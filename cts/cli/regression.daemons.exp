@@ -2,7 +2,7 @@
 <?xml version=""?>
 <resource-agent name="pacemaker-based" version="">
   <version>1.1</version>
-  <longdesc lang="en">Cluster options used by Pacemaker&apos;s Cluster Information Base manager</longdesc>
+  <longdesc lang="en">Cluster options used by Pacemaker's Cluster Information Base manager</longdesc>
   <shortdesc lang="en">Cluster Information Base manager options</shortdesc>
   <parameters>
     <parameter name="enable-acl">
@@ -11,7 +11,7 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="cluster-ipc-limit">
-      <longdesc lang="en">Raise this if log has &quot;Evicting client&quot; messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).</longdesc>
+      <longdesc lang="en">Raise this if log has "Evicting client" messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).</longdesc>
       <shortdesc lang="en">Maximum IPC message backlog before disconnecting a cluster daemon</shortdesc>
       <content type="integer" default=""/>
     </parameter>
@@ -23,7 +23,7 @@
 <?xml version=""?>
 <resource-agent name="pacemaker-controld" version="">
   <version>1.1</version>
-  <longdesc lang="en">Cluster options used by Pacemaker&apos;s controller</longdesc>
+  <longdesc lang="en">Cluster options used by Pacemaker's controller</longdesc>
   <shortdesc lang="en">Pacemaker controller options</shortdesc>
   <parameters>
     <parameter name="dc-version">
@@ -37,7 +37,7 @@
       <content type="string" default=""/>
     </parameter>
     <parameter name="cluster-name">
-      <longdesc lang="en">This optional value is mostly for users&apos; convenience as desired in administration, but may also be used in Pacemaker configuration rules via the #cluster-name node attribute, and by higher-level tools and resource agents.</longdesc>
+      <longdesc lang="en">This optional value is mostly for users' convenience as desired in administration, but may also be used in Pacemaker configuration rules via the #cluster-name node attribute, and by higher-level tools and resource agents.</longdesc>
       <shortdesc lang="en">An arbitrary name for the cluster</shortdesc>
       <content type="string"/>
     </parameter>
@@ -52,7 +52,7 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="fence-reaction">
-      <longdesc lang="en">A cluster node may receive notification of a &quot;succeeded&quot; fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn&apos;t cut cluster communication. Use &quot;stop&quot; to attempt to immediately stop Pacemaker and stay stopped, or &quot;panic&quot; to attempt to immediately reboot the local node, falling back to stop on failure. Allowed values: stop, panic.</longdesc>
+      <longdesc lang="en">A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure. Allowed values: stop, panic.</longdesc>
       <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
       <content type="select" default="">
         <option value="stop" />
@@ -112,26 +112,26 @@
 <?xml version=""?>
 <resource-agent name="pacemaker-fenced" version="">
   <version>1.1</version>
-  <longdesc lang="en">Instance attributes available for all &quot;stonith&quot;-class resources and used by Pacemaker&apos;s fence daemon, formerly known as stonithd</longdesc>
-  <shortdesc lang="en">Instance attributes available for all &quot;stonith&quot;-class resources</shortdesc>
+  <longdesc lang="en">Instance attributes available for all "stonith"-class resources and used by Pacemaker's fence daemon, formerly known as stonithd</longdesc>
+  <shortdesc lang="en">Instance attributes available for all "stonith"-class resources</shortdesc>
   <parameters>
     <parameter name="pcmk_host_argument">
-      <longdesc lang="en">Some devices do not support the standard &apos;port&apos; parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of &quot;none&quot; can be used to tell the cluster not to supply any additional parameters.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate parameter to supply instead of &apos;port&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard 'port' parameter or may provide additional ones. Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced. A value of "none" can be used to tell the cluster not to supply any additional parameters.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate parameter to supply instead of 'port'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_host_map">
-      <longdesc lang="en">For example, &quot;node1:1;node2:2,3&quot; would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2.</longdesc>
+      <longdesc lang="en">For example, "node1:1;node2:2,3" would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2.</longdesc>
       <shortdesc lang="en">A mapping of node names to port numbers for devices that do not support node names.</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_host_list">
-      <longdesc lang="en">For example, &quot;node1,node2,node3&quot;.</longdesc>
-      <shortdesc lang="en">A list of nodes that can be targeted by this device (optional unless pcmk_host_list=&quot;static-list&quot;)</shortdesc>
+      <longdesc lang="en">For example, "node1,node2,node3".</longdesc>
+      <shortdesc lang="en">A list of nodes that can be targeted by this device (optional unless pcmk_host_list="static-list")</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_host_check">
-      <longdesc lang="en">Use &quot;dynamic-list&quot; to query the device via the &apos;list&apos; command; &quot;static-list&quot; to check the pcmk_host_list attribute; &quot;status&quot; to query the device via the &apos;status&apos; command; or &quot;none&quot; to assume every device can fence every node. Allowed values: dynamic-list, static-list, status, none.</longdesc>
+      <longdesc lang="en">Use "dynamic-list" to query the device via the 'list' command; "static-list" to check the pcmk_host_list attribute; "status" to query the device via the 'status' command; or "none" to assume every device can fence every node. Allowed values: dynamic-list, static-list, status, none.</longdesc>
       <shortdesc lang="en">How to determine which nodes can be targeted by the device</shortdesc>
       <content type="select" default="">
         <option value="dynamic-list" />
@@ -146,103 +146,103 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_delay_base">
-      <longdesc lang="en">This enables a static delay for fencing actions, which can help avoid &quot;death matches&quot; where two nodes try to fence each other at the same time. If pcmk_delay_max is also used, a random delay will be added such that the total delay is kept below that value. This can be set to a single time value to apply to any node targeted by this device (useful if a separate device is configured for each target), or to a node map (for example, &quot;node1:1s;node2:5&quot;) to set a different value for each target.</longdesc>
+      <longdesc lang="en">This enables a static delay for fencing actions, which can help avoid "death matches" where two nodes try to fence each other at the same time. If pcmk_delay_max is also used, a random delay will be added such that the total delay is kept below that value. This can be set to a single time value to apply to any node targeted by this device (useful if a separate device is configured for each target), or to a node map (for example, "node1:1s;node2:5") to set a different value for each target.</longdesc>
       <shortdesc lang="en">Enable a base delay for fencing actions and specify base delay value.</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_action_limit">
-      <longdesc lang="en">Cluster property concurrent-fencing=&quot;true&quot; needs to be configured first. Then use this to specify the maximum number of actions can be performed in parallel on this device. A value of -1 means an unlimited number of actions can be performed in parallel.</longdesc>
+      <longdesc lang="en">Cluster property concurrent-fencing="true" needs to be configured first. Then use this to specify the maximum number of actions can be performed in parallel on this device. A value of -1 means an unlimited number of actions can be performed in parallel.</longdesc>
       <shortdesc lang="en">The maximum number of actions can be performed in parallel on this device</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_reboot_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;reboot&apos; action.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;reboot&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'reboot' action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of 'reboot'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_reboot_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;reboot&apos; actions.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;reboot&apos; actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_reboot_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;reboot&apos; action before giving up.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;reboot&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'reboot' action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the 'reboot' command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_off_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;off&apos; action.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;off&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'off' action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of 'off'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_off_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;off&apos; actions.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;off&apos; actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_off_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;off&apos; action before giving up.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;off&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'off' action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the 'off' command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_on_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;on&apos; action.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;on&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'on' action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of 'on'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_on_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;on&apos; actions.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;on&apos; actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_on_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;on&apos; action before giving up.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;on&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'on' action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the 'on' command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_list_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;list&apos; action.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;list&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'list' action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of 'list'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_list_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;list&apos; actions.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;list&apos; actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_list_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;list&apos; action before giving up.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;list&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'list' action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the 'list' command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_monitor_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;monitor&apos; action.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;monitor&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'monitor' action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of 'monitor'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_monitor_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;monitor&apos; actions.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;monitor&apos; actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_monitor_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;monitor&apos; action before giving up.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;monitor&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'monitor' action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the 'monitor' command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="pcmk_status_action">
-      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the &apos;status&apos; action.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of &apos;status&apos;</shortdesc>
+      <longdesc lang="en">Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'status' action.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** An alternate command to run instead of 'status'</shortdesc>
       <content type="string" default=""/>
     </parameter>
     <parameter name="pcmk_status_timeout">
-      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for &apos;status&apos; actions.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for &apos;status&apos; actions instead of stonith-timeout</shortdesc>
+      <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="pcmk_status_retries">
-      <longdesc lang="en">Some devices do not support multiple connections. Operations may &quot;fail&quot; if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a &apos;status&apos; action before giving up.</longdesc>
-      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the &apos;status&apos; command within the timeout period</shortdesc>
+      <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'status' action before giving up.</longdesc>
+      <shortdesc lang="en">*** Advanced Use Only *** The maximum number of times to try the 'status' command within the timeout period</shortdesc>
       <content type="integer" default=""/>
     </parameter>
   </parameters>
@@ -253,7 +253,7 @@
 <?xml version=""?>
 <resource-agent name="pacemaker-schedulerd" version="">
   <version>1.1</version>
-  <longdesc lang="en">Cluster options used by Pacemaker&apos;s scheduler</longdesc>
+  <longdesc lang="en">Cluster options used by Pacemaker's scheduler</longdesc>
   <shortdesc lang="en">Pacemaker scheduler options</shortdesc>
   <parameters>
     <parameter name="no-quorum-policy">
@@ -268,7 +268,7 @@
       </content>
     </parameter>
     <parameter name="shutdown-lock">
-      <longdesc lang="en">When true, resources active on a node when it is cleanly shut down are kept &quot;locked&quot; to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.</longdesc>
+      <longdesc lang="en">When true, resources active on a node when it is cleanly shut down are kept "locked" to that node (not allowed to run elsewhere) until they start again on that node after it rejoins (or for at most shutdown-lock-limit, if set). Stonith resources and Pacemaker Remote connections are never locked. Clone and bundle instances and the promoted role of promotable clones are currently never locked, though support could be added in a future release.</longdesc>
       <shortdesc lang="en">Whether to lock resources to a cleanly shut down node</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
@@ -288,7 +288,7 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="start-failure-is-fatal">
-      <longdesc lang="en">When true, the cluster will immediately ban a resource from a node if it fails to start there. When false, the cluster will instead check the resource&apos;s fail count against its migration-threshold.</longdesc>
+      <longdesc lang="en">When true, the cluster will immediately ban a resource from a node if it fails to start there. When false, the cluster will instead check the resource's fail count against its migration-threshold.</longdesc>
       <shortdesc lang="en">Whether a start failure should prevent a resource from being recovered on the same node</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
@@ -298,13 +298,13 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="stonith-enabled">
-      <longdesc lang="en">If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a &quot;split-brain&quot; situation, potentially leading to data loss and/or service unavailability.</longdesc>
+      <longdesc lang="en">If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.</longdesc>
       <shortdesc lang="en">*** Advanced Use Only *** Whether nodes may be fenced as part of recovery</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="stonith-action">
-      <longdesc lang="en">Action to send to fence device when a node needs to be fenced (&quot;poweroff&quot; is a deprecated alias for &quot;off&quot;). Allowed values: reboot, off, poweroff.</longdesc>
-      <shortdesc lang="en">Action to send to fence device when a node needs to be fenced (&quot;poweroff&quot; is a deprecated alias for &quot;off&quot;)</shortdesc>
+      <longdesc lang="en">Action to send to fence device when a node needs to be fenced ("poweroff" is a deprecated alias for "off"). Allowed values: reboot, off, poweroff.</longdesc>
+      <shortdesc lang="en">Action to send to fence device when a node needs to be fenced ("poweroff" is a deprecated alias for "off")</shortdesc>
       <content type="select" default="">
         <option value="reboot" />
         <option value="off" />
@@ -327,12 +327,12 @@
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="startup-fencing">
-      <longdesc lang="en">Setting this to false may lead to a &quot;split-brain&quot; situation, potentially leading to data loss and/or service unavailability.</longdesc>
+      <longdesc lang="en">Setting this to false may lead to a "split-brain" situation, potentially leading to data loss and/or service unavailability.</longdesc>
       <shortdesc lang="en">*** Advanced Use Only *** Whether to fence unseen nodes at start-up</shortdesc>
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="priority-fencing-delay">
-      <longdesc lang="en">Apply specified delay for the fencings that are targeting the lost nodes with the highest total resource priority in case we don&apos;t have the majority of the nodes in our cluster partition, so that the more significant nodes potentially win any fencing match, which is especially meaningful under split-brain of 2-node cluster. A promoted resource instance takes the base priority + 1 on calculation if the base priority is not 0. Any static/random delays that are introduced by `pcmk_delay_base/max` configured for the corresponding fencing resources will be added to this delay. This delay should be significantly greater than, safely twice, the maximum `pcmk_delay_base/max`. By default, priority fencing delay is disabled.</longdesc>
+      <longdesc lang="en">Apply specified delay for the fencings that are targeting the lost nodes with the highest total resource priority in case we don't have the majority of the nodes in our cluster partition, so that the more significant nodes potentially win any fencing match, which is especially meaningful under split-brain of 2-node cluster. A promoted resource instance takes the base priority + 1 on calculation if the base priority is not 0. Any static/random delays that are introduced by `pcmk_delay_base/max` configured for the corresponding fencing resources will be added to this delay. This delay should be significantly greater than, safely twice, the maximum `pcmk_delay_base/max`. By default, priority fencing delay is disabled.</longdesc>
       <shortdesc lang="en">Apply fencing delay targeting the lost nodes with the highest total resource priority</shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -342,12 +342,12 @@
       <content type="time" default=""/>
     </parameter>
     <parameter name="cluster-delay">
-      <longdesc lang="en">The node elected Designated Controller (DC) will consider an action failed if it does not get a response from the node executing the action within this time (after considering the action&apos;s own timeout). The &quot;correct&quot; value will depend on the speed and load of your network and cluster nodes.</longdesc>
+      <longdesc lang="en">The node elected Designated Controller (DC) will consider an action failed if it does not get a response from the node executing the action within this time (after considering the action's own timeout). The "correct" value will depend on the speed and load of your network and cluster nodes.</longdesc>
       <shortdesc lang="en">Maximum time for node-to-node communication</shortdesc>
       <content type="time" default=""/>
     </parameter>
     <parameter name="batch-limit">
-      <longdesc lang="en">The &quot;correct&quot; value will depend on the speed and load of your network and cluster nodes. If set to 0, the cluster will impose a dynamically calculated limit when any node has a high load.</longdesc>
+      <longdesc lang="en">The "correct" value will depend on the speed and load of your network and cluster nodes. If set to 0, the cluster will impose a dynamically calculated limit when any node has a high load.</longdesc>
       <shortdesc lang="en">Maximum number of jobs that the cluster may execute in parallel across all nodes</shortdesc>
       <content type="integer" default=""/>
     </parameter>
@@ -392,7 +392,7 @@
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-strategy">
-      <longdesc lang="en">Requires external entities to create node attributes (named with the prefix &quot;#health&quot;) with values &quot;red&quot;, &quot;yellow&quot;, or &quot;green&quot;. Allowed values: none, migrate-on-red, only-green, progressive, custom.</longdesc>
+      <longdesc lang="en">Requires external entities to create node attributes (named with the prefix "#health") with values "red", "yellow", or "green". Allowed values: none, migrate-on-red, only-green, progressive, custom.</longdesc>
       <shortdesc lang="en">How cluster should react to node health attributes</shortdesc>
       <content type="select" default="">
         <option value="none" />
@@ -403,23 +403,23 @@
       </content>
     </parameter>
     <parameter name="node-health-base">
-      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;progressive&quot;.</longdesc>
+      <longdesc lang="en">Only used when "node-health-strategy" is set to "progressive".</longdesc>
       <shortdesc lang="en">Base health score assigned to a node</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-green">
-      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
-      <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;green&quot;</shortdesc>
+      <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
+      <shortdesc lang="en">The score to use for a node health attribute whose value is "green"</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-yellow">
-      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
-      <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;yellow&quot;</shortdesc>
+      <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
+      <shortdesc lang="en">The score to use for a node health attribute whose value is "yellow"</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="node-health-red">
-      <longdesc lang="en">Only used when &quot;node-health-strategy&quot; is set to &quot;custom&quot; or &quot;progressive&quot;.</longdesc>
-      <shortdesc lang="en">The score to use for a node health attribute whose value is &quot;red&quot;</shortdesc>
+      <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
+      <shortdesc lang="en">The score to use for a node health attribute whose value is "red"</shortdesc>
       <content type="integer" default=""/>
     </parameter>
     <parameter name="placement-strategy">
