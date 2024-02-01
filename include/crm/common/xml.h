@@ -172,13 +172,11 @@ xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int err
 static inline const char *
 crm_map_element_name(const xmlNode *xml)
 {
-    /* Can't use PCMK__XE_PROMOTED_LEGACY or PCMK_XE_CLONE because this header
-     * is included in xml_names.h
-     */
     if (xml == NULL) {
         return NULL;
     } else if (strcmp((const char *) xml->name, "master") == 0) {
-        return "clone";
+        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
+        return PCMK_XE_CLONE;
     } else {
         return (const char *) xml->name;
     }
