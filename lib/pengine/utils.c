@@ -545,7 +545,10 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 const char *
 rsc_printable_id(const pcmk_resource_t *rsc)
 {
-    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? rsc->id : ID(rsc->xml);
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+        return rsc->id;
+    }
+    return pcmk__xe_id(rsc->xml);
 }
 
 void

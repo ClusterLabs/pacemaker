@@ -1861,7 +1861,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     }
 
     if (node == NULL && n) {
-        node = ID(n);
+        node = pcmk__xe_id(n);
     }
 
     if (node == NULL) {
@@ -1917,7 +1917,7 @@ handle_op_for_node(xmlNode *xml, void *userdata)
     const char *node = crm_element_value(xml, PCMK_XA_UNAME);
 
     if (node == NULL) {
-        node = ID(xml);
+        node = pcmk__xe_id(xml);
     }
 
     handle_rsc_op(xml, (void *) node);
@@ -1978,12 +1978,12 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
             node = crm_element_value(match, PCMK_XA_UNAME);
             if (node == NULL) {
-                node = ID(match);
+                node = pcmk__xe_id(match);
             }
             handle_rsc_op(match, (void *) node);
 
         } else if (strcmp(name, PCMK__XE_LRM) == 0) {
-            node = ID(match);
+            node = pcmk__xe_id(match);
             handle_rsc_op(match, (void *) node);
 
         } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {

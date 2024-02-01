@@ -160,7 +160,8 @@ handle_multiples(pcmk__output_t *out, xmlNode *search, const char *attr_name)
         for (child = pcmk__xml_first_child(search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, PCMK_XA_VALUE), ID(child));
+                      crm_element_value(child, PCMK_XA_VALUE),
+                      pcmk__xe_id(child));
         }
         return ENOTUNIQ;
 
@@ -567,14 +568,14 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
             parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
             parsed_is_remote = TRUE;
         } else {
-            parsed_uuid = ID(result);
+            parsed_uuid = pcmk__xe_id(result);
             parsed_is_remote = FALSE;
         }
 
     } else if (pcmk__str_eq(tag, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
         /* Result is <primitive> for ocf:pacemaker:remote resource */
 
-        parsed_uuid = ID(result);
+        parsed_uuid = pcmk__xe_id(result);
         parsed_is_remote = TRUE;
 
     } else if (pcmk__str_eq(tag, PCMK_XE_NVPAIR, pcmk__str_casei)) {
@@ -702,7 +703,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
          a_child = pcmk__xml_next(a_child)) {
 
         if (pcmk__xe_is(a_child, PCMK_XE_NODE)) {
-            child_name = ID(a_child);
+            child_name = pcmk__xe_id(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
                 child_name = crm_element_value(a_child, PCMK_XA_UNAME);
                 if (child_name != NULL) {

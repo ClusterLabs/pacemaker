@@ -487,10 +487,12 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 
             crm_element_value_int(match, PCMK_XA_INDEX, &index);
             if (target == NULL) {
-                crm_err("Invalid fencing target in element %s", ID(match));
+                crm_err("Invalid fencing target in element %s",
+                        pcmk__xe_id(match));
 
             } else if (index <= 0) {
-                crm_err("Invalid level for %s in element %s", target, ID(match));
+                crm_err("Invalid level for %s in element %s",
+                        target, pcmk__xe_id(match));
 
             } else {
                 topology_remove_helper(target, index);

@@ -283,7 +283,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return TRUE;
     }
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
@@ -390,7 +390,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return TRUE;
     }
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;

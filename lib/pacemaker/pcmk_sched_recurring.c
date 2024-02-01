@@ -73,16 +73,16 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
             continue;
         }
 
-        if (ID(op) == NULL) {
+        if (pcmk__xe_id(op) == NULL) {
             continue; // Shouldn't be possible
         }
 
         if (id == NULL) {
-            id = ID(op); // First matching op
+            id = pcmk__xe_id(op); // First matching op
         } else {
             pcmk__config_err("Operation %s is duplicate of %s (do not use "
                              "same name and interval combination more "
-                             "than once per resource)", ID(op), id);
+                             "than once per resource)", pcmk__xe_id(op), id);
             return true;
         }
     }
@@ -136,7 +136,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
         return false; // Not recurring
     }
 
-    op->id = ID(xml);
+    op->id = pcmk__xe_id(xml);
     if (pcmk__str_empty(op->id)) {
         pcmk__config_err("Ignoring resource history entry without ID");
         return false; // Shouldn't be possible (unless CIB was manually edited)

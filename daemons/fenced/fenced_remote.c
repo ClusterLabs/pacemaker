@@ -2177,10 +2177,12 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
          */
-        if (pcmk__str_eq(ID(child), PCMK_ACTION_OFF, pcmk__str_none)) {
+        if (pcmk__str_eq(pcmk__xe_id(child), PCMK_ACTION_OFF, pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, PCMK_ACTION_OFF,
                                   op, st_phase_off, props);
-        } else if (pcmk__str_eq(ID(child), PCMK_ACTION_ON, pcmk__str_none)) {
+
+        } else if (pcmk__str_eq(pcmk__xe_id(child), PCMK_ACTION_ON,
+                                pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, PCMK_ACTION_ON,
                                   op, st_phase_on, props);
         }
@@ -2214,7 +2216,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices,
     /* Each child element describes one capable device available to the peer */
     for (child = pcmk__xml_first_child(xml); child != NULL;
          child = pcmk__xml_next(child)) {
-        const char *device = ID(child);
+        const char *device = pcmk__xe_id(child);
 
         if (device) {
             add_device_properties(child, op, peer, device);

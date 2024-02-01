@@ -239,11 +239,11 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
             pcmk_resource_t *rsc = NULL;
             pcmk_tag_t *tag = NULL;
 
-            if (!pcmk__valid_resource_or_tag(scheduler, ID(xml_rsc), &rsc,
-                                             &tag)) {
+            if (!pcmk__valid_resource_or_tag(scheduler, pcmk__xe_id(xml_rsc),
+                                             &rsc, &tag)) {
                 pcmk__config_err("Ignoring resource sets for constraint '%s' "
                                  "because '%s' is not a valid resource or tag",
-                                 ID(xml_obj), ID(xml_rsc));
+                                 pcmk__xe_id(xml_obj), pcmk__xe_id(xml_rsc));
                 free_xml(new_xml);
                 return NULL;
 
@@ -348,7 +348,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     CRM_CHECK((xml_obj != NULL) && (attr != NULL), return false);
 
-    cons_id = ID(xml_obj);
+    cons_id = pcmk__xe_id(xml_obj);
     if (cons_id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);

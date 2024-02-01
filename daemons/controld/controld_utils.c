@@ -834,5 +834,5 @@ get_node_id(xmlNode *lrm_rsc_op)
     }
 
     CRM_CHECK(node != NULL, return NULL);
-    return ID(node);
+    return pcmk__xe_id(node);
 }

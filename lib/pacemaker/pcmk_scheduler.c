@@ -62,7 +62,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
-                              rsc->id, ID(rsc_op), node->details->id);
+                              rsc->id, pcmk__xe_id(rsc_op), node->details->id);
                     break;
                 case pcmk__digest_match:
                     break;

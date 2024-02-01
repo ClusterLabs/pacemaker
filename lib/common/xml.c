@@ -349,7 +349,7 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
         return pcmk__xc_match(haystack, needle, exact);
 
     } else {
-        const char *id = ID(needle);
+        const char *id = pcmk__xe_id(needle);
         const char *attr = (id == NULL)? NULL : PCMK_XA_ID;
 
         return pcmk__xe_match(haystack, (const char *) needle->name, attr, id);
@@ -1980,7 +1980,7 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
     xml_node_private_t *nodepriv = new_child->_private;
 
     crm_trace("Child element %s with id='%s' moved from position %d to %d under %s",
-              new_child->name, (ID(new_child)? ID(new_child) : "<no id>"),
+              new_child->name, pcmk__s(pcmk__xe_id(new_child), "<no id>"),
               p_old, p_new, new_parent->name);
     pcmk__mark_xml_node_dirty(new_parent);
     pcmk__set_xml_flags(nodepriv, pcmk__xf_moved);
@@ -2069,7 +2069,8 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
               && pcmk__xe_is(old_xml, (const char *) new_xml->name)
-              && pcmk__str_eq(ID(old_xml), ID(new_xml), pcmk__str_none),
+              && pcmk__str_eq(pcmk__xe_id(old_xml), pcmk__xe_id(new_xml),
+                              pcmk__str_none),
               return);
 
     if(xml_tracking_changes(new_xml) == FALSE) {
@@ -2230,7 +2231,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     }
 
     object_name = (const char *) update->name;
-    object_href_val = ID(update);
+    object_href_val = pcmk__xe_id(update);
     if (object_href_val != NULL) {
         object_href = PCMK_XA_ID;
     } else {
@@ -2318,7 +2319,8 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
     if (!pcmk__xe_is(to_update, (const char *) child->name)) {
         can_update = FALSE;
 
-    } else if (!pcmk__str_eq(ID(to_update), ID(child), pcmk__str_none)) {
+    } else if (!pcmk__str_eq(pcmk__xe_id(to_update), pcmk__xe_id(child),
+                             pcmk__str_none)) {
         can_update = FALSE;
 
     } else if (can_update) {
@@ -2386,8 +2388,8 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     CRM_CHECK(child != NULL, return FALSE);
     CRM_CHECK(update != NULL, return FALSE);
 
-    up_id = ID(update);
-    child_id = ID(child);
+    up_id = pcmk__xe_id(update);
+    child_id = pcmk__xe_id(child);
 
     if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
         can_delete = TRUE;

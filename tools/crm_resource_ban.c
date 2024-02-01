@@ -85,7 +85,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
               "appropriate tool.\n"
               "\tThis will be the case even if %s is the last node in the "
               "cluster",
-              ID(location), rsc_id, host, rsc_id,
+              pcmk__xe_id(location), rsc_id, host, rsc_id,
               (promoted_role_only? "being promoted" : "running"), host, host);
 
     crm_xml_add(location, PCMK_XA_RSC, rsc_id);
@@ -352,7 +352,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
                          const char *rsc, const char *node,
                          bool promoted_role_only)
 {
-    const char *cons_id = ID(constraint_node);
+    const char *cons_id = pcmk__xe_id(constraint_node);
     const char *cons_rsc = crm_element_value(constraint_node, PCMK_XA_RSC);
     GString *rsc_role_substr = NULL;
     const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK__ROLE_PROMOTED
@@ -475,7 +475,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
 
             fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
             location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
-            crm_xml_set_id(location, "%s", ID(constraint_node));
+            crm_xml_set_id(location, "%s", pcmk__xe_id(constraint_node));
             crm_log_xml_info(fragment, "Delete");
 
             rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,

@@ -194,13 +194,15 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 
     if (attrs != NULL) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s] (%s)%s%s%s",
-                                 rsc->id, ID(clone_data->xml_obj_child),
+                                 rsc->id,
+                                 pcmk__xe_id(clone_data->xml_obj_child),
                                  (const char *) attrs->str, desc ? " (" : "",
                                  desc ? desc : "", desc ? ")" : "");
         g_string_free(attrs, TRUE);
     } else {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]%s%s%s",
-                                 rsc->id, ID(clone_data->xml_obj_child),
+                                 rsc->id,
+                                 pcmk__xe_id(clone_data->xml_obj_child),
                                  desc ? " (" : "", desc ? desc : "",
                                  desc ? ")" : "");
     }
@@ -233,7 +235,7 @@ find_clone_instance(const pcmk_resource_t *rsc, const char *sub_id)
 
     get_clone_variant_data(clone_data, rsc);
 
-    child_base = ID(clone_data->xml_obj_child);
+    child_base = pcmk__xe_id(clone_data->xml_obj_child);
     child_id = crm_strdup_printf("%s:%s", child_base, sub_id);
     child = pe_find_resource(rsc->children, child_id);
 
@@ -629,7 +631,8 @@ clone_print(pcmk_resource_t *rsc, const char *pre_text, long options,
     child_text = crm_strdup_printf("%s    ", pre_text);
 
     status_print("%sClone Set: %s [%s]%s%s%s",
-                 pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),
+                 pcmk__s(pre_text, ""), rsc->id,
+                 pcmk__xe_id(clone_data->xml_obj_child),
                  pcmk_is_set(rsc->flags, pcmk_rsc_promotable)? " (promotable)" : "",
                  pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
                  pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " (unmanaged)");
@@ -1282,7 +1285,8 @@ pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
         passes = TRUE;
     } else {
         get_clone_variant_data(clone_data, rsc);
-        passes = pcmk__str_in_list(ID(clone_data->xml_obj_child), only_rsc, pcmk__str_star_matches);
+        passes = pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child),
+                                   only_rsc, pcmk__str_star_matches);
 
         if (!passes) {
             for (const GList *iter = rsc->children;
@@ -1306,7 +1310,7 @@ pe__clone_child_id(const pcmk_resource_t *rsc)
 {
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);
-    return ID(clone_data->xml_obj_child);
+    return pcmk__xe_id(clone_data->xml_obj_child);
 }
 
 /*!

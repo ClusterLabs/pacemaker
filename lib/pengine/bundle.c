@@ -392,8 +392,8 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         }
 
         xml_obj = create_xml_node(xml_ip, PCMK_XE_OPERATIONS);
-        crm_create_op_xml(xml_obj, ID(xml_ip), PCMK_ACTION_MONITOR, "60s",
-                          NULL);
+        crm_create_op_xml(xml_obj, pcmk__xe_id(xml_ip), PCMK_ACTION_MONITOR,
+                          "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -644,8 +644,8 @@ create_container_resource(pcmk_resource_t *parent,
     }
 
     xml_obj = create_xml_node(xml_container, PCMK_XE_OPERATIONS);
-    crm_create_op_xml(xml_obj, ID(xml_container), PCMK_ACTION_MONITOR, "60s",
-                      NULL);
+    crm_create_op_xml(xml_obj, pcmk__xe_id(xml_container), PCMK_ACTION_MONITOR,
+                      "60s", NULL);
 
     // TODO: Other ops? Timeouts and intervals from underlying resource?
     if (pe__unpack_resource(xml_container, &replica->container, parent,
@@ -728,7 +728,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         free(id);
         id = NULL;
-        uname = ID(xml_remote);
+        uname = pcmk__xe_id(xml_remote);
 
         /* Ensure a node has been created for the guest (it may have already
          * been, if it has a permanent node attribute), and ensure its weight is
@@ -978,8 +978,8 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
 
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
         flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
-                                   "Bundle mount", ID(mount_xml), flags,    \
-                                   (flags_to_set), #flags_to_set);          \
+                                   "Bundle mount", pcmk__xe_id(mount_xml),  \
+                                   flags, (flags_to_set), #flags_to_set);   \
     } while (0)
 
 gboolean
@@ -1093,7 +1093,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
             } else {
                 pcmk__config_err("Invalid " PCMK_XA_PORT " directive %s",
-                                 ID(xml_child));
+                                 pcmk__xe_id(xml_child));
                 port_free(port);
             }
         }
@@ -1120,7 +1120,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 need_log_mount = FALSE;
             }
         } else {
-            pcmk__config_err("Invalid mount directive %s", ID(xml_child));
+            pcmk__config_err("Invalid mount directive %s",
+                             pcmk__xe_id(xml_child));
         }
     }
 
@@ -1171,7 +1172,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     } else if(xml_obj) {
         pcmk__config_err("Cannot control %s inside %s without either "
                          PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
-                         rsc->id, ID(xml_obj));
+                         rsc->id, pcmk__xe_id(xml_obj));
         return FALSE;
     }
 

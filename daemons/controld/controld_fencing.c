@@ -431,7 +431,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
                 last_action = action->xml;
                 pcmk__update_graph(graph, action);
                 crm_notice("Failing action %d (%s): fencer terminated",
-                           action->id, ID(action->xml));
+                           action->id, pcmk__xe_id(action->xml));
             }
         }
     }
@@ -956,7 +956,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
                               pcmk__graph_action_t *action)
 {
     int rc = 0;
-    const char *id = ID(action->xml);
+    const char *id = pcmk__xe_id(action->xml);
     const char *uuid = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
     const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *type = crm_meta_value(action->params, "stonith_action");

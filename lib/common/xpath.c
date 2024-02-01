@@ -300,7 +300,7 @@ pcmk__element_xpath(const xmlNode *xml)
         pcmk__g_strcat(xpath, "/", (const char *) xml->name, NULL);
     }
 
-    id = ID(xml);
+    id = pcmk__xe_id(xml);
     if (id != NULL) {
         pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", id, "']", NULL);
     }

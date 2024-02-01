@@ -48,7 +48,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
         return FALSE;
     }
 
-    lrm_op_id = ID(lrm_op_xml);
+    lrm_op_id = pcmk__xe_id(lrm_op_xml);
     last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
 
     if (pcmk__str_eq(last_failure_key, lrm_op_id, pcmk__str_casei)) {

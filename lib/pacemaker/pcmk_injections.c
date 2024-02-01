@@ -55,7 +55,7 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
 {
     xmlNode *attrs = NULL;
     xmlNode *instance_attrs = NULL;
-    const char *node_uuid = ID(cib_node);
+    const char *node_uuid = pcmk__xe_id(cib_node);
 
     out->message(out, "inject-attr", name, value, cib_node);
 
@@ -165,7 +165,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
 
-    op = lrmd_new_event(ID(cib_resource), task, interval_ms);
+    op = lrmd_new_event(pcmk__xe_id(cib_resource), task, interval_ms);
     lrmd__set_result(op, outcome, PCMK_EXEC_DONE, "Simulated action result");
     op->params = NULL; // Not needed for simulation purposes
     op->t_run = (unsigned int) time(NULL);
@@ -235,7 +235,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
-    if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
+    if ((cib_object != NULL) && (pcmk__xe_id(cib_object) == NULL)) {
         crm_err("Detected multiple " PCMK__XE_NODE_STATE " entries for "
                 "xpath=%s, bailing",
                 xpath);
@@ -260,7 +260,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
             rc = cib_conn->cmds->query(cib_conn, xpath_by_uuid, &cib_object,
                                        cib_xpath|cib_sync_call|cib_scope_local);
 
-            if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
+            if ((cib_object != NULL) && (pcmk__xe_id(cib_object) == NULL)) {
                 crm_err("Can't inject node state for %s because multiple "
                         "state entries found for ID %s", node, found_uuid);
                 duplicate = true;
@@ -408,7 +408,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         out->err(out,
                  "Resource %s not found in the status section of %s "
                  "(supply class and type to continue)",
-                 resource, ID(cib_node));
+                 resource, pcmk__xe_id(cib_node));
         return NULL;
 
     } else if (!pcmk__strcase_any_of(rclass,
@@ -429,11 +429,11 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     }
 
     crm_info("Injecting new resource %s into node state '%s'",
-             lrm_name, ID(cib_node));
+             lrm_name, pcmk__xe_id(cib_node));
 
     lrm = first_named_child(cib_node, PCMK__XE_LRM);
     if (lrm == NULL) {
-        const char *node_uuid = ID(cib_node);
+        const char *node_uuid = pcmk__xe_id(cib_node);
 
         lrm = create_xml_node(cib_node, PCMK__XE_LRM);
         crm_xml_add(lrm, PCMK_XA_ID, node_uuid);

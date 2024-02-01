@@ -199,7 +199,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         accept = pe_test_rule(rule_xml, node->details->attrs, pcmk_role_unknown,
                               rsc->cluster->now, next_change, &match_data);
 
-        crm_trace("Rule %s %s on %s", ID(rule_xml), accept? "passed" : "failed",
+        crm_trace("Rule %s %s on %s",
+                  pcmk__xe_id(rule_xml), (accept? "passed" : "failed"),
                   pcmk__node_name(node));
 
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
@@ -311,7 +312,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         for (xmlNode *rule_xml = first_named_child(xml_obj, PCMK_XE_RULE);
              rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
             empty = false;
-            crm_trace("Unpacking %s/%s", id, ID(rule_xml));
+            crm_trace("Unpacking %s/%s", id, pcmk__xe_id(rule_xml));
             generate_location_rule(rsc, rule_xml, discovery, next_change,
                                    re_match_data);
         }
@@ -425,7 +426,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     CRM_CHECK(xml_obj != NULL, return EINVAL);
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
@@ -500,11 +501,11 @@ unpack_location_set(xmlNode *location, xmlNode *set,
 
     CRM_CHECK(set != NULL, return EINVAL);
 
-    set_id = ID(set);
+    set_id = pcmk__xe_id(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring " PCMK_XE_RESOURCE_SET " without "
                          PCMK_XA_ID " in constraint '%s'",
-                         pcmk__s(ID(location), "(missing ID)"));
+                         pcmk__s(pcmk__xe_id(location), "(missing ID)"));
         return pcmk_rc_unpack_error;
     }
 
@@ -515,10 +516,10 @@ unpack_location_set(xmlNode *location, xmlNode *set,
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         resource = pcmk__find_constraint_resource(scheduler->resources,
-                                                  ID(xml_rsc));
+                                                  pcmk__xe_id(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
-                             set_id, ID(xml_rsc));
+                             set_id, pcmk__xe_id(xml_rsc));
             return pcmk_rc_unpack_error;
         }
 

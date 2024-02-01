@@ -243,7 +243,7 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
     CRM_CHECK(set != NULL, return EINVAL);
     CRM_CHECK(ticket != NULL, return EINVAL);
 
-    set_id = ID(set);
+    set_id = pcmk__xe_id(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring <" PCMK_XE_RESOURCE_SET "> without "
                          PCMK_XA_ID);
@@ -258,10 +258,10 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
         pcmk_resource_t *resource = NULL;
 
         resource = pcmk__find_constraint_resource(scheduler->resources,
-                                                  ID(xml_rsc));
+                                                  pcmk__xe_id(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
-                             set_id, ID(xml_rsc));
+                             set_id, pcmk__xe_id(xml_rsc));
             return pcmk_rc_unpack_error;
         }
         pcmk__rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
@@ -297,7 +297,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     CRM_CHECK(xml_obj != NULL, return);
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
@@ -368,7 +368,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     CRM_CHECK(xml_obj != NULL, return EINVAL);
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
@@ -444,7 +444,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     CRM_CHECK(xml_obj != NULL, return);
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);

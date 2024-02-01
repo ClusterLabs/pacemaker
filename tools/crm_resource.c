@@ -331,7 +331,8 @@ build_constraint_list(xmlNode *root)
 
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
         xmlNode *match = getXpathResult(xpathObj, ndx);
-        retval = g_list_insert_sorted(retval, (gpointer) ID(match), compare_id);
+        retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
+                                      compare_id);
     }
 
     freeXpathObject(xpathObj);

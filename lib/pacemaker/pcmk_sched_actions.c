@@ -1868,7 +1868,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
         if (rsc_entry->children != NULL) {
-            GList *result = pcmk__rscs_matching_id(ID(rsc_entry),
+            GList *result = pcmk__rscs_matching_id(pcmk__xe_id(rsc_entry),
                                                    node->details->data_set);
 
             for (GList *iter = result; iter != NULL; iter = iter->next) {

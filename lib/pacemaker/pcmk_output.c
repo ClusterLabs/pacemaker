@@ -1403,7 +1403,7 @@ inject_cluster_action(pcmk__output_t *out, va_list args)
 
     if (rsc != NULL) {
         out->list_item(out, NULL, "Cluster action:  %s for %s on %s",
-                       task, ID(rsc), node);
+                       task, pcmk__xe_id(rsc), node);
     } else {
         out->list_item(out, NULL, "Cluster action:  %s on %s", task, node);
     }
@@ -1432,7 +1432,7 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
                                             NULL);
 
     if (rsc) {
-        crm_xml_add(xml_node, PCMK_XA_ID, ID(rsc));
+        crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(rsc));
     }
 
     return pcmk_rc_ok;
@@ -1488,7 +1488,7 @@ inject_attr(pcmk__output_t *out, va_list args)
     node_path = xmlGetNodePath(cib_node);
 
     out->list_item(out, NULL, "Injecting attribute %s=%s into %s '%s'",
-                   name, value, node_path, ID(cib_node));
+                   name, value, node_path, pcmk__xe_id(cib_node));
 
     free(node_path);
     return pcmk_rc_ok;
@@ -1514,7 +1514,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_VALUE, value,
                                  PCMK_XA_NODE_PATH, node_path,
-                                 PCMK_XA_CIB_NODE, ID(cib_node),
+                                 PCMK_XA_CIB_NODE, pcmk__xe_id(cib_node),
                                  NULL);
     free(node_path);
     return pcmk_rc_ok;

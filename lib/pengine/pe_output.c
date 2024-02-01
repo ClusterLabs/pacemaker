@@ -2612,7 +2612,9 @@ node_summary(pcmk__output_t *out, va_list args) {
 
     for (node_state = first_named_child(cib_status, PCMK__XE_NODE_STATE);
          node_state != NULL; node_state = crm_next_same_xml(node_state)) {
-        pcmk_node_t *node = pe_find_node_id(scheduler->nodes, ID(node_state));
+
+        pcmk_node_t *node = pe_find_node_id(scheduler->nodes,
+                                            pcmk__xe_id(node_state));
 
         if (!node || !node->details || !node->details->online) {
             continue;

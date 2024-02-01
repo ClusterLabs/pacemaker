@@ -170,7 +170,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
 
-        op_id = ID(match);
+        op_id = pcmk__xe_id(match);
 
         if (rsc_op_xpath == NULL) {
             rsc_op_xpath = g_string_new(RSC_OP_PREFIX);
@@ -264,7 +264,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     for (rsc = pcmk__xml_first_child(xml); rsc != NULL;
          rsc = pcmk__xml_next(rsc)) {
-        crm_trace("Processing %s", ID(rsc));
+        crm_trace("Processing %s", pcmk__xe_id(rsc));
         process_lrm_resource_diff(rsc, node);
     }
 }
@@ -377,7 +377,7 @@ process_node_state_diff(xmlNode *state, xmlNode *change, const char *op,
 {
     xmlNode *lrm = first_named_child(state, PCMK__XE_LRM);
 
-    process_resource_updates(ID(state), lrm, change, op, xpath);
+    process_resource_updates(pcmk__xe_id(state), lrm, change, op, xpath);
 }
 
 static void
@@ -504,7 +504,8 @@ te_update_diff_v2(xmlNode *diff)
             process_node_state_diff(match, change, op, xpath);
 
         } else if (strcmp(name, PCMK__XE_LRM) == 0) {
-            process_resource_updates(ID(match), match, change, op, xpath);
+            process_resource_updates(pcmk__xe_id(match), match, change, op,
+                                     xpath);
 
         } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);

@@ -133,7 +133,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         GString *xpath = pcmk__element_xpath(xml);
 
         crm_trace("%s.%s moved to position %d",
-                  xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
+                  xml->name, pcmk__xe_id(xml),
+                  pcmk__xml_position(xml, pcmk__xf_skip));
 
         if (xpath != NULL) {
             change = create_xml_node(patchset, PCMK_XE_CHANGE);
@@ -440,7 +441,9 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) patch->name), return);
-    CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
+    CRM_CHECK(pcmk__str_eq(pcmk__xe_id(target), pcmk__xe_id(patch),
+                           pcmk__str_none),
+              return);
 
     // Check for PCMK__XA_CRM_DIFF_MARKER in a child
     id = crm_element_value_copy(target, PCMK_XA_ID);
@@ -491,13 +494,13 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     value = crm_element_value(patch, PCMK__XA_CRM_DIFF_MARKER);
     if ((target == NULL) && (value != NULL)
         && (strcmp(value, "added:top") == 0)) {
-        id = ID(patch);
+        id = pcmk__xe_id(patch);
         crm_trace("We are the root of the addition: %s.id=%s", name, id);
         add_node_copy(parent, patch);
         return;
 
     } else if (target == NULL) {
-        id = ID(patch);
+        id = pcmk__xe_id(patch);
         crm_err("Could not locate: %s.id=%s", name, id);
         return;
     }
@@ -507,7 +510,9 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     }
 
     CRM_CHECK(pcmk__xe_is(target, name), return);
-    CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
+    CRM_CHECK(pcmk__str_eq(pcmk__xe_id(target), pcmk__xe_id(patch),
+                           pcmk__str_none),
+              return);
 
     for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
          xIter = xIter->next) {
@@ -759,7 +764,7 @@ first_matching_xml_child(const xmlNode *parent, const char *name,
         if (strcmp((const char *) cIter->name, name) != 0) {
             continue;
         } else if (id) {
-            const char *cid = ID(cIter);
+            const char *cid = pcmk__xe_id(cIter);
 
             if ((cid == NULL) || (strcmp(cid, id) != 0)) {
                 continue;
@@ -1086,7 +1091,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 crm_err("Moved %s.%s to position %d instead of %d (%p)",
-                        match->name, ID(match),
+                        match->name, pcmk__xe_id(match),
                         pcmk__xml_position(match, pcmk__xf_skip),
                         position, match->prev);
                 rc = pcmk_rc_diff_failed;
@@ -1261,7 +1266,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         return subtract_xml_comment(parent, left, right, changed);
     }
 
-    id = ID(left);
+    id = pcmk__xe_id(left);
     name = (const char *) left->name;
     if (right == NULL) {
         xmlNode *deleted = NULL;

@@ -225,7 +225,7 @@ pe_unpack_alerts(const xmlNode *alerts)
 
         xmlNode *recipient;
         int recipients = 0;
-        const char *alert_id = ID(alert);
+        const char *alert_id = pcmk__xe_id(alert);
         const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
 
         /* The schema should enforce this, but to be safe ... */
@@ -274,7 +274,8 @@ pe_unpack_alerts(const xmlNode *alerts)
             }
             alert_list = g_list_prepend(alert_list, recipient_entry);
             crm_debug("Alert %s has recipient %s with value %s and %d envvars",
-                      entry->id, ID(recipient), recipient_entry->recipient,
+                      entry->id, pcmk__xe_id(recipient),
+                      recipient_entry->recipient,
                       (recipient_entry->envvars?
                        g_hash_table_size(recipient_entry->envvars) : 0));
         }
