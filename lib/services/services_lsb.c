@@ -93,6 +93,9 @@
 static inline gboolean
 lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
 {
+    /* @TODO Perhaps update later to use pcmk__xml_needs_escape(). Involves many
+     * extra variables in the caller.
+     */
     if (!*value && pcmk__starts_with(line, prefix)) {
         *value = pcmk__xml_escape(line + strlen(prefix), false);
         return TRUE;

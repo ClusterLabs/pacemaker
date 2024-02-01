@@ -217,6 +217,7 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
+bool pcmk__xml_needs_escape(const char *text, bool escape_quote);
 char *pcmk__xml_escape(const char *text, bool escape_quote);
 
 /*!

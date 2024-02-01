@@ -1351,6 +1351,68 @@ replace_text(char *text, int index, size_t *length, const char *replace)
 
 /*!
  * \internal
+ * \brief Check whether a string has XML special characters that must be escaped
+ *
+ * See \c pcmk__xml_escape() for more details.
+ *
+ * \param[in] text          String to check
+ * \param[in] escape_quote  If \c true, double quotes must be escaped
+ *
+ * \return \c true if \p text has special characters that need to be escaped, or
+ *         \c false otherwise
+ */
+bool
+pcmk__xml_needs_escape(const char *text, bool escape_quote)
+{
+    size_t length = 0;
+
+    if (text == NULL) {
+        return false;
+    }
+    length = strlen(text);
+
+    for (size_t index = 0; index < length; index++) {
+        if (((text[index] & 0x80) != 0) && ((text[index + 1] & 0x80) != 0)) {
+            // @TODO See note in pcmk__xml_escape()
+            index++;
+            continue;
+        }
+
+        switch (text[index]) {
+            case '<':
+                return true;
+            case '>':
+                // Not necessary, but for symmetry with '<'
+                return true;
+            case '&':
+                return true;
+            case '"':
+                if (escape_quote) {
+                    return true;
+                }
+                break;
+            case '\n':
+            case '\t':
+                // Don't escape newline or tab
+                break;
+            default:
+                if ((text[index] < 0x20) || (text[index] >= 0x7f)) {
+                    /* Escape non-printing and Unicode characters (0x7f (delete)
+                     * is ASCII but non-printing)
+                     *
+                     * @TODO Handle multi-byte Unicode characters, and note that
+                     * xmlChar* is unsigned char *.
+                     */
+                    return true;
+                }
+                break;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Replace special characters with their XML escape sequences
  *
  * XML allows the escaping of special characters by replacing them with entity
@@ -1437,7 +1499,8 @@ pcmk__xml_escape(const char *text, bool escape_quote)
                     /* Escape non-printing and Unicode characters (0x7f (delete)
                      * is ASCII but non-printing)
                      *
-                     * @TODO Handle multi-byte Unicode characters
+                     * @TODO Handle multi-byte Unicode characters, and note that
+                     * xmlChar * is unsigned char *.
                      */
                     snprintf(buf, sizeof(buf), "&#%.2x;", copy[index]);
                     copy = replace_text(copy, index, &length, buf);
@@ -1526,7 +1589,13 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
 {
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
-    char *content = pcmk__xml_escape((const char *) data->content, false);
+    const char *content = (const char *) data->content;
+    char *content_esc = NULL;
+
+    if (pcmk__xml_needs_escape(content, false)) {
+        content_esc = pcmk__xml_escape(content, false);
+        content = content_esc;
+    }
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
@@ -1537,7 +1606,7 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     if (pretty) {
         g_string_append_c(buffer, '\n');
     }
-    free(content);
+    free(content_esc);
 }
 
 /*!

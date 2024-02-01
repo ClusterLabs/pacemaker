@@ -125,14 +125,16 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
 
             if ((hidden != NULL) && (p_name[0] != '\0')
                 && (strstr(hidden, p_name) != NULL)) {
-                pcmk__str_update(&p_copy, "*****");
+
+                p_value = "*****";
 
             } else {
                 p_copy = pcmk__xml_escape(p_value, true);
+                p_value = p_copy;
             }
 
             pcmk__g_strcat(buffer, " ", p_name, "=\"",
-                           pcmk__s(p_copy, "<null>"), "\"", NULL);
+                           pcmk__s(p_value, "<null>"), "\"", NULL);
             free(p_copy);
         }
 

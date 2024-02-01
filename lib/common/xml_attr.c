@@ -61,8 +61,9 @@ pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data)
 void
 pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
-    char *p_value = NULL;
-    const char *p_name = NULL;
+    const char *name = NULL;
+    const char *value = NULL;
+    char *value_esc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     if (attr == NULL || attr->children == NULL) {
@@ -74,10 +75,15 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         return;
     }
 
-    p_name = (const char *) attr->name;
-    p_value = pcmk__xml_escape((const char *) attr->children->content, true);
-    pcmk__g_strcat(buffer, " ", p_name, "=\"", pcmk__s(p_value, "<null>"), "\"",
+    name = (const char *) attr->name;
+    value = (const char *) attr->children->content;
+    if (pcmk__xml_needs_escape(value, true)) {
+        value_esc = pcmk__xml_escape(value, true);
+        value = value_esc;
+    }
+
+    pcmk__g_strcat(buffer, " ", name, "=\"", pcmk__s(value, "<null>"), "\"",
                    NULL);
 
-    free(p_value);
+    free(value_esc);
 }
