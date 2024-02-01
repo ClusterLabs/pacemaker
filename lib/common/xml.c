@@ -1371,8 +1371,9 @@ crm_xml_escape(const char *text)
     CRM_ASSERT(copy != NULL);
     for (size_t index = 0; index <= length; index++) {
         if(copy[index] & 0x80 && copy[index+1] & 0x80){
+            // @TODO Is this a valid test for Unicode characters?
             index++;
-            break;
+            continue;
         }
         switch (copy[index]) {
             case 0:
