@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,6 +33,9 @@ extern "C" {
 
 //! \deprecated This defined constant will be removed in a future release
 #define MAX_IPC_DELAY 120
+
+//! \deprecated Use PCMK_VALUE_INFINITY instead
+#define CRM_INFINITY_S PCMK_VALUE_INFINITY
 
 //! \deprecated Use PCMK_ACTION_STONITH instead
 #define CRM_OP_FENCE PCMK_ACTION_STONITH

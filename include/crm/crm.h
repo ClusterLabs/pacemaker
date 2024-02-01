@@ -84,7 +84,6 @@ extern char *crm_system_name;
 
 // How we represent "infinite" scores
 #  define CRM_SCORE_INFINITY    1000000
-#  define CRM_INFINITY_S        PCMK_VALUE_INFINITY
 #  define CRM_PLUS_INFINITY_S   "+" PCMK_VALUE_INFINITY
 #  define CRM_MINUS_INFINITY_S  "-" PCMK_VALUE_INFINITY
 
