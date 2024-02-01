@@ -1298,20 +1298,37 @@ write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
     return (int) nbytes;
 }
 
-// Replace a portion of a dynamically allocated string (reallocating memory)
+/*!
+ * \internal
+ * \brief Replace a character in a dynamically allocated string, reallocating
+ *        memory
+ *
+ * \param[in,out] text     String to replace a character in
+ * \param[in]     index    Index of character to replace with new string
+ * \param[in,out] length   Length of \p text
+ * \param[in]     replace  String to replace character at \p index with (must
+ *                         not be empty)
+ *
+ * \return \p text, with the character at \p index replaced by \p replace
+ */
 static char *
-replace_text(char *text, int start, size_t *length, const char *replace)
+replace_text(char *text, int index, size_t *length, const char *replace)
 {
-    size_t offset = strlen(replace) - 1; // We have space for 1 char already
+    // We have space for 1 char already
+    size_t offset = strlen(replace) - 1;
 
-    *length += offset;
-    text = pcmk__realloc(text, *length);
+    if (offset > 0) {
+        *length += offset;
+        text = pcmk__realloc(text, *length + 1);
 
-    for (size_t lpc = (*length) - 1; lpc > (start + offset); lpc--) {
-        text[lpc] = text[lpc - offset];
+        // Shift characters to the right to make room for the replacement string
+        for (size_t i = *length; i > (index + offset); i--) {
+            text[i] = text[i - offset];
+        }
     }
 
-    memcpy(text + start, replace, offset + 1);
+    // Replace the character at index by the replacement string
+    memcpy(text + index, replace, offset + 1);
     return text;
 }
 
@@ -1327,8 +1344,8 @@ replace_text(char *text, int start, size_t *length, const char *replace)
 char *
 crm_xml_escape(const char *text)
 {
-    size_t length;
-    char *copy;
+    size_t length = 0;
+    char *copy = NULL;
 
     /*
      * When xmlCtxtReadDoc() parses &lt; and friends in a
@@ -1349,16 +1366,17 @@ crm_xml_escape(const char *text)
         return NULL;
     }
 
-    length = 1 + strlen(text);
+    length = strlen(text);
     copy = strdup(text);
     CRM_ASSERT(copy != NULL);
-    for (size_t index = 0; index < length; index++) {
+    for (size_t index = 0; index <= length; index++) {
         if(copy[index] & 0x80 && copy[index+1] & 0x80){
             index++;
             break;
         }
         switch (copy[index]) {
             case 0:
+                // Sanity only; loop should stop at the last non-null byte
                 break;
             case '<':
                 copy = replace_text(copy, index, &length, "&lt;");
