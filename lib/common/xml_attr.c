@@ -75,7 +75,7 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
     }
 
     p_name = (const char *) attr->name;
-    p_value = crm_xml_escape((const char *)attr->children->content);
+    p_value = pcmk__xml_escape((const char *) attr->children->content, true);
     pcmk__g_strcat(buffer, " ", p_name, "=\"", pcmk__s(p_value, "<null>"), "\"",
                    NULL);
 

@@ -80,14 +80,6 @@
 #define SHORT_DESC                      "# Short-Description:"
 #define DESCRIPTION                     "# Description:"
 
-#define lsb_meta_helper_free_value(m)           \
-    do {                                        \
-        if ((m) != NULL) {                      \
-            xmlFree(m);                         \
-            (m) = NULL;                         \
-        }                                       \
-    } while(0)
-
 /*!
  * \internal
  * \brief Grab an LSB header value
@@ -102,7 +94,7 @@ static inline gboolean
 lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
 {
     if (!*value && pcmk__starts_with(line, prefix)) {
-        *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
+        *value = pcmk__xml_escape(line + strlen(prefix), false);
         return TRUE;
     }
     return FALSE;
@@ -205,9 +197,7 @@ services__get_lsb_metadata(const char *type, char **output)
             }
 
             // Make long description safe to use in XML
-            long_desc =
-                (char *) xmlEncodeEntitiesReentrant(NULL,
-                                                    (pcmkXmlStr) desc->str);
+            long_desc = pcmk__xml_escape(desc->str, false);
             g_string_free(desc, TRUE);
 
             if (processed_line) {
@@ -237,15 +227,15 @@ services__get_lsb_metadata(const char *type, char **output)
                                 pcmk__s(default_start, ""),
                                 pcmk__s(default_stop, ""));
 
-    lsb_meta_helper_free_value(long_desc);
-    lsb_meta_helper_free_value(short_desc);
-    lsb_meta_helper_free_value(provides);
-    lsb_meta_helper_free_value(required_start);
-    lsb_meta_helper_free_value(required_stop);
-    lsb_meta_helper_free_value(should_start);
-    lsb_meta_helper_free_value(should_stop);
-    lsb_meta_helper_free_value(default_start);
-    lsb_meta_helper_free_value(default_stop);
+    free(long_desc);
+    free(short_desc);
+    free(provides);
+    free(required_start);
+    free(required_stop);
+    free(should_start);
+    free(should_stop);
+    free(default_start);
+    free(default_stop);
     return pcmk_ok;
 }
 

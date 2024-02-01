@@ -957,7 +957,7 @@ static void
 add_desc(GString *s, const char *tag, const char *desc, const char *values,
          const char *spaces)
 {
-    char *escaped_en = crm_xml_escape(desc);
+    char *escaped_en = pcmk__xml_escape(desc, false);
 
     if (spaces != NULL) {
         g_string_append(s, spaces);
@@ -983,7 +983,7 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     {
         static const char *locale = NULL;
 
-        char *localized = crm_xml_escape(_(desc));
+        char *localized = pcmk__xml_escape(_(desc), false);
 
         if (strcmp(escaped_en, localized) != 0) {
             if (locale == NULL) {

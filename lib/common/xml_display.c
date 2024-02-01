@@ -128,7 +128,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                 pcmk__str_update(&p_copy, "*****");
 
             } else {
-                p_copy = crm_xml_escape(p_value);
+                p_copy = pcmk__xml_escape(p_value, true);
             }
 
             pcmk__g_strcat(buffer, " ", p_name, "=\"",

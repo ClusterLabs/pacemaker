@@ -217,6 +217,8 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
+char *pcmk__xml_escape(const char *text, bool escape_quote);
+
 /*!
  * \internal
  * \brief Get the root directory to scan XML artefacts of given kind for

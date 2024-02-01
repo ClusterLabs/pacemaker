@@ -1333,6 +1333,108 @@ replace_text(char *text, int index, size_t *length, const char *replace)
 }
 
 /*!
+ * \internal
+ * \brief Replace special characters with their XML escape sequences
+ *
+ * XML allows the escaping of special characters by replacing them with entity
+ * references (for example, <tt>"&quot;"</tt>) or character references (for
+ * example, <tt>"&#13;"</tt>).
+ *
+ * The special characters <tt>'<'</tt> and <tt>'&'</tt> are not allowed in their
+ * literal forms in XML character data. Character data is non-markup text (for
+ * example, the content of a text node).
+ *
+ * Additionally, if an attribute value is delimited by single quotes, then
+ * single quotes must be escaped within the value. Similarly, if an attribute
+ * value is delimited by double quotes, then double quotes must be escaped
+ * within the value.
+ *
+ * For more details, see the "Character Data and Markup" section of the XML
+ * spec, currently section 2.4:
+ * https://www.w3.org/TR/xml/#dt-markup
+ *
+ * Pacemaker always delimits attribute values with double quotes, so this
+ * function doesn't escape single quotes.
+ *
+ * \param[in] text          Text to escape
+ * \param[in] escape_quote  If \c true, escape double quotes (should be enabled
+ *                          for attribute values)
+ *
+ * \return Newly allocated string equivalent to \p text but with special
+ *         characters replaced with XML escape sequences (or \c NULL if \p text
+ *         is \c NULL). If \p text is not \c NULL, the return value is
+ *         guaranteed not to be \c NULL.
+ *
+ * \note There are libxml functions that purport to do this:
+ *       \c xmlEncodeEntitiesReentrant() and \c xmlEncodeSpecialChars().
+ *       However, their escaping is incomplete. See:
+ *       https://discourse.gnome.org/t/intended-use-of-xmlencodeentitiesreentrant-vs-xmlencodespecialchars/19252
+ */
+char *
+pcmk__xml_escape(const char *text, bool escape_quote)
+{
+    size_t length = 0;
+    char *copy = NULL;
+    char buf[32] = { '\0', };
+
+    if (text == NULL) {
+        return NULL;
+    }
+    length = strlen(text);
+    pcmk__str_update(&copy, text);
+
+    for (size_t index = 0; index < length; index++) {
+        if (((copy[index] & 0x80) != 0) && ((copy[index + 1] & 0x80) != 0)) {
+            /* @TODO Is this a valid test for multi-byte Unicode characters?
+             * Probably better to escape them anyway.
+             */
+            index++;
+            continue;
+        }
+
+        switch (copy[index]) {
+            case 0:
+                // Sanity only; loop should stop at the last non-null byte
+                break;
+            case '<':
+                copy = replace_text(copy, index, &length, "&lt;");
+                break;
+            case '>':
+                // Not necessary, but for symmetry with '<'
+                copy = replace_text(copy, index, &length, "&gt;");
+                break;
+            case '&':
+                copy = replace_text(copy, index, &length, "&amp;");
+                break;
+            case '"':
+                if (escape_quote) {
+                    copy = replace_text(copy, index, &length, "&quot;");
+                }
+                break;
+            case '\n':
+            case '\t':
+                // Don't escape newlines and tabs
+                break;
+            default:
+                if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
+                    /* Escape non-printing and Unicode characters (0x7f (delete)
+                     * is ASCII but non-printing)
+                     *
+                     * @TODO Handle multi-byte Unicode characters
+                     */
+                    snprintf(buf, sizeof(buf), "&#%.2x;", copy[index]);
+                    copy = replace_text(copy, index, &length, buf);
+
+                    // Jump to semicolon; loop counter will skip one more char
+                    index += strlen(buf) - 1;
+                }
+                break;
+        }
+    }
+    return copy;
+}
+
+/*!
  * \brief Replace special characters with their XML escape sequences
  *
  * \param[in] text  Text to escape

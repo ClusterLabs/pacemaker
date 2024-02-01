@@ -203,8 +203,8 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
     }
 
     if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
-        char *xml_meta_longdesc = NULL;
-        char *xml_meta_shortdesc = NULL;
+        char *meta_longdesc_escaped = NULL;
+        char *meta_shortdesc_escaped = NULL;
 
         char *meta_param = NULL;
         char *meta_longdesc = NULL;
@@ -241,25 +241,22 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             return -EINVAL;
         }
 
-        xml_meta_longdesc =
-            (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
-        xml_meta_shortdesc =
-            (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
+        meta_longdesc_escaped = pcmk__xml_escape(meta_longdesc, false);
+        meta_shortdesc_escaped = pcmk__xml_escape(meta_shortdesc, false);
 
         /* @TODO This needs a string that's parsable by crm_get_msec(). In
          * general, pcmk__readable_interval() doesn't provide that. It works
          * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
          */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
-        buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
-                                   xml_meta_shortdesc, meta_param,
+        buffer = crm_strdup_printf(META_TEMPLATE, agent, meta_longdesc_escaped,
+                                   meta_shortdesc_escaped, meta_param,
                                    timeout_str, timeout_str, timeout_str);
 
-        xmlFree(xml_meta_longdesc);
-        xmlFree(xml_meta_shortdesc);
-
-        free(meta_shortdesc);
+        free(meta_longdesc_escaped);
+        free(meta_shortdesc_escaped);
         free(meta_longdesc);
+        free(meta_shortdesc);
         free(meta_param);
     }
     if (output) {
