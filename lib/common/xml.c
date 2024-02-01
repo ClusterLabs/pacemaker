@@ -667,15 +667,32 @@ create_xml_node(xmlNode * parent, const char *name)
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Set a given string as an XML node's content
+ *
+ * \param[in,out] node     Node whose content to set
+ * \param[in]     content  String to set as the content
+ *
+ * \note \c xmlNodeSetContent() does not escape special characters.
+ */
+void
+pcmk__xe_set_content(xmlNode *node, const char *content)
+{
+    if (node != NULL) {
+        char *escaped = pcmk__xml_escape(content, false);
+
+        xmlNodeSetContent(node, (pcmkXmlStr) escaped);
+        free(escaped);
+    }
+}
+
 xmlNode *
 pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
 {
     xmlNode *node = create_xml_node(parent, name);
 
-    if (node != NULL) {
-        xmlNodeSetContent(node, (pcmkXmlStr) content);
-    }
-
+    pcmk__xe_set_content(node, content);
     return node;
 }
 

@@ -516,7 +516,7 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
-    xmlNodeSetContent(node, (pcmkXmlStr) content);
+    pcmk__xe_set_content(node, content);
     return node;
 }
 

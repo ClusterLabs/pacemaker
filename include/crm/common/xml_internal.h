@@ -348,6 +348,8 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+void pcmk__xe_set_content(xmlNode *node, const char *content);
+
 /*!
  * \internal
  * \brief Like pcmk__xe_set_props, but takes a va_list instead of
