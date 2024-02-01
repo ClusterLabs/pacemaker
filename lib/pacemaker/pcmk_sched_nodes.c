@@ -41,7 +41,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
     }
 
     // @TODO Go through all callers to see which should set consider_guest
-    if (consider_guest && pe__is_guest_node(node)) {
+    if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->fns->location(guest, NULL, FALSE) == NULL) {

@@ -45,6 +45,22 @@ pcmk__is_remote_node(const pcmk_node_t *node)
                || (node->details->remote_rsc->container == NULL));
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is a guest or bundle node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a guest or bundle node, otherwise false
+ */
+static inline bool
+pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
+{
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
+           && (node->details->remote_rsc != NULL)
+           && (node->details->remote_rsc->container != NULL);
+}
+
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 #    include <gnutls/gnutls.h>
 

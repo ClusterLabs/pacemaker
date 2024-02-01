@@ -797,7 +797,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
         replica->node->details->remote_rsc = replica->remote;
 
-        // Ensure pe__is_guest_node() functions correctly immediately
+        // Ensure pcmk__is_guest_or_bundle_node() functions correctly
         replica->remote->container = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the

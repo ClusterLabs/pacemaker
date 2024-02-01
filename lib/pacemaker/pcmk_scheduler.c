@@ -566,7 +566,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
          */
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             if (node->details->remote_requires_reset && have_managed
                 && pe_can_fence(scheduler, node)) {
                 pcmk__fence_guest(node);

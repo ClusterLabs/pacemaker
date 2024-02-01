@@ -129,7 +129,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
      * because guest node "fencing" is actually just a resource stop.
      */
     if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)
-        || pe__is_guest_node(target)) {
+        || pcmk__is_guest_or_bundle_node(target)) {
 
         order_implicit = true;
     }

@@ -557,7 +557,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
                   "can run on DC instead of %s",
                   action->uuid, action->id, pcmk__node_name(action->node));
 
-    } else if (pe__is_guest_node(action->node)
+    } else if (pcmk__is_guest_or_bundle_node(action->node)
                && !action->node->details->remote_requires_reset) {
         crm_trace("Action %s (%d) should be dumped: "
                   "assuming will be runnable on guest %s",

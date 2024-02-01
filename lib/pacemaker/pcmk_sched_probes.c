@@ -176,7 +176,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
             reason = "Pacemaker Remote nodes cannot run stonith agents";
             goto no_probe;
 
-        } else if (pe__is_guest_node(node)
+        } else if (pcmk__is_guest_or_bundle_node(node)
                    && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
@@ -232,7 +232,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
     }
 
-    if (pe__is_guest_node(node)) {
+    if (pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->role == pcmk_role_stopped) {

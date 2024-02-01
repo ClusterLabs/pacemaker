@@ -19,7 +19,6 @@ extern "C" {
 #include <crm/pengine/status.h>
 
 bool xml_contains_remote_node(xmlNode *xml);
-bool pe__is_guest_node(const pcmk_node_t *node);
 bool pe__is_guest_or_remote_node(const pcmk_node_t *node);
 bool pe__is_bundle_node(const pcmk_node_t *node);
 

@@ -141,7 +141,7 @@ get_node_names(const GList *list, GString **all_node_names,
 
         // Add to host node name list if appropriate
         if (host_node_names != NULL) {
-            if (pe__is_guest_node(node)
+            if (pcmk__is_guest_or_bundle_node(node)
                 && (node->details->remote_rsc->container->running_on != NULL)) {
                 node = pcmk__current_node(node->details->remote_rsc->container);
                 if (node->details->uname == NULL) {

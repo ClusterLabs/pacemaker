@@ -688,7 +688,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     const pcmk_node_t *host = NULL;
     enum action_tasks task;
 
-    if (!pe__is_guest_node(guest)) {
+    if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
 

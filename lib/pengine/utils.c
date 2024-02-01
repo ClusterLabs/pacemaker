@@ -35,7 +35,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 bool
 pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
 {
-    if (pe__is_guest_node(node)) {
+    if (pcmk__is_guest_or_bundle_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
          * do that if the container's host is either online or fenceable.
          */

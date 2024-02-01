@@ -115,7 +115,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
     CRM_CHECK(node, return);
 
     /* A guest node is fenced by marking its container as failed */
-    if (pe__is_guest_node(node)) {
+    if (pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *rsc = node->details->remote_rsc->container;
 
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
@@ -1298,7 +1298,7 @@ unpack_node_history(const xmlNode *status, bool fence,
         if (fence) {
             // We're processing all remaining nodes
 
-        } else if (pe__is_guest_node(this_node)) {
+        } else if (pcmk__is_guest_or_bundle_node(this_node)) {
             /* We can unpack a guest node's history only after we've unpacked
              * other resource history to the point that we know that the node's
              * connection and containing resource are both up.
@@ -2145,7 +2145,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
      */
     if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)
         && (!node->details->online || node->details->unclean)
-        && !pe__is_guest_node(node)
+        && !pcmk__is_guest_or_bundle_node(node)
         && !pe__is_universal_clone(parent, scheduler)) {
 
         rsc = NULL;
@@ -2296,7 +2296,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
          * operation history in the CIB will be cleared, freeing the affected
          * resource to run again once we are sure we know its state.
          */
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             should_fence = TRUE;
 

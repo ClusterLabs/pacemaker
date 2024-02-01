@@ -14,14 +14,6 @@
 #include <glib.h>
 
 bool
-pe__is_guest_node(const pcmk_node_t *node)
-{
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
-           && (node->details->remote_rsc != NULL)
-           && (node->details->remote_rsc->container != NULL);
-}
-
-bool
 pe__is_guest_or_remote_node(const pcmk_node_t *node)
 {
     return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
@@ -30,7 +22,7 @@ pe__is_guest_or_remote_node(const pcmk_node_t *node)
 bool
 pe__is_bundle_node(const pcmk_node_t *node)
 {
-    return pe__is_guest_node(node)
+    return pcmk__is_guest_or_bundle_node(node)
            && pcmk__is_bundled(node->details->remote_rsc);
 }
 

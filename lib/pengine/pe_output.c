@@ -562,7 +562,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
     /* Host is displayed only if this is a guest node and detail is requested */
-    if (print_detail && pe__is_guest_node(node)) {
+    if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
         const pcmk_node_t *host_node = pcmk__current_node(container);
 
@@ -1857,7 +1857,7 @@ node_text(pcmk__output_t *out, va_list args) {
         int health = pe__node_health(node);
 
         // Create a summary line with node type, name, and status
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             g_string_append(str, "GuestNode");
         } else if (pcmk__is_remote_node(node)) {
             g_string_append(str, "RemoteNode");
@@ -2019,7 +2019,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_RESOURCES_RUNNING, resources_running,
                                  PCMK_XA_TYPE, node_type);
 
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
                         node->details->remote_rsc->container->id);
@@ -2519,7 +2519,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         } else if (node->details->online) {
             // Display online node in a list
-            if (pe__is_guest_node(node)) {
+            if (pcmk__is_guest_or_bundle_node(node)) {
                 pcmk__add_word(&online_guest_nodes, 1024, node_name);
 
             } else if (pcmk__is_remote_node(node)) {
@@ -2536,7 +2536,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
             if (pcmk__is_remote_node(node)) {
                 pcmk__add_word(&offline_remote_nodes, 1024, node_name);
 
-            } else if (pe__is_guest_node(node)) {
+            } else if (pcmk__is_guest_or_bundle_node(node)) {
                 /* ignore offline guest nodes */
 
             } else {
