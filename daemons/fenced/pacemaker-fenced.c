@@ -370,15 +370,18 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
  * \internal
  * \brief Send notifications for a configuration change to subscribed clients
  *
- * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD,
- *                    STONITH_OP_DEVICE_DEL, STONITH_OP_LEVEL_ADD, or
- *                    STONITH_OP_LEVEL_DEL)
+ * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD,
+ *                    \c STONITH_OP_DEVICE_DEL, \c STONITH_OP_LEVEL_ADD, or
+ *                    \c STONITH_OP_LEVEL_DEL)
  * \param[in] result  Operation result
- * \param[in] desc    Description of what changed
+ * \param[in] desc    Description of what changed (either device ID or string
+ *                    representation of level
+ *                    (<tt><target>[<level_index>]</tt>))
  */
-static void
-send_config_notification(const char *op, const pcmk__action_result_t *result,
-                         const char *desc)
+void
+fenced_send_config_notification(const char *op,
+                                const pcmk__action_result_t *result,
+                                const char *desc)
 {
     xmlNode *notify_data = create_xml_node(NULL, op);
 
@@ -388,40 +391,6 @@ send_config_notification(const char *op, const pcmk__action_result_t *result,
 
     fenced_send_notification(op, result, notify_data);
     free_xml(notify_data);
-}
-
-/*!
- * \internal
- * \brief Send notifications for a device change to subscribed clients
- *
- * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD or
- *                    STONITH_OP_DEVICE_DEL)
- * \param[in] result  Operation result
- * \param[in] desc    ID of device that changed
- */
-void
-fenced_send_device_notification(const char *op,
-                                const pcmk__action_result_t *result,
-                                const char *desc)
-{
-    send_config_notification(op, result, desc);
-}
-
-/*!
- * \internal
- * \brief Send notifications for a topology level change to subscribed clients
- *
- * \param[in] op      Notification type (STONITH_OP_LEVEL_ADD or
- *                    STONITH_OP_LEVEL_DEL)
- * \param[in] result  Operation result
- * \param[in] desc    String representation of level (<target>[<level_index>])
- */
-void
-fenced_send_level_notification(const char *op,
-                               const pcmk__action_result_t *result,
-                               const char *desc)
-{
-    send_config_notification(op, result, desc);
 }
 
 /*!

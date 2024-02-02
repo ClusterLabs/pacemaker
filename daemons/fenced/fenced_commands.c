@@ -3461,7 +3461,7 @@ handle_device_add_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must register device via CIB");
     }
-    fenced_send_device_notification(op, &request->result,
+    fenced_send_config_notification(op, &request->result,
                                     (dev == NULL)? NULL : pcmk__xe_id(dev));
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
@@ -3483,7 +3483,7 @@ handle_device_delete_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete device via CIB");
     }
-    fenced_send_device_notification(op, &request->result, device_id);
+    fenced_send_config_notification(op, &request->result, device_id);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3502,7 +3502,7 @@ handle_level_add_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must add level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, desc);
+    fenced_send_config_notification(op, &request->result, desc);
     free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
@@ -3522,7 +3522,7 @@ handle_level_delete_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, desc);
+    fenced_send_config_notification(op, &request->result, desc);
     free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }

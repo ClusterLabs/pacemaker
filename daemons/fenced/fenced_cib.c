@@ -76,7 +76,7 @@ add_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     fenced_register_level(match, &desc, &result);
-    fenced_send_level_notification(STONITH_OP_LEVEL_ADD, &result, desc);
+    fenced_send_config_notification(STONITH_OP_LEVEL_ADD, &result, desc);
     pcmk__reset_result(&result);
     free(desc);
 }
@@ -93,7 +93,7 @@ topology_remove_helper(const char *node, int level)
     crm_xml_add(data, PCMK_XA_TARGET, node);
 
     fenced_unregister_level(data, &desc, &result);
-    fenced_send_level_notification(STONITH_OP_LEVEL_DEL, &result, desc);
+    fenced_send_config_notification(STONITH_OP_LEVEL_DEL, &result, desc);
     pcmk__reset_result(&result);
     free_xml(data);
     free(desc);
