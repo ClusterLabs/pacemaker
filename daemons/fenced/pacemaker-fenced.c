@@ -375,18 +375,16 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
  *                    STONITH_OP_LEVEL_DEL)
  * \param[in] result  Operation result
  * \param[in] desc    Description of what changed
- * \param[in] active  Current number of devices or topologies in use
  */
 static void
 send_config_notification(const char *op, const pcmk__action_result_t *result,
-                         const char *desc, int active)
+                         const char *desc)
 {
     xmlNode *notify_data = create_xml_node(NULL, op);
 
     CRM_CHECK(notify_data != NULL, return);
 
     crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
-    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, active);
 
     fenced_send_notification(op, result, notify_data);
     free_xml(notify_data);
@@ -406,7 +404,7 @@ fenced_send_device_notification(const char *op,
                                 const pcmk__action_result_t *result,
                                 const char *desc)
 {
-    send_config_notification(op, result, desc, g_hash_table_size(device_list));
+    send_config_notification(op, result, desc);
 }
 
 /*!
@@ -423,7 +421,7 @@ fenced_send_level_notification(const char *op,
                                const pcmk__action_result_t *result,
                                const char *desc)
 {
-    send_config_notification(op, result, desc, g_hash_table_size(topology));
+    send_config_notification(op, result, desc);
 }
 
 /*!

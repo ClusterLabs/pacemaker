@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_ACTIVE        "st_active"
 #  define F_STONITH_DIFFERENTIAL  "st_differential"
 
 #  define F_STONITH_DEVICE        "st_device_id"
