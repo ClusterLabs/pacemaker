@@ -43,6 +43,7 @@ extern "C" {
 #define PCMK__XE_RSC_OP                 "rsc_op"
 #define PCMK__XE_SHUTDOWN               "shutdown"
 #define PCMK__XE_SPAN                   "span"
+#define PCMK__XE_ST_HISTORY             "st_history"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"

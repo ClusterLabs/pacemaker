@@ -310,7 +310,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     if (stonith_remote_op_list) {
             char *id = NULL;
 
-            history = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
+            history = create_xml_node(NULL, PCMK__XE_ST_HISTORY);
 
             g_hash_table_iter_init(&iter, stonith_remote_op_list);
             while (g_hash_table_iter_next(&iter, (void **)&id, (void **)&op)) {
@@ -506,8 +506,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         NULL);
         } else if (remote_peer &&
                    !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
-            xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
-                                                msg, LOG_NEVER);
+            xmlNode *history = get_xpath_object("//" PCMK__XE_ST_HISTORY, msg,
+                                                LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing
