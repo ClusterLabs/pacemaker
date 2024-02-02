@@ -253,7 +253,7 @@ stonith_xml_history_to_list(const xmlNode *history)
         op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
         op->client_name = crm_element_value_copy(xml_op,
                                                  PCMK__XA_ST_CLIENTNAME);
-        crm_element_value_ll(xml_op, F_STONITH_DATE, &completed);
+        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE, &completed);
         op->completed = (time_t) completed;
         crm_element_value_ll(xml_op, F_STONITH_DATE_NSEC, &completed_nsec);
         op->completed_nsec = completed_nsec;
@@ -371,7 +371,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_xml_add(entry, PCMK__XA_ST_ORIGIN, op->originator);
                 crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
                 crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
-                crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
+                crm_xml_add_ll(entry, PCMK__XA_ST_DATE, op->completed);
                 crm_xml_add_ll(entry, F_STONITH_DATE_NSEC, op->completed_nsec);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
                 stonith__xe_set_result(entry, &op->result);

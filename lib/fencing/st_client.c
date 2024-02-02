@@ -739,7 +739,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
             kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
-            crm_element_value_ll(op, F_STONITH_DATE, &completed);
+            crm_element_value_ll(op, PCMK__XA_ST_DATE, &completed);
             kvp->completed = (time_t) completed;
             crm_element_value_ll(op, F_STONITH_DATE_NSEC, &completed_nsec);
             kvp->completed_nsec = completed_nsec;
