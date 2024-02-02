@@ -3290,7 +3290,7 @@ handle_notify_request(pcmk__request_t *request)
         pcmk__set_client_flags(request->ipc_client, get_stonith_flag(flag_name));
     }
 
-    flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_DEACTIVATE);
+    flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_DEACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Disabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));

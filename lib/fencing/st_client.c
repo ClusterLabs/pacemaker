@@ -1200,7 +1200,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         if (enabled) {
             crm_xml_add(notify_msg, PCMK__XA_ST_NOTIFY_ACTIVATE, callback);
         } else {
-            crm_xml_add(notify_msg, F_STONITH_NOTIFY_DEACTIVATE, callback);
+            crm_xml_add(notify_msg, PCMK__XA_ST_NOTIFY_DEACTIVATE, callback);
         }
 
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
