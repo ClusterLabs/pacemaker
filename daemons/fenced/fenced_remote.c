@@ -2129,7 +2129,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     /* If a reboot is remapped to off+on, it's possible that a node is allowed
      * to perform one action but not another.
      */
-    if (pcmk__xe_attr_is_true(xml, F_STONITH_ACTION_DISALLOWED)) {
+    if (pcmk__xe_attr_is_true(xml, PCMK__XA_ST_ACTION_DISALLOWED)) {
         props->disallowed[phase] = TRUE;
         crm_trace("Peer %s is disallowed from executing %s for device %s",
                   peer, action, device);

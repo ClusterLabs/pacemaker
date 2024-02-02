@@ -102,8 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! Host in query result is not allowed to run this action */
-#  define F_STONITH_ACTION_DISALLOWED     "st_action_disallowed"
 /*! Has this device been verified using a monitor type
  *  operation (monitor, list, status) */
 #  define F_STONITH_DEVICE_VERIFIED   "st_monitor_verified"

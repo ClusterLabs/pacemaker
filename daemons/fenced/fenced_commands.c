@@ -2374,7 +2374,7 @@ add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
     if (!localhost_is_eligible(device, action, target, allow_suicide)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
-        pcmk__xe_set_bool_attr(xml, F_STONITH_ACTION_DISALLOWED, true);
+        pcmk__xe_set_bool_attr(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
     }
 }
 
