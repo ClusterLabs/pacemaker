@@ -210,6 +210,10 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_SHUTDOWN_COMPLETE       "shutdown_complete"
 #define PCMK__VALUE_SHUTTING_DOWN           "shutting_down"
 #define PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE  "st-async-timeout-value"
+
+// @TODO Create separate constant for when this is used in operation context
+#define PCMK__VALUE_ST_NOTIFY               "st_notify"
+
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_STONITH_NG              "stonith-ng"
 #define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"

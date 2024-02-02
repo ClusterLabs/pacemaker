@@ -282,7 +282,7 @@ stonith_connection_destroy(gpointer user_data)
 
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
-    crm_xml_add(blob.xml, PCMK__XA_T, T_STONITH_NOTIFY);
+    crm_xml_add(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     crm_xml_add(blob.xml, PCMK__XA_SUBT, T_STONITH_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
@@ -1067,7 +1067,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     if (pcmk__str_eq(type, PCMK__VALUE_STONITH_NG, pcmk__str_none)) {
         invoke_registered_callbacks(st, blob.xml, 0);
 
-    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_none)) {
+    } else if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY, pcmk__str_none)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
 
     } else if (pcmk__str_eq(type, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE,

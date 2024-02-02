@@ -351,7 +351,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     CRM_LOG_ASSERT(type != NULL);
 
-    crm_xml_add(update_msg, PCMK__XA_T, T_STONITH_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, type);
     crm_xml_add(update_msg, PCMK__XA_ST_OP, type);
     stonith__xe_set_result(update_msg, result);
