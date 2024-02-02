@@ -2159,7 +2159,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     g_hash_table_insert(peer->devices, strdup(device), props);
 
     /* Peers with verified (monitored) access will be preferred */
-    crm_element_value_int(xml, F_STONITH_DEVICE_VERIFIED, &verified);
+    crm_element_value_int(xml, PCMK__XA_ST_MONITOR_VERIFIED, &verified);
     if (verified) {
         crm_trace("Peer %s has confirmed a verified device %s",
                   peer->host, device);

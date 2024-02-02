@@ -2463,7 +2463,10 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, PCMK_XA_ID, device->id);
         crm_xml_add(dev, PCMK__XA_NAMESPACE, device->namespace);
         crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
-        crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
+
+        // Has had successful monitor, list, or status on this node
+        crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED, device->verified);
+
         crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a

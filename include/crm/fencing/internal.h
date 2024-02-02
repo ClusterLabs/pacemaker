@@ -102,9 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! Has this device been verified using a monitor type
- *  operation (monitor, list, status) */
-#  define F_STONITH_DEVICE_VERIFIED   "st_monitor_verified"
 /*! device is required for this action */
 #  define F_STONITH_DEVICE_REQUIRED   "st_required"
 /*! number of available devices in query result */

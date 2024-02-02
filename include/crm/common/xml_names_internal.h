@@ -178,6 +178,7 @@ extern "C" {
 #define PCMK__XA_ST_DELAY               "st_delay"
 #define PCMK__XA_ST_DELAY_BASE          "st_delay_base"
 #define PCMK__XA_ST_DELAY_MAX           "st_delay_max"
+#define PCMK__XA_ST_MONITOR_VERIFIED    "st_monitor_verified"
 #define PCMK__XA_ST_OP                  "st_op"
 #define PCMK__XA_ST_OUTPUT              "st_output"
 #define PCMK__XA_ST_RC                  "st_rc"
