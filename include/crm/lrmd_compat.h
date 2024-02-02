@@ -29,6 +29,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_CLIENTNAME "lrmd_clientname"
 
+//! \deprecated Do not use
+#define F_LRMD_CALLBACK_TOKEN "lrmd_async_id"
+
 #ifdef __cplusplus
 }
 #endif

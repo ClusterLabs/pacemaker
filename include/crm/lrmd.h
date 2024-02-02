@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -72,7 +72,6 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
 #define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
 #define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
-#define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"
 #define F_LRMD_CALLID           "lrmd_callid"
 #define F_LRMD_CALLOPTS         "lrmd_callopt"
 #define F_LRMD_CALLDATA         "lrmd_calldata"
