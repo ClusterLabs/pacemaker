@@ -2667,7 +2667,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->target);
         crm_xml_add(reply, PCMK__XA_SUBT, "broadcast");
-        crm_xml_add(reply, PCMK__XA_ST_OP, T_STONITH_NOTIFY);
+        crm_xml_add(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {
         // Reply only to the originator
@@ -3277,7 +3277,7 @@ handle_query_request(pcmk__request_t *request)
     return NULL;
 }
 
-// T_STONITH_NOTIFY
+// STONITH_OP_NOTIFY
 static xmlNode *
 handle_notify_request(pcmk__request_t *request)
 {
@@ -3563,7 +3563,7 @@ fenced_register_handlers(void)
         { STONITH_OP_EXEC, handle_agent_request },
         { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
         { STONITH_OP_QUERY, handle_query_request },
-        { T_STONITH_NOTIFY, handle_notify_request },
+        { STONITH_OP_NOTIFY, handle_notify_request },
         { STONITH_OP_RELAY, handle_relay_request },
         { STONITH_OP_FENCE, handle_fence_request },
         { STONITH_OP_FENCE_HISTORY, handle_history_request },
@@ -3632,8 +3632,11 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
-    } else if (pcmk__str_any_of(op, T_STONITH_NOTIFY, STONITH_OP_FENCE, NULL)) {
+
+    } else if (pcmk__str_any_of(op, STONITH_OP_NOTIFY, STONITH_OP_FENCE,
+                                NULL)) {
         fenced_process_fencing_reply(request);
+
     } else {
         crm_err("Ignoring unknown %s reply from %s %s",
                 pcmk__s(op, "untyped"), ((client == NULL)? "peer" : "client"),
