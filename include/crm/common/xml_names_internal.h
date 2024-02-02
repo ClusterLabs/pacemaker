@@ -43,6 +43,7 @@ extern "C" {
 #define PCMK__XE_RSC_OP                 "rsc_op"
 #define PCMK__XE_SHUTDOWN               "shutdown"
 #define PCMK__XE_SPAN                   "span"
+#define PCMK__XE_ST_ASYNC_TIMEOUT_VALUE "st-async-timeout-value"
 #define PCMK__XE_ST_DEVICE_ACTION       "st_device_action"
 #define PCMK__XE_ST_DEVICE_ID           "st_device_id"
 #define PCMK__XE_ST_HISTORY             "st_history"
