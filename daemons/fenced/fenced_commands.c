@@ -1956,7 +1956,7 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
 static void
 execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 {
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, msg, LOG_ERR);
     xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
     const char *id = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
     const char *action = crm_element_value(op, F_STONITH_ACTION);
@@ -2458,7 +2458,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         available_devices++;
 
-        dev = create_xml_node(list, F_STONITH_DEVICE);
+        dev = create_xml_node(list, PCMK__XE_ST_DEVICE_ID);
         crm_xml_add(dev, PCMK_XA_ID, device->id);
         crm_xml_add(dev, PCMK__XA_NAMESPACE, device->namespace);
         crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
@@ -3446,7 +3446,7 @@ static xmlNode *
 handle_device_add_request(pcmk__request_t *request)
 {
     const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
+    xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, request->xml,
                                     LOG_ERR);
 
     if (is_privileged(request->ipc_client, op)) {
@@ -3470,7 +3470,7 @@ handle_device_add_request(pcmk__request_t *request)
 static xmlNode *
 handle_device_delete_request(pcmk__request_t *request)
 {
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
+    xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, request->xml,
                                     LOG_ERR);
     const char *device_id = crm_element_value(dev, PCMK_XA_ID);
     const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);

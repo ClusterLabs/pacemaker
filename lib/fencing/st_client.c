@@ -295,7 +295,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
                                const stonith_key_value_t *params,
                                const char *rsc_provides)
 {
-    xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
+    xmlNode *data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
     xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
 
 #if HAVE_STONITH_STONITH_H
@@ -351,7 +351,7 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
@@ -553,7 +553,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
     CRM_CHECK(devices != NULL, return -EINVAL);
 
-    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     crm_xml_add(data, F_STONITH_ACTION, PCMK_ACTION_OFF);
@@ -610,7 +610,7 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_ST_DEVICE_ID, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
