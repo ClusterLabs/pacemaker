@@ -743,7 +743,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->completed = (time_t) completed;
             crm_element_value_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
             kvp->completed_nsec = completed_nsec;
-            crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
+            crm_element_value_int(op, PCMK__XA_ST_STATE, &kvp->state);
             kvp->exit_reason = crm_element_value_copy(op, PCMK_XA_EXIT_REASON);
 
             if (last) {
