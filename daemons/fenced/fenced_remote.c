@@ -2265,9 +2265,9 @@ process_remote_stonith_query(xmlNode *msg)
     id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return -EPROTO);
 
-    dev = get_xpath_object("//@" F_STONITH_AVAILABLE_DEVICES, msg, LOG_ERR);
+    dev = get_xpath_object("//@" PCMK__XA_ST_AVAILABLE_DEVICES, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
-    crm_element_value_int(dev, F_STONITH_AVAILABLE_DEVICES, &ndevices);
+    crm_element_value_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
 
     op = g_hash_table_lookup(stonith_remote_op_list, id);
     if (op == NULL) {
