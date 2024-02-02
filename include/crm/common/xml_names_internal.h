@@ -180,6 +180,7 @@ extern "C" {
 #define PCMK__XA_ST_CLIENTNAME          "st_clientname"
 #define PCMK__XA_ST_CLIENTNODE          "st_clientnode"
 #define PCMK__XA_ST_DATE                "st_date"
+#define PCMK__XA_ST_DATE_NSEC           "st_date_nsec"
 #define PCMK__XA_ST_DELAY               "st_delay"
 #define PCMK__XA_ST_DELAY_BASE          "st_delay_base"
 #define PCMK__XA_ST_DELAY_MAX           "st_delay_max"
