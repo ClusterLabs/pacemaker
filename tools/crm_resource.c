@@ -1561,11 +1561,10 @@ main(int argc, char **argv)
             case cmd_list_active_ops:
             case cmd_list_all_ops:
             case cmd_colocations:
-                pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
+                pcmk__force_args(context, &error, "%s --xml-simple-list",
+                                 g_get_prgname());
                 break;
-
             default:
-                pcmk__force_args(context, &error, "%s --xml-substitute", g_get_prgname());
                 break;
         }
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
