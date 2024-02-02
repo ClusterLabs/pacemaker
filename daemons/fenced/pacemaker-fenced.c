@@ -176,7 +176,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
     const char *remote_peer = crm_element_value(msg, PCMK__XA_SRC);
     const char *op = crm_element_value(msg, PCMK__XA_ST_OP);
 
-    if (pcmk__str_eq(op, "poke", pcmk__str_none)) {
+    if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
         return;
     }
 
@@ -477,7 +477,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
         xmlNode *query = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
 
         crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        crm_xml_add(query, PCMK__XA_ST_OP, "poke");
+        crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
         crm_debug("Broadcasting our uname because of node %u", node->id);
         send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);

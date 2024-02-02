@@ -116,6 +116,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define STONITH_OP_LEVEL_ADD       "st_level_add"
 #  define STONITH_OP_LEVEL_DEL       "st_level_remove"
 #  define STONITH_OP_NOTIFY          "st_notify"
+#  define STONITH_OP_POKE            "poke"
 
 
 #  define STONITH_WATCHDOG_AGENT          "fence_watchdog"
