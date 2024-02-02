@@ -809,7 +809,7 @@ stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
 xmlNode *
 stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data, int call_options)
 {
-    xmlNode *op_msg = create_xml_node(NULL, "stonith_command");
+    xmlNode *op_msg = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
 
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
@@ -1139,7 +1139,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         rc = -ENOTCONN;
     } else {
         xmlNode *reply = NULL;
-        xmlNode *hello = create_xml_node(NULL, "stonith_command");
+        xmlNode *hello = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
 
         crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);

@@ -474,7 +474,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        xmlNode *query = create_xml_node(NULL, "stonith_command");
+        xmlNode *query = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
 
         crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(query, PCMK__XA_ST_OP, "poke");
