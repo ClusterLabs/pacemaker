@@ -102,6 +102,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
+// @COMPAT Deprecated since 1.1.17 (and see T773 to drop it)
 #  define STONITH_ATTR_ACTION_OP   "action"
 
 #  define STONITH_OP_EXEC        "st_execute"
