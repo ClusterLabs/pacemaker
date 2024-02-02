@@ -413,7 +413,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     crm_xml_add_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
-        pcmk__xe_set_bool_attr(bcast, F_STONITH_MERGED, true);
+        pcmk__xe_set_bool_attr(bcast, PCMK__XA_ST_OP_MERGED, true);
     }
 
     stonith__xe_set_result(notify_data, &op->result);
@@ -584,7 +584,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         }
     }
 
-    if (dup || (crm_element_value(data, F_STONITH_MERGED) != NULL)) {
+    if (dup || (crm_element_value(data, PCMK__XA_ST_OP_MERGED) != NULL)) {
         op_merged = true;
     }
 

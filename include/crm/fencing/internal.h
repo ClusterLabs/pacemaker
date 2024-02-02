@@ -102,8 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_MERGED        "st_op_merged"
-
 #  define T_STONITH_NG        "stonith-ng"
 #  define T_STONITH_REPLY     "st-reply"
 /*! For async operations, an event from the server containing

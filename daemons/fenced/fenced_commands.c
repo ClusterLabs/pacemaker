@@ -2656,7 +2656,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     reply = construct_async_reply(cmd, result);
     if (merged) {
-        pcmk__xe_set_bool_attr(reply, F_STONITH_MERGED, true);
+        pcmk__xe_set_bool_attr(reply, PCMK__XA_ST_OP_MERGED, true);
     }
 
     if (!stand_alone && pcmk__is_fencing_action(cmd->action)
