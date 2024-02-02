@@ -346,7 +346,7 @@ create_async_command(xmlNode *msg)
         return NULL;
     }
 
-    op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
+    op = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, msg, LOG_ERR);
     if (op == NULL) {
         return NULL;
     }
@@ -1957,7 +1957,8 @@ static void
 execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 {
     xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, msg, LOG_ERR);
-    xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
+    xmlNode *op = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, msg,
+                                   LOG_ERR);
     const char *id = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
     const char *action = crm_element_value(op, PCMK__XA_ST_DEVICE_ACTION);
     async_command_t *cmd = NULL;
@@ -2392,7 +2393,7 @@ add_action_reply(xmlNode *xml, const char *action,
                  const stonith_device_t *device, const char *target,
                  gboolean allow_suicide)
 {
-    xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
+    xmlNode *child = create_xml_node(xml, PCMK__XE_ST_DEVICE_ACTION);
 
     crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
@@ -3105,7 +3106,8 @@ check_alternate_host(const char *target)
 static void 
 remove_relay_op(xmlNode * request)
 {
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, request, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, request,
+                                    LOG_TRACE);
     const char *relay_op_id = NULL; 
     const char *op_id = NULL;
     const char *client_name = NULL;
@@ -3244,7 +3246,8 @@ handle_query_request(pcmk__request_t *request)
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
-    dev = get_xpath_object("//@" F_STONITH_ACTION, request->xml, LOG_NEVER);
+    dev = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, request->xml,
+                           LOG_NEVER);
     if (dev != NULL) {
         const char *device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
