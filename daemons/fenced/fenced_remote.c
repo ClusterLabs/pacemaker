@@ -402,7 +402,7 @@ void
 fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
-    xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
+    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_ST_REPLY);
     xmlNode *notify_data = fencing_result2xml(op);
 
     count++;

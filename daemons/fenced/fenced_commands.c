@@ -2978,7 +2978,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 {
     xmlNode *reply = NULL;
 
-    reply = create_xml_node(NULL, T_STONITH_REPLY);
+    reply = create_xml_node(NULL, PCMK__XE_ST_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
@@ -3032,7 +3032,7 @@ static xmlNode *
 construct_async_reply(const async_command_t *cmd,
                       const pcmk__action_result_t *result)
 {
-    xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
+    xmlNode *reply = create_xml_node(NULL, PCMK__XE_ST_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
@@ -3667,7 +3667,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     CRM_CHECK(message != NULL, return);
 
-    if (get_xpath_object("//" T_STONITH_REPLY, message, LOG_NEVER) != NULL) {
+    if (get_xpath_object("//" PCMK__XE_ST_REPLY, message, LOG_NEVER) != NULL) {
         is_reply = true;
     }
     crm_element_value_int(message, PCMK__XA_ST_CALLOPT, &call_options);

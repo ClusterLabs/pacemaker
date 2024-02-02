@@ -46,6 +46,7 @@ extern "C" {
 #define PCMK__XE_ST_DEVICE_ACTION       "st_device_action"
 #define PCMK__XE_ST_DEVICE_ID           "st_device_id"
 #define PCMK__XE_ST_HISTORY             "st_history"
+#define PCMK__XE_ST_REPLY               "st-reply"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
