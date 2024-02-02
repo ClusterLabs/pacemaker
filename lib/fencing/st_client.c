@@ -1069,7 +1069,9 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
 
     } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_none)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
-    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_none)) {
+
+    } else if (pcmk__str_eq(type, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE,
+                            pcmk__str_none)) {
         int call_id = 0;
         int timeout = 0;
 

@@ -102,10 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! For async operations, an event from the server containing
- * the total amount of time the server is allowing for the operation
- * to take place is returned to the client. */
-#  define T_STONITH_TIMEOUT_VALUE "st-async-timeout-value"
 #  define T_STONITH_NOTIFY    "st_notify"
 
 #  define STONITH_ATTR_ACTION_OP   "action"

@@ -321,7 +321,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     }
 
     notify_data = create_xml_node(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
-    crm_xml_add(notify_data, PCMK__XA_T, T_STONITH_TIMEOUT_VALUE);
+    crm_xml_add(notify_data, PCMK__XA_T, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE);
     crm_xml_add(notify_data, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
 
