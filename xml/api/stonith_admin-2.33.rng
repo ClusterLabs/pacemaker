@@ -45,6 +45,9 @@
             <attribute name="agent"> <text /> </attribute>
             <attribute name="valid"> <data type="boolean" /> </attribute>
             <optional>
+                <attribute name="device"> <text /> </attribute>
+            </optional>
+            <optional>
                 <externalRef href="command-output-2.23.rng" />
             </optional>
         </element>
