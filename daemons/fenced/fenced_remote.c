@@ -382,7 +382,7 @@ fencing_result2xml(const remote_fencing_op_t *op)
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
     crm_xml_add(notify_data, F_STONITH_ACTION, op->action);
-    crm_xml_add(notify_data, F_STONITH_DELEGATE, op->delegate);
+    crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, op->delegate);
     crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(notify_data, F_STONITH_ORIGIN, op->originator);
     crm_xml_add(notify_data, PCMK__XA_ST_CLIENTID, op->client_id);
@@ -451,7 +451,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     crm_xml_add(data, PCMK__XA_ST_OP, op->action);
 
     reply = fenced_construct_reply(op->request, data, &op->result);
-    crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
+    crm_xml_add(reply, PCMK__XA_ST_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
     client = pcmk__find_client_by_id(op->client_id);
@@ -508,12 +508,13 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 static char *
 delegate_from_xml(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" F_STONITH_DELEGATE, xml, LOG_NEVER);
+    xmlNode *match = get_xpath_object("//@" PCMK__XA_ST_DELEGATE, xml,
+                                      LOG_NEVER);
 
     if (match == NULL) {
         return crm_element_value_copy(xml, PCMK__XA_SRC);
     } else {
-        return crm_element_value_copy(match, F_STONITH_DELEGATE);
+        return crm_element_value_copy(match, PCMK__XA_ST_DELEGATE);
     }
 }
 
@@ -1178,7 +1179,9 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     op->replies_expected = fencing_active_peers();
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
     op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
-    op->delegate = crm_element_value_copy(dev, F_STONITH_DELEGATE); /* May not be set */
+
+    // Delegate may not be set
+    op->delegate = crm_element_value_copy(dev, PCMK__XA_ST_DELEGATE);
     op->created = time(NULL);
 
     if (op->originator == NULL) {

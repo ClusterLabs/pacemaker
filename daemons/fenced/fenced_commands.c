@@ -2685,7 +2685,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         stonith__xe_set_result(notify_data, result);
         crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
         crm_xml_add(notify_data, PCMK__XA_ST_OP, cmd->op);
-        crm_xml_add(notify_data, F_STONITH_DELEGATE, "localhost");
+        crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, "localhost");
         crm_xml_add(notify_data, F_STONITH_DEVICE, cmd->device);
         crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
         crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);

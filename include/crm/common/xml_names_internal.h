@@ -181,6 +181,7 @@ extern "C" {
 #define PCMK__XA_ST_DELAY               "st_delay"
 #define PCMK__XA_ST_DELAY_BASE          "st_delay_base"
 #define PCMK__XA_ST_DELAY_MAX           "st_delay_max"
+#define PCMK__XA_ST_DELEGATE            "st_delegate"
 #define PCMK__XA_ST_MONITOR_VERIFIED    "st_monitor_verified"
 #define PCMK__XA_ST_NOTIFY_ACTIVATE     "st_notify_activate"
 #define PCMK__XA_ST_NOTIFY_DEACTIVATE   "st_notify_deactivate"

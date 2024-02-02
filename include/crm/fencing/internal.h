@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_DELEGATE      "st_delegate"
 #  define F_STONITH_DEVICE_SUPPORT_FLAGS "st_device_support_flags"
 /*! The node initiating the stonith operation.  If an operation
  * is relayed, this is the last node the operation lands on. When

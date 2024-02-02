@@ -737,7 +737,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
             kvp->action = crm_element_value_copy(op, F_STONITH_ACTION);
             kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
-            kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
+            kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
             kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
             crm_element_value_ll(op, F_STONITH_DATE, &completed);
             kvp->completed = (time_t) completed;
@@ -1442,7 +1442,8 @@ xml_to_event(xmlNode *msg)
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
             event->action = crm_element_value_copy(data, F_STONITH_ACTION);
             event->target = crm_element_value_copy(data, PCMK__XA_ST_TARGET);
-            event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
+            event->executioner = crm_element_value_copy(data,
+                                                        PCMK__XA_ST_DELEGATE);
             event->id = crm_element_value_copy(data, PCMK__XA_ST_REMOTE_OP);
             event->client_origin =
                 crm_element_value_copy(data, PCMK__XA_ST_CLIENTNAME);
