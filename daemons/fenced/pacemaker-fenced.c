@@ -387,7 +387,7 @@ fenced_send_config_notification(const char *op,
 
     CRM_CHECK(notify_data != NULL, return);
 
-    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
+    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
 
     fenced_send_notification(op, result, notify_data);
     free_xml(notify_data);

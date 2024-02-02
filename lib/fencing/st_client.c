@@ -612,7 +612,7 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(data, F_STONITH_DEVICE, id);
+    crm_xml_add(data, PCMK__XA_ST_DEVICE_ID, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, PCMK__XA_ST_TARGET, target);
 
@@ -1447,7 +1447,7 @@ xml_to_event(xmlNode *msg)
             event->id = crm_element_value_copy(data, PCMK__XA_ST_REMOTE_OP);
             event->client_origin =
                 crm_element_value_copy(data, PCMK__XA_ST_CLIENTNAME);
-            event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
+            event->device = crm_element_value_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
 
     } else if (pcmk__str_any_of(event->operation,
@@ -1460,7 +1460,7 @@ xml_to_event(xmlNode *msg)
             crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
-            event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
+            event->device = crm_element_value_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
     }
 

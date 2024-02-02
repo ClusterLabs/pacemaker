@@ -1894,7 +1894,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
                        op->client_name, timeout_one);
-            crm_xml_add(remote_op, F_STONITH_DEVICE, device);
+            crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ID, device);
 
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
@@ -2380,7 +2380,7 @@ fenced_process_fencing_reply(xmlNode *msg)
 
     stonith__xe_get_result(dev, &result);
 
-    device = crm_element_value(dev, F_STONITH_DEVICE);
+    device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
     if (stonith_remote_op_list) {
         op = g_hash_table_lookup(stonith_remote_op_list, id);
@@ -2442,7 +2442,7 @@ fenced_process_fencing_reply(xmlNode *msg)
             return;
         }
 
-        device = crm_element_value(msg, F_STONITH_DEVICE);
+        device = crm_element_value(msg, PCMK__XA_ST_DEVICE_ID);
 
         if ((op->phase == 2) && !pcmk__result_ok(&op->result)) {
             /* A remapped "on" failed, but the node was already turned off
