@@ -2170,7 +2170,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
         props->verified = TRUE;
     }
 
-    crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
+    crm_element_value_int(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, &flags);
     props->device_support_flags = flags;
 
     /* Parse action-specific device properties */

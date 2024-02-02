@@ -2468,7 +2468,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         // Has had successful monitor, list, or status on this node
         crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED, device->verified);
 
-        crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
+        crm_xml_add_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
