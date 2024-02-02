@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_CLIENTNAME        "st_clientname"
 #  define F_STONITH_CLIENTNODE        "st_clientnode"
 #  define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #  define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"

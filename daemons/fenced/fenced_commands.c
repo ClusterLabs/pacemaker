@@ -371,7 +371,7 @@ create_async_command(xmlNode *msg)
 
     cmd->origin = crm_element_value_copy(msg, PCMK__XA_SRC);
     cmd->remote_op_id = crm_element_value_copy(msg, PCMK__XA_ST_REMOTE_OP);
-    cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
+    cmd->client_name = crm_element_value_copy(msg, PCMK__XA_ST_CLIENTNAME);
     cmd->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
 
@@ -3005,7 +3005,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             PCMK__XA_ST_OP,
             PCMK__XA_ST_CALLID,
             PCMK__XA_ST_CLIENTID,
-            F_STONITH_CLIENTNAME,
+            PCMK__XA_ST_CLIENTNAME,
             PCMK__XA_ST_REMOTE_OP,
             PCMK__XA_ST_CALLOPT,
         };
@@ -3041,7 +3041,7 @@ construct_async_reply(const async_command_t *cmd,
     crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
     crm_xml_add(reply, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
     crm_xml_add(reply, PCMK__XA_ST_CLIENTID, cmd->client);
-    crm_xml_add(reply, F_STONITH_CLIENTNAME, cmd->client_name);
+    crm_xml_add(reply, PCMK__XA_ST_CLIENTNAME, cmd->client_name);
     crm_xml_add(reply, PCMK__XA_ST_TARGET, cmd->target);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
@@ -3120,7 +3120,7 @@ remove_relay_op(xmlNode * request)
 
     relay_op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP_RELAY);
     op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP);
-    client_name = crm_element_value(request, F_STONITH_CLIENTNAME);
+    client_name = crm_element_value(request, PCMK__XA_ST_CLIENTNAME);
 
     /* Delete RELAY operation. */
     if (relay_op_id && target && pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
