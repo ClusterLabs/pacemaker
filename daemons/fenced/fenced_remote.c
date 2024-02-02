@@ -1653,7 +1653,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     }
 
     crm_trace("Reporting timeout for %s (id=%.8s)", op->client_name, op->id);
-    client_node = crm_element_value(op->request, F_STONITH_CLIENTNODE);
+    client_node = crm_element_value(op->request, PCMK__XA_ST_CLIENTNODE);
     call_id = crm_element_value(op->request, PCMK__XA_ST_CALLID);
     client_id = crm_element_value(op->request, PCMK__XA_ST_CLIENTID);
     if (!client_node || !call_id || !client_id) {

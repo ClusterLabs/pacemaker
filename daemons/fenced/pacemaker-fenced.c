@@ -112,7 +112,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_OP, op);
         crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-        crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
+        crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
         send_cluster_message(NULL, crm_msg_stonith_ng, request, FALSE);
         free_xml(request);
@@ -137,7 +137,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
     crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-    crm_xml_add(request, F_STONITH_CLIENTNODE, stonith_our_uname);
+    crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
     crm_log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
