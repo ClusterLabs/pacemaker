@@ -381,7 +381,7 @@ fencing_result2xml(const remote_fencing_op_t *op)
 
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(notify_data, F_STONITH_ACTION, op->action);
+    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ACTION, op->action);
     crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, op->delegate);
     crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, op->originator);
@@ -1177,7 +1177,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     op->state = st_query;
     op->replies_expected = fencing_active_peers();
-    op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
+    op->action = crm_element_value_copy(dev, PCMK__XA_ST_DEVICE_ACTION);
 
     /* The node initiating the stonith operation. If an operation is relayed,
      * this is the last node the operation lands on. When in standalone mode,
@@ -1329,7 +1329,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
 
     crm_xml_add(query, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(query, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(query, F_STONITH_ACTION, op_requested_action(op));
+    crm_xml_add(query, PCMK__XA_ST_DEVICE_ACTION, op_requested_action(op));
     crm_xml_add(query, PCMK__XA_ST_ORIGIN, op->originator);
     crm_xml_add(query, PCMK__XA_ST_CLIENTID, op->client_id);
     crm_xml_add(query, PCMK__XA_ST_CLIENTNAME, op->client_name);
@@ -1879,7 +1879,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
         crm_xml_add(remote_op, PCMK__XA_ST_REMOTE_OP, op->id);
         crm_xml_add(remote_op, PCMK__XA_ST_TARGET, op->target);
-        crm_xml_add(remote_op, F_STONITH_ACTION, op->action);
+        crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ACTION, op->action);
         crm_xml_add(remote_op, PCMK__XA_ST_ORIGIN, op->originator);
         crm_xml_add(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
         crm_xml_add(remote_op, PCMK__XA_ST_CLIENTNAME, op->client_name);

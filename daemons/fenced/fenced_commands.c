@@ -355,7 +355,7 @@ create_async_command(xmlNode *msg)
     CRM_ASSERT(cmd != NULL);
 
     // All messages must include these
-    cmd->action = crm_element_value_copy(op, F_STONITH_ACTION);
+    cmd->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
     cmd->op = crm_element_value_copy(msg, PCMK__XA_ST_OP);
     cmd->client = crm_element_value_copy(msg, PCMK__XA_ST_CLIENTID);
     if ((cmd->action == NULL) || (cmd->op == NULL) || (cmd->client == NULL)) {
@@ -1959,7 +1959,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
     xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, msg, LOG_ERR);
     xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
     const char *id = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
-    const char *action = crm_element_value(op, F_STONITH_ACTION);
+    const char *action = crm_element_value(op, PCMK__XA_ST_DEVICE_ACTION);
     async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
 
@@ -3041,7 +3041,7 @@ construct_async_reply(const async_command_t *cmd,
     crm_xml_add(reply, PCMK__XA_ST_CLIENTID, cmd->client);
     crm_xml_add(reply, PCMK__XA_ST_CLIENTNAME, cmd->client_name);
     crm_xml_add(reply, PCMK__XA_ST_TARGET, cmd->target);
-    crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
+    crm_xml_add(reply, PCMK__XA_ST_DEVICE_ACTION, cmd->op);
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, PCMK__XA_ST_CALLID, cmd->id);
     crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
@@ -3252,7 +3252,7 @@ handle_query_request(pcmk__request_t *request)
             return NULL; // No query or reply necessary
         }
         target = crm_element_value(dev, PCMK__XA_ST_TARGET);
-        action = crm_element_value(dev, F_STONITH_ACTION);
+        action = crm_element_value(dev, PCMK__XA_ST_DEVICE_ACTION);
     }
 
     crm_log_xml_trace(request->xml, "Query");
@@ -3314,7 +3314,7 @@ handle_relay_request(pcmk__request_t *request)
                "%s %s to fence (%s) peer %s",
                pcmk__request_origin_type(request),
                pcmk__request_origin(request),
-               crm_element_value(dev, F_STONITH_ACTION),
+               crm_element_value(dev, PCMK__XA_ST_DEVICE_ACTION),
                crm_element_value(dev, PCMK__XA_ST_TARGET));
 
     if (initiate_remote_stonith_op(NULL, request->xml, FALSE) == NULL) {
@@ -3354,7 +3354,7 @@ handle_fence_request(pcmk__request_t *request)
         xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request->xml,
                                         LOG_TRACE);
         const char *target = crm_element_value(dev, PCMK__XA_ST_TARGET);
-        const char *action = crm_element_value(dev, F_STONITH_ACTION);
+        const char *action = crm_element_value(dev, PCMK__XA_ST_DEVICE_ACTION);
         const char *device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
         if (request->ipc_client != NULL) {

@@ -248,7 +248,7 @@ stonith_xml_history_to_list(const xmlNode *history)
 
         op->id = id;
         op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
-        op->action = crm_element_value_copy(xml_op, F_STONITH_ACTION);
+        op->action = crm_element_value_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
         op->originator = crm_element_value_copy(xml_op, PCMK__XA_ST_ORIGIN);
         op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
         op->client_name = crm_element_value_copy(xml_op,
@@ -367,7 +367,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                     crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
                 crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
-                crm_xml_add(entry, F_STONITH_ACTION, op->action);
+                crm_xml_add(entry, PCMK__XA_ST_DEVICE_ACTION, op->action);
                 crm_xml_add(entry, PCMK__XA_ST_ORIGIN, op->originator);
                 crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
                 crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
