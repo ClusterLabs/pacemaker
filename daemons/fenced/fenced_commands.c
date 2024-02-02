@@ -2688,7 +2688,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, "localhost");
         crm_xml_add(notify_data, F_STONITH_DEVICE, cmd->device);
         crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
-        crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
+        crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
 
         fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
         fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
@@ -2981,7 +2981,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
-    crm_xml_add(reply, "st_origin", __func__);
+    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, T_STONITH_NG);
     stonith__xe_set_result(reply, result);
 
@@ -3035,7 +3035,7 @@ construct_async_reply(const async_command_t *cmd,
 {
     xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
 
-    crm_xml_add(reply, "st_origin", __func__);
+    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(reply, PCMK__XA_ST_OP, cmd->op);
     crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
@@ -3044,7 +3044,7 @@ construct_async_reply(const async_command_t *cmd,
     crm_xml_add(reply, PCMK__XA_ST_CLIENTNAME, cmd->client_name);
     crm_xml_add(reply, PCMK__XA_ST_TARGET, cmd->target);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
-    crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
+    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, PCMK__XA_ST_CALLID, cmd->id);
     crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
 

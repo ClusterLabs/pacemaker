@@ -102,11 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! The node initiating the stonith operation.  If an operation
- * is relayed, this is the last node the operation lands on. When
- * in standalone mode, origin is the client's id that originated the
- * operation. */
-#  define F_STONITH_ORIGIN        "st_origin"
 #  define F_STONITH_HISTORY_LIST  "st_history"
 #  define F_STONITH_DATE          "st_date"
 #  define F_STONITH_DATE_NSEC     "st_date_nsec"

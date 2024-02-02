@@ -309,7 +309,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
 #endif
 
     crm_xml_add(data, PCMK_XA_ID, id);
-    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_AGENT, agent);
     if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
         crm_xml_add(data, PCMK__XA_NAMESPACE,
@@ -352,7 +352,7 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
-    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     free_xml(data);
@@ -371,7 +371,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
     CRM_CHECK(node || pattern || (attr && value), return -EINVAL);
 
     data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
-    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
 
     if (node) {
         crm_xml_add(data, PCMK_XA_TARGET, node);
@@ -426,7 +426,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
     CRM_CHECK(data, return NULL);
 
-    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_ID, level);
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
 
@@ -554,7 +554,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     CRM_CHECK(devices != NULL, return -EINVAL);
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
-    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     crm_xml_add(data, F_STONITH_ACTION, PCMK_ACTION_OFF);
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
@@ -611,7 +611,7 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
-    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, PCMK__XA_ST_TARGET, target);
@@ -736,7 +736,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
             kvp->action = crm_element_value_copy(op, F_STONITH_ACTION);
-            kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
+            kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
             kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
             crm_element_value_ll(op, F_STONITH_DATE, &completed);
@@ -1439,7 +1439,7 @@ xml_to_event(xmlNode *msg)
             crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
-            event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
+            event->origin = crm_element_value_copy(data, PCMK__XA_ST_ORIGIN);
             event->action = crm_element_value_copy(data, F_STONITH_ACTION);
             event->target = crm_element_value_copy(data, PCMK__XA_ST_TARGET);
             event->executioner = crm_element_value_copy(data,

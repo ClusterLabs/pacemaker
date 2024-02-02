@@ -187,6 +187,7 @@ extern "C" {
 #define PCMK__XA_ST_NOTIFY_ACTIVATE     "st_notify_activate"
 #define PCMK__XA_ST_NOTIFY_DEACTIVATE   "st_notify_deactivate"
 #define PCMK__XA_ST_OP                  "st_op"
+#define PCMK__XA_ST_ORIGIN              "st_origin"
 #define PCMK__XA_ST_OUTPUT              "st_output"
 #define PCMK__XA_ST_RC                  "st_rc"
 #define PCMK__XA_ST_REMOTE_OP           "st_remote_op"
