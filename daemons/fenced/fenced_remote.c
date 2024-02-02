@@ -2118,7 +2118,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         int required = 0;
 
-        crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
+        crm_element_value_int(xml, PCMK__XA_ST_REQUIRED, &required);
         if (required) {
             crm_trace("Peer %s requires device %s to execute for action %s",
                       peer, device, action);

@@ -2318,9 +2318,10 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
 
     CRM_CHECK(xml && action && device, return);
 
+    // PCMK__XA_ST_REQUIRED is currently used only for unfencing
     if (is_action_required(action, device)) {
         crm_trace("Action '%s' is required using %s", action, device->id);
-        crm_xml_add_int(xml, F_STONITH_DEVICE_REQUIRED, 1);
+        crm_xml_add_int(xml, PCMK__XA_ST_REQUIRED, 1);
     }
 
     // pcmk_<action>_timeout if configured

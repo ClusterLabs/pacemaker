@@ -102,8 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-/*! device is required for this action */
-#  define F_STONITH_DEVICE_REQUIRED   "st_required"
 /*! number of available devices in query result */
 #  define F_STONITH_AVAILABLE_DEVICES "st-available-devices"
 #  define F_STONITH_CALLBACK_TOKEN    "st_async_id"
