@@ -814,7 +814,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
-    crm_xml_add(op_msg, PCMK__XA_T, T_STONITH_NG);
+    crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     crm_xml_add(op_msg, PCMK__XA_ST_OP, op);
     crm_xml_add_int(op_msg, PCMK__XA_ST_CALLID, call_id);
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
@@ -1064,7 +1064,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     type = crm_element_value(blob.xml, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
 
-    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_none)) {
+    if (pcmk__str_eq(type, PCMK__VALUE_STONITH_NG, pcmk__str_none)) {
         invoke_registered_callbacks(st, blob.xml, 0);
 
     } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_none)) {
@@ -1139,7 +1139,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         xmlNode *reply = NULL;
         xmlNode *hello = create_xml_node(NULL, "stonith_command");
 
-        crm_xml_add(hello, PCMK__XA_T, T_STONITH_NG);
+        crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
         crm_xml_add(hello, PCMK__XA_ST_CLIENTNAME, name);
         rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);

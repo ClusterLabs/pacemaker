@@ -108,7 +108,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     op = crm_element_value(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
-        crm_xml_add(request, PCMK__XA_T, T_STONITH_NG);
+        crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(request, PCMK__XA_ST_OP, op);
         crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
@@ -476,7 +476,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
          */
         xmlNode *query = create_xml_node(NULL, "stonith_command");
 
-        crm_xml_add(query, PCMK__XA_T, T_STONITH_NG);
+        crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(query, PCMK__XA_ST_OP, "poke");
 
         crm_debug("Broadcasting our uname because of node %u", node->id);

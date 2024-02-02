@@ -102,7 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define T_STONITH_NG        "stonith-ng"
 #  define T_STONITH_REPLY     "st-reply"
 /*! For async operations, an event from the server containing
  * the total amount of time the server is allowing for the operation

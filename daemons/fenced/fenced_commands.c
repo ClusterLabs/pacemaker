@@ -2981,7 +2981,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(reply, PCMK__XA_T, T_STONITH_NG);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     stonith__xe_set_result(reply, result);
 
     if (request == NULL) {
@@ -3035,7 +3035,7 @@ construct_async_reply(const async_command_t *cmd,
     xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(reply, PCMK__XA_T, T_STONITH_NG);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     crm_xml_add(reply, PCMK__XA_ST_OP, cmd->op);
     crm_xml_add(reply, PCMK__XA_ST_DEVICE_ID, cmd->device);
     crm_xml_add(reply, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
