@@ -408,7 +408,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     count++;
     crm_trace("Broadcasting result to peers");
     crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
-    crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
+    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
     crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
     crm_xml_add_int(bcast, PCMK_XA_COUNT, count);
 
@@ -592,7 +592,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
      * with doing the local notifications once we receive
      * the broadcast back. */
     subt = crm_element_value(data, PCMK__XA_SUBT);
-    if (!dup && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
+    if (!dup && !pcmk__str_eq(subt, PCMK__VALUE_BROADCAST, pcmk__str_none)) {
         /* Defer notification until the bcast message arrives */
         fenced_broadcast_op_result(op, op_merged);
         free_xml(local_data);
@@ -2411,8 +2411,8 @@ fenced_process_fencing_reply(xmlNode *msg)
         return;
     }
 
-    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT), "broadcast",
-                     pcmk__str_none)) {
+    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
+                     PCMK__VALUE_BROADCAST, pcmk__str_none)) {
 
         if (pcmk__result_ok(&op->result)) {
             op->state = st_done;
