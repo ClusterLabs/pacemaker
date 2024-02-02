@@ -1198,7 +1198,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 
         crm_xml_add(notify_msg, PCMK__XA_ST_OP, T_STONITH_NOTIFY);
         if (enabled) {
-            crm_xml_add(notify_msg, F_STONITH_NOTIFY_ACTIVATE, callback);
+            crm_xml_add(notify_msg, PCMK__XA_ST_NOTIFY_ACTIVATE, callback);
         } else {
             crm_xml_add(notify_msg, F_STONITH_NOTIFY_DEACTIVATE, callback);
         }

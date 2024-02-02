@@ -3283,7 +3283,7 @@ handle_notify_request(pcmk__request_t *request)
     const char *flag_name = NULL;
 
     CRM_ASSERT(request->ipc_client != NULL);
-    flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_ACTIVATE);
+    flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
