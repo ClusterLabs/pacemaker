@@ -244,6 +244,9 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
 
+// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
+#define PCMK__XA_CIB_UPDATE_DIFF        "cib_update_diff"
+
 // @COMPAT Used only with v1 patchsets
 #define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
 
@@ -276,7 +279,6 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"
-
 
 #ifdef __cplusplus
 }

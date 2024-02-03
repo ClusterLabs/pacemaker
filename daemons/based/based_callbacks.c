@@ -1000,7 +1000,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
             CRM_ASSERT(digest != NULL);
         }
 
-        add_message_xml(msg, F_CIB_UPDATE_DIFF, result_diff);
+        add_message_xml(msg, PCMK__XA_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_explicit(msg, "copy");
         return send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
 
@@ -1302,7 +1302,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     switch (type) {
         case cib__op_apply_patch:
             if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-                input = get_message_xml(request, F_CIB_UPDATE_DIFF);
+                input = get_message_xml(request, PCMK__XA_CIB_UPDATE_DIFF);
             } else {
                 input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
             }
