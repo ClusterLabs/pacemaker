@@ -531,7 +531,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
-    crm_xml_add(op_msg, PCMK__XA_T, T_LRMD);
+    crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_LRMD);
     crm_xml_add(op_msg, PCMK__XA_LRMD_OP, op);
     crm_xml_add_int(op_msg, PCMK__XA_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(op_msg, PCMK__XA_LRMD_CALLOPT, options);
@@ -980,7 +980,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     xmlNode *reply = NULL;
     xmlNode *hello = create_xml_node(NULL, "lrmd_command");
 
-    crm_xml_add(hello, PCMK__XA_T, T_LRMD);
+    crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
     crm_xml_add(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(hello, PCMK__XA_LRMD_CLIENTNAME, name);
     crm_xml_add(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
