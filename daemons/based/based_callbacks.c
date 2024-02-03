@@ -1613,7 +1613,7 @@ initiate_exit(void)
 
     crm_info("Sending shutdown request to %d peers", active);
 
-    leaving = create_xml_node(NULL, "exit-notification");
+    leaving = create_xml_node(NULL, PCMK__XE_EXIT_NOTIFICATION);
     crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
