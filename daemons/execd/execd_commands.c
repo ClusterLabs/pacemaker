@@ -635,7 +635,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
 #endif
 
-    crm_xml_add(notify, F_LRMD_OPERATION, LRMD_OP_RSC_EXEC);
+    crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
     crm_xml_add(notify, F_LRMD_RSC_ID, cmd->rsc_id);
     if(cmd->real_action) {
         crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->real_action);
@@ -687,7 +687,7 @@ send_generic_notify(int rc, xmlNode * request)
         xmlNode *notify = NULL;
         xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
         const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
-        const char *op = crm_element_value(request, F_LRMD_OPERATION);
+        const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
 
         crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
@@ -695,7 +695,7 @@ send_generic_notify(int rc, xmlNode * request)
         crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
         crm_xml_add_int(notify, F_LRMD_RC, rc);
         crm_xml_add_int(notify, F_LRMD_CALLID, call_id);
-        crm_xml_add(notify, F_LRMD_OPERATION, op);
+        crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
         crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
 
         pcmk__foreach_ipc_client(send_client_notify, notify);
@@ -781,7 +781,7 @@ notify_of_new_client(pcmk__client_t *new_client)
     data.new_client = new_client;
     data.notify = create_xml_node(NULL, T_LRMD_NOTIFY);
     crm_xml_add(data.notify, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data.notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
+    crm_xml_add(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     free_xml(data.notify);
 }
@@ -1494,7 +1494,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         if ((client->remote != NULL)
             && pcmk_is_set(client->flags,
                            pcmk__client_tls_handshake_complete)) {
-            const char *op = crm_element_value(request, F_LRMD_OPERATION);
+            const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
 
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
@@ -1515,7 +1515,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     }
 
     *reply = create_lrmd_reply(__func__, rc, call_id);
-    crm_xml_add(*reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
+    crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
@@ -1819,7 +1819,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     int rc = pcmk_ok;
     int call_id = 0;
-    const char *op = crm_element_value(request, F_LRMD_OPERATION);
+    const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
     int do_reply = 0;
     int do_notify = 0;
     xmlNode *reply = NULL;

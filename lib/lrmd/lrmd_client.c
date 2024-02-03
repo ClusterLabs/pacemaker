@@ -276,7 +276,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     }
 
     event.remote_nodename = native->remote_nodename;
-    type = crm_element_value(msg, F_LRMD_OPERATION);
+    type = crm_element_value(msg, PCMK__XA_LRMD_OP);
     crm_element_value_int(msg, F_LRMD_CALLID, &event.call_id);
     event.rsc_id = crm_element_value(msg, F_LRMD_RSC_ID);
 
@@ -524,7 +524,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
 
     crm_xml_add(op_msg, PCMK__XA_T, T_LRMD);
     crm_xml_add(op_msg, F_LRMD_CALLBACK_TOKEN, token);
-    crm_xml_add(op_msg, F_LRMD_OPERATION, op);
+    crm_xml_add(op_msg, PCMK__XA_LRMD_OP, op);
     crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(op_msg, F_LRMD_CALLOPTS, options);
 
@@ -948,7 +948,7 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     int rc = pcmk_rc_ok;
     const char *value;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_OPERATION);
+    xmlNode *data = create_xml_node(NULL, PCMK__XA_LRMD_OP);
 
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);
 
@@ -973,7 +973,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     xmlNode *hello = create_xml_node(NULL, "lrmd_command");
 
     crm_xml_add(hello, PCMK__XA_T, T_LRMD);
-    crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_REGISTER);
+    crm_xml_add(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(hello, F_LRMD_CLIENTNAME, name);
     crm_xml_add(hello, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
@@ -992,7 +992,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         rc = -EPROTO;
     } else {
         const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
-        const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
+        const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
         const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
         long long uptime = -1;
@@ -1928,7 +1928,7 @@ lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
     if (lrmd == NULL) {
         return -ENOTCONN;
     }
-    crm_xml_add(msg, F_LRMD_OPERATION, CRM_OP_IPC_FWD);
+    crm_xml_add(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
 
     crm_log_xml_trace(msg, "PROXY_OUTBOUND");
     return lrmd_send_xml_no_reply(lrmd, msg);
