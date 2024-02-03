@@ -32,6 +32,9 @@ extern "C" {
 //! \deprecated Do not use
 #define T_STONITH_NOTIFY_HISTORY "st_notify_history"
 
+//! \deprecated Do not use
+#define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
+
 #ifdef __cplusplus
 }
 #endif

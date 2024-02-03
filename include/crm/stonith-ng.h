@@ -32,8 +32,6 @@ extern "C" {
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
 
-#  define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
-
 /* *INDENT-OFF* */
 enum stonith_state {
     stonith_connected_command,
