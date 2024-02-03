@@ -219,7 +219,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     int call_id = 0;
     int call_options = cib_none;
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *section = crm_element_value(request, F_CIB_SECTION);
+    const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
     xmlNode *data = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
 
     bool changed = false;

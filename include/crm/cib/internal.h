@@ -34,7 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define F_CIB_SECTION   "cib_section"
 #  define F_CIB_HOST	"cib_host"
 #  define F_CIB_RC	"cib_rc"
 #  define F_CIB_UPGRADE_RC      "cib_upgrade_rc"

@@ -116,6 +116,7 @@ extern "C" {
 #define PCMK__XA_CIB_CLIENTNAME         "cib_clientname"
 #define PCMK__XA_CIB_ISREPLYTO          "cib_isreplyto"
 #define PCMK__XA_CIB_OP                 "cib_op"
+#define PCMK__XA_CIB_SECTION            "cib_section"
 #define PCMK__XA_CLIENT_NAME            "client_name"
 #define PCMK__XA_CLIENT_UUID            "client_uuid"
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"

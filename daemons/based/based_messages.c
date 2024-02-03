@@ -383,7 +383,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_CALLID,
         PCMK__XA_CIB_OP,
         PCMK__XA_CIB_ISREPLYTO,
-        F_CIB_SECTION,
+        PCMK__XA_CIB_SECTION,
         F_CIB_HOST,
         F_CIB_RC,
         F_CIB_DELEGATED,

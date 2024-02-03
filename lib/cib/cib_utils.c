@@ -679,7 +679,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add(*op_msg, PCMK__XA_T, T_CIB);
     crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
     crm_xml_add(*op_msg, F_CIB_HOST, host);
-    crm_xml_add(*op_msg, F_CIB_SECTION, section);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
     crm_xml_add(*op_msg, F_CIB_USER, user_name);
     crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);

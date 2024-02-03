@@ -919,7 +919,7 @@ static void
 forward_request(xmlNode *request)
 {
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *section = crm_element_value(request, F_CIB_SECTION);
+    const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *client_name = crm_element_value(request,
@@ -1145,7 +1145,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         time_t finished = 0;
         time_t now = time(NULL);
         int level = LOG_INFO;
-        const char *section = crm_element_value(request, F_CIB_SECTION);
+        const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
         const char *admin_epoch_s = NULL;
         const char *epoch_s = NULL;
         const char *num_updates_s = NULL;
@@ -1306,7 +1306,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
 
         default:
             input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
-            *section = crm_element_value(request, F_CIB_SECTION);
+            *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
             break;
     }
 
