@@ -377,7 +377,7 @@ undo_op_remap(remote_fencing_op_t *op)
 static xmlNode *
 fencing_result2xml(const remote_fencing_op_t *op)
 {
-    xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+    xmlNode *notify_data = create_xml_node(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);

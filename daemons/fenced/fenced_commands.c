@@ -2679,7 +2679,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     if (stand_alone) {
         /* Do notification with a clean data object */
-        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        xmlNode *notify_data = create_xml_node(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
         crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
