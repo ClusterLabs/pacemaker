@@ -731,7 +731,7 @@ parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
         return TRUE;
     }
 
-    delegated = crm_element_value(request, F_CIB_DELEGATED);
+    delegated = crm_element_value(request, PCMK__XA_CIB_DELEGATED_FROM);
     if (delegated != NULL) {
         crm_trace("Ignoring message for primary instance");
 
@@ -767,7 +767,8 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
                       gboolean *process)
 {
     const char *host = NULL;
-    const char *delegated = crm_element_value(request, F_CIB_DELEGATED);
+    const char *delegated = crm_element_value(request,
+                                              PCMK__XA_CIB_DELEGATED_FROM);
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
@@ -943,7 +944,7 @@ forward_request(xmlNode *request)
                pcmk__s(client_name, "unspecified"),
                pcmk__s(call_id, "unspecified"));
 
-    crm_xml_add(request, F_CIB_DELEGATED, OUR_NODENAME);
+    crm_xml_add(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
@@ -951,7 +952,7 @@ forward_request(xmlNode *request)
     send_cluster_message(peer, crm_msg_cib, request, FALSE);
 
     // Return the request to its original state
-    xml_remove_prop(request, F_CIB_DELEGATED);
+    xml_remove_prop(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
 static gboolean
