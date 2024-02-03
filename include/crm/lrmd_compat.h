@@ -122,6 +122,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC "lrmd_rsc"
 
+//! \deprecated Do not use
+#define F_LRMD_ALERT_ID "lrmd_alert_id"
+
 #ifdef __cplusplus
 }
 #endif
