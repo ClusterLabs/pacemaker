@@ -194,6 +194,7 @@ extern "C" {
 #define PCMK__XA_LRMD_REMOTE_MSG_ID     "lrmd_remote_msg_id"
 #define PCMK__XA_LRMD_REMOTE_MSG_TYPE   "lrmd_remote_msg_type"
 #define PCMK__XA_LRMD_RSC_ACTION        "lrmd_rsc_action"
+#define PCMK__XA_LRMD_RSC_DELETED       "lrmd_rsc_deleted"
 #define PCMK__XA_LRMD_RSC_EXIT_REASON   "lrmd_rsc_exit_reason"
 #define PCMK__XA_LRMD_RSC_ID            "lrmd_rsc_id"
 #define PCMK__XA_LRMD_RSC_INTERVAL      "lrmd_rsc_interval"
