@@ -44,7 +44,7 @@
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__*
 
 #include "crm_mon.h"
 

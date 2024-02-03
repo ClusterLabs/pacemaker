@@ -12,7 +12,7 @@
 #include <crm/common/results.h>
 #include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__*
 #include <crm/pengine/internal.h>
 #include <libxml/tree.h>
 #include <pacemaker-internal.h>

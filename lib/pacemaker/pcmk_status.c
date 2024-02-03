@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/common/results.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
-#include <crm/stonith-ng.h>
+#include <crm/stonith-ng.h> // stonith__register_messages()
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
