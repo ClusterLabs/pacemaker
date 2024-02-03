@@ -265,7 +265,8 @@ get_stonith_flag(const char *name)
                             pcmk__str_none)) {
         return st_callback_notify_history;
 
-    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
+                            pcmk__str_none)) {
         return st_callback_notify_history_synced;
 
     }

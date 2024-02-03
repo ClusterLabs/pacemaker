@@ -492,7 +492,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
            is done so send a notification for anything
            that smells like history-sync
          */
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY_SYNCED, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED, NULL,
+                                 NULL);
         if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
