@@ -496,7 +496,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
+    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
