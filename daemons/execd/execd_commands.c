@@ -1898,7 +1898,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
             const char *timeout = NULL;
 
             CRM_LOG_ASSERT(data != NULL);
-            timeout = crm_element_value(data, F_LRMD_WATCHDOG);
+            timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
             pcmk__valid_stonith_watchdog_timeout(timeout);
         } else {
             rc = -EACCES;

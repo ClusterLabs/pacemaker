@@ -956,7 +956,7 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     value = g_hash_table_lookup(hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
     if ((value) &&
         (stonith__watchdog_fencing_enabled_for_node(native->remote_nodename))) {
-       crm_xml_add(data, F_LRMD_WATCHDOG, value);
+       crm_xml_add(data, PCMK__XA_LRMD_WATCHDOG, value);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
