@@ -1731,7 +1731,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
     crm_xml_add(data, PCMK__XA_LRMD_CLASS, class);
-    crm_xml_add(data, F_LRMD_PROVIDER, provider);
+    crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
     crm_xml_add(data, F_LRMD_TYPE, type);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, TRUE);
     free_xml(data);
@@ -1807,7 +1807,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     }
 
     class = crm_element_value(output, PCMK__XA_LRMD_CLASS);
-    provider = crm_element_value(output, F_LRMD_PROVIDER);
+    provider = crm_element_value(output, PCMK__XA_LRMD_PROVIDER);
     type = crm_element_value(output, F_LRMD_TYPE);
 
     if (!class || !type) {
