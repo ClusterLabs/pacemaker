@@ -992,7 +992,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     } else {
         const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
         const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
-        const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
+        const char *tmp_ticket = crm_element_value(reply,
+                                                   PCMK__XA_LRMD_CLIENTID);
         const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
         long long uptime = -1;
 

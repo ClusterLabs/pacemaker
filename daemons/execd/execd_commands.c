@@ -1516,7 +1516,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     *reply = create_lrmd_reply(__func__, rc, call_id);
     crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
-    crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
+    crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
 
