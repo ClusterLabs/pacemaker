@@ -34,7 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define F_CIB_TIMEOUT	"cib_timeout"
 #  define F_CIB_GLOBAL_UPDATE	"cib_update"
 #  define F_CIB_UPDATE_RESULT	"cib_update_result"
 #  define F_CIB_NOTIFY_TYPE	"cib_notify_type"
