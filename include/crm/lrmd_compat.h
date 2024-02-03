@@ -38,6 +38,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_CLIENTID "lrmd_clientid"
 
+//! \deprecated Do not use
+#define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
+
 #ifdef __cplusplus
 }
 #endif
