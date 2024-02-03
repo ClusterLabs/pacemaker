@@ -400,7 +400,7 @@ static int
 cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     int rc = pcmk_ok;
-    xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
+    xmlNode *notify_msg = create_xml_node(NULL, PCMK__XE_CIB_CALLBACK);
     cib_native_opaque_t *native = cib->variant_opaque;
 
     if (cib->state != cib_disconnected) {
