@@ -261,7 +261,8 @@ static void
 lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 {
     const char *type;
-    const char *proxy_session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *proxy_session = crm_element_value(msg,
+                                                  PCMK__XA_LRMD_IPC_SESSION);
     lrmd_private_t *native = lrmd->lrmd_private;
     lrmd_event_data_t event = { 0, };
 

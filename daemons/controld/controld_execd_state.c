@@ -493,7 +493,7 @@ static void
 crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
     const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
