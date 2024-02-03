@@ -119,6 +119,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_DELETED "lrmd_rsc_deleted"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC "lrmd_rsc"
+
 #ifdef __cplusplus
 }
 #endif
