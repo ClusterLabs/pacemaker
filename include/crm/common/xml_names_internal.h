@@ -123,6 +123,7 @@ extern "C" {
 #define PCMK__XA_CIB_DELEGATED_FROM     "cib_delegated_from"
 #define PCMK__XA_CIB_HOST               "cib_host"
 #define PCMK__XA_CIB_ISREPLYTO          "cib_isreplyto"
+#define PCMK__XA_CIB_NOTIFY_TYPE        "cib_notify_type"
 #define PCMK__XA_CIB_OP                 "cib_op"
 #define PCMK__XA_CIB_RC                 "cib_rc"
 #define PCMK__XA_CIB_SECTION            "cib_section"

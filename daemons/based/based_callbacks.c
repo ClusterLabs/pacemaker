@@ -280,7 +280,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         int on_off = 0;
         crm_exit_t status = CRM_EX_OK;
         uint64_t bit = UINT64_C(0);
-        const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
+        const char *type = crm_element_value(op_request,
+                                             PCMK__XA_CIB_NOTIFY_TYPE);
 
         crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 
