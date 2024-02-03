@@ -622,7 +622,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
-    crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->result.execution_status);
+    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
+                    cmd->result.execution_status);
     crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
