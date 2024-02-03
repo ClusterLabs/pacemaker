@@ -307,7 +307,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
                               (int *) &event.queue_time);
 
         event.op_type = crm_element_value(msg, PCMK__XA_LRMD_RSC_ACTION);
-        event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
+        event.user_data = crm_element_value(msg,
+                                            PCMK__XA_LRMD_RSC_USERDATA_STR);
         event.type = lrmd_event_exec_complete;
 
         /* output and exit_reason may be freed by a callback */
@@ -2041,7 +2042,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
-    crm_xml_add(data, F_LRMD_RSC_USERDATA_STR, userdata);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);

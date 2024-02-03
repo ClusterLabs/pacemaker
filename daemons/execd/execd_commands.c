@@ -315,7 +315,8 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
     cmd->action = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
-    cmd->userdata_str = crm_element_value_copy(rsc_xml, F_LRMD_RSC_USERDATA_STR);
+    cmd->userdata_str = crm_element_value_copy(rsc_xml,
+                                               PCMK__XA_LRMD_RSC_USERDATA_STR);
     cmd->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
@@ -643,7 +644,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     } else {
         crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
     }
-    crm_xml_add(notify, F_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
+    crm_xml_add(notify, PCMK__XA_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
     crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
 
     if (cmd->result.action_stderr != NULL) {
