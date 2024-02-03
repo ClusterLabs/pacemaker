@@ -1110,7 +1110,7 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
     cib_file_opaque_t *private = cib->variant_opaque;
     xmlNode *saved_cib = private->cib_xml;
 
-    CRM_CHECK(pcmk__xe_is(transaction, T_CIB_TRANSACTION),
+    CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
 
     /* *result_cib should be a copy of private->cib_xml (created by

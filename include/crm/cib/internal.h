@@ -35,7 +35,6 @@
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
 /* notify sub-types */
-#  define T_CIB_TRANSACTION	"cib_transaction"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 
 /*!
