@@ -440,7 +440,10 @@ sync_our_cib(xmlNode * request, gboolean all)
     }
 
     crm_xml_add(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
-    crm_xml_add(replace_request, "original_" PCMK__XA_CIB_OP, op);
+
+    // @TODO Keep for tracing, or drop?
+    crm_xml_add(replace_request, PCMK__XA_ORIGINAL_CIB_OP, op);
+
     pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 
     crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
