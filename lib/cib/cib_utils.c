@@ -84,7 +84,9 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return ENOMSG;
     }
 
-    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+    if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
+        || (rc != pcmk_ok)) {
+
         crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
                  pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
@@ -777,7 +779,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
-        crm_element_value_int(msg, F_CIB_RC, &rc);
+        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
         output = get_message_xml(msg, PCMK__XA_CIB_CALLDATA);
     }
@@ -919,7 +921,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(input);
     CRM_ASSERT(output);
 
-    crm_element_value_int(event, F_CIB_RC, &rc);
+    crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
     diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
 
     if (rc < pcmk_ok || diff == NULL) {

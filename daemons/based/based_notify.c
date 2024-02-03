@@ -199,7 +199,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     crm_xml_add(update_msg, PCMK__XA_CIB_CALLID, call_id);
     crm_xml_add(update_msg, PCMK__XA_SRC, origin);
-    crm_xml_add_int(update_msg, F_CIB_RC, result);
+    crm_xml_add_int(update_msg, PCMK__XA_CIB_RC, result);
 
     if (update != NULL) {
         type = (const char *) update->name;

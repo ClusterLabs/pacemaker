@@ -628,7 +628,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         int rc = pcmk_ok;
         xmlNode *patchset = NULL;
 
-        crm_element_value_int(msg, F_CIB_RC, &rc);
+        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
             return;
         }

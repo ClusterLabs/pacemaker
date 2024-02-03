@@ -385,7 +385,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_ISREPLYTO,
         PCMK__XA_CIB_SECTION,
         PCMK__XA_CIB_HOST,
-        F_CIB_RC,
+        PCMK__XA_CIB_RC,
         F_CIB_DELEGATED,
         F_CIB_OBJID,
         F_CIB_OBJTYPE,

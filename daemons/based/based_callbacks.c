@@ -167,7 +167,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     crm_xml_add(reply, PCMK__XA_CIB_CALLID, call_id);
     crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
     crm_xml_add_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
-    crm_xml_add_int(reply, F_CIB_RC, rc);
+    crm_xml_add_int(reply, PCMK__XA_CIB_RC, rc);
 
     if (call_data != NULL) {
         crm_trace("Attaching reply output");
@@ -814,7 +814,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
-            crm_xml_add(request, F_CIB_RC, upgrade_rc);
+            crm_xml_add(request, PCMK__XA_CIB_RC, upgrade_rc);
 
         } else if ((max == NULL) && based_is_primary) {
             /* We are the DC, check if this upgrade is allowed */

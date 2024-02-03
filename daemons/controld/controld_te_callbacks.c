@@ -542,7 +542,7 @@ te_update_diff(const char *event, xmlNode * msg)
     int p_del[] = { 0, 0, 0 };
 
     CRM_CHECK(msg != NULL, return);
-    crm_element_value_int(msg, F_CIB_RC, &rc);
+    crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
 
     if (controld_globals.transition_graph == NULL) {
         crm_trace("No graph");

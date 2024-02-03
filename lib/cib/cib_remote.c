@@ -167,7 +167,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     crm_trace("Synchronous reply received");
 
     /* Start processing the reply... */
-    if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
+    if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
         rc = -EPROTO;
     }
 
