@@ -290,7 +290,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         crm_element_value_int(msg, F_LRMD_TIMEOUT, &event.timeout);
         crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
         crm_element_value_int(msg, F_LRMD_RSC_START_DELAY, &event.start_delay);
-        crm_element_value_int(msg, F_LRMD_EXEC_RC, (int *)&event.rc);
+        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, (int *) &event.rc);
         crm_element_value_int(msg, F_LRMD_OP_STATUS, &event.op_status);
         crm_element_value_int(msg, F_LRMD_RSC_DELETED, &event.rsc_deleted);
 

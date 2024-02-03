@@ -179,6 +179,7 @@ extern "C" {
 #define PCMK__XA_LRMD_CALLOPT           "lrmd_callopt"
 #define PCMK__XA_LRMD_CLIENTID          "lrmd_clientid"
 #define PCMK__XA_LRMD_CLIENTNAME        "lrmd_clientname"
+#define PCMK__XA_LRMD_EXEC_RC           "lrmd_exec_rc"
 #define PCMK__XA_LRMD_IS_IPC_PROVIDER   "lrmd_is_ipc_provider"
 #define PCMK__XA_LRMD_OP                "lrmd_op"
 #define PCMK__XA_LRMD_PROTOCOL_VERSION  "lrmd_protocol_version"
