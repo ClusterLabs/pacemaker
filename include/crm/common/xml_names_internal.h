@@ -189,6 +189,7 @@ extern "C" {
 #define PCMK__XA_LRMD_EXEC_RC           "lrmd_exec_rc"
 #define PCMK__XA_LRMD_EXEC_TIME         "lrmd_exec_time"
 #define PCMK__XA_LRMD_IPC_CLIENT        "lrmd_ipc_client"
+#define PCMK__XA_LRMD_IPC_MSG_FLAGS     "lrmd_ipc_msg_flags"
 #define PCMK__XA_LRMD_IPC_MSG_ID        "lrmd_ipc_msg_id"
 #define PCMK__XA_LRMD_IPC_OP            "lrmd_ipc_op"
 #define PCMK__XA_LRMD_IPC_SERVER        "lrmd_ipc_server"

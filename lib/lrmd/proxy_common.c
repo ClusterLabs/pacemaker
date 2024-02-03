@@ -246,7 +246,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             return;
         }
         proxy->last_request_id = 0;
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
+        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
         crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
 
         CRM_ASSERT(node_name);

@@ -575,7 +575,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         crmd_proxy_dispatch(session, request);
 
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
+        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
         if (flags & crm_ipc_client_response) {
             int msg_id = 0;
             xmlNode *op_reply = create_xml_node(NULL, PCMK__XE_ACK);
