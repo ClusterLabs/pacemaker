@@ -539,7 +539,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 static xmlNode *
 create_lrmd_reply(const char *origin, int rc, int call_id)
 {
-    xmlNode *reply = create_xml_node(NULL, T_LRMD_REPLY);
+    xmlNode *reply = create_xml_node(NULL, PCMK__XE_LRMD_REPLY);
 
     crm_xml_add(reply, PCMK__XA_LRMD_ORIGIN, origin);
     crm_xml_add_int(reply, PCMK__XA_LRMD_RC, rc);
