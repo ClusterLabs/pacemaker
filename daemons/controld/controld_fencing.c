@@ -723,7 +723,7 @@ controld_timer_fencer_connect(gpointer user_data)
         cmds->register_notification(stonith_api, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     handle_fence_notification);
         cmds->register_notification(stonith_api,
-                                    T_STONITH_NOTIFY_HISTORY_SYNCED,
+                                    PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
                                     tengine_stonith_history_synced);
         te_trigger_stonith_history_sync(TRUE);
         crm_notice("Fencer successfully connected");
@@ -1049,7 +1049,7 @@ te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
     }
 
     if (st) {
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY_SYNCED);
+        st->cmds->remove_notification(st, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED);
     }
 }
 
