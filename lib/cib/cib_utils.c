@@ -682,7 +682,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add(*op_msg, F_CIB_SECTION, section);
     crm_xml_add(*op_msg, F_CIB_USER, user_name);
     crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
-    crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
+    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
@@ -778,7 +778,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 
     if (msg != NULL) {
         crm_element_value_int(msg, F_CIB_RC, &rc);
-        crm_element_value_int(msg, F_CIB_CALLID, &call_id);
+        crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
         output = get_message_xml(msg, F_CIB_CALLDATA);
     }
 

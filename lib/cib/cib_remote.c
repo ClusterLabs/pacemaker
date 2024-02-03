@@ -126,7 +126,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
         }
 
-        crm_element_value_int(op_reply, F_CIB_CALLID, &reply_id);
+        crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
 
         if (reply_id == msg_id) {
             break;

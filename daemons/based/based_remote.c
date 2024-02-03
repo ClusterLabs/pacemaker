@@ -429,11 +429,11 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
     crm_xml_add(command, F_CIB_USER, client->user);
 
-    if (crm_element_value(command, F_CIB_CALLID) == NULL) {
+    if (crm_element_value(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
-        crm_xml_add(command, F_CIB_CALLID, call_uuid);
+        crm_xml_add(command, PCMK__XA_CIB_CALLID, call_uuid);
         free(call_uuid);
     }
 

@@ -233,7 +233,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__get_operation(op, &operation);
     op_function = file_get_op_function(operation);
 
-    crm_element_value_int(request, F_CIB_CALLID, &call_id);
+    crm_element_value_int(request, PCMK__XA_CIB_CALLID, &call_id);
     crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
 
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);

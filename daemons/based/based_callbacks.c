@@ -164,7 +164,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 
     crm_xml_add(reply, PCMK__XA_T, T_CIB);
     crm_xml_add(reply, F_CIB_OPERATION, op);
-    crm_xml_add(reply, F_CIB_CALLID, call_id);
+    crm_xml_add(reply, PCMK__XA_CIB_CALLID, call_id);
     crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
     crm_xml_add_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
     crm_xml_add_int(reply, F_CIB_RC, rc);
@@ -188,7 +188,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 
     CRM_ASSERT(notify_src && client_id);
 
-    crm_element_value_int(notify_src, F_CIB_CALLID, &call_id);
+    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &call_id);
 
     client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
@@ -885,7 +885,8 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
               "(local clients will%s be notified)", op,
               pcmk__s(crm_element_value(request, PCMK__XA_CIB_CLIENTNAME),
                       "client"),
-              pcmk__s(crm_element_value(request, F_CIB_CALLID), "without ID"),
+              pcmk__s(crm_element_value(request, PCMK__XA_CIB_CALLID),
+                      "without ID"),
               originator, (*local_notify? "" : "not"));
     return TRUE;
 }
@@ -923,7 +924,7 @@ forward_request(xmlNode *request)
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *client_name = crm_element_value(request,
                                                 PCMK__XA_CIB_CLIENTNAME);
-    const char *call_id = crm_element_value(request, F_CIB_CALLID);
+    const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
     crm_node_t *peer = NULL;
 
     int log_level = LOG_INFO;
@@ -1043,7 +1044,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *target = NULL;
-    const char *call_id = crm_element_value(request, F_CIB_CALLID);
+    const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
     const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = crm_element_value(request,
                                                 PCMK__XA_CIB_CLIENTNAME);
@@ -1352,7 +1353,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     const char *op = NULL;
     const char *section = NULL;
-    const char *call_id = crm_element_value(request, F_CIB_CALLID);
+    const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
     const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = crm_element_value(request,
                                                 PCMK__XA_CIB_CLIENTNAME);

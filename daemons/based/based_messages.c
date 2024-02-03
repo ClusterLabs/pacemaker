@@ -209,7 +209,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                                               PCMK_XA_VALIDATE_WITH);
         const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
         const char *call_opts = crm_element_value(req, PCMK__XA_CIB_CALLOPT);
-        const char *call_id = crm_element_value(req, F_CIB_CALLID);
+        const char *call_id = crm_element_value(req, PCMK__XA_CIB_CALLID);
 
         crm_trace("Processing \"%s\" event", op);
         if (value != NULL) {
@@ -229,7 +229,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, F_CIB_DELEGATED, host);
             crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
-            crm_xml_add(up, F_CIB_CALLID, call_id);
+            crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
 
             if (cib_legacy_mode() && based_is_primary) {
                 rc = cib_process_upgrade(
@@ -265,7 +265,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, F_CIB_ISREPLY, host);
                 crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
                 crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
-                crm_xml_add(up, F_CIB_CALLID, call_id);
+                crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
                 crm_xml_add_int(up, F_CIB_UPGRADE_RC, rc);
                 if (send_cluster_message(origin, crm_msg_cib, up, TRUE)
                     == FALSE) {
@@ -380,7 +380,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_T,
         PCMK__XA_CIB_CLIENTID,
         PCMK__XA_CIB_CALLOPT,
-        F_CIB_CALLID,
+        PCMK__XA_CIB_CALLID,
         F_CIB_OPERATION,
         F_CIB_ISREPLY,
         F_CIB_SECTION,
