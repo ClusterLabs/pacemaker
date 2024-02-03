@@ -86,6 +86,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_RUN_TIME "lrmd_run_time"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC_RCCHANGE_TIME "lrmd_rcchange_time"
+
 #ifdef __cplusplus
 }
 #endif
