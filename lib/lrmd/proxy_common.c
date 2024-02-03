@@ -227,7 +227,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
-        const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
+        const char *name = crm_element_value(msg, PCMK__XA_LRMD_IPC_CLIENT);
 
         CRM_CHECK(request != NULL, return);
 
