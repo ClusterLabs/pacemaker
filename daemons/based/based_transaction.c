@@ -65,7 +65,7 @@ process_transaction_requests(xmlNodePtr transaction,
          request != NULL; request = crm_next_same_xml(request)) {
 
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-        const char *host = crm_element_value(request, F_CIB_HOST);
+        const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
         const cib__operation_t *operation = NULL;
         int rc = cib__get_operation(op, &operation);
 

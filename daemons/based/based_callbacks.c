@@ -715,7 +715,7 @@ parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
         return TRUE;
     }
 
-    host = crm_element_value(request, F_CIB_HOST);
+    host = crm_element_value(request, PCMK__XA_CIB_HOST);
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing %s request sent to us from %s", op, originator);
         return TRUE;
@@ -866,7 +866,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
 
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
-    host = crm_element_value(request, F_CIB_HOST);
+    host = crm_element_value(request, PCMK__XA_CIB_HOST);
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing %s request sent to us from %s", op, originator);
         *needs_reply = TRUE;
@@ -920,7 +920,7 @@ forward_request(xmlNode *request)
 {
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
-    const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *client_name = crm_element_value(request,
                                                 PCMK__XA_CIB_CLIENTNAME);
@@ -1042,7 +1042,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     int rc = pcmk_ok;
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
     const char *target = NULL;
     const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
     const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);

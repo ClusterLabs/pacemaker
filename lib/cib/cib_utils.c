@@ -678,7 +678,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 
     crm_xml_add(*op_msg, PCMK__XA_T, T_CIB);
     crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
-    crm_xml_add(*op_msg, F_CIB_HOST, host);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_HOST, host);
     crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
     crm_xml_add(*op_msg, F_CIB_USER, user_name);
     crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
@@ -710,7 +710,7 @@ static int
 validate_transaction_request(const xmlNode *request)
 {
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
     int rc = cib__get_operation(op, &operation);
 

@@ -384,7 +384,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_OP,
         PCMK__XA_CIB_ISREPLYTO,
         PCMK__XA_CIB_SECTION,
-        F_CIB_HOST,
+        PCMK__XA_CIB_HOST,
         F_CIB_RC,
         F_CIB_DELEGATED,
         F_CIB_OBJID,
@@ -436,7 +436,7 @@ sync_our_cib(xmlNode * request, gboolean all)
         crm_xml_add(replace_request, PCMK__XA_CIB_ISREPLYTO, host);
     }
     if (all) {
-        xml_remove_prop(replace_request, F_CIB_HOST);
+        xml_remove_prop(replace_request, PCMK__XA_CIB_HOST);
     }
 
     crm_xml_add(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
