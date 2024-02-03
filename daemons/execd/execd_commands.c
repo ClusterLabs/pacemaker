@@ -284,7 +284,7 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
     rsc->class = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
     rsc->provider = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
-    rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
+    rsc->type = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
                                      rsc);
 
@@ -1574,7 +1574,7 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
         crm_xml_add(reply, F_LRMD_RSC_ID, rsc->rsc_id);
         crm_xml_add(reply, PCMK__XA_LRMD_CLASS, rsc->class);
         crm_xml_add(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
-        crm_xml_add(reply, F_LRMD_TYPE, rsc->type);
+        crm_xml_add(reply, PCMK__XA_LRMD_TYPE, rsc->type);
     }
     return reply;
 }
