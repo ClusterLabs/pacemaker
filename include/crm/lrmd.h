@@ -88,7 +88,6 @@ typedef struct lrmd_key_value_s {
 #define LRMD_IPC_OP_SHUTDOWN_ACK  "shutdown_ack"
 #define LRMD_IPC_OP_SHUTDOWN_NACK "shutdown_nack"
 
-#define F_LRMD_IPC_OP           "lrmd_ipc_op"
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
 #define F_LRMD_IPC_SESSION      "lrmd_ipc_session"
 #define F_LRMD_IPC_CLIENT       "lrmd_ipc_client"

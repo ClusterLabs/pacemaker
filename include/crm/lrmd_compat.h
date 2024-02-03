@@ -131,6 +131,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_ALERT "lrmd_alert"
 
+//! \deprecated Do not use
+#define F_LRMD_IPC_OP "lrmd_ipc_op"
+
 #ifdef __cplusplus
 }
 #endif
