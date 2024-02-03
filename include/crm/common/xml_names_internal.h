@@ -177,6 +177,7 @@ extern "C" {
 #define PCMK__XA_LRMD_CALLDATA          "lrmd_calldata"
 #define PCMK__XA_LRMD_CALLID            "lrmd_callid"
 #define PCMK__XA_LRMD_CALLOPT           "lrmd_callopt"
+#define PCMK__XA_LRMD_CLASS             "lrmd_class"
 #define PCMK__XA_LRMD_CLIENTID          "lrmd_clientid"
 #define PCMK__XA_LRMD_CLIENTNAME        "lrmd_clientname"
 #define PCMK__XA_LRMD_EXEC_OP_STATUS    "lrmd_exec_op_status"
