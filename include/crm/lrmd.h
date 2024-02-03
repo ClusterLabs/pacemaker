@@ -67,7 +67,6 @@ typedef struct lrmd_key_value_s {
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
 
-#define F_LRMD_CLIENTID         "lrmd_clientid"
 #define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
 #define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
 #define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
