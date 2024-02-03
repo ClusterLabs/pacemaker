@@ -116,6 +116,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_INTERVAL "lrmd_rsc_interval"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC_DELETED "lrmd_rsc_deleted"
+
 #ifdef __cplusplus
 }
 #endif
