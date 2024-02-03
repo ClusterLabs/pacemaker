@@ -306,7 +306,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         crm_element_value_int(msg, PCMK__XA_LRMD_QUEUE_TIME,
                               (int *) &event.queue_time);
 
-        event.op_type = crm_element_value(msg, F_LRMD_RSC_ACTION);
+        event.op_type = crm_element_value(msg, PCMK__XA_LRMD_RSC_ACTION);
         event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
         event.type = lrmd_event_exec_complete;
 
@@ -1886,7 +1886,8 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
                 break;
             }
             op_info->rsc_id = strdup(rsc_id);
-            op_info->action = crm_element_value_copy(op_xml, F_LRMD_RSC_ACTION);
+            op_info->action = crm_element_value_copy(op_xml,
+                                                     PCMK__XA_LRMD_RSC_ACTION);
             op_info->interval_ms_s = crm_element_value_copy(op_xml,
                                                             F_LRMD_RSC_INTERVAL);
             op_info->timeout_ms_s =
@@ -2039,7 +2040,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    crm_xml_add(data, F_LRMD_RSC_ACTION, action);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, F_LRMD_RSC_USERDATA_STR, userdata);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
@@ -2091,7 +2092,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ACTION, action);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);

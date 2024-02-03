@@ -314,7 +314,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->timeout_orig = cmd->timeout;
 
     cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
-    cmd->action = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ACTION);
+    cmd->action = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     cmd->userdata_str = crm_element_value_copy(rsc_xml, F_LRMD_RSC_USERDATA_STR);
     cmd->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
@@ -639,9 +639,9 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
     crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
     if(cmd->real_action) {
-        crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->real_action);
+        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->real_action);
     } else {
-        crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->action);
+        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
     }
     crm_xml_add(notify, F_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
     crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
@@ -1741,7 +1741,7 @@ process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    const char *action = crm_element_value(rsc_xml, F_LRMD_RSC_ACTION);
+    const char *action = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     guint interval_ms = 0;
 
     crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &interval_ms);
@@ -1763,8 +1763,8 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
         lrmd_cmd_t *cmd = item->data;
         xmlNode *op_xml = create_xml_node(rsc_xml, T_LRMD_RSC_OP);
 
-        crm_xml_add(op_xml, F_LRMD_RSC_ACTION,
-                    (cmd->real_action? cmd->real_action : cmd->action));
+        crm_xml_add(op_xml, PCMK__XA_LRMD_RSC_ACTION,
+                    pcmk__s(cmd->real_action, cmd->action));
         crm_xml_add_ms(op_xml, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
         crm_xml_add_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
     }
