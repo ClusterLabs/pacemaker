@@ -110,6 +110,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_EXIT_REASON "lrmd_rsc_exit_reason"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC_START_DELAY "lrmd_rsc_start_delay"
+
 #ifdef __cplusplus
 }
 #endif
