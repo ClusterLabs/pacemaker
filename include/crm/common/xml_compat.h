@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,6 +73,9 @@ crm_element_name(const xmlNode *xml)
 
 //! \deprecated Do not use
 char *crm_xml_escape(const char *text);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *copy_xml(xmlNode *src_node);
 
 #ifdef __cplusplus
 }
