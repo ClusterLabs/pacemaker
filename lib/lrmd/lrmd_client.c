@@ -303,7 +303,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME,
                               (int *) &event.exec_time);
-        crm_element_value_int(msg, F_LRMD_RSC_QUEUE_TIME, (int *)&event.queue_time);
+        crm_element_value_int(msg, PCMK__XA_LRMD_QUEUE_TIME,
+                              (int *) &event.queue_time);
 
         event.op_type = crm_element_value(msg, F_LRMD_RSC_ACTION);
         event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);

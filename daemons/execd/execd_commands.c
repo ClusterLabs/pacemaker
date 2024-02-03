@@ -633,7 +633,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
                    (long long) cmd->epoch_rcchange);
 #ifdef PCMK__TIME_USE_CGT
     crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_TIME, exec_time);
-    crm_xml_add_int(notify, F_LRMD_RSC_QUEUE_TIME, queue_time);
+    crm_xml_add_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
 #endif
 
     crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
