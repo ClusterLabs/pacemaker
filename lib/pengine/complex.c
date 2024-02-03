@@ -327,9 +327,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
          child_xml = pcmk__xe_next(child_xml)) {
-        xmlNode *new_child = NULL;
 
-        new_child = add_node_copy(new_xml, child_xml);
+        xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
         if (pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
             rsc_ops = new_child;
@@ -354,7 +353,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             char *key = template_op_key(op);
 
             if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
-                add_node_copy(rsc_ops, op);
+                pcmk__xml_copy(rsc_ops, op);
             }
 
             free(key);

@@ -2161,7 +2161,7 @@ static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
 {
     // Re-create the child element so we can check ACLs
-    xmlNode *candidate = add_node_copy(new_parent, old_child);
+    xmlNode *candidate = pcmk__xml_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
     reset_xml_node_flags(candidate);
@@ -2395,7 +2395,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
     }
 
     if (target == NULL) {
-        add_node_copy(parent, update);
+        pcmk__xml_copy(parent, update);
 
     } else if (!pcmk__str_eq((const char *)target->content, (const char *)update->content, pcmk__str_casei)) {
         xmlFree(target->content);
@@ -2565,7 +2565,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
         if (*children == NULL) {
             *children = create_xml_node(NULL, __func__);
         }
-        add_node_copy(*children, root);
+        pcmk__xml_copy(*children, root);
         match_found = 1;
     }
 
@@ -2684,7 +2684,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
         if (recursive) {
             sorted_xml(child, result, recursive);
         } else {
-            add_node_copy(result, child);
+            pcmk__xml_copy(result, child);
         }
     }
 

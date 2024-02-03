@@ -1167,7 +1167,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
 
         //crm_xml_add(xml_obj, PCMK_XA_ID, bundle_data->prefix);
-        add_node_copy(xml_resource, xml_obj);
+        pcmk__xml_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {
         pcmk__config_err("Cannot control %s inside %s without either "

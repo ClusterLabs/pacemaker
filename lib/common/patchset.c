@@ -60,7 +60,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, PCMK_XE_POSITION, position);
-            add_node_copy(change, xml);
+            pcmk__xml_copy(change, xml);
             g_string_free(xpath, TRUE);
         }
 
@@ -495,7 +495,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
         && (strcmp(value, "added:top") == 0)) {
         id = pcmk__xe_id(patch);
         crm_trace("We are the root of the addition: %s.id=%s", name, id);
-        add_node_copy(parent, patch);
+        pcmk__xml_copy(parent, patch);
         return;
 
     } else if (target == NULL) {
@@ -1229,7 +1229,7 @@ subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
                                          pcmk__str_casei)) {
         xmlNode *deleted = NULL;
 
-        deleted = add_node_copy(parent, left);
+        deleted = pcmk__xml_copy(parent, left);
         *changed = TRUE;
 
         return deleted;
@@ -1272,7 +1272,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
         crm_trace("Processing <%s " PCMK_XA_ID "=%s> (complete copy)",
                   name, id);
-        deleted = add_node_copy(parent, left);
+        deleted = pcmk__xml_copy(parent, left);
         crm_xml_add(deleted, PCMK__XA_CRM_DIFF_MARKER, marker);
 
         *changed = TRUE;

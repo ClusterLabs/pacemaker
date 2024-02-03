@@ -758,7 +758,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
     }
 
     if (rc == pcmk_rc_ok) {
-        add_node_copy(cib->transaction, request);
+        pcmk__xml_copy(cib->transaction, request);
 
     } else {
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
