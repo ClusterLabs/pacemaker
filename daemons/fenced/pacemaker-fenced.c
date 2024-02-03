@@ -347,7 +347,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
                          xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
-    xmlNode *update_msg = create_xml_node(NULL, "notify");
+    xmlNode *update_msg = create_xml_node(NULL, PCMK__XE_NOTIFY);
 
     CRM_LOG_ASSERT(type != NULL);
 

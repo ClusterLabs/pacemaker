@@ -40,6 +40,7 @@ extern "C" {
 #define PCMK__XE_META                   "meta"
 #define PCMK__XE_NACK                   "nack"
 #define PCMK__XE_NODE_STATE             "node_state"
+#define PCMK__XE_NOTIFY                 "notify"
 #define PCMK__XE_OPTIONS                "options"
 #define PCMK__XE_PARAM                  "param"
 #define PCMK__XE_PING                   "ping"
