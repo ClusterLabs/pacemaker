@@ -34,9 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-/* notify sub-types */
-#  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
-
 /*!
  * \internal
  * \enum cib__op_attr
