@@ -1243,7 +1243,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
 
-        converted = copy_xml(*xml);
+        converted = pcmk__xml_copy(NULL, *xml);
         update_validation(&converted, &version, 0, TRUE, to_logs);
 
         value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);

@@ -208,7 +208,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
 
     } else {
         // Start with a copy of all parameters
-        data->params_secure = copy_xml(data->params_all);
+        data->params_secure = pcmk__xml_copy(NULL, data->params_all);
     }
 
     if (secure_list != NULL) {
@@ -270,7 +270,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     }
 
     // Start with a copy of all parameters
-    data->params_restart = copy_xml(data->params_all);
+    data->params_restart = pcmk__xml_copy(NULL, data->params_all);
 
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);

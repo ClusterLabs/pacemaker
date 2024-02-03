@@ -1215,7 +1215,9 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     }
 
     op->target = crm_element_value_copy(dev, PCMK__XA_ST_TARGET);
-    op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
+
+    // @TODO Figure out how to avoid copying XML here
+    op->request = pcmk__xml_copy(NULL, request);
     crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     op->call_options = call_options;
 

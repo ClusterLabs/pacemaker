@@ -224,7 +224,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
         return NULL;
     }
 
-    new_xml = copy_xml(xml_obj);
+    new_xml = pcmk__xml_copy(NULL, xml_obj);
 
     for (xmlNode *set = first_named_child(new_xml, PCMK_XE_RESOURCE_SET);
          set != NULL; set = crm_next_same_xml(set)) {

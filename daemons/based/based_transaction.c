@@ -139,7 +139,7 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
      * * cib_perform_op() will infer changes for the commit request at the end.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
-              *result_cib = copy_xml(the_cib));
+              *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
     crm_trace("Committing transaction for %s to working CIB", source);

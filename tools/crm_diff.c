@@ -116,7 +116,7 @@ print_patch(xmlNode *patch)
 static int
 apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 {
-    xmlNode *output = copy_xml(input);
+    xmlNode *output = pcmk__xml_copy(NULL, input);
     int rc = xml_apply_patchset(output, patch, as_cib);
 
     rc = pcmk_legacy2rc(rc);

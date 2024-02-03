@@ -221,7 +221,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     }
 
     if (copy_dest != NULL) {
-        *copy_dest = copy_xml(priv->root);
+        *copy_dest = pcmk__xml_copy(NULL, priv->root);
     }
 }
 

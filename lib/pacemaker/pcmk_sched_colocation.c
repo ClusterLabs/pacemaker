@@ -888,7 +888,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
     primary_role = crm_element_value(xml_obj, PCMK_XA_WITH_RSC_ROLE);
 
-    *expanded_xml = copy_xml(xml_obj);
+    *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
     /* Convert dependent's template/tag reference into constraint
      * PCMK_XE_RESOURCE_SET

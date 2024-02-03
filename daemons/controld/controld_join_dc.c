@@ -486,7 +486,7 @@ do_dc_join_filter_offer(long long action,
             crm_debug("Accepting join-%d request from %s (with first CIB "
                       "generation) " CRM_XS " ref=%s",
                       join_id, join_from, ref);
-            max_generation_xml = copy_xml(generation);
+            max_generation_xml = pcmk__xml_copy(NULL, generation);
             pcmk__str_update(&max_generation_from, join_from);
         }
 
@@ -512,7 +512,7 @@ do_dc_join_filter_offer(long long action,
             crm_log_xml_debug(generation, "New max generation");
 
             free_xml(max_generation_xml);
-            max_generation_xml = copy_xml(join_ack->xml);
+            max_generation_xml = pcmk__xml_copy(NULL, join_ack->xml);
             pcmk__str_update(&max_generation_from, join_from);
         }
 

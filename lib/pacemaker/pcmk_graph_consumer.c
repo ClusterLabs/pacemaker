@@ -514,7 +514,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 
     pcmk__scan_min_int(value, &(action->id), -1);
     action->type = pcmk__rsc_graph_action;
-    action->xml = copy_xml(xml_action);
+    action->xml = pcmk__xml_copy(NULL, xml_action);
     action->synapse = parent;
     action->type = action_type;
     action->params = xml2list(action->xml);
