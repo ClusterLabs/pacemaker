@@ -805,7 +805,8 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
          * limit on how far newer nodes will go
          */
         const char *max = crm_element_value(request, F_CIB_SCHEMA_MAX);
-        const char *upgrade_rc = crm_element_value(request, F_CIB_UPGRADE_RC);
+        const char *upgrade_rc = crm_element_value(request,
+                                                   PCMK__XA_CIB_UPGRADE_RC);
 
         crm_trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
                   (is_reply? "reply" : "request"),
