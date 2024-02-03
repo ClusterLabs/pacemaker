@@ -618,22 +618,6 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
 }
 
 xmlNode *
-add_node_copy(xmlNode * parent, xmlNode * src_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
-
-    child = xmlDocCopyNode(src_node, parent->doc, 1);
-    if (child == NULL) {
-        return NULL;
-    }
-    xmlAddChild(parent, child);
-    pcmk__mark_xml_created(child);
-    return child;
-}
-
-xmlNode *
 create_xml_node(xmlNode * parent, const char *name)
 {
     xmlDoc *doc = NULL;
@@ -2953,6 +2937,22 @@ getDocPtr(xmlNode *node)
         xmlDocSetRootElement(doc, node);
     }
     return doc;
+}
+
+xmlNode *
+add_node_copy(xmlNode *parent, xmlNode *src_node)
+{
+    xmlNode *child = NULL;
+
+    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
+
+    child = xmlDocCopyNode(src_node, parent->doc, 1);
+    if (child == NULL) {
+        return NULL;
+    }
+    xmlAddChild(parent, child);
+    pcmk__mark_xml_created(child);
+    return child;
 }
 
 int

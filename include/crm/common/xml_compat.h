@@ -77,6 +77,9 @@ char *crm_xml_escape(const char *text);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *copy_xml(xmlNode *src_node);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
+
 #ifdef __cplusplus
 }
 #endif
