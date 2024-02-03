@@ -21,6 +21,7 @@ extern "C" {
 #define PCMK__XE_ACK                    "ack"
 #define PCMK__XE_ATTRIBUTES             "attributes"
 #define PCMK__XE_CIB_COMMAND            "cib_command"
+#define PCMK__XE_CIB_RESULT             "cib_result"
 #define PCMK__XE_CIB_TRANSACTION        "cib_transaction"
 #define PCMK__XE_CRM_EVENT              "crm_event"
 #define PCMK__XE_CRM_XML                "crm_xml"
