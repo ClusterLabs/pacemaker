@@ -2689,7 +2689,8 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
         crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
 
-        fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
+                                 notify_data);
         fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 }

@@ -925,7 +925,8 @@ setup_fencer_connection(void)
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_event);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                            mon_st_callback_event);
         } else {
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
