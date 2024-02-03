@@ -2067,7 +2067,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
                     int timeout, lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_ALERT);
+    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_ALERT);
     xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 

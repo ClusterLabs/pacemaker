@@ -105,7 +105,8 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
-    xmlNode *alert_xml = get_xpath_object("//" F_LRMD_ALERT, request, LOG_ERR);
+    xmlNode *alert_xml = get_xpath_object("//" PCMK__XE_LRMD_ALERT, request,
+                                          LOG_ERR);
     const char *alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
     const char *alert_path = crm_element_value(alert_xml,
                                                PCMK__XA_LRMD_ALERT_PATH);
