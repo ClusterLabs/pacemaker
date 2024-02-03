@@ -798,16 +798,16 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
-         * this operation if F_CIB_SCHEMA_MAX is unset
+         * this operation if PCMK__XA_CIB_SCHEMA_MAX is unset.
          *
          * If the DC is happy it will then send out another
          * PCMK__CIB_REQUEST_UPGRADE which will tell all nodes to do the actual
          * upgrade.
          *
-         * Except this time F_CIB_SCHEMA_MAX will be set which puts a
+         * Except this time PCMK__XA_CIB_SCHEMA_MAX will be set which puts a
          * limit on how far newer nodes will go
          */
-        const char *max = crm_element_value(request, F_CIB_SCHEMA_MAX);
+        const char *max = crm_element_value(request, PCMK__XA_CIB_SCHEMA_MAX);
         const char *upgrade_rc = crm_element_value(request,
                                                    PCMK__XA_CIB_UPGRADE_RC);
 

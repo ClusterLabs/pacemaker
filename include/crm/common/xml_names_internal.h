@@ -128,6 +128,7 @@ extern "C" {
 #define PCMK__XA_CIB_OP                 "cib_op"
 #define PCMK__XA_CIB_PING_ID            "cib_ping_id"
 #define PCMK__XA_CIB_RC                 "cib_rc"
+#define PCMK__XA_CIB_SCHEMA_MAX         "cib_schema_max"
 #define PCMK__XA_CIB_SECTION            "cib_section"
 #define PCMK__XA_CIB_UPDATE             "cib_update"
 #define PCMK__XA_CIB_UPDATE_RESULT      "cib_update_result"

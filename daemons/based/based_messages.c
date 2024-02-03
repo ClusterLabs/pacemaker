@@ -191,11 +191,11 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
     *answer = NULL;
 
-    if(crm_element_value(req, F_CIB_SCHEMA_MAX)) {
+    if (crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX) != NULL) {
         /* The originator of an upgrade request sends it to the DC, without
-         * F_CIB_SCHEMA_MAX. If an upgrade is needed, the DC re-broadcasts the
-         * request with F_CIB_SCHEMA_MAX, and each node performs the upgrade
-         * (and notifies its local clients) here.
+         * PCMK__XA_CIB_SCHEMA_MAX. If an upgrade is needed, the DC
+         * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
+         * performs the upgrade (and notifies its local clients) here.
          */
         return cib_process_upgrade(
             op, options, section, req, input, existing_cib, result_cib, answer);
@@ -225,7 +225,8 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
             crm_xml_add(up, PCMK__XA_T, T_CIB);
             crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-            crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
+            crm_xml_add(up, PCMK__XA_CIB_SCHEMA_MAX,
+                        get_schema_name(new_version));
             crm_xml_add(up, PCMK__XA_CIB_DELEGATED_FROM, host);
             crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);

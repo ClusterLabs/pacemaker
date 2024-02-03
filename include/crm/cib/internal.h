@@ -34,8 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define F_CIB_SCHEMA_MAX      "cib_schema_max"
-
 #  define T_CIB			"cib"
 #  define T_CIB_COMMAND		"cib_command"
 #  define T_CIB_NOTIFY		"cib_notify"
