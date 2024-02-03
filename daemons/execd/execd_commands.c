@@ -279,7 +279,7 @@ build_rsc_from_xml(xmlNode * msg)
 
     rsc = calloc(1, sizeof(lrmd_rsc_t));
 
-    crm_element_value_int(msg, F_LRMD_CALLOPTS, &rsc->call_opts);
+    crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
     rsc->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
     rsc->class = crm_element_value_copy(rsc_xml, F_LRMD_CLASS);
@@ -303,7 +303,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     cmd = calloc(1, sizeof(lrmd_cmd_t));
 
-    crm_element_value_int(msg, F_LRMD_CALLOPTS, &call_options);
+    crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
     cmd->call_opts = call_options;
     cmd->client_id = strdup(client->id);
 

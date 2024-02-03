@@ -175,6 +175,7 @@ extern "C" {
 #define PCMK__XA_LINE                   "line"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_LRMD_CALLID            "lrmd_callid"
+#define PCMK__XA_LRMD_CALLOPT           "lrmd_callopt"
 #define PCMK__XA_LRMD_CLIENTID          "lrmd_clientid"
 #define PCMK__XA_LRMD_CLIENTNAME        "lrmd_clientname"
 #define PCMK__XA_LRMD_IS_IPC_PROVIDER   "lrmd_is_ipc_provider"
