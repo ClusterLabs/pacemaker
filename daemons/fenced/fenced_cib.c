@@ -716,7 +716,7 @@ void
 fenced_cib_cleanup(void)
 {
     if (cib_api != NULL) {
-        cib_api->cmds->del_notify_callback(cib_api, T_CIB_DIFF_NOTIFY,
+        cib_api->cmds->del_notify_callback(cib_api, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                            update_cib_cache_cb);
         cib__clean_up_connection(&cib_api);
     }
@@ -742,16 +742,20 @@ setup_cib(void)
 
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB manager: %s (%d)", pcmk_strerror(rc), rc);
-
-    } else if (pcmk_ok !=
-               cib_api->cmds->add_notify_callback(cib_api, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {
-        crm_err("Could not set CIB notification callback");
-
-    } else {
-        rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_scope_local);
-        cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL, "init_cib_cache_cb",
-                                         init_cib_cache_cb);
-        cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
-        crm_info("Watching for fencing topology changes");
+        return;
     }
+
+    rc = cib_api->cmds->add_notify_callback(cib_api,
+                                            PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                            update_cib_cache_cb);
+    if (rc != pcmk_ok) {
+        crm_err("Could not set CIB notification callback");
+        return;
+    }
+
+    rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_scope_local);
+    cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL,
+                                     "init_cib_cache_cb", init_cib_cache_cb);
+    cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
+    crm_info("Watching for fencing topology changes");
 }

@@ -56,7 +56,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     CRM_LOG_ASSERT(type != NULL);
 
     if (pcmk_is_set(client->flags, cib_notify_diff)
-        && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+        && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
         do_send = TRUE;
 
@@ -199,7 +199,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     update_msg = create_xml_node(NULL, "notify");
 
     crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
-    crm_xml_add(update_msg, PCMK__XA_SUBT, T_CIB_DIFF_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_CIB_OP, op);
     crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
     crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);

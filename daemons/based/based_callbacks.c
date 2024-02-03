@@ -300,7 +300,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                                 pcmk__str_none)) {
             bit = cib_notify_confirm;
 
-        } else if (pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                pcmk__str_none)) {
             bit = cib_notify_diff;
 
         } else {

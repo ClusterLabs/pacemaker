@@ -132,7 +132,8 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
+    rc = the_cib->cmds->add_notify_callback(the_cib,
+                                            PCMK__VALUE_CIB_DIFF_NOTIFY,
                                             attrd_cib_updated_cb);
     if (rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback");
@@ -150,7 +151,7 @@ void
 attrd_cib_disconnect(void)
 {
     CRM_CHECK(the_cib != NULL, return);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
+    the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
 }

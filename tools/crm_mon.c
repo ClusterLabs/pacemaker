@@ -964,10 +964,11 @@ setup_cib_connection(void)
         }
 
         if (rc == pcmk_rc_ok) {
-            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY,
+            cib->cmds->del_notify_callback(cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                            crm_diff_update);
-            rc = pcmk_legacy2rc(cib->cmds->add_notify_callback(cib,
-                                    T_CIB_DIFF_NOTIFY, crm_diff_update));
+            rc = cib->cmds->add_notify_callback(cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                                crm_diff_update);
+            rc = pcmk_legacy2rc(rc);
         }
 
         if (rc != pcmk_rc_ok) {
