@@ -41,6 +41,7 @@ extern "C" {
 #define PCMK__XE_LRMD_ALERT             "lrmd_alert"
 #define PCMK__XE_LRMD_COMMAND           "lrmd_command"
 #define PCMK__XE_LRMD_IPC_MSG           "lrmd_ipc_msg"
+#define PCMK__XE_LRMD_IPC_PROXY         "lrmd_ipc_proxy"
 #define PCMK__XE_LRMD_NOTIFY            "lrmd_notify"
 #define PCMK__XE_LRMD_REPLY             "lrmd_reply"
 #define PCMK__XE_LRMD_RSC               "lrmd_rsc"
