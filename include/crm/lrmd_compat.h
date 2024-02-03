@@ -104,6 +104,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC_OUTPUT "lrmd_rsc_output"
+
 #ifdef __cplusplus
 }
 #endif
