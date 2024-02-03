@@ -2072,7 +2072,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     lrmd_key_value_t *tmp = NULL;
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_ALERT_ID, alert_id);
+    crm_xml_add(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
     crm_xml_add(data, F_LRMD_ALERT_PATH, alert_path);
     crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
 
