@@ -250,7 +250,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
 
         CRM_ASSERT(node_name);
-        pcmk__update_acl_user(request, F_LRMD_IPC_USER, node_name);
+        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER, node_name);
 
         if (pcmk_is_set(flags, crm_ipc_proxied)) {
             const char *type = crm_element_value(request, PCMK__XA_T);

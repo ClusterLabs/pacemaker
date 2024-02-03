@@ -191,6 +191,7 @@ extern "C" {
 #define PCMK__XA_LRMD_IPC_OP            "lrmd_ipc_op"
 #define PCMK__XA_LRMD_IPC_SERVER        "lrmd_ipc_server"
 #define PCMK__XA_LRMD_IPC_SESSION       "lrmd_ipc_session"
+#define PCMK__XA_LRMD_IPC_USER          "lrmd_ipc_user"
 #define PCMK__XA_LRMD_IS_IPC_PROVIDER   "lrmd_is_ipc_provider"
 #define PCMK__XA_LRMD_OP                "lrmd_op"
 #define PCMK__XA_LRMD_ORIGIN            "lrmd_origin"

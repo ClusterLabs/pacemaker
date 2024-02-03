@@ -267,7 +267,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_REQUEST);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_CLIENT, pcmk__client_name(client));
-    crm_xml_add(msg, F_LRMD_IPC_USER, client->user);
+    crm_xml_add(msg, PCMK__XA_LRMD_IPC_USER, client->user);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_ID, id);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_FLAGS, flags);
     add_message_xml(msg, F_LRMD_IPC_MSG, request);
