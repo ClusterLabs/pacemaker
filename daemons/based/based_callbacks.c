@@ -379,7 +379,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_xml_add(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
 
     CRM_LOG_ASSERT(cib_client->user != NULL);
-    pcmk__update_acl_user(op_request, F_CIB_USER, cib_client->user);
+    pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     free_xml(op_request);
@@ -994,7 +994,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
         pcmk__xe_set_bool_attr(msg, PCMK__XA_CIB_UPDATE, true);
         crm_xml_add(msg, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_APPLY_PATCH);
-        crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
+        crm_xml_add(msg, PCMK__XA_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {
             CRM_ASSERT(digest != NULL);

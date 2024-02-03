@@ -338,7 +338,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *user = crm_element_value(req, F_CIB_USER);
+    const char *user = crm_element_value(req, PCMK__XA_CIB_USER);
     bool with_digest = false;
 
     crm_trace("Begin %s%s%s op",
@@ -682,7 +682,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
     crm_xml_add(*op_msg, PCMK__XA_CIB_HOST, host);
     crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
-    crm_xml_add(*op_msg, F_CIB_USER, user_name);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_USER, user_name);
     crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 

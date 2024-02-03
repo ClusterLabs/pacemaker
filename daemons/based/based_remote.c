@@ -427,7 +427,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     crm_xml_add(command, PCMK__XA_T, T_CIB);
     crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
     crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
-    crm_xml_add(command, F_CIB_USER, client->user);
+    crm_xml_add(command, PCMK__XA_CIB_USER, client->user);
 
     if (crm_element_value(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();

@@ -391,7 +391,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_OBJECT_TYPE,
         PCMK__XA_CIB_UPDATE,
         PCMK__XA_CIB_CLIENTNAME,
-        F_CIB_USER,
+        PCMK__XA_CIB_USER,
         PCMK__XA_CIB_NOTIFY_TYPE,
         PCMK__XA_CIB_NOTIFY_ACTIVATE,
     };

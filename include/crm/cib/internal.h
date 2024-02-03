@@ -34,7 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define F_CIB_USER		"cib_user"
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
 #  define F_CIB_SCHEMA_MAX      "cib_schema_max"
