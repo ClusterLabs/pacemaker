@@ -98,7 +98,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
 
     msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_NEW);
-    crm_xml_add(msg, F_LRMD_IPC_IPC_SERVER, ipc_channel);
+    crm_xml_add(msg, PCMK__XA_LRMD_IPC_SERVER, ipc_channel);
     crm_xml_add(msg, F_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
     free_xml(msg);
