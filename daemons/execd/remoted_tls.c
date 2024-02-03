@@ -109,7 +109,7 @@ lrmd_remote_client_msg(gpointer data)
 
     request = pcmk__remote_message_xml(client->remote);
     while (request) {
-        crm_element_value_int(request, F_LRMD_REMOTE_MSG_ID, &id);
+        crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
         crm_trace("Processing remote client request %d", id);
         if (!client->name) {
             const char *value = crm_element_value(request,

@@ -623,7 +623,7 @@ int
 lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                       const char *msg_type)
 {
-    crm_xml_add_int(msg, F_LRMD_REMOTE_MSG_ID, id);
+    crm_xml_add_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, id);
     crm_xml_add(msg, PCMK__XA_LRMD_REMOTE_MSG_TYPE, msg_type);
     return pcmk__remote_send_xml(session, msg);
 }
@@ -671,7 +671,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             }
         }
 
-        crm_element_value_int(*reply, F_LRMD_REMOTE_MSG_ID, &reply_id);
+        crm_element_value_int(*reply, PCMK__XA_LRMD_REMOTE_MSG_ID, &reply_id);
         msg_type = crm_element_value(*reply, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
 
         if (!msg_type) {
