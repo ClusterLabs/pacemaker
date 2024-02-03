@@ -65,7 +65,8 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_pre)
-               && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
+                               pcmk__str_none)) {
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_post)

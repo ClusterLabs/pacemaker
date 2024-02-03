@@ -292,7 +292,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         if (pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
             bit = cib_notify_post;
 
-        } else if (pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
+                                pcmk__str_none)) {
             bit = cib_notify_pre;
 
         } else if (pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
