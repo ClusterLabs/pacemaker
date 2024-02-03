@@ -397,7 +397,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_NOTIFY_ACTIVATE,
     };
 
-    xmlNode *copy = create_xml_node(NULL, "copy");
+    xmlNode *copy = create_xml_node(NULL, PCMK__XE_COPY);
 
     CRM_ASSERT(copy != NULL);
 
