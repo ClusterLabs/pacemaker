@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -401,7 +401,7 @@ enum crmd_fsa_input {
 #  define R_HAVE_CIB        0x00020000ULL   /* Do we have an up-to-date CIB */
 
 #  define R_MEMBERSHIP      0x00100000ULL   /* Have we got cluster layer data yet */
-#  define R_PEER_DATA       0x00200000ULL   /* Have we got T_CL_STATUS data yet */
+#  define R_PEER_DATA       0x00200000ULL   // Cluster-layer peer status changed
 
 #  define R_HA_DISCONNECTED 0x00400000ULL      /* did we sign out of our own accord */
 
