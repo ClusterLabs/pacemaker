@@ -846,17 +846,6 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 }
 
 xmlNode *
-copy_xml(xmlNode * src)
-{
-    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
-    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
-
-    CRM_ASSERT(copy != NULL);
-    xmlDocSetRootElement(doc, copy);
-    return copy;
-}
-
-xmlNode *
 string2xml(const char *input)
 {
     xmlNode *xml = NULL;
@@ -3038,6 +3027,17 @@ crm_xml_escape(const char *text)
                 }
         }
     }
+    return copy;
+}
+
+xmlNode *
+copy_xml(xmlNode *src)
+{
+    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+
+    CRM_ASSERT(copy != NULL);
+    xmlDocSetRootElement(doc, copy);
     return copy;
 }
 

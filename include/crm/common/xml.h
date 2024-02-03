@@ -110,12 +110,6 @@ xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const
 void purge_diff_markers(xmlNode * a_node);
 
 /*
- * Returns a deep copy of src_node
- *
- */
-xmlNode *copy_xml(xmlNode * src_node);
-
-/*
  * Add a copy of xml_node to new_parent
  */
 xmlNode *add_node_copy(xmlNode * new_parent, xmlNode * xml_node);
