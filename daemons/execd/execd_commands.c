@@ -648,10 +648,12 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
 
     if (cmd->result.action_stderr != NULL) {
-        crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->result.action_stderr);
+        crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
+                    cmd->result.action_stderr);
 
     } else if (cmd->result.action_stdout != NULL) {
-        crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->result.action_stdout);
+        crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
+                    cmd->result.action_stdout);
     }
 
     if (cmd->params) {

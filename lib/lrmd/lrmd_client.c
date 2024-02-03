@@ -312,7 +312,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.type = lrmd_event_exec_complete;
 
         /* output and exit_reason may be freed by a callback */
-        event.output = crm_element_value_copy(msg, F_LRMD_RSC_OUTPUT);
+        event.output = crm_element_value_copy(msg, PCMK__XA_LRMD_RSC_OUTPUT);
         lrmd__set_result(&event, event.rc, event.op_status,
                          crm_element_value(msg, F_LRMD_RSC_EXIT_REASON));
 
