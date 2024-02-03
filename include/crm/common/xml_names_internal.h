@@ -246,6 +246,9 @@ extern "C" {
 #define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
 
 // @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
+#define PCMK__XA_CIB_LOCAL_NOTIFY_ID    "cib_local_notify_id"
+
+// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
 #define PCMK__XA_CIB_UPDATE_DIFF        "cib_update_diff"
 
 // @COMPAT Used only with v1 patchsets

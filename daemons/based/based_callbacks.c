@@ -1220,7 +1220,8 @@ cib_process_request(xmlNode *request, gboolean privileged,
         gboolean broadcast = FALSE;
 
         cib_local_bcast_num++;
-        crm_xml_add_int(request, F_CIB_LOCAL_NOTIFY_ID, cib_local_bcast_num);
+        crm_xml_add_int(request, PCMK__XA_CIB_LOCAL_NOTIFY_ID,
+                        cib_local_bcast_num);
         broadcast = send_peer_reply(request, result_diff, originator, TRUE);
 
         if (broadcast && client_id && local_notify && op_reply) {
@@ -1551,7 +1552,8 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         /* message is from ourselves */
         int bcast_id = 0;
 
-        if (!(crm_element_value_int(msg, F_CIB_LOCAL_NOTIFY_ID, &bcast_id))) {
+        if (crm_element_value_int(msg, PCMK__XA_CIB_LOCAL_NOTIFY_ID,
+                                  &bcast_id) == 0) {
             check_local_notify(bcast_id);
         }
         return;
