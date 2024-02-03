@@ -37,7 +37,6 @@
 #  define F_CIB_EXISTING	"cib_existing_object"
 #  define F_CIB_SEENCOUNT	"cib_seen"
 #  define F_CIB_TIMEOUT	"cib_timeout"
-#  define F_CIB_UPDATE	"cib_update"
 #  define F_CIB_GLOBAL_UPDATE	"cib_update"
 #  define F_CIB_UPDATE_RESULT	"cib_update_result"
 #  define F_CIB_NOTIFY_TYPE	"cib_notify_type"

@@ -66,6 +66,9 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_CIB_GENERATION         "cib_generation"
 
+// @COMPAT Deprecated since 2.1.8
+#define PCMK__XE_CIB_UPDATE             "cib_update"
+
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
 
