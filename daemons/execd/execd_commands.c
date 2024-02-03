@@ -618,7 +618,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     cmd->last_notify_rc = cmd->result.exit_status;
     cmd->last_notify_op_status = cmd->result.execution_status;
 
-    notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+    notify = create_xml_node(NULL, PCMK__XE_LRMD_NOTIFY);
 
     crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
@@ -698,7 +698,7 @@ send_generic_notify(int rc, xmlNode * request)
 
         crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
-        notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+        notify = create_xml_node(NULL, PCMK__XE_LRMD_NOTIFY);
         crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
         crm_xml_add_int(notify, PCMK__XA_LRMD_RC, rc);
         crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
@@ -786,7 +786,7 @@ notify_of_new_client(pcmk__client_t *new_client)
     struct notify_new_client_data data;
 
     data.new_client = new_client;
-    data.notify = create_xml_node(NULL, T_LRMD_NOTIFY);
+    data.notify = create_xml_node(NULL, PCMK__XE_LRMD_NOTIFY);
     crm_xml_add(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
