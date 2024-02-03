@@ -931,7 +931,8 @@ setup_fencer_connection(void)
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_display);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_HISTORY,
+                                            mon_st_callback_display);
         }
     } else {
         stonith_api_delete(st);

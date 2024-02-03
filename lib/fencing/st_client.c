@@ -2671,7 +2671,7 @@ stonith__event_description(const stonith_event_t *event)
         status = crm_exit_str(CRM_EX_OK);
     }
 
-    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_HISTORY,
+    if (pcmk__str_eq(event->operation, PCMK__VALUE_ST_NOTIFY_HISTORY,
                      pcmk__str_none)) {
         return crm_strdup_printf("Fencing history may have changed");
 

@@ -2691,7 +2691,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
         fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
                                  notify_data);
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 
