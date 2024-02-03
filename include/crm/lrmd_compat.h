@@ -59,6 +59,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RC "lrmd_rc"
 
+//! \deprecated Do not use
+#define F_LRMD_EXEC_RC "lrmd_exec_rc"
+
 #ifdef __cplusplus
 }
 #endif
