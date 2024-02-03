@@ -134,6 +134,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_IPC_OP "lrmd_ipc_op"
 
+//! \deprecated Do not use
+#define F_LRMD_IPC_IPC_SERVER "lrmd_ipc_server"
+
 #ifdef __cplusplus
 }
 #endif
