@@ -389,7 +389,6 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_DELEGATED_FROM,
         PCMK__XA_CIB_OBJECT,
         PCMK__XA_CIB_OBJECT_TYPE,
-        F_CIB_EXISTING,
         F_CIB_SEENCOUNT,
         F_CIB_TIMEOUT,
         F_CIB_GLOBAL_UPDATE,
