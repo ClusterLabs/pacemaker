@@ -86,7 +86,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
     xmlNode *response = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     crm_xml_add(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
     crm_xml_add(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
-    crm_xml_add_int(response, F_LRMD_IPC_MSG_ID, msg_id);
+    crm_xml_add_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
     add_message_xml(response, PCMK__XE_LRMD_IPC_MSG, msg);
     lrmd_internal_proxy_send(proxy->lrm, response);
     free_xml(response);
@@ -218,7 +218,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(session != NULL, return);
 
-    crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
+    crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
     /* This is msg from remote ipc client going to real ipc server */
 
     if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {

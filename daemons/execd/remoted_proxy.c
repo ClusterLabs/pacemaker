@@ -198,7 +198,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     } else if (pcmk__str_eq(msg_type, LRMD_IPC_OP_RESPONSE, pcmk__str_casei)) {
         int msg_id = 0;
 
-        crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
+        crm_element_value_int(xml, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
         crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
         rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, FALSE);
 
@@ -268,7 +268,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_CLIENT, pcmk__client_name(client));
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_USER, client->user);
-    crm_xml_add_int(msg, F_LRMD_IPC_MSG_ID, id);
+    crm_xml_add_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, id);
     crm_xml_add_int(msg, F_LRMD_IPC_MSG_FLAGS, flags);
     add_message_xml(msg, PCMK__XE_LRMD_IPC_MSG, request);
     lrmd_server_send_notify(ipc_proxy, msg);
