@@ -32,6 +32,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_CALLBACK_TOKEN "lrmd_async_id"
 
+//! \deprecated Do not use
+#define F_LRMD_IS_IPC_PROVIDER "lrmd_is_ipc_provider"
+
 #ifdef __cplusplus
 }
 #endif
