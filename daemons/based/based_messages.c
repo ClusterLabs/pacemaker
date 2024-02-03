@@ -207,7 +207,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         const char *host = crm_element_value(req, PCMK__XA_SRC);
         const char *value = crm_element_value(existing_cib,
                                               PCMK_XA_VALIDATE_WITH);
-        const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+        const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
         const char *call_opts = crm_element_value(req, F_CIB_CALLOPTS);
         const char *call_id = crm_element_value(req, F_CIB_CALLID);
 
@@ -227,7 +227,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
             crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
             crm_xml_add(up, F_CIB_DELEGATED, host);
-            crm_xml_add(up, F_CIB_CLIENTID, client_id);
+            crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
             crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
             crm_xml_add(up, F_CIB_CALLID, call_id);
 
@@ -263,7 +263,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
                 crm_xml_add(up, F_CIB_DELEGATED, host);
                 crm_xml_add(up, F_CIB_ISREPLY, host);
-                crm_xml_add(up, F_CIB_CLIENTID, client_id);
+                crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
                 crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
                 crm_xml_add(up, F_CIB_CALLID, call_id);
                 crm_xml_add_int(up, F_CIB_UPGRADE_RC, rc);
@@ -378,7 +378,7 @@ cib_msg_copy(xmlNode *msg)
 {
     static const char *field_list[] = {
         PCMK__XA_T,
-        F_CIB_CLIENTID,
+        PCMK__XA_CIB_CLIENTID,
         F_CIB_CALLOPTS,
         F_CIB_CALLID,
         F_CIB_OPERATION,
@@ -471,7 +471,7 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
      * On failure, our caller will free *result_cib.
      */
     int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
     const char *origin = crm_element_value(req, PCMK__XA_SRC);
     pcmk__client_t *client = pcmk__find_client_by_id(client_id);
 

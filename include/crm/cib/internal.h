@@ -34,7 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
 #  define F_CIB_CALLID    "cib_callid"
 #  define F_CIB_CALLDATA  "cib_calldata"

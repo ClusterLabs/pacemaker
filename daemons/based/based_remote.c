@@ -425,7 +425,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
 
     crm_xml_add(command, PCMK__XA_T, T_CIB);
-    crm_xml_add(command, F_CIB_CLIENTID, client->id);
+    crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
     crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
     crm_xml_add(command, F_CIB_USER, client->user);
 
@@ -517,7 +517,7 @@ cib_remote_msg(gpointer data)
         /* send ACK */
         reg = create_xml_node(NULL, "cib_result");
         crm_xml_add(reg, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(reg, F_CIB_CLIENTID, client->id);
+        crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
         free_xml(reg);
         free_xml(command);

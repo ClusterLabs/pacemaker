@@ -86,7 +86,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
          * the CIB.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, F_CIB_CLIENTID);
+            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Updating all attributes after %s event triggered by %s",
                    event, pcmk__s(client_name, "(unidentified client)"));

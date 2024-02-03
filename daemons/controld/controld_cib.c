@@ -83,7 +83,7 @@ do_cib_updated(const char *event, xmlNode * msg)
          * process again so we get everyone's current resource history.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, F_CIB_CLIENTID);
+            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Populating nodes and starting an election after %s event "
                    "triggered by %s",

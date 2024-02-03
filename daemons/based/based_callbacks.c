@@ -165,7 +165,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     crm_xml_add(reply, PCMK__XA_T, T_CIB);
     crm_xml_add(reply, F_CIB_OPERATION, op);
     crm_xml_add(reply, F_CIB_CALLID, call_id);
-    crm_xml_add(reply, F_CIB_CLIENTID, client_id);
+    crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
     crm_xml_add_int(reply, F_CIB_CALLOPTS, call_options);
     crm_xml_add_int(reply, F_CIB_RC, rc);
 
@@ -268,7 +268,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             xmlNode *ack = create_xml_node(NULL, __func__);
 
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
-            crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
+            crm_xml_add(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
             pcmk__ipc_send_xml(cib_client, id, ack, flags);
             cib_client->request_id = 0;
             free_xml(ack);
@@ -372,7 +372,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         }
     }
 
-    crm_xml_add(op_request, F_CIB_CLIENTID, cib_client->id);
+    crm_xml_add(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
     crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
     CRM_LOG_ASSERT(cib_client->user != NULL);
@@ -1041,7 +1041,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *host = crm_element_value(request, F_CIB_HOST);
     const char *target = NULL;
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
-    const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
+    const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
 
@@ -1349,7 +1349,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     const char *op = NULL;
     const char *section = NULL;
     const char *call_id = crm_element_value(request, F_CIB_CALLID);
-    const char *client_id = crm_element_value(request, F_CIB_CLIENTID);
+    const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = crm_element_value(request, F_CIB_CLIENTNAME);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
 

@@ -327,7 +327,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return rc;
     }
     crm_xml_add(request, PCMK_XE_ACL_TARGET, user_name);
-    crm_xml_add(request, F_CIB_CLIENTID, private->id);
+    crm_xml_add(request, PCMK__XA_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
@@ -1156,7 +1156,7 @@ cib_file_process_commit_transaction(const char *op, int options,
                                     xmlNode **result_cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
     cib_t *cib = NULL;
 
     CRM_CHECK(client_id != NULL, return -EINVAL);

@@ -403,7 +403,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     } else {
         /* grab the token */
         const char *msg_type = crm_element_value(answer, F_CIB_OPERATION);
-        const char *tmp_ticket = crm_element_value(answer, F_CIB_CLIENTID);
+        const char *tmp_ticket = crm_element_value(answer,
+                                                   PCMK__XA_CIB_CLIENTID);
 
         if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);

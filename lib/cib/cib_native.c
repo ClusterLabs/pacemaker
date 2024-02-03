@@ -343,7 +343,8 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
                 rc = -EPROTO;
 
             } else {
-                native->token = crm_element_value_copy(reply, F_CIB_CLIENTID);
+                native->token = crm_element_value_copy(reply,
+                                                       PCMK__XA_CIB_CLIENTID);
                 if (native->token == NULL) {
                     rc = -EPROTO;
                 }
