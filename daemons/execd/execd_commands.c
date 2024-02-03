@@ -309,7 +309,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
     crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval_ms);
-    crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
+    crm_element_value_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, F_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
 
@@ -618,7 +618,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     notify = create_xml_node(NULL, T_LRMD_NOTIFY);
 
     crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
-    crm_xml_add_int(notify, F_LRMD_TIMEOUT, cmd->timeout);
+    crm_xml_add_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
     crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
@@ -1766,7 +1766,7 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
         crm_xml_add(op_xml, F_LRMD_RSC_ACTION,
                     (cmd->real_action? cmd->real_action : cmd->action));
         crm_xml_add_ms(op_xml, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
-        crm_xml_add_int(op_xml, F_LRMD_TIMEOUT, cmd->timeout_orig);
+        crm_xml_add_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
     }
 }
 

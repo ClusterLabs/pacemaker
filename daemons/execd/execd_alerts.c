@@ -122,7 +122,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
         return pcmk_ok;
     }
 
-    crm_element_value_int(alert_xml, F_LRMD_TIMEOUT, &alert_timeout);
+    crm_element_value_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
 
     crm_info("Executing alert %s for %s", alert_id, client->id);
 

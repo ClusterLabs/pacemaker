@@ -287,7 +287,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     } else if (pcmk__str_eq(type, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
         time_t epoch = 0;
 
-        crm_element_value_int(msg, F_LRMD_TIMEOUT, &event.timeout);
+        crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
         crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
         crm_element_value_int(msg, F_LRMD_RSC_START_DELAY, &event.start_delay);
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, (int *) &event.rc);
@@ -526,7 +526,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
 
     crm_xml_add(op_msg, PCMK__XA_T, T_LRMD);
     crm_xml_add(op_msg, PCMK__XA_LRMD_OP, op);
-    crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
+    crm_xml_add_int(op_msg, PCMK__XA_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(op_msg, PCMK__XA_LRMD_CALLOPT, options);
 
     if (data != NULL) {
@@ -1887,8 +1887,8 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
             op_info->action = crm_element_value_copy(op_xml, F_LRMD_RSC_ACTION);
             op_info->interval_ms_s = crm_element_value_copy(op_xml,
                                                             F_LRMD_RSC_INTERVAL);
-            op_info->timeout_ms_s = crm_element_value_copy(op_xml,
-                                                           F_LRMD_TIMEOUT);
+            op_info->timeout_ms_s =
+                crm_element_value_copy(op_xml, PCMK__XA_LRMD_TIMEOUT);
             *output = g_list_prepend(*output, op_info);
         }
     }
@@ -2040,7 +2040,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, F_LRMD_RSC_ACTION, action);
     crm_xml_add(data, F_LRMD_RSC_USERDATA_STR, userdata);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
-    crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
+    crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
@@ -2067,7 +2067,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);
     crm_xml_add(data, F_LRMD_ALERT_ID, alert_id);
     crm_xml_add(data, F_LRMD_ALERT_PATH, alert_path);
-    crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
+    crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
