@@ -29,6 +29,9 @@ extern "C" {
 //! \deprecated Do not use
 #define T_STONITH_NOTIFY_FENCE "st_notify_fence"
 
+//! \deprecated Do not use
+#define T_STONITH_NOTIFY_HISTORY "st_notify_history"
+
 #ifdef __cplusplus
 }
 #endif
