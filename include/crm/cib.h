@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,11 +26,8 @@ extern "C" {
  * \ingroup cib
  */
 
+// Use compare_version() for doing comparisons
 #  define CIB_FEATURE_SET "2.0"
-
-/* use compare_version() for doing comparisons */
-
-#define T_CIB_DIFF_NOTIFY	"cib_diff_notify"
 
 /* Core functions */
 cib_t *cib_new(void);

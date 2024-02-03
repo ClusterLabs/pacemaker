@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,6 +12,7 @@ MAINTAINERCLEANFILES	= Makefile.in
 headerdir=$(pkgincludedir)/crm
 
 header_HEADERS		= cib.h			\
+			  cib_compat.h		\
 			  cluster.h		\
 			  compatibility.h	\
 			  crm.h			\
