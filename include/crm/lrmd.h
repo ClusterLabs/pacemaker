@@ -67,7 +67,6 @@ typedef struct lrmd_key_value_s {
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
 
-#define F_LRMD_CALLOPTS         "lrmd_callopt"
 #define F_LRMD_CALLDATA         "lrmd_calldata"
 #define F_LRMD_RC               "lrmd_rc"
 #define F_LRMD_EXEC_RC          "lrmd_exec_rc"

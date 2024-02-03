@@ -50,6 +50,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_CALLID "lrmd_callid"
 
+//! \deprecated Do not use
+#define F_LRMD_CALLOPTS "lrmd_callopt"
+
 #ifdef __cplusplus
 }
 #endif
