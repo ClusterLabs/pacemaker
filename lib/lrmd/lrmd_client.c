@@ -526,7 +526,7 @@ static xmlNode *
 lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
                enum lrmd_call_options options)
 {
-    xmlNode *op_msg = create_xml_node(NULL, "lrmd_command");
+    xmlNode *op_msg = create_xml_node(NULL, PCMK__XE_LRMD_COMMAND);
 
     CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
@@ -978,7 +978,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *reply = NULL;
-    xmlNode *hello = create_xml_node(NULL, "lrmd_command");
+    xmlNode *hello = create_xml_node(NULL, PCMK__XE_LRMD_COMMAND);
 
     crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
     crm_xml_add(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
