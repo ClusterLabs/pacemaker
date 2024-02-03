@@ -295,7 +295,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
                               &event.op_status);
         crm_element_value_int(msg, F_LRMD_RSC_DELETED, &event.rsc_deleted);
 
-        crm_element_value_epoch(msg, F_LRMD_RSC_RUN_TIME, &epoch);
+        crm_element_value_epoch(msg, PCMK__XA_LRMD_RUN_TIME, &epoch);
         event.t_run = (unsigned int) epoch;
 
         crm_element_value_epoch(msg, F_LRMD_RSC_RCCHANGE_TIME, &epoch);

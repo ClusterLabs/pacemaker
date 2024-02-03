@@ -627,7 +627,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
-    crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME,
+    crm_xml_add_ll(notify, PCMK__XA_LRMD_RUN_TIME,
                    (long long) cmd->epoch_last_run);
     crm_xml_add_ll(notify, F_LRMD_RSC_RCCHANGE_TIME,
                    (long long) cmd->epoch_rcchange);

@@ -190,6 +190,7 @@ extern "C" {
 #define PCMK__XA_LRMD_RC                "lrmd_rc"
 #define PCMK__XA_LRMD_REMOTE_MSG_ID     "lrmd_remote_msg_id"
 #define PCMK__XA_LRMD_REMOTE_MSG_TYPE   "lrmd_remote_msg_type"
+#define PCMK__XA_LRMD_RUN_TIME          "lrmd_run_time"
 #define PCMK__XA_LRMD_TIMEOUT           "lrmd_timeout"
 #define PCMK__XA_LRMD_TYPE              "lrmd_type"
 #define PCMK__XA_LRMD_WATCHDOG          "lrmd_watchdog"
