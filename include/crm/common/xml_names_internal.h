@@ -176,6 +176,7 @@ extern "C" {
 #define PCMK__XA_LINE                   "line"
 #define PCMK__XA_LONG_ID                "long-id"
 #define PCMK__XA_LRMD_ALERT_ID          "lrmd_alert_id"
+#define PCMK__XA_LRMD_ALERT_PATH        "lrmd_alert_path"
 #define PCMK__XA_LRMD_CALLDATA          "lrmd_calldata"
 #define PCMK__XA_LRMD_CALLID            "lrmd_callid"
 #define PCMK__XA_LRMD_CALLOPT           "lrmd_callopt"
