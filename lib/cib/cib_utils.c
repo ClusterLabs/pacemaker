@@ -93,7 +93,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return pcmk_legacy2rc(rc);
     }
 
-    *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (*patchset == NULL) {
         crm_err("CIB diff notification received with no patchset");
@@ -102,7 +102,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     return pcmk_rc_ok;
 }
 
-#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
+#define XPATH_DIFF_V1 "//" PCMK__XA_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
 
 /*!
  * \internal
@@ -922,7 +922,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(output);
 
     crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
-    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
+    diff = get_message_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (rc < pcmk_ok || diff == NULL) {
         return rc;

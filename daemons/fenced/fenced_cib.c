@@ -261,7 +261,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
 
     /* process new constraints */
     xpath_obj = xpath_search(msg,
-                             "//" F_CIB_UPDATE_RESULT
+                             "//" PCMK__XA_CIB_UPDATE_RESULT
                              "//" PCMK_XE_RSC_LOCATION);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
@@ -280,7 +280,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
 
     /* process deletions */
     xpath_obj = xpath_search(msg,
-                             "//" F_CIB_UPDATE_RESULT
+                             "//" PCMK__XA_CIB_UPDATE_RESULT
                              "//" PCMK__XE_DIFF_REMOVED
                              "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
@@ -290,7 +290,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
 
     /* process additions */
     xpath_obj = xpath_search(msg,
-                             "//" F_CIB_UPDATE_RESULT
+                             "//" PCMK__XA_CIB_UPDATE_RESULT
                              "//" PCMK__XE_DIFF_ADDED
                              "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
@@ -327,7 +327,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     xmlNode *change = NULL;
     char *reason = NULL;
     bool needs_update = FALSE;
-    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
@@ -392,7 +392,7 @@ static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
     int format = 1;
-    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
@@ -507,14 +507,14 @@ update_fencing_topology(const char *event, xmlNode * msg)
     int format = 1;
     const char *xpath;
     xmlXPathObjectPtr xpathObj = NULL;
-    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
 
     if(format == 1) {
         /* Process deletions (only) */
-        xpath = "//" F_CIB_UPDATE_RESULT
+        xpath = "//" PCMK__XA_CIB_UPDATE_RESULT
                 "//" PCMK__XE_DIFF_REMOVED
                 "//" PCMK_XE_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
@@ -523,7 +523,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         freeXpathObject(xpathObj);
 
         /* Process additions and changes */
-        xpath = "//" F_CIB_UPDATE_RESULT
+        xpath = "//" PCMK__XA_CIB_UPDATE_RESULT
                 "//" PCMK__XE_DIFF_ADDED
                 "//" PCMK_XE_FENCING_LEVEL;
         xpathObj = xpath_search(msg, xpath);
@@ -633,7 +633,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
 
-        patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+        patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:

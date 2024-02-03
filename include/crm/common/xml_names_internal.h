@@ -127,6 +127,7 @@ extern "C" {
 #define PCMK__XA_CIB_RC                 "cib_rc"
 #define PCMK__XA_CIB_SECTION            "cib_section"
 #define PCMK__XA_CIB_UPDATE             "cib_update"
+#define PCMK__XA_CIB_UPDATE_RESULT      "cib_update_result"
 #define PCMK__XA_CIB_UPGRADE_RC         "cib_upgrade_rc"
 #define PCMK__XA_CLIENT_NAME            "client_name"
 #define PCMK__XA_CLIENT_UUID            "client_uuid"
