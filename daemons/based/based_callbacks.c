@@ -675,7 +675,7 @@ parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
-    if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+    if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         *needs_reply = FALSE;
         if (is_reply) {
             *local_notify = TRUE;
@@ -831,7 +831,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
             return FALSE;
         }
 
-    } else if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+    } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         crm_info("Detected legacy %s global update from %s", op, originator);
         send_sync_request(NULL);
         legacy_mode = TRUE;
@@ -990,7 +990,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates, digest);
 
         crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-        pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
+        pcmk__xe_set_bool_attr(msg, PCMK__XA_CIB_UPDATE, true);
         crm_xml_add(msg, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
@@ -1158,7 +1158,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         if (!is_update) {
             level = LOG_TRACE;
 
-        } else if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+        } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
             switch (rc) {
                 case pcmk_ok:
                     level = LOG_INFO;
@@ -1299,7 +1299,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
 
     switch (type) {
         case cib__op_apply_patch:
-            if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+            if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
                 input = get_message_xml(request, F_CIB_UPDATE_DIFF);
             } else {
                 input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
@@ -1401,11 +1401,11 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     /* @COMPAT: Handle a valid write action (legacy)
      *
      * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
-     * portion is. However, F_CIB_GLOBAL_UPDATE may be set by a sync operation
+     * portion is. However, PCMK__XA_CIB_UPDATE may be set by a sync operation
      * even in non-legacy mode, and manage_counters tells xml_create_patchset()
      * whether to update version/epoch info.
      */
-    if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
+    if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         manage_counters = false;
         cib__set_call_options(call_options, "call", cib_force_diff);
         crm_trace("Global update detected");

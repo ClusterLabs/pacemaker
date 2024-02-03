@@ -389,7 +389,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_DELEGATED_FROM,
         PCMK__XA_CIB_OBJECT,
         PCMK__XA_CIB_OBJECT_TYPE,
-        F_CIB_GLOBAL_UPDATE,
+        PCMK__XA_CIB_UPDATE,
         PCMK__XA_CIB_CLIENTNAME,
         F_CIB_USER,
         F_CIB_NOTIFY_TYPE,
@@ -441,7 +441,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     // @TODO Keep for tracing, or drop?
     crm_xml_add(replace_request, PCMK__XA_ORIGINAL_CIB_OP, op);
 
-    pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
+    pcmk__xe_set_bool_attr(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
