@@ -201,6 +201,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     crm_xml_add(update_msg, PCMK__XA_SRC, origin);
     crm_xml_add_int(update_msg, PCMK__XA_CIB_RC, result);
 
+    // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
         type = (const char *) update->name;
         crm_trace("Setting type to update->name: %s", type);
@@ -211,8 +212,8 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     // @COMPAT Unused internally, drop at 3.0.0
     crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT, pcmk__xe_id(diff));
+    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT_TYPE, type);
 
-    crm_xml_add(update_msg, F_CIB_OBJTYPE, type);
     attach_cib_generation(update_msg, "cib_generation", the_cib);
 
     if (update != NULL) {
