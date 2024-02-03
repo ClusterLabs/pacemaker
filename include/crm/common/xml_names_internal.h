@@ -182,6 +182,7 @@ extern "C" {
 #define PCMK__XA_LRMD_CLIENTNAME        "lrmd_clientname"
 #define PCMK__XA_LRMD_EXEC_OP_STATUS    "lrmd_exec_op_status"
 #define PCMK__XA_LRMD_EXEC_RC           "lrmd_exec_rc"
+#define PCMK__XA_LRMD_EXEC_TIME         "lrmd_exec_time"
 #define PCMK__XA_LRMD_IS_IPC_PROVIDER   "lrmd_is_ipc_provider"
 #define PCMK__XA_LRMD_OP                "lrmd_op"
 #define PCMK__XA_LRMD_ORIGIN            "lrmd_origin"
