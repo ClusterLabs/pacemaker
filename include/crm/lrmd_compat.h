@@ -107,6 +107,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_OUTPUT "lrmd_rsc_output"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC_EXIT_REASON "lrmd_rsc_exit_reason"
+
 #ifdef __cplusplus
 }
 #endif
