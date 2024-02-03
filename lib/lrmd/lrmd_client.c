@@ -289,7 +289,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 
         crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
         crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
-        crm_element_value_int(msg, F_LRMD_RSC_START_DELAY, &event.start_delay);
+        crm_element_value_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
+                              &event.start_delay);
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, (int *) &event.rc);
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS,
                               &event.op_status);
@@ -2045,7 +2046,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-    crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
+    crm_xml_add_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);

@@ -197,6 +197,7 @@ extern "C" {
 #define PCMK__XA_LRMD_RSC_EXIT_REASON   "lrmd_rsc_exit_reason"
 #define PCMK__XA_LRMD_RSC_ID            "lrmd_rsc_id"
 #define PCMK__XA_LRMD_RSC_OUTPUT        "lrmd_rsc_output"
+#define PCMK__XA_LRMD_RSC_START_DELAY   "lrmd_rsc_start_delay"
 #define PCMK__XA_LRMD_RSC_USERDATA_STR  "lrmd_rsc_userdata_str"
 #define PCMK__XA_LRMD_RUN_TIME          "lrmd_run_time"
 #define PCMK__XA_LRMD_TIMEOUT           "lrmd_timeout"
