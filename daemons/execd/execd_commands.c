@@ -645,7 +645,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
     }
     crm_xml_add(notify, PCMK__XA_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
-    crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
+    crm_xml_add(notify, PCMK__XA_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
 
     if (cmd->result.action_stderr != NULL) {
         crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
