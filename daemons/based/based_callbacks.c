@@ -171,7 +171,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 
     if (call_data != NULL) {
         crm_trace("Attaching reply output");
-        add_message_xml(reply, F_CIB_CALLDATA, call_data);
+        add_message_xml(reply, PCMK__XA_CIB_CALLDATA, call_data);
     }
 
     crm_log_xml_explicit(reply, "cib:reply");
@@ -421,7 +421,7 @@ process_ping_reply(xmlNode *reply)
     uint64_t seq = 0;
     const char *host = crm_element_value(reply, PCMK__XA_SRC);
 
-    xmlNode *pong = get_message_xml(reply, F_CIB_CALLDATA);
+    xmlNode *pong = get_message_xml(reply, PCMK__XA_CIB_CALLDATA);
     const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
     const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
@@ -457,7 +457,7 @@ process_ping_reply(xmlNode *reply)
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *remote_cib = get_message_xml(pong, F_CIB_CALLDATA);
+            xmlNode *remote_cib = get_message_xml(pong, PCMK__XA_CIB_CALLDATA);
             const char *admin_epoch_s = NULL;
             const char *epoch_s = NULL;
             const char *num_updates_s = NULL;
@@ -1300,12 +1300,12 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
             if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
                 input = get_message_xml(request, F_CIB_UPDATE_DIFF);
             } else {
-                input = get_message_xml(request, F_CIB_CALLDATA);
+                input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
             }
             break;
 
         default:
-            input = get_message_xml(request, F_CIB_CALLDATA);
+            input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
             *section = crm_element_value(request, F_CIB_SECTION);
             break;
     }

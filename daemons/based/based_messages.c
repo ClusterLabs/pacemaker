@@ -152,7 +152,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     pcmk__if_tracing(
         {
             // Append additional detail so the receiver can log the differences
-            add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
+            add_message_xml(*answer, PCMK__XA_CIB_CALLDATA, the_cib);
         },
         if (the_cib != NULL) {
             // Always include at least the version details
@@ -160,7 +160,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
                                                (const char *) the_cib->name);
 
             copy_in_properties(shallow, the_cib);
-            add_message_xml(*answer, F_CIB_CALLDATA, shallow);
+            add_message_xml(*answer, PCMK__XA_CIB_CALLDATA, shallow);
             free_xml(shallow);
         }
     );
@@ -447,7 +447,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
     crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
-    add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
+    add_message_xml(replace_request, PCMK__XA_CIB_CALLDATA, the_cib);
 
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
@@ -499,7 +499,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
 
     *answer = create_xml_node(NULL, PCMK__XA_SCHEMAS);
 
-    data = get_message_xml(req, F_CIB_CALLDATA);
+    data = get_message_xml(req, PCMK__XA_CIB_CALLDATA);
     if (data == NULL) {
         crm_warn("No data specified in request");
         return -EPROTO;
