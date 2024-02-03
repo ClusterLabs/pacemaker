@@ -165,7 +165,8 @@ passive_test(void)
     }
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                     st_callback);
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                    st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
     st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",
@@ -327,7 +328,8 @@ sanity_tests(void)
     }
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                     st_callback);
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                    st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
     st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",

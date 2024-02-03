@@ -720,7 +720,7 @@ controld_timer_fencer_connect(gpointer user_data)
         cmds->register_notification(stonith_api,
                                     PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                     tengine_stonith_connection_destroy);
-        cmds->register_notification(stonith_api, T_STONITH_NOTIFY_FENCE,
+        cmds->register_notification(stonith_api, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     handle_fence_notification);
         cmds->register_notification(stonith_api,
                                     T_STONITH_NOTIFY_HISTORY_SYNCED,

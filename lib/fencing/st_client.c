@@ -1433,7 +1433,7 @@ xml_to_event(xmlNode *msg)
 
     // Some notification subtypes have additional information
 
-    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
+    if (pcmk__str_eq(event->operation, PCMK__VALUE_ST_NOTIFY_FENCE,
                      pcmk__str_none)) {
         xmlNode *data = get_event_data_xml(msg, event->operation);
 
@@ -2694,7 +2694,7 @@ stonith__event_description(const stonith_event_t *event)
                                  device);
     }
 
-    // event->operation should be T_STONITH_NOTIFY_FENCE at this point
+    // event->operation should be PCMK__VALUE_ST_NOTIFY_FENCE at this point
 
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
                              action, target, executioner, origin, origin_node,

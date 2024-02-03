@@ -252,7 +252,7 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
 uint64_t
 get_stonith_flag(const char *name)
 {
-    if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
         return st_callback_notify_fence;
 
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
