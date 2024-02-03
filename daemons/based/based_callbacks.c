@@ -158,7 +158,7 @@ static xmlNode *
 create_cib_reply(const char *op, const char *call_id, const char *client_id,
                  int call_options, int rc, xmlNode *call_data)
 {
-    xmlNode *reply = create_xml_node(NULL, "cib-reply");
+    xmlNode *reply = create_xml_node(NULL, PCMK__XE_CIB_REPLY);
 
     CRM_ASSERT(reply != NULL);
 
