@@ -193,6 +193,7 @@ extern "C" {
 #define PCMK__XA_LRMD_RCCHANGE_TIME     "lrmd_rcchange_time"
 #define PCMK__XA_LRMD_REMOTE_MSG_ID     "lrmd_remote_msg_id"
 #define PCMK__XA_LRMD_REMOTE_MSG_TYPE   "lrmd_remote_msg_type"
+#define PCMK__XA_LRMD_RSC_ID            "lrmd_rsc_id"
 #define PCMK__XA_LRMD_RUN_TIME          "lrmd_run_time"
 #define PCMK__XA_LRMD_TIMEOUT           "lrmd_timeout"
 #define PCMK__XA_LRMD_TYPE              "lrmd_type"

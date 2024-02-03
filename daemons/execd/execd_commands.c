@@ -281,7 +281,7 @@ build_rsc_from_xml(xmlNode * msg)
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
-    rsc->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
+    rsc->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     rsc->class = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
     rsc->provider = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
@@ -316,7 +316,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
     cmd->action = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ACTION);
     cmd->userdata_str = crm_element_value_copy(rsc_xml, F_LRMD_RSC_USERDATA_STR);
-    cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
+    cmd->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
 
@@ -637,7 +637,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 #endif
 
     crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
-    crm_xml_add(notify, F_LRMD_RSC_ID, cmd->rsc_id);
+    crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
     if(cmd->real_action) {
         crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->real_action);
     } else {
@@ -687,7 +687,7 @@ send_generic_notify(int rc, xmlNode * request)
         int call_id = 0;
         xmlNode *notify = NULL;
         xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
-        const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+        const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
 
         crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
@@ -697,7 +697,7 @@ send_generic_notify(int rc, xmlNode * request)
         crm_xml_add_int(notify, PCMK__XA_LRMD_RC, rc);
         crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
         crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
-        crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
+        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
 
         pcmk__foreach_ipc_client(send_client_notify, notify);
 
@@ -1555,7 +1555,7 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
 {
     int rc = pcmk_ok;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     xmlNode *reply = NULL;
     lrmd_rsc_t *rsc = NULL;
 
@@ -1571,7 +1571,7 @@ process_lrmd_get_rsc_info(xmlNode *request, int call_id)
 
     reply = create_lrmd_reply(__func__, rc, call_id);
     if (rsc) {
-        crm_xml_add(reply, F_LRMD_RSC_ID, rsc->rsc_id);
+        crm_xml_add(reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
         crm_xml_add(reply, PCMK__XA_LRMD_CLASS, rsc->class);
         crm_xml_add(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
         crm_xml_add(reply, PCMK__XA_LRMD_TYPE, rsc->type);
@@ -1586,7 +1586,7 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
     int rc = pcmk_ok;
     lrmd_rsc_t *rsc = NULL;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
         return -ENODEV;
@@ -1617,7 +1617,7 @@ process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     lrmd_rsc_t *rsc = NULL;
     lrmd_cmd_t *cmd = NULL;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     int call_id;
 
     if (!rsc_id) {
@@ -1740,7 +1740,7 @@ static int
 process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     const char *action = crm_element_value(rsc_xml, F_LRMD_RSC_ACTION);
     guint interval_ms = 0;
 
@@ -1758,7 +1758,7 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
 {
     xmlNode *rsc_xml = create_xml_node(reply, F_LRMD_RSC);
 
-    crm_xml_add(rsc_xml, F_LRMD_RSC_ID, rsc->rsc_id);
+    crm_xml_add(rsc_xml, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
     for (GList *item = rsc->recurring_ops; item != NULL; item = item->next) {
         lrmd_cmd_t *cmd = item->data;
         xmlNode *op_xml = create_xml_node(rsc_xml, T_LRMD_RSC_OP);
@@ -1785,7 +1785,7 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         rsc_xml = first_named_child(rsc_xml, F_LRMD_RSC);
     }
     if (rsc_xml) {
-        rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+        rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     }
 
     // If resource ID is specified, resource must exist

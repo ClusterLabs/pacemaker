@@ -278,7 +278,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     event.remote_nodename = native->remote_nodename;
     type = crm_element_value(msg, PCMK__XA_LRMD_OP);
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
-    event.rsc_id = crm_element_value(msg, F_LRMD_RSC_ID);
+    event.rsc_id = crm_element_value(msg, PCMK__XA_LRMD_RSC_ID);
 
     if (pcmk__str_eq(type, LRMD_OP_RSC_REG, pcmk__str_none)) {
         event.type = lrmd_event_register;
@@ -1731,7 +1731,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     data = create_xml_node(NULL, F_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add(data, PCMK__XA_LRMD_CLASS, class);
     crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
     crm_xml_add(data, PCMK__XA_LRMD_TYPE, type);
@@ -1748,7 +1748,7 @@ lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_option
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, TRUE);
     free_xml(data);
 
@@ -1800,7 +1800,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     const char *type = NULL;
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
     free_xml(data);
 
@@ -1855,7 +1855,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     if (rsc_id) {
         data = create_xml_node(NULL, F_LRMD_RSC);
         crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-        crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+        crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     }
     rc = lrmd_send_command(lrmd, LRMD_OP_GET_RECURRING, data, &output_xml,
                            timeout_ms, options, TRUE);
@@ -1871,7 +1871,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
          (rsc_xml != NULL) && (rc == pcmk_ok);
          rsc_xml = crm_next_same_xml(rsc_xml)) {
 
-        rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+        rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         if (rsc_id == NULL) {
             crm_err("Could not parse recurring operation information from executor");
             continue;
@@ -2038,7 +2038,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     lrmd_key_value_t *tmp = NULL;
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add(data, F_LRMD_RSC_ACTION, action);
     crm_xml_add(data, F_LRMD_RSC_USERDATA_STR, userdata);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
@@ -2092,7 +2092,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, F_LRMD_RSC_ACTION, action);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
     free_xml(data);
