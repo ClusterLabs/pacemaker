@@ -163,7 +163,8 @@ passive_test(void)
         stonith_api_delete(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
+                                    st_callback);
     st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
@@ -324,7 +325,8 @@ sanity_tests(void)
         stonith_api_delete(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
+                                    st_callback);
     st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);

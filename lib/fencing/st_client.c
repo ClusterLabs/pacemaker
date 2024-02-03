@@ -283,7 +283,7 @@ stonith_connection_destroy(gpointer user_data)
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
-    crm_xml_add(blob.xml, PCMK__XA_SUBT, T_STONITH_NOTIFY_DISCONNECT);
+    crm_xml_add(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
     free_xml(blob.xml);
