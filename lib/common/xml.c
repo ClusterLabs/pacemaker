@@ -801,6 +801,50 @@ free_xml(xmlNode * child)
     free_xml_with_position(child, -1);
 }
 
+/*!
+ * \internal
+ * \brief Make a deep copy of an XML node under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the copy's parent (\c NULL
+ *                        to create a new XML document with the copy as root)
+ * \param[in]     src     XML node to copy
+ *
+ * \return Deep copy of \p src, or \c NULL if \p src is \c NULL
+ */
+xmlNode *
+pcmk__xml_copy(xmlNode *parent, xmlNode *src)
+{
+    xmlNode *copy = NULL;
+
+    if (src == NULL) {
+        return NULL;
+    }
+
+    if (parent == NULL) {
+        xmlDoc *doc = NULL;
+
+        // The copy will be the root element of a new document
+        CRM_ASSERT(src->type == XML_ELEMENT_NODE);
+
+        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        CRM_ASSERT(doc != NULL);
+
+        copy = xmlDocCopyNode(src, doc, 1);
+        CRM_ASSERT(copy != NULL);
+
+        xmlDocSetRootElement(doc, copy);
+
+    } else {
+        copy = xmlDocCopyNode(src, parent->doc, 1);
+        CRM_ASSERT(copy != NULL);
+
+        xmlAddChild(parent, copy);
+    }
+
+    pcmk__mark_xml_created(copy);
+    return copy;
+}
+
 xmlNode *
 copy_xml(xmlNode * src)
 {

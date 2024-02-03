@@ -407,7 +407,7 @@ write_cib_contents(gpointer p)
     /* Make a copy of the CIB to write (possibly in a forked child) */
     if (p) {
         /* Synchronous write out */
-        cib_local = copy_xml(p);
+        cib_local = pcmk__xml_copy(NULL, p);
 
     } else {
         int pid = 0;
@@ -444,7 +444,7 @@ write_cib_contents(gpointer p)
         /* In theory, we can scribble on the_cib here and not affect the parent,
          * but let's be safe anyway.
          */
-        cib_local = copy_xml(the_cib);
+        cib_local = pcmk__xml_copy(NULL, the_cib);
     }
 
     /* Write the CIB */

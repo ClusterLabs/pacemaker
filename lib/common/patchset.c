@@ -706,7 +706,7 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(patchset, PCMK__XE_DIFF_ADDED, FALSE);
     xmlNode *removed = find_xml_node(patchset, PCMK__XE_DIFF_REMOVED, FALSE);
-    xmlNode *old = copy_xml(xml);
+    xmlNode *old = pcmk__xml_copy(NULL, xml);
 
     crm_trace("Subtraction Phase");
     for (child_diff = pcmk__xml_first_child(removed); child_diff != NULL;
@@ -1128,7 +1128,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         /* Make original XML available for logging in case result doesn't have
          * expected digest
          */
-        pcmk__if_tracing(old = copy_xml(xml), {});
+        pcmk__if_tracing(old = pcmk__xml_copy(NULL, xml), {});
     }
 
     if (rc == pcmk_ok) {
@@ -1445,7 +1445,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     if (root_nodes_seen == 0) {
-        *new_xml = copy_xml(old_xml);
+        *new_xml = pcmk__xml_copy(NULL, old_xml);
 
     } else if (root_nodes_seen > 1) {
         crm_err("(-) Diffs cannot contain more than one change set... saw %d",

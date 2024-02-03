@@ -317,7 +317,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    new_xml = copy_xml(template);
+    new_xml = pcmk__xml_copy(NULL, template);
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_add(new_xml, PCMK_XA_ID, id);
     crm_xml_add(new_xml, PCMK__META_CLONE,

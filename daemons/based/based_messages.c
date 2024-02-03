@@ -203,7 +203,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
     } else {
         int new_version = 0;
         int current_version = 0;
-        xmlNode *scratch = copy_xml(existing_cib);
+        xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);
         const char *host = crm_element_value(req, PCMK__XA_SRC);
         const char *value = crm_element_value(existing_cib,
                                               PCMK_XA_VALIDATE_WITH);

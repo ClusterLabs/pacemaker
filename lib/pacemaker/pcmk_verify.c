@@ -97,7 +97,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_obje
             // No status available, so do minimal checks
             flags |= pcmk_sched_validate_only;
         }
-        cib_object_copy = copy_xml(cib_object);
+        cib_object_copy = pcmk__xml_copy(NULL, cib_object);
 
         /* The scheduler takes ownership of the XML object and potentially
          * frees it later. We want the caller of pcmk__verify to retain

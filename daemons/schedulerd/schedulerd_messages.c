@@ -79,7 +79,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
                                             CRM_FEATURE_SET);
-    converted = copy_xml(xml_data);
+    converted = pcmk__xml_copy(NULL, xml_data);
     if (!cli_config_update(&converted, NULL, TRUE)) {
         scheduler->graph = create_xml_node(NULL, PCMK__XE_TRANSITION_GRAPH);
         crm_xml_add_int(scheduler->graph, "transition_id", 0);

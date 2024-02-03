@@ -75,7 +75,7 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
 
     // Make our own copy of the given input or fetch the CIB and use that
     if (input != NULL) {
-        new_scheduler->input = copy_xml(input);
+        new_scheduler->input = pcmk__xml_copy(NULL, input);
         if (new_scheduler->input == NULL) {
             out->err(out, "Failed to copy input XML");
             pe_free_working_set(new_scheduler);

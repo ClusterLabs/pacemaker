@@ -403,7 +403,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         if (*result_cib != existing_cib) {
             free_xml(*result_cib);
         }
-        *result_cib = copy_xml(input);
+        *result_cib = pcmk__xml_copy(NULL, input);
 
     } else {
         xmlNode *obj_root = NULL;
@@ -789,7 +789,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     if (*result_cib != existing_cib) {
         free_xml(*result_cib);
     }
-    *result_cib = copy_xml(existing_cib);
+    *result_cib = pcmk__xml_copy(NULL, existing_cib);
 
     return xml_apply_patchset(*result_cib, input, TRUE);
 }

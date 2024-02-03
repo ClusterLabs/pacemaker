@@ -349,6 +349,8 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+
 void pcmk__xe_set_content(xmlNode *node, const char *content);
 
 /*!

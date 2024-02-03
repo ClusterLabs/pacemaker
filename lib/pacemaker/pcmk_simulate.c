@@ -363,8 +363,11 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
-        xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
+        xmlNode *input = cib_object;
 
+        if (repeat > 1) {
+            input = pcmk__xml_copy(NULL, cib_object);
+        }
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
         pcmk__schedule_actions(input, scheduler_flags, scheduler);

@@ -194,7 +194,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         if (tmp == NULL) {
             crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
         } else {
-            *output_data = copy_xml(tmp);
+            *output_data = pcmk__xml_copy(NULL, tmp);
         }
     }
 

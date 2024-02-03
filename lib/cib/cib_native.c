@@ -111,9 +111,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
         if (output_data == NULL || (call_options & cib_discard_reply)) {
             crm_trace("Discarding reply");
-
-        } else if (tmp != NULL) {
-            *output_data = copy_xml(tmp);
+        } else {
+            *output_data = pcmk__xml_copy(NULL, tmp);
         }
 
     } else if (reply_id <= 0) {

@@ -338,7 +338,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if ((output_data != NULL) && (output != NULL)) {
         if (output->doc == private->cib_xml->doc) {
-            *output_data = copy_xml(output);
+            *output_data = pcmk__xml_copy(NULL, output);
         } else {
             *output_data = output;
         }
@@ -1121,7 +1121,7 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
      * * cib_perform_op() will infer changes for the commit request at the end.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
-              *result_cib = copy_xml(private->cib_xml));
+              *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
 
     crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
               "working CIB",
