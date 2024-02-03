@@ -88,7 +88,6 @@ typedef struct lrmd_key_value_s {
 #define LRMD_IPC_OP_SHUTDOWN_ACK  "shutdown_ack"
 #define LRMD_IPC_OP_SHUTDOWN_NACK "shutdown_nack"
 
-#define T_LRMD_REPLY     "lrmd_reply"
 #define T_LRMD_NOTIFY    "lrmd_notify"
 #define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
 #define T_LRMD_RSC_OP    "lrmd_rsc_op"
