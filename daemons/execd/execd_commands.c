@@ -1779,7 +1779,7 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
     xmlNode *rsc_xml = NULL;
 
     // Resource ID is optional
-    rsc_xml = first_named_child(request, F_LRMD_CALLDATA);
+    rsc_xml = first_named_child(request, PCMK__XA_LRMD_CALLDATA);
     if (rsc_xml) {
         rsc_xml = first_named_child(rsc_xml, F_LRMD_RSC);
     }
@@ -1893,7 +1893,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
         if (allowed) {
-            xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA);
+            xmlNode *data = get_message_xml(request, PCMK__XA_LRMD_CALLDATA);
             const char *timeout = NULL;
 
             CRM_LOG_ASSERT(data != NULL);
