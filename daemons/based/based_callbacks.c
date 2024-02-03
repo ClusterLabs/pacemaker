@@ -671,7 +671,7 @@ parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
     const char *host = NULL;
     const char *delegated = NULL;
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
+    const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
@@ -770,7 +770,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
     const char *delegated = crm_element_value(request, F_CIB_DELEGATED);
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
+    const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
 
     gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
@@ -779,7 +779,7 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
-        /* sync_our_cib() sets F_CIB_ISREPLY */
+        // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
         if (reply_to) {
             delegated = reply_to;
         }
@@ -987,7 +987,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
                   diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates, digest);
 
-        crm_xml_add(msg, F_CIB_ISREPLY, originator);
+        crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
         pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
         crm_xml_add(msg, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
@@ -1003,7 +1003,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
     } else if (originator != NULL) {
         /* send reply via HA to originating node */
         crm_trace("Sending request result to %s only", originator);
-        crm_xml_add(msg, F_CIB_ISREPLY, originator);
+        crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
         return send_cluster_message(pcmk__get_node(0, originator, NULL,
                                                    pcmk__node_search_cluster),
                                     crm_msg_cib, msg, FALSE);
@@ -1048,7 +1048,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = crm_element_value(request,
                                                 PCMK__XA_CIB_CLIENTNAME);
-    const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
+    const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
 
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;

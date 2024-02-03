@@ -48,7 +48,7 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
 
     *answer = NULL;
 
-    if (crm_element_value(req, F_CIB_ISREPLY) == NULL) {
+    if (crm_element_value(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
         crm_info("Peer %s is requesting to shut down", host);
         return pcmk_ok;
     }
@@ -262,7 +262,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, PCMK__XA_T, T_CIB);
                 crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
                 crm_xml_add(up, F_CIB_DELEGATED, host);
-                crm_xml_add(up, F_CIB_ISREPLY, host);
+                crm_xml_add(up, PCMK__XA_CIB_ISREPLYTO, host);
                 crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
                 crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
                 crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
@@ -382,7 +382,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_CALLOPT,
         PCMK__XA_CIB_CALLID,
         PCMK__XA_CIB_OP,
-        F_CIB_ISREPLY,
+        PCMK__XA_CIB_ISREPLYTO,
         F_CIB_SECTION,
         F_CIB_HOST,
         F_CIB_RC,
@@ -433,7 +433,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     replace_request = cib_msg_copy(request);
 
     if (host != NULL) {
-        crm_xml_add(replace_request, F_CIB_ISREPLY, host);
+        crm_xml_add(replace_request, PCMK__XA_CIB_ISREPLYTO, host);
     }
     if (all) {
         xml_remove_prop(replace_request, F_CIB_HOST);
