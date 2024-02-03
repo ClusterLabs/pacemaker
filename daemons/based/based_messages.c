@@ -122,7 +122,7 @@ send_sync_request(const char *host)
     crm_info("Requesting re-sync from %s", (host? host : "all peers"));
     sync_in_progress = 1;
 
-    crm_xml_add(sync_me, PCMK__XA_T, T_CIB);
+    crm_xml_add(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
     crm_xml_add(sync_me, PCMK__XA_CIB_DELEGATED_FROM,
                 stand_alone? "localhost" : crm_cluster->uname);
@@ -223,7 +223,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             rc = pcmk_ok;
             crm_notice("Upgrade request from %s verified", host);
 
-            crm_xml_add(up, PCMK__XA_T, T_CIB);
+            crm_xml_add(up, PCMK__XA_T, PCMK__VALUE_CIB);
             crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
             crm_xml_add(up, PCMK__XA_CIB_SCHEMA_MAX,
                         get_schema_name(new_version));
@@ -260,7 +260,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             if (origin) {
                 xmlNode *up = create_xml_node(NULL, __func__);
 
-                crm_xml_add(up, PCMK__XA_T, T_CIB);
+                crm_xml_add(up, PCMK__XA_T, PCMK__VALUE_CIB);
                 crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
                 crm_xml_add(up, PCMK__XA_CIB_DELEGATED_FROM, host);
                 crm_xml_add(up, PCMK__XA_CIB_ISREPLYTO, host);
