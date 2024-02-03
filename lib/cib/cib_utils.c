@@ -597,7 +597,8 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                  * the values in req
                  */
                 const char *origin = crm_element_value(req, PCMK__XA_SRC);
-                const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
+                const char *client = crm_element_value(req,
+                                                       PCMK__XA_CIB_CLIENTNAME);
 
                 if (origin != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
@@ -680,7 +681,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add(*op_msg, F_CIB_HOST, host);
     crm_xml_add(*op_msg, F_CIB_SECTION, section);
     crm_xml_add(*op_msg, F_CIB_USER, user_name);
-    crm_xml_add(*op_msg, F_CIB_CLIENTNAME, client_name);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);

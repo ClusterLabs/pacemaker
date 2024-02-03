@@ -69,7 +69,7 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
+    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
         // The CIB is still accurate
         return;

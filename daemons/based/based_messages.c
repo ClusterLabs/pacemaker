@@ -393,7 +393,7 @@ cib_msg_copy(xmlNode *msg)
         F_CIB_SEENCOUNT,
         F_CIB_TIMEOUT,
         F_CIB_GLOBAL_UPDATE,
-        F_CIB_CLIENTNAME,
+        PCMK__XA_CIB_CLIENTNAME,
         F_CIB_USER,
         F_CIB_NOTIFY_TYPE,
         F_CIB_NOTIFY_ACTIVATE

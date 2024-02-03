@@ -16,7 +16,7 @@
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/common/messages_internal.h>
-#include <crm/cib/internal.h>
+#include <crm/cib/cib_types.h>
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used

@@ -52,7 +52,6 @@
 #  define F_CIB_UPDATE	"cib_update"
 #  define F_CIB_GLOBAL_UPDATE	"cib_update"
 #  define F_CIB_UPDATE_RESULT	"cib_update_result"
-#  define F_CIB_CLIENTNAME	"cib_clientname"
 #  define F_CIB_NOTIFY_TYPE	"cib_notify_type"
 #  define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
 #  define F_CIB_UPDATE_DIFF	"cib_update_diff"

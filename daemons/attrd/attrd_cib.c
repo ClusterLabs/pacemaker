@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <glib.h>
 
+#include <crm/cib/internal.h>       // cib__*
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
@@ -67,7 +68,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     status_changed = cib__element_in_patchset(patchset, PCMK_XE_STATUS);
 
-    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
+    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
         /* This change came from a source that ensured the CIB is consistent
          * with our attributes table, so we don't need to write anything out.
