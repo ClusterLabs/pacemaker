@@ -167,6 +167,9 @@ extern "C" {
 //! \deprecated Do not use
 #define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
 
+//! \deprecated Do not use
+#define T_LRMD_RSC_OP "lrmd_rsc_op"
+
 #ifdef __cplusplus
 }
 #endif
