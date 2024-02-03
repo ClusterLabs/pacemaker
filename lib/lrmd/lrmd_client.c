@@ -277,7 +277,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 
     event.remote_nodename = native->remote_nodename;
     type = crm_element_value(msg, PCMK__XA_LRMD_OP);
-    crm_element_value_int(msg, F_LRMD_CALLID, &event.call_id);
+    crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
     event.rsc_id = crm_element_value(msg, F_LRMD_RSC_ID);
 
     if (pcmk__str_eq(type, LRMD_OP_RSC_REG, pcmk__str_none)) {
@@ -424,7 +424,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 native->expected_late_replies--;
             } else {
                 int reply_id = 0;
-                crm_element_value_int(xml, F_LRMD_CALLID, &reply_id);
+                crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
                 /* if this happens, we want to know about it */
                 crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
             }

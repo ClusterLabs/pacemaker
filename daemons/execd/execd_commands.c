@@ -307,7 +307,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->call_opts = call_options;
     cmd->client_id = strdup(client->id);
 
-    crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
+    crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
     crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval_ms);
     crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, F_LRMD_RSC_START_DELAY, &cmd->start_delay);
@@ -540,7 +540,7 @@ create_lrmd_reply(const char *origin, int rc, int call_id)
 
     crm_xml_add(reply, F_LRMD_ORIGIN, origin);
     crm_xml_add_int(reply, F_LRMD_RC, rc);
-    crm_xml_add_int(reply, F_LRMD_CALLID, call_id);
+    crm_xml_add_int(reply, PCMK__XA_LRMD_CALLID, call_id);
     return reply;
 }
 
@@ -623,7 +623,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, F_LRMD_EXEC_RC, cmd->result.exit_status);
     crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->result.execution_status);
-    crm_xml_add_int(notify, F_LRMD_CALLID, cmd->call_id);
+    crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
     crm_xml_add_ll(notify, F_LRMD_RSC_RUN_TIME,
@@ -689,12 +689,12 @@ send_generic_notify(int rc, xmlNode * request)
         const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
         const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
 
-        crm_element_value_int(request, F_LRMD_CALLID, &call_id);
+        crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
         notify = create_xml_node(NULL, T_LRMD_NOTIFY);
         crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
         crm_xml_add_int(notify, F_LRMD_RC, rc);
-        crm_xml_add_int(notify, F_LRMD_CALLID, call_id);
+        crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
         crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
         crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
 
@@ -1832,7 +1832,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
 
     crm_trace("Processing %s operation from %s", op, client->id);
-    crm_element_value_int(request, F_LRMD_CALLID, &call_id);
+    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef PCMK__COMPILE_REMOTE

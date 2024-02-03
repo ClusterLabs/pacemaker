@@ -158,7 +158,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, F_LRMD_CALLID, lrmd_call_id);
+    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
     process_lrmd_message(client, id, request);
 
