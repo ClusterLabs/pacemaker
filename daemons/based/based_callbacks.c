@@ -166,7 +166,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     crm_xml_add(reply, F_CIB_OPERATION, op);
     crm_xml_add(reply, F_CIB_CALLID, call_id);
     crm_xml_add(reply, PCMK__XA_CIB_CLIENTID, client_id);
-    crm_xml_add_int(reply, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
     crm_xml_add_int(reply, F_CIB_RC, rc);
 
     if (call_data != NULL) {
@@ -254,7 +254,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
     int call_options = cib_none;
 
-    crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
+    crm_element_value_int(op_request, PCMK__XA_CIB_CALLOPT, &call_options);
 
     /* Requests with cib_transaction set should not be sent to based directly
      * (outside of a commit-transaction request)
@@ -328,7 +328,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     xmlNode *op_request = pcmk__client_data2xml(cib_client, data, &id, &flags);
 
     if (op_request) {
-        crm_element_value_int(op_request, F_CIB_CALLOPTS, &call_options);
+        crm_element_value_int(op_request, PCMK__XA_CIB_CALLOPT, &call_options);
     }
 
     if (op_request == NULL) {
@@ -1052,7 +1052,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
-    crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
+    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
 
     if ((host != NULL) && (*host == '\0')) {
         host = NULL;
@@ -1376,7 +1376,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     /* Start processing the request... */
     op = crm_element_value(request, F_CIB_OPERATION);
-    crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
+    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
 
     if (!privileged && pcmk_is_set(operation->flags, cib__op_attr_privileged)) {
         rc = -EACCES;

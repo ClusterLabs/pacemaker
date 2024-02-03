@@ -685,7 +685,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(*op_msg, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
         add_message_xml(*op_msg, F_CIB_CALLDATA, data);
