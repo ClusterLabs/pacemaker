@@ -126,6 +126,7 @@ extern "C" {
 #define PCMK__XA_CIB_NOTIFY_ACTIVATE    "cib_notify_activate"
 #define PCMK__XA_CIB_NOTIFY_TYPE        "cib_notify_type"
 #define PCMK__XA_CIB_OP                 "cib_op"
+#define PCMK__XA_CIB_PING_ID            "cib_ping_id"
 #define PCMK__XA_CIB_RC                 "cib_rc"
 #define PCMK__XA_CIB_SECTION            "cib_section"
 #define PCMK__XA_CIB_UPDATE             "cib_update"

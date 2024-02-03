@@ -139,7 +139,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     const char *host = crm_element_value(req, PCMK__XA_SRC);
-    const char *seq = crm_element_value(req, F_CIB_PING_ID);
+    const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
@@ -147,7 +147,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(*answer, PCMK__XA_DIGEST, digest);
-    crm_xml_add(*answer, F_CIB_PING_ID, seq);
+    crm_xml_add(*answer, PCMK__XA_CIB_PING_ID, seq);
 
     pcmk__if_tracing(
         {

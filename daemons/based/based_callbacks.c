@@ -407,7 +407,7 @@ cib_digester_cb(gpointer data)
 
         crm_xml_add(ping, PCMK__XA_T, T_CIB);
         crm_xml_add(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-        crm_xml_add(ping, F_CIB_PING_ID, buffer);
+        crm_xml_add(ping, PCMK__XA_CIB_PING_ID, buffer);
 
         crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
         send_cluster_message(NULL, crm_msg_cib, ping, TRUE);
@@ -424,11 +424,11 @@ process_ping_reply(xmlNode *reply)
     const char *host = crm_element_value(reply, PCMK__XA_SRC);
 
     xmlNode *pong = get_message_xml(reply, PCMK__XA_CIB_CALLDATA);
-    const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
+    const char *seq_s = crm_element_value(pong, PCMK__XA_CIB_PING_ID);
     const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
     if (seq_s == NULL) {
-        crm_debug("Ignoring ping reply with no " F_CIB_PING_ID);
+        crm_debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
         return;
 
     } else {
