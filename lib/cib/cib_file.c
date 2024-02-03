@@ -1061,7 +1061,8 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    for (xmlNode *request = first_named_child(transaction, T_CIB_COMMAND);
+    for (xmlNode *request = first_named_child(transaction,
+                                              PCMK__XE_CIB_COMMAND);
          request != NULL; request = crm_next_same_xml(request)) {
 
         xmlNode *output = NULL;
