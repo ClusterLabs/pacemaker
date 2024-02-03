@@ -149,7 +149,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
                     reply->data.graph.input);
 
         crm_data_node = create_xml_node(fsa_input.msg, PCMK__XE_CRM_XML);
-        add_node_copy(crm_data_node, reply->data.graph.tgraph);
+        pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         free_xml(fsa_input.msg);
