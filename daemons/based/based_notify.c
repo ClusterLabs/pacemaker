@@ -124,14 +124,18 @@ cib_notify_send(const xmlNode *xml)
 }
 
 static void
-attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib)
+attach_cib_generation(xmlNode *msg)
 {
     xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
 
-    if (a_cib != NULL) {
-        copy_in_properties(generation, a_cib);
+    if (generation == NULL) {
+        return;
     }
-    add_message_xml(msg, field, generation);
+
+    if (the_cib != NULL) {
+        copy_in_properties(generation, the_cib);
+    }
+    add_message_xml(msg, PCMK__XE_CIB_GENERATION, generation);
     free_xml(generation);
 }
 
@@ -213,8 +217,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     // @COMPAT Unused internally, drop at 3.0.0
     crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT, pcmk__xe_id(diff));
     crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT_TYPE, type);
-
-    attach_cib_generation(update_msg, "cib_generation", the_cib);
+    attach_cib_generation(update_msg);
 
     if (update != NULL) {
         add_message_xml(update_msg, F_CIB_UPDATE, update);
