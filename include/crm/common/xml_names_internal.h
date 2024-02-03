@@ -38,6 +38,7 @@ extern "C" {
 #define PCMK__XE_LRM_RESOURCE           "lrm_resource"
 #define PCMK__XE_LRM_RESOURCES          "lrm_resources"
 #define PCMK__XE_LRM_RSC_OP             "lrm_rsc_op"
+#define PCMK__XE_LRMD_RSC               "lrmd_rsc"
 #define PCMK__XE_MAINTENANCE            "maintenance"
 #define PCMK__XE_META                   "meta"
 #define PCMK__XE_NACK                   "nack"
