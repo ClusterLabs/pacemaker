@@ -34,7 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define F_CIB_OBJID	"cib_object"
 #  define F_CIB_OBJTYPE	"cib_object_type"
 #  define F_CIB_EXISTING	"cib_existing_object"
 #  define F_CIB_SEENCOUNT	"cib_seen"

@@ -208,7 +208,10 @@ cib_diff_notify(const char *op, int result, const char *call_id,
         type = (const char *) diff->name;
         crm_trace("Setting type to new_obj->name: %s", type);
     }
-    crm_xml_add(update_msg, F_CIB_OBJID, pcmk__xe_id(diff));
+
+    // @COMPAT Unused internally, drop at 3.0.0
+    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT, pcmk__xe_id(diff));
+
     crm_xml_add(update_msg, F_CIB_OBJTYPE, type);
     attach_cib_generation(update_msg, "cib_generation", the_cib);
 
