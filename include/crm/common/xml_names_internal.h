@@ -178,6 +178,7 @@ extern "C" {
 #define PCMK__XA_LRMD_CLIENTNAME        "lrmd_clientname"
 #define PCMK__XA_LRMD_IS_IPC_PROVIDER   "lrmd_is_ipc_provider"
 #define PCMK__XA_LRMD_OP                "lrmd_op"
+#define PCMK__XA_LRMD_PROTOCOL_VERSION  "lrmd_protocol_version"
 #define PCMK__XA_MAJOR_VERSION          "major_version"
 #define PCMK__XA_MINOR_VERSION          "minor_version"
 #define PCMK__XA_MODE                   "mode"

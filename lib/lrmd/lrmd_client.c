@@ -974,7 +974,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     crm_xml_add(hello, PCMK__XA_T, T_LRMD);
     crm_xml_add(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(hello, PCMK__XA_LRMD_CLIENTNAME, name);
-    crm_xml_add(hello, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+    crm_xml_add(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     /* advertise that we are a proxy provider */
     if (native->proxy_callback) {
@@ -990,7 +990,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         crm_err("Did not receive registration reply");
         rc = -EPROTO;
     } else {
-        const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
+        const char *version = crm_element_value(reply,
+                                                PCMK__XA_LRMD_PROTOCOL_VERSION);
         const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
         const char *tmp_ticket = crm_element_value(reply,
                                                    PCMK__XA_LRMD_CLIENTID);
