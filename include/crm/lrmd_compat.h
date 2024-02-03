@@ -41,6 +41,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
 
+//! \deprecated Do not use
+#define F_LRMD_REMOTE_MSG_TYPE "lrmd_remote_msg_type"
+
 #ifdef __cplusplus
 }
 #endif
