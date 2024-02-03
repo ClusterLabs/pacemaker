@@ -1489,7 +1489,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         rc = -EPROTO;
     }
 
-    if (pcmk__xe_attr_is_true(request, F_LRMD_IS_IPC_PROVIDER)) {
+    if (pcmk__xe_attr_is_true(request, PCMK__XA_LRMD_IS_IPC_PROVIDER)) {
 #ifdef PCMK__COMPILE_REMOTE
         if ((client->remote != NULL)
             && pcmk_is_set(client->flags,

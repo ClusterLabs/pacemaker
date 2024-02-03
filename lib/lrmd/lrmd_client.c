@@ -978,7 +978,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
 
     /* advertise that we are a proxy provider */
     if (native->proxy_callback) {
-        pcmk__xe_set_bool_attr(hello, F_LRMD_IS_IPC_PROVIDER, true);
+        pcmk__xe_set_bool_attr(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
     }
 
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
