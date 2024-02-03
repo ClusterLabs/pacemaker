@@ -155,6 +155,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_IPC_MSG_FLAGS "lrmd_ipc_msg_flags"
 
+//! \deprecated Do not use
+#define T_LRMD "lrmd"
+
 #ifdef __cplusplus
 }
 #endif
