@@ -1771,7 +1771,7 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
     crm_xml_add(rsc_xml, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
     for (GList *item = rsc->recurring_ops; item != NULL; item = item->next) {
         lrmd_cmd_t *cmd = item->data;
-        xmlNode *op_xml = create_xml_node(rsc_xml, T_LRMD_RSC_OP);
+        xmlNode *op_xml = create_xml_node(rsc_xml, PCMK__XE_LRMD_RSC_OP);
 
         crm_xml_add(op_xml, PCMK__XA_LRMD_RSC_ACTION,
                     pcmk__s(cmd->real_action, cmd->action));
