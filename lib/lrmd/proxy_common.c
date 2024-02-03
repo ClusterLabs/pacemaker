@@ -73,7 +73,7 @@ remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
     xmlNode *event = create_xml_node(NULL, T_LRMD_IPC_PROXY);
     crm_xml_add(event, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
     crm_xml_add(event, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
-    add_message_xml(event, F_LRMD_IPC_MSG, msg);
+    add_message_xml(event, PCMK__XE_LRMD_IPC_MSG, msg);
     crm_log_xml_explicit(event, "EventForProxy");
     lrmd_internal_proxy_send(proxy->lrm, event);
     free_xml(event);
@@ -87,7 +87,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
     crm_xml_add(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
     crm_xml_add(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
     crm_xml_add_int(response, F_LRMD_IPC_MSG_ID, msg_id);
-    add_message_xml(response, F_LRMD_IPC_MSG, msg);
+    add_message_xml(response, PCMK__XE_LRMD_IPC_MSG, msg);
     lrmd_internal_proxy_send(proxy->lrm, response);
     free_xml(response);
 }
@@ -226,7 +226,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
         int flags = 0;
-        xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
+        xmlNode *request = get_message_xml(msg, PCMK__XE_LRMD_IPC_MSG);
         const char *name = crm_element_value(msg, PCMK__XA_LRMD_IPC_CLIENT);
 
         CRM_CHECK(request != NULL, return);
