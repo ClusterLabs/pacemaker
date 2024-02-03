@@ -80,6 +80,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_TYPE "lrmd_type"
 
+//! \deprecated Do not use
+#define F_LRMD_ORIGIN "lrmd_origin"
+
 #ifdef __cplusplus
 }
 #endif
