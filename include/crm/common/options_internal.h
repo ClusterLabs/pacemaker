@@ -219,6 +219,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_ST_NOTIFY               "st_notify"
 #define PCMK__VALUE_ST_NOTIFY_DISCONNECT    "st_notify_disconnect"
 #define PCMK__VALUE_ST_NOTIFY_FENCE         "st_notify_fence"
+#define PCMK__VALUE_ST_NOTIFY_HISTORY       "st_notify_history"
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_STONITH_NG              "stonith-ng"
 #define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
