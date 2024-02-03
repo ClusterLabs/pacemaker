@@ -308,7 +308,8 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->client_id = strdup(client->id);
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval_ms);
+    crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL,
+                         &cmd->interval_ms);
     crm_element_value_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY,
                           &cmd->start_delay);
@@ -621,7 +622,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
-    crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
+    crm_xml_add_ms(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
     crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
@@ -1748,7 +1749,7 @@ process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
     const char *action = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     guint interval_ms = 0;
 
-    crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &interval_ms);
+    crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
         return -EINVAL;
@@ -1769,7 +1770,7 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
 
         crm_xml_add(op_xml, PCMK__XA_LRMD_RSC_ACTION,
                     pcmk__s(cmd->real_action, cmd->action));
-        crm_xml_add_ms(op_xml, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
+        crm_xml_add_ms(op_xml, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
         crm_xml_add_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
     }
 }

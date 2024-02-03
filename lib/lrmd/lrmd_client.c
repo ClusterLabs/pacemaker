@@ -288,7 +288,8 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         time_t epoch = 0;
 
         crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
-        crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
+        crm_element_value_ms(msg, PCMK__XA_LRMD_RSC_INTERVAL,
+                             &event.interval_ms);
         crm_element_value_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
                               &event.start_delay);
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, (int *) &event.rc);
@@ -1890,8 +1891,8 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
             op_info->rsc_id = strdup(rsc_id);
             op_info->action = crm_element_value_copy(op_xml,
                                                      PCMK__XA_LRMD_RSC_ACTION);
-            op_info->interval_ms_s = crm_element_value_copy(op_xml,
-                                                            F_LRMD_RSC_INTERVAL);
+            op_info->interval_ms_s =
+                crm_element_value_copy(op_xml, PCMK__XA_LRMD_RSC_INTERVAL);
             op_info->timeout_ms_s =
                 crm_element_value_copy(op_xml, PCMK__XA_LRMD_TIMEOUT);
             *output = g_list_prepend(*output, op_info);
@@ -2044,7 +2045,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
-    crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
+    crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
 
@@ -2096,7 +2097,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
+    crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
     free_xml(data);
     return rc;
