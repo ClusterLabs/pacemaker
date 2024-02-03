@@ -275,7 +275,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         }
         return;
 
-    } else if (pcmk__str_eq(op, T_CIB_NOTIFY, pcmk__str_none)) {
+    } else if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
         /* Update the notify filters for this client */
         int on_off = 0;
         crm_exit_t status = CRM_EX_OK;

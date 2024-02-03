@@ -196,7 +196,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     update_msg = create_xml_node(NULL, "notify");
 
-    crm_xml_add(update_msg, PCMK__XA_T, T_CIB_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, T_CIB_DIFF_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_CIB_OP, op);
     crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
