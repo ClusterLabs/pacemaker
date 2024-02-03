@@ -904,7 +904,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     rc = pcmk_ok;
     crm_trace("%s op reply received", op);
-    if (crm_element_value_int(op_reply, F_LRMD_RC, &rc) != 0) {
+    if (crm_element_value_int(op_reply, PCMK__XA_LRMD_RC, &rc) != 0) {
         rc = -ENOMSG;
         goto done;
     }
@@ -999,7 +999,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
         long long uptime = -1;
 
-        crm_element_value_int(reply, F_LRMD_RC, &rc);
+        crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
 
         /* The remote executor may add its uptime to the XML reply, which is
          * useful in handling transient attributes when the connection to the

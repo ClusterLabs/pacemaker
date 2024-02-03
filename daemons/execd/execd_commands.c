@@ -539,7 +539,7 @@ create_lrmd_reply(const char *origin, int rc, int call_id)
     xmlNode *reply = create_xml_node(NULL, T_LRMD_REPLY);
 
     crm_xml_add(reply, F_LRMD_ORIGIN, origin);
-    crm_xml_add_int(reply, F_LRMD_RC, rc);
+    crm_xml_add_int(reply, PCMK__XA_LRMD_RC, rc);
     crm_xml_add_int(reply, PCMK__XA_LRMD_CALLID, call_id);
     return reply;
 }
@@ -693,7 +693,7 @@ send_generic_notify(int rc, xmlNode * request)
 
         notify = create_xml_node(NULL, T_LRMD_NOTIFY);
         crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
-        crm_xml_add_int(notify, F_LRMD_RC, rc);
+        crm_xml_add_int(notify, PCMK__XA_LRMD_RC, rc);
         crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
         crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
         crm_xml_add(notify, F_LRMD_RSC_ID, rsc_id);
