@@ -184,6 +184,7 @@ extern "C" {
 #define PCMK__XA_LRMD_EXEC_RC           "lrmd_exec_rc"
 #define PCMK__XA_LRMD_IS_IPC_PROVIDER   "lrmd_is_ipc_provider"
 #define PCMK__XA_LRMD_OP                "lrmd_op"
+#define PCMK__XA_LRMD_ORIGIN            "lrmd_origin"
 #define PCMK__XA_LRMD_PROTOCOL_VERSION  "lrmd_protocol_version"
 #define PCMK__XA_LRMD_PROVIDER          "lrmd_provider"
 #define PCMK__XA_LRMD_RC                "lrmd_rc"

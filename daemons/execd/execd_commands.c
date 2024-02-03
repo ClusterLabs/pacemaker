@@ -313,7 +313,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     crm_element_value_int(rsc_xml, F_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
 
-    cmd->origin = crm_element_value_copy(rsc_xml, F_LRMD_ORIGIN);
+    cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
     cmd->action = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ACTION);
     cmd->userdata_str = crm_element_value_copy(rsc_xml, F_LRMD_RSC_USERDATA_STR);
     cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
@@ -538,7 +538,7 @@ create_lrmd_reply(const char *origin, int rc, int call_id)
 {
     xmlNode *reply = create_xml_node(NULL, T_LRMD_REPLY);
 
-    crm_xml_add(reply, F_LRMD_ORIGIN, origin);
+    crm_xml_add(reply, PCMK__XA_LRMD_ORIGIN, origin);
     crm_xml_add_int(reply, PCMK__XA_LRMD_RC, rc);
     crm_xml_add_int(reply, PCMK__XA_LRMD_CALLID, call_id);
     return reply;
@@ -617,7 +617,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     notify = create_xml_node(NULL, T_LRMD_NOTIFY);
 
-    crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
+    crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
     crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
@@ -693,7 +693,7 @@ send_generic_notify(int rc, xmlNode * request)
         crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
         notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-        crm_xml_add(notify, F_LRMD_ORIGIN, __func__);
+        crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
         crm_xml_add_int(notify, PCMK__XA_LRMD_RC, rc);
         crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
         crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
@@ -781,7 +781,7 @@ notify_of_new_client(pcmk__client_t *new_client)
 
     data.new_client = new_client;
     data.notify = create_xml_node(NULL, T_LRMD_NOTIFY);
-    crm_xml_add(data.notify, F_LRMD_ORIGIN, __func__);
+    crm_xml_add(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     free_xml(data.notify);
