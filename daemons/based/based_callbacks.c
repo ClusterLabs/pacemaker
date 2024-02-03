@@ -289,7 +289,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         crm_debug("Setting %s callbacks %s for client %s",
                   type, (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
-        if (pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
+        if (pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY, pcmk__str_none)) {
             bit = cib_notify_post;
 
         } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,

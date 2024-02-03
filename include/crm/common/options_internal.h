@@ -188,6 +188,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_BROADCAST               "broadcast"
 #define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CIB_NOTIFY              "cib_notify"
+#define PCMK__VALUE_CIB_POST_NOTIFY         "cib_post_notify"
 #define PCMK__VALUE_CIB_PRE_NOTIFY          "cib_pre_notify"
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CRMD                    "crmd"
