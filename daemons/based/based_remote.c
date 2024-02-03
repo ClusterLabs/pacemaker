@@ -516,7 +516,7 @@ cib_remote_msg(gpointer data)
 
         /* send ACK */
         reg = create_xml_node(NULL, "cib_result");
-        crm_xml_add(reg, F_CIB_OPERATION, CRM_OP_REGISTER);
+        crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
         crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
         free_xml(reg);

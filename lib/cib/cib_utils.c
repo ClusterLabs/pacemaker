@@ -155,7 +155,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
     for (const xmlNode *change = first_named_child(patchset, PCMK_XE_CHANGE);
          change != NULL; change = crm_next_same_xml(change)) {
 
-        const char *op = crm_element_value(change, F_CIB_OPERATION);
+        const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
         const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
@@ -677,7 +677,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     }
 
     crm_xml_add(*op_msg, PCMK__XA_T, T_CIB);
-    crm_xml_add(*op_msg, F_CIB_OPERATION, op);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
     crm_xml_add(*op_msg, F_CIB_HOST, host);
     crm_xml_add(*op_msg, F_CIB_SECTION, section);
     crm_xml_add(*op_msg, F_CIB_USER, user_name);
@@ -709,7 +709,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 static int
 validate_transaction_request(const xmlNode *request)
 {
-    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *host = crm_element_value(request, F_CIB_HOST);
     const cib__operation_t *operation = NULL;
     int rc = cib__get_operation(op, &operation);
@@ -759,7 +759,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
         add_node_copy(cib->transaction, request);
 
     } else {
-        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);

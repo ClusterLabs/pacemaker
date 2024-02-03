@@ -218,7 +218,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     int call_id = 0;
     int call_options = cib_none;
-    const char *op = crm_element_value(request, F_CIB_OPERATION);
+    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *section = crm_element_value(request, F_CIB_SECTION);
     xmlNode *data = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
 
@@ -1065,7 +1065,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
          request != NULL; request = crm_next_same_xml(request)) {
 
         xmlNode *output = NULL;
-        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
 
         int rc = cib_file_process_request(cib, request, &output);
 
