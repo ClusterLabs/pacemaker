@@ -26,6 +26,9 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_OPERATION "lrmd_op"
 
+//! \deprecated Do not use
+#define F_LRMD_CLIENTNAME "lrmd_clientname"
+
 #ifdef __cplusplus
 }
 #endif
