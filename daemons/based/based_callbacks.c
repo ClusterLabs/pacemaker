@@ -283,7 +283,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         const char *type = crm_element_value(op_request,
                                              PCMK__XA_CIB_NOTIFY_TYPE);
 
-        crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
+        crm_element_value_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE,
+                              &on_off);
 
         crm_debug("Setting %s callbacks %s for client %s",
                   type, (on_off? "on" : "off"), pcmk__client_name(cib_client));

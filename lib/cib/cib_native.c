@@ -406,7 +406,7 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
     if (cib->state != cib_disconnected) {
         crm_xml_add(notify_msg, PCMK__XA_CIB_OP, T_CIB_NOTIFY);
         crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
-        crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+        crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
                           1000 * cib->call_timeout, NULL);
         if (rc <= 0) {
