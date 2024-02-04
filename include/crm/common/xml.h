@@ -126,8 +126,6 @@ char *dump_xml_unformatted(const xmlNode *xml);
 /*
  * Diff related Functions
  */
-xmlNode *diff_xml_object(xmlNode * left, xmlNode * right, gboolean suppress);
-
 xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
                              gboolean full, gboolean * changed, const char *marker);
 
