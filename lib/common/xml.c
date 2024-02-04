@@ -645,6 +645,7 @@ create_xml_node(xmlNode * parent, const char *name)
     }
 
     if (parent == NULL) {
+        // libxml2 supports only XML 1.0
         doc = xmlNewDoc((pcmkXmlStr) "1.0");
         if (doc == NULL) {
             return NULL;
@@ -826,6 +827,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         // The copy will be the root element of a new document
         CRM_ASSERT(src->type == XML_ELEMENT_NODE);
 
+        // libxml2 supports only XML 1.0.
         doc = xmlNewDoc((pcmkXmlStr) "1.0");
         CRM_ASSERT(doc != NULL);
 
