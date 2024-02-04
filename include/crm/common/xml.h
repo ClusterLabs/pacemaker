@@ -105,11 +105,6 @@ xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const
                                const char *class_name, const char *text);
 
 /*
- *
- */
-void purge_diff_markers(xmlNode * a_node);
-
-/*
  * XML I/O Functions
  *
  * Whitespace between tags is discarded.

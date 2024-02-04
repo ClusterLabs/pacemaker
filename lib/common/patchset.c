@@ -688,6 +688,21 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     return pcmk_rc_ok;
 }
 
+// @COMPAT Remove when v1 patchsets are removed
+static void
+purge_v1_diff_markers(xmlNode *node)
+{
+    xmlNode *child = NULL;
+
+    CRM_CHECK(node != NULL, return);
+
+    xml_remove_prop(node, PCMK__XA_CRM_DIFF_MARKER);
+    for (child = pcmk__xml_first_child(node); child != NULL;
+         child = pcmk__xml_next(child)) {
+        purge_v1_diff_markers(child);
+    }
+}
+
 /*!
  * \internal
  * \brief Apply a version 1 patchset to an XML node
@@ -745,7 +760,7 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
         rc = ENOTUNIQ;
     }
 
-    purge_diff_markers(xml); // Purge prior to checking digest
+    purge_v1_diff_markers(xml); // Purge prior to checking digest
 
     free_xml(old);
     return rc;
@@ -1175,20 +1190,6 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     return rc;
 }
 
-void
-purge_diff_markers(xmlNode *a_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK(a_node != NULL, return);
-
-    xml_remove_prop(a_node, PCMK__XA_CRM_DIFF_MARKER);
-    for (child = pcmk__xml_first_child(a_node); child != NULL;
-         child = pcmk__xml_next(child)) {
-        purge_diff_markers(child);
-    }
-}
-
 xmlNode *
 diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 {
@@ -1476,7 +1477,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     } else if (result && (digest != NULL)) {
         char *new_digest = NULL;
 
-        purge_diff_markers(*new_xml); // Purge now so diff is ok
+        purge_v1_diff_markers(*new_xml);    // Purge now so diff is ok
         new_digest = calculate_xml_versioned_digest(*new_xml, FALSE, TRUE,
                                                     version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
@@ -1500,10 +1501,16 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
         free(new_digest);
 
     } else if (result) {
-        purge_diff_markers(*new_xml); // Purge now so diff is ok
+        purge_v1_diff_markers(*new_xml);    // Purge now so diff is ok
     }
 
     return result;
+}
+
+void
+purge_diff_markers(xmlNode *a_node)
+{
+    purge_v1_diff_markers(a_node);
 }
 
 // LCOV_EXCL_STOP

@@ -80,6 +80,9 @@ xmlNode *copy_xml(xmlNode *src_node);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
 
+//! \deprecated Do not use
+void purge_diff_markers(xmlNode *a_node);
+
 #ifdef __cplusplus
 }
 #endif
