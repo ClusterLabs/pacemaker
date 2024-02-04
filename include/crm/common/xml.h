@@ -109,8 +109,6 @@ xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const
  *
  * Whitespace between tags is discarded.
  */
-xmlNode *filename2xml(const char *filename);
-
 xmlNode *stdin2xml(void);
 
 xmlNode *string2xml(const char *input);
