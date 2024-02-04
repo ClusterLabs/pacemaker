@@ -86,6 +86,11 @@ void purge_diff_markers(xmlNode *a_node);
 //! \deprecated Do not use
 xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
 
+//! \deprecated Do not use
+xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                             gboolean full, gboolean *changed,
+                             const char *marker);
+
 #ifdef __cplusplus
 }
 #endif
