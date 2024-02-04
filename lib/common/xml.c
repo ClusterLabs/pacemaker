@@ -1129,12 +1129,6 @@ pcmk__xml_read(const char *filename)
     return xml;
 }
 
-xmlNode *
-filename2xml(const char *filename)
-{
-    return pcmk__xml_read(filename);
-}
-
 /*!
  * \internal
  * \brief Add a "last written" attribute to an XML element, set to current time
@@ -3023,6 +3017,12 @@ copy_xml(xmlNode *src)
     CRM_ASSERT(copy != NULL);
     xmlDocSetRootElement(doc, copy);
     return copy;
+}
+
+xmlNode *
+filename2xml(const char *filename)
+{
+    return pcmk__xml_read(filename);
 }
 
 // LCOV_EXCL_STOP
