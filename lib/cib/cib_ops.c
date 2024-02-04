@@ -806,7 +806,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     CRM_ASSERT(diff != NULL);
 
     if (*diff == NULL && last != NULL && next != NULL) {
-        *diff = diff_xml_object(last, next, FALSE);
+        *diff = pcmk__diff_v1_xml_object(last, next, false);
     }
 
     if (*diff == NULL) {

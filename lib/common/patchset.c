@@ -250,7 +250,7 @@ static xmlNode *
 xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
                        bool suppress)
 {
-    xmlNode *patchset = diff_xml_object(source, target, suppress);
+    xmlNode *patchset = pcmk__diff_v1_xml_object(source, target, suppress);
 
     if (patchset) {
         CRM_LOG_ASSERT(xml_document_dirty(target));
@@ -1191,7 +1191,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 }
 
 xmlNode *
-diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
+pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
 {
     xmlNode *tmp1 = NULL;
     xmlNode *diff = create_xml_node(NULL, PCMK_XE_DIFF);
@@ -1200,12 +1200,12 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 
     crm_xml_add(diff, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-    tmp1 = subtract_xml_object(removed, old, new, FALSE, NULL, "removed:top");
+    tmp1 = subtract_xml_object(removed, old, new, false, NULL, "removed:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
         free_xml(tmp1);
     }
 
-    tmp1 = subtract_xml_object(added, new, old, TRUE, NULL, "added:top");
+    tmp1 = subtract_xml_object(added, new, old, true, NULL, "added:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
         free_xml(tmp1);
     }
@@ -1216,6 +1216,12 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
     }
 
     return diff;
+}
+
+xmlNode *
+diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
+{
+    return pcmk__diff_v1_xml_object(old, new, suppress);
 }
 
 static xmlNode *
