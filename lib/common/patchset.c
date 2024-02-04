@@ -25,9 +25,6 @@
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
-static xmlNode *subtract_xml_comment(xmlNode *parent, xmlNode *left,
-                                     xmlNode *right, gboolean *changed);
-
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
  */
@@ -176,6 +173,7 @@ is_config_change(xmlNode *xml)
     return FALSE;
 }
 
+// @COMPAT Remove when v1 patchsets are removed
 static void
 xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
                    gboolean changed)
@@ -246,6 +244,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     crm_log_xml_explicit(local_diff, "Repaired-diff");
 }
 
+// @COMPAT Remove when v1 patchsets are removed
 static xmlNode *
 xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
                        bool suppress)
@@ -369,6 +368,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
 
     switch (format) {
         case 1:
+            // @COMPAT Remove when v1 patchsets are removed
             patch = xml_create_patchset_v1(source, target, config, FALSE);
             break;
         case 2:
@@ -412,14 +412,219 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     return;
 }
 
-// Return true if attribute name is not \c PCMK_XML_ID
+// @COMPAT Remove when v1 patchsets are removed
+static xmlNode *
+subtract_v1_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
+                        gboolean *changed)
+{
+    CRM_CHECK(left != NULL, return NULL);
+    CRM_CHECK(left->type == XML_COMMENT_NODE, return NULL);
+
+    if ((right == NULL) || !pcmk__str_eq((const char *)left->content,
+                                         (const char *)right->content,
+                                         pcmk__str_casei)) {
+        xmlNode *deleted = NULL;
+
+        deleted = pcmk__xml_copy(parent, left);
+        *changed = TRUE;
+
+        return deleted;
+    }
+
+    return NULL;
+}
+
+// @COMPAT Remove when v1 patchsets are removed
+static xmlNode *
+subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                       bool full, gboolean *changed, const char *marker)
+{
+    gboolean dummy = FALSE;
+    xmlNode *diff = NULL;
+    xmlNode *right_child = NULL;
+    xmlNode *left_child = NULL;
+    xmlAttrPtr xIter = NULL;
+
+    const char *id = NULL;
+    const char *name = NULL;
+    const char *value = NULL;
+    const char *right_val = NULL;
+
+    if (changed == NULL) {
+        changed = &dummy;
+    }
+
+    if (left == NULL) {
+        return NULL;
+    }
+
+    if (left->type == XML_COMMENT_NODE) {
+        return subtract_v1_xml_comment(parent, left, right, changed);
+    }
+
+    id = pcmk__xe_id(left);
+    name = (const char *) left->name;
+    if (right == NULL) {
+        xmlNode *deleted = NULL;
+
+        crm_trace("Processing <%s " PCMK_XA_ID "=%s> (complete copy)",
+                  name, id);
+        deleted = pcmk__xml_copy(parent, left);
+        crm_xml_add(deleted, PCMK__XA_CRM_DIFF_MARKER, marker);
+
+        *changed = TRUE;
+        return deleted;
+    }
+
+    CRM_CHECK(name != NULL, return NULL);
+    CRM_CHECK(pcmk__xe_is(left, (const char *) right->name), return NULL);
+
+    // Check for PCMK__XA_CRM_DIFF_MARKER in a child
+    value = crm_element_value(right, PCMK__XA_CRM_DIFF_MARKER);
+    if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
+        crm_trace("We are the root of the deletion: %s.id=%s", name, id);
+        *changed = TRUE;
+        return NULL;
+    }
+
+    // @TODO Avoiding creating the full hierarchy would save work here
+    diff = create_xml_node(parent, name);
+
+    // Changes to child objects
+    for (left_child = pcmk__xml_first_child(left); left_child != NULL;
+         left_child = pcmk__xml_next(left_child)) {
+        gboolean child_changed = FALSE;
+
+        right_child = pcmk__xml_match(right, left_child, false);
+        subtract_v1_xml_object(diff, left_child, right_child, full,
+                               &child_changed, marker);
+        if (child_changed) {
+            *changed = TRUE;
+        }
+    }
+
+    if (!*changed) {
+        /* Nothing to do */
+
+    } else if (full) {
+        xmlAttrPtr pIter = NULL;
+
+        for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
+             pIter = pIter->next) {
+            const char *p_name = (const char *)pIter->name;
+            const char *p_value = pcmk__xml_attr_value(pIter);
+
+            xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
+        }
+
+        // We have everything we need
+        goto done;
+    }
+
+    // Changes to name/value pairs
+    for (xIter = pcmk__xe_first_attr(left); xIter != NULL;
+         xIter = xIter->next) {
+        const char *prop_name = (const char *) xIter->name;
+        xmlAttrPtr right_attr = NULL;
+        xml_node_private_t *nodepriv = NULL;
+
+        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
+            // id already obtained when present ~ this case, so just reuse
+            xmlSetProp(diff, (pcmkXmlStr) PCMK_XA_ID, (pcmkXmlStr) id);
+            continue;
+        }
+
+        if (pcmk__xa_filterable(prop_name)) {
+            continue;
+        }
+
+        right_attr = xmlHasProp(right, (pcmkXmlStr) prop_name);
+        if (right_attr) {
+            nodepriv = right_attr->_private;
+        }
+
+        right_val = crm_element_value(right, prop_name);
+        if ((right_val == NULL) || (nodepriv && pcmk_is_set(nodepriv->flags, pcmk__xf_deleted))) {
+            /* new */
+            *changed = TRUE;
+            if (full) {
+                xmlAttrPtr pIter = NULL;
+
+                for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
+                     pIter = pIter->next) {
+                    const char *p_name = (const char *) pIter->name;
+                    const char *p_value = pcmk__xml_attr_value(pIter);
+
+                    xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
+                }
+                break;
+
+            } else {
+                const char *left_value = pcmk__xml_attr_value(xIter);
+
+                xmlSetProp(diff, (pcmkXmlStr) prop_name, (pcmkXmlStr) value);
+                crm_xml_add(diff, prop_name, left_value);
+            }
+
+        } else {
+            /* Only now do we need the left value */
+            const char *left_value = pcmk__xml_attr_value(xIter);
+
+            if (strcmp(left_value, right_val) == 0) {
+                /* unchanged */
+
+            } else {
+                *changed = TRUE;
+                if (full) {
+                    xmlAttrPtr pIter = NULL;
+
+                    crm_trace("Changes detected to %s in "
+                              "<%s " PCMK_XA_ID "=%s>", prop_name, name, id);
+                    for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
+                         pIter = pIter->next) {
+                        const char *p_name = (const char *) pIter->name;
+                        const char *p_value = pcmk__xml_attr_value(pIter);
+
+                        xmlSetProp(diff, (pcmkXmlStr) p_name,
+                                   (pcmkXmlStr) p_value);
+                    }
+                    break;
+
+                } else {
+                    crm_trace("Changes detected to %s (%s -> %s) in "
+                              "<%s " PCMK_XA_ID "=%s>",
+                              prop_name, left_value, right_val, name, id);
+                    crm_xml_add(diff, prop_name, left_value);
+                }
+            }
+        }
+    }
+
+    if (!*changed) {
+        free_xml(diff);
+        return NULL;
+
+    } else if (!full && (id != NULL)) {
+        crm_xml_add(diff, PCMK_XA_ID, id);
+    }
+  done:
+    return diff;
+}
+
+/* @COMPAT Remove when v1 patchsets are removed.
+ *
+ * Return true if attribute name is not \c PCMK_XML_ID.
+ */
 static bool
 not_id(xmlAttrPtr attr, void *user_data)
 {
     return strcmp((const char *) attr->name, PCMK_XA_ID) != 0;
 }
 
-// Apply the removals section of an v1 patchset to an XML node
+/* @COMPAT Remove when v1 patchsets are removed.
+ *
+ * Apply the removals section of an v1 patchset to an XML node.
+ */
 static void
 process_v1_removals(xmlNode *target, xmlNode *patch)
 {
@@ -436,7 +641,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     if (target->type == XML_COMMENT_NODE) {
         gboolean dummy;
 
-        subtract_xml_comment(target->parent, target, patch, &dummy);
+        subtract_v1_xml_comment(target->parent, target, patch, &dummy);
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) patch->name), return);
@@ -470,7 +675,10 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     free(id);
 }
 
-// Apply the additions section of an v1 patchset to an XML node
+/* @COMPAT Remove when v1 patchsets are removed.
+ *
+ * Apply the additions section of an v1 patchset to an XML node.
+ */
 static void
 process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
 {
@@ -551,6 +759,7 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
 
     switch (format) {
         case 1:
+            // @COMPAT Remove when v1 patchsets are removed
             label = added? PCMK__XE_DIFF_ADDED : PCMK__XE_DIFF_REMOVED;
             *patch_node = find_xml_node(patchset, label, FALSE);
             cib_node = find_xml_node(*patch_node, PCMK_XE_CIB, FALSE);
@@ -703,6 +912,7 @@ purge_v1_diff_markers(xmlNode *node)
     }
 }
 
+// @COMPAT Remove when v1 patchsets are removed
 /*!
  * \internal
  * \brief Apply a version 1 patchset to an XML node
@@ -859,6 +1069,7 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 
             switch (f) {
                 case 1:
+                    // @COMPAT Remove when v1 patchsets are removed
                     target = first_matching_xml_child(target, tag, NULL,
                                                       current_position);
                     break;
@@ -1150,6 +1361,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
         switch (format) {
             case 1:
+                // @COMPAT Remove when v1 patchsets are removed
                 rc = pcmk_rc2legacy(apply_v1_patchset(xml, patchset));
                 break;
             case 2:
@@ -1190,6 +1402,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     return rc;
 }
 
+// @COMPAT Remove when v1 patchsets are removed
 xmlNode *
 pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
 {
@@ -1200,12 +1413,13 @@ pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
 
     crm_xml_add(diff, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-    tmp1 = subtract_xml_object(removed, old, new, false, NULL, "removed:top");
+    tmp1 = subtract_v1_xml_object(removed, old, new, false, NULL,
+                                  "removed:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
         free_xml(tmp1);
     }
 
-    tmp1 = subtract_xml_object(added, new, old, true, NULL, "added:top");
+    tmp1 = subtract_v1_xml_object(added, new, old, true, NULL, "added:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
         free_xml(tmp1);
     }
@@ -1215,203 +1429,6 @@ pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
         diff = NULL;
     }
 
-    return diff;
-}
-
-static xmlNode *
-subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
-                     gboolean *changed)
-{
-    CRM_CHECK(left != NULL, return NULL);
-    CRM_CHECK(left->type == XML_COMMENT_NODE, return NULL);
-
-    if ((right == NULL) || !pcmk__str_eq((const char *)left->content,
-                                         (const char *)right->content,
-                                         pcmk__str_casei)) {
-        xmlNode *deleted = NULL;
-
-        deleted = pcmk__xml_copy(parent, left);
-        *changed = TRUE;
-
-        return deleted;
-    }
-
-    return NULL;
-}
-
-xmlNode *
-subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
-                    gboolean full, gboolean *changed, const char *marker)
-{
-    gboolean dummy = FALSE;
-    xmlNode *diff = NULL;
-    xmlNode *right_child = NULL;
-    xmlNode *left_child = NULL;
-    xmlAttrPtr xIter = NULL;
-
-    const char *id = NULL;
-    const char *name = NULL;
-    const char *value = NULL;
-    const char *right_val = NULL;
-
-    if (changed == NULL) {
-        changed = &dummy;
-    }
-
-    if (left == NULL) {
-        return NULL;
-    }
-
-    if (left->type == XML_COMMENT_NODE) {
-        return subtract_xml_comment(parent, left, right, changed);
-    }
-
-    id = pcmk__xe_id(left);
-    name = (const char *) left->name;
-    if (right == NULL) {
-        xmlNode *deleted = NULL;
-
-        crm_trace("Processing <%s " PCMK_XA_ID "=%s> (complete copy)",
-                  name, id);
-        deleted = pcmk__xml_copy(parent, left);
-        crm_xml_add(deleted, PCMK__XA_CRM_DIFF_MARKER, marker);
-
-        *changed = TRUE;
-        return deleted;
-    }
-
-    CRM_CHECK(name != NULL, return NULL);
-    CRM_CHECK(pcmk__xe_is(left, (const char *) right->name), return NULL);
-
-    // Check for PCMK__XA_CRM_DIFF_MARKER in a child
-    value = crm_element_value(right, PCMK__XA_CRM_DIFF_MARKER);
-    if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
-        crm_trace("We are the root of the deletion: %s.id=%s", name, id);
-        *changed = TRUE;
-        return NULL;
-    }
-
-    // @TODO Avoiding creating the full hierarchy would save work here
-    diff = create_xml_node(parent, name);
-
-    // Changes to child objects
-    for (left_child = pcmk__xml_first_child(left); left_child != NULL;
-         left_child = pcmk__xml_next(left_child)) {
-        gboolean child_changed = FALSE;
-
-        right_child = pcmk__xml_match(right, left_child, false);
-        subtract_xml_object(diff, left_child, right_child, full, &child_changed,
-                            marker);
-        if (child_changed) {
-            *changed = TRUE;
-        }
-    }
-
-    if (!*changed) {
-        /* Nothing to do */
-
-    } else if (full) {
-        xmlAttrPtr pIter = NULL;
-
-        for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
-             pIter = pIter->next) {
-            const char *p_name = (const char *)pIter->name;
-            const char *p_value = pcmk__xml_attr_value(pIter);
-
-            xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
-        }
-
-        // We have everything we need
-        goto done;
-    }
-
-    // Changes to name/value pairs
-    for (xIter = pcmk__xe_first_attr(left); xIter != NULL;
-         xIter = xIter->next) {
-        const char *prop_name = (const char *) xIter->name;
-        xmlAttrPtr right_attr = NULL;
-        xml_node_private_t *nodepriv = NULL;
-
-        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
-            // id already obtained when present ~ this case, so just reuse
-            xmlSetProp(diff, (pcmkXmlStr) PCMK_XA_ID, (pcmkXmlStr) id);
-            continue;
-        }
-
-        if (pcmk__xa_filterable(prop_name)) {
-            continue;
-        }
-
-        right_attr = xmlHasProp(right, (pcmkXmlStr) prop_name);
-        if (right_attr) {
-            nodepriv = right_attr->_private;
-        }
-
-        right_val = crm_element_value(right, prop_name);
-        if ((right_val == NULL) || (nodepriv && pcmk_is_set(nodepriv->flags, pcmk__xf_deleted))) {
-            /* new */
-            *changed = TRUE;
-            if (full) {
-                xmlAttrPtr pIter = NULL;
-
-                for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
-                     pIter = pIter->next) {
-                    const char *p_name = (const char *) pIter->name;
-                    const char *p_value = pcmk__xml_attr_value(pIter);
-
-                    xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
-                }
-                break;
-
-            } else {
-                const char *left_value = pcmk__xml_attr_value(xIter);
-
-                xmlSetProp(diff, (pcmkXmlStr) prop_name, (pcmkXmlStr) value);
-                crm_xml_add(diff, prop_name, left_value);
-            }
-
-        } else {
-            /* Only now do we need the left value */
-            const char *left_value = pcmk__xml_attr_value(xIter);
-
-            if (strcmp(left_value, right_val) == 0) {
-                /* unchanged */
-
-            } else {
-                *changed = TRUE;
-                if (full) {
-                    xmlAttrPtr pIter = NULL;
-
-                    crm_trace("Changes detected to %s in "
-                              "<%s " PCMK_XA_ID "=%s>", prop_name, name, id);
-                    for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
-                         pIter = pIter->next) {
-                        const char *p_name = (const char *) pIter->name;
-                        const char *p_value = pcmk__xml_attr_value(pIter);
-
-                        xmlSetProp(diff, (pcmkXmlStr) p_name,
-                                   (pcmkXmlStr) p_value);
-                    }
-                    break;
-
-                } else {
-                    crm_trace("Changes detected to %s (%s -> %s) in "
-                              "<%s " PCMK_XA_ID "=%s>",
-                              prop_name, left_value, right_val, name, id);
-                    crm_xml_add(diff, prop_name, left_value);
-                }
-            }
-        }
-    }
-
-    if (!*changed) {
-        free_xml(diff);
-        return NULL;
-
-    } else if (!full && (id != NULL)) {
-        crm_xml_add(diff, PCMK_XA_ID, id);
-    }
-  done:
     return diff;
 }
 
@@ -1439,8 +1456,8 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
          child_diff = pcmk__xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, result = FALSE);
         if (root_nodes_seen == 0) {
-            *new_xml = subtract_xml_object(NULL, old_xml, child_diff, FALSE,
-                                           NULL, NULL);
+            *new_xml = subtract_v1_xml_object(NULL, old_xml, child_diff, false,
+                                              NULL, NULL);
         }
         root_nodes_seen++;
     }
@@ -1517,6 +1534,13 @@ xmlNode *
 diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 {
     return pcmk__diff_v1_xml_object(old, new, suppress);
+}
+
+xmlNode *
+subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                    gboolean full, gboolean *changed, const char *marker)
+{
+    return subtract_v1_xml_object(parent, left, right, full, changed, marker);
 }
 
 // LCOV_EXCL_STOP
