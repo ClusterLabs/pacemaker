@@ -1218,12 +1218,6 @@ pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
     return diff;
 }
 
-xmlNode *
-diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
-{
-    return pcmk__diff_v1_xml_object(old, new, suppress);
-}
-
 static xmlNode *
 subtract_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
                      gboolean *changed)
@@ -1517,6 +1511,12 @@ void
 purge_diff_markers(xmlNode *a_node)
 {
     purge_v1_diff_markers(a_node);
+}
+
+xmlNode *
+diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
+{
+    return pcmk__diff_v1_xml_object(old, new, suppress);
 }
 
 // LCOV_EXCL_STOP

@@ -83,6 +83,9 @@ xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
 //! \deprecated Do not use
 void purge_diff_markers(xmlNode *a_node);
 
+//! \deprecated Do not use
+xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
+
 #ifdef __cplusplus
 }
 #endif
