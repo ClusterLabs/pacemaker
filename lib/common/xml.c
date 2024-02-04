@@ -2270,47 +2270,6 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
     mark_xml_changes(old_xml, new_xml, FALSE);
 }
 
-gboolean
-can_prune_leaf(xmlNode * xml_node)
-{
-    xmlNode *cIter = NULL;
-    gboolean can_prune = TRUE;
-
-    CRM_CHECK(xml_node != NULL, return FALSE);
-
-    /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed for
-     * rolling upgrades)
-     */
-    if (pcmk__strcase_any_of((const char *) xml_node->name,
-                             PCMK_XE_RESOURCE_REF, PCMK_XE_OBJ_REF,
-                             PCMK_XE_ROLE, PCMK__XE_ROLE_REF,
-                             NULL)) {
-        return FALSE;
-    }
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-
-        if (strcmp(p_name, PCMK_XA_ID) == 0) {
-            continue;
-        }
-        can_prune = FALSE;
-    }
-
-    cIter = pcmk__xml_first_child(xml_node);
-    while (cIter) {
-        xmlNode *child = cIter;
-
-        cIter = pcmk__xml_next(cIter);
-        if (can_prune_leaf(child)) {
-            free_xml(child);
-        } else {
-            can_prune = FALSE;
-        }
-    }
-    return can_prune;
-}
-
 /*!
  * \internal
  * \brief Find a comment with matching content in specified XML
