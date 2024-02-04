@@ -1403,6 +1403,48 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 }
 
 // @COMPAT Remove when v1 patchsets are removed
+static bool
+can_prune_leaf_v1(xmlNode *node)
+{
+    xmlNode *cIter = NULL;
+    bool can_prune = true;
+
+    CRM_CHECK(node != NULL, return false);
+
+    /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed for
+     * rolling upgrades)
+     */
+    if (pcmk__strcase_any_of((const char *) node->name,
+                             PCMK_XE_RESOURCE_REF, PCMK_XE_OBJ_REF,
+                             PCMK_XE_ROLE, PCMK__XE_ROLE_REF,
+                             NULL)) {
+        return false;
+    }
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(node); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
+
+        if (strcmp(p_name, PCMK_XA_ID) == 0) {
+            continue;
+        }
+        can_prune = false;
+    }
+
+    cIter = pcmk__xml_first_child(node);
+    while (cIter) {
+        xmlNode *child = cIter;
+
+        cIter = pcmk__xml_next(cIter);
+        if (can_prune_leaf_v1(child)) {
+            free_xml(child);
+        } else {
+            can_prune = false;
+        }
+    }
+    return can_prune;
+}
+
+// @COMPAT Remove when v1 patchsets are removed
 xmlNode *
 pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
 {
@@ -1415,12 +1457,12 @@ pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
 
     tmp1 = subtract_v1_xml_object(removed, old, new, false, NULL,
                                   "removed:top");
-    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
+    if (suppress && (tmp1 != NULL) && can_prune_leaf_v1(tmp1)) {
         free_xml(tmp1);
     }
 
     tmp1 = subtract_v1_xml_object(added, new, old, true, NULL, "added:top");
-    if (suppress && (tmp1 != NULL) && can_prune_leaf(tmp1)) {
+    if (suppress && (tmp1 != NULL) && can_prune_leaf_v1(tmp1)) {
         free_xml(tmp1);
     }
 
@@ -1541,6 +1583,12 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     gboolean full, gboolean *changed, const char *marker)
 {
     return subtract_v1_xml_object(parent, left, right, full, changed, marker);
+}
+
+gboolean
+can_prune_leaf(xmlNode *xml_node)
+{
+    return can_prune_leaf_v1(xml_node);
 }
 
 // LCOV_EXCL_STOP

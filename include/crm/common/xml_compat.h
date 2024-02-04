@@ -91,6 +91,9 @@ xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                              gboolean full, gboolean *changed,
                              const char *marker);
 
+//! \deprecated Do not use
+gboolean can_prune_leaf(xmlNode *xml_node);
+
 #ifdef __cplusplus
 }
 #endif
