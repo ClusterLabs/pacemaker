@@ -645,7 +645,7 @@ create_xml_node(xmlNode * parent, const char *name)
     }
 
     if (parent == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        doc = xmlNewDoc(PCMK__XML_VERSION);
         if (doc == NULL) {
             return NULL;
         }
@@ -826,7 +826,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         // The copy will be the root element of a new document
         CRM_ASSERT(src->type == XML_ELEMENT_NODE);
 
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        doc = xmlNewDoc(PCMK__XML_VERSION);
         CRM_ASSERT(doc != NULL);
 
         copy = xmlDocCopyNode(src, doc, 1);
@@ -2947,7 +2947,7 @@ getDocPtr(xmlNode *node)
 
     doc = node->doc;
     if (doc == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        doc = xmlNewDoc(PCMK__XML_VERSION);
         xmlDocSetRootElement(doc, node);
     }
     return doc;
@@ -3033,7 +3033,7 @@ crm_xml_escape(const char *text)
 xmlNode *
 copy_xml(xmlNode *src)
 {
-    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlNode *copy = xmlDocCopyNode(src, doc, 1);
 
     CRM_ASSERT(copy != NULL);
