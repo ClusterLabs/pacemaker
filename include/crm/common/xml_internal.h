@@ -471,6 +471,14 @@ void pcmk__log_known_schemas(void);
 const char *pcmk__remote_schema_dir(void);
 void pcmk__sort_schemas(void);
 
+
+/*
+ * I/O
+ */
+
+xmlNode *pcmk__xml_read(const char *filename);
+
+
 // @COMPAT Remove when v1 patchsets are removed
 xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
 

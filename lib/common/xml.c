@@ -1019,37 +1019,49 @@ pcmk__strip_xml_text(xmlNode *xml)
     }
 }
 
+/*!
+ * \internal
+ * \brief Parse XML from a file
+ *
+ * \param[in] filename  Name of file containing XML (\c NULL or \c "-" for
+ *                      \c stdin); if \p filename ends in \c ".bz2", the file
+ *                      will be decompressed using \c bzip2
+ *
+ * \return XML tree parsed from the given file; may be \c NULL or only partial
+ *         on error
+ */
 xmlNode *
-filename2xml(const char *filename)
+pcmk__xml_read(const char *filename)
 {
+    static const char *recovered = "Successfully recovered from XML errors "
+                                   "(note: a future release will treat this as "
+                                   "a fatal failure)";
     xmlNode *xml = NULL;
     xmlDocPtr output = NULL;
     bool uncompressed = true;
-    xmlParserCtxtPtr ctxt = NULL;
+    xmlParserCtxt *ctxt = NULL;
     const xmlError *last_error = NULL;
 
-    /* create a parser context */
+    // Create a parser context
     ctxt = xmlNewParserCtxt();
     CRM_CHECK(ctxt != NULL, return NULL);
 
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    if (filename) {
+    if (filename != NULL) {
         uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
     }
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
-        /* STDIN_FILENO == fileno(stdin) */
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
                                PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
 
         if (output == NULL) {
             output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
                                    PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
+            if (output != NULL) {
+                crm_warn("%s", recovered);
             }
         }
 
@@ -1060,11 +1072,10 @@ filename2xml(const char *filename)
         if (output == NULL) {
             output = xmlCtxtReadFile(ctxt, filename, NULL,
                                      PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
+            if (output != NULL) {
+                crm_warn("%s", recovered);
             }
-        }        
+        }
 
     } else {
         char *input = decompress_file(filename);
@@ -1075,39 +1086,53 @@ filename2xml(const char *filename)
         if (output == NULL) {
             output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
+            if (output != NULL) {
+                crm_warn("%s", recovered);
             }
-        }        
+        }
 
         free(input);
     }
 
-    if (output && (xml = xmlDocGetRootElement(output))) {
-        pcmk__strip_xml_text(xml);
+    if (output != NULL) {
+        xml = xmlDocGetRootElement(output);
+        if (xml != NULL) {
+            /* @TODO Should we really be stripping out text? This seems like an
+             * overly broad way to get rid of whitespace, if that's the goal.
+             * Text nodes may be invalid in most or all Pacemaker inputs, but
+             * stripping them in a generic "parse XML from file" function may
+             * not be the best way to ignore them.
+             */
+            pcmk__strip_xml_text(xml);
+        }
     }
 
     last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
-        /*
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
+    if ((last_error != NULL) && (last_error->code != XML_ERR_OK)) {
+        /* crm_abort(__FILE__,__func__,__LINE__,
+         *           "last_error->code != XML_ERR_OK", TRUE, TRUE);
          */
         crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                last_error->domain, last_error->level, last_error->code, last_error->message);
+                last_error->domain, last_error->level, last_error->code,
+                last_error->message);
 
-        if (last_error && last_error->code != XML_ERR_OK) {
-            crm_err("Couldn't%s parse %s", xml ? " fully" : "", filename);
-            if (xml != NULL) {
-                crm_log_xml_err(xml, "Partial");
-            }
+        if (xml != NULL) {
+            // @COMPAT At 3.0.0, free xml and return NULL
+            crm_err("Couldn't fully parse %s", filename);
+            crm_log_xml_err(xml, "Partial");
+        } else {
+            crm_err("Couldn't parse %s", filename);
         }
     }
 
     xmlFreeParserCtxt(ctxt);
     return xml;
+}
+
+xmlNode *
+filename2xml(const char *filename)
+{
+    return pcmk__xml_read(filename);
 }
 
 /*!

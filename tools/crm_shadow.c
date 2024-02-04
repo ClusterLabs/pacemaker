@@ -497,7 +497,7 @@ read_xml(const char *filename, xmlNode **output, GError **error)
 {
     int rc = pcmk_rc_ok;
 
-    *output = filename2xml(filename);
+    *output = pcmk__xml_read(filename);
     if (*output == NULL) {
         rc = pcmk_rc_no_input;
         exit_code = pcmk_rc2exitc(rc);

@@ -338,7 +338,7 @@ profile_file(const char *xml_file, long long repeat,
 
     CRM_ASSERT(out != NULL);
 
-    cib_object = filename2xml(xml_file);
+    cib_object = pcmk__xml_read(xml_file);
     start = clock();
 
     if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {

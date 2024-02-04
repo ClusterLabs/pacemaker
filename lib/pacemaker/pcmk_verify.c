@@ -44,7 +44,7 @@ pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib_obj
         }
 
     } else {
-        *cib_object = filename2xml(cib_source);
+        *cib_object = pcmk__xml_read(cib_source);
         if (*cib_object == NULL) {
             rc = ENODATA;
         }
