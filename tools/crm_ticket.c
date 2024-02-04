@@ -782,7 +782,7 @@ main(int argc, char **argv)
     }
 
     if (options.xml_file != NULL) {
-        cib_xml_copy = filename2xml(options.xml_file);
+        cib_xml_copy = pcmk__xml_parse_file(options.xml_file);
 
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);

@@ -334,7 +334,7 @@ main(int argc, char **argv)
         object_1 = stdin2xml();
 
     } else if (options.xml_file_1 != NULL) {
-        object_1 = filename2xml(options.xml_file_1);
+        object_1 = pcmk__xml_parse_file(options.xml_file_1);
     }
 
     if (options.raw_2) {
@@ -345,7 +345,7 @@ main(int argc, char **argv)
         object_2 = stdin2xml();
 
     } else if (options.xml_file_2 != NULL) {
-        object_2 = filename2xml(options.xml_file_2);
+        object_2 = pcmk__xml_parse_file(options.xml_file_2);
     }
 
     if (object_1 == NULL) {

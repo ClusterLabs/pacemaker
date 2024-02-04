@@ -359,10 +359,10 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         }
 
     } else if (pcmk__str_eq(input, "-", pcmk__str_casei)) {
-        cib_object = filename2xml(NULL);
+        cib_object = pcmk__xml_parse_file(NULL);
 
     } else {
-        cib_object = filename2xml(input);
+        cib_object = pcmk__xml_parse_file(input);
     }
 
     if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {

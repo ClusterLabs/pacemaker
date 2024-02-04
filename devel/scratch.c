@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,7 @@ main(int argc, char **argv)
         }
     }
 
-    top = filename2xml(xml_file);
+    top = pcmk__xml_parse_file(xml_file);
     free_xml(top);
     return 0;
 }

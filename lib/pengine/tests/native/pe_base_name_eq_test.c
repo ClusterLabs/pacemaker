@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,7 @@ setup(void **state) {
     crm_xml_init();
 
     path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
-    input = filename2xml(path);
+    input = pcmk__xml_parse_file(path);
     free(path);
 
     if (input == NULL) {

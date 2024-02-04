@@ -1132,7 +1132,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
     int rc = pcmk_rc_ok;
 
     if (options.xml_file != NULL) {
-        *cib_xml_copy = filename2xml(options.xml_file);
+        *cib_xml_copy = pcmk__xml_parse_file(options.xml_file);
         if (*cib_xml_copy == NULL) {
             rc = pcmk_rc_cib_corrupt;
         }

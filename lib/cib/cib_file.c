@@ -382,7 +382,7 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Parse XML from file */
-    root = filename2xml(filename);
+    root = pcmk__xml_parse_file(filename);
     if (root == NULL) {
         return -pcmk_err_schema_validation;
     }
@@ -763,7 +763,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Parse XML */
-    local_root = filename2xml(filename);
+    local_root = pcmk__xml_parse_file(filename);
     if (local_root == NULL) {
         crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
         return -pcmk_err_cib_corrupt;

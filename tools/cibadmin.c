@@ -656,7 +656,7 @@ main(int argc, char **argv)
     }
 
     if (options.input_file != NULL) {
-        input = filename2xml(options.input_file);
+        input = pcmk__xml_parse_file(options.input_file);
         source = options.input_file;
 
     } else if (options.input_xml != NULL) {
