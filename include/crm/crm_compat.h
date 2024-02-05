@@ -38,6 +38,14 @@ extern "C" {
 //! \deprecated Use PCMK_SCORE_INFINITY instead
 #define CRM_SCORE_INFINITY PCMK_SCORE_INFINITY
 
+/* INFINITY might be defined elsewhere (such as math.h), so undefine it first.
+ * This, of course, complicates any attempt to use the other definition in any
+ * code that includes this header.
+ */
+//! \deprecated Use PCMK_SCORE_INFINITY instead
+#undef INFINITY
+#define INFINITY PCMK_SCORE_INFINITY
+
 //! \deprecated Use PCMK_VALUE_INFINITY instead
 #define CRM_INFINITY_S PCMK_VALUE_INFINITY
 
