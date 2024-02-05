@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,9 +32,9 @@ bad_input(void **state)
 static void
 special_values(void **state)
 {
-    assert_int_equal(char2score("-INFINITY"), -CRM_SCORE_INFINITY);
-    assert_int_equal(char2score("INFINITY"), CRM_SCORE_INFINITY);
-    assert_int_equal(char2score("+INFINITY"), CRM_SCORE_INFINITY);
+    assert_int_equal(char2score("-INFINITY"), -PCMK_SCORE_INFINITY);
+    assert_int_equal(char2score("INFINITY"), PCMK_SCORE_INFINITY);
+    assert_int_equal(char2score("+INFINITY"), PCMK_SCORE_INFINITY);
 
     pcmk__score_red = 10;
     pcmk__score_green = 20;
@@ -56,8 +56,10 @@ special_values(void **state)
 static void
 outside_limits(void **state)
 {
-    assert_int_equal(char2score(B(CRM_SCORE_INFINITY) "00"), CRM_SCORE_INFINITY);
-    assert_int_equal(char2score("-" B(CRM_SCORE_INFINITY) "00"), -CRM_SCORE_INFINITY);
+    assert_int_equal(char2score(B(PCMK_SCORE_INFINITY) "00"),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(char2score("-" B(PCMK_SCORE_INFINITY) "00"),
+                     -PCMK_SCORE_INFINITY);
 }
 
 static void

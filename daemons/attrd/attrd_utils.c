@@ -176,8 +176,8 @@ attrd_expand_value(const char *value, const char *old_value)
     }
     int_value += offset;
 
-    if (int_value > INFINITY) {
-        int_value = INFINITY;
+    if (int_value > PCMK_SCORE_INFINITY) {
+        int_value = PCMK_SCORE_INFINITY;
     }
     return int_value;
 }

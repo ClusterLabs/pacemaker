@@ -190,8 +190,8 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
         crm_err("Fencing update %d for %s: failed - %s (%d)",
                 call_id, (char *)user_data, pcmk_strerror(rc), rc);
         crm_log_xml_warn(msg, "Failed update");
-        abort_transition(INFINITY, pcmk__graph_shutdown, "CIB update failed",
-                         NULL);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_shutdown,
+                         "CIB update failed", NULL);
 
     } else {
         crm_info("Fencing update %d for %s: complete", call_id, (char *)user_data);
@@ -292,7 +292,8 @@ abort_for_stonith_failure(enum pcmk__graph_next abort_action,
     if ((abort_action != pcmk__graph_wait) && too_many_st_failures(target)) {
         abort_action = pcmk__graph_wait;
     }
-    abort_transition(INFINITY, abort_action, "Stonith failed", reason);
+    abort_transition(PCMK_SCORE_INFINITY, abort_action, "Stonith failed",
+                     reason);
 }
 
 
@@ -609,7 +610,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
                  */
                 crm_info("External fencing operation from %s fenced %s",
                          client, event->target);
-                abort_transition(INFINITY, pcmk__graph_restart,
+                abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                                  "External Fencing Operation", NULL);
             }
 

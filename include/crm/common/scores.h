@@ -20,6 +20,9 @@ extern "C" {
  * \ingroup core
  */
 
+//! Integer score to use to represent "infinity"
+#define PCMK_SCORE_INFINITY 1000000
+
 const char *pcmk_readable_score(int score);
 int char2score(const char *score);
 

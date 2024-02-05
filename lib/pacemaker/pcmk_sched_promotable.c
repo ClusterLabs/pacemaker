@@ -354,12 +354,12 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
     pcmk_resource_t *clone = user_data;
     pcmk_resource_t *primary = colocation->primary;
     uint32_t flags = pcmk__coloc_select_default;
-    float factor = colocation->score / (float) INFINITY;
+    float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
 
     if (colocation->dependent_role != pcmk_role_promoted) {
         return;
     }
-    if (colocation->score < INFINITY) {
+    if (colocation->score < PCMK_SCORE_INFINITY) {
         flags = pcmk__coloc_select_active;
     }
     pcmk__rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
@@ -384,7 +384,7 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
     pcmk__colocation_t *colocation = data;
     pcmk_resource_t *clone = user_data;
     pcmk_resource_t *dependent = colocation->dependent;
-    const float factor = colocation->score / (float) INFINITY;
+    const float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
     const uint32_t flags = pcmk__coloc_select_active
                            |pcmk__coloc_select_nonnegative;
 
@@ -419,7 +419,7 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
 
     if (!pcmk_is_set(child->flags, pcmk_rsc_managed)
         && (child->next_role == pcmk_role_promoted)) {
-        child->sort_index = INFINITY;
+        child->sort_index = PCMK_SCORE_INFINITY;
         pcmk__rsc_trace(clone,
                         "Final sort index for %s is INFINITY "
                         "(unmanaged promoted)",
@@ -964,7 +964,7 @@ set_instance_priority(gpointer data, gpointer user_data)
         case pcmk_role_unpromoted:
         case pcmk_role_stopped:
             // Instance can't be promoted
-            instance->priority = -INFINITY;
+            instance->priority = -PCMK_SCORE_INFINITY;
             break;
 
         case pcmk_role_promoted:
@@ -991,7 +991,7 @@ set_instance_priority(gpointer data, gpointer user_data)
 
     instance->sort_index = instance->priority;
     if (next_role == pcmk_role_promoted) {
-        instance->sort_index = INFINITY;
+        instance->sort_index = PCMK_SCORE_INFINITY;
     }
     pcmk__rsc_trace(clone, "Assigning %s priority = %d",
                     instance->id, instance->priority);
@@ -1185,7 +1185,7 @@ update_dependent_allowed_nodes(pcmk_resource_t *dependent,
     const char *primary_value = NULL;
     const char *attr = colocation->node_attribute;
 
-    if (colocation->score >= INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         return; // Colocation is mandatory, so allowed node scores don't matter
     }
 
@@ -1253,7 +1253,7 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
      * However, skip this for promoted-with-promoted colocations, otherwise
      * inactive dependent instances can't start (in the unpromoted role).
      */
-    if ((colocation->score >= INFINITY)
+    if ((colocation->score >= PCMK_SCORE_INFINITY)
         && ((colocation->dependent_role != pcmk_role_promoted)
             || (colocation->primary_role != pcmk_role_promoted))) {
 
@@ -1302,12 +1302,12 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                         pcmk_readable_score(new_priority));
         dependent->priority = new_priority;
 
-    } else if (colocation->score >= INFINITY) {
+    } else if (colocation->score >= PCMK_SCORE_INFINITY) {
         // Mandatory colocation, but primary won't be here
         pcmk__rsc_trace(colocation->primary,
                         "Applying %s (%s with %s) to %s: can't be promoted",
                         colocation->id, colocation->dependent->id,
                         colocation->primary->id, dependent->id);
-        dependent->priority = -INFINITY;
+        dependent->priority = -PCMK_SCORE_INFINITY;
     }
 }

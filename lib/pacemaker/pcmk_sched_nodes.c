@@ -205,8 +205,8 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
     const pcmk_node_t *node2 = (const pcmk_node_t *) b;
     const pcmk_node_t *preferred = (const pcmk_node_t *) data;
 
-    int node1_score = -INFINITY;
-    int node2_score = -INFINITY;
+    int node1_score = -PCMK_SCORE_INFINITY;
+    int node2_score = -PCMK_SCORE_INFINITY;
 
     int result = 0;
 

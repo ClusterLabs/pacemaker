@@ -303,7 +303,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             dependent->cmds->apply_coloc_score(dependent, primary_instance,
                                                colocation, true);
 
-        } else if (colocation->score >= INFINITY) {
+        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
             crm_notice("%s cannot run because it cannot interleave with "
                        "any instance of %s", dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true, true);
@@ -319,7 +319,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
     }
 
     // Apply mandatory colocations
-    if (colocation->score >= INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         GList *primary_nodes = NULL;
 
         // Dependent can run only where primary will have unblocked instances

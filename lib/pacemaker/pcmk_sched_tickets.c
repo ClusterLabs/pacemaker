@@ -88,14 +88,14 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
-                resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
-                                  rsc->cluster);
+                resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
+                                  "__loss_of_ticket__", rsc->cluster);
                 break;
 
             case loss_ticket_demote:
                 // Promotion score will be set to -INFINITY in promotion_order()
                 if (rsc_ticket->role != pcmk_role_promoted) {
-                    resource_location(rsc, NULL, -INFINITY,
+                    resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                                       "__loss_of_ticket__", rsc->cluster);
                 }
                 break;
@@ -105,8 +105,8 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                     return;
                 }
 
-                resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
-                                  rsc->cluster);
+                resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
+                                  "__loss_of_ticket__", rsc->cluster);
 
                 for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
                     pe_fence_node(rsc->cluster, (pcmk_node_t *) iter->data,
@@ -129,16 +129,16 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
-            resource_location(rsc, NULL, -INFINITY, "__no_ticket__",
-                              rsc->cluster);
+            resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
+                              "__no_ticket__", rsc->cluster);
         }
 
     } else if (rsc_ticket->ticket->standby) {
 
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
-            resource_location(rsc, NULL, -INFINITY, "__ticket_standby__",
-                              rsc->cluster);
+            resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
+                              "__ticket_standby__", rsc->cluster);
         }
     }
 }
@@ -525,7 +525,7 @@ pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
 
         if ((rsc_ticket->role == pcmk_role_promoted)
             && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
-            resource_location(rsc, NULL, -INFINITY,
+            resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                               "__stateful_without_ticket__", rsc->cluster);
         }
     }

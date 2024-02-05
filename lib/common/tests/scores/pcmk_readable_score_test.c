@@ -14,9 +14,9 @@
 static void
 outside_limits(void **state)
 {
-    assert_string_equal(pcmk_readable_score(CRM_SCORE_INFINITY * 2),
+    assert_string_equal(pcmk_readable_score(PCMK_SCORE_INFINITY * 2),
                         PCMK_VALUE_INFINITY);
-    assert_string_equal(pcmk_readable_score(-CRM_SCORE_INFINITY * 2),
+    assert_string_equal(pcmk_readable_score(-PCMK_SCORE_INFINITY * 2),
                         PCMK_VALUE_MINUS_INFINITY);
 }
 

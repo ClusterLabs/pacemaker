@@ -268,7 +268,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                 if (nodes_with_best_score > 1) {
                     uint8_t log_level = LOG_INFO;
 
-                    if (chosen->weight >= INFINITY) {
+                    if (chosen->weight >= PCMK_SCORE_INFINITY) {
                         log_level = LOG_WARNING;
                     }
                     do_crm_log(log_level,
@@ -304,7 +304,8 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
 
     // In certain cases, we will need to revert the node scores
     if ((colocation->dependent_role >= pcmk_role_promoted)
-        || ((colocation->score < 0) && (colocation->score > -INFINITY))) {
+        || ((colocation->score < 0)
+            && (colocation->score > -PCMK_SCORE_INFINITY))) {
         archive = pcmk__copy_node_table(rsc->allowed_nodes);
     }
 
@@ -435,16 +436,16 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
         colocation = iter->data;
 
-        if ((colocation->score <= -CRM_SCORE_INFINITY)
-            || (colocation->score >= CRM_SCORE_INFINITY)) {
+        if ((colocation->score <= -PCMK_SCORE_INFINITY)
+            || (colocation->score >= PCMK_SCORE_INFINITY)) {
             apply_this_with(colocation, rsc);
         }
     }
     for (iter = with_this_colocations; iter != NULL; iter = iter->next) {
         colocation = iter->data;
 
-        if ((colocation->score <= -CRM_SCORE_INFINITY)
-            || (colocation->score >= CRM_SCORE_INFINITY)) {
+        if ((colocation->score <= -PCMK_SCORE_INFINITY)
+            || (colocation->score >= PCMK_SCORE_INFINITY)) {
             pcmk__add_dependent_scores(colocation, rsc);
         }
     }
@@ -456,16 +457,16 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
         colocation = iter->data;
 
-        if ((colocation->score > -CRM_SCORE_INFINITY)
-            && (colocation->score < CRM_SCORE_INFINITY)) {
+        if ((colocation->score > -PCMK_SCORE_INFINITY)
+            && (colocation->score < PCMK_SCORE_INFINITY)) {
             apply_this_with(colocation, rsc);
         }
     }
     for (iter = with_this_colocations; iter != NULL; iter = iter->next) {
         colocation = iter->data;
 
-        if ((colocation->score > -CRM_SCORE_INFINITY)
-            && (colocation->score < CRM_SCORE_INFINITY)) {
+        if ((colocation->score > -PCMK_SCORE_INFINITY)
+            && (colocation->score < PCMK_SCORE_INFINITY)) {
             pcmk__add_dependent_scores(colocation, rsc);
         }
     }
@@ -477,8 +478,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk__rsc_trace(rsc,
                         "Banning %s from all nodes because it will be stopped",
                         rsc->id);
-        resource_location(rsc, NULL, -INFINITY, PCMK_META_TARGET_ROLE,
-                          rsc->cluster);
+        resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
+                          PCMK_META_TARGET_ROLE, rsc->cluster);
 
     } else if ((rsc->next_role > rsc->role)
                && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
@@ -866,7 +867,7 @@ rsc_avoids_remote_nodes(const pcmk_resource_t *rsc)
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (node->details->remote_rsc != NULL) {
-            node->weight = -INFINITY;
+            node->weight = -PCMK_SCORE_INFINITY;
         }
     }
 }
@@ -1025,7 +1026,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                 pcmk_node_t *node = item->data;
 
                 if (node->details->remote_rsc != remote_rsc) {
-                    node->weight = -INFINITY;
+                    node->weight = -PCMK_SCORE_INFINITY;
                 }
             }
 
@@ -1060,7 +1061,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
             if (pcmk_is_set(rsc->flags, pcmk_rsc_remote_nesting_allowed)) {
                 score = 10000;    /* Highly preferred but not essential */
             } else {
-                score = INFINITY; /* Force them to run on the same host */
+                score = PCMK_SCORE_INFINITY; // Force to run on same host
             }
             pcmk__new_colocation("#resource-with-container", NULL, score, rsc,
                                  rsc->container, NULL, NULL,
@@ -1603,7 +1604,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
-        resource_location(rsc, node, -CRM_SCORE_INFINITY,
+        resource_location(rsc, node, -PCMK_SCORE_INFINITY,
                           PCMK_OPT_SHUTDOWN_LOCK, rsc->cluster);
     }
 }

@@ -187,8 +187,9 @@ member_internal_constraints(gpointer data, gpointer user_data)
         }
 
         // Colocate this member with the previous one
-        pcmk__new_colocation("#group-members", NULL, INFINITY, member,
-                             member_data->previous_member, NULL, NULL, flags);
+        pcmk__new_colocation("#group-members", NULL, PCMK_SCORE_INFINITY,
+                             member, member_data->previous_member, NULL, NULL,
+                             flags);
     }
 
     if (member_data->promotable) {
@@ -364,7 +365,7 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
         return;
     }
 
-    if (colocation->score >= INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation between "
                          "non-colocated group and %s",
                          dependent->id, primary->id);
@@ -406,7 +407,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
 
     if (pe__group_flag_is_set(primary, pcmk__group_colocated)) {
 
-        if (colocation->score >= INFINITY) {
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
             /* For mandatory colocations, the entire group must be assignable
              * (and in the specified role if any), so apply the colocation based
              * on the last member.
@@ -427,7 +428,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
         return;
     }
 
-    if (colocation->score >= INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
                          " non-colocated group %s",
                          dependent->id, primary->id);
@@ -801,7 +802,7 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
                 const pcmk__colocation_t *colocation = NULL;
 
                 colocation = (const pcmk__colocation_t *) cons_iter->data;
-                if (colocation->score == INFINITY) {
+                if (colocation->score == PCMK_SCORE_INFINITY) {
                     pcmk__add_this_with(list, colocation, orig_rsc);
                 }
             }

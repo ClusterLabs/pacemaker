@@ -1399,7 +1399,7 @@ pe__create_promotable_pseudo_ops(pcmk_resource_t *clone, bool any_promoting,
     // Create a "promoted" action for when all promotions are done
     action_complete = pe__new_rsc_pseudo_action(clone, PCMK_ACTION_PROMOTED,
                                                 !any_promoting, true);
-    action_complete->priority = INFINITY;
+    action_complete->priority = PCMK_SCORE_INFINITY;
 
     // Create notification pseudo-actions for promotion
     if (clone_data->promote_notify == NULL) {
@@ -1416,7 +1416,7 @@ pe__create_promotable_pseudo_ops(pcmk_resource_t *clone, bool any_promoting,
     // Create a "demoted" action for when all demotions are done
     action_complete = pe__new_rsc_pseudo_action(clone, PCMK_ACTION_DEMOTED,
                                                 !any_demoting, true);
-    action_complete->priority = INFINITY;
+    action_complete->priority = PCMK_SCORE_INFINITY;
 
     // Create notification pseudo-actions for demotion
     if (clone_data->demote_notify == NULL) {

@@ -232,7 +232,7 @@ init_node_pending_timer(const crm_node_t *node, guint timeout)
     CRM_ASSERT(node_pending_timer != NULL);
 
     node_pending_timer->aborted = FALSE;
-    node_pending_timer->priority = INFINITY;
+    node_pending_timer->priority = PCMK_SCORE_INFINITY;
     node_pending_timer->action = pcmk__graph_restart;
     node_pending_timer->text = "Node pending timed out";
 

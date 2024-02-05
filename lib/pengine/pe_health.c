@@ -31,14 +31,14 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
             break;
 
         case pcmk__health_strategy_no_red:
-            pcmk__score_red = -INFINITY;
+            pcmk__score_red = -PCMK_SCORE_INFINITY;
             pcmk__score_yellow = 0;
             pcmk__score_green = 0;
             break;
 
         case pcmk__health_strategy_only_green:
-            pcmk__score_red = -INFINITY;
-            pcmk__score_yellow = -INFINITY;
+            pcmk__score_red = -PCMK_SCORE_INFINITY;
+            pcmk__score_yellow = -PCMK_SCORE_INFINITY;
             pcmk__score_green = 0;
             break;
 

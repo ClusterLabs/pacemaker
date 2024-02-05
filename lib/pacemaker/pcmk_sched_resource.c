@@ -268,7 +268,7 @@ pcmk__colocated_resources(const pcmk_resource_t *rsc,
             continue; // Break colocation loop
         }
 
-        if ((constraint->score == INFINITY) &&
+        if ((constraint->score == PCMK_SCORE_INFINITY) &&
             (pcmk__colocation_affects(rsc, primary, constraint,
                                       true) == pcmk__coloc_affects_location)) {
             add_colocated_resources(primary, orig_rsc, &colocated_rscs);
@@ -290,7 +290,7 @@ pcmk__colocated_resources(const pcmk_resource_t *rsc,
             continue; // We can't be sure whether dependent will be colocated
         }
 
-        if ((constraint->score == INFINITY) &&
+        if ((constraint->score == PCMK_SCORE_INFINITY) &&
             (pcmk__colocation_affects(dependent, rsc, constraint,
                                       true) == pcmk__coloc_affects_location)) {
             add_colocated_resources(dependent, orig_rsc, &colocated_rscs);
@@ -636,7 +636,7 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
     if ((node != NULL) && (nodes != NULL)) {
         found_node = g_hash_table_lookup(nodes, node->details->id);
     }
-    return (found_node == NULL)? -INFINITY : found_node->weight;
+    return (found_node == NULL)? -PCMK_SCORE_INFINITY : found_node->weight;
 }
 
 /*!
@@ -662,8 +662,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     const GList *nodes = data;
 
     int rc = 0;
-    int r1_score = -INFINITY;
-    int r2_score = -INFINITY;
+    int r1_score = -PCMK_SCORE_INFINITY;
+    int r2_score = -PCMK_SCORE_INFINITY;
     pcmk_node_t *r1_node = NULL;
     pcmk_node_t *r2_node = NULL;
     GHashTable *r1_nodes = NULL;

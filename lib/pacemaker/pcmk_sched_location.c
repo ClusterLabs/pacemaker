@@ -43,7 +43,7 @@ get_node_score(const char *rule, const char *score, bool raw,
         if (attr_score == NULL) {
             crm_debug("Rule %s: %s did not have a value for %s",
                       rule, pcmk__node_name(node), score);
-            score_f = -INFINITY;
+            score_f = -PCMK_SCORE_INFINITY;
 
         } else {
             crm_debug("Rule %s: %s had value %s for %s",

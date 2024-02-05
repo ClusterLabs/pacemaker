@@ -378,7 +378,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,
                                n_data);
     if (notify != NULL) {
-        notify->priority = INFINITY;
+        notify->priority = PCMK_SCORE_INFINITY;
     }
 
     // Order recurring monitors after all "post-" notifications complete
@@ -471,7 +471,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         // Create "post-" notify pseudo-action for clone
         n_data->post = new_notify_pseudo_action(rsc, complete,
                                                 PCMK_ACTION_NOTIFY, "post");
-        n_data->post->priority = INFINITY;
+        n_data->post->priority = PCMK_SCORE_INFINITY;
         if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
             pcmk__set_action_flags(n_data->post, pcmk_action_runnable);
         } else {
@@ -484,7 +484,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         n_data->post_done = new_notify_pseudo_action(rsc, complete,
                                                      PCMK_ACTION_NOTIFIED,
                                                      "confirmed-post");
-        n_data->post_done->priority = INFINITY;
+        n_data->post_done->priority = PCMK_SCORE_INFINITY;
         if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
             pcmk__set_action_flags(n_data->post_done, pcmk_action_runnable);
         } else {

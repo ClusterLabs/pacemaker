@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,48 +14,71 @@
 static void
 score1_minus_inf(void **state)
 {
-    assert_int_equal(pcmk__add_scores(-CRM_SCORE_INFINITY, -CRM_SCORE_INFINITY), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(-CRM_SCORE_INFINITY, -1), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(-CRM_SCORE_INFINITY, 0), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(-CRM_SCORE_INFINITY, 1), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(-CRM_SCORE_INFINITY, CRM_SCORE_INFINITY), -CRM_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-PCMK_SCORE_INFINITY,
+                                      -PCMK_SCORE_INFINITY),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-PCMK_SCORE_INFINITY, -1),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-PCMK_SCORE_INFINITY, 0),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-PCMK_SCORE_INFINITY, 1),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-PCMK_SCORE_INFINITY,
+                                      PCMK_SCORE_INFINITY),
+                     -PCMK_SCORE_INFINITY);
 }
 
 static void
 score2_minus_inf(void **state)
 {
-    assert_int_equal(pcmk__add_scores(-1, -CRM_SCORE_INFINITY), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(0, -CRM_SCORE_INFINITY), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(1, -CRM_SCORE_INFINITY), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(CRM_SCORE_INFINITY, -CRM_SCORE_INFINITY), -CRM_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-1, -PCMK_SCORE_INFINITY),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(0, -PCMK_SCORE_INFINITY),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(1, -PCMK_SCORE_INFINITY),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(PCMK_SCORE_INFINITY,
+                                      -PCMK_SCORE_INFINITY),
+                     -PCMK_SCORE_INFINITY);
 }
 
 static void
 score1_pos_inf(void **state)
 {
-    assert_int_equal(pcmk__add_scores(CRM_SCORE_INFINITY, CRM_SCORE_INFINITY), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(CRM_SCORE_INFINITY, -1), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(CRM_SCORE_INFINITY, 0), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(CRM_SCORE_INFINITY, 1), CRM_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(PCMK_SCORE_INFINITY, PCMK_SCORE_INFINITY),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(PCMK_SCORE_INFINITY, -1),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(PCMK_SCORE_INFINITY, 0),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(PCMK_SCORE_INFINITY, 1),
+                     PCMK_SCORE_INFINITY);
 }
 
 static void
 score2_pos_inf(void **state)
 {
-    assert_int_equal(pcmk__add_scores(-1, CRM_SCORE_INFINITY), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(0, CRM_SCORE_INFINITY), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(1, CRM_SCORE_INFINITY), CRM_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-1, PCMK_SCORE_INFINITY),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(0, PCMK_SCORE_INFINITY),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(1, PCMK_SCORE_INFINITY),
+                     PCMK_SCORE_INFINITY);
 }
 
 static void
 result_infinite(void **state)
 {
-    assert_int_equal(pcmk__add_scores(INT_MAX, INT_MAX), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(INT_MIN, INT_MIN), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(2000000, 50), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(CRM_SCORE_INFINITY/2, CRM_SCORE_INFINITY/2), CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(-CRM_SCORE_INFINITY/2, -CRM_SCORE_INFINITY/2), -CRM_SCORE_INFINITY);
-    assert_int_equal(pcmk__add_scores(-4000000, 50), -CRM_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(INT_MAX, INT_MAX), PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(INT_MIN, INT_MIN), -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(2000000, 50), PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(PCMK_SCORE_INFINITY/2,
+                                      PCMK_SCORE_INFINITY/2),
+                     PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-PCMK_SCORE_INFINITY/2,
+                                      -PCMK_SCORE_INFINITY/2),
+                     -PCMK_SCORE_INFINITY);
+    assert_int_equal(pcmk__add_scores(-4000000, 50), -PCMK_SCORE_INFINITY);
 }
 
 static void

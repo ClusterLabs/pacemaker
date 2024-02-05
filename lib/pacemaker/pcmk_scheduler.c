@@ -133,8 +133,8 @@ check_failure_threshold(gpointer data, gpointer user_data)
         pcmk_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
-            resource_location(failed, node, -INFINITY, "__fail_limit__",
-                              rsc->cluster);
+            resource_location(failed, node, -PCMK_SCORE_INFINITY,
+                              "__fail_limit__", rsc->cluster);
         }
     }
 }
@@ -168,7 +168,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
         match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if ((match != NULL)
             && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
-            match->weight = -INFINITY;
+            match->weight = -PCMK_SCORE_INFINITY;
         }
     }
 }

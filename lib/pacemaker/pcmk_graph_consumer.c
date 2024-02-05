@@ -125,7 +125,7 @@ pcmk__update_graph(pcmk__graph_t *graph, const pcmk__graph_action_t *action)
             update_synapse_confirmed(synapse, action->id);
 
         } else if (!pcmk_is_set(action->flags, pcmk__graph_action_failed)
-                   || (synapse->priority == INFINITY)) {
+                   || (synapse->priority == PCMK_SCORE_INFINITY)) {
             update_synapse_ready(synapse, action->id);
         }
     }
@@ -330,7 +330,7 @@ pseudo_action_dummy(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     if (action->id == fail) {
         crm_err("Dummy event handler: pretending action %d failed", action->id);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
-        graph->abort_priority = INFINITY;
+        graph->abort_priority = PCMK_SCORE_INFINITY;
     } else {
         crm_trace("Dummy event handler: action %d initiated", action->id);
     }
@@ -415,7 +415,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
             if (fire_synapse(graph, synapse) != pcmk_rc_ok) {
                 crm_err("Synapse %d failed to fire", synapse->id);
                 log_level = LOG_ERR;
-                graph->abort_priority = INFINITY;
+                graph->abort_priority = PCMK_SCORE_INFINITY;
                 graph->incomplete++;
                 graph->fired--;
             }

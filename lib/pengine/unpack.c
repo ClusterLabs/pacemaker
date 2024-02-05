@@ -1837,13 +1837,13 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     } else {
         /* remove node from contention */
         this_node->fixed = TRUE; // @COMPAT deprecated and unused
-        this_node->weight = -INFINITY;
+        this_node->weight = -PCMK_SCORE_INFINITY;
     }
 
     if (online && this_node->details->shutdown) {
         /* don't run resources here */
         this_node->fixed = TRUE; // @COMPAT deprecated and unused
-        this_node->weight = -INFINITY;
+        this_node->weight = -PCMK_SCORE_INFINITY;
     }
 
     if (this_node->details->type == node_ping) {
@@ -2243,8 +2243,8 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
         pcmk__rsc_trace(rsc, "Added orphan %s", rsc->id);
-        resource_location(rsc, NULL, -INFINITY, "__orphan_do_not_run__",
-                          scheduler);
+        resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
+                          "__orphan_do_not_run__", scheduler);
     }
     return rsc;
 }
@@ -2380,8 +2380,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             /* make sure it comes up somewhere else
              * or not at all
              */
-            resource_location(rsc, node, -INFINITY, "__action_migration_auto__",
-                              rsc->cluster);
+            resource_location(rsc, node, -PCMK_SCORE_INFINITY,
+                              "__action_migration_auto__", rsc->cluster);
             break;
 
         case pcmk_on_fail_stop:
@@ -3629,7 +3629,7 @@ cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
 static void
 ban_from_all_nodes(pcmk_resource_t *rsc)
 {
-    int score = -INFINITY;
+    int score = -PCMK_SCORE_INFINITY;
     pcmk_resource_t *fail_rsc = rsc;
 
     if (fail_rsc->parent != NULL) {
@@ -3752,7 +3752,7 @@ unpack_rsc_op_failure(struct action_history *history,
     }
 
     if (strcmp(history->task, PCMK_ACTION_STOP) == 0) {
-        resource_location(history->rsc, history->node, -INFINITY,
+        resource_location(history->rsc, history->node, -PCMK_SCORE_INFINITY,
                           "__stop_fail__", history->rsc->cluster);
 
     } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0) {
@@ -4637,8 +4637,8 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
 
     record_failed_op(history);
-    resource_location(ban_rsc, history->node, -INFINITY, "masked-probe-failure",
-                      history->rsc->cluster);
+    resource_location(ban_rsc, history->node, -PCMK_SCORE_INFINITY,
+                      "masked-probe-failure", history->rsc->cluster);
 }
 
 /*!
@@ -4866,8 +4866,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                  */
                 *on_fail = pcmk_on_fail_ban;
             }
-            resource_location(parent, node, -INFINITY, "hard-error",
-                              rsc->cluster);
+            resource_location(parent, node, -PCMK_SCORE_INFINITY,
+                              "hard-error", rsc->cluster);
             unpack_rsc_op_failure(&history, failure_strategy, fail_role,
                                   last_failure, on_fail);
             goto done;
@@ -4943,8 +4943,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                        services_ocf_exitcode_str(history.exit_status),
                        (pcmk__str_empty(history.exit_reason)? "" : ": "),
                        pcmk__s(history.exit_reason, ""), history.id);
-            resource_location(parent, node, -INFINITY, "hard-error",
-                              rsc->cluster);
+            resource_location(parent, node, -PCMK_SCORE_INFINITY,
+                              "hard-error", rsc->cluster);
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
             pcmk__sched_err("Preventing %s from restarting anywhere because "
@@ -4953,8 +4953,8 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                             services_ocf_exitcode_str(history.exit_status),
                             (pcmk__str_empty(history.exit_reason)? "" : ": "),
                             pcmk__s(history.exit_reason, ""), history.id);
-            resource_location(parent, NULL, -INFINITY, "fatal-error",
-                              rsc->cluster);
+            resource_location(parent, NULL, -PCMK_SCORE_INFINITY,
+                              "fatal-error", rsc->cluster);
         }
     }
 
