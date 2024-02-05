@@ -112,7 +112,7 @@ action_uuid_for_ordering(const char *first_uuid,
         goto done;
     }
 
-    first_task = text2task(first_task_str);
+    first_task = pcmk_parse_action(first_task_str);
     switch (first_task) {
         case pcmk_action_stop:
         case pcmk_action_start:
@@ -144,9 +144,9 @@ action_uuid_for_ordering(const char *first_uuid,
         if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
             && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
-                                    task2text(remapped_task));
+                                    pcmk_action_text(remapped_task));
         } else {
-            uuid = pcmk__op_key(rid, task2text(remapped_task), 0);
+            uuid = pcmk__op_key(rid, pcmk_action_text(remapped_task), 0);
         }
         pcmk__rsc_trace(first_rsc,
                         "Remapped action UUID %s to %s for ordering purposes",
@@ -987,7 +987,7 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
         }
     }
 
-    switch (text2task(action->task)) {
+    switch (pcmk_parse_action(action->task)) {
         case pcmk_action_fence:
         case pcmk_action_shutdown:
             if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {

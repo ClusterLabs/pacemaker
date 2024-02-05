@@ -169,7 +169,7 @@ static void
 apply_remote_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
-    enum action_tasks task = text2task(action->task);
+    enum action_tasks task = pcmk_parse_action(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
     uint32_t order_opts = pcmk__ar_none;
@@ -307,7 +307,7 @@ apply_container_ordering(pcmk_action_t *action)
      */
     pcmk_resource_t *remote_rsc = NULL;
     pcmk_resource_t *container = NULL;
-    enum action_tasks task = text2task(action->task);
+    enum action_tasks task = pcmk_parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(action->node != NULL);
@@ -694,9 +694,10 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         return;
     }
 
-    task = text2task(action->task);
+    task = pcmk_parse_action(action->task);
     if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
-        task = text2task(g_hash_table_lookup(action->meta, "notify_operation"));
+        task = pcmk_parse_action(g_hash_table_lookup(action->meta,
+                                                     "notify_operation"));
     }
 
     switch (task) {

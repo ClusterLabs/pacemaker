@@ -2260,7 +2260,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     CRM_ASSERT(rsc);
     pcmk__rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                     rsc->id, pcmk_role_text(rsc->role), pcmk__node_name(node),
-                    fail2text(on_fail));
+                    pcmk_on_fail_text(on_fail));
 
     /* process current state */
     if (rsc->role != pcmk_role_unknown) {
@@ -3745,8 +3745,8 @@ unpack_rsc_op_failure(struct action_history *history,
 
     if (cmp_on_fail(*on_fail, config_on_fail) < 0) {
         pcmk__rsc_trace(history->rsc, "on-fail %s -> %s for %s",
-                        fail2text(*on_fail), fail2text(config_on_fail),
-                        history->key);
+                        pcmk_on_fail_text(*on_fail),
+                        pcmk_on_fail_text(config_on_fail), history->key);
         *on_fail = config_on_fail;
     }
 
@@ -3796,7 +3796,8 @@ unpack_rsc_op_failure(struct action_history *history,
                     "Resource %s: role=%s unclean=%s on_fail=%s fail_role=%s",
                     history->rsc->id, pcmk_role_text(history->rsc->role),
                     pcmk__btoa(history->node->details->unclean),
-                    fail2text(config_on_fail), pcmk_role_text(fail_role));
+                    pcmk_on_fail_text(config_on_fail),
+                    pcmk_role_text(fail_role));
 
     if ((fail_role != pcmk_role_started)
         && (history->rsc->next_role < fail_role)) {
@@ -4437,7 +4438,7 @@ update_resource_state(struct action_history *history, int exit_status,
         case pcmk_on_fail_fence_node:
             pcmk__rsc_trace(history->rsc,
                             "%s (%s) is not cleared by a completed %s",
-                            history->rsc->id, fail2text(*on_fail),
+                            history->rsc->id, pcmk_on_fail_text(*on_fail),
                             history->task);
             break;
 

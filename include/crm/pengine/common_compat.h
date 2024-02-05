@@ -61,6 +61,15 @@ const char *role2text(enum rsc_role_e role);
 //! \deprecated Use pcmk_parse_role() instead
 enum rsc_role_e text2role(const char *role);
 
+//! \deprecated Use pcmk_action_text() instead
+const char *task2text(enum action_tasks task);
+
+//! \deprecated Use pcmk_parse_action() instead
+enum action_tasks text2task(const char *task);
+
+//! \deprecated Use pcmk_on_fail_text() instead
+const char *fail2text(enum action_fail_response fail);
+
 //! \deprecated Use pcmk_multiply_active_text() instead
 static inline const char *
 recovery2text(enum rsc_recovery_type type)

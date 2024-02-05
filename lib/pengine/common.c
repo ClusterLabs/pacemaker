@@ -18,144 +18,6 @@
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 
-const char *
-fail2text(enum action_fail_response fail)
-{
-    const char *result = "<unknown>";
-
-    switch (fail) {
-        case pcmk_on_fail_ignore:
-            result = "ignore";
-            break;
-        case pcmk_on_fail_demote:
-            result = "demote";
-            break;
-        case pcmk_on_fail_block:
-            result = "block";
-            break;
-        case pcmk_on_fail_restart:
-            result = "recover";
-            break;
-        case pcmk_on_fail_ban:
-            result = "migrate";
-            break;
-        case pcmk_on_fail_stop:
-            result = "stop";
-            break;
-        case pcmk_on_fail_fence_node:
-            result = "fence";
-            break;
-        case pcmk_on_fail_standby_node:
-            result = "standby";
-            break;
-        case pcmk_on_fail_restart_container:
-            result = "restart-container";
-            break;
-        case pcmk_on_fail_reset_remote:
-            result = "reset-remote";
-            break;
-    }
-    return result;
-}
-
-enum action_tasks
-text2task(const char *task)
-{
-    if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        return pcmk_action_stop;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_STOPPED, pcmk__str_casei)) {
-        return pcmk_action_stopped;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_casei)) {
-        return pcmk_action_start;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_RUNNING, pcmk__str_casei)) {
-        return pcmk_action_started;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_casei)) {
-        return pcmk_action_shutdown;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
-        return pcmk_action_fence;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-        return pcmk_action_monitor;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
-        return pcmk_action_notify;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_NOTIFIED, pcmk__str_casei)) {
-        return pcmk_action_notified;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTE, pcmk__str_casei)) {
-        return pcmk_action_promote;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTE, pcmk__str_casei)) {
-        return pcmk_action_demote;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_PROMOTED, pcmk__str_casei)) {
-        return pcmk_action_promoted;
-
-    } else if (pcmk__str_eq(task, PCMK_ACTION_DEMOTED, pcmk__str_casei)) {
-        return pcmk_action_demoted;
-    }
-    return pcmk_action_unspecified;
-}
-
-const char *
-task2text(enum action_tasks task)
-{
-    const char *result = "<unknown>";
-
-    switch (task) {
-        case pcmk_action_unspecified:
-            result = "no_action";
-            break;
-        case pcmk_action_stop:
-            result = PCMK_ACTION_STOP;
-            break;
-        case pcmk_action_stopped:
-            result = PCMK_ACTION_STOPPED;
-            break;
-        case pcmk_action_start:
-            result = PCMK_ACTION_START;
-            break;
-        case pcmk_action_started:
-            result = PCMK_ACTION_RUNNING;
-            break;
-        case pcmk_action_shutdown:
-            result = PCMK_ACTION_DO_SHUTDOWN;
-            break;
-        case pcmk_action_fence:
-            result = PCMK_ACTION_STONITH;
-            break;
-        case pcmk_action_monitor:
-            result = PCMK_ACTION_MONITOR;
-            break;
-        case pcmk_action_notify:
-            result = PCMK_ACTION_NOTIFY;
-            break;
-        case pcmk_action_notified:
-            result = PCMK_ACTION_NOTIFIED;
-            break;
-        case pcmk_action_promote:
-            result = PCMK_ACTION_PROMOTE;
-            break;
-        case pcmk_action_promoted:
-            result = PCMK_ACTION_PROMOTED;
-            break;
-        case pcmk_action_demote:
-            result = PCMK_ACTION_DEMOTE;
-            break;
-        case pcmk_action_demoted:
-            result = PCMK_ACTION_DEMOTED;
-            break;
-    }
-
-    return result;
-}
-
 void
 add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
@@ -297,9 +159,27 @@ text2role(const char *role)
 }
 
 const char *
+task2text(enum action_tasks task)
+{
+    return pcmk_action_text(task);
+}
+
+enum action_tasks
+text2task(const char *task)
+{
+    return pcmk_parse_action(task);
+}
+
+const char *
 pe_pref(GHashTable * options, const char *name)
 {
     return pcmk__cluster_option(options, name);
+}
+
+const char *
+fail2text(enum action_fail_response fail)
+{
+    return pcmk_on_fail_text(fail);
 }
 
 // LCOV_EXCL_STOP
