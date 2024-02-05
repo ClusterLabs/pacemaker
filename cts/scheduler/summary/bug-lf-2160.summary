@@ -10,8 +10,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: domU-test01     monitor on cardhu
-  * Resource action: dom0-iscsi1-cnx1:0 monitor on cardhu
 
 Revised Cluster Status:
   * Node List:

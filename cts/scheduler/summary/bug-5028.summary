@@ -8,13 +8,12 @@ Current cluster status:
     * Resource Group: dummy-g:
       * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a
       * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Stop       dummy01     ( bl460g6a )  due to unrunnable dummy02 stop (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   dummy-g_stop_0
-  * Pseudo action:   dummy-g_start_0
 
 Revised Cluster Status:
   * Node List:
@@ -24,3 +23,4 @@ Revised Cluster Status:
     * Resource Group: dummy-g:
       * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a
       * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
+Found verification errors! Run crm_verify for more information.

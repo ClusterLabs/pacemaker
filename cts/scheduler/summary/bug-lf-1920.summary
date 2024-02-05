@@ -8,7 +8,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: mysql-bin       monitor=30000 on dktest2sles10
 
 Revised Cluster Status:
   * Node List:

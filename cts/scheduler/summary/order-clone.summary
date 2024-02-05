@@ -23,14 +23,13 @@ Transition Summary:
   * Start      fencing-sbd     ( hex-0 )
 
 Executing Cluster Transition:
-  * Resource action: fencing-sbd     start on hex-0
 
 Revised Cluster Status:
   * Node List:
     * Online: [ hex-0 hex-7 hex-8 hex-9 ]
 
   * Full List of Resources:
-    * fencing-sbd	(stonith:external/sbd):	 Started hex-0
+    * fencing-sbd	(stonith:external/sbd):	 Stopped
     * Clone Set: o2cb-clone [o2cb]:
       * Stopped: [ hex-0 hex-7 hex-8 hex-9 ]
     * Clone Set: vg1-clone [vg1]:

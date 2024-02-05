@@ -10,7 +10,6 @@ Transition Summary:
   * Stop       the-future-of-vaj     (   hb2 )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: the-future-of-vaj stop on hb2
 
 Revised Cluster Status:
   * Node List:
@@ -18,4 +17,4 @@ Revised Cluster Status:
     * OFFLINE: [ hb3 ]
 
   * Full List of Resources:
-    * the-future-of-vaj	(ocf:heartbeat:Dummy):	 Stopped
+    * the-future-of-vaj	(ocf:heartbeat:Dummy):	 FAILED hb2

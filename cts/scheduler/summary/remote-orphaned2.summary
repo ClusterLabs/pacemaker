@@ -10,6 +10,7 @@ Current cluster status:
     * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
     * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
     * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
 
@@ -27,3 +28,4 @@ Revised Cluster Status:
     * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
     * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
     * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+Found verification errors! Run crm_verify for more information.

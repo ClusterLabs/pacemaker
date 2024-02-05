@@ -10,8 +10,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Pseudo action:   load_stopped_hex-14
-  * Pseudo action:   load_stopped_hex-13
 
 Revised Cluster Status:
   * Node List:

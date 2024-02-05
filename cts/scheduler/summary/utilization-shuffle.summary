@@ -30,6 +30,7 @@ Current cluster status:
       * Started: [ act1 act2 act3 sby1 sby2 ]
     * Clone Set: clnDiskd2 [prmDiskd2]:
       * Started: [ act1 act2 act3 sby1 sby2 ]
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Start      prmExPostgreSQLDB1     (  act3 )
@@ -40,25 +41,6 @@ Transition Summary:
   * Start      prmApPostgreSQLDB1     (  act3 )
 
 Executing Cluster Transition:
-  * Pseudo action:   grpPostgreSQLDB1_start_0
-  * Pseudo action:   load_stopped_sby2
-  * Pseudo action:   load_stopped_sby1
-  * Pseudo action:   load_stopped_act3
-  * Pseudo action:   load_stopped_act2
-  * Pseudo action:   load_stopped_act1
-  * Resource action: prmExPostgreSQLDB1 start on act3
-  * Resource action: prmFsPostgreSQLDB1-1 start on act3
-  * Resource action: prmFsPostgreSQLDB1-2 start on act3
-  * Resource action: prmFsPostgreSQLDB1-3 start on act3
-  * Resource action: prmIpPostgreSQLDB1 start on act3
-  * Resource action: prmApPostgreSQLDB1 start on act3
-  * Pseudo action:   grpPostgreSQLDB1_running_0
-  * Resource action: prmExPostgreSQLDB1 monitor=5000 on act3
-  * Resource action: prmFsPostgreSQLDB1-1 monitor=5000 on act3
-  * Resource action: prmFsPostgreSQLDB1-2 monitor=5000 on act3
-  * Resource action: prmFsPostgreSQLDB1-3 monitor=5000 on act3
-  * Resource action: prmIpPostgreSQLDB1 monitor=5000 on act3
-  * Resource action: prmApPostgreSQLDB1 monitor=5000 on act3
 
 Revised Cluster Status:
   * Node List:
@@ -66,12 +48,12 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Resource Group: grpPostgreSQLDB1:
-      * prmExPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started act3
-      * prmFsPostgreSQLDB1-1	(ocf:pacemaker:Dummy):	 Started act3
-      * prmFsPostgreSQLDB1-2	(ocf:pacemaker:Dummy):	 Started act3
-      * prmFsPostgreSQLDB1-3	(ocf:pacemaker:Dummy):	 Started act3
-      * prmIpPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started act3
-      * prmApPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started act3
+      * prmExPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Stopped
+      * prmFsPostgreSQLDB1-1	(ocf:pacemaker:Dummy):	 Stopped
+      * prmFsPostgreSQLDB1-2	(ocf:pacemaker:Dummy):	 Stopped
+      * prmFsPostgreSQLDB1-3	(ocf:pacemaker:Dummy):	 Stopped
+      * prmIpPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Stopped
+      * prmApPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Stopped
     * Resource Group: grpPostgreSQLDB2:
       * prmExPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
       * prmFsPostgreSQLDB2-1	(ocf:pacemaker:Dummy):	 Started act2
@@ -92,3 +74,4 @@ Revised Cluster Status:
       * Started: [ act1 act2 act3 sby1 sby2 ]
     * Clone Set: clnDiskd2 [prmDiskd2]:
       * Started: [ act1 act2 act3 sby1 sby2 ]
+Found verification errors! Run crm_verify for more information.

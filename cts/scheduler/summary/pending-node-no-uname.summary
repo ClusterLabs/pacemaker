@@ -11,7 +11,6 @@ Transition Summary:
   * Start      st-sbd     ( node-1 )  blocked
 
 Executing Cluster Transition:
-  * Resource action: st-sbd          monitor on node-1
 Using the original execution date of: 2023-02-21 12:19:57Z
 
 Revised Cluster Status:

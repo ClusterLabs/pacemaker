@@ -14,8 +14,6 @@ Transition Summary:
   * Start      stateful-1:1     ( node-1 )  due to unrunnable stateful-1:0 monitor (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   promotable-1_start_0
-  * Pseudo action:   promotable-1_running_0
 Using the original execution date of: 2022-12-02 17:04:52Z
 
 Revised Cluster Status:

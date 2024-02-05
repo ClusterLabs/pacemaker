@@ -11,9 +11,6 @@ Transition Summary:
   * Reload     A       ( fc16-builder )
 
 Executing Cluster Transition:
-  * Cluster action:  clear_failcount for A on fc16-builder
-  * Resource action: A               reload-agent on fc16-builder
-  * Resource action: A               monitor=30000 on fc16-builder
 
 Revised Cluster Status:
   * Node List:

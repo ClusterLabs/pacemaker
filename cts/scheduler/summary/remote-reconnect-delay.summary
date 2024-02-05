@@ -27,14 +27,12 @@ Current cluster status:
     * lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started rhel7-2
     * remote-rhel7-3	(ocf:pacemaker:remote):	 FAILED
     * remote-rsc	(ocf:heartbeat:Dummy):	 Started rhel7-1
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Restart    Fencing     ( rhel7-2 )  due to resource definition change
 
 Executing Cluster Transition:
-  * Resource action: Fencing         stop on rhel7-2
-  * Resource action: Fencing         start on rhel7-2
-  * Resource action: Fencing         monitor=120000 on rhel7-2
 Using the original execution date of: 2017-08-21 17:12:54Z
 
 Revised Cluster Status:
@@ -65,3 +63,4 @@ Revised Cluster Status:
     * lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started rhel7-2
     * remote-rhel7-3	(ocf:pacemaker:remote):	 FAILED
     * remote-rsc	(ocf:heartbeat:Dummy):	 Started rhel7-1
+Found verification errors! Run crm_verify for more information.

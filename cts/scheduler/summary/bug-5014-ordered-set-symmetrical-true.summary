@@ -11,12 +11,10 @@ Current cluster status:
     * C	(ocf:pacemaker:Dummy):	 Started fc16-builder (disabled)
 
 Transition Summary:
-  * Stop       A       ( fc16-builder )  due to required C start
+  * Stop       A       ( fc16-builder )  due to unrunnable C start
   * Stop       C       ( fc16-builder )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: A               stop on fc16-builder
-  * Resource action: C               stop on fc16-builder
 
 Revised Cluster Status:
   * Node List:
@@ -24,6 +22,6 @@ Revised Cluster Status:
     * OFFLINE: [ fc16-builder2 ]
 
   * Full List of Resources:
-    * A	(ocf:pacemaker:Dummy):	 Stopped
+    * A	(ocf:pacemaker:Dummy):	 Started fc16-builder
     * B	(ocf:pacemaker:Dummy):	 Started fc16-builder
-    * C	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * C	(ocf:pacemaker:Dummy):	 Started fc16-builder (disabled)

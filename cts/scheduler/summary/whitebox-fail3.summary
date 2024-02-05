@@ -12,6 +12,11 @@ Current cluster status:
     * Clone Set: X-master [X] (promotable):
       * Promoted: [ dvossel-laptop2 ]
       * Stopped: [ 18builder 18node1 ]
+element primitive: Relax-NG validity error : Type ID doesn't allow value '18builder'
+element primitive: Relax-NG validity error : Invalid sequence in interleave
+element primitive: Relax-NG validity error : Element primitive failed to validate content
+Entity: line 16: element primitive: Relax-NG validity error : Element resources has extra content: primitive
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Start      vm            (              dvossel-laptop2 )
@@ -53,3 +58,8 @@ Revised Cluster Status:
       * Promoted: [ dvossel-laptop2 ]
       * Unpromoted: [ 18builder ]
       * Stopped: [ 18node1 ]
+element primitive: Relax-NG validity error : Type ID doesn't allow value '18builder'
+element primitive: Relax-NG validity error : Invalid sequence in interleave
+element primitive: Relax-NG validity error : Element primitive failed to validate content
+Entity: line 16: element primitive: Relax-NG validity error : Element resources has extra content: primitive
+Found verification errors! Run crm_verify for more information.

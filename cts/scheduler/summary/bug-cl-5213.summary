@@ -10,7 +10,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: pgsql           monitor=10000 on srv01
 
 Revised Cluster Status:
   * Node List:

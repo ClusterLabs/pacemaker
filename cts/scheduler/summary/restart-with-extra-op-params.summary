@@ -11,9 +11,6 @@ Transition Summary:
   * Restart    dummy1     ( node2 )  due to resource definition change
 
 Executing Cluster Transition:
-  * Resource action: dummy1          stop on node2
-  * Resource action: dummy1          start on node2
-  * Resource action: dummy1          monitor=10000 on node2
 Using the original execution date of: 2021-03-31 14:58:18Z
 
 Revised Cluster Status:

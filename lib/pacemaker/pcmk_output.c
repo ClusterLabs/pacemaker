@@ -1801,6 +1801,9 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
+    pcmk__output_t *verify_out;
+    int verify_rc;
+
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
 
@@ -1917,6 +1920,20 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
         }
     }
 
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "No verification errors");
+        }
+    } else {
+        out->info(out, "Found verification errors! Run crm_verify for more information.");
+    }
+
     return rc;
 }
 
@@ -1938,6 +1955,9 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
+
+    pcmk__output_t *verify_out;
+    int verify_rc;
 
     out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
@@ -1999,6 +2019,21 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
                      false);
     }
 
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "No verification errors");
+        }
+    } else {
+        out->info(out, "Found verification errors! Run crm_verify for more information.");
+    }
+
     return pcmk_rc_ok;
 }
 
@@ -2021,6 +2056,9 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
     bool already_printed_failure = false;
+
+    pcmk__output_t *verify_out;
+    int verify_rc;
 
     out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
@@ -2124,6 +2162,20 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
+    }
+
+    /* If there are verification errors, always print a statement about that, even if not requested */
+
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc != pcmk_rc_schema_validation) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            out->info(out, "No verification errors");
+        }
+    } else {
+        out->info(out, "Found verification errors! Run crm_verify for more information.");
     }
 
     return pcmk_rc_ok;

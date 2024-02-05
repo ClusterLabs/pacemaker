@@ -7,6 +7,7 @@ Current cluster status:
     * stonith-1	(stonith:dummy):	 Stopped
     * rsc1	(ocf:heartbeat:apache):	 Started node1 (UNCLEAN)
     * rsc2	(ocf:heartbeat:apache):	 Started node1 (UNCLEAN)
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Start      stonith-1     ( node2 )  due to no quorum (blocked)
@@ -14,9 +15,6 @@ Transition Summary:
   * Stop       rsc2          ( node1 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
-  * Resource action: stonith-1       monitor on node2
-  * Resource action: rsc1            monitor on node2
-  * Resource action: rsc2            monitor on node2
 
 Revised Cluster Status:
   * Node List:
@@ -27,3 +25,4 @@ Revised Cluster Status:
     * stonith-1	(stonith:dummy):	 Stopped
     * rsc1	(ocf:heartbeat:apache):	 Started node1 (UNCLEAN)
     * rsc2	(ocf:heartbeat:apache):	 Started node1 (UNCLEAN)
+Found verification errors! Run crm_verify for more information.

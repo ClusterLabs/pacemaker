@@ -36,8 +36,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Cluster action:  do_shutdown on pcmk-2
-  * Cluster action:  do_shutdown on pcmk-1
 
 Revised Cluster Status:
   * Node List:

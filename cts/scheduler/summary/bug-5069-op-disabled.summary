@@ -9,8 +9,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Cluster action:  clear_failcount for A on fc16-builder2
-  * Resource action: A               cancel=10000 on fc16-builder2
 
 Revised Cluster Status:
   * Node List:

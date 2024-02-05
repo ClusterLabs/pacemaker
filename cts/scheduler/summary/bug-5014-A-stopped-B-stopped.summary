@@ -12,8 +12,6 @@ Transition Summary:
   * Start      ClusterIP2     ( fc16-builder )  due to unrunnable ClusterIP start (blocked)
 
 Executing Cluster Transition:
-  * Resource action: ClusterIP       monitor on fc16-builder
-  * Resource action: ClusterIP2      monitor on fc16-builder
 
 Revised Cluster Status:
   * Node List:

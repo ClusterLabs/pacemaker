@@ -30,16 +30,7 @@ Transition Summary:
   * Start      res_drbd_mysql1:1     ( alice.demo )
 
 Executing Cluster Transition:
-  * Pseudo action:   ms_drbd_mysql1_pre_notify_start_0
   * Resource action: res_drbd_mysql1:0 notify on bob.demo
-  * Pseudo action:   ms_drbd_mysql1_confirmed-pre_notify_start_0
-  * Pseudo action:   ms_drbd_mysql1_start_0
-  * Resource action: res_drbd_mysql1:1 start on alice.demo
-  * Pseudo action:   ms_drbd_mysql1_running_0
-  * Pseudo action:   ms_drbd_mysql1_post_notify_running_0
-  * Resource action: res_drbd_mysql1:0 notify on bob.demo
-  * Resource action: res_drbd_mysql1:1 notify on alice.demo
-  * Pseudo action:   ms_drbd_mysql1_confirmed-post_notify_running_0
 
 Revised Cluster Status:
   * Node List:
@@ -58,7 +49,7 @@ Revised Cluster Status:
       * res_mysql1	(ocf:heartbeat:mysql):	 Started bob.demo
     * Clone Set: ms_drbd_mysql1 [res_drbd_mysql1] (promotable):
       * Promoted: [ bob.demo ]
-      * Unpromoted: [ alice.demo ]
+      * Stopped: [ alice.demo ]
     * Clone Set: ms_drbd_mysql2 [res_drbd_mysql2] (promotable):
       * Promoted: [ alice.demo ]
       * Unpromoted: [ bob.demo ]

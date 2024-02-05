@@ -11,6 +11,7 @@ Current cluster status:
       * Unpromoted: [ rhel7-2 ]
       * Stopped: [ rhel7-3 rhel7-4 rhel7-5 ]
     * rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-2
+Found verification errors! Run crm_verify for more information.
 
 Transition Summary:
   * Stop       Fencing     (                        rhel7-1 )  due to no quorum
@@ -18,13 +19,6 @@ Transition Summary:
   * Stop       rsc2        (                        rhel7-2 )  due to no quorum
 
 Executing Cluster Transition:
-  * Resource action: Fencing         stop on rhel7-1
-  * Resource action: rsc1            cancel=10000 on rhel7-1
-  * Pseudo action:   rsc1-clone_demote_0
-  * Resource action: rsc2            stop on rhel7-2
-  * Resource action: rsc1            demote on rhel7-1
-  * Pseudo action:   rsc1-clone_demoted_0
-  * Resource action: rsc1            monitor=11000 on rhel7-1
 Using the original execution date of: 2020-06-17 17:26:35Z
 
 Revised Cluster Status:
@@ -33,8 +27,10 @@ Revised Cluster Status:
     * OFFLINE: [ rhel7-3 rhel7-4 rhel7-5 ]
 
   * Full List of Resources:
-    * Fencing	(stonith:fence_xvm):	 Stopped
+    * Fencing	(stonith:fence_xvm):	 Started rhel7-1
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * Unpromoted: [ rhel7-1 rhel7-2 ]
+      * Promoted: [ rhel7-1 ]
+      * Unpromoted: [ rhel7-2 ]
       * Stopped: [ rhel7-3 rhel7-4 rhel7-5 ]
-    * rsc2	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-2
+Found verification errors! Run crm_verify for more information.

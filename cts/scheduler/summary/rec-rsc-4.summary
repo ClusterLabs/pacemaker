@@ -10,7 +10,6 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: rsc1            monitor on node1
 
 Revised Cluster Status:
   * Node List:
