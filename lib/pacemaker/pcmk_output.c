@@ -1389,7 +1389,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("inject-cluster-action", "const char *", "const char *",
-                  "xmlNodePtr")
+                  "xmlNode *")
 static int
 inject_cluster_action(pcmk__output_t *out, va_list args)
 {
@@ -1412,7 +1412,7 @@ inject_cluster_action(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("inject-cluster-action", "const char *", "const char *",
-                  "xmlNodePtr")
+                  "xmlNode *")
 static int
 inject_cluster_action_xml(pcmk__output_t *out, va_list args)
 {
@@ -1471,7 +1471,7 @@ inject_fencing_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-attr", "const char *", "const char *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("inject-attr", "const char *", "const char *", "xmlNode *")
 static int
 inject_attr(pcmk__output_t *out, va_list args)
 {
@@ -1494,7 +1494,7 @@ inject_attr(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-attr", "const char *", "const char *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("inject-attr", "const char *", "const char *", "xmlNode *")
 static int
 inject_attr_xml(pcmk__output_t *out, va_list args)
 {
