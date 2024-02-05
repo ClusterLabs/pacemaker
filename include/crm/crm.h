@@ -82,9 +82,6 @@ extern "C" {
 
 extern char *crm_system_name;
 
-// How we represent "infinite" scores
-#  define CRM_SCORE_INFINITY    1000000
-
 /* @COMPAT API < 2.0.0 Deprecated "infinity" aliases
  *
  * INFINITY might be defined elsewhere (e.g. math.h), so undefine it first.

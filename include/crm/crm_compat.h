@@ -14,6 +14,7 @@
 #include <glib.h>
 
 #include <crm/common/actions.h>
+#include <crm/common/scores.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +34,9 @@ extern "C" {
 
 //! \deprecated This defined constant will be removed in a future release
 #define MAX_IPC_DELAY 120
+
+//! \deprecated Use PCMK_SCORE_INFINITY instead
+#define CRM_SCORE_INFINITY PCMK_SCORE_INFINITY
 
 //! \deprecated Use PCMK_VALUE_INFINITY instead
 #define CRM_INFINITY_S PCMK_VALUE_INFINITY
