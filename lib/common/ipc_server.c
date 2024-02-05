@@ -16,7 +16,7 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"

@@ -22,7 +22,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cmdline_internal.h>

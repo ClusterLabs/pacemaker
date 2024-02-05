@@ -19,7 +19,6 @@
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
@@ -399,7 +398,7 @@ purge_xml_attributes(xmlNode *xml)
 
     if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
         crm_trace("%s[@" PCMK_XA_ID "=%s] is readable",
-                  xml->name, ID(xml));
+                  xml->name, pcmk__xe_id(xml));
         return true;
     }
 
@@ -552,7 +551,7 @@ implicitly_allowed(const xmlNode *xml)
     return true;
 }
 
-#define display_id(xml) (ID(xml)? ID(xml) : "<unset>")
+#define display_id(xml) pcmk__s(pcmk__xe_id(xml), "<unset>")
 
 /*!
  * \internal

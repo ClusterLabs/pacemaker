@@ -24,7 +24,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
@@ -445,12 +444,14 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
         for (child = pcmk__xml_first_child(input); child;
              child = pcmk__xml_next(child)) {
             if (replace_xml_child(NULL, obj_root, child, TRUE) == FALSE) {
-                crm_trace("No matching object to delete: %s=%s", child->name, ID(child));
+                crm_trace("No matching object to delete: %s=%s",
+                          child->name, pcmk__xe_id(child));
             }
         }
 
     } else if (replace_xml_child(NULL, obj_root, input, TRUE) == FALSE) {
-            crm_trace("No matching object to delete: %s=%s", input->name, ID(input));
+            crm_trace("No matching object to delete: %s=%s",
+                      input->name, pcmk__xe_id(input));
     }
 
     return pcmk_ok;
@@ -541,7 +542,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     object_name = (const char *) update->name;
     CRM_CHECK(object_name != NULL, return -EINVAL);
 
-    object_id = ID(update);
+    object_id = pcmk__xe_id(update);
     crm_trace("Processing update for <%s%s%s%s>", object_name,
               ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
               pcmk__s(object_id, ""),
@@ -607,21 +608,27 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
+
+        const char *child_id = pcmk__xe_id(a_child);
         int tmp_result = 0;
 
-        crm_trace("Updating child <%s%s%s%s>", a_child->name,
-                  ((ID(a_child) == NULL)? "" : " " PCMK_XA_ID "='"),
-                  pcmk__s(ID(a_child), ""), ((ID(a_child) == NULL)? "" : "'"));
+        if (child_id != NULL) {
+            crm_trace("Updating child <%s " PCMK_XA_ID "='%s'>",
+                      a_child->name, child_id);
+        } else {
+            crm_trace("Updating child <%s>", a_child->name);
+        }
 
         tmp_result = update_cib_object(target, a_child);
 
         /*  only the first error is likely to be interesting */
         if (tmp_result != pcmk_ok) {
-            crm_err("Error updating child <%s%s%s%s>",
-                    a_child->name,
-                    ((ID(a_child) == NULL)? "" : " " PCMK_XA_ID "='"),
-                    pcmk__s(ID(a_child), ""),
-                    ((ID(a_child) == NULL)? "" : "'"));
+            if (child_id != NULL) {
+                crm_err("Error updating child <%s " PCMK_XA_ID "='%s'>",
+                        a_child->name, child_id);
+            } else {
+                crm_err("Error updating child <%s>", a_child->name);
+            }
 
             if (result == pcmk_ok) {
                 result = tmp_result;
@@ -653,7 +660,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         return -EINVAL;
     }
 
-    object_id = ID(new_obj);
+    object_id = pcmk__xe_id(new_obj);
 
     crm_trace("Processing creation of <%s%s%s%s>", object_name,
               ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
@@ -687,7 +694,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         xml_node = create_xml_node(failed, PCMK__XE_FAILED_UPDATE);
         add_node_copy(xml_node, target);
 
-        crm_xml_add(xml_node, PCMK_XA_ID, ID(target));
+        crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
         crm_xml_add(xml_node, PCMK_XA_OBJECT_TYPE, (const char *) target->name);
         crm_xml_add(xml_node, PCMK_XA_OPERATION, operation);
         crm_xml_add(xml_node, PCMK_XA_REASON, error_msg);

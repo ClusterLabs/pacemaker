@@ -11,7 +11,6 @@
 
 #include <glib.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules_internal.h>

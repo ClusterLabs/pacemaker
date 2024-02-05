@@ -17,8 +17,8 @@
 #include <crm/cib/cib_types.h>
 #include <crm/cib/internal.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"
 

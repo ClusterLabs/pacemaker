@@ -12,7 +12,6 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <glib.h>
@@ -280,7 +279,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
-        const char *xml_id = ID(action->rsc->xml);
+        const char *xml_id = pcmk__xe_id(action->rsc->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
                   xml_id, action->rsc->id, action->rsc->clone_name);

@@ -13,7 +13,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/lrmd.h>               // lrmd_event_data_t, lrmd_free_event()
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 
@@ -113,7 +112,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     gboolean rc = TRUE;
     gboolean no_wait = FALSE;
 
-    id = ID(action->xml);
+    id = pcmk__xe_id(action->xml);
     CRM_CHECK(!pcmk__str_empty(id), return EPROTO);
 
     task = crm_element_value(action->xml, PCMK_XA_OPERATION);
@@ -270,7 +269,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
         return;
     }
 
-    rsc_id = ID(action_rsc);
+    rsc_id = pcmk__xe_id(action_rsc);
     CRM_CHECK(rsc_id != NULL,
               crm_log_xml_err(action->xml, "Bad:action"); return);
 
@@ -372,7 +371,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     CRM_CHECK(!pcmk__str_empty(on_node),
               crm_err("Corrupted command(id=%s) %s: no node",
-                      ID(action->xml), pcmk__s(task, "without task"));
+                      pcmk__xe_id(action->xml), pcmk__s(task, "without task"));
               return pcmk_rc_node_unknown);
 
     rsc_op = action->xml;

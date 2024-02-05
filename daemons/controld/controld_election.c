@@ -12,7 +12,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>

@@ -16,7 +16,6 @@
 #include <crm/crm.h>
 #include <glib.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/xml.h>
@@ -24,16 +23,12 @@
 
 static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
-static gboolean substitute = FALSE;
 
 GOptionEntry pcmk__xml_output_entries[] = {
     { "xml-legacy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
       NULL,
       NULL },
     { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
-      NULL,
-      NULL },
-    { "xml-substitute", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &substitute,
       NULL,
       NULL },
 
@@ -45,7 +40,7 @@ typedef struct subst_s {
     const char *to;
 } subst_t;
 
-static subst_t substitutions[] = {
+static const subst_t substitutions[] = {
     { "Active Resources",
       PCMK_XE_RESOURCES, },
     { "Assignment Scores",
@@ -80,6 +75,8 @@ static subst_t substitutions[] = {
       PCMK_XE_OPERATIONS, },
     { "Revised Cluster Status",
       PCMK_XE_REVISED_CLUSTER_STATUS, },
+    { "Timings",
+      PCMK_XE_TIMINGS, },
     { "Transition Summary",
       PCMK_XE_ACTIONS, },
     { "Utilization Information",
@@ -330,12 +327,10 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
-    if (substitute) {
-        for (subst_t *s = substitutions; s->from != NULL; s++) {
-            if (!strcmp(s->from, buf)) {
-                name = g_strdup(s->to);
-                break;
-            }
+    for (const subst_t *s = substitutions; s->from != NULL; s++) {
+        if (strcmp(s->from, buf) == 0) {
+            name = g_strdup(s->to);
+            break;
         }
     }
 

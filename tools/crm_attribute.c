@@ -22,7 +22,6 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/util.h>
@@ -509,7 +508,7 @@ output_one_attribute(xmlNode *node, void *userdata)
 
     const char *name = crm_element_value(node, PCMK_XA_NAME);
     const char *value = crm_element_value(node, PCMK_XA_VALUE);
-    const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(node, PCMK__XA_ATTR_HOST);
 
     const char *type = options.type;
     const char *attr_id = options.attr_id;

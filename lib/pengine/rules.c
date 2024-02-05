@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
@@ -258,7 +257,7 @@ pe_cron_range_satisfied(const crm_time_t *now, const xmlNode *cron_spec)
                           PCMK_XE_DATE_SPEC " elements (such as %s) is "
                           "deprecated and will be removed in a future release "
                           "of Pacemaker",
-                          ID(cron_spec));
+                          pcmk__xe_id(cron_spec));
     }
 
     /* If we get here, either no fields were specified (which is success), or all
@@ -464,7 +463,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             }
 
             pair = calloc(1, sizeof(sorted_set_t));
-            pair->name = ID(expanded_attr_set);
+            pair->name = pcmk__xe_id(expanded_attr_set);
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
             pair->overwrite = overwrite;
@@ -677,10 +676,10 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
                              pcmk__str_null_matches|pcmk__str_casei)) {
         pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
                           " value '%s', using default ('" PCMK_VALUE_AND "')",
-                          ID(rule), value);
+                          pcmk__xe_id(rule), value);
     }
 
-    crm_trace("Testing rule %s", ID(rule));
+    crm_trace("Testing rule %s", pcmk__xe_id(rule));
     for (expr = pcmk__xe_first_child(rule); expr != NULL;
          expr = pcmk__xe_next(expr)) {
 
@@ -688,21 +687,23 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
         empty = FALSE;
 
         if (test && do_and == FALSE) {
-            crm_trace("Expression %s/%s passed", ID(rule), ID(expr));
+            crm_trace("Expression %s/%s passed",
+                      pcmk__xe_id(rule), pcmk__xe_id(expr));
             return TRUE;
 
         } else if (test == FALSE && do_and) {
-            crm_trace("Expression %s/%s failed", ID(rule), ID(expr));
+            crm_trace("Expression %s/%s failed",
+                      pcmk__xe_id(rule), pcmk__xe_id(expr));
             return FALSE;
         }
     }
 
     if (empty) {
         pcmk__config_err("Ignoring rule %s because it contains no expressions",
-                         ID(rule));
+                         pcmk__xe_id(rule));
     }
 
-    crm_trace("Rule %s %s", ID(rule), passed ? "passed" : "failed");
+    crm_trace("Rule %s %s", pcmk__xe_id(rule), passed ? "passed" : "failed");
     return passed;
 }
 
@@ -766,7 +767,8 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     }
 
     crm_trace("Expression %s %s on %s",
-              ID(expr), accept ? "passed" : "failed", uname ? uname : "all nodes");
+              pcmk__xe_id(expr), (accept? "passed" : "failed"),
+              pcmk__s(uname, "all nodes"));
     return accept;
 }
 
@@ -987,7 +989,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
 
-    const char *id = ID(expr);
+    const char *id = pcmk__xe_id(expr);
     const char *attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
     const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
     const char *type = crm_element_value(expr, PCMK_XA_TYPE);
@@ -1057,7 +1059,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     // "undetermined" will also be returned for parsing errors
     int rc = pcmk_rc_undetermined;
 
-    crm_trace("Testing expression: %s", ID(expr));
+    crm_trace("Testing expression: %s", pcmk__xe_id(expr));
 
     duration_spec = first_named_child(expr, PCMK_XE_DURATION);
     date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
@@ -1132,7 +1134,7 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *interval_s = crm_element_value(expr, PCMK_META_INTERVAL);
     guint interval_ms = 0U;
 
-    crm_trace("Testing op_defaults expression: %s", ID(expr));
+    crm_trace("Testing op_defaults expression: %s", pcmk__xe_id(expr));
 
     if (rule_data->op_data == NULL) {
         crm_trace("No operations data provided");
@@ -1165,7 +1167,7 @@ pe__eval_rsc_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     const char *provider = crm_element_value(expr, PCMK_XA_PROVIDER);
     const char *type = crm_element_value(expr, PCMK_XA_TYPE);
 
-    crm_trace("Testing rsc_defaults expression: %s", ID(expr));
+    crm_trace("Testing rsc_defaults expression: %s", pcmk__xe_id(expr));
 
     if (rule_data->rsc_data == NULL) {
         crm_trace("No resource data provided");

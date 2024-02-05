@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
@@ -1385,7 +1385,7 @@ remote_ra_process_pseudo(xmlNode *xml)
          * recovered.
          */
         if (result) {
-            const char *remote = ID(result);
+            const char *remote = pcmk__xe_id(result);
 
             if (remote) {
                 remote_node_down(remote, DOWN_ERASE_LRM);
@@ -1443,7 +1443,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         for (node = first_named_child(getXpathResult(search, 0), PCMK_XE_NODE);
              node != NULL; node = crm_next_same_xml(node)) {
 
-            lrm_state_t *lrm_state = lrm_state_find(ID(node));
+            lrm_state_t *lrm_state = lrm_state_find(pcmk__xe_id(node));
 
             cnt++;
             if (lrm_state && lrm_state->remote_ra_data &&

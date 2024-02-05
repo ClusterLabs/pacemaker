@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 void
 pcmk__cli_help(char cmd)
@@ -52,7 +52,7 @@ static pcmk__cluster_option_t cluster_options[] = {
      */
     {
         PCMK_OPT_DC_VERSION, NULL, "string", NULL,
-        PCMK__VALUE_NONE, NULL,
+        PCMK_VALUE_NONE, NULL,
         pcmk__opt_context_controld,
         N_("Pacemaker version on cluster node elected Designated Controller "
             "(DC)"),
@@ -480,10 +480,10 @@ static pcmk__cluster_option_t cluster_options[] = {
     // Node health
     {
         PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, "select",
-            PCMK__VALUE_NONE ", " PCMK__VALUE_MIGRATE_ON_RED ", "
-                PCMK__VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
-                PCMK__VALUE_CUSTOM,
-        PCMK__VALUE_NONE, pcmk__validate_health_strategy,
+            PCMK_VALUE_NONE ", " PCMK_VALUE_MIGRATE_ON_RED ", "
+                PCMK_VALUE_ONLY_GREEN ", " PCMK_VALUE_PROGRESSIVE ", "
+                PCMK_VALUE_CUSTOM,
+        PCMK_VALUE_NONE, pcmk__validate_health_strategy,
         pcmk__opt_context_schedulerd,
         N_("How cluster should react to node health attributes"),
         N_("Requires external entities to create node attributes (named with "

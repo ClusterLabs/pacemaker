@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/lrmd.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml_internal.h>

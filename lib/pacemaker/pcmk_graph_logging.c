@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
@@ -126,14 +125,14 @@ synapse_pending_inputs(const pcmk__graph_t *graph,
         const pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
 
         if (pcmk_is_set(input->flags, pcmk__graph_action_failed)) {
-            pcmk__add_word(&pending, 1024, ID(input->xml));
+            pcmk__add_word(&pending, 1024, pcmk__xe_id(input->xml));
 
         } else if (pcmk_is_set(input->flags, pcmk__graph_action_confirmed)) {
             // Confirmed successful inputs are not pending
 
         } else if (find_graph_action_by_id(graph, input->id) != NULL) {
             // In-flight or pending
-            pcmk__add_word(&pending, 1024, ID(input->xml));
+            pcmk__add_word(&pending, 1024, pcmk__xe_id(input->xml));
         }
     }
     return pending;

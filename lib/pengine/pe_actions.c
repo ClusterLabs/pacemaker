@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 #include <crm/common/xml_internal.h>
@@ -594,7 +594,7 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
     if (origin == NULL) {
         pcmk__config_err("Ignoring '" PCMK_META_INTERVAL_ORIGIN "' for "
                          "operation '%s' because '%s' is not valid",
-                         (ID(xml_obj)? ID(xml_obj) : "(missing ID)"), value);
+                         pcmk__s(pcmk__xe_id(xml_obj), "(missing ID)"), value);
         return false;
     }
 
@@ -608,8 +608,7 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
     // Calculate seconds remaining until next interval
     result = ((result <= 0)? 0 : interval_sec) - result;
     crm_info("Calculated a start delay of %llds for operation '%s'",
-             result,
-             (ID(xml_obj)? ID(xml_obj) : "(unspecified)"));
+             result, pcmk__s(pcmk__xe_id(xml_obj), "(unspecified)"));
 
     if (start_delay != NULL) {
         *start_delay = result * 1000; // milliseconds

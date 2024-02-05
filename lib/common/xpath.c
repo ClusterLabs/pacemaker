@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 #include <stdio.h>
 #include <string.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
@@ -300,7 +300,7 @@ pcmk__element_xpath(const xmlNode *xml)
         pcmk__g_strcat(xpath, "/", (const char *) xml->name, NULL);
     }
 
-    id = ID(xml);
+    id = pcmk__xe_id(xml);
     if (id != NULL) {
         pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", id, "']", NULL);
     }

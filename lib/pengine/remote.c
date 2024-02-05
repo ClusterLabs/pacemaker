@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
@@ -234,7 +233,8 @@ pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
     check_op = calloc(1, sizeof(struct check_op));
     CRM_ASSERT(check_op != NULL);
 
-    crm_trace("Deferring checks of %s until after allocation", ID(rsc_op));
+    crm_trace("Deferring checks of %s until after allocation",
+              pcmk__xe_id(rsc_op));
     check_op->rsc_op = rsc_op;
     check_op->rsc = rsc;
     check_op->node = node;

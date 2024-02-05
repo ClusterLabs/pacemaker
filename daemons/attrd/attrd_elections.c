@@ -8,9 +8,9 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 

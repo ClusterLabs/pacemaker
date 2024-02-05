@@ -242,6 +242,20 @@ char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
 
 /*!
  * \internal
+ * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
+ *
+ * \param[in] xml  XML element to check
+ *
+ * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
+ */
+static inline const char *
+pcmk__xe_id(const xmlNode *xml)
+{
+    return crm_element_value(xml, PCMK_XA_ID);
+}
+
+/*!
+ * \internal
  * \brief Check whether an XML element is of a particular type
  *
  * \param[in] xml   XML element to compare

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 #include <ftw.h>
 #include <unistd.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 

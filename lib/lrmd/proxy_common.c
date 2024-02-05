@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 
@@ -257,9 +257,8 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             int rc = 0;
 
             if (pcmk__str_eq(type, PCMK__VALUE_ATTRD, pcmk__str_none)
-                && crm_element_value(request,
-                                     PCMK__XA_ATTR_NODE_NAME) == NULL
-                && pcmk__str_any_of(crm_element_value(request, PCMK__XA_TASK),
+                && (crm_element_value(request, PCMK__XA_ATTR_HOST) == NULL)
+                && pcmk__str_any_of(crm_element_value(request, PCMK_XA_TASK),
                                     PCMK__ATTRD_CMD_UPDATE,
                                     PCMK__ATTRD_CMD_UPDATE_BOTH,
                                     PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {

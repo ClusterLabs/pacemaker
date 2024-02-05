@@ -16,7 +16,7 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
@@ -296,7 +296,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             return -ETIME;
         }
 
-    } else if (pcmk__str_eq(host_arg, PCMK__VALUE_NONE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(host_arg, PCMK_VALUE_NONE, pcmk__str_casei)) {
         host_arg = NULL;
     }
 

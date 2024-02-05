@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
@@ -225,17 +224,17 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
     rc_buf = crm_strdup_printf("Return code: %d", exit_status);
 
     pcmk__output_create_xml_text_node(out, "h2", "Command Output");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, rc_buf);
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, rc_buf);
 
     if (proc_stdout != NULL) {
-        pcmk__output_create_html_node(out, "div", NULL, NULL, "Stdout");
-        pcmk__output_create_html_node(out, "div", NULL, PCMK__VALUE_OUTPUT,
-                                      proc_stdout);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, "Stdout");
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL,
+                                      PCMK__VALUE_OUTPUT, proc_stdout);
     }
     if (proc_stderr != NULL) {
-        pcmk__output_create_html_node(out, "div", NULL, NULL, "Stderr");
-        pcmk__output_create_html_node(out, "div", NULL, PCMK__VALUE_OUTPUT,
-                                      proc_stderr);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, "Stderr");
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL,
+                                      PCMK__VALUE_OUTPUT, proc_stderr);
     }
 
     free(rc_buf);
@@ -246,13 +245,17 @@ html_version(pcmk__output_t *out, bool extended) {
     CRM_ASSERT(out != NULL);
 
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, "Program: Pacemaker");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Version: %s", PACEMAKER_VERSION));
-    pcmk__output_create_html_node(out, "div", NULL, NULL,
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Program: Pacemaker");
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Version: " PACEMAKER_VERSION);
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
                                   "Author: Andrew Beekhof and "
                                   "the Pacemaker project contributors");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Build: %s", BUILD_VERSION));
-    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Features: %s", CRM_FEATURES));
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Build: " BUILD_VERSION);
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Features: " CRM_FEATURES);
 }
 
 G_GNUC_PRINTF(2, 3)

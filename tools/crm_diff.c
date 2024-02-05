@@ -18,7 +18,6 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>

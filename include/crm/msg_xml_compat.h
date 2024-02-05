@@ -11,6 +11,7 @@
 #  define PCMK__CRM_MSG_XML_COMPAT__H
 
 #include <crm/common/agents.h>      // PCMK_STONITH_PROVIDES
+#include <crm/common/xml.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -193,8 +194,8 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ID instead
 #define XML_FAILCIB_ATTR_ID PCMK_XA_ID
 
-//! \deprecated Use \c PCMK_META_CONTAINER_ATTR_TARGET instead
-#define XML_RSC_ATTR_TARGET PCMK_META_CONTAINER_ATTR_TARGET
+//! \deprecated Use \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET instead
+#define XML_RSC_ATTR_TARGET PCMK_META_CONTAINER_ATTRIBUTE_TARGET
 
 //! \deprecated Do not use
 #define XML_RSC_ATTR_RESTART "restart-type"
@@ -959,7 +960,7 @@ extern "C" {
 #define XML_FAIL_TAG_CIB "failed_update"
 
 //! \deprecated Use \c PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS instead
-#define CIB_OPTIONS_FIRST "cib-bootstrap-options"
+#define CIB_OPTIONS_FIRST PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS
 
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE_INIT "init"
@@ -1009,6 +1010,9 @@ extern "C" {
 
 //! \deprecated Do not use
 #define XML_NODE_ATTR_RSC_DISCOVERY "resource-discovery-enabled"
+
+//! \deprecated Do not use
+#define ID(x) crm_element_value(x, PCMK_XA_ID)
 
 #ifdef __cplusplus
 }

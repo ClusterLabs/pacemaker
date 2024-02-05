@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
@@ -823,7 +823,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     }
 
     pcmk__output_create_xml_node(out, PCMK_XE_PACEMAKERD,
-                                 "sys_from", sys_from,
+                                 PCMK_XA_SYS_FROM, sys_from,
                                  PCMK_XA_STATE, state_s,
                                  PCMK_XA_LAST_UPDATED, last_updated_s,
                                  NULL);
@@ -853,7 +853,7 @@ profile_xml(pcmk__output_t *out, va_list args) {
 
     char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
 
-    pcmk__output_create_xml_node(out, "timing",
+    pcmk__output_create_xml_node(out, PCMK_XE_TIMING,
                                  PCMK_XA_FILE, xml_file,
                                  PCMK_XA_DURATION, duration,
                                  NULL);
@@ -1045,7 +1045,7 @@ digests_xml(pcmk__output_t *out, va_list args)
                                        PCMK_XA_RESOURCE, pcmk__s(rsc->id, ""),
                                        PCMK_XA_NODE,
                                        pcmk__s(node->details->uname, ""),
-                                       "task", pcmk__s(task, ""),
+                                       PCMK_XA_TASK, pcmk__s(task, ""),
                                        PCMK_XA_INTERVAL, interval_s,
                                        NULL);
     free(interval_s);
@@ -1331,7 +1331,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     } else if (reason) {
         pcmk__output_create_xml_node(out, PCMK_XE_NODE_ACTION,
-                                     "task", task,
+                                     PCMK_XA_TASK, task,
                                      PCMK_XA_NODE, node_name,
                                      PCMK_XA_REASON, reason,
                                      NULL);
@@ -1403,7 +1403,7 @@ inject_cluster_action(pcmk__output_t *out, va_list args)
 
     if (rsc != NULL) {
         out->list_item(out, NULL, "Cluster action:  %s for %s on %s",
-                       task, ID(rsc), node);
+                       task, pcmk__xe_id(rsc), node);
     } else {
         out->list_item(out, NULL, "Cluster action:  %s on %s", task, node);
     }
@@ -1427,12 +1427,12 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
     }
 
     xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_ACTION,
-                                            "task", task,
+                                            PCMK_XA_TASK, task,
                                             PCMK_XA_NODE, node,
                                             NULL);
 
     if (rsc) {
-        crm_xml_add(xml_node, PCMK_XA_ID, ID(rsc));
+        crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(rsc));
     }
 
     return pcmk_rc_ok;
@@ -1488,7 +1488,7 @@ inject_attr(pcmk__output_t *out, va_list args)
     node_path = xmlGetNodePath(cib_node);
 
     out->list_item(out, NULL, "Injecting attribute %s=%s into %s '%s'",
-                   name, value, node_path, ID(cib_node));
+                   name, value, node_path, pcmk__xe_id(cib_node));
 
     free(node_path);
     return pcmk_rc_ok;
@@ -1514,7 +1514,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_VALUE, value,
                                  PCMK_XA_NODE_PATH, node_path,
-                                 PCMK_XA_CIB_NODE, ID(cib_node),
+                                 PCMK_XA_CIB_NODE, pcmk__xe_id(cib_node),
                                  NULL);
     free(node_path);
     return pcmk_rc_ok;
@@ -1594,7 +1594,7 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
     }
 
     if (watchdog) {
-        crm_xml_add(node, "watchdog", watchdog);
+        crm_xml_add(node, PCMK_XA_WATCHDOG, watchdog);
     }
 
     return pcmk_rc_ok;
@@ -1711,7 +1711,7 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
     }
 
     xml_node = pcmk__output_create_xml_node(out, PCMK_XE_PSEUDO_ACTION,
-                                            "task", task,
+                                            PCMK_XA_TASK, task,
                                             NULL);
     if (node) {
         crm_xml_add(xml_node, PCMK_XA_NODE, node);

@@ -32,7 +32,7 @@
 #include <corosync/cmap.h>
 #include <corosync/quorum.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"

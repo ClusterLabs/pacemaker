@@ -14,7 +14,6 @@
 #include <time.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
@@ -630,7 +629,7 @@ handle_failcount_op(xmlNode * stored_msg)
         xmlNode *xml_attrs = first_named_child(xml_op, PCMK__XE_ATTRIBUTES);
 
         if (xml_rsc) {
-            rsc = ID(xml_rsc);
+            rsc = pcmk__xe_id(xml_rsc);
         }
         if (xml_attrs) {
             op = crm_element_value(xml_attrs,
@@ -704,7 +703,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         rsc_xml = first_named_child(msg_data, PCMK_XE_PRIMITIVE);
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
-        rsc_id = ID(rsc_xml);
+        rsc_id = pcmk__xe_id(rsc_xml);
         from_sys = crm_element_value(stored_msg, PCMK__XA_CRM_SYS_FROM);
         node = crm_element_value(msg_data, PCMK__META_ON_NODE);
         user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
@@ -763,7 +762,7 @@ static enum crmd_fsa_input
 handle_remote_state(const xmlNode *msg)
 {
     const char *conn_host = NULL;
-    const char *remote_uname = ID(msg);
+    const char *remote_uname = pcmk__xe_id(msg);
     crm_node_t *remote_peer;
     bool remote_is_up = false;
     int rc = pcmk_rc_ok;
@@ -779,7 +778,7 @@ handle_remote_state(const xmlNode *msg)
                             remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
                             0);
 
-    conn_host = crm_element_value(msg, PCMK__XA_CONN_HOST);
+    conn_host = crm_element_value(msg, PCMK__XA_CONNECTION_HOST);
     if (conn_host) {
         pcmk__str_update(&remote_peer->conn_host, conn_host);
     } else if (remote_peer->conn_host) {
@@ -1328,7 +1327,8 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
-        crm_xml_add(msg, PCMK__XA_CONN_HOST, controld_globals.our_nodename);
+        crm_xml_add(msg, PCMK__XA_CONNECTION_HOST,
+                    controld_globals.our_nodename);
     }
 
     send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);

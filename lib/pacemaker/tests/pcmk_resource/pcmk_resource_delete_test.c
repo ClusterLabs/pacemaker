@@ -11,7 +11,7 @@
 
 #include <crm/cib/internal.h>
 #include <crm/common/unittest_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pacemaker.h>
 
 static char *cib_path = NULL;

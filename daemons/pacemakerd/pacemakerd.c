@@ -25,8 +25,8 @@
 #include <sys/resource.h>
 
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
-#include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc_pacemakerd.h>
 #include <crm/common/output_internal.h>
@@ -406,7 +406,7 @@ main(int argc, char **argv)
     {
         const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
-        if (!pcmk__str_eq(facility, PCMK__VALUE_NONE,
+        if (!pcmk__str_eq(facility, PCMK_VALUE_NONE,
                           pcmk__str_casei|pcmk__str_null_matches)) {
             pcmk__set_env_option("LOGFACILITY", facility, true);
         }

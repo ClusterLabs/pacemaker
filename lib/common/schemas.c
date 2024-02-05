@@ -22,7 +22,6 @@
 #include <libxslt/security.h>
 #include <libxslt/xsltutils.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
@@ -507,7 +506,7 @@ crm_schema_init(void)
     add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next",
                NULL, NULL, FALSE);
 
-    add_schema(pcmk__schema_validator_none, &zero, PCMK__VALUE_NONE,
+    add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE,
                NULL, NULL, FALSE);
 
     /* This shouldn't be strictly necessary, but we'll do it here just in case
@@ -792,7 +791,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     }
 
     version = get_schema_version(validation);
-    if (strcmp(validation, PCMK__VALUE_NONE) == 0) {
+    if (strcmp(validation, PCMK_VALUE_NONE) == 0) {
         return TRUE;
     } else if (version < g_list_length(known_schemas)) {
         pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
@@ -1052,7 +1051,7 @@ get_schema_version(const char *name)
     int lpc = 0;
 
     if (name == NULL) {
-        name = PCMK__VALUE_NONE;
+        name = PCMK_VALUE_NONE;
     }
 
     for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
@@ -1316,7 +1315,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             }
         }
 
-    } else if (version >= get_schema_version(PCMK__VALUE_NONE)) {
+    } else if (version >= get_schema_version(PCMK_VALUE_NONE)) {
         // Schema validation is disabled
         if (to_logs) {
             pcmk__config_warn("Schema validation of configuration is disabled "
@@ -1546,7 +1545,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 const char *
 pcmk__remote_schema_dir(void)
 {
-    const char *dir = pcmk__env_option(PCMK__ENV_REMOTE_SCHEMA_DIR);
+    const char *dir = pcmk__env_option(PCMK__ENV_REMOTE_SCHEMA_DIRECTORY);
 
     if (pcmk__str_empty(dir)) {
         return PCMK__REMOTE_SCHEMA_DIR;

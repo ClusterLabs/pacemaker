@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/lrmd_internal.h>
@@ -235,7 +234,7 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
 static int
 initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *id = ID(action->xml);
+    const char *id = pcmk__xe_id(action->xml);
 
     CRM_CHECK(id != NULL, return EINVAL);
     CRM_CHECK(!pcmk_is_set(action->flags, pcmk__graph_action_executed),
@@ -482,7 +481,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 {
     enum pcmk__graph_action_type action_type;
     pcmk__graph_action_t *action = NULL;
-    const char *value = ID(xml_action);
+    const char *value = pcmk__xe_id(xml_action);
 
     if (value == NULL) {
         crm_err("Ignoring transition graph action without id (bug?)");
@@ -578,14 +577,14 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     xmlNode *action_set = NULL;
     pcmk__graph_synapse_t *new_synapse = NULL;
 
-    crm_trace("Unpacking synapse %s", ID(xml_synapse));
+    crm_trace("Unpacking synapse %s", pcmk__xe_id(xml_synapse));
 
     new_synapse = calloc(1, sizeof(pcmk__graph_synapse_t));
     if (new_synapse == NULL) {
         return NULL;
     }
 
-    pcmk__scan_min_int(ID(xml_synapse), &(new_synapse->id), 0);
+    pcmk__scan_min_int(pcmk__xe_id(xml_synapse), &(new_synapse->id), 0);
 
     value = crm_element_value(xml_synapse, PCMK__XA_PRIORITY);
     pcmk__scan_min_int(value, &(new_synapse->priority), 0);
@@ -619,7 +618,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
         }
     }
 
-    crm_trace("Unpacking synapse %s inputs", ID(xml_synapse));
+    crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
     for (xmlNode *inputs = first_named_child(xml_synapse, "inputs");
          inputs != NULL; inputs = crm_next_same_xml(inputs)) {
@@ -854,7 +853,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");
                                        return NULL);
 
-    op = lrmd_new_event(ID(action_resource),
+    op = lrmd_new_event(pcmk__xe_id(action_resource),
                         crm_element_value(action->xml, PCMK_XA_OPERATION),
                         action->interval_ms);
     lrmd__set_result(op, rc, status, exit_reason);
@@ -872,7 +871,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
         int tmp = 0;
 
         crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);
-        crm_debug("Got call_id=%d for %s", tmp, ID(resource));
+        crm_debug("Got call_id=%d for %s", tmp, pcmk__xe_id(resource));
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }

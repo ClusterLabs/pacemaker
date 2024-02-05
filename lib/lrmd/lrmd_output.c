@@ -11,7 +11,7 @@
 #include <stdarg.h>
 
 #include <crm/lrmd_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/output_internal.h>
 
 static int

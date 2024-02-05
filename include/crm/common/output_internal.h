@@ -156,7 +156,7 @@ pcmk__output_t *pcmk__mk_xml_output(char **argv);
 
 #define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
 #define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, pcmk__log_output_entries }
-#define PCMK__SUPPORTED_FORMAT_NONE { PCMK__VALUE_NONE, pcmk__mk_none_output,   \
+#define PCMK__SUPPORTED_FORMAT_NONE { PCMK_VALUE_NONE, pcmk__mk_none_output,    \
                                       pcmk__none_output_entries }
 #define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
 #define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
@@ -898,7 +898,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
  *
  * \code
  * pcmk__html_add_header(PCMK__XE_META,
- *                       "http-equiv", "refresh",
+ *                       PCMK__XA_HTTP_EQUIV, PCMK__VALUE_REFRESH,
  *                       PCMK__XA_CONTENT, "19",
  *                       NULL);
  * \endcode

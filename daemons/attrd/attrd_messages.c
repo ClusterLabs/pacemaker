@@ -13,7 +13,7 @@
 
 #include <crm/common/messages_internal.h>
 #include <crm/cluster/internal.h>   // pcmk__get_node()
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 
@@ -149,7 +149,7 @@ static xmlNode *
 handle_remove_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
-        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
+        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
         bool reap = false;
 
         if (pcmk__xe_get_bool_attr(request->xml, PCMK__XA_REAP,
@@ -214,7 +214,7 @@ static xmlNode *
 handle_update_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
-        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
+        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
         crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
                                           pcmk__node_search_cluster);
 
@@ -338,7 +338,7 @@ attrd_broadcast_protocol(void)
 
     crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
-    crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    crm_xml_add(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
@@ -355,7 +355,7 @@ attrd_broadcast_protocol(void)
 gboolean
 attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
-    const char *op = crm_element_value(data, PCMK__XA_TASK);
+    const char *op = crm_element_value(data, PCMK_XA_TASK);
 
     crm_xml_add(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);

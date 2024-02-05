@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -313,7 +312,7 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
 
     if (when) {
         char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
         return pcmk_rc_ok;
     } else {
@@ -517,12 +516,12 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     if (device) {
         char *buf = crm_strdup_printf("Validation of %s on %s %s", agent, device,
                                       rc ? "failed" : "succeeded");
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     } else {
         char *buf = crm_strdup_printf("Validation of %s %s", agent,
                                       rc ? "failed" : "succeeded");
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     }
 
@@ -562,12 +561,11 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    xmlNodePtr node = NULL;
-
-    node = pcmk__output_create_xml_node(out, "validate",
-                                        PCMK_XA_AGENT, agent,
-                                        "valid", pcmk__btoa(rc == pcmk_ok),
-                                        NULL);
+    const char *valid = pcmk__btoa(rc == pcmk_ok);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_VALIDATE,
+                                                   PCMK_XA_AGENT, agent,
+                                                   PCMK_XA_VALID, valid,
+                                                   NULL);
 
     if (device != NULL) {
         crm_xml_add(node, "device", device);

@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include "crmcommon_private.h"
 
@@ -206,7 +206,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             continue;
         }
 
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
                                              xpath);
 
@@ -226,7 +226,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
             free(prefix);
 
-        } else if (strcmp(op, "move") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             const char *position = crm_element_value(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,
@@ -234,7 +234,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
                                 xpath, position);
             rc = pcmk__output_select_rc(rc, temp_rc);
 
-        } else if (strcmp(op, "modify") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             xmlNode *clist = first_named_child(change, PCMK_XE_CHANGE_LIST);
             GString *buffer_set = NULL;
             GString *buffer_unset = NULL;
@@ -273,7 +273,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
                 g_string_free(buffer_unset, TRUE);
             }
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             int position = -1;
 
             crm_element_value_int(change, PCMK_XE_POSITION, &position);
@@ -413,7 +413,7 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
     if (patchset != NULL) {
         char *buf = dump_xml_formatted_with_text(patchset);
 
-        out->output_xml(out, "xml-patchset", buf);
+        out->output_xml(out, PCMK_XE_XML_PATCHSET, buf);
         free(buf);
         return pcmk_rc_ok;
     }

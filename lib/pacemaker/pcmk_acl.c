@@ -24,7 +24,6 @@
 #include <libxslt/xsltutils.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>

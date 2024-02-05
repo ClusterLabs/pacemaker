@@ -19,7 +19,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
@@ -165,7 +164,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
             break;
         }
 
-        if (pcmk__str_eq(op, "create", pcmk__str_none)
+        if (pcmk__str_eq(op, PCMK_VALUE_CREATE, pcmk__str_none)
             && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
             && pcmk__xe_is(pcmk__xml_first_child(change), element)) {
 

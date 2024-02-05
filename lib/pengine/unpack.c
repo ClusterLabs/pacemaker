@@ -16,7 +16,6 @@
 
 #include <crm/crm.h>
 #include <crm/services.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
@@ -538,7 +537,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     xmlNode *attr_set = NULL;
     xmlNode *attr = NULL;
 
-    const char *container_id = ID(xml_obj);
+    const char *container_id = pcmk__xe_id(xml_obj);
     const char *remote_name = NULL;
     const char *remote_server = NULL;
     const char *remote_port = NULL;
@@ -720,13 +719,13 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
          * primitives.
          */
         if (xml_contains_remote_node(xml_obj)) {
-            new_node_id = ID(xml_obj);
+            new_node_id = pcmk__xe_id(xml_obj);
             /* The "pe_find_node" check is here to make sure we don't iterate over
              * an expanded node that has already been added to the node list. */
             if (new_node_id
                 && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found remote node %s defined by resource %s",
-                          new_node_id, ID(xml_obj));
+                          new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
                                NULL, scheduler);
             }
@@ -746,7 +745,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             if (new_node_id
                 && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found guest node %s in resource %s",
-                          new_node_id, ID(xml_obj));
+                          new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
                                NULL, scheduler);
             }
@@ -767,7 +766,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 if (new_node_id
                     && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
                     crm_trace("Found guest node %s in resource %s inside group %s",
-                              new_node_id, ID(xml_obj2), ID(xml_obj));
+                              new_node_id, pcmk__xe_id(xml_obj2),
+                              pcmk__xe_id(xml_obj));
                     pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
                                    NULL, scheduler);
                 }
@@ -857,7 +857,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
          xml_obj = pcmk__xe_next(xml_obj)) {
 
         pcmk_resource_t *new_rsc = NULL;
-        const char *id = ID(xml_obj);
+        const char *id = pcmk__xe_id(xml_obj);
 
         if (pcmk__str_empty(id)) {
             pcmk__config_err("Ignoring <%s> resource without ID",
@@ -923,7 +923,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
          xml_tag = pcmk__xe_next(xml_tag)) {
 
         xmlNode *xml_obj_ref = NULL;
-        const char *tag_id = ID(xml_tag);
+        const char *tag_id = pcmk__xe_id(xml_tag);
 
         if (!pcmk__xe_is(xml_tag, PCMK_XE_TAG)) {
             continue;
@@ -938,7 +938,7 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
         for (xml_obj_ref = pcmk__xe_first_child(xml_tag); xml_obj_ref != NULL;
              xml_obj_ref = pcmk__xe_next(xml_obj_ref)) {
 
-            const char *obj_ref = ID(xml_obj_ref);
+            const char *obj_ref = pcmk__xe_id(xml_obj_ref);
 
             if (!pcmk__xe_is(xml_obj_ref, PCMK_XE_OBJ_REF)) {
                 continue;
@@ -972,7 +972,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
 
     pcmk_ticket_t *ticket = NULL;
 
-    ticket_id = ID(xml_ticket);
+    ticket_id = pcmk__xe_id(xml_ticket);
     if (pcmk__str_empty(ticket_id)) {
         return FALSE;
     }
@@ -1273,7 +1273,7 @@ unpack_node_history(const xmlNode *status, bool fence,
     for (const xmlNode *state = first_named_child(status, PCMK__XE_NODE_STATE);
          state != NULL; state = crm_next_same_xml(state)) {
 
-        const char *id = ID(state);
+        const char *id = pcmk__xe_id(state);
         const char *uname = crm_element_value(state, PCMK_XA_UNAME);
         pcmk_node_t *this_node = NULL;
 
@@ -2543,7 +2543,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
 
         guint interval_ms = 0;
         char *key = NULL;
-        const char *id = ID(rsc_op);
+        const char *id = pcmk__xe_id(rsc_op);
 
         counter++;
 
@@ -2683,7 +2683,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     int start_index = -1;
     enum rsc_role_e req_role = pcmk_role_unknown;
 
-    const char *rsc_id = ID(lrm_resource);
+    const char *rsc_id = pcmk__xe_id(lrm_resource);
 
     pcmk_resource_t *rsc = NULL;
     GList *op_list = NULL;
@@ -3147,7 +3147,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
     if ((*source_name == NULL) || (*target_name == NULL)) {
         pcmk__config_err("Ignoring resource history entry %s without "
                          PCMK__META_MIGRATE_SOURCE " and "
-                         PCMK__META_MIGRATE_TARGET, ID(entry));
+                         PCMK__META_MIGRATE_TARGET, pcmk__xe_id(entry));
         return pcmk_rc_unpack_error;
     }
 
@@ -3156,7 +3156,8 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
                          PCMK__META_MIGRATE_SOURCE "='%s' does not match %s",
-                         ID(entry), *source_name, pcmk__node_name(source_node));
+                         pcmk__xe_id(entry), *source_name,
+                         pcmk__node_name(source_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -3165,7 +3166,8 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
                          PCMK__META_MIGRATE_TARGET "='%s' does not match %s",
-                         ID(entry), *target_name, pcmk__node_name(target_node));
+                         pcmk__xe_id(entry), *target_name,
+                         pcmk__node_name(target_node));
         return pcmk_rc_unpack_error;
     }
 
@@ -4777,7 +4779,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
     CRM_CHECK(rsc && node && xml_op, return);
 
-    history.id = ID(xml_op);
+    history.id = pcmk__xe_id(xml_op);
     if (history.id == NULL) {
         pcmk__config_err("Ignoring resource history entry for %s on %s "
                          "without ID", rsc->id, pcmk__node_name(node));
@@ -5074,11 +5076,11 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
         counter++;
 
         if (start_index < stop_index) {
-            crm_trace("Skipping %s: not active", ID(rsc_entry));
+            crm_trace("Skipping %s: not active", pcmk__xe_id(rsc_entry));
             break;
 
         } else if (counter < start_index) {
-            crm_trace("Skipping %s: old", ID(rsc_op));
+            crm_trace("Skipping %s: old", pcmk__xe_id(rsc_op));
             continue;
         }
         op_list = g_list_append(op_list, rsc_op);

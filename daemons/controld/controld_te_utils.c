@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -417,8 +416,8 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
                    CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                    controld_globals.transition_graph->id, reason->name,
-                   ID(reason), abort_text, add[0], add[1], add[2], fn, line,
-                   (const char *) local_path->str,
+                   pcmk__xe_id(reason), abort_text, add[0], add[1], add[2], fn,
+                   line, (const char *) local_path->str,
                    pcmk__btoa(controld_globals.transition_graph->complete));
         g_string_free(local_path, TRUE);
 
@@ -427,10 +426,10 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         const char *path = crm_element_value(change, PCMK_XA_PATH);
 
         if(change == reason) {
-            if(strcmp(op, "create") == 0) {
+            if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
                 reason = reason->children;
 
-            } else if(strcmp(op, "modify") == 0) {
+            } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
                 reason = first_named_child(reason, PCMK_XE_CHANGE_RESULT);
                 if(reason) {
                     reason = reason->children;
@@ -439,7 +438,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             CRM_CHECK(reason != NULL, goto done);
         }
 
-        if(strcmp(op, "delete") == 0) {
+        if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             const char *shortpath = strrchr(path, '/');
 
             do_crm_log(level, "Transition %d aborted by deletion of %s: %s "
@@ -474,17 +473,17 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
         } else if (pcmk__str_any_of((const char *) reason->name,
                    PCMK__XE_NODE_STATE, PCMK_XE_NODE, NULL)) {
-            const char *uname = crm_peer_uname(ID(reason));
+            const char *uname = crm_peer_uname(pcmk__xe_id(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
-                       reason->name, op, pcmk__s(uname, ID(reason)),
+                       reason->name, op, pcmk__s(uname, pcmk__xe_id(reason)),
                        abort_text, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else {
-            const char *id = ID(reason);
+            const char *id = pcmk__xe_id(reason);
 
             do_crm_log(level, "Transition %d aborted by %s.%s '%s': %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",

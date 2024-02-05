@@ -23,7 +23,6 @@
 #include <ctype.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
@@ -1063,7 +1062,7 @@ target_list_type(stonith_device_t * dev)
         } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
             check_type = "status";
         } else {
-            check_type = PCMK__VALUE_NONE;
+            check_type = PCMK_VALUE_NONE;
         }
     }
 
@@ -1594,7 +1593,7 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
                 crm_element_value(level, PCMK_XA_TARGET_VALUE));
 
         default:
-            return crm_strdup_printf("unknown-%s", ID(level));
+            return crm_strdup_printf("unknown-%s", pcmk__xe_id(level));
     }
 }
 
@@ -1742,7 +1741,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     }
 
     // Ensure an ID was given (even the client API adds an ID)
-    if (pcmk__str_empty(ID(level))) {
+    if (pcmk__str_empty(pcmk__xe_id(level))) {
         crm_warn("Ignoring registration for topology level without ID");
         free(target);
         crm_log_xml_trace(level, "Bad level");
@@ -1754,12 +1753,12 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     // Ensure a valid target was specified
     if (mode == fenced_target_by_unknown) {
         crm_warn("Ignoring registration for topology level '%s' "
-                 "without valid target", ID(level));
+                 "without valid target", pcmk__xe_id(level));
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
-                            ID(level));
+                            pcmk__xe_id(level));
         return;
     }
 
@@ -1773,7 +1772,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
                             "Invalid level number '%s' for topology level '%s'",
                             pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     ""),
-                            ID(level));
+                            pcmk__xe_id(level));
         return;
     }
 
@@ -1867,7 +1866,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
                                     "<null>"),
 
                             // Client API doesn't add ID to unregistration XML
-                            pcmk__s(ID(level), ""));
+                            pcmk__s(pcmk__xe_id(level), ""));
         return;
     }
 
@@ -2163,7 +2162,7 @@ can_fence_host_with_device(stonith_device_t *dev,
     // Check eligibility as specified by pcmk_host_check
     check_type = target_list_type(dev);
     alias = g_hash_table_lookup(dev->aliases, target);
-    if (pcmk__str_eq(check_type, PCMK__VALUE_NONE, pcmk__str_casei)) {
+    if (pcmk__str_eq(check_type, PCMK_VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
     } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {
@@ -3449,7 +3448,7 @@ handle_device_add_request(pcmk__request_t *request)
                          "Unprivileged users must register device via CIB");
     }
     fenced_send_device_notification(op, &request->result,
-                                    (dev == NULL)? NULL : ID(dev));
+                                    (dev == NULL)? NULL : pcmk__xe_id(dev));
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 

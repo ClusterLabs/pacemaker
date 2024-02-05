@@ -141,7 +141,8 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         for (child = pcmk__xml_first_child(xml_search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, PCMK_XA_VALUE), ID(child));
+                      crm_element_value(child, PCMK_XA_VALUE),
+                      pcmk__xe_id(child));
         }
 
         out->spacer(out);

@@ -16,7 +16,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pe_status_private.h>
 
 #ifdef PCMK__COMPAT_2_0
@@ -281,7 +281,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
     CRM_CHECK(id && rsc && rsc->id, return NULL);
 
     if (pcmk_is_set(flags, pcmk_rsc_match_clone_only)) {
-        const char *rid = ID(rsc->xml);
+        const char *rid = pcmk__xe_id(rsc->xml);
 
         if (!pcmk__is_clone(pe__const_top_resource(rsc, false))) {
             match = false;
@@ -780,7 +780,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                                               target_role, true);
 
         list_node = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
-        pcmk_create_html_node(list_node, "span", NULL, cl, s);
+        pcmk_create_html_node(list_node, PCMK__XE_SPAN, NULL, cl, s);
         g_free(s);
     }
 

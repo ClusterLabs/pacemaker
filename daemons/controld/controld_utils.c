@@ -14,7 +14,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -834,5 +833,5 @@ get_node_id(xmlNode *lrm_rsc_op)
     }
 
     CRM_CHECK(node != NULL, return NULL);
-    return ID(node);
+    return pcmk__xe_id(node);
 }

@@ -21,7 +21,6 @@
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
@@ -58,7 +57,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, "create");
+            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, PCMK_XE_POSITION, position);
             add_node_copy(change, xml);
@@ -84,7 +83,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             if (xpath != NULL) {
                 change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-                crm_xml_add(change, PCMK_XA_OPERATION, "modify");
+                crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
                 crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
 
                 change = create_xml_node(change, PCMK_XE_CHANGE_LIST);
@@ -133,12 +132,13 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         GString *xpath = pcmk__element_xpath(xml);
 
         crm_trace("%s.%s moved to position %d",
-                  xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
+                  xml->name, pcmk__xe_id(xml),
+                  pcmk__xml_position(xml, pcmk__xf_skip));
 
         if (xpath != NULL) {
             change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, "move");
+            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, PCMK_XE_POSITION,
                             pcmk__xml_position(xml, pcmk__xf_deleted));
@@ -313,7 +313,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
         xmlNode *change = create_xml_node(patchset, PCMK_XE_CHANGE);
 
-        crm_xml_add(change, PCMK_XA_OPERATION, "delete");
+        crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
         crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
             crm_xml_add_int(change, PCMK_XE_POSITION, deleted_obj->position);
@@ -440,7 +440,9 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) patch->name), return);
-    CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
+    CRM_CHECK(pcmk__str_eq(pcmk__xe_id(target), pcmk__xe_id(patch),
+                           pcmk__str_none),
+              return);
 
     // Check for PCMK__XA_CRM_DIFF_MARKER in a child
     id = crm_element_value_copy(target, PCMK_XA_ID);
@@ -491,13 +493,13 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     value = crm_element_value(patch, PCMK__XA_CRM_DIFF_MARKER);
     if ((target == NULL) && (value != NULL)
         && (strcmp(value, "added:top") == 0)) {
-        id = ID(patch);
+        id = pcmk__xe_id(patch);
         crm_trace("We are the root of the addition: %s.id=%s", name, id);
         add_node_copy(parent, patch);
         return;
 
     } else if (target == NULL) {
-        id = ID(patch);
+        id = pcmk__xe_id(patch);
         crm_err("Could not locate: %s.id=%s", name, id);
         return;
     }
@@ -507,7 +509,9 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     }
 
     CRM_CHECK(pcmk__xe_is(target, name), return);
-    CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
+    CRM_CHECK(pcmk__str_eq(pcmk__xe_id(target), pcmk__xe_id(patch),
+                           pcmk__str_none),
+              return);
 
     for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
          xIter = xIter->next) {
@@ -759,7 +763,7 @@ first_matching_xml_child(const xmlNode *parent, const char *name,
         if (strcmp((const char *) cIter->name, name) != 0) {
             continue;
         } else if (id) {
-            const char *cid = ID(cIter);
+            const char *cid = pcmk__xe_id(cIter);
 
             if ((cid == NULL) || (strcmp(cid, id) != 0)) {
                 continue;
@@ -929,14 +933,16 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         crm_trace("Processing %s %s", change->name, op);
 
-        // "delete" changes for XML comments are generated with PCMK_XE_POSITION
-        if (strcmp(op, "delete") == 0) {
+        /* PCMK_VALUE_DELETE changes for XML comments are generated with
+         * PCMK_XE_POSITION
+         */
+        if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             crm_element_value_int(change, PCMK_XE_POSITION, &position);
         }
         match = search_v2_xpath(xml, xpath, position);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
-        if ((match == NULL) && (strcmp(op, "delete") == 0)) {
+        if ((match == NULL) && (strcmp(op, PCMK_VALUE_DELETE) == 0)) {
             crm_debug("No %s match for %s in %p", op, xpath, xml->doc);
             continue;
 
@@ -945,8 +951,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             rc = pcmk_rc_diff_failed;
             continue;
 
-        } else if ((strcmp(op, "create") == 0) || (strcmp(op, "move") == 0)) {
-            // Delay the adding of a "create" object
+        } else if (pcmk__str_any_of(op,
+                                    PCMK_VALUE_CREATE, PCMK_VALUE_MOVE, NULL)) {
+            // Delay the adding of a PCMK_VALUE_CREATE object
             xml_change_obj_t *change_obj = calloc(1, sizeof(xml_change_obj_t));
 
             CRM_ASSERT(change_obj != NULL);
@@ -956,17 +963,17 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
             change_objs = g_list_append(change_objs, change_obj);
 
-            if (strcmp(op, "move") == 0) {
-                // Temporarily put the "move" object after the last sibling
+            if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
+                // Temporarily put the PCMK_VALUE_MOVE object after the last sibling
                 if ((match->parent != NULL) && (match->parent->last != NULL)) {
                     xmlAddNextSibling(match->parent->last, match);
                 }
             }
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             free_xml(match);
 
-        } else if (strcmp(op, "modify") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             const xmlNode *child = first_named_child(change,
                                                      PCMK_XE_CHANGE_RESULT);
             const xmlNode *attrs = pcmk__xml_first_child(child);
@@ -1007,7 +1014,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         crm_trace("Continue performing %s on %s with %p", op, xpath, match);
 
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             int position = 0;
             xmlNode *child = NULL;
             xmlNode *match_child = NULL;
@@ -1042,7 +1049,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
             pcmk__mark_xml_created(child);
 
-        } else if (strcmp(op, "move") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             int position = 0;
 
             crm_element_value_int(change, PCMK_XE_POSITION, &position);
@@ -1083,7 +1090,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 crm_err("Moved %s.%s to position %d instead of %d (%p)",
-                        match->name, ID(match),
+                        match->name, pcmk__xe_id(match),
                         pcmk__xml_position(match, pcmk__xf_skip),
                         position, match->prev);
                 rc = pcmk_rc_diff_failed;
@@ -1258,7 +1265,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         return subtract_xml_comment(parent, left, right, changed);
     }
 
-    id = ID(left);
+    id = pcmk__xe_id(left);
     name = (const char *) left->name;
     if (right == NULL) {
         xmlNode *deleted = NULL;

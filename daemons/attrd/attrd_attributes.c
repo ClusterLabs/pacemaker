@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <glib.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
@@ -56,7 +55,7 @@ attrd_create_attribute(xmlNode *xml)
     pcmk__str_update(&a->set_type, set_type);
 
     a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->uuid = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
+    a->uuid = crm_element_value_copy(xml, PCMK__XA_ATTR_KEY);
     a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
@@ -143,7 +142,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
     crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);
     crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set_id);
-    crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
+    crm_xml_add(xml, PCMK__XA_ATTR_KEY, a->uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
     pcmk__xe_add_node(xml, v->nodename, v->nodeid);
     if (pcmk_is_set(v->flags, attrd_value_remote)) {
@@ -152,7 +151,7 @@ attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
     crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, a->is_private);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_FORCE, force_write);
+    crm_xml_add_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, force_write);
 
     return xml;
 }
@@ -180,9 +179,9 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     attribute_t *a = NULL;
     bool update_both = false;
 
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
+    const char *op = crm_element_value(xml, PCMK_XA_TASK);
 
-    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
+    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK_XA_TASK
     update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
                                pcmk__str_null_matches);
 

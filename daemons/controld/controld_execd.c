@@ -17,7 +17,6 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/lrmd_internal.h>
@@ -910,7 +909,7 @@ static int
 get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
                  gboolean do_create, lrmd_rsc_info_t **rsc_info)
 {
-    const char *id = ID(rsc_xml);
+    const char *id = pcmk__xe_id(rsc_xml);
 
     CRM_CHECK(lrm_state && rsc_xml && rsc_info, return -EINVAL);
     CRM_CHECK(id, return -EINVAL);
@@ -1103,7 +1102,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
     const char *target_node = crm_element_value(action, PCMK__META_ON_NODE);
     xmlNode *xml_rsc = find_xml_node(action, PCMK_XE_PRIMITIVE, TRUE);
 
-    if ((xml_rsc == NULL) || (ID(xml_rsc) == NULL)) {
+    if ((xml_rsc == NULL) || (pcmk__xe_id(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
         crm_info("Can't fake %s failure (%d) on %s without resource configuration",
                  crm_element_value(action, PCMK__XA_OPERATION_KEY), rc,
@@ -1113,11 +1112,11 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
     } else if(operation == NULL) {
         /* This probably came from crm_resource -C, nothing to do */
         crm_info("Can't fake %s failure (%d) on %s without operation",
-                 ID(xml_rsc), rc, target_node);
+                 pcmk__xe_id(xml_rsc), rc, target_node);
         return;
     }
 
-    op = construct_op(lrm_state, action, ID(xml_rsc), operation);
+    op = construct_op(lrm_state, action, pcmk__xe_id(xml_rsc), operation);
 
     if (pcmk__str_eq(operation, PCMK_ACTION_NOTIFY, pcmk__str_casei)) {
         // Notifications can't fail
@@ -1175,18 +1174,20 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      * and pass that event to the executor client callback so it will be
      * processed as if it came from the executor.
      */
-    op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
+    op = construct_op(lrm_state, xml, pcmk__xe_id(xml_rsc), "asyncmon");
 
     free((char*) op->user_data);
     op->user_data = NULL;
     op->interval_ms = 0;
 
     if (user_name && !pcmk__is_privileged(user_name)) {
-        crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
+        crm_err("%s does not have permission to fail %s",
+                user_name, pcmk__xe_id(xml_rsc));
         fake_op_status(lrm_state, op, PCMK_EXEC_ERROR,
                        PCMK_OCF_INSUFFICIENT_PRIV,
                        "Unprivileged user cannot fail resources");
-        controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
+        controld_ack_event_directly(from_host, from_sys, NULL, op,
+                                    pcmk__xe_id(xml_rsc));
         lrmd_free_event(op);
         return;
     }
@@ -1207,7 +1208,8 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
                        "Cannot fail unknown resource");
     }
 
-    controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
+    controld_ack_event_directly(from_host, from_sys, NULL, op,
+                                pcmk__xe_id(xml_rsc));
     lrmd_free_event(op);
 }
 
@@ -1497,7 +1499,7 @@ do_lrm_invoke(long long action,
         int rc;
 
         // We can't return anything meaningful without a resource ID
-        CRM_CHECK(xml_rsc && ID(xml_rsc), return);
+        CRM_CHECK((xml_rsc != NULL) && (pcmk__xe_id(xml_rsc) != NULL), return);
 
         rc = get_lrm_resource(lrm_state, xml_rsc, create_rsc, &rsc);
         if (rc == -ENOTCONN) {
@@ -1513,15 +1515,15 @@ do_lrm_invoke(long long action,
              */
             crm_notice("Not registering resource '%s' for a %s event "
                        CRM_XS " get-rc=%d (%s) transition-key=%s",
-                       ID(xml_rsc), operation,
-                       rc, pcmk_strerror(rc), ID(input->xml));
-            delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok,
-                             user_name, true);
+                       pcmk__xe_id(xml_rsc), operation,
+                       rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
+            delete_rsc_entry(lrm_state, input, pcmk__xe_id(xml_rsc), NULL,
+                             pcmk_ok, user_name, true);
             return;
 
         } else if (rc == -EINVAL) {
             // Resource operation on malformed resource
-            crm_err("Invalid resource definition for %s", ID(xml_rsc));
+            crm_err("Invalid resource definition for %s", pcmk__xe_id(xml_rsc));
             crm_log_xml_warn(input->msg, "invalid resource");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_NOT_CONFIGURED, // fatal error
@@ -1532,7 +1534,7 @@ do_lrm_invoke(long long action,
             // Error communicating with the executor
             crm_err("Could not register resource '%s' with executor: %s "
                     CRM_XS " rc=%d",
-                    ID(xml_rsc), pcmk_strerror(rc), rc);
+                    pcmk__xe_id(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_INVALID_PARAM, // hard error

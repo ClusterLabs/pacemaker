@@ -26,7 +26,7 @@
 #include <bzlib.h>
 
 #include <crm/crm.h>   /* indirectly: pcmk_err_generic */
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
@@ -758,7 +758,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             request = create_xml_node(NULL, __func__);
             crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
             crm_xml_add(request, PCMK__XA_SRC, crm_system_name);
-            crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+            crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
             pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
             pcmk__xe_add_node(request, node_name, nodeid);
             break;

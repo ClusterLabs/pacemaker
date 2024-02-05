@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 static void
 empty_params(void **state)

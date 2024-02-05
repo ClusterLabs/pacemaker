@@ -29,7 +29,6 @@
 
 #include <crm/cib.h>
 #include <crm/common/util.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>
 #include <crm/cluster.h>

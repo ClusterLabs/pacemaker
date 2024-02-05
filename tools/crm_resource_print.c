@@ -509,7 +509,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
-        pcmk__xe_set_bool_attr(node, "unmanaged", true);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_UNMANAGED, true);
     }
 
     if (pcmk_is_set(checks->flags, rsc_locked)) {
@@ -517,7 +517,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(checks->flags, rsc_node_health)) {
-        pcmk__xe_set_bool_attr(node, "unhealthy", true);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_UNHEALTHY, true);
     }
 
     return pcmk_rc_ok;

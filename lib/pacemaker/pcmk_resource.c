@@ -54,7 +54,8 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         guint interval_ms = 0;
         const char *task = crm_element_value(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;
-        bool failure = pcmk__ends_with(ID(lrm_rsc_op), "_last_failure_0");
+        bool failure = pcmk__ends_with(pcmk__xe_id(lrm_rsc_op),
+                                       "_last_failure_0");
 
 
         crm_element_value_ms(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);

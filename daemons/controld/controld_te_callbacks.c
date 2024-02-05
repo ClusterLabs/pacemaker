@@ -14,7 +14,6 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
-#include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>
 
@@ -170,7 +169,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
 
-        op_id = ID(match);
+        op_id = pcmk__xe_id(match);
 
         if (rsc_op_xpath == NULL) {
             rsc_op_xpath = g_string_new(RSC_OP_PREFIX);
@@ -264,7 +263,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     for (rsc = pcmk__xml_first_child(xml); rsc != NULL;
          rsc = pcmk__xml_next(rsc)) {
-        crm_trace("Processing %s", ID(rsc));
+        crm_trace("Processing %s", pcmk__xe_id(rsc));
         process_lrm_resource_diff(rsc, node);
     }
 }
@@ -302,7 +301,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     char *node_uuid = NULL;
     pcmk__graph_action_t *down = NULL;
 
-    if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
+    if (!pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)) {
         abort_transition(INFINITY, pcmk__graph_restart, reason, change);
         return;
     }
@@ -377,7 +376,7 @@ process_node_state_diff(xmlNode *state, xmlNode *change, const char *op,
 {
     xmlNode *lrm = first_named_child(state, PCMK__XE_LRM);
 
-    process_resource_updates(ID(state), lrm, change, op, xpath);
+    process_resource_updates(pcmk__xe_id(state), lrm, change, op, xpath);
 }
 
 static void
@@ -429,7 +428,7 @@ te_update_diff_v2(xmlNode *diff)
             crm_trace("Ignoring %s change for version field", op);
             continue;
 
-        } else if ((strcmp(op, "move") == 0)
+        } else if ((strcmp(op, PCMK_VALUE_MOVE) == 0)
                    && (strstr(xpath,
                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
                               "/" PCMK_XE_RESOURCES) == NULL)) {
@@ -441,16 +440,18 @@ te_update_diff_v2(xmlNode *diff)
         }
 
         // Find the result of create/modify ops
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             match = change->children;
 
-        } else if (strcmp(op, "modify") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;
             }
 
-        } else if (!pcmk__str_any_of(op, "delete", "move", NULL)) {
+        } else if (!pcmk__str_any_of(op,
+                                     PCMK_VALUE_DELETE, PCMK_VALUE_MOVE,
+                                     NULL)) {
             crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
                      op, xpath);
             continue;
@@ -485,7 +486,7 @@ te_update_diff_v2(xmlNode *diff)
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             process_delete_diff(xpath, op, change);
 
         } else if (name == NULL) {
@@ -502,7 +503,8 @@ te_update_diff_v2(xmlNode *diff)
             process_node_state_diff(match, change, op, xpath);
 
         } else if (strcmp(name, PCMK__XE_LRM) == 0) {
-            process_resource_updates(ID(match), match, change, op, xpath);
+            process_resource_updates(pcmk__xe_id(match), match, change, op,
+                                     xpath);
 
         } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);

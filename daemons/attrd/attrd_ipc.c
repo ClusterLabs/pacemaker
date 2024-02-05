@@ -16,13 +16,13 @@
 
 #include <crm/cluster.h>
 #include <crm/cluster/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/acl_internal.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/util.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 
@@ -111,11 +111,11 @@ attrd_client_clear_failure(pcmk__request_t *request)
     }
 
     rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
-    op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
-    interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
+    op = crm_element_value(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
+    interval_spec = crm_element_value(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
 
     /* Map this to an update */
-    crm_xml_add(xml, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Add regular expression matching desired attributes */
 
@@ -133,11 +133,11 @@ attrd_client_clear_failure(pcmk__request_t *request)
                                         rsc, op, interval_ms);
         }
 
-        crm_xml_add(xml, PCMK__XA_ATTR_PATTERN, pattern);
+        crm_xml_add(xml, PCMK__XA_ATTR_REGEX, pattern);
         free(pattern);
 
     } else {
-        crm_xml_add(xml, PCMK__XA_ATTR_PATTERN, ATTRD_RE_CLEAR_ALL);
+        crm_xml_add(xml, PCMK__XA_ATTR_REGEX, ATTRD_RE_CLEAR_ALL);
     }
 
     /* Make sure attribute and value are not set, so we delete via regex */
@@ -153,7 +153,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
     xmlNode *xml = request->xml;
 
     // Host and ID are not used in combination, rather host has precedence
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
     char *host_alloc = NULL;
 
     attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
@@ -161,7 +161,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
     if (host == NULL) {
         int nodeid = 0;
 
-        crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID, &nodeid);
+        crm_element_value_int(xml, PCMK__XA_ATTR_HOST_ID, &nodeid);
         if (nodeid > 0) {
             crm_node_t *node = NULL;
             char *host_alloc = NULL;
@@ -213,8 +213,8 @@ attrd_client_query(pcmk__request_t *request)
     }
 
     /* Build the XML reply */
-    reply = build_query_reply(attr, crm_element_value(query,
-                                                      PCMK__XA_ATTR_NODE_NAME));
+    reply = build_query_reply(attr,
+                              crm_element_value(query, PCMK__XA_ATTR_HOST));
     if (reply == NULL) {
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                             "Could not respond to query from %s: could not create XML reply",
@@ -243,7 +243,7 @@ attrd_client_refresh(pcmk__request_t *request)
 static void
 handle_missing_host(xmlNode *xml)
 {
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
 
     if (host == NULL) {
         crm_trace("Inferring host");
@@ -281,7 +281,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                  * regex and replace it with the name.
                  */
                 attrd_copy_xml_attributes(xml, child);
-                xml_remove_prop(child, PCMK__XA_ATTR_PATTERN);
+                xml_remove_prop(child, PCMK__XA_ATTR_REGEX);
                 crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
             }
         }
@@ -312,7 +312,7 @@ handle_regexes(pcmk__request_t *request)
 
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_REGEX);
 
     rc = expand_regexes(xml, attr, value, regex);
 
@@ -346,7 +346,7 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
         attribute_value_t *v = NULL;
 
         if (a) {
-            const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
+            const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
             v = g_hash_table_lookup(a->values, host);
         }
 
@@ -455,7 +455,7 @@ attrd_client_update(pcmk__request_t *request)
 
     attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+    regex = crm_element_value(xml, PCMK__XA_ATTR_REGEX);
 
     if (handle_regexes(request) != pcmk_rc_ok) {
         /* Error handling was already dealt with in handle_regexes, so just return. */
@@ -476,7 +476,8 @@ attrd_client_update(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_debug("Broadcasting %s[%s]=%s%s", attr, crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME),
+    crm_debug("Broadcasting %s[%s]=%s%s",
+              attr, crm_element_value(xml, PCMK__XA_ATTR_HOST),
               value, (attrd_election_won()? " (writer)" : ""));
 
     send_update_msg_to_cluster(request, xml);
@@ -593,7 +594,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         CRM_ASSERT(client->user != NULL);
         pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 
-        request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
+        request.op = crm_element_value_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         attrd_handle_request(&request);

@@ -120,7 +120,7 @@ pcmk__mk_none_output(char **argv) {
         return NULL;
     }
 
-    retval->fmt_name = PCMK__VALUE_NONE;
+    retval->fmt_name = PCMK_VALUE_NONE;
     retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = none_init;

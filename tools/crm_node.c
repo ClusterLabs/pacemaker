@@ -19,7 +19,7 @@
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>

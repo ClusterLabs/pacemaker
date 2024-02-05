@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/services.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
@@ -495,7 +495,7 @@ main(int argc, char **argv, char **envp)
 
     // ocf_log() (in resource-agents) uses the capitalized env options below
     option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
-    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+    if (!pcmk__str_eq(option, PCMK_VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)
         && !pcmk__str_eq(option, "/dev/null", pcmk__str_none)) {
 
@@ -503,7 +503,7 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option(PCMK__ENV_LOGFILE);
-    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+    if (!pcmk__str_eq(option, PCMK_VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__set_env_option("LOGFILE", option, true);
 
