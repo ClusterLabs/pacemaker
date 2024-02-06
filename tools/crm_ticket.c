@@ -402,10 +402,7 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     *ticket_cons_xml = NULL;
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_CONSTRAINTS);
-    if (xpath_base == NULL) {
-        crm_err(PCMK_XE_CONSTRAINTS " CIB element not known (bug?)");
-        return -ENOMSG;
-    }
+    CRM_ASSERT(xpath_base != NULL);
 
     xpath = g_string_sized_new(1024);
     pcmk__g_strcat(xpath, xpath_base, "/" PCMK_XE_RSC_TICKET, NULL);
