@@ -268,71 +268,6 @@ find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
 }
 
 static void
-print_date(time_t time)
-{
-    int lpc = 0;
-    char date_str[26];
-
-    asctime_r(localtime(&time), date_str);
-    for (; lpc < 26; lpc++) {
-        if (date_str[lpc] == '\n') {
-            date_str[lpc] = 0;
-        }
-    }
-    fprintf(stdout, "'%s'", date_str);
-}
-
-static void
-print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
-{
-    if (raw) {
-        fprintf(stdout, "%s\n", ticket->id);
-        return;
-    }
-
-    fprintf(stdout, "%s\t%s %s",
-            ticket->id, ticket->granted ? "granted" : "revoked",
-            ticket->standby ? "[standby]" : "         ");
-
-    if (details && g_hash_table_size(ticket->state) > 0) {
-        GHashTableIter iter;
-        const char *name = NULL;
-        const char *value = NULL;
-        int lpc = 0;
-
-        fprintf(stdout, " (");
-
-        g_hash_table_iter_init(&iter, ticket->state);
-        while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {
-            if (lpc > 0) {
-                fprintf(stdout, ", ");
-            }
-            fprintf(stdout, "%s=", name);
-            if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, "expires", NULL)) {
-                long long time_ll;
-
-                pcmk__scan_ll(value, &time_ll, 0);
-                print_date((time_t) time_ll);
-            } else {
-                fprintf(stdout, "%s", value);
-            }
-            lpc++;
-        }
-
-        fprintf(stdout, ")\n");
-
-    } else {
-        if (ticket->last_granted > -1) {
-            fprintf(stdout, " " PCMK_XA_LAST_GRANTED "=");
-            print_date(ticket->last_granted);
-        }
-        fprintf(stdout, "\n");
-    }
-
-    return;
-}
-
-static void
 print_ticket_list(pcmk_scheduler_t *scheduler, bool raw, bool details)
 {
     GHashTableIter iter;
@@ -341,7 +276,7 @@ print_ticket_list(pcmk_scheduler_t *scheduler, bool raw, bool details)
     g_hash_table_iter_init(&iter, scheduler->tickets);
 
     while (g_hash_table_iter_next(&iter, NULL, (void **)&ticket)) {
-        print_ticket(ticket, raw, details);
+        out->message(out, "ticket", ticket, raw, details);
     }
 }
 
@@ -903,6 +838,7 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pe__register_messages(out);
     pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
@@ -989,7 +925,8 @@ main(int argc, char **argv)
                             "No such ticket '%s'", options.ticket_id);
                 goto done;
             }
-            print_ticket(ticket, raw, details);
+
+            out->message(out, "ticket", ticket, raw, details);
 
         } else {
             print_ticket_list(scheduler, raw, details);

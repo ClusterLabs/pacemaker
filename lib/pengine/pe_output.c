@@ -3128,58 +3128,110 @@ resource_util_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
+PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
 static int
-ticket_html(pcmk__output_t *out, va_list args) {
+ticket_default(pcmk__output_t *out, va_list args) {
     pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    bool raw = va_arg(args, int);
+    bool details = va_arg(args, int);
+
+    GString *detail_str = NULL;
+
+    if (raw) {
+        out->list_item(out, ticket->id, "%s", ticket->id);
+        return pcmk_rc_ok;
+    }
+
+    if (details && g_hash_table_size(ticket->state) > 0) {
+        GHashTableIter iter;
+        const char *name = NULL;
+        const char *value = NULL;
+        bool already_added = false;
+
+        detail_str = g_string_sized_new(100);
+        pcmk__g_strcat(detail_str, "\t(", NULL);
+
+        g_hash_table_iter_init(&iter, ticket->state);
+        while (g_hash_table_iter_next(&iter, (void **) &name, (void **) &value)) {
+            if (already_added) {
+                g_string_append_printf(detail_str, ", %s=", name);
+            } else {
+                g_string_append_printf(detail_str, "%s=", name);
+                already_added = true;
+            }
+
+            if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, "expires", NULL)) {
+                char *epoch_str = NULL;
+                long long time_ll;
+
+                pcmk__scan_ll(value, &time_ll, 0);
+                epoch_str = pcmk__epoch2str((const time_t *) &time_ll, 0);
+                pcmk__g_strcat(detail_str, epoch_str, NULL);
+                free(epoch_str);
+            } else {
+                pcmk__g_strcat(detail_str, value, NULL);
+            }
+        }
+
+        pcmk__g_strcat(detail_str, ")", NULL);
+    }
 
     if (ticket->last_granted > -1) {
-        char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
+        /* Prior to the introduction of the details & raw arguments to this
+         * function, last-granted would always be added in this block.  We need
+         * to preserve that behavior.  At the same time, we also need to preserve
+         * the existing behavior from crm_ticket, which would include last-granted
+         * as part of the (...) detail string.
+         *
+         * Luckily we can check detail_str - if it's NULL, either there were no
+         * details, or we are preserving the previous behavior of this function.
+         * If it's not NULL, we are either preserving the previous behavior of
+         * crm_ticket or we were given details=true as an argument.
+         */
+        if (detail_str == NULL) {
+            char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
 
-        out->list_item(out, NULL, "%s:\t%s%s last-granted=\"%s\"",
-                       ticket->id, (ticket->granted? "granted" : "revoked"),
-                       (ticket->standby? " [standby]" : ""),
-                       pcmk__s(epoch_str, ""));
-        free(epoch_str);
+            out->list_item(out, NULL, "%s\t%s%s last-granted=\"%s\"",
+                           ticket->id,
+                           (ticket->granted? "granted" : "revoked"),
+                           (ticket->standby? " [standby]" : ""),
+                           pcmk__s(epoch_str, ""));
+            free(epoch_str);
+        } else {
+            out->list_item(out, NULL, "%s\t%s%s %s",
+                           ticket->id,
+                           (ticket->granted? "granted" : "revoked"),
+                           (ticket->standby? " [standby]" : ""),
+                           detail_str->str);
+        }
     } else {
-        out->list_item(out, NULL, "%s:\t%s%s", ticket->id,
+        out->list_item(out, NULL, "%s\t%s%s%s", ticket->id,
                        ticket->granted ? "granted" : "revoked",
-                       ticket->standby ? " [standby]" : "");
+                       ticket->standby ? " [standby]" : "",
+                       detail_str != NULL ? detail_str->str : "");
+    }
+
+    if (detail_str != NULL) {
+        g_string_free(detail_str, TRUE);
     }
 
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
-static int
-ticket_text(pcmk__output_t *out, va_list args) {
-    pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
-
-    if (ticket->last_granted > -1) {
-        char *epoch_str = pcmk__epoch2str(&(ticket->last_granted), 0);
-
-        out->list_item(out, ticket->id, "%s%s last-granted=\"%s\"",
-                       (ticket->granted? "granted" : "revoked"),
-                       (ticket->standby? " [standby]" : ""),
-                       pcmk__s(epoch_str, ""));
-        free(epoch_str);
-    } else {
-        out->list_item(out, ticket->id, "%s%s",
-                       ticket->granted ? "granted" : "revoked",
-                       ticket->standby ? " [standby]" : "");
-    }
-
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *")
+PCMK__OUTPUT_ARGS("ticket", "pcmk_ticket_t *", "bool", "bool")
 static int
 ticket_xml(pcmk__output_t *out, va_list args) {
     pcmk_ticket_t *ticket = va_arg(args, pcmk_ticket_t *);
+    bool raw G_GNUC_UNUSED = va_arg(args, int);
+    bool details G_GNUC_UNUSED = va_arg(args, int);
+
     const char *status = NULL;
     const char *standby = pcmk__btoa(ticket->standby);
 
     xmlNodePtr node = NULL;
+    GHashTableIter iter;
+    const char *name = NULL;
+    const char *value = NULL;
 
     status = ticket->granted? PCMK_VALUE_GRANTED : PCMK_VALUE_REVOKED;
 
@@ -3194,6 +3246,23 @@ ticket_xml(pcmk__output_t *out, va_list args) {
 
         crm_xml_add(node, PCMK_XA_LAST_GRANTED, buf);
         free(buf);
+    }
+
+    g_hash_table_iter_init(&iter, ticket->state);
+    while (g_hash_table_iter_next(&iter, (void **) &name, (void **) &value)) {
+        /* PCMK_XA_LAST_GRANTED and "expires" are already added by the check
+         * for ticket->last_granted above.
+         *
+         * PCMK__XA_GRANTED should not be added because it duplicates the
+         * status value.
+         */
+        if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, PCMK_XA_EXPIRES,
+                             PCMK__XA_GRANTED,
+                             NULL)) {
+            continue;
+        }
+
+        crm_xml_add(node, name, value);
     }
 
     return pcmk_rc_ok;
@@ -3221,7 +3290,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     g_hash_table_iter_init(&iter, tickets);
     while (g_hash_table_iter_next(&iter, NULL, &value)) {
         pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
-        out->message(out, "ticket", ticket);
+        out->message(out, "ticket", ticket, false, false);
     }
 
     /* Close section */
@@ -3296,8 +3365,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "resource-operation-list", "default", resource_operation_list },
     { "resource-util", "default", resource_util },
     { "resource-util", "xml", resource_util_xml },
-    { "ticket", "default", ticket_text },
-    { "ticket", "html", ticket_html },
+    { "ticket", "default", ticket_default },
     { "ticket", "xml", ticket_xml },
     { "ticket-list", "default", ticket_list },
 
