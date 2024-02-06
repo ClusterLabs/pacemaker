@@ -515,11 +515,9 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->attrs = pcmk__strkey_table(free, free);
 
     if (pe__is_guest_or_remote_node(new_node)) {
-        g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
-                            strdup("remote"));
+        pcmk__insert_dup(new_node->details->attrs, CRM_ATTR_KIND, "remote");
     } else {
-        g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
-                            strdup("cluster"));
+        pcmk__insert_dup(new_node->details->attrs, CRM_ATTR_KIND, "cluster");
     }
 
     new_node->details->utilization = pcmk__strkey_table(free, free);
@@ -816,8 +814,8 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
         /* pe_create_node() marks the new node as "remote" or "cluster"; now
          * that we know the node is a guest node, update it correctly.
          */
-        g_hash_table_replace(remote_node->details->attrs, strdup(CRM_ATTR_KIND),
-                             strdup("container"));
+        pcmk__insert_dup(remote_node->details->attrs,
+                         CRM_ATTR_KIND, "container");
     }
 }
 
@@ -869,8 +867,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             if (g_hash_table_lookup_extended(scheduler->template_rsc_sets, id,
                                              NULL, NULL) == FALSE) {
                 /* Record the template's ID for the knowledge of its existence anyway. */
-                g_hash_table_insert(scheduler->template_rsc_sets, strdup(id),
-                                    NULL);
+                pcmk__insert_dup(scheduler->template_rsc_sets, id, NULL);
             }
             continue;
         }
@@ -994,7 +991,7 @@ unpack_ticket_state(xmlNode *xml_ticket, pcmk_scheduler_t *scheduler)
         if (pcmk__str_eq(prop_name, PCMK_XA_ID, pcmk__str_none)) {
             continue;
         }
-        g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
+        pcmk__insert_dup(ticket->state, prop_name, prop_value);
     }
 
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
@@ -4980,26 +4977,25 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         .op_data = NULL
     };
 
-    g_hash_table_insert(node->details->attrs,
-                        strdup(CRM_ATTR_UNAME), strdup(node->details->uname));
+    pcmk__insert_dup(node->details->attrs,
+                     CRM_ATTR_UNAME, node->details->uname);
 
-    g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_ID),
-                        strdup(node->details->id));
+    pcmk__insert_dup(node->details->attrs, CRM_ATTR_ID, node->details->id);
     if (pcmk__str_eq(node->details->id, scheduler->dc_uuid, pcmk__str_casei)) {
         scheduler->dc_node = node;
         node->details->is_dc = TRUE;
-        g_hash_table_insert(node->details->attrs,
-                            strdup(CRM_ATTR_IS_DC), strdup(PCMK_VALUE_TRUE));
+        pcmk__insert_dup(node->details->attrs,
+                         CRM_ATTR_IS_DC, PCMK_VALUE_TRUE);
     } else {
-        g_hash_table_insert(node->details->attrs,
-                            strdup(CRM_ATTR_IS_DC), strdup(PCMK_VALUE_FALSE));
+        pcmk__insert_dup(node->details->attrs,
+                         CRM_ATTR_IS_DC, PCMK_VALUE_FALSE);
     }
 
     cluster_name = g_hash_table_lookup(scheduler->config_hash,
                                        PCMK_OPT_CLUSTER_NAME);
     if (cluster_name) {
-        g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_CLUSTER_NAME),
-                            strdup(cluster_name));
+        pcmk__insert_dup(node->details->attrs, CRM_ATTR_CLUSTER_NAME,
+                         cluster_name);
     }
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
@@ -5014,15 +5010,13 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         const char *site_name = pe_node_attribute_raw(node, "site-name");
 
         if (site_name) {
-            g_hash_table_insert(node->details->attrs,
-                                strdup(CRM_ATTR_SITE_NAME),
-                                strdup(site_name));
+            pcmk__insert_dup(node->details->attrs,
+                             CRM_ATTR_SITE_NAME, site_name);
 
         } else if (cluster_name) {
             /* Default to cluster-name if unset */
-            g_hash_table_insert(node->details->attrs,
-                                strdup(CRM_ATTR_SITE_NAME),
-                                strdup(cluster_name));
+            pcmk__insert_dup(node->details->attrs,
+                             CRM_ATTR_SITE_NAME, cluster_name);
         }
     }
 }

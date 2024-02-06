@@ -67,7 +67,7 @@ static void
 copy_instance_keys(gpointer key, gpointer value, gpointer user_data)
 {
     if (strstr(key, CRM_META "_") == NULL) {
-        g_hash_table_replace(user_data, strdup((const char *)key), strdup((const char *)value));
+        pcmk__insert_dup(user_data, (const char *) key, (const char *) value);
     }
 }
 
@@ -75,7 +75,7 @@ static void
 copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
 {
     if (strstr(key, CRM_META "_") != NULL) {
-        g_hash_table_replace(user_data, strdup((const char *)key), strdup((const char *)value));
+        pcmk__insert_dup(user_data, (const char *) key, (const char *) value);
     }
 }
 
@@ -1638,8 +1638,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
          */
         op->params = pcmk__strkey_table(free, free);
 
-        g_hash_table_insert(op->params, strdup(PCMK_XA_CRM_FEATURE_SET),
-                            strdup(CRM_FEATURE_SET));
+        pcmk__insert_dup(op->params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
         crm_trace("Constructed %s op for %s", operation, rsc_id);
         return op;

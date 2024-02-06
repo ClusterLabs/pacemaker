@@ -459,10 +459,10 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
 
     if (needs_node_info && (action->node != NULL)) {
         add_node_details(action, action_xml);
-        g_hash_table_insert(action->meta, strdup(PCMK__META_ON_NODE),
-                            strdup(action->node->details->uname));
-        g_hash_table_insert(action->meta, strdup(PCMK__META_ON_NODE_UUID),
-                            strdup(action->node->details->id));
+        pcmk__insert_dup(action->meta, PCMK__META_ON_NODE,
+                         action->node->details->uname);
+        pcmk__insert_dup(action->meta, PCMK__META_ON_NODE_UUID,
+                         action->node->details->id);
     }
 
     if (skip_details) {

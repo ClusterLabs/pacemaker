@@ -661,8 +661,7 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
 
         remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
-            g_hash_table_insert(params, strdup(PCMK_REMOTE_RA_ADDR),
-                                strdup(remote_addr));
+            pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, remote_addr);
         }
     }
 }

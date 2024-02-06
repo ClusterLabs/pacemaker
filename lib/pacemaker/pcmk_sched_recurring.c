@@ -660,8 +660,8 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     pcmk__str_update(&cancel_op->cancel_task, task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);
-    add_hash_param(cancel_op->meta, PCMK_XA_OPERATION, task);
-    add_hash_param(cancel_op->meta, PCMK_META_INTERVAL, interval_ms_s);
+    pcmk__insert_meta(cancel_op, PCMK_XA_OPERATION, task);
+    pcmk__insert_meta(cancel_op, PCMK_META_INTERVAL, interval_ms_s);
     free(interval_ms_s);
 
     return cancel_op;
@@ -693,7 +693,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
              pcmk__readable_interval(interval_ms), task, rsc->id,
              pcmk__node_name(node), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
-    add_hash_param(cancel->meta, PCMK__XA_CALL_ID, call_id);
+    pcmk__insert_meta(cancel, PCMK__XA_CALL_ID, call_id);
 
     // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,

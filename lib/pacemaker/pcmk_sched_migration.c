@@ -28,11 +28,11 @@ static void
 add_migration_meta(pcmk_action_t *action, const pcmk_node_t *source,
                    const pcmk_node_t *target)
 {
-    add_hash_param(action->meta, PCMK__META_MIGRATE_SOURCE,
-                   source->details->uname);
+    pcmk__insert_meta(action, PCMK__META_MIGRATE_SOURCE,
+                      source->details->uname);
 
-    add_hash_param(action->meta, PCMK__META_MIGRATE_TARGET,
-                   target->details->uname);
+    pcmk__insert_meta(action, PCMK__META_MIGRATE_TARGET,
+                      target->details->uname);
 }
 
 /*!
@@ -135,8 +135,8 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
              * hurt, and now that PCMK_META_RECORD_PENDING defaults to true,
              * skipping it matters even less.)
              */
-            add_hash_param(migrate_to->meta, PCMK_META_RECORD_PENDING,
-                           PCMK_VALUE_TRUE);
+            pcmk__insert_meta(migrate_to,
+                              PCMK_META_RECORD_PENDING, PCMK_VALUE_TRUE);
         }
     }
 

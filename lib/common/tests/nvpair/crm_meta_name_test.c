@@ -15,7 +15,7 @@
 static void
 empty_params(void **state)
 {
-    assert_null(crm_meta_name(NULL));
+    pcmk__assert_asserts(crm_meta_name(NULL));
 }
 
 static void

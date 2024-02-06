@@ -863,7 +863,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
 
     g_hash_table_iter_init(&iter, action->params);
     while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {
-        g_hash_table_insert(op->params, strdup(name), strdup(value));
+        pcmk__insert_dup(op->params, name, value);
     }
 
     for (xmlNode *xop = pcmk__xml_first_child(resource); xop != NULL;

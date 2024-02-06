@@ -1757,8 +1757,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
             host_arg = params->value;
         }
         if (!pcmk_stonith_param(params->key)) {
-            g_hash_table_insert(params_table, strdup(params->key),
-                                strdup(params->value));
+            pcmk__insert_dup(params_table, params->key, params->value);
         }
     }
 

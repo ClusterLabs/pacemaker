@@ -1984,7 +1984,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
 
     params_table = pcmk__strkey_table(free, free);
     for (const lrmd_key_value_t *param = params; param; param = param->next) {
-        g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
+        pcmk__insert_dup(params_table, param->key, param->value);
     }
     action = services__create_resource_action(type, standard, provider, type,
                                               PCMK_ACTION_META_DATA, 0,

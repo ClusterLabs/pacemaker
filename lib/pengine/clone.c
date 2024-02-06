@@ -285,7 +285,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
     }
 
-    add_hash_param(child_rsc->meta, PCMK_META_CLONE_MAX, inc_max);
+    pcmk__insert_meta(child_rsc, PCMK_META_CLONE_MAX, inc_max);
     pcmk__rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
@@ -412,15 +412,15 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * for no benefit in situations when pre-allocation is not appropriate
      */
     if (g_hash_table_lookup(rsc->meta, PCMK_META_RESOURCE_STICKINESS) == NULL) {
-        add_hash_param(rsc->meta, PCMK_META_RESOURCE_STICKINESS, "1");
+        pcmk__insert_meta(rsc, PCMK_META_RESOURCE_STICKINESS, "1");
     }
 
     /* This ensures that the PCMK_META_GLOBALLY_UNIQUE value always exists for
      * children to inherit when being unpacked, as well as in resource agents'
      * environment.
      */
-    add_hash_param(rsc->meta, PCMK_META_GLOBALLY_UNIQUE,
-                   pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
+    pcmk__insert_meta(rsc, PCMK_META_GLOBALLY_UNIQUE,
+                      pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
@@ -983,7 +983,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 if (stopped == NULL) {
                     stopped = pcmk__strkey_table(free, free);
                 }
-                g_hash_table_insert(stopped, strdup(child_rsc->id), strdup("Stopped"));
+                pcmk__insert_dup(stopped, child_rsc->id, "Stopped");
             }
 
         } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
@@ -1153,8 +1153,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                         g_hash_table_insert(stopped, strdup(node->details->uname),
                                             crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
                     } else {
-                        g_hash_table_insert(stopped, strdup(node->details->uname),
-                                            strdup(state));
+                        pcmk__insert_dup(stopped, node->details->uname, state);
                     }
                 }
             }

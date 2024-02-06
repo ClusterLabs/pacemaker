@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #  define PCMK__CRM_COMMON_NVPAIR__H
 
 #  include <sys/time.h>     // struct timeval
-#  include <glib.h>         // gpointer, gboolean, guint
+#  include <glib.h>         // gpointer, gboolean, guint, GHashTable
 #  include <libxml/tree.h>  // xmlNode
 #  include <crm/crm.h>
 
@@ -61,6 +61,9 @@ int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
 int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
                               const char *name_usec, struct timeval *dest);
 char *crm_element_value_copy(const xmlNode *data, const char *name);
+
+char *crm_meta_name(const char *field);
+const char *crm_meta_value(GHashTable *hash, const char *field);
 
 /*!
  * \brief Copy an element from one XML object to another

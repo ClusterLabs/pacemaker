@@ -22,11 +22,12 @@
 #include "crmcommon_private.h"
 
 /*
- * This file isolates handling of three types of name/value pairs:
+ * This file isolates handling of various kinds of name/value pairs:
  *
  * - pcmk_nvpair_t data type
  * - XML attributes (<TAG ... NAME=VALUE ...>)
  * - XML nvpair elements (<nvpair id=ID name=NAME value=VALUE>)
+ * - Meta-attributes (for resources and actions)
  */
 
 // pcmk_nvpair_t handling
@@ -854,7 +855,7 @@ xml2list(const xmlNode *parent)
 
         crm_trace("Added %s=%s", p_name, p_value);
 
-        g_hash_table_insert(nvpair_hash, strdup(p_name), strdup(p_value));
+        pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
 
     for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
@@ -866,7 +867,7 @@ xml2list(const xmlNode *parent)
 
             crm_trace("Added %s=%s", key, value);
             if (key != NULL && value != NULL) {
-                g_hash_table_insert(nvpair_hash, strdup(key), strdup(value));
+                pcmk__insert_dup(nvpair_hash, key, value);
             }
         }
     }
@@ -915,6 +916,60 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 
     rc = pcmk__xe_get_bool_attr(node, name, &value);
     return rc == pcmk_rc_ok && value == true;
+}
+
+// Meta-attribute handling
+
+/*!
+ * \brief Get the environment variable equivalent of a meta-attribute name
+ *
+ * \param[in] attr_name  Name of meta-attribute
+ *
+ * \return Newly allocated string for \p attr_name with "CRM_meta_" prefix and
+ *         underbars instead of dashes
+ * \note This asserts on an invalid argument or memory allocation error, so
+ *       callers can assume the result is non-NULL. The caller is responsible
+ *       for freeing the result using free().
+ */
+char *
+crm_meta_name(const char *attr_name)
+{
+    char *env_name = NULL;
+
+    CRM_ASSERT(!pcmk__str_empty(attr_name));
+
+    env_name = crm_strdup_printf(CRM_META "_%s", attr_name);
+    for (char *c = env_name; *c != '\0'; ++c) {
+        if (*c == '-') {
+            *c = '_';
+        }
+    }
+    return env_name;
+}
+
+/*!
+ * \brief Get the value of a meta-attribute
+ *
+ * Get the value of a meta-attribute from a hash table whose keys are
+ * meta-attribute environment variable names (as crm_meta_name() would
+ * create, like pcmk__graph_action_t:params, not pcmk_resource_t:meta).
+ *
+ * \param[in] meta       Hash table of meta-attributes
+ * \param[in] attr_name  Name of meta-attribute to get
+ *
+ * \return Value of given meta-attribute
+ */
+const char *
+crm_meta_value(GHashTable *meta, const char *attr_name)
+{
+    if ((meta != NULL) && (attr_name != NULL)) {
+        char *key = crm_meta_name(attr_name);
+        const char *value = g_hash_table_lookup(meta, key);
+
+        free(key);
+        return value;
+    }
+    return NULL;
 }
 
 // Deprecated functions kept only for backward API compatibility

@@ -709,7 +709,6 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 {
     GHashTable *meta = NULL;
     char *name = NULL;
-    char *value = NULL;
     const char *timeout_spec = NULL;
     const char *str = NULL;
 
@@ -755,10 +754,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                                 "Setting default timeout for %s probe to "
                                 "most frequent monitor's timeout '%s'",
                                 rsc->id, timeout_spec);
-                name = strdup(PCMK_META_TIMEOUT);
-                value = strdup(timeout_spec);
-                CRM_ASSERT((name != NULL) && (value != NULL));
-                g_hash_table_insert(meta, name, value);
+                pcmk__insert_dup(meta, PCMK_META_TIMEOUT, timeout_spec);
             }
         }
     }
@@ -774,11 +770,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          */
         for (xmlAttrPtr attr = action_config->properties;
              attr != NULL; attr = attr->next) {
-            name = strdup((const char *) attr->name);
-            value = strdup(pcmk__xml_attr_value(attr));
-
-            CRM_ASSERT((name != NULL) && (value != NULL));
-            g_hash_table_insert(meta, name, value);
+            pcmk__insert_dup(meta, (const char *) attr->name,
+                             pcmk__xml_attr_value(attr));
         }
     }
 
@@ -788,8 +781,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (interval_ms > 0) {
         name = strdup(PCMK_META_INTERVAL);
         CRM_ASSERT(name != NULL);
-        value = crm_strdup_printf("%u", interval_ms);
-        g_hash_table_insert(meta, name, value);
+        g_hash_table_insert(meta, name, crm_strdup_printf("%u", interval_ms));
     } else {
         g_hash_table_remove(meta, PCMK_META_INTERVAL);
     }
@@ -818,10 +810,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                             "Setting timeout for %s %s to "
                             "pcmk_monitor_timeout (%s)",
                             rsc->id, action_name, timeout_spec);
-            name = strdup(PCMK_META_TIMEOUT);
-            value = strdup(timeout_spec);
-            CRM_ASSERT((name != NULL) && (value != NULL));
-            g_hash_table_insert(meta, name, value);
+            pcmk__insert_dup(meta, PCMK_META_TIMEOUT, timeout_spec);
         }
     }
 
@@ -1302,11 +1291,10 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE,
-                       node->details->uname);
-        add_hash_param(stonith_op->meta, PCMK__META_ON_NODE_UUID,
-                       node->details->id);
-        add_hash_param(stonith_op->meta, PCMK__META_STONITH_ACTION, op);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->details->uname);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
+                          node->details->id);
+        pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes
@@ -1883,7 +1871,7 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
  * \param[in,out] action           Action to add expected result to
  * \param[in]     expected_result  Expected result to add
  *
- * \note This is more efficient than calling add_hash_param().
+ * \note This is more efficient than calling pcmk__insert_meta().
  */
 void
 pe__add_action_expected_result(pcmk_action_t *action, int expected_result)

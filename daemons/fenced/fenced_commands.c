@@ -1308,8 +1308,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
          */
         if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
             crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
-            g_hash_table_replace(dev->params, strdup(PCMK_STONITH_HOST_CHECK),
-                                 strdup("status"));
+            pcmk__insert_dup(dev->params, PCMK_STONITH_HOST_CHECK, "status");
         }
     }
 
@@ -1430,9 +1429,8 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
             if (node_does_watchdog_fencing(stonith_our_uname)) {
                 g_list_free_full(device->targets, free);
                 device->targets = stonith__parse_targets(stonith_our_uname);
-                g_hash_table_replace(device->params,
-                                     strdup(PCMK_STONITH_HOST_LIST),
-                                     strdup(stonith_our_uname));
+                pcmk__insert_dup(device->params,
+                                 PCMK_STONITH_HOST_LIST, stonith_our_uname);
                 /* proceed as with any other stonith-device */
                 break;
             }

@@ -394,12 +394,12 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
 
             } else if (old_value == NULL) {
                 crm_trace("Setting %s=\"%s\"", name, value);
-                g_hash_table_insert(hash, strdup(name), strdup(value));
+                pcmk__insert_dup(hash, name, value);
 
             } else if (overwrite) {
                 crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
                           name, value, old_value);
-                g_hash_table_replace(hash, strdup(name), strdup(value));
+                pcmk__insert_dup(hash, name, value);
             }
         }
     }

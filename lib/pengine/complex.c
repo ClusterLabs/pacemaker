@@ -106,10 +106,29 @@ get_resource_type(const char *name)
     return pcmk_rsc_variant_unknown;
 }
 
+/*!
+ * \internal
+ * \brief Insert a meta-attribute if not already present
+ *
+ * \param[in]     key    Meta-attribute name
+ * \param[in]     value  Meta-attribute value to add if not already present
+ * \param[in,out] table  Meta-attribute hash table to insert into
+ *
+ * \note This is like pcmk__insert_meta() except it won't overwrite existing
+ *       values.
+ */
 static void
 dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-    add_hash_param(user_data, key, value);
+    GHashTable *table = user_data;
+
+    CRM_CHECK(table != NULL, return);
+    if ((key != NULL)
+        && !pcmk__str_eq((const char *) value, "#default",
+                         pcmk__str_casei|pcmk__str_null_matches)
+        && (g_hash_table_lookup(table, key) == NULL)) {
+        pcmk__insert_dup(table, (const char *) key, (const char *) value);
+    }
 }
 
 static void
@@ -136,20 +155,9 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         p = p->parent; 
     }
 
-    /* If there is a fixed value of PCMK_XE_META_ATTRIBUTES of the parent
-     * resource, it will be processed.
-     */
     if (parent_orig_meta != NULL) {
-        GHashTableIter iter;
-        char *key = NULL;
-        char *value = NULL;
-
-        g_hash_table_iter_init(&iter, parent_orig_meta);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            /* Parameters set in the original xml of the parent resource will also try to overwrite the child resource. */
-            /* Attributes that already exist in the child lease are not updated. */
-            dup_attr(key, value, meta_hash);
-        }
+        // This will not overwrite any values already existing for child
+        g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
     }
 
     if (parent_orig_meta != NULL) {
@@ -182,10 +190,10 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     }
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->xml); a != NULL; a = a->next) {
-        const char *prop_name = (const char *) a->name;
-        const char *prop_value = pcmk__xml_attr_value(a);
-
-        add_hash_param(meta_hash, prop_name, prop_value);
+        if (a->children != NULL) {
+            dup_attr((gpointer) a->name, (gpointer) a->children->content,
+                     meta_hash);
+        }
     }
 
     pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_META_ATTRIBUTES, &rule_data,
@@ -424,8 +432,7 @@ detect_promotable(pcmk_resource_t *rsc)
         /* @TODO in some future version, pcmk__warn_once() here,
          *       then drop support in even later version
          */
-        g_hash_table_insert(rsc->meta, strdup(PCMK_META_PROMOTABLE),
-                            strdup(PCMK_VALUE_TRUE));
+        pcmk__insert_dup(rsc->meta, PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
         return TRUE;
     }
     return FALSE;
@@ -689,7 +696,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     value = crm_element_value((*rsc)->xml, PCMK__META_CLONE);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
-        add_hash_param((*rsc)->meta, PCMK__META_CLONE, value);
+        pcmk__insert_meta(*rsc, PCMK__META_CLONE, value);
 
     } else {
         (*rsc)->id = strdup(id);

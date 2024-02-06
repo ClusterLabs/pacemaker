@@ -70,7 +70,7 @@ attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
         return TRUE;
     }
 
-    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
+    pcmk__insert_dup(attr_set, options.attr_name, options.attr_value);
     pcmk__str_update(&options.attr_name, NULL);
     pcmk__str_update(&options.attr_value, NULL);
 
@@ -115,20 +115,16 @@ get_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 static gboolean
 grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (pcmk__str_any_of(option_name, "--grant", "-g", NULL)) {
-        g_hash_table_insert(attr_set, strdup(PCMK__XA_GRANTED),
-                            strdup(PCMK_VALUE_TRUE));
+        pcmk__insert_dup(attr_set, PCMK__XA_GRANTED, PCMK_VALUE_TRUE);
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--revoke", "-r", NULL)) {
-        g_hash_table_insert(attr_set, strdup(PCMK__XA_GRANTED),
-                            strdup(PCMK_VALUE_FALSE));
+        pcmk__insert_dup(attr_set, PCMK__XA_GRANTED, PCMK_VALUE_FALSE);
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--standby", "-s", NULL)) {
-        g_hash_table_insert(attr_set, strdup(PCMK_XA_STANDBY),
-                            strdup(PCMK_VALUE_TRUE));
+        pcmk__insert_dup(attr_set, PCMK_XA_STANDBY, PCMK_VALUE_TRUE);
         modified = true;
     } else if (pcmk__str_any_of(option_name, "--activate", "-a", NULL)) {
-        g_hash_table_insert(attr_set, strdup(PCMK_XA_STANDBY),
-                            strdup(PCMK_VALUE_FALSE));
+        pcmk__insert_dup(attr_set, PCMK_XA_STANDBY, PCMK_VALUE_FALSE);
         modified = true;
     }
 
@@ -143,7 +139,7 @@ set_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
         return TRUE;
     }
 
-    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
+    pcmk__insert_dup(attr_set, options.attr_name, options.attr_value);
     pcmk__str_update(&options.attr_name, NULL);
     pcmk__str_update(&options.attr_value, NULL);
 

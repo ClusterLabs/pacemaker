@@ -687,6 +687,31 @@ pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                  key_destroy_func, value_destroy_func);
 }
 
+/*!
+ * \internal
+ * \brief Insert string copies into a hash table as key and value
+ *
+ * \param[in,out] table  Hash table to add to
+ * \param[in]     name   String to add a copy of as key
+ * \param[in]     value  String to add a copy of as value
+ *
+ * \note This asserts on invalid arguments or memory allocation failure.
+ */
+void
+pcmk__insert_dup(GHashTable *table, const char *name, const char *value)
+{
+    char *name_copy = NULL;
+    char *value_copy = NULL;
+
+    CRM_ASSERT((table != NULL) && (name != NULL));
+
+    pcmk__str_update(&name_copy, name);
+    if (value != NULL) {
+        pcmk__str_update(&value_copy, value);
+    }
+    g_hash_table_insert(table, name_copy, value_copy);
+}
+
 /* used with hash tables where case does not matter */
 static gboolean
 pcmk__strcase_equal(gconstpointer a, gconstpointer b)
@@ -729,7 +754,8 @@ static void
 copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
 {
     if (key && value && user_data) {
-        g_hash_table_insert((GHashTable*)user_data, strdup(key), strdup(value));
+        pcmk__insert_dup((GHashTable *) user_data,
+                         (const char *) key, (const char *) value);
     }
 }
 

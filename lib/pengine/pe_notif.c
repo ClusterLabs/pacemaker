@@ -253,8 +253,7 @@ copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    g_hash_table_insert(notify->meta, strdup((const char *) key),
-                        strdup((const char *) value));
+    pcmk__insert_dup(notify->meta, (const char *) key, (const char *) value);
 }
 
 static void
@@ -264,7 +263,7 @@ add_notify_data_to_action_meta(const notify_data_t *n_data,
     for (const GSList *item = n_data->keys; item; item = item->next) {
         const pcmk_nvpair_t *nvpair = (const pcmk_nvpair_t *) item->data;
 
-        add_hash_param(action->meta, nvpair->name, nvpair->value);
+        pcmk__insert_meta(action, nvpair->name, nvpair->value);
     }
 }
 
@@ -291,8 +290,8 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                            pcmk_is_set(action->flags, pcmk_action_optional),
                            rsc->cluster);
     pcmk__set_action_flags(notify, pcmk_action_pseudo);
-    add_hash_param(notify->meta, "notify_key_type", notif_type);
-    add_hash_param(notify->meta, "notify_key_operation", action->task);
+    pcmk__insert_meta(notify, "notify_key_type", notif_type);
+    pcmk__insert_meta(notify, "notify_key_operation", action->task);
     return notify;
 }
 
@@ -451,17 +450,16 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         n_data->pre = new_notify_pseudo_action(rsc, action, PCMK_ACTION_NOTIFY,
                                                "pre");
         pcmk__set_action_flags(n_data->pre, pcmk_action_runnable);
-        add_hash_param(n_data->pre->meta, "notify_type", "pre");
-        add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
+        pcmk__insert_meta(n_data->pre, "notify_type", "pre");
+        pcmk__insert_meta(n_data->pre, "notify_operation", n_data->action);
 
         // Create "pre-" notifications complete pseudo-action for clone
         n_data->pre_done = new_notify_pseudo_action(rsc, action,
                                                     PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
         pcmk__set_action_flags(n_data->pre_done, pcmk_action_runnable);
-        add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
-        add_hash_param(n_data->pre_done->meta,
-                       "notify_operation", n_data->action);
+        pcmk__insert_meta(n_data->pre_done, "notify_type", "pre");
+        pcmk__insert_meta(n_data->pre_done, "notify_operation", n_data->action);
 
         // Order "pre-" -> "pre-" complete -> original action
         order_actions(n_data->pre, n_data->pre_done, pcmk__ar_ordered);
@@ -479,8 +477,8 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         } else {
             pcmk__clear_action_flags(n_data->post, pcmk_action_runnable);
         }
-        add_hash_param(n_data->post->meta, "notify_type", "post");
-        add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
+        pcmk__insert_meta(n_data->post, "notify_type", "post");
+        pcmk__insert_meta(n_data->post, "notify_operation", n_data->action);
 
         // Create "post-" notifications complete pseudo-action for clone
         n_data->post_done = new_notify_pseudo_action(rsc, complete,
@@ -492,9 +490,9 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         } else {
             pcmk__clear_action_flags(n_data->post_done, pcmk_action_runnable);
         }
-        add_hash_param(n_data->post_done->meta, "notify_type", "post");
-        add_hash_param(n_data->post_done->meta,
-                       "notify_operation", n_data->action);
+        pcmk__insert_meta(n_data->post_done, "notify_type", "post");
+        pcmk__insert_meta(n_data->post_done,
+                          "notify_operation", n_data->action);
 
         // Order original action complete -> "post-" -> "post-" complete
         order_actions(complete, n_data->post, pcmk__ar_first_implies_then);

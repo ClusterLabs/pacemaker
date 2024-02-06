@@ -1074,7 +1074,7 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
                                 node, FALSE, node->details->data_set);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op);
-    add_hash_param(shutdown_op->meta, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
+    pcmk__insert_meta(shutdown_op, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
     return shutdown_op;
 }
 
