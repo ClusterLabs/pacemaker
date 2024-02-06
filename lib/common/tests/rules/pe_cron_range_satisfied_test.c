@@ -11,9 +11,9 @@
 
 #include <glib.h>
 
-#include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules_internal.h>
+#include <crm/common/rules_internal.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 run_one_test(const char *t, const char *x, int expected) {

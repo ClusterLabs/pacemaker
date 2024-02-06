@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2021 the Pacemaker project contributors
+# Copyright 2020-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,8 +9,6 @@
 
 include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
-
-LDADD += $(top_builddir)/lib/pengine/libpe_rules_test.la
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pe_cron_range_satisfied_test
