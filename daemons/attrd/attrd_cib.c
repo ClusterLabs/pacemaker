@@ -288,11 +288,12 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
         } else {
             do_crm_log(level, "* Could not write %s[%s]=%s",
                        a->id, peer, pcmk__s(v->requested, "(unset)"));
-            a->changed = true; // Reattempt write below if we are still writer
+            /* Reattempt write below if we are still the writer */
+            attrd_set_attr_flags(a, attrd_attr_changed);
         }
     }
 
-    if (a->changed && attrd_election_won()) {
+    if (pcmk_is_set(a->flags, attrd_attr_changed) && attrd_election_won()) {
         if (rc == pcmk_ok) {
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
@@ -502,7 +503,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     /* If this attribute will be written to the CIB ... */
-    if (!stand_alone && !a->is_private) {
+    if (!stand_alone && !pcmk_is_set(a->flags, attrd_attr_is_private)) {
         /* Defer the write if now's not a good time */
         if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost",
@@ -536,14 +537,10 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
     }
 
-    /* Attribute will be written shortly, so clear changed flag */
-    a->changed = false;
-
-    /* We will check all peers' uuids shortly, so initialize this to false */
-    a->unknown_peer_uuids = false;
-
-    /* Attribute will be written shortly, so clear forced write flag */
-    a->force_write = FALSE;
+    /* Attribute will be written shortly, so clear changed flag and force
+     * write flag, and initialize UUID missing flag to false.
+     */
+    attrd_clear_attr_flags(a, attrd_attr_changed|attrd_attr_uuid_missing|attrd_attr_force_write);
 
     /* Make the table for the attribute trap */
     alert_attribute_value = pcmk__strikey_table(NULL,
@@ -575,14 +572,14 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         /* If this is a private attribute, no update needs to be sent */
-        if (stand_alone || a->is_private) {
+        if (stand_alone || pcmk_is_set(a->flags, attrd_attr_is_private)) {
             private_updates++;
             continue;
         }
 
         // Defer write if this is a cluster node that's never been seen
         if (uuid == NULL) {
-            a->unknown_peer_uuids = true;
+            attrd_set_attr_flags(a, attrd_attr_uuid_missing);
             crm_notice("Cannot update %s[%s]='%s' now because node's UUID is "
                        "unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
@@ -664,18 +661,20 @@ attrd_write_attributes(uint32_t options)
               pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
+        if (!pcmk_is_set(options, attrd_write_all) &&
+            pcmk_is_set(a->flags, attrd_attr_uuid_missing)) {
             // Try writing this attribute again, in case peer ID was learned
-            a->changed = true;
-        } else if (a->force_write) {
+            attrd_set_attr_flags(a, attrd_attr_changed);
+        } else if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
             /* If the force_write flag is set, write the attribute. */
-            a->changed = true;
+            attrd_set_attr_flags(a, attrd_attr_changed);
         }
 
-        if (pcmk_is_set(options, attrd_write_all) || a->changed) {
+        if (pcmk_is_set(options, attrd_write_all) ||
+            pcmk_is_set(a->flags, attrd_attr_changed)) {
             bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
 
-            if (a->force_write) {
+            if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
                 // Always ignore delay when forced write flag is set
                 ignore_delay = true;
             }
