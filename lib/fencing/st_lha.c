@@ -41,16 +41,22 @@ static const char META_TEMPLATE[] =
         "%s"
       "</" PCMK_XE_SHORTDESC ">\n"
     "%s\n"
-    "  <actions>\n"
-    "    <action name=\"start\"   timeout=\"%s\" />\n"
-    "    <action name=\"stop\"    timeout=\"15\" />\n"
-    "    <action name=\"status\"  timeout=\"%s\" />\n"
-    "    <action name=\"monitor\" timeout=\"%s\" interval=\"3600\"/>\n"
-    "    <action name=\"meta-data\"  timeout=\"15\" />\n"
-    "  </actions>\n"
-    "  <special tag=\"heartbeat\">\n"
+    "  <" PCMK_XE_ACTIONS ">\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""
+                           " " PCMK_META_TIMEOUT "=\"%s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STOP "\""
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STATUS "\""
+                           " " PCMK_META_TIMEOUT "=\"%s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_MONITOR "\""
+                           " " PCMK_META_TIMEOUT "=\"%s\""
+                           " " PCMK_META_INTERVAL "=\"3600s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_META_DATA "\""
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"
+    "  </" PCMK_XE_ACTIONS ">\n"
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "=\"heartbeat\">\n"
     "    <" PCMK_XE_VERSION ">2.0</" PCMK_XE_VERSION ">\n"
-    "  </special>\n"
+    "  </" PCMK_XE_SPECIAL ">\n"
     "</" PCMK_XE_RESOURCE_AGENT ">\n";
 
 static void *
@@ -240,6 +246,10 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         xml_meta_shortdesc =
             (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
 
+        /* @TODO This needs a string that's parsable by crm_get_msec(). In
+         * general, pcmk__readable_interval() doesn't provide that. It works
+         * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
+         */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
         buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
                                    xml_meta_shortdesc, meta_param,

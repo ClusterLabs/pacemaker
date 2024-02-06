@@ -57,7 +57,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 
     if (tag == NULL) {
         // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
-        tag = crm_element_value(xml, PCMK__XA_TAG);
+        tag = crm_element_value(xml, PCMK_XA_TAG);
     }
     if (ref == NULL) {
         // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)

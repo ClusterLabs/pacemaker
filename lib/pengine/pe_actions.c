@@ -1306,7 +1306,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                        node->details->uname);
         add_hash_param(stonith_op->meta, PCMK__META_ON_NODE_UUID,
                        node->details->id);
-        add_hash_param(stonith_op->meta, "stonith_action", op);
+        add_hash_param(stonith_op->meta, PCMK__META_STONITH_ACTION, op);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             /* Extra work to detect device changes

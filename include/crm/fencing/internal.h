@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2022 the Pacemaker project contributors
+ * Copyright 2011-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,50 +102,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_CLIENTID      "st_clientid"
-#  define F_STONITH_CALLOPTS      "st_callopt"
-#  define F_STONITH_CALLID        "st_callid"
-#  define F_STONITH_CALLDATA      "st_calldata"
-#  define F_STONITH_OPERATION     "st_op"
-#  define F_STONITH_TARGET        "st_target"
-#  define F_STONITH_REMOTE_OP_ID  "st_remote_op"
-#  define F_STONITH_REMOTE_OP_ID_RELAY  "st_remote_op_relay"
-#  define F_STONITH_RC            "st_rc"
-#  define F_STONITH_OUTPUT        "st_output"
-/*! Timeout period per a device execution */
-#  define F_STONITH_TIMEOUT       "st_timeout"
-#  define F_STONITH_TOLERANCE     "st_tolerance"
-#  define F_STONITH_DELAY         "st_delay"
-/*! Action specific timeout period returned in query of fencing devices. */
-#  define F_STONITH_ACTION_TIMEOUT       "st_action_timeout"
-/*! Host in query result is not allowed to run this action */
-#  define F_STONITH_ACTION_DISALLOWED     "st_action_disallowed"
-/*! Maximum of random fencing delay for a device */
-#  define F_STONITH_DELAY_MAX            "st_delay_max"
-/*! Base delay used for a fencing delay */
-#  define F_STONITH_DELAY_BASE           "st_delay_base"
-/*! Has this device been verified using a monitor type
- *  operation (monitor, list, status) */
-#  define F_STONITH_DEVICE_VERIFIED   "st_monitor_verified"
-/*! device is required for this action */
-#  define F_STONITH_DEVICE_REQUIRED   "st_required"
-/*! number of available devices in query result */
-#  define F_STONITH_AVAILABLE_DEVICES "st-available-devices"
-#  define F_STONITH_CALLBACK_TOKEN    "st_async_id"
-#  define F_STONITH_CLIENTNAME        "st_clientname"
-#  define F_STONITH_CLIENTNODE        "st_clientnode"
-#  define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
-#  define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
-#  define F_STONITH_DELEGATE      "st_delegate"
-#  define F_STONITH_DEVICE_SUPPORT_FLAGS "st_device_support_flags"
-/*! The node initiating the stonith operation.  If an operation
- * is relayed, this is the last node the operation lands on. When
- * in standalone mode, origin is the client's id that originated the
- * operation. */
-#  define F_STONITH_ORIGIN        "st_origin"
-#  define F_STONITH_HISTORY_LIST  "st_history"
-#  define F_STONITH_DATE          "st_date"
-#  define F_STONITH_DATE_NSEC     "st_date_nsec"
 #  define F_STONITH_STATE         "st_state"
 #  define F_STONITH_ACTIVE        "st_active"
 #  define F_STONITH_DIFFERENTIAL  "st_differential"

@@ -97,7 +97,8 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                             pcmk__str_none)) {
-        const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+        const char *op = g_hash_table_lookup(action->meta,
+                                             PCMK__META_STONITH_ACTION);
 
         action_name = crm_strdup_printf("%s%s '%s' %s",
                                         prefix, action->task, op, action_host);
@@ -242,7 +243,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         }
 
         if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)) {
-            style = "bold";
+            style = PCMK__VALUE_BOLD;
             color = "green";
 
         } else if ((action->rsc != NULL)
@@ -286,7 +287,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
             if (before->state == pe_link_dumped) {
                 optional = false;
-                style = "bold";
+                style = PCMK__VALUE_BOLD;
             } else if ((uint32_t) before->type == pcmk__ar_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags,
@@ -685,7 +686,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *op = crm_meta_value(action->params, "stonith_action");
+    const char *op = crm_meta_value(action->params, PCMK__META_STONITH_ACTION);
     char *target = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
 
     out->message(out, "inject-fencing-action", target, op);

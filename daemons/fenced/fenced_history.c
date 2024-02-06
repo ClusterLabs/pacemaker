@@ -45,16 +45,16 @@ stonith_send_broadcast_history(xmlNode *history,
     xmlNode *data = create_xml_node(NULL, __func__);
 
     if (target) {
-        crm_xml_add(data, F_STONITH_TARGET, target);
+        crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     }
     crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NG);
     crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
-    crm_xml_add(bcast, F_STONITH_OPERATION, STONITH_OP_FENCE_HISTORY);
-    crm_xml_add_int(bcast, F_STONITH_CALLOPTS, callopts);
+    crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
+    crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
     if (history) {
         add_node_copy(data, history);
     }
-    add_message_xml(bcast, F_STONITH_CALLDATA, data);
+    add_message_xml(bcast, PCMK__XA_ST_CALLDATA, data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
 
     free_xml(data);
@@ -230,7 +230,7 @@ stonith_xml_history_to_list(const xmlNode *history)
     for (xml_op = pcmk__xml_first_child(history); xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {
         remote_fencing_op_t *op = NULL;
-        char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
+        char *id = crm_element_value_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
         int state;
         int exit_status = CRM_EX_OK;
         int execution_status = PCMK_EXEC_DONE;
@@ -247,14 +247,15 @@ stonith_xml_history_to_list(const xmlNode *history)
         op = calloc(1, sizeof(remote_fencing_op_t));
 
         op->id = id;
-        op->target = crm_element_value_copy(xml_op, F_STONITH_TARGET);
+        op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
         op->action = crm_element_value_copy(xml_op, F_STONITH_ACTION);
-        op->originator = crm_element_value_copy(xml_op, F_STONITH_ORIGIN);
-        op->delegate = crm_element_value_copy(xml_op, F_STONITH_DELEGATE);
-        op->client_name = crm_element_value_copy(xml_op, F_STONITH_CLIENTNAME);
-        crm_element_value_ll(xml_op, F_STONITH_DATE, &completed);
+        op->originator = crm_element_value_copy(xml_op, PCMK__XA_ST_ORIGIN);
+        op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
+        op->client_name = crm_element_value_copy(xml_op,
+                                                 PCMK__XA_ST_CLIENTNAME);
+        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE, &completed);
         op->completed = (time_t) completed;
-        crm_element_value_ll(xml_op, F_STONITH_DATE_NSEC, &completed_nsec);
+        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
         op->completed_nsec = completed_nsec;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
@@ -272,7 +273,8 @@ stonith_xml_history_to_list(const xmlNode *history)
         pcmk__set_result(&op->result, exit_status, execution_status,
                          crm_element_value(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
-                                crm_element_value_copy(xml_op, F_STONITH_OUTPUT),
+                                crm_element_value_copy(xml_op,
+                                                       PCMK__XA_ST_OUTPUT),
                                 NULL);
 
 
@@ -308,7 +310,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     if (stonith_remote_op_list) {
             char *id = NULL;
 
-            history = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
+            history = create_xml_node(NULL, PCMK__XE_ST_HISTORY);
 
             g_hash_table_iter_init(&iter, stonith_remote_op_list);
             while (g_hash_table_iter_next(&iter, (void **)&id, (void **)&op)) {
@@ -362,15 +364,16 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_trace("Attaching op %s", op->id);
                 entry = create_xml_node(history, STONITH_OP_EXEC);
                 if (add_id) {
-                    crm_xml_add(entry, F_STONITH_REMOTE_OP_ID, op->id);
+                    crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
-                crm_xml_add(entry, F_STONITH_TARGET, op->target);
+                crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
                 crm_xml_add(entry, F_STONITH_ACTION, op->action);
-                crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
-                crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
-                crm_xml_add(entry, F_STONITH_CLIENTNAME, op->client_name);
-                crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
-                crm_xml_add_ll(entry, F_STONITH_DATE_NSEC, op->completed_nsec);
+                crm_xml_add(entry, PCMK__XA_ST_ORIGIN, op->originator);
+                crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
+                crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
+                crm_xml_add_ll(entry, PCMK__XA_ST_DATE, op->completed);
+                crm_xml_add_ll(entry, PCMK__XA_ST_DATE_NSEC,
+                               op->completed_nsec);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
                 stonith__xe_set_result(entry, &op->result);
             }
@@ -458,11 +461,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_NEVER);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
-        target = crm_element_value(dev, F_STONITH_TARGET);
+        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid;
             crm_node_t *node;
@@ -478,18 +481,19 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     }
 
     if (options & st_opt_cleanup) {
+        const char *call_id = crm_element_value(msg, PCMK__XA_ST_CALLID);
+
         crm_trace("Cleaning up operations on %s in %p", target,
                   stonith_remote_op_list);
+        stonith_fence_history_cleanup(target, (call_id != NULL));
 
-        stonith_fence_history_cleanup(target,
-            crm_element_value(msg, F_STONITH_CALLID) != NULL);
     } else if (options & st_opt_broadcast) {
         /* there is no clear sign atm for when a history sync
            is done so send a notification for anything
            that smells like history-sync
          */
         fenced_send_notification(T_STONITH_NOTIFY_HISTORY_SYNCED, NULL, NULL);
-        if (crm_element_value(msg, F_STONITH_CALLID)) {
+        if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
             * craft a broadcast with node's history
@@ -503,8 +507,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         NULL);
         } else if (remote_peer &&
                    !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
-            xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
-                                                msg, LOG_NEVER);
+            xmlNode *history = get_xpath_object("//" PCMK__XE_ST_HISTORY, msg,
+                                                LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing

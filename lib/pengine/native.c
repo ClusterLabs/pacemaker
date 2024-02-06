@@ -756,23 +756,23 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        cl = "rsc-managed";
+        cl = PCMK__VALUE_RSC_MANAGED;
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-        cl = "rsc-failed";
+        cl = PCMK__VALUE_RSC_FAILED;
 
     } else if ((rsc->variant == pcmk_rsc_variant_primitive)
                && (rsc->running_on == NULL)) {
-        cl = "rsc-failed";
+        cl = PCMK__VALUE_RSC_FAILED;
 
     } else if (pcmk__list_of_multiple(rsc->running_on)) {
-        cl = "rsc-multiple";
+        cl = PCMK__VALUE_RSC_MULTIPLE;
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
-        cl = "rsc-failure-ignored";
+        cl = PCMK__VALUE_RSC_FAILURE_IGNORED;
 
     } else {
-        cl = "rsc-ok";
+        cl = PCMK__VALUE_RSC_OK;
     }
 
     {

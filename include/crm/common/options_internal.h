@@ -159,6 +159,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__META_OP_NO_WAIT               "op_no_wait"
 #define PCMK__META_OP_TARGET_RC             "op_target_rc"
 #define PCMK__META_PHYSICAL_HOST            "physical-host"
+#define PCMK__META_STONITH_ACTION           "stonith_action"
 
 /* @TODO Plug these in. Currently, they're never set. These are op attrs for use
  * with https://projects.clusterlabs.org/T382.
@@ -181,26 +182,36 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 // @COMPAT Deprecated meta-attribute since 2.0.0
 #define PCMK__META_ROLE_AFTER_FAILURE       "role_after_failure"
 
-// Constants for enumerated values for various options
+// Constants for enumerated values
 #define PCMK__VALUE_ATTRD                   "attrd"
+#define PCMK__VALUE_BOLD                    "bold"
 #define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CRMD                    "crmd"
 #define PCMK__VALUE_EN                      "en"
 #define PCMK__VALUE_EPOCH                   "epoch"
+#define PCMK__VALUE_HEALTH_RED              "health_red"
+#define PCMK__VALUE_HEALTH_YELLOW           "health_yellow"
 #define PCMK__VALUE_INIT                    "init"
 #define PCMK__VALUE_LOCAL                   "local"
+#define PCMK__VALUE_MAINT                   "maint"
 #define PCMK__VALUE_OUTPUT                  "output"
 #define PCMK__VALUE_PASSWORD                "password"
 #define PCMK__VALUE_PING                    "ping"
 #define PCMK__VALUE_REFRESH                 "refresh"
 #define PCMK__VALUE_REQUEST                 "request"
 #define PCMK__VALUE_RESPONSE                "response"
+#define PCMK__VALUE_RSC_FAILED              "rsc-failed"
+#define PCMK__VALUE_RSC_FAILURE_IGNORED     "rsc-failure-ignored"
+#define PCMK__VALUE_RSC_MANAGED             "rsc-managed"
+#define PCMK__VALUE_RSC_MULTIPLE            "rsc-multiple"
+#define PCMK__VALUE_RSC_OK                  "rsc-ok"
 #define PCMK__VALUE_RUNNING                 "running"
 #define PCMK__VALUE_SHUTDOWN_COMPLETE       "shutdown_complete"
 #define PCMK__VALUE_SHUTTING_DOWN           "shutting_down"
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
 #define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
+#define PCMK__VALUE_WARNING                 "warning"
 
 /* @COMPAT Deprecated since 2.1.7 (used with PCMK__XA_ORDERING attribute of
  * resource sets)

@@ -372,28 +372,36 @@ parse_status_result(const char *name, const char *state, void *userdata)
 }
 
 // @TODO Use XML string constants and maybe a real XML object
-#define METADATA_FORMAT                                                     \
-    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                 \
-    "<" PCMK_XE_RESOURCE_AGENT " "                                          \
-        PCMK_XA_NAME "='%s' "                                               \
-        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"              \
-    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                    \
-    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"    \
-    "    Upstart agent for controlling the system %s service\n"             \
-    "  </" PCMK_XE_LONGDESC ">\n"                                           \
-    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"     \
-        "Upstart job for %s"                                                \
-      "</" PCMK_XE_SHORTDESC ">\n"                                          \
-    "  <" PCMK_XE_PARAMETERS "/>\n"                                         \
-    "  <actions>\n"                                                         \
-    "    <action name=\"start\"     timeout=\"15\" />\n"                    \
-    "    <action name=\"stop\"      timeout=\"15\" />\n"                    \
-    "    <action name=\"status\"    timeout=\"15\" />\n"                    \
-    "    <action name=\"restart\"   timeout=\"15\" />\n"                    \
-    "    <action name=\"monitor\"   timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n" \
-    "    <action name=\"meta-data\" timeout=\"5\" />\n"                     \
-    "  </actions>\n"                                                        \
-    "  <special tag=\"upstart\"/>\n"                                        \
+#define METADATA_FORMAT                                                       \
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                   \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                            \
+        PCMK_XA_NAME "='%s' "                                                 \
+        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"                \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                      \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"      \
+    "    Upstart agent for controlling the system %s service\n"               \
+    "  </" PCMK_XE_LONGDESC ">\n"                                             \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"       \
+        "Upstart job for %s"                                                  \
+      "</" PCMK_XE_SHORTDESC ">\n"                                            \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                           \
+    "  <" PCMK_XE_ACTIONS ">\n"                                               \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""      \
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STOP "\""       \
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STATUS "\""     \
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"restart\""                    \
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_MONITOR "\""    \
+                           " " PCMK_META_TIMEOUT "=\"15s\""                   \
+                           " " PCMK_META_INTERVAL "=\"15s\""                  \
+                           " " PCMK_META_START_DELAY "=\"15s\" />\n"          \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_META_DATA "\""  \
+                           " " PCMK_META_TIMEOUT "=\"5s\" />\n"               \
+    "  </" PCMK_XE_ACTIONS ">\n"                                              \
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "=\"upstart\"/>\n"                  \
     "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 static char *

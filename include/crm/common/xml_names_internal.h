@@ -43,9 +43,12 @@ extern "C" {
 #define PCMK__XE_RSC_OP                 "rsc_op"
 #define PCMK__XE_SHUTDOWN               "shutdown"
 #define PCMK__XE_SPAN                   "span"
+#define PCMK__XE_ST_HISTORY             "st_history"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
+#define PCMK__XE_XPATH_QUERY            "xpath-query"
+#define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
 // @COMPAT Deprecated since 1.1.12
 #define PCMK__XE_ACL_USER               "acl_user"
@@ -138,6 +141,7 @@ extern "C" {
 #define PCMK__XA_MINOR_VERSION          "minor_version"
 #define PCMK__XA_MODE                   "mode"
 #define PCMK__XA_MOON                   "moon"
+#define PCMK__XA_NAMESPACE              "namespace"
 #define PCMK__XA_NODE_FENCED            "node_fenced"
 #define PCMK__XA_NODE_IN_MAINTENANCE    "node_in_maintenance"
 #define PCMK__XA_NODE_START_STATE       "node_start_state"
@@ -162,9 +166,39 @@ extern "C" {
 #define PCMK__XA_ROUTER_NODE            "router_node"
 
 #define PCMK__XA_RSC_ID                 "rsc-id"
+#define PCMK__XA_RSC_PROVIDES           "rsc_provides"
 #define PCMK__XA_SCHEMA                 "schema"
 #define PCMK__XA_SCHEMAS                "schemas"
 #define PCMK__XA_SRC                    "src"
+#define PCMK__XA_ST_ACTION_DISALLOWED   "st_action_disallowed"
+#define PCMK__XA_ST_ACTION_TIMEOUT      "st_action_timeout"
+#define PCMK__XA_ST_AVAILABLE_DEVICES   "st-available-devices"
+#define PCMK__XA_ST_CALLID              "st_callid"
+#define PCMK__XA_ST_CALLDATA            "st_calldata"
+#define PCMK__XA_ST_CALLOPT             "st_callopt"
+#define PCMK__XA_ST_CLIENTID            "st_clientid"
+#define PCMK__XA_ST_CLIENTNAME          "st_clientname"
+#define PCMK__XA_ST_CLIENTNODE          "st_clientnode"
+#define PCMK__XA_ST_DATE                "st_date"
+#define PCMK__XA_ST_DATE_NSEC           "st_date_nsec"
+#define PCMK__XA_ST_DELAY               "st_delay"
+#define PCMK__XA_ST_DELAY_BASE          "st_delay_base"
+#define PCMK__XA_ST_DELAY_MAX           "st_delay_max"
+#define PCMK__XA_ST_DELEGATE            "st_delegate"
+#define PCMK__XA_ST_DEVICE_SUPPORT_FLAGS    "st_device_support_flags"
+#define PCMK__XA_ST_MONITOR_VERIFIED    "st_monitor_verified"
+#define PCMK__XA_ST_NOTIFY_ACTIVATE     "st_notify_activate"
+#define PCMK__XA_ST_NOTIFY_DEACTIVATE   "st_notify_deactivate"
+#define PCMK__XA_ST_OP                  "st_op"
+#define PCMK__XA_ST_ORIGIN              "st_origin"
+#define PCMK__XA_ST_OUTPUT              "st_output"
+#define PCMK__XA_ST_RC                  "st_rc"
+#define PCMK__XA_ST_REMOTE_OP           "st_remote_op"
+#define PCMK__XA_ST_REMOTE_OP_RELAY     "st_remote_op_relay"
+#define PCMK__XA_ST_REQUIRED            "st_required"
+#define PCMK__XA_ST_TARGET              "st_target"
+#define PCMK__XA_ST_TIMEOUT             "st_timeout"
+#define PCMK__XA_ST_TOLERANCE           "st_tolerance"
 #define PCMK__XA_SUBT                   "subt"                  // subtype
 #define PCMK__XA_T                      "t"                     // type
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
@@ -192,11 +226,11 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.6
 #define PCMK__XA_REPLACE                "replace"
 
+// @COMPAT Deprecated alias for \c PCMK_XA_AUTOMATIC since 1.1.14
+#define PCMK__XA_REQUIRED               "required"
+
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_RSC_INSTANCE           "rsc-instance"
-
-// @COMPAT Deprecated since 1.1.12
-#define PCMK__XA_TAG                    "tag"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_THEN_INSTANCE          "then-instance"

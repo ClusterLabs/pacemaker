@@ -543,7 +543,6 @@ static int
 get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 {
     int rc = -ENXIO;
-    const char *tag;
     const char *parsed_uuid = NULL;
     int parsed_is_remote = FALSE;
 
@@ -552,15 +551,13 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
     }
 
     /* If there are multiple results, the first is sufficient */
-    tag = (const char *) (result->name);
-    if (pcmk__str_eq(tag, "xpath-query", pcmk__str_casei)) {
+    if (pcmk__xe_is(result, PCMK__XE_XPATH_QUERY)) {
         result = pcmk__xml_first_child(result);
         CRM_CHECK(result != NULL, return rc);
-        tag = (const char *) (result->name);
     }
 
-    if (pcmk__str_eq(tag, PCMK_XE_NODE, pcmk__str_casei)) {
-        /* Result is <node> tag from <nodes> section */
+    if (pcmk__xe_is(result, PCMK_XE_NODE)) {
+        // Result is PCMK_XE_NODE element from PCMK_XE_NODES section
 
         if (pcmk__str_eq(crm_element_value(result, PCMK_XA_TYPE),
                          PCMK_VALUE_REMOTE, pcmk__str_casei)) {
@@ -571,13 +568,13 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
             parsed_is_remote = FALSE;
         }
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
+    } else if (pcmk__xe_is(result, PCMK_XE_PRIMITIVE)) {
         /* Result is <primitive> for ocf:pacemaker:remote resource */
 
         parsed_uuid = pcmk__xe_id(result);
         parsed_is_remote = TRUE;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_NVPAIR, pcmk__str_casei)) {
+    } else if (pcmk__xe_is(result, PCMK_XE_NVPAIR)) {
         /* Result is PCMK_META_REMOTE_NODE parameter of <primitive> for guest
          * node
          */
@@ -585,8 +582,8 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
         parsed_uuid = crm_element_value(result, PCMK_XA_VALUE);
         parsed_is_remote = TRUE;
 
-    } else if (pcmk__str_eq(tag, PCMK__XE_NODE_STATE, pcmk__str_casei)) {
-        // Result is PCMK__XE_NODE_STATE tag from PCMK_XE_STATUS section
+    } else if (pcmk__xe_is(result, PCMK__XE_NODE_STATE)) {
+        // Result is PCMK__XE_NODE_STATE element from PCMK_XE_STATUS section
 
         parsed_uuid = crm_element_value(result, PCMK_XA_UNAME);
         if (pcmk__xe_attr_is_true(result, PCMK_XA_REMOTE_NODE)) {

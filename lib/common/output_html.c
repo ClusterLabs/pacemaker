@@ -19,22 +19,22 @@
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
-    ".bold { font-weight: bold }\n"
+    "." PCMK__VALUE_BOLD " { font-weight: bold }\n"
 
-    ".online { color: green }\n"
-    ".offline { color: red }\n"
-    ".maint { color: blue }\n"
-    ".standby { color: blue }\n"
-    ".health_red { color: red }\n"
-    ".health_yellow { color: GoldenRod }\n"
+    "." PCMK_VALUE_ONLINE " { color: green }\n"
+    "." PCMK_VALUE_OFFLINE " { color: red }\n"
+    "." PCMK__VALUE_MAINT " { color: blue }\n"
+    "." PCMK_VALUE_STANDBY " { color: blue }\n"
+    "." PCMK__VALUE_HEALTH_RED " { color: red }\n"
+    "." PCMK__VALUE_HEALTH_YELLOW " { color: GoldenRod }\n"
 
-    ".rsc-failed { color: red }\n"
-    ".rsc-failure-ignored { color: DarkGreen }\n"
-    ".rsc-managed { color: blue }\n"
-    ".rsc-multiple { color: orange }\n"
-    ".rsc-ok { color: green }\n"
+    "." PCMK__VALUE_RSC_FAILED " { color: red }\n"
+    "." PCMK__VALUE_RSC_FAILURE_IGNORED " { color: DarkGreen }\n"
+    "." PCMK__VALUE_RSC_MANAGED " { color: blue }\n"
+    "." PCMK__VALUE_RSC_MULTIPLE " { color: orange }\n"
+    "." PCMK__VALUE_RSC_OK " { color: green }\n"
 
-    ".warning { color: red; font-weight: bold }";
+    "." PCMK__VALUE_WARNING " { color: red; font-weight: bold }";
 
 static gboolean cgi_output = FALSE;
 static char *stylesheet_link = NULL;

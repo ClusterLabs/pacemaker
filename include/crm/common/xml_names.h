@@ -21,7 +21,7 @@ extern "C" {
  * * "XA" for XML attribute names
  * * "OPT" for cluster option (property) names
  * * "META" for meta-attribute names
- * * "VALUE" for enumerated values for various options
+ * * "VALUE" for enumerated values (such as for options or for XML attributes)
  * * "NODE_ATTR" for node attribute names
  *
  * Old names that don't follow this policy should eventually be deprecated and
@@ -188,6 +188,7 @@ extern "C" {
 #define PCMK_XE_SHADOW                      "shadow"
 #define PCMK_XE_SHORTDESC                   "shortdesc"
 #define PCMK_XE_SOURCE                      "source"
+#define PCMK_XE_SPECIAL                     "special"
 #define PCMK_XE_STACK                       "stack"
 #define PCMK_XE_STATUS                      "status"
 #define PCMK_XE_STORAGE                     "storage"
@@ -222,6 +223,7 @@ extern "C" {
 #define PCMK_XA_API_VERSION                 "api-version"
 #define PCMK_XA_ATTRIBUTE                   "attribute"
 #define PCMK_XA_AUTHOR                      "author"
+#define PCMK_XA_AUTOMATIC                   "automatic"
 #define PCMK_XA_BLOCKED                     "blocked"
 #define PCMK_XA_BOOLEAN_OP                  "boolean-op"
 #define PCMK_XA_BUILD                       "build"
@@ -325,6 +327,7 @@ extern "C" {
 #define PCMK_XA_NUMBER                      "number"
 #define PCMK_XA_NUMBER_RESOURCES            "number_resources"
 #define PCMK_XA_OBJECT_TYPE                 "object-type"
+#define PCMK_XA_ON_TARGET                   "on_target"
 #define PCMK_XA_ONLINE                      "online"
 #define PCMK_XA_OP                          "op"
 #define PCMK_XA_OP_KEY                      "op_key"
@@ -396,6 +399,7 @@ extern "C" {
 #define PCMK_XA_SYMMETRIC_CLUSTER           "symmetric-cluster"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
 #define PCMK_XA_SYS_FROM                    "sys_from"
+#define PCMK_XA_TAG                         "tag"
 #define PCMK_XA_TARGET                      "target"
 #define PCMK_XA_TARGET_ATTRIBUTE            "target-attribute"
 #define PCMK_XA_TARGET_DIR                  "target-dir"
