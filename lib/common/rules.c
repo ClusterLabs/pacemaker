@@ -16,6 +16,9 @@
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/scheduler.h>
+
+#include <crm/common/iso8601_internal.h>
+#include <crm/common/nvpair_internal.h>
 #include <crm/common/scheduler_internal.h>
 
 /*!
@@ -287,5 +290,94 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
     ADD_COMPONENT(pcmk__time_minutes);
     ADD_COMPONENT(pcmk__time_seconds);
 
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Evaluate a date_expression
+ *
+ * \param[in]  expr         XML of rule expression
+ * \param[in]  now          Time to use for evaluation
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
+                   crm_time_t *next_change)
+{
+    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
+
+    crm_time_t *start = NULL;
+    crm_time_t *end = NULL;
+    xmlNode *duration_spec = NULL;
+    xmlNode *date_spec = NULL;
+
+    // "undetermined" will also be returned for parsing errors
+    int rc = pcmk_rc_undetermined;
+
+    crm_trace("Testing expression: %s", pcmk__xe_id(expr));
+
+    duration_spec = first_named_child(expr, PCMK_XE_DURATION);
+    date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
+
+    pcmk__xe_get_datetime(expr, PCMK_XA_START, &start);
+    pcmk__xe_get_datetime(expr, PCMK_XA_END, &end);
+
+    if (start != NULL && end == NULL && duration_spec != NULL) {
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return the result of this if it fails
+         */
+        pcmk__unpack_duration(duration_spec, start, &end);
+    }
+
+    if (pcmk__str_eq(op, "in_range", pcmk__str_null_matches | pcmk__str_casei)) {
+        if ((start == NULL) && (end == NULL)) {
+            // in_range requires at least one of start or end
+        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
+            rc = pcmk_rc_before_range;
+            pcmk__set_time_if_earlier(next_change, start);
+        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
+            rc = pcmk_rc_after_range;
+        } else {
+            rc = pcmk_rc_within_range;
+            if (end && next_change) {
+                // Evaluation doesn't change until second after end
+                crm_time_add_seconds(end, 1);
+                pcmk__set_time_if_earlier(next_change, end);
+            }
+        }
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
+        rc = pcmk__evaluate_date_spec(date_spec, now);
+        // @TODO set next_change appropriately
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
+        if (start == NULL) {
+            // gt requires start
+        } else if (crm_time_compare(now, start) > 0) {
+            rc = pcmk_rc_within_range;
+        } else {
+            rc = pcmk_rc_before_range;
+
+            // Evaluation doesn't change until second after start
+            crm_time_add_seconds(start, 1);
+            pcmk__set_time_if_earlier(next_change, start);
+        }
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
+        if (end == NULL) {
+            // lt requires end
+        } else if (crm_time_compare(now, end) < 0) {
+            rc = pcmk_rc_within_range;
+            pcmk__set_time_if_earlier(next_change, end);
+        } else {
+            rc = pcmk_rc_after_range;
+        }
+    }
+
+    crm_time_free(start);
+    crm_time_free(end);
     return rc;
 }
