@@ -1161,9 +1161,29 @@ function test_tools() {
     cmd="crm_ticket -t ticketA -r --force"
     test_assert $CRM_EX_OK
 
+    desc="List ticket IDs"
+    cmd="crm_ticket -w"
+    test_assert $CRM_EX_OK 0
+
+    desc="List ticket IDs, outputting in XML"
+    cmd="crm_ticket -w --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query ticket state"
+    cmd="crm_ticket -t ticketA -q"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query ticket state, outputting as xml"
+    cmd="crm_ticket -t ticketA -q --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Query ticket granted state"
     cmd="crm_ticket -t ticketA -G granted"
     test_assert $CRM_EX_OK
+
+    desc="Query ticket granted state, outputting as xml"
+    cmd="crm_ticket -t ticketA -G granted --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Delete ticket granted state"
     cmd="crm_ticket -t ticketA -D granted --force"
@@ -1181,8 +1201,52 @@ function test_tools() {
     cmd="crm_ticket -t ticketA -a"
     test_assert $CRM_EX_OK
 
+    desc="List ticket details"
+    cmd="crm_ticket -L -t ticketA"
+    test_assert $CRM_EX_OK 0
+
+    desc="List ticket details, outputting as XML"
+    cmd="crm_ticket -L -t ticketA --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Add a second ticket"
+    cmd="crm_ticket -t ticketB -G granted -d false"
+    test_assert $CRM_EX_OK
+
+    desc="Set second ticket granted state"
+    cmd="crm_ticket -t ticketB -r --force"
+    test_assert $CRM_EX_OK
+
+    desc="List tickets"
+    cmd="crm_ticket -l"
+    test_assert $CRM_EX_OK 0
+
+    desc="List tickets, outputting as XML"
+    cmd="crm_ticket -l --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Delete second ticket"
+    cmd="cibadmin --delete --xml-text '<ticket_state id=\"ticketB\"/>'"
+    test_assert $CRM_EX_OK
+
     desc="Delete ticket standby state"
     cmd="crm_ticket -t ticketA -D standby"
+    test_assert $CRM_EX_OK
+
+    esc="Add a constraint to a ticket"
+    cmd="cibadmin -C -o constraints --xml-text '<rsc_ticket id=\"dummy-dep-ticketA\" rsc=\"dummy\" rsc-role=\"Started\" ticket=\"ticketA\" loss-policy=\"freeze\"/>'"
+    test_assert $CRM_EX_OK
+
+    desc="Query ticket constraints"
+    cmd="crm_ticket -t ticketA -c"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query ticket constraints, outputting as xml"
+    cmd="crm_ticket -t ticketA -c --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Delete ticket constraint"
+    cmd="cibadmin --delete --xml-text '<rsc_ticket id=\"dummy-dep-ticketA\"/>'"
     test_assert $CRM_EX_OK
 
     desc="Ban a resource on unknown node"
