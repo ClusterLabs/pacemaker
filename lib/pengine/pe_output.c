@@ -3268,11 +3268,13 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket-list", "GHashTable *", "bool")
+PCMK__OUTPUT_ARGS("ticket-list", "GHashTable *", "bool", "bool", "bool")
 static int
 ticket_list(pcmk__output_t *out, va_list args) {
     GHashTable *tickets = va_arg(args, GHashTable *);
     bool print_spacer = va_arg(args, int);
+    bool raw = va_arg(args, int);
+    bool details = va_arg(args, int);
 
     GHashTableIter iter;
     gpointer value;
@@ -3290,7 +3292,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     g_hash_table_iter_init(&iter, tickets);
     while (g_hash_table_iter_next(&iter, NULL, &value)) {
         pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
-        out->message(out, "ticket", ticket, false, false);
+        out->message(out, "ticket", ticket, raw, details);
     }
 
     /* Close section */

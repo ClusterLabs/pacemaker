@@ -267,19 +267,6 @@ find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
     return g_hash_table_lookup(scheduler->tickets, ticket_id);
 }
 
-static void
-print_ticket_list(pcmk_scheduler_t *scheduler, bool raw, bool details)
-{
-    GHashTableIter iter;
-    pcmk_ticket_t *ticket = NULL;
-
-    g_hash_table_iter_init(&iter, scheduler->tickets);
-
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&ticket)) {
-        out->message(out, "ticket", ticket, raw, details);
-    }
-}
-
 static int
 find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml)
 {
@@ -917,6 +904,7 @@ main(int argc, char **argv)
         }
 
         if (options.ticket_id) {
+            GHashTable *tickets = NULL;
             pcmk_ticket_t *ticket = find_ticket(options.ticket_id, scheduler);
 
             if (ticket == NULL) {
@@ -926,10 +914,16 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            out->message(out, "ticket", ticket, raw, details);
+            /* The ticket-list message expects a GHashTable, so we'll construct
+             * one with just this single item.
+             */
+            tickets = pcmk__strkey_table(free, NULL);
+            g_hash_table_insert(tickets, strdup(ticket->id), ticket);
+            out->message(out, "ticket-list", tickets, false, raw, details);
+            g_hash_table_destroy(tickets);
 
         } else {
-            print_ticket_list(scheduler, raw, details);
+            out->message(out, "ticket-list", scheduler->tickets, false, raw, details);
         }
 
     } else if (options.ticket_cmd == 'q') {

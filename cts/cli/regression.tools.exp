@@ -3213,14 +3213,13 @@ ticketA
 * Passed: crm_ticket     - List ticket IDs
 =#=#=#= Begin test: List ticket IDs, outputting in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -w --output-as=xml">
+  <tickets>
+    <ticket id="ticketA" status="revoked" standby="false"/>
+  </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
-ticketA
-/tmp/cts-cli.ta_outfile:4: parser error : Extra content at the end of the document
-ticketA
-^
-=#=#=#= End test: List ticket IDs, outputting in XML - Failed to validate (1) =#=#=#=
-* Failed (rc=001): crm_ticket     - List ticket IDs, outputting in XML
+=#=#=#= End test: List ticket IDs, outputting in XML - OK (0) =#=#=#=
+* Passed: crm_ticket     - List ticket IDs, outputting in XML
 =#=#=#= Begin test: Query ticket state =#=#=#=
 State XML:
 
@@ -3529,19 +3528,18 @@ true
 =#=#=#= End test: Activate a ticket - OK (0) =#=#=#=
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: List ticket details =#=#=#=
-ticketA	revoked           (standby=false)
+ticketA	revoked	(standby=false)
 =#=#=#= End test: List ticket details - OK (0) =#=#=#=
 * Passed: crm_ticket     - List ticket details
 =#=#=#= Begin test: List ticket details, outputting as XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -L -t ticketA --output-as=xml">
+  <tickets>
+    <ticket id="ticketA" status="revoked" standby="false"/>
+  </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
-ticketA	revoked           (standby=false)
-/tmp/cts-cli.ta_outfile:4: parser error : Extra content at the end of the document
-ticketA	revoked           (standby=false)
-^
-=#=#=#= End test: List ticket details, outputting as XML - Failed to validate (1) =#=#=#=
-* Failed (rc=001): crm_ticket     - List ticket details, outputting as XML
+=#=#=#= End test: List ticket details, outputting as XML - OK (0) =#=#=#=
+* Passed: crm_ticket     - List ticket details, outputting as XML
 =#=#=#= Begin test: Add a second ticket =#=#=#=
 false
 =#=#=#= Current cib after: Add a second ticket =#=#=#=
@@ -3657,21 +3655,20 @@ false
 =#=#=#= End test: Set second ticket granted state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Set second ticket granted state
 =#=#=#= Begin test: List tickets =#=#=#=
-ticketA	revoked          
-ticketB	revoked          
+ticketA	revoked
+ticketB	revoked
 =#=#=#= End test: List tickets - OK (0) =#=#=#=
 * Passed: crm_ticket     - List tickets
 =#=#=#= Begin test: List tickets, outputting as XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -l --output-as=xml">
+  <tickets>
+    <ticket id="ticketA" status="revoked" standby="false"/>
+    <ticket id="ticketB" status="revoked" standby="false"/>
+  </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
-ticketA	revoked          
-ticketB	revoked          
-/tmp/cts-cli.ta_outfile:4: parser error : Extra content at the end of the document
-ticketA	revoked          
-^
-=#=#=#= End test: List tickets, outputting as XML - Failed to validate (1) =#=#=#=
-* Failed (rc=001): crm_ticket     - List tickets, outputting as XML
+=#=#=#= End test: List tickets, outputting as XML - OK (0) =#=#=#=
+* Passed: crm_ticket     - List tickets, outputting as XML
 =#=#=#= Begin test: Delete second ticket =#=#=#=
 =#=#=#= Current cib after: Delete second ticket =#=#=#=
 <cib epoch="29" num_updates="6" admin_epoch="0">
