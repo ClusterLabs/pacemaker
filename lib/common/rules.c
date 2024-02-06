@@ -486,43 +486,79 @@ evaluate_lt(const xmlNode *date_expression, const char *id,
 
 /*!
  * \internal
- * \brief Evaluate a date_expression
+ * \brief Evaluate a rule's date expression for a given date/time
  *
- * \param[in]  expr         XML of rule expression
- * \param[in]  now          Time to use for evaluation
- * \param[out] next_change  If not NULL, set to when evaluation will change
+ * \param[in]     date_expression  XML of a PCMK_XE_DATE_EXPRESSION element
+ * \param[in]     now              Time to use for evaluation
+ * \param[in,out] next_change      If not NULL, set this to when the evaluation
+ *                                 will change, if known and earlier than the
+ *                                 original value
  *
- * \return Standard Pacemaker return code
+ * \return Standard Pacemaker return code (unlike most other evaluation
+ *         functions, this can return either pcmk_rc_ok or pcmk_rc_within_range
+ *         on success)
  */
 int
-pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
-                   crm_time_t *next_change)
+pcmk__evaluate_date_expression(const xmlNode *date_expression,
+                               const crm_time_t *now, crm_time_t *next_change)
 {
-    const char *id = pcmk__xe_id(expr);
-    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
-    xmlNode *date_spec = NULL;
-
-    // "undetermined" will also be returned for parsing errors
+    const char *id = NULL;
+    const char *op = NULL;
     int rc = pcmk_rc_undetermined;
 
-    crm_trace("Testing expression: %s", id);
-
-    date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
-
-    if (pcmk__str_eq(op, PCMK_VALUE_IN_RANGE,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        rc = evaluate_in_range(expr, id, now, next_change);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
-        rc = pcmk__evaluate_date_spec(date_spec, now);
-        // @TODO set next_change appropriately
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
-        rc = evaluate_gt(expr, id, now, next_change);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
-        rc = evaluate_lt(expr, id, now, next_change);
+    if ((date_expression == NULL) || (now == NULL)) {
+        return EINVAL;
     }
 
+    // Get expression ID (for logging)
+    id = pcmk__xe_id(date_expression);
+    if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn(PCMK_XE_DATE_EXPRESSION " element has no "
+                          PCMK_XA_ID);
+        id = "without ID"; // for logging
+    }
+
+    op = crm_element_value(date_expression, PCMK_XA_OPERATION);
+    if (pcmk__str_eq(op, PCMK_VALUE_IN_RANGE,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        rc = evaluate_in_range(date_expression, id, now, next_change);
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
+        xmlNode *date_spec = first_named_child(date_expression,
+                                               PCMK_XE_DATE_SPEC);
+
+        if (date_spec == NULL) { // Not possible with schema validation enabled
+            /* @COMPAT When we can break behavioral backward compatibility,
+             * return pcmk_rc_unpack_error
+             */
+            pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s "
+                              "as not passing because " PCMK_VALUE_DATE_SPEC
+                              " operations require a " PCMK_XE_DATE_SPEC
+                              " subelement", id);
+        } else {
+            // @TODO set next_change appropriately
+            rc = pcmk__evaluate_date_spec(date_spec, now);
+        }
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
+        rc = evaluate_gt(date_expression, id, now, next_change);
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
+        rc = evaluate_lt(date_expression, id, now, next_change);
+
+    } else { // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION
+                          " %s as not passing because '%s' is not a valid "
+                          PCMK_XE_OPERATION, op);
+    }
+
+    crm_trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)",
+              id, op, pcmk_rc_str(rc), rc);
     return rc;
 }

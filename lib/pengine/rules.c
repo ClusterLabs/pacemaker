@@ -532,7 +532,8 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             break;
 
         case pcmk__subexpr_datetime:
-            switch (pe__eval_date_expr(expr, rule_data->now, next_change)) {
+            switch (pcmk__evaluate_date_expression(expr, rule_data->now,
+                                                   next_change)) {
                 case pcmk_rc_within_range:
                 case pcmk_rc_ok:
                     accept = TRUE;

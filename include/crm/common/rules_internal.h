@@ -17,7 +17,8 @@
 
 enum expression_type pcmk__expression_type(const xmlNode *expr);
 
-int pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
-                       crm_time_t *next_change);
+int pcmk__evaluate_date_expression(const xmlNode *date_expression,
+                                   const crm_time_t *now,
+                                   crm_time_t *next_change);
 
 #endif // PCMK__CRM_COMMON_RULES_INTERNAL__H
