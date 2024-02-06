@@ -21,8 +21,7 @@ void pe_free_alert_list(GList *alert_list);
 
 gboolean pe__eval_attr_expr(const xmlNode *expr,
                             const pe_rule_eval_data_t *rule_data);
-int pe__eval_date_expr(const xmlNode *expr,
-                       const pe_rule_eval_data_t *rule_data,
+int pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
                        crm_time_t *next_change);
 gboolean pe__eval_op_expr(const xmlNode *expr,
                           const pe_rule_eval_data_t *rule_data);

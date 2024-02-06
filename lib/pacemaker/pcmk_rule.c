@@ -19,29 +19,6 @@
 
 /*!
  * \internal
- * \brief Evaluate a date expression for a specific time
- *
- * \param[in]  expr         date_expression XML
- * \param[in]  now          Time for which to evaluate expression
- *
- * \return Standard Pacemaker return code
- */
-static int
-eval_date_expression(const xmlNode *expr, crm_time_t *now)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_date_expr(expr, &rule_data, NULL);
-}
-
-/*!
- * \internal
  * \brief Initialize scheduler data for checking rules
  *
  * Make our own copies of the CIB XML and date/time object, if they're not
@@ -223,11 +200,8 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(pcmk__expression_type(match) == pcmk__subexpr_datetime);
 
-    rc = eval_date_expression(match, scheduler->now);
-    if (rc == pcmk_rc_undetermined) {
-        /* pe__eval_date_expr() should return this only if something is
-         * malformed or missing
-         */
+    rc = pe__eval_date_expr(match, scheduler->now, NULL);
+    if (rc == pcmk_rc_undetermined) { // Malformed or missing
         *error = "Error parsing rule";
     }
 
