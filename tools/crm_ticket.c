@@ -59,8 +59,16 @@ GList *attr_delete;
 GHashTable *attr_set;
 bool modified = false;
 int cib_options = cib_sync_call;
+static pcmk__output_t *out = NULL;
 
 #define INDENT "                               "
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 static gboolean
 attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
@@ -672,7 +680,8 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
     GOptionContext *context = NULL;
 
     const char *description = "Examples:\n\n"
@@ -704,7 +713,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "causing the cluster site to 'forget' the existing ticket state:\n\n"
                               "\tcrm_ticket --ticket ticketA --cleanup\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "queries", "Queries:",
@@ -731,6 +740,7 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = NULL;
     GOptionContext *context = NULL;
     gchar **processed_args = NULL;
@@ -739,9 +749,10 @@ main(int argc, char **argv)
     attr_delete = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
-    context = build_arg_context(args);
+    context = build_arg_context(args, &output_group);
     processed_args = pcmk__cmdline_preproc(argv, "dintvxCDGS");
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -749,11 +760,18 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_ticket", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_ticket is converted to use formatted output, this can go. */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
 
     scheduler = pe_new_working_set();
@@ -1011,7 +1029,13 @@ main(int argc, char **argv)
     g_free(options.ticket_id);
     g_free(options.xml_file);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
 
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
