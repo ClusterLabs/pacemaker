@@ -127,17 +127,15 @@ enum attrd_attr_flags {
 };
 
 typedef struct attribute_s {
-    char *id;
-    char *set_id;
-    char *set_type;
-    GHashTable *values;
-    int update;
-    int timeout_ms;
-    uint32_t flags;
-
-    mainloop_timer_t *timer;
-
-    char *user;
+    char *id;       // Attribute name
+    char *set_type; // PCMK_XE_INSTANCE_ATTRIBUTES or PCMK_XE_UTILIZATION
+    char *set_id;   // Set's XML ID to use when writing
+    char *user;     // ACL user to use for CIB writes
+    int update;     // Call ID of pending write
+    int timeout_ms; // How long to wait for more changes before writing
+    uint32_t flags; // Group of enum attrd_attr_flags
+    GHashTable *values;         // Key: node name, value: attribute_value_t
+    mainloop_timer_t *timer;    // Timer to use for timeout_ms
 } attribute_t;
 
 #define attrd_set_attr_flags(attr, flags_to_set) do {               \
@@ -159,11 +157,11 @@ enum attrd_value_flags {
 };
 
 typedef struct attribute_value_s {
-        uint32_t nodeid;
-        char *nodename;
-        char *current;
-        char *requested;
-        uint32_t flags;     // Group of attrd_value_flags
+    char *nodename;     // Node that this value is for
+    char *current;      // Attribute value
+    char *requested;    // Value specified in pending CIB write, if any
+    uint32_t nodeid;    // Cluster node ID of node that this value is for
+    uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
 #define attrd_set_value_flags(attr_value, flags_to_set) do {            \
