@@ -127,7 +127,6 @@ enum attrd_attr_flags {
 };
 
 typedef struct attribute_s {
-    char *uuid; /* TODO: Remove if at all possible */
     char *id;
     char *set_id;
     char *set_type;

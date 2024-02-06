@@ -90,7 +90,6 @@ extern "C" {
 #define PCMK__XA_ATTR_HOST_ID           "attr_host_id"
 #define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
 #define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
-#define PCMK__XA_ATTR_KEY               "attr_key"
 #define PCMK__XA_ATTR_NAME              "attr_name"
 #define PCMK__XA_ATTR_REGEX             "attr_regex"
 #define PCMK__XA_ATTR_RESOURCE          "attr_resource"

@@ -530,9 +530,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
         the_cib->cmds->set_user(the_cib, a->user);
         rc = the_cib->cmds->init_transaction(the_cib);
         if (rc != pcmk_ok) {
-            crm_err("Failed to write %s (id %s, set %s): Could not initiate "
+            crm_err("Failed to write %s (set %s): Could not initiate "
                     "CIB transaction",
-                    a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+                    a->id, pcmk__s(a->set_id, "unspecified"));
             goto done;
         }
     }
@@ -609,9 +609,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     if (private_updates) {
-        crm_info("Processed %d private change%s for %s, id=%s, set=%s",
+        crm_info("Processed %d private change%s for %s (set %s)",
                  private_updates, pcmk__plural_s(private_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+                 a->id, pcmk__s(a->set_id, "unspecified"));
     }
     if (cib_updates > 0) {
         char *id = NULL;
@@ -619,9 +619,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
         // Commit transaction
         a->update = the_cib->cmds->end_transaction(the_cib, true, cib_none);
 
-        crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
+        crm_info("Sent CIB request %d with %d change%s for %s (set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+                 a->id, pcmk__s(a->set_id, "unspecified"));
 
         pcmk__str_update(&id, a->id);
         if (the_cib->cmds->register_callback_full(the_cib, a->update,
