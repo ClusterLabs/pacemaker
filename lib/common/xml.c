@@ -1317,6 +1317,23 @@ write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
 
 /*!
  * \internal
+ * \brief Check whether a string's first two bytes represent a Unicode charcter
+ *
+ * \param[in] text  String to check
+ *
+ * \return \c true if the first two bytes of \p text represent a Unicode
+ *         character, or \c false otherwise
+ */
+static inline bool
+is_unicode(const char *text)
+{
+    // @TODO Is this a valid and complete test for multi-byte Unicode chars?
+    return !pcmk__str_empty(text)
+           && ((text[0] & 0x80) != 0) && ((text[1] & 0x80) != 0);
+}
+
+/*!
+ * \internal
  * \brief Replace a character in a dynamically allocated string, reallocating
  *        memory
  *
@@ -1372,8 +1389,12 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
     length = strlen(text);
 
     for (size_t index = 0; index < length; index++) {
-        if (((text[index] & 0x80) != 0) && ((text[index + 1] & 0x80) != 0)) {
-            // @TODO See note in pcmk__xml_escape()
+        if (is_unicode(&text[index])) {
+            /* Skip two bytes (one here, one in loop counter).
+             *
+             * @TODO Better to escape these? But readability concerns for
+             * languages with non-ASCII alphabets.
+             */
             index++;
             continue;
         }
@@ -1463,9 +1484,11 @@ pcmk__xml_escape(const char *text, bool escape_quote)
     pcmk__str_update(&copy, text);
 
     for (size_t index = 0; index < length; index++) {
-        if (((copy[index] & 0x80) != 0) && ((copy[index + 1] & 0x80) != 0)) {
-            /* @TODO Is this a valid test for multi-byte Unicode characters?
-             * Probably better to escape them anyway.
+        if (is_unicode(&copy[index])) {
+            /* Skip two bytes (one here, one in loop counter).
+             *
+             * @TODO Better to escape these? But readability concerns for
+             * languages with non-ASCII alphabets.
              */
             index++;
             continue;
