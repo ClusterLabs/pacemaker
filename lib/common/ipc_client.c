@@ -1623,13 +1623,17 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     do {
         poll_rc = poll(&pollfd, 1, 2000);
     } while ((poll_rc == -1) && (errno == EINTR));
-    if ((poll_rc <= 0) || (qb_ipcc_connect_continue(c) != 0)) {
+
+    /* If poll() failed, given that disconnect function is not registered yet,
+     * qb_ipcc_disconnect() won't clean up the socket. In any case, call
+     * qb_ipcc_connect_continue() here so that it may fail and do the cleanup
+     * for us.
+     */
+    if (qb_ipcc_connect_continue(c) != 0) {
         crm_info("Could not connect to %s IPC: %s", name,
                  (poll_rc == 0)?"timeout":strerror(errno));
         rc = pcmk_rc_ipc_unresponsive;
-        if (poll_rc > 0) {
-            c = NULL; // qb_ipcc_connect_continue cleaned up for us
-        }
+        c = NULL; // qb_ipcc_connect_continue cleaned up for us
         goto bail;
     }
 #endif
