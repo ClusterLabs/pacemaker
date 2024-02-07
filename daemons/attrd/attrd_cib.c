@@ -525,10 +525,13 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
     }
 
-    /* Attribute will be written shortly, so clear changed flag and force
-     * write flag, and initialize UUID missing flag to false.
+    /* The changed and force-write flags apply only to the next write,
+     * which this is, so clear them now. Also clear the "node unknown" flag
+     * because we will check whether it is known below and reset if appopriate.
      */
-    attrd_clear_attr_flags(a, attrd_attr_changed|attrd_attr_uuid_missing|attrd_attr_force_write);
+    attrd_clear_attr_flags(a, attrd_attr_changed
+                              |attrd_attr_force_write
+                              |attrd_attr_node_unknown);
 
     /* Make the table for the attribute trap */
     alert_attribute_value = pcmk__strikey_table(NULL,
@@ -568,7 +571,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         // Defer write if this is a cluster node that's never been seen
         if (node_xml_id == NULL) {
-            attrd_set_attr_flags(a, attrd_attr_uuid_missing);
+            attrd_set_attr_flags(a, attrd_attr_node_unknown);
             crm_notice("Cannot write %s[%s]='%s' to CIB because node's XML ID "
                        "is unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
@@ -660,8 +663,8 @@ attrd_write_attributes(uint32_t options)
               pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!pcmk_is_set(options, attrd_write_all) &&
-            pcmk_is_set(a->flags, attrd_attr_uuid_missing)) {
+        if (!pcmk_is_set(options, attrd_write_all)
+            && pcmk_is_set(a->flags, attrd_attr_node_unknown)) {
             // Try writing this attribute again, in case peer ID was learned
             attrd_set_attr_flags(a, attrd_attr_changed);
         } else if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
