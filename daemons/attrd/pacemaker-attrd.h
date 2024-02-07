@@ -115,10 +115,18 @@ void attrd_xml_add_writer(xmlNode *xml);
 
 enum attrd_attr_flags {
     attrd_attr_none         = 0U,
-    attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
-    attrd_attr_uuid_missing = (1U << 1),    // Whether we know we're missing a peer UUID
-    attrd_attr_is_private   = (1U << 2),    // Whether to keep this attribute out of the CIB
-    attrd_attr_force_write  = (1U << 3),    // Update attribute by ignoring delay
+
+    // At least one of attribute's values has changed since last write
+    attrd_attr_changed      = (1U << 0),
+
+    // At least one of attribute's values has an unknown node XML ID
+    attrd_attr_node_unknown = (1U << 1),
+
+    // This attribute should never be written to the CIB
+    attrd_attr_is_private   = (1U << 2),
+
+    // Ignore any configured delay for next write of this attribute
+    attrd_attr_force_write  = (1U << 3),
 };
 
 typedef struct attribute_s {
