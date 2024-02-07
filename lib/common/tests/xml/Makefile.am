@@ -14,6 +14,7 @@ include $(top_srcdir)/mk/unittest.mk
 check_PROGRAMS = crm_xml_init_test 		\
 		 pcmk__xe_foreach_child_test 	\
 		 pcmk__xe_match_test		\
-		 pcmk__xml_escape_test
+		 pcmk__xml_escape_test		\
+		 pcmk__xml_needs_escape_test
 
 TESTS = $(check_PROGRAMS)
