@@ -3199,16 +3199,16 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket-list", "pcmk_scheduler_t *", "bool")
+PCMK__OUTPUT_ARGS("ticket-list", "GHashTable *", "bool")
 static int
 ticket_list(pcmk__output_t *out, va_list args) {
-    pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
+    GHashTable *tickets = va_arg(args, GHashTable *);
     bool print_spacer = va_arg(args, int);
 
     GHashTableIter iter;
-    gpointer key, value;
+    gpointer value;
 
-    if (g_hash_table_size(scheduler->tickets) == 0) {
+    if (g_hash_table_size(tickets) == 0) {
         return pcmk_rc_no_output;
     }
 
@@ -3218,8 +3218,8 @@ ticket_list(pcmk__output_t *out, va_list args) {
     out->begin_list(out, NULL, NULL, "Tickets");
 
     /* Print each ticket */
-    g_hash_table_iter_init(&iter, scheduler->tickets);
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
+    g_hash_table_iter_init(&iter, tickets);
+    while (g_hash_table_iter_next(&iter, NULL, &value)) {
         pcmk_ticket_t *ticket = (pcmk_ticket_t *) value;
         out->message(out, "ticket", ticket);
     }
