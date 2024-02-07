@@ -31,8 +31,7 @@
  * --------  ---------  -------------------
  *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
  *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
- *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC,
- *                      PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC_RESPONSE
  *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_REGEX),
  *                      PCMK__ATTRD_CMD_QUERY
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
@@ -128,7 +127,6 @@ enum attrd_attr_flags {
 };
 
 typedef struct attribute_s {
-    char *uuid; /* TODO: Remove if at all possible */
     char *id;
     char *set_id;
     char *set_type;
@@ -187,6 +185,7 @@ extern GHashTable *peer_protocol_vers;
 #define CIB_OP_TIMEOUT_S 120
 
 int attrd_cluster_connect(void);
+void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
 void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                        bool filter);
 void attrd_peer_sync(crm_node_t *peer);

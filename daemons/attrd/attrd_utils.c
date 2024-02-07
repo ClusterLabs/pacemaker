@@ -239,7 +239,6 @@ attrd_free_attribute(gpointer data)
         free(a->id);
         free(a->set_id);
         free(a->set_type);
-        free(a->uuid);
         free(a->user);
 
         mainloop_timer_del(a->timer);
