@@ -349,6 +349,46 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("ticket-attribute", "gchar *", "const char *", "const char *")
+static int
+ticket_attribute_default(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id G_GNUC_UNUSED = va_arg(args, gchar *);
+    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    out->info(out, "%s", value);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-attribute", "gchar *", "const char *", "const char *")
+static int
+ticket_attribute_xml(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id = va_arg(args, gchar *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="">
+     *     <attribute name="" value="" />
+     *   </ticket>
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
+                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_create_xml_node(out, PCMK_XA_ATTRIBUTE,
+                                 PCMK_XA_NAME, name,
+                                 PCMK_XA_VALUE, value,
+                                 NULL);
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("ticket-constraints", "gchar *", "xmlNode *")
 static int
 ticket_constraints_default(pcmk__output_t *out, va_list args)
@@ -778,6 +818,8 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "ticket-attribute", "default", ticket_attribute_default },
+    { "ticket-attribute", "xml", ticket_attribute_xml },
     { "ticket-constraints", "default", ticket_constraints_default },
     { "ticket-constraints", "xml", ticket_constraints_xml },
     { "ticket-state", "default", ticket_state_default },
@@ -971,9 +1013,13 @@ main(int argc, char **argv)
         rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name,
                                    &value, scheduler);
         if (rc == pcmk_rc_ok) {
-            fprintf(stdout, "%s\n", value);
+            out->message(out, "ticket-attribute", options.ticket_id,
+                         options.get_attr_name, value);
         } else if (rc == ENXIO && options.attr_default) {
-            fprintf(stdout, "%s\n", options.attr_default);
+            const char *def = options.attr_default;
+
+            out->message(out, "ticket-attribute", options.ticket_id,
+                         options.get_attr_name, def);
             rc = pcmk_rc_ok;
         }
         exit_code = pcmk_rc2exitc(rc);

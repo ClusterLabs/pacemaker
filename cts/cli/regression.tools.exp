@@ -3294,14 +3294,15 @@ false
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Query ticket granted state, outputting as xml =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -t ticketA -G granted --output-as=xml">
+  <tickets>
+    <ticket id="ticketA">
+      <attribute name="granted" value="false"/>
+    </ticket>
+  </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
-false
-/tmp/cts-cli.ta_outfile:4: parser error : Extra content at the end of the document
-false
-^
-=#=#=#= End test: Query ticket granted state, outputting as xml - Failed to validate (1) =#=#=#=
-* Failed (rc=001): crm_ticket     - Query ticket granted state, outputting as xml
+=#=#=#= End test: Query ticket granted state, outputting as xml - OK (0) =#=#=#=
+* Passed: crm_ticket     - Query ticket granted state, outputting as xml
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
 =#=#=#= Current cib after: Delete ticket granted state =#=#=#=
 <cib epoch="29" num_updates="2" admin_epoch="0">
