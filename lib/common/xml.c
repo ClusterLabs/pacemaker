@@ -1317,19 +1317,65 @@ write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
 
 /*!
  * \internal
- * \brief Check whether a string's first two bytes represent a Unicode charcter
+ * \brief Get consecutive bytes encoding non-ASCII UTF-8 characters
  *
  * \param[in] text  String to check
  *
- * \return \c true if the first two bytes of \p text represent a Unicode
- *         character, or \c false otherwise
+ * \return Number of non-ASCII UTF-8 bytes at the beginning of \p text
  */
-static inline bool
-is_unicode(const char *text)
+static size_t
+utf8_bytes(const char *text)
 {
-    // @TODO Is this a valid and complete test for multi-byte Unicode chars?
-    return !pcmk__str_empty(text)
-           && ((text[0] & 0x80) != 0) && ((text[1] & 0x80) != 0);
+    // Total number of consecutive bytes containing UTF-8 characters
+    size_t c_bytes = 0;
+
+    if (text == NULL) {
+        return 0;
+    }
+
+    /* UTF-8 uses one to four 8-bit bytes per character. The first byte
+     * indicates the width of the character. A byte beginning with a '0' bit is
+     * a one-byte ASCII character.
+     *
+     * A C byte is 8 bits on most systems, but this is not guaranteed.
+     *
+     * Count until we find an ASCII character or an invalid byte. Check bytes
+     * aligned with the C byte boundary.
+     */
+    for (const uint8_t *utf8_byte = (const uint8_t *) text;
+         (*utf8_byte & 0x80) != 0;
+         utf8_byte = (const uint8_t *) (text + c_bytes)) {
+
+        size_t utf8_bits = 0;
+
+        if ((*utf8_byte & 0xf0) == 0xf0) {
+            // Four-byte character (first byte: 11110xxx)
+            utf8_bits = 32;
+
+        } else if ((*utf8_byte & 0xe0) == 0xe0) {
+            // Three-byte character (first byte: 1110xxxx)
+            utf8_bits = 24;
+
+        } else if ((*utf8_byte & 0xc0) == 0xc0) {
+            // Two-byte character (first byte: 110xxxxx)
+            utf8_bits = 16;
+
+        } else {
+            crm_warn("Found invalid UTF-8 character %.2x",
+                     (unsigned char) *utf8_byte);
+            return c_bytes;
+        }
+
+        c_bytes += utf8_bits / CHAR_BIT;
+
+#if (CHAR_BIT != 8) // Coverity complains about dead code without this CPP guard
+        if ((utf8_bits % CHAR_BIT) > 0) {
+            c_bytes++;
+        }
+#endif  // CHAR_BIT != 8
+    }
+
+    return c_bytes;
 }
 
 /*!
@@ -1389,17 +1435,13 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
     length = strlen(text);
 
     for (size_t index = 0; index < length; index++) {
-        if (is_unicode(&text[index])) {
-            /* Skip two bytes (one here, one in loop counter).
-             *
-             * @TODO Better to escape these? But readability concerns for
-             * languages with non-ASCII alphabets.
-             */
-            index++;
-            continue;
-        }
+        // Don't escape any non-ASCII characters
+        index += utf8_bytes(&(text[index]));
 
         switch (text[index]) {
+            case '\0':
+                // Reached end of string by skipping UTF-8 bytes
+                return false;
             case '<':
                 return true;
             case '>':
@@ -1418,12 +1460,7 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
                 break;
             default:
                 if ((text[index] < 0x20) || (text[index] >= 0x7f)) {
-                    /* Escape non-printing and Unicode characters (0x7f (delete)
-                     * is ASCII but non-printing)
-                     *
-                     * @TODO Handle multi-byte Unicode characters, and note that
-                     * xmlChar* is unsigned char *.
-                     */
+                    // Escape non-printing characters
                     return true;
                 }
                 break;
@@ -1484,19 +1521,12 @@ pcmk__xml_escape(const char *text, bool escape_quote)
     pcmk__str_update(&copy, text);
 
     for (size_t index = 0; index < length; index++) {
-        if (is_unicode(&copy[index])) {
-            /* Skip two bytes (one here, one in loop counter).
-             *
-             * @TODO Better to escape these? But readability concerns for
-             * languages with non-ASCII alphabets.
-             */
-            index++;
-            continue;
-        }
+        // Don't escape any non-ASCII characters
+        index += utf8_bytes(&(copy[index]));
 
         switch (copy[index]) {
-            case 0:
-                // Sanity only; loop should stop at the last non-null byte
+            case '\0':
+                // Reached end of string by skipping UTF-8 bytes
                 break;
             case '<':
                 copy = replace_text(copy, index, &length, "&lt;");
@@ -1519,12 +1549,7 @@ pcmk__xml_escape(const char *text, bool escape_quote)
                 break;
             default:
                 if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
-                    /* Escape non-printing and Unicode characters (0x7f (delete)
-                     * is ASCII but non-printing)
-                     *
-                     * @TODO Handle multi-byte Unicode characters, and note that
-                     * xmlChar * is unsigned char *.
-                     */
+                    // Escape non-printing characters
                     snprintf(buf, sizeof(buf), "&#%.2x;", copy[index]);
                     copy = replace_text(copy, index, &length, buf);
 
