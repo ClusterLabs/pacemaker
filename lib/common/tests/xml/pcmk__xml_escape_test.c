@@ -12,8 +12,6 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 
-// @TODO Add tests for Unicode characters
-
 static void
 null_empty(void **state)
 {
@@ -135,6 +133,54 @@ escape_nonprinting(void **state)
     free(str);
 }
 
+static void
+escape_utf8(void **state)
+{
+    /* Non-ASCII UTF-8 characters may be two, three, or four 8-bit bytes wide
+     * and should not be escaped.
+     */
+    const char *chinese = "仅高级使用";
+    const char *two_byte = "abc""\xcf\xa6""d<ef";
+    const char *two_byte_esc = "abc""\xcf\xa6""d&lt;ef";
+    const char *three_byte = "abc""\xef\x98\x98""d<ef";
+    const char *three_byte_esc = "abc""\xef\x98\x98""d&lt;ef";
+    const char *four_byte = "abc""\xf0\x94\x81\x90""d<ef";
+    const char *four_byte_esc = "abc""\xf0\x94\x81\x90""d&lt;ef";
+    char *str = NULL;
+
+    str = pcmk__xml_escape(chinese, false);
+    assert_string_equal(str, chinese);
+    free(str);
+
+    str = pcmk__xml_escape(chinese, true);
+    assert_string_equal(str, chinese);
+    free(str);
+
+    str = pcmk__xml_escape(two_byte, false);
+    assert_string_equal(str, two_byte_esc);
+    free(str);
+
+    str = pcmk__xml_escape(two_byte, true);
+    assert_string_equal(str, two_byte_esc);
+    free(str);
+
+    str = pcmk__xml_escape(three_byte, false);
+    assert_string_equal(str, three_byte_esc);
+    free(str);
+
+    str = pcmk__xml_escape(three_byte, true);
+    assert_string_equal(str, three_byte_esc);
+    free(str);
+
+    str = pcmk__xml_escape(four_byte, false);
+    assert_string_equal(str, four_byte_esc);
+    free(str);
+
+    str = pcmk__xml_escape(four_byte, true);
+    assert_string_equal(str, four_byte_esc);
+    free(str);
+}
+
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(null_empty),
                 cmocka_unit_test(escape_unchanged),
@@ -142,4 +188,5 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(escape_right_angle),
                 cmocka_unit_test(escape_ampersand),
                 cmocka_unit_test(escape_double_quote),
-                cmocka_unit_test(escape_nonprinting));
+                cmocka_unit_test(escape_nonprinting),
+                cmocka_unit_test(escape_utf8));
