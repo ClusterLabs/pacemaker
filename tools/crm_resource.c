@@ -1174,7 +1174,7 @@ refresh(pcmk__output_t *out)
     if (options.host_uname) {
         pcmk_node_t *node = pe_find_node(scheduler->nodes, options.host_uname);
 
-        if (pe__is_guest_or_remote_node(node)) {
+        if (pcmk__is_pacemaker_remote_node(node)) {
             node = pcmk__current_node(node->details->remote_rsc);
             if (node == NULL) {
                 rc = ENXIO;

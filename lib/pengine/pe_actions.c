@@ -337,7 +337,7 @@ update_resource_action_runnable(pcmk_action_t *action,
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && !(action->node->details->online)
-               && (!pe__is_guest_node(action->node)
+               && (!pcmk__is_guest_or_bundle_node(action->node)
                    || action->node->details->remote_requires_reset)) {
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
@@ -357,7 +357,7 @@ update_resource_action_runnable(pcmk_action_t *action,
 
     } else if (action->needs == pcmk_requires_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
-        if (pe__is_guest_node(action->node)
+        if (pcmk__is_guest_or_bundle_node(action->node)
             && !pe_can_fence(scheduler, action->node)) {
             /* An action that requires nothing usually does not require any
              * fencing in order to be runnable. However, there is an exception:
@@ -897,6 +897,9 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     bool needs_remote_reset = false;
     enum action_fail_response on_fail = pcmk_on_fail_ignore;
 
+    // There's no enum value for unknown or invalid, so assert
+    CRM_ASSERT((rsc != NULL) && (action_name != NULL));
+
     if (value == NULL) {
         // Use default
 
@@ -965,7 +968,8 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
      * failures that don't are probes and starts. The user can explicitly set
      * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start failures.
      */
-    if (pe__resource_is_remote_conn(rsc)
+    if (rsc->is_remote_node
+        && pcmk__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id))
         && !pcmk_is_probe(action_name, interval_ms)
         && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
         needs_remote_reset = true;

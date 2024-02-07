@@ -424,7 +424,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         && ((node->weight < 0)
             // Allow graph to assume that guest node connections will come up
             || (!pcmk__node_available(node, true, false)
-                && !pe__is_guest_node(node)))) {
+                && !pcmk__is_guest_or_bundle_node(node)))) {
 
         pcmk__rsc_debug(rsc,
                         "All nodes for resource %s are unavailable, unclean or "

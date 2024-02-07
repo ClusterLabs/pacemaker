@@ -24,7 +24,7 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_internal.h>
 
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 
 #include <pcmki/pcmki_output.h>
 

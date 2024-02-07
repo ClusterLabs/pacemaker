@@ -789,7 +789,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
         g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
-            if (pe__is_guest_or_remote_node(node)) {
+            if (pcmk__is_pacemaker_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */
                 node->weight = -INFINITY;
             }
@@ -797,7 +797,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
         replica->node->details->remote_rsc = replica->remote;
 
-        // Ensure pe__is_guest_node() functions correctly immediately
+        // Ensure pcmk__is_guest_or_bundle_node() functions correctly
         replica->remote->container = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the

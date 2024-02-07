@@ -1432,7 +1432,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
             continue; // Don't display other node action types
         }
 
-        if (pe__is_guest_node(action->node)) {
+        if (pcmk__is_guest_or_bundle_node(action->node)) {
             const pcmk_resource_t *remote = action->node->details->remote_rsc;
 
             node_name = crm_strdup_printf("%s (resource: %s)",

@@ -129,7 +129,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
      * because guest node "fencing" is actually just a resource stop.
      */
     if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)
-        || pe__is_guest_node(target)) {
+        || pcmk__is_guest_or_bundle_node(target)) {
 
         order_implicit = true;
     }
@@ -448,7 +448,8 @@ pcmk__fence_guest(pcmk_node_t *node)
 bool
 pcmk__node_unfenced(const pcmk_node_t *node)
 {
-    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+    const char *unfenced = pcmk__node_attr(node, CRM_ATTR_UNFENCED, NULL,
+                                           pcmk__rsc_node_current);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
 }

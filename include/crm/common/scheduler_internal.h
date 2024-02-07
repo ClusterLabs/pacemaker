@@ -12,6 +12,7 @@
 
 #include <crm/common/action_relation_internal.h>
 #include <crm/common/actions_internal.h>
+#include <crm/common/attrs_internal.h>
 #include <crm/common/bundles_internal.h>
 #include <crm/common/clone_internal.h>
 #include <crm/common/digests_internal.h>
@@ -20,6 +21,7 @@
 #include <crm/common/history_internal.h>
 #include <crm/common/location_internal.h>
 #include <crm/common/nodes_internal.h>
+#include <crm/common/remote_internal.h>
 #include <crm/common/roles_internal.h>
 
 #ifdef __cplusplus

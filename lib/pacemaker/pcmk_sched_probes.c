@@ -169,14 +169,14 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
     }
 
-    if (pe__is_guest_or_remote_node(node)) {
+    if (pcmk__is_pacemaker_remote_node(node)) {
         const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
 
         if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_none)) {
             reason = "Pacemaker Remote nodes cannot run stonith agents";
             goto no_probe;
 
-        } else if (pe__is_guest_node(node)
+        } else if (pcmk__is_guest_or_bundle_node(node)
                    && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
@@ -232,7 +232,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
     }
 
-    if (pe__is_guest_node(node)) {
+    if (pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->details->remote_rsc->container;
 
         if (guest->role == pcmk_role_stopped) {
@@ -887,7 +887,8 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
          * for processing old saved CIBs (< 1.1.14), including the
          * reprobe-target_rc regression test.
          */
-        probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
+        probed = pcmk__node_attr(node, CRM_OP_PROBED, NULL,
+                                 pcmk__rsc_node_current);
         if (probed != NULL && crm_is_true(probed) == FALSE) {
             pcmk_action_t *probe_op = NULL;
 

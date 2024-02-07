@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__REMOTE_INTERNAL__H
-#  define PCMK__REMOTE_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_REMOTE_INTERNAL__H
+#define PCMK__CRM_COMMON_REMOTE_INTERNAL__H
+
+#include <stdbool.h>                    // bool
+
+#include <crm/common/nodes.h>           // pcmk_node_variant_remote
+#include <crm/common/scheduler_types.h> // pcmk_node_t
 
 // internal functions from remote.c
 
@@ -23,6 +28,52 @@ int pcmk__connect_remote(const char *host, int port, int timeout_ms,
                          void (*callback) (void *userdata, int rc, int sock));
 int pcmk__accept_remote_connection(int ssock, int *csock);
 void pcmk__sockaddr2str(const void *sa, char *s);
+
+/*!
+ * \internal
+ * \brief Check whether a node is a Pacemaker Remote node of any kind
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a remote, guest, or bundle node, otherwise false
+ */
+static inline bool
+pcmk__is_pacemaker_remote_node(const pcmk_node_t *node)
+{
+    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a node is a remote node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a remote node, otherwise false
+ */
+static inline bool
+pcmk__is_remote_node(const pcmk_node_t *node)
+{
+    return pcmk__is_pacemaker_remote_node(node)
+           && ((node->details->remote_rsc == NULL)
+               || (node->details->remote_rsc->container == NULL));
+}
+
+/*!
+ * \internal
+ * \brief Check whether a node is a guest or bundle node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a guest or bundle node, otherwise false
+ */
+static inline bool
+pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
+{
+    return pcmk__is_pacemaker_remote_node(node)
+           && (node->details->remote_rsc != NULL)
+           && (node->details->remote_rsc->container != NULL);
+}
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 #    include <gnutls/gnutls.h>
@@ -45,4 +96,4 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
 int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
 
 #  endif    // HAVE_GNUTLS_GNUTLS_H
-#endif      // PCMK__REMOTE_INTERNAL__H
+#endif      // PCMK__CRM_COMMON_REMOTE_INTERNAL__H

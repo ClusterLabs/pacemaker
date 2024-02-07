@@ -663,15 +663,17 @@ promotion_attr_value(const pcmk_resource_t *rsc, const pcmk_node_t *node,
 {
     char *attr_name = NULL;
     const char *attr_value = NULL;
+    const char *target = NULL;
     enum pcmk__rsc_node node_type = pcmk__rsc_node_assigned;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         // Not assigned yet
         node_type = pcmk__rsc_node_current;
     }
+    target = g_hash_table_lookup(rsc->meta,
+                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     attr_name = pcmk_promotion_score_name(name);
-    attr_value = pe__node_attribute_calculated(node, attr_name, rsc, node_type,
-                                               false);
+    attr_value = pcmk__node_attr(node, attr_name, target, node_type);
     free(attr_name);
     return attr_value;
 }

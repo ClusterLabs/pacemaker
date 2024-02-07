@@ -177,7 +177,7 @@ apply_remote_ordering(pcmk_action_t *action)
         return;
     }
 
-    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
+    CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
@@ -310,7 +310,7 @@ apply_container_ordering(pcmk_action_t *action)
 
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(action->node != NULL);
-    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
+    CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
@@ -434,7 +434,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (!pe__is_guest_or_remote_node(action->node)) {
+        if (!pcmk__is_pacemaker_remote_node(action->node)) {
             continue;
         }
 
@@ -505,7 +505,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 bool
 pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
-    return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
+    return pcmk__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
 
@@ -551,7 +551,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     const char *task = action->task;
 
     if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
-        || !pe__is_guest_or_remote_node(action->node)) {
+        || !pcmk__is_pacemaker_remote_node(action->node)) {
         return NULL;
     }
 
@@ -688,7 +688,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     const pcmk_node_t *host = NULL;
     enum action_tasks task;
 
-    if (!pe__is_guest_node(guest)) {
+    if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
 

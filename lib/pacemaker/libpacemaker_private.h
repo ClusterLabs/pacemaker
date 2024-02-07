@@ -494,13 +494,6 @@ enum pcmk__coloc_affects {
  * \internal
  * \brief Get the value of a colocation's node attribute
  *
- * When looking up a colocation node attribute on a bundle node for a bundle
- * primitive, we should always look on the bundle node's assigned host,
- * regardless of the value of \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET. At most
- * one resource (the bundle primitive, if any) can run on a bundle node, so any
- * colocation must necessarily be evaluated with respect to the bundle node
- * (the container).
- *
  * \param[in] node  Node on which to look up the attribute
  * \param[in] attr  Name of attribute to look up
  * \param[in] rsc   Resource on whose behalf to look up the attribute
@@ -511,12 +504,23 @@ static inline const char *
 pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
                            const pcmk_resource_t *rsc)
 {
-    const pcmk_resource_t *top = pe__const_top_resource(rsc, false);
-    const bool force_host = pe__is_bundle_node(node) && pcmk__is_bundled(rsc)
-                            && (top == pe__bundled_resource(rsc));
+    const char *target = NULL;
 
-    return pe__node_attribute_calculated(node, attr, rsc,
-                                         pcmk__rsc_node_assigned, force_host);
+    /* A resource colocated with a bundle or its primitive can't run on the
+     * bundle node itself (where only the primitive, if any, can run). Instead,
+     * we treat it as a colocation with the bundle's containers, so always look
+     * up colocation node attributes on the container host.
+     */
+    if (pcmk__is_bundle_node(node) && pcmk__is_bundled(rsc)
+        && (pe__const_top_resource(rsc, false) == pe__bundled_resource(rsc))) {
+        target = PCMK_VALUE_HOST;
+
+    } else if (rsc != NULL) {
+        target = g_hash_table_lookup(rsc->meta,
+                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+    }
+
+    return pcmk__node_attr(node, attr, target, pcmk__rsc_node_assigned);
 }
 
 G_GNUC_INTERNAL

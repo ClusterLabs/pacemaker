@@ -1575,8 +1575,8 @@ pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
 static time_t
 shutdown_time(pcmk_node_t *node)
 {
-    const char *shutdown = pe_node_attribute_raw(node,
-                                                 PCMK__NODE_ATTR_SHUTDOWN);
+    const char *shutdown = pcmk__node_attr(node, PCMK__NODE_ATTR_SHUTDOWN, NULL,
+                                           pcmk__rsc_node_current);
     time_t result = 0;
 
     if (shutdown != NULL) {
@@ -1620,7 +1620,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
     // Fence devices and remote connections can't be locked
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
-        || pe__resource_is_remote_conn(rsc)) {
+        || rsc->is_remote_node) {
         return;
     }
 

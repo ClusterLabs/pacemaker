@@ -35,7 +35,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 bool
 pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
 {
-    if (pe__is_guest_node(node)) {
+    if (pcmk__is_guest_or_bundle_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
          * do that if the container's host is either online or fenceable.
          */
@@ -669,8 +669,8 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 bool
 pe__shutdown_requested(const pcmk_node_t *node)
 {
-    const char *shutdown = pe_node_attribute_raw(node,
-                                                 PCMK__NODE_ATTR_SHUTDOWN);
+    const char *shutdown = pcmk__node_attr(node, PCMK__NODE_ATTR_SHUTDOWN, NULL,
+                                           pcmk__rsc_node_current);
 
     return !pcmk__str_eq(shutdown, "0", pcmk__str_null_matches);
 }

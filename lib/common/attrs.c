@@ -16,7 +16,8 @@
 #include <stdio.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/attrd_internal.h>
+#include <crm/common/scheduler.h>
+#include <crm/common/scheduler_internal.h>
 
 #define OCF_RESKEY_PREFIX "OCF_RESKEY_"
 #define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" PCMK__META_ON_NODE
@@ -97,4 +98,86 @@ pcmk_promotion_score_name(const char *rsc_id)
         }
     }
     return crm_strdup_printf("master-%s", rsc_id);
+}
+
+/*!
+ * \internal
+ * \brief Get the value of a node attribute
+ *
+ * \param[in] node       Node to get attribute for
+ * \param[in] name       Name of node attribute to get
+ * \param[in] target     If this is \c PCMK_VALUE_HOST and \p node is a guest
+ *                       (bundle) node, get the value from the guest's host,
+ *                       otherwise get the value from \p node itself
+ * \param[in] node_type  If getting the value from \p node's host, this
+ *                       indicates whether to check the current or assigned host
+ *
+ * \return Value of \p name attribute for \p node
+ */
+const char *
+pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
+                enum pcmk__rsc_node node_type)
+{
+    const char *value = NULL;       // Attribute value to return
+    const char *node_type_s = NULL; // Readable equivalent of node_type
+    const pcmk_node_t *host = NULL;
+    const pcmk_resource_t *container = NULL;
+
+    if ((node == NULL) || (name == NULL)) {
+        return NULL;
+    }
+
+    /* Check the node's own attributes unless this is a guest (bundle) node with
+     * the container host as the attribute target.
+     */
+    if (!pcmk__is_guest_or_bundle_node(node)
+        || !pcmk__str_eq(target, PCMK_VALUE_HOST, pcmk__str_casei)) {
+        value = g_hash_table_lookup(node->details->attrs, name);
+        crm_trace("%s='%s' on %s",
+                  name, pcmk__s(value, ""), pcmk__node_name(node));
+        return value;
+    }
+
+    /* This resource needs attributes set for the container's host instead of
+     * for the container itself (useful when the container uses the host's
+     * storage).
+     */
+    container = node->details->remote_rsc->container;
+
+    switch (node_type) {
+        case pcmk__rsc_node_assigned:
+            host = container->allocated_to;
+            if (host == NULL) {
+                crm_trace("Skipping %s lookup for %s because "
+                          "its container %s is unassigned",
+                          name, pcmk__node_name(node), container->id);
+                return NULL;
+            }
+            node_type_s = "assigned";
+            break;
+
+        case pcmk__rsc_node_current:
+            if (container->running_on != NULL) {
+                host = container->running_on->data;
+            }
+            if (host == NULL) {
+                crm_trace("Skipping %s lookup for %s because "
+                          "its container %s is inactive",
+                          name, pcmk__node_name(node), container->id);
+                return NULL;
+            }
+            node_type_s = "current";
+            break;
+
+        default:
+            // Add support for other enum pcmk__rsc_node values if needed
+            CRM_ASSERT(false);
+            break;
+    }
+
+    value = g_hash_table_lookup(host->details->attrs, name);
+    crm_trace("%s='%s' for %s on %s container host %s",
+              name, pcmk__s(value, ""), pcmk__node_name(node), node_type_s,
+              pcmk__node_name(host));
+    return value;
 }

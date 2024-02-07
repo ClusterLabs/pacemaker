@@ -353,7 +353,7 @@ static const char *
 get_node_feature_set(const pcmk_node_t *node)
 {
     if (node->details->online && node->details->expected_up
-        && !pe__is_guest_or_remote_node(node)) {
+        && !pcmk__is_pacemaker_remote_node(node)) {
 
         const char *feature_set = g_hash_table_lookup(node->details->attrs,
                                                       CRM_ATTR_FEATURE_SET);
@@ -562,7 +562,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
     /* Host is displayed only if this is a guest node and detail is requested */
-    if (print_detail && pe__is_guest_node(node)) {
+    if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
         const pcmk_node_t *host_node = pcmk__current_node(container);
 
@@ -1857,9 +1857,9 @@ node_text(pcmk__output_t *out, va_list args) {
         int health = pe__node_health(node);
 
         // Create a summary line with node type, name, and status
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             g_string_append(str, "GuestNode");
-        } else if (pe__is_remote_node(node)) {
+        } else if (pcmk__is_remote_node(node)) {
             g_string_append(str, "RemoteNode");
         } else {
             g_string_append(str, "Node");
@@ -2019,7 +2019,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_RESOURCES_RUNNING, resources_running,
                                  PCMK_XA_TYPE, node_type);
 
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
                         node->details->remote_rsc->container->id);
@@ -2308,7 +2308,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             int expected_score = 0;
             bool add_extra = false;
 
-            value = pe_node_attribute_raw(node, name);
+            value = pcmk__node_attr(node, name, NULL, pcmk__rsc_node_current);
 
             add_extra = add_extra_info(node, node->details->running_rsc,
                                        scheduler, name, &expected_score);
@@ -2519,10 +2519,10 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         } else if (node->details->online) {
             // Display online node in a list
-            if (pe__is_guest_node(node)) {
+            if (pcmk__is_guest_or_bundle_node(node)) {
                 pcmk__add_word(&online_guest_nodes, 1024, node_name);
 
-            } else if (pe__is_remote_node(node)) {
+            } else if (pcmk__is_remote_node(node)) {
                 pcmk__add_word(&online_remote_nodes, 1024, node_name);
 
             } else {
@@ -2533,10 +2533,10 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         } else {
             // Display offline node in a list
-            if (pe__is_remote_node(node)) {
+            if (pcmk__is_remote_node(node)) {
                 pcmk__add_word(&offline_remote_nodes, 1024, node_name);
 
-            } else if (pe__is_guest_node(node)) {
+            } else if (pcmk__is_guest_or_bundle_node(node)) {
                 /* ignore offline guest nodes */
 
             } else {
