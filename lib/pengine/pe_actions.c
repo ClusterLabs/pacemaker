@@ -897,6 +897,9 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     bool needs_remote_reset = false;
     enum action_fail_response on_fail = pcmk_on_fail_ignore;
 
+    // There's no enum value for unknown or invalid, so assert
+    CRM_ASSERT((rsc != NULL) && (action_name != NULL));
+
     if (value == NULL) {
         // Use default
 
