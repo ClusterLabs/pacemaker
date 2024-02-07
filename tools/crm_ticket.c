@@ -589,43 +589,31 @@ get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr
 }
 
 static void
-ticket_warning(gchar *ticket_id, const char *action)
+ticket_grant_warning(gchar *ticket_id)
 {
-    GString *warning = g_string_sized_new(1024);
-    const char *word = NULL;
+    out->err(out, "This command cannot help you verify whether '%s' has "
+                  "been already granted elsewhere.\n"
+                  "If you really want to grant '%s' to this site now, and "
+                  "you know what you are doing,\n"
+                  "please specify --force.",
+                  ticket_id, ticket_id);
+}
 
-    CRM_ASSERT(action != NULL);
-
-    if (strcmp(action, "grant") == 0) {
-        pcmk__g_strcat(warning,
-                       "This command cannot help you verify whether '",
-                       ticket_id,
-                       "' has been already granted elsewhere.\n", NULL);
-        word = "to";
-
-    } else {
-        pcmk__g_strcat(warning,
-                       "Revoking '", ticket_id, "' can trigger the specified "
-                       "'" PCMK_XA_LOSS_POLICY "'(s) "
-                       "relating to '", ticket_id, "'.\n\n"
-                       "You can check that with:\n"
-                       "crm_ticket --ticket ", ticket_id, " --constraints\n\n"
-                       "Otherwise before revoking '", ticket_id, "', "
-                       "you may want to make '", ticket_id, "' "
-                       "standby with:\n"
-                       "crm_ticket --ticket ", ticket_id, " --standby\n\n",
-                       NULL);
-        word = "from";
-    }
-
-    pcmk__g_strcat(warning,
-                   "If you really want to ", action, " '", ticket_id, "' ",
-                   word, " this site now, and you know what you are doing,\n"
-                   "please specify --force.", NULL);
-
-    fprintf(stdout, "%s\n", (const char *) warning->str);
-
-    g_string_free(warning, TRUE);
+static void
+ticket_revoke_warning(gchar *ticket_id)
+{
+    out->err(out, "Revoking '%s' can trigger the specified '" PCMK_XA_LOSS_POLICY
+              "'(s) relating to '%s'.\n\n"
+              "You can check that with:\n"
+              "crm_ticket --ticket %s --constraints\n\n"
+              "Otherwise before revoking '%s', you may want to make '%s'"
+              "standby with:\n"
+              "crm_ticket --ticket %s --standby\n\n"
+              "If you really want to revoke '%s' from this site now, and "
+              "you know what you are doing,\n"
+              "please specify --force.",
+              ticket_id, ticket_id, ticket_id, ticket_id, ticket_id,
+              ticket_id, ticket_id);
 }
 
 static bool
@@ -641,11 +629,11 @@ allow_modification(gchar *ticket_id)
     if (g_hash_table_lookup_extended(attr_set, PCMK__XA_GRANTED, NULL,
                                      (gpointer *) &value)) {
         if (crm_is_true(value)) {
-            ticket_warning(ticket_id, "grant");
+            ticket_grant_warning(ticket_id);
             return false;
 
         } else {
-            ticket_warning(ticket_id, "revoke");
+            ticket_revoke_warning(ticket_id);
             return false;
         }
     }
@@ -654,7 +642,7 @@ allow_modification(gchar *ticket_id)
         const char *key = (const char *)list_iter->data;
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)) {
-            ticket_warning(ticket_id, "revoke");
+            ticket_revoke_warning(ticket_id);
             return false;
         }
     }
@@ -1044,7 +1032,7 @@ main(int argc, char **argv)
             }
 
             if (ticket->granted) {
-                ticket_warning(options.ticket_id, "revoke");
+                ticket_revoke_warning(options.ticket_id);
                 exit_code = CRM_EX_INSUFFICIENT_PRIV;
                 goto done;
             }
