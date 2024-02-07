@@ -1384,7 +1384,8 @@ utf8_bytes(const char *text)
  *        memory
  *
  * \param[in,out] text     String to replace a character in
- * \param[in]     index    Index of character to replace with new string
+ * \param[in,out] index    Index of character to replace with new string; on
+ *                         return, reset to index of end of replacement string
  * \param[in,out] length   Length of \p text
  * \param[in]     replace  String to replace character at \p index with (must
  *                         not be empty)
@@ -1392,8 +1393,12 @@ utf8_bytes(const char *text)
  * \return \p text, with the character at \p index replaced by \p replace
  */
 static char *
-replace_text(char *text, int index, size_t *length, const char *replace)
+replace_text(char *text, size_t *index, size_t *length, const char *replace)
 {
+    /* @TODO Replace with GString? Or at least copy char-by-char, escaping
+     * characters as needed, instead of shifting characters on every replacement
+     */
+
     // We have space for 1 char already
     size_t offset = strlen(replace) - 1;
 
@@ -1402,13 +1407,16 @@ replace_text(char *text, int index, size_t *length, const char *replace)
         text = pcmk__realloc(text, *length + 1);
 
         // Shift characters to the right to make room for the replacement string
-        for (size_t i = *length; i > (index + offset); i--) {
+        for (size_t i = *length; i > (*index + offset); i--) {
             text[i] = text[i - offset];
         }
     }
 
     // Replace the character at index by the replacement string
-    memcpy(text + index, replace, offset + 1);
+    memcpy(text + *index, replace, offset + 1);
+
+    // Reset index to the end of replacement string
+    *index += offset;
     return text;
 }
 
@@ -1529,18 +1537,18 @@ pcmk__xml_escape(const char *text, bool escape_quote)
                 // Reached end of string by skipping UTF-8 bytes
                 break;
             case '<':
-                copy = replace_text(copy, index, &length, "&lt;");
+                copy = replace_text(copy, &index, &length, "&lt;");
                 break;
             case '>':
                 // Not necessary, but for symmetry with '<'
-                copy = replace_text(copy, index, &length, "&gt;");
+                copy = replace_text(copy, &index, &length, "&gt;");
                 break;
             case '&':
-                copy = replace_text(copy, index, &length, "&amp;");
+                copy = replace_text(copy, &index, &length, "&amp;");
                 break;
             case '"':
                 if (escape_quote) {
-                    copy = replace_text(copy, index, &length, "&quot;");
+                    copy = replace_text(copy, &index, &length, "&quot;");
                 }
                 break;
             case '\n':
@@ -1551,10 +1559,7 @@ pcmk__xml_escape(const char *text, bool escape_quote)
                 if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
                     // Escape non-printing characters
                     snprintf(buf, sizeof(buf), "&#%.2x;", copy[index]);
-                    copy = replace_text(copy, index, &length, buf);
-
-                    // Jump to semicolon; loop counter will skip one more char
-                    index += strlen(buf) - 1;
+                    copy = replace_text(copy, &index, &length, buf);
                 }
                 break;
         }
@@ -2955,36 +2960,36 @@ crm_xml_escape(const char *text)
                 // Sanity only; loop should stop at the last non-null byte
                 break;
             case '<':
-                copy = replace_text(copy, index, &length, "&lt;");
+                copy = replace_text(copy, &index, &length, "&lt;");
                 break;
             case '>':
-                copy = replace_text(copy, index, &length, "&gt;");
+                copy = replace_text(copy, &index, &length, "&gt;");
                 break;
             case '"':
-                copy = replace_text(copy, index, &length, "&quot;");
+                copy = replace_text(copy, &index, &length, "&quot;");
                 break;
             case '\'':
-                copy = replace_text(copy, index, &length, "&apos;");
+                copy = replace_text(copy, &index, &length, "&apos;");
                 break;
             case '&':
-                copy = replace_text(copy, index, &length, "&amp;");
+                copy = replace_text(copy, &index, &length, "&amp;");
                 break;
             case '\t':
                 /* Might as well just expand to a few spaces... */
-                copy = replace_text(copy, index, &length, "    ");
+                copy = replace_text(copy, &index, &length, "    ");
                 break;
             case '\n':
-                copy = replace_text(copy, index, &length, "\\n");
+                copy = replace_text(copy, &index, &length, "\\n");
                 break;
             case '\r':
-                copy = replace_text(copy, index, &length, "\\r");
+                copy = replace_text(copy, &index, &length, "\\r");
                 break;
             default:
                 /* Check for and replace non-printing characters with their octal equivalent */
                 if(copy[index] < ' ' || copy[index] > '~') {
                     char *replace = crm_strdup_printf("\\%.3o", copy[index]);
 
-                    copy = replace_text(copy, index, &length, replace);
+                    copy = replace_text(copy, &index, &length, replace);
                     free(replace);
                 }
         }
