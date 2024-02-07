@@ -300,9 +300,8 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     crm_log_xml_debug(xml_search, "Match");
     if (xml_search->children != NULL) {
         if (ticket_id) {
-            fprintf(stdout,
-                    "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s\n",
-                    ticket_id);
+            out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                      ticket_id);
         }
         *ticket_state_xml = xml_search;
     } else {
@@ -747,7 +746,7 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
-        fprintf(stdout, "Cleaned up %s\n", ticket_id);
+        out->info(out, "Cleaned up %s", ticket_id);
     }
 
     free_xml(ticket_state_xml);
