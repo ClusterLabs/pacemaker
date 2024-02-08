@@ -153,8 +153,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 
     if (last_action != NULL) {
         crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
-        abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
-                         last_action);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Node failure", last_action);
         return TRUE;
     }
 
@@ -211,12 +211,12 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
-                        CRM_INFINITY_S);
+                        PCMK_VALUE_INFINITY);
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
-                        CRM_INFINITY_S);
+                        PCMK_VALUE_INFINITY);
     }
 
     if (do_update) {
@@ -465,7 +465,8 @@ process_graph_event(xmlNode *event, const char *event_node)
         // decode_transition_key() already logged the bad key
         crm_err("Can't process action %s result: Incompatible versions? "
                 CRM_XS " call-id=%d", id, callid);
-        abort_transition(INFINITY, pcmk__graph_restart, "Bad event", event);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Bad event", event);
         return;
     }
 
@@ -477,14 +478,15 @@ process_graph_event(xmlNode *event, const char *event_node)
             goto bail;
         }
         desc = "initiated outside of the cluster";
-        abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
-                         event);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Unexpected event", event);
 
     } else if ((action_num < 0)
                || !pcmk__str_eq(update_te_uuid, controld_globals.te_uuid,
                                 pcmk__str_none)) {
         desc = "initiated by a different DC";
-        abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Foreign event", event);
 
     } else if ((controld_globals.transition_graph->id != transition_num)
                || controld_globals.transition_graph->complete) {
@@ -505,16 +507,17 @@ process_graph_event(xmlNode *event, const char *event_node)
             }
 
             desc = "arrived after initial scheduling";
-            abort_transition(INFINITY, pcmk__graph_restart,
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Change in recurring result", event);
 
         } else if (controld_globals.transition_graph->id != transition_num) {
             desc = "arrived really late";
-            abort_transition(INFINITY, pcmk__graph_restart, "Old event", event);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Old event", event);
         } else {
             desc = "arrived late";
-            abort_transition(INFINITY, pcmk__graph_restart, "Inactive graph",
-                             event);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Inactive graph", event);
         }
 
     } else {
@@ -524,8 +527,8 @@ process_graph_event(xmlNode *event, const char *event_node)
         if (action == NULL) {
             // Should never happen
             desc = "unknown";
-            abort_transition(INFINITY, pcmk__graph_restart, "Unknown event",
-                             event);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Unknown event", event);
 
         } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
             /* Nothing further needs to be done if the action has already been

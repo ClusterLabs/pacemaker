@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <glib.h>
 
 #include <crm/common/actions.h>
+#include <crm/common/scores.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +34,32 @@ extern "C" {
 
 //! \deprecated This defined constant will be removed in a future release
 #define MAX_IPC_DELAY 120
+
+//! \deprecated Use PCMK_SCORE_INFINITY instead
+#define CRM_SCORE_INFINITY PCMK_SCORE_INFINITY
+
+/* INFINITY might be defined elsewhere (such as math.h), so undefine it first.
+ * This, of course, complicates any attempt to use the other definition in any
+ * code that includes this header.
+ */
+//! \deprecated Use PCMK_SCORE_INFINITY instead
+#undef INFINITY
+#define INFINITY PCMK_SCORE_INFINITY
+
+//! \deprecated Use PCMK_VALUE_INFINITY instead
+#define CRM_INFINITY_S PCMK_VALUE_INFINITY
+
+//! \deprecated Use PCMK_VALUE_MINUS_INFINITY instead
+#define CRM_MINUS_INFINITY_S PCMK_VALUE_MINUS_INFINITY
+
+//! \deprecated Use PCMK_VALUE_PLUS_INFINITY instead
+#define CRM_PLUS_INFINITY_S PCMK_VALUE_PLUS_INFINITY
+
+//! \deprecated Use PCMK_VALUE_INFINITY instead
+#define INFINITY_S "INFINITY"
+
+//! \deprecated Use PCMK_VALUE_MINUS_INFINITY instead
+#define MINUS_INFINITY_S "-INFINITY"
 
 //! \deprecated Use PCMK_ACTION_STONITH instead
 #define CRM_OP_FENCE PCMK_ACTION_STONITH

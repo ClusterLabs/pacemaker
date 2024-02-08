@@ -92,7 +92,7 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
             if (!can_run_instance(instance, node, max_per_node)) {
                 pcmk__rsc_trace(instance, "Banning %s from unavailable node %s",
                                 instance->id, pcmk__node_name(node));
-                node->weight = -INFINITY;
+                node->weight = -PCMK_SCORE_INFINITY;
                 for (GList *child_iter = instance->children;
                      child_iter != NULL; child_iter = child_iter->next) {
                     pcmk_resource_t *child = child_iter->data;
@@ -106,7 +106,7 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
                                         "from unavailable node %s",
                                         instance->id, child->id,
                                         pcmk__node_name(node));
-                        child_node->weight = -INFINITY;
+                        child_node->weight = -PCMK_SCORE_INFINITY;
                     }
                 }
             }
@@ -149,7 +149,7 @@ apply_parent_colocations(const pcmk_resource_t *rsc, GHashTable **nodes)
     for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *colocation = iter->data;
         pcmk_resource_t *other = colocation->primary;
-        float factor = colocation->score / (float) INFINITY;
+        float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
 
         other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
                                                colocation, factor,
@@ -161,7 +161,7 @@ apply_parent_colocations(const pcmk_resource_t *rsc, GHashTable **nodes)
     for (const GList *iter = colocations; iter != NULL; iter = iter->next) {
         const pcmk__colocation_t *colocation = iter->data;
         pcmk_resource_t *other = colocation->dependent;
-        float factor = colocation->score / (float) INFINITY;
+        float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
 
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
@@ -850,7 +850,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
                             "Not assigning %s because maximum %d instances "
                             "already assigned",
                             instance->id, max_total);
-            resource_location(instance, NULL, -INFINITY,
+            resource_location(instance, NULL, -PCMK_SCORE_INFINITY,
                               "collective_limit_reached", collective->cluster);
 
         } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
@@ -1000,7 +1000,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
     started = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_RUNNING,
                                         !pcmk_is_set(state, instance_starting),
                                         false);
-    started->priority = INFINITY;
+    started->priority = PCMK_SCORE_INFINITY;
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
         pcmk__set_action_flags(started, pcmk_action_runnable);
     }
@@ -1012,7 +1012,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
     stopped = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOPPED,
                                         !pcmk_is_set(state, instance_stopping),
                                         true);
-    stopped->priority = INFINITY;
+    stopped->priority = PCMK_SCORE_INFINITY;
     if (!pcmk_is_set(state, instance_restarting)) {
         pcmk__set_action_flags(stop, pcmk_action_migratable);
     }

@@ -382,7 +382,7 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    if (node == NULL && score == -INFINITY) {
+    if ((node == NULL) && (score == -PCMK_SCORE_INFINITY)) {
         if (rsc->allocated_to) {
             crm_info("Deallocating %s from %s",
                      rsc->id, pcmk__node_name(rsc->allocated_to));

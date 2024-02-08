@@ -56,7 +56,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
              * active connection.
              */
             pcmk__new_colocation("#replica-remote-with-host-remote", NULL,
-                                 INFINITY, replica->remote,
+                                 PCMK_SCORE_INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
                                  NULL, pcmk__coloc_influence);
         }
@@ -72,9 +72,9 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (!pcmk__same_node(node, replica->node)) {
-                node->weight = -INFINITY;
+                node->weight = -PCMK_SCORE_INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
-                node->weight = INFINITY;
+                node->weight = PCMK_SCORE_INFINITY;
             }
         }
 
@@ -144,7 +144,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
             if (pe__node_is_bundle_instance(rsc, node)) {
                 node->weight = 0;
             } else {
-                node->weight = -INFINITY;
+                node->weight = -PCMK_SCORE_INFINITY;
             }
         }
         bundled_resource->cmds->assign(bundled_resource, prefer, stop_if_fail);
@@ -207,12 +207,12 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTED,
                                                true, true);
-            action->priority = INFINITY;
+            action->priority = PCMK_SCORE_INFINITY;
 
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTED,
                                                true, true);
-            action->priority = INFINITY;
+            action->priority = PCMK_SCORE_INFINITY;
         }
     }
 }
@@ -266,8 +266,8 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
         pcmk__order_stops(replica->container, replica->ip,
                           pcmk__ar_then_implies_first|pcmk__ar_guest_allowed);
 
-        pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
-                             replica->container, NULL, NULL,
+        pcmk__new_colocation("#ip-with-container", NULL, PCMK_SCORE_INFINITY,
+                             replica->ip, replica->container, NULL, NULL,
                              pcmk__coloc_influence);
     }
 
@@ -472,7 +472,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
     struct coloc_data *coloc_data = user_data;
     pcmk_node_t *chosen = NULL;
 
-    if (coloc_data->colocation->score < INFINITY) {
+    if (coloc_data->colocation->score < PCMK_SCORE_INFINITY) {
         replica->container->cmds->apply_coloc_score(coloc_data->dependent,
                                                     replica->container,
                                                     coloc_data->colocation,
@@ -556,7 +556,8 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
             dependent->cmds->apply_coloc_score(dependent, primary_container,
                                                colocation, true);
 
-        } else if (colocation->score >= INFINITY) { // Failure, and it's fatal
+        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+            // Failure, and it's fatal
             crm_notice("%s cannot run because there is no compatible "
                        "instance of %s to colocate with",
                        dependent->id, primary->id);
@@ -573,7 +574,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     pe__foreach_const_bundle_replica(primary, replica_apply_coloc_score,
                                      &coloc_data);
 
-    if (colocation->score >= INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__colocation_intersect_nodes(dependent, primary, colocation,
                                          coloc_data.container_hosts, false);
     }

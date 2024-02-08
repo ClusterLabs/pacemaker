@@ -355,8 +355,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
                                          unassigned_utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rscs_id);
-                resource_location(rsc, node, -INFINITY, "__limit_utilization__",
-                                  rsc->cluster);
+                resource_location(rsc, node, -PCMK_SCORE_INFINITY,
+                                  "__limit_utilization__", rsc->cluster);
             }
         }
         most_capable_node = NULL;
@@ -369,8 +369,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rsc->id);
-                resource_location(rsc, node, -INFINITY, "__limit_utilization__",
-                                  rsc->cluster);
+                resource_location(rsc, node, -PCMK_SCORE_INFINITY,
+                                  "__limit_utilization__", rsc->cluster);
             }
         }
     }

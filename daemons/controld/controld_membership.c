@@ -451,11 +451,11 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
              * nodes are joining around the same time, so the one that brings us
              * to quorum doesn't cause all the remaining ones to be fenced.
              */
-            abort_after_delay(INFINITY, pcmk__graph_restart, "Quorum gained",
-                              5000);
+            abort_after_delay(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                              "Quorum gained", 5000);
         } else {
-            abort_transition(INFINITY, pcmk__graph_restart, "Quorum lost",
-                             NULL);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Quorum lost", NULL);
         }
     }
 

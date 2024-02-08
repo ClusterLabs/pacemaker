@@ -670,7 +670,7 @@ disallow_node(pcmk_resource_t *rsc, const char *uname)
     gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
 
     if (match) {
-        ((pcmk_node_t *) match)->weight = -INFINITY;
+        ((pcmk_node_t *) match)->weight = -PCMK_SCORE_INFINITY;
         ((pcmk_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
     }
     if (rsc->children) {
@@ -737,9 +737,9 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         node = pe_find_node(parent->cluster->nodes, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  CRM_MINUS_INFINITY_S, parent->cluster);
+                                  PCMK_VALUE_MINUS_INFINITY, parent->cluster);
         } else {
-            node->weight = -INFINITY;
+            node->weight = -PCMK_SCORE_INFINITY;
         }
         node->rsc_discover_mode = pcmk_probe_never;
 
@@ -778,7 +778,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
         {
             pcmk_node_t *copy = pe__copy_node(replica->node);
-            copy->weight = -INFINITY;
+            copy->weight = -PCMK_SCORE_INFINITY;
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
@@ -791,7 +791,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
             if (pcmk__is_pacemaker_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */
-                node->weight = -INFINITY;
+                node->weight = -PCMK_SCORE_INFINITY;
             }
         }
 

@@ -23,7 +23,7 @@
 #include "libpacemaker_private.h"
 
 // Used to temporarily mark a node as unusable
-#define INFINITY_HACK   (INFINITY * -100)
+#define INFINITY_HACK   (PCMK_SCORE_INFINITY * -100)
 
 /*!
  * \internal
@@ -395,7 +395,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     dependent->cluster->colocation_constraints = g_list_prepend(
         dependent->cluster->colocation_constraints, new_con);
 
-    if (score <= -INFINITY) {
+    if (score <= -PCMK_SCORE_INFINITY) {
         anti_colocation_order(dependent, new_con->dependent_role, primary,
                               new_con->primary_role);
         anti_colocation_order(primary, new_con->primary_role, dependent,
@@ -1115,7 +1115,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
     for (iter = colocations; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *colocation = iter->data;
 
-        if (colocation->score < INFINITY) {
+        if (colocation->score < PCMK_SCORE_INFINITY) {
             continue; // Only mandatory colocations block dependent
         }
 
@@ -1233,7 +1233,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
             crm_trace("Skipping colocation '%s': %s will not run anywhere",
                       colocation->id, dependent->id);
 
-        } else if (colocation->score >= INFINITY) {
+        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Dependent resource must colocate with primary resource
 
             if (!pcmk__same_node(primary_node, dependent->allocated_to)) {
@@ -1244,7 +1244,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
                                 pcmk__node_name(primary_node));
             }
 
-        } else if (colocation->score <= -CRM_SCORE_INFINITY) {
+        } else if (colocation->score <= -PCMK_SCORE_INFINITY) {
             // Dependent resource must anti-colocate with primary resource
 
             if (pcmk__same_node(dependent->allocated_to, primary_node)) {
@@ -1339,7 +1339,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
              * The resource will simply be forbidden from running on the node if
              * the primary isn't active there (via the condition above).
              */
-            if (colocation->score < CRM_SCORE_INFINITY) {
+            if (colocation->score < PCMK_SCORE_INFINITY) {
                 node->weight = pcmk__add_scores(colocation->score,
                                                 node->weight);
                 pcmk__rsc_trace(dependent,
@@ -1353,13 +1353,13 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
             continue;
         }
 
-        if (colocation->score >= CRM_SCORE_INFINITY) {
+        if (colocation->score >= PCMK_SCORE_INFINITY) {
             /* Only mandatory colocations are relevant when the colocation
              * attribute doesn't match, because an attribute not matching is not
              * a negative preference -- the colocation is simply relevant only
              * where it matches.
              */
-            node->weight = -CRM_SCORE_INFINITY;
+            node->weight = -PCMK_SCORE_INFINITY;
             pcmk__rsc_trace(dependent,
                             "Banned %s from %s because colocation %s attribute %s "
                             "does not match",
@@ -1368,7 +1368,8 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
         }
     }
 
-    if ((colocation->score <= -INFINITY) || (colocation->score >= INFINITY)
+    if ((colocation->score <= -PCMK_SCORE_INFINITY)
+        || (colocation->score >= PCMK_SCORE_INFINITY)
         || pcmk__any_node_available(work)) {
 
         g_hash_table_destroy(dependent->allowed_nodes);
@@ -1424,9 +1425,9 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     primary_role_rsc = get_resource_for_role(primary);
 
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
-        if ((colocation->score == INFINITY)
+        if ((colocation->score == PCMK_SCORE_INFINITY)
             && (colocation->dependent_role == pcmk_role_promoted)) {
-            dependent->priority = -INFINITY;
+            dependent->priority = -PCMK_SCORE_INFINITY;
         }
         return;
     }
@@ -1464,7 +1465,7 @@ best_node_score_matching_attr(const pcmk_resource_t *rsc, const char *attr,
 {
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
-    int best_score = -INFINITY;
+    int best_score = -PCMK_SCORE_INFINITY;
     const char *best_node = NULL;
 
     // Find best allowed node with matching attribute
@@ -1748,7 +1749,8 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
             pcmk__colocation_t *constraint = iter->data;
 
             pcmk_resource_t *other = NULL;
-            float other_factor = factor * constraint->score / (float) INFINITY;
+            float other_factor = factor * constraint->score
+                                 / (float) PCMK_SCORE_INFINITY;
 
             if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
@@ -1813,7 +1815,7 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
     pcmk_resource_t *target_rsc = user_data;
 
     pcmk_resource_t *source_rsc = colocation->dependent;
-    const float factor = colocation->score / (float) INFINITY;
+    const float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
     uint32_t flags = pcmk__coloc_select_active;
 
     if (!pcmk__colocation_has_influence(colocation, NULL)) {
@@ -1868,7 +1870,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
         primary_node = pe_find_node_id(primary_nodes,
                                        dependent_node->details->id);
         if (primary_node == NULL) {
-            dependent_node->weight = -INFINITY;
+            dependent_node->weight = -PCMK_SCORE_INFINITY;
             pcmk__rsc_trace(dependent,
                             "Banning %s from %s (no primary instance) for %s",
                             dependent->id, pcmk__node_name(dependent_node),

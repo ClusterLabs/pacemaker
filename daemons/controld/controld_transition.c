@@ -109,13 +109,15 @@ do_te_invoke(long long action,
     if (action & A_TE_CANCEL) {
         crm_debug("Cancelling the transition: %sactive",
                   controld_globals.transition_graph->complete? "in" : "");
-        abort_transition(INFINITY, pcmk__graph_restart, "Peer Cancelled", NULL);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Peer Cancelled", NULL);
         if (!controld_globals.transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
 
     } else if (action & A_TE_HALT) {
-        abort_transition(INFINITY, pcmk__graph_wait, "Peer Halt", NULL);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_wait, "Peer Halt",
+                         NULL);
         if (!controld_globals.transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
@@ -135,8 +137,8 @@ do_te_invoke(long long action,
 
         if (!controld_globals.transition_graph->complete) {
             crm_info("Another transition is already active");
-            abort_transition(INFINITY, pcmk__graph_restart, "Transition Active",
-                             NULL);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Transition Active", NULL);
             return;
         }
 
@@ -146,7 +148,7 @@ do_te_invoke(long long action,
             crm_info("Transition is redundant: %s expected but %s received",
                      pcmk__s(controld_globals.fsa_pe_ref, "no reference"),
                      pcmk__s(ref, "no reference"));
-            abort_transition(INFINITY, pcmk__graph_restart,
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
         }
 

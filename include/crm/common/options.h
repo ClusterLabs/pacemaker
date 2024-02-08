@@ -155,6 +155,7 @@ extern     "C" {
 #define PCMK_VALUE_GTE                          "gte"
 #define PCMK_VALUE_HOST                         "host"
 #define PCMK_VALUE_IGNORE                       "ignore"
+#define PCMK_VALUE_INFINITY                     "INFINITY"
 #define PCMK_VALUE_INTEGER                      "integer"
 #define PCMK_VALUE_LITERAL                      "literal"
 #define PCMK_VALUE_LT                           "lt"
@@ -164,6 +165,7 @@ extern     "C" {
 #define PCMK_VALUE_META                         "meta"
 #define PCMK_VALUE_MIGRATE_ON_RED               "migrate-on-red"
 #define PCMK_VALUE_MINIMAL                      "minimal"
+#define PCMK_VALUE_MINUS_INFINITY               "-" PCMK_VALUE_INFINITY
 #define PCMK_VALUE_MODIFY                       "modify"
 #define PCMK_VALUE_MOVE                         "move"
 #define PCMK_VALUE_NE                           "ne"
@@ -180,6 +182,7 @@ extern     "C" {
 #define PCMK_VALUE_PANIC                        "panic"
 #define PCMK_VALUE_PARAM                        "param"
 #define PCMK_VALUE_PENDING                      "pending"
+#define PCMK_VALUE_PLUS_INFINITY                "+" PCMK_VALUE_INFINITY
 #define PCMK_VALUE_PROGRESSIVE                  "progressive"
 #define PCMK_VALUE_QUORUM                       "quorum"
 #define PCMK_VALUE_READ                         "read"

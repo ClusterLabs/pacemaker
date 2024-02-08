@@ -722,7 +722,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
-    (*rsc)->migration_threshold = INFINITY;
+    (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
     (*rsc)->failure_timeout = 0;
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);

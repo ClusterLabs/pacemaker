@@ -28,6 +28,7 @@
 #include <crm/common/results_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
+#include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/acl_internal.h>
 

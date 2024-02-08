@@ -82,23 +82,6 @@ extern "C" {
 
 extern char *crm_system_name;
 
-// How we represent "infinite" scores
-#  define CRM_SCORE_INFINITY    1000000
-#  define CRM_INFINITY_S        "INFINITY"
-#  define CRM_PLUS_INFINITY_S   "+" CRM_INFINITY_S
-#  define CRM_MINUS_INFINITY_S  "-" CRM_INFINITY_S
-
-/* @COMPAT API < 2.0.0 Deprecated "infinity" aliases
- *
- * INFINITY might be defined elsewhere (e.g. math.h), so undefine it first.
- * This, of course, complicates any attempt to use the other definition in any
- * code that includes this header.
- */
-#  undef INFINITY
-#  define INFINITY_S        "INFINITY"
-#  define MINUS_INFINITY_S "-INFINITY"
-#  define INFINITY        1000000
-
 /* Sub-systems */
 #  define CRM_SYSTEM_DC		"dc"
 #define CRM_SYSTEM_DCIB         "dcib" // Primary instance of CIB manager

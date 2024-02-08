@@ -123,8 +123,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         pcmk_resource_t *p = rsc->parent;
 
         pcmk__rsc_info(rsc, "resource %s isn't managed", rsc->id);
-        resource_location(rsc, node, INFINITY, "not_managed_default",
-                          scheduler);
+        resource_location(rsc, node, PCMK_SCORE_INFINITY,
+                          "not_managed_default", scheduler);
 
         while(p && node->details->online) {
             /* add without the additional location constraint */
@@ -148,7 +148,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     rsc->allowed_nodes = pe__node_list2table(scheduler->nodes);
                     g_hash_table_iter_init(&gIter, rsc->allowed_nodes);
                     while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
-                        local_node->weight = -INFINITY;
+                        local_node->weight = -PCMK_SCORE_INFINITY;
                     }
                 }
                 break;

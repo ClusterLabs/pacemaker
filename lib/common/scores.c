@@ -39,10 +39,10 @@ char2score(const char *score)
         return 0;
 
     } else if (pcmk_str_is_minus_infinity(score)) {
-        return -CRM_SCORE_INFINITY;
+        return -PCMK_SCORE_INFINITY;
 
     } else if (pcmk_str_is_infinity(score)) {
-        return CRM_SCORE_INFINITY;
+        return PCMK_SCORE_INFINITY;
 
     } else if (pcmk__str_eq(score, PCMK_VALUE_RED, pcmk__str_casei)) {
         return pcmk__score_red;
@@ -57,11 +57,11 @@ char2score(const char *score)
         long long score_ll;
 
         pcmk__scan_ll(score, &score_ll, 0LL);
-        if (score_ll > CRM_SCORE_INFINITY) {
-            return CRM_SCORE_INFINITY;
+        if (score_ll > PCMK_SCORE_INFINITY) {
+            return PCMK_SCORE_INFINITY;
 
-        } else if (score_ll < -CRM_SCORE_INFINITY) {
-            return -CRM_SCORE_INFINITY;
+        } else if (score_ll < -PCMK_SCORE_INFINITY) {
+            return -PCMK_SCORE_INFINITY;
 
         } else {
             return (int) score_ll;
@@ -86,13 +86,13 @@ const char *
 pcmk_readable_score(int score)
 {
     // The longest possible result is "-INFINITY"
-    static char score_s[sizeof(CRM_MINUS_INFINITY_S)];
+    static char score_s[sizeof(PCMK_VALUE_MINUS_INFINITY)];
 
-    if (score >= CRM_SCORE_INFINITY) {
-        strcpy(score_s, CRM_INFINITY_S);
+    if (score >= PCMK_SCORE_INFINITY) {
+        strcpy(score_s, PCMK_VALUE_INFINITY);
 
-    } else if (score <= -CRM_SCORE_INFINITY) {
-        strcpy(score_s, CRM_MINUS_INFINITY_S);
+    } else if (score <= -PCMK_SCORE_INFINITY) {
+        strcpy(score_s, PCMK_VALUE_MINUS_INFINITY);
 
     } else {
         // Range is limited to +/-1000000, so no chance of overflow
@@ -115,25 +115,25 @@ pcmk_readable_score(int score)
 int
 pcmk__add_scores(int score1, int score2)
 {
-    /* As long as CRM_SCORE_INFINITY is less than half of the maximum integer,
+    /* As long as PCMK_SCORE_INFINITY is less than half of the maximum integer,
      * we can ignore the possibility of integer overflow.
      */
     int result = score1 + score2;
 
     // First handle the cases where one or both is infinite
-    if ((score1 <= -CRM_SCORE_INFINITY) || (score2 <= -CRM_SCORE_INFINITY)) {
-        return -CRM_SCORE_INFINITY;
+    if ((score1 <= -PCMK_SCORE_INFINITY) || (score2 <= -PCMK_SCORE_INFINITY)) {
+        return -PCMK_SCORE_INFINITY;
     }
-    if ((score1 >= CRM_SCORE_INFINITY) || (score2 >= CRM_SCORE_INFINITY)) {
-        return CRM_SCORE_INFINITY;
+    if ((score1 >= PCMK_SCORE_INFINITY) || (score2 >= PCMK_SCORE_INFINITY)) {
+        return PCMK_SCORE_INFINITY;
     }
 
     // Bound result to infinity.
-    if (result >= CRM_SCORE_INFINITY) {
-        return CRM_SCORE_INFINITY;
+    if (result >= PCMK_SCORE_INFINITY) {
+        return PCMK_SCORE_INFINITY;
     }
-    if (result <= -CRM_SCORE_INFINITY) {
-        return -CRM_SCORE_INFINITY;
+    if (result <= -PCMK_SCORE_INFINITY) {
+        return -PCMK_SCORE_INFINITY;
     }
 
     return result;
@@ -142,7 +142,7 @@ pcmk__add_scores(int score1, int score2)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
-#include <crm/common/util_compat.h>
+#include <crm/common/scores_compat.h>
 
 char *
 score2char(int score)
@@ -156,7 +156,7 @@ score2char(int score)
 char *
 score2char_stack(int score, char *buf, size_t len)
 {
-    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
+    CRM_CHECK((buf != NULL) && (len >= sizeof(PCMK_VALUE_MINUS_INFINITY)),
               return NULL);
     strcpy(buf, pcmk_readable_score(score));
     return buf;

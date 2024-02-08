@@ -37,6 +37,8 @@ header_HEADERS = acl.h 			\
 		 rules.h		\
 		 scheduler.h		\
 		 scheduler_types.h	\
+		 scores.h		\
+		 scores_compat.h	\
 		 tags.h			\
 		 tickets.h		\
 		 util.h 		\

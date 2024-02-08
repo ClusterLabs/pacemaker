@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,10 +14,10 @@
 static void
 outside_limits(void **state)
 {
-    assert_string_equal(pcmk_readable_score(CRM_SCORE_INFINITY * 2),
-                        CRM_INFINITY_S);
-    assert_string_equal(pcmk_readable_score(-CRM_SCORE_INFINITY * 2),
-                        CRM_MINUS_INFINITY_S);
+    assert_string_equal(pcmk_readable_score(PCMK_SCORE_INFINITY * 2),
+                        PCMK_VALUE_INFINITY);
+    assert_string_equal(pcmk_readable_score(-PCMK_SCORE_INFINITY * 2),
+                        PCMK_VALUE_MINUS_INFINITY);
 }
 
 static void
