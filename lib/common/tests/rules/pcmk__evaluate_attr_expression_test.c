@@ -109,12 +109,9 @@ null_invalid(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(EXPR_SOURCE_LITERAL_PASSES);
 
-    assert_int_equal(pcmk__evaluate_attr_expression(NULL, NULL),
-                     pcmk_rc_unpack_error);
-    assert_int_equal(pcmk__evaluate_attr_expression(xml, NULL),
-                     pcmk_rc_op_unsatisfied);
-    assert_int_equal(pcmk__evaluate_attr_expression(NULL, &rule_input),
-                     pcmk_rc_unpack_error);
+    assert_int_equal(pcmk__evaluate_attr_expression(NULL, NULL), EINVAL);
+    assert_int_equal(pcmk__evaluate_attr_expression(xml, NULL), EINVAL);
+    assert_int_equal(pcmk__evaluate_attr_expression(NULL, &rule_input), EINVAL);
 
     free_xml(xml);
 }
