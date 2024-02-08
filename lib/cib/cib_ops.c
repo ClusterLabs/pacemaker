@@ -266,7 +266,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     int new_version = 0;
     int current_version = 0;
     int max_version = 0;
-    const char *max = crm_element_value(req, F_CIB_SCHEMA_MAX);
+    const char *max = crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX);
     const char *value = crm_element_value(existing_cib, PCMK_XA_VALIDATE_WITH);
 
     *answer = NULL;

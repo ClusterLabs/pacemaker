@@ -100,12 +100,12 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     rc = pcmk_ok;
-    crm_element_value_int(op_reply, F_CIB_CALLID, &reply_id);
+    crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
-        xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
+        xmlNode *tmp = get_message_xml(op_reply, PCMK__XA_CIB_CALLDATA);
 
         crm_trace("Synchronous reply %d received", reply_id);
-        if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
+        if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
             rc = -EPROTO;
         }
 
@@ -200,7 +200,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
     crm_trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
-    if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
+    if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
         cib_native_callback(cib, msg, 0, 0);
 
     } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
@@ -332,7 +332,7 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
 
         if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
                          &reply) > 0) {
-            const char *msg_type = crm_element_value(reply, F_CIB_OPERATION);
+            const char *msg_type = crm_element_value(reply, PCMK__XA_CIB_OP);
 
             crm_log_xml_trace(reply, "reg-reply");
 
@@ -343,7 +343,8 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
                 rc = -EPROTO;
 
             } else {
-                native->token = crm_element_value_copy(reply, F_CIB_CLIENTID);
+                native->token = crm_element_value_copy(reply,
+                                                       PCMK__XA_CIB_CLIENTID);
                 if (native->token == NULL) {
                     rc = -EPROTO;
                 }
@@ -403,9 +404,9 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
     cib_native_opaque_t *native = cib->variant_opaque;
 
     if (cib->state != cib_disconnected) {
-        crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
-        crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
-        crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+        crm_xml_add(notify_msg, PCMK__XA_CIB_OP, T_CIB_NOTIFY);
+        crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
+        crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
                           1000 * cib->call_timeout, NULL);
         if (rc <= 0) {

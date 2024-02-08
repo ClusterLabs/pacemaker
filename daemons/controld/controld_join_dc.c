@@ -416,8 +416,17 @@ do_dc_join_filter_offer(long long action,
             PCMK_XA_NUM_UPDATES,
         };
 
-        for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {
-            cmp = compare_int_fields(max_generation_xml, generation, attributes[lpc]);
+        /* It's not obvious that join_ack->xml is the PCMK__XE_GENERATION_TUPLE
+         * element from the join client. The "if" guard is for clarity.
+         */
+        if (pcmk__xe_is(generation, PCMK__XE_GENERATION_TUPLE)) {
+            for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {
+                cmp = compare_int_fields(max_generation_xml, generation,
+                                         attributes[lpc]);
+            }
+
+        } else {    // Should always be PCMK__XE_GENERATION_TUPLE
+            CRM_LOG_ASSERT(false);
         }
     }
 

@@ -84,14 +84,16 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return ENOMSG;
     }
 
-    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+    if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
+        || (rc != pcmk_ok)) {
+
         crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
                  pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);
     }
 
-    *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (*patchset == NULL) {
         crm_err("CIB diff notification received with no patchset");
@@ -100,7 +102,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     return pcmk_rc_ok;
 }
 
-#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
+#define XPATH_DIFF_V1 "//" PCMK__XA_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
 
 /*!
  * \internal
@@ -155,7 +157,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
     for (const xmlNode *change = first_named_child(patchset, PCMK_XE_CHANGE);
          change != NULL; change = crm_next_same_xml(change)) {
 
-        const char *op = crm_element_value(change, F_CIB_OPERATION);
+        const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
         const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
@@ -336,7 +338,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *user = crm_element_value(req, F_CIB_USER);
+    const char *user = crm_element_value(req, PCMK__XA_CIB_USER);
     bool with_digest = false;
 
     crm_trace("Begin %s%s%s op",
@@ -597,7 +599,8 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                  * the values in req
                  */
                 const char *origin = crm_element_value(req, PCMK__XA_SRC);
-                const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
+                const char *client = crm_element_value(req,
+                                                       PCMK__XA_CIB_CLIENTNAME);
 
                 if (origin != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
@@ -675,19 +678,19 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         cib->call_id = 1;
     }
 
-    crm_xml_add(*op_msg, PCMK__XA_T, T_CIB);
-    crm_xml_add(*op_msg, F_CIB_OPERATION, op);
-    crm_xml_add(*op_msg, F_CIB_HOST, host);
-    crm_xml_add(*op_msg, F_CIB_SECTION, section);
-    crm_xml_add(*op_msg, F_CIB_USER, user_name);
-    crm_xml_add(*op_msg, F_CIB_CLIENTNAME, client_name);
-    crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
+    crm_xml_add(*op_msg, PCMK__XA_T, PCMK__VALUE_CIB);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_HOST, host);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_USER, user_name);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
+    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(*op_msg, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(*op_msg, F_CIB_CALLDATA, data);
+        add_message_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
     }
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
@@ -708,8 +711,8 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 static int
 validate_transaction_request(const xmlNode *request)
 {
-    const char *op = crm_element_value(request, F_CIB_OPERATION);
-    const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
     int rc = cib__get_operation(op, &operation);
 
@@ -758,7 +761,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
         add_node_copy(cib->transaction, request);
 
     } else {
-        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
@@ -776,9 +779,9 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
-        crm_element_value_int(msg, F_CIB_RC, &rc);
-        crm_element_value_int(msg, F_CIB_CALLID, &call_id);
-        output = get_message_xml(msg, F_CIB_CALLDATA);
+        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+        crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
+        output = get_message_xml(msg, PCMK__XA_CIB_CALLDATA);
     }
 
     blob = cib__lookup_id(call_id);
@@ -918,8 +921,8 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(input);
     CRM_ASSERT(output);
 
-    crm_element_value_int(event, F_CIB_RC, &rc);
-    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
+    crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
+    diff = get_message_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (rc < pcmk_ok || diff == NULL) {
         return rc;

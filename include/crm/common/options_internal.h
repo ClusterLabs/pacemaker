@@ -185,6 +185,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 // Constants for enumerated values
 #define PCMK__VALUE_ATTRD                   "attrd"
 #define PCMK__VALUE_BOLD                    "bold"
+#define PCMK__VALUE_BROADCAST               "broadcast"
 #define PCMK__VALUE_CIB                     "cib"
 #define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CRMD                    "crmd"
@@ -209,7 +210,10 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__VALUE_RUNNING                 "running"
 #define PCMK__VALUE_SHUTDOWN_COMPLETE       "shutdown_complete"
 #define PCMK__VALUE_SHUTTING_DOWN           "shutting_down"
+#define PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE  "st-async-timeout-value"
+#define PCMK__VALUE_ST_NOTIFY               "st_notify"
 #define PCMK__VALUE_STARTING_DAEMONS        "starting_daemons"
+#define PCMK__VALUE_STONITH_NG              "stonith-ng"
 #define PCMK__VALUE_WAIT_FOR_PING           "wait_for_ping"
 #define PCMK__VALUE_WARNING                 "warning"
 

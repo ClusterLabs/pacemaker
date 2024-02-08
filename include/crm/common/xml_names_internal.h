@@ -43,7 +43,12 @@ extern "C" {
 #define PCMK__XE_RSC_OP                 "rsc_op"
 #define PCMK__XE_SHUTDOWN               "shutdown"
 #define PCMK__XE_SPAN                   "span"
+#define PCMK__XE_ST_ASYNC_TIMEOUT_VALUE "st-async-timeout-value"
+#define PCMK__XE_ST_DEVICE_ACTION       "st_device_action"
+#define PCMK__XE_ST_DEVICE_ID           "st_device_id"
 #define PCMK__XE_ST_HISTORY             "st_history"
+#define PCMK__XE_ST_REPLY               "st-reply"
+#define PCMK__XE_STONITH_COMMAND        "stonith_command"
 #define PCMK__XE_TICKET_STATE           "ticket_state"
 #define PCMK__XE_TRANSIENT_ATTRIBUTES   "transient_attributes"
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
@@ -57,6 +62,12 @@ extern "C" {
  * PCMK__XE_CIB in places where it's recognized.
  */
 #define PCMK__XE_ALL                    "all"
+
+// @COMPAT Deprecated since 2.1.8
+#define PCMK__XE_CIB_GENERATION         "cib_generation"
+
+// @COMPAT Deprecated since 2.1.8
+#define PCMK__XE_CIB_UPDATE             "cib_update"
 
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
@@ -103,6 +114,25 @@ extern "C" {
 #define PCMK__XA_ATTR_WRITER            "attr_writer"
 #define PCMK__XA_ATTRD_IS_FORCE_WRITE   "attrd_is_force_write"
 #define PCMK__XA_CALL_ID                "call-id"
+#define PCMK__XA_CIB_CALLDATA           "cib_calldata"
+#define PCMK__XA_CIB_CALLID             "cib_callid"
+#define PCMK__XA_CIB_CALLOPT            "cib_callopt"
+#define PCMK__XA_CIB_CLIENTID           "cib_clientid"
+#define PCMK__XA_CIB_CLIENTNAME         "cib_clientname"
+#define PCMK__XA_CIB_DELEGATED_FROM     "cib_delegated_from"
+#define PCMK__XA_CIB_HOST               "cib_host"
+#define PCMK__XA_CIB_ISREPLYTO          "cib_isreplyto"
+#define PCMK__XA_CIB_NOTIFY_ACTIVATE    "cib_notify_activate"
+#define PCMK__XA_CIB_NOTIFY_TYPE        "cib_notify_type"
+#define PCMK__XA_CIB_OP                 "cib_op"
+#define PCMK__XA_CIB_PING_ID            "cib_ping_id"
+#define PCMK__XA_CIB_RC                 "cib_rc"
+#define PCMK__XA_CIB_SCHEMA_MAX         "cib_schema_max"
+#define PCMK__XA_CIB_SECTION            "cib_section"
+#define PCMK__XA_CIB_UPDATE             "cib_update"
+#define PCMK__XA_CIB_UPDATE_RESULT      "cib_update_result"
+#define PCMK__XA_CIB_UPGRADE_RC         "cib_upgrade_rc"
+#define PCMK__XA_CIB_USER               "cib_user"
 #define PCMK__XA_CLIENT_NAME            "client_name"
 #define PCMK__XA_CLIENT_UUID            "client_uuid"
 #define PCMK__XA_CONFIG_ERRORS          "config-errors"
@@ -152,6 +182,7 @@ extern "C" {
 #define PCMK__XA_OP_SECURE_PARAMS       "op-secure-params"
 #define PCMK__XA_OP_STATUS              "op-status"
 #define PCMK__XA_OPERATION_KEY          "operation_key"
+#define PCMK__XA_ORIGINAL_CIB_OP        "original_cib_op"
 #define PCMK__XA_PACEMAKERD_STATE       "pacemakerd_state"
 #define PCMK__XA_PASSWORD               "password"
 #define PCMK__XA_PRIORITY               "priority"
@@ -184,17 +215,22 @@ extern "C" {
 #define PCMK__XA_ST_DELAY_BASE          "st_delay_base"
 #define PCMK__XA_ST_DELAY_MAX           "st_delay_max"
 #define PCMK__XA_ST_DELEGATE            "st_delegate"
+#define PCMK__XA_ST_DEVICE_ACTION       "st_device_action"
+#define PCMK__XA_ST_DEVICE_ID           "st_device_id"
 #define PCMK__XA_ST_DEVICE_SUPPORT_FLAGS    "st_device_support_flags"
+#define PCMK__XA_ST_DIFFERENTIAL        "st_differential"
 #define PCMK__XA_ST_MONITOR_VERIFIED    "st_monitor_verified"
 #define PCMK__XA_ST_NOTIFY_ACTIVATE     "st_notify_activate"
 #define PCMK__XA_ST_NOTIFY_DEACTIVATE   "st_notify_deactivate"
 #define PCMK__XA_ST_OP                  "st_op"
+#define PCMK__XA_ST_OP_MERGED           "st_op_merged"
 #define PCMK__XA_ST_ORIGIN              "st_origin"
 #define PCMK__XA_ST_OUTPUT              "st_output"
 #define PCMK__XA_ST_RC                  "st_rc"
 #define PCMK__XA_ST_REMOTE_OP           "st_remote_op"
 #define PCMK__XA_ST_REMOTE_OP_RELAY     "st_remote_op_relay"
 #define PCMK__XA_ST_REQUIRED            "st_required"
+#define PCMK__XA_ST_STATE               "st_state"
 #define PCMK__XA_ST_TARGET              "st_target"
 #define PCMK__XA_ST_TIMEOUT             "st_timeout"
 #define PCMK__XA_ST_TOLERANCE           "st_tolerance"
@@ -203,6 +239,18 @@ extern "C" {
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
+
+// @COMPAT Deprecated since 2.1.8
+#define PCMK__XA_CIB_OBJECT             "cib_object"
+
+// @COMPAT Deprecated since 2.1.8
+#define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
+
+// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
+#define PCMK__XA_CIB_LOCAL_NOTIFY_ID    "cib_local_notify_id"
+
+// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
+#define PCMK__XA_CIB_UPDATE_DIFF        "cib_update_diff"
 
 // @COMPAT Used only with v1 patchsets
 #define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
@@ -236,7 +284,6 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_WITH_RSC_INSTANCE      "with-rsc-instance"
-
 
 #ifdef __cplusplus
 }

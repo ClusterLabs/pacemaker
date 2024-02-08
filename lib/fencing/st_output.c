@@ -568,7 +568,7 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (device != NULL) {
-        crm_xml_add(node, "device", device);
+        crm_xml_add(node, PCMK_XA_DEVICE, device);
     }
 
     pcmk__output_xml_push_parent(out, node);

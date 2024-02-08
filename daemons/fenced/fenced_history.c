@@ -41,14 +41,14 @@ stonith_send_broadcast_history(xmlNode *history,
                                int callopts,
                                const char *target)
 {
-    xmlNode *bcast = create_xml_node(NULL, "stonith_command");
+    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
     xmlNode *data = create_xml_node(NULL, __func__);
 
     if (target) {
         crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     }
-    crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NG);
-    crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
+    crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
     crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
     crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
     if (history) {
@@ -248,7 +248,7 @@ stonith_xml_history_to_list(const xmlNode *history)
 
         op->id = id;
         op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
-        op->action = crm_element_value_copy(xml_op, F_STONITH_ACTION);
+        op->action = crm_element_value_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
         op->originator = crm_element_value_copy(xml_op, PCMK__XA_ST_ORIGIN);
         op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
         op->client_name = crm_element_value_copy(xml_op,
@@ -257,7 +257,7 @@ stonith_xml_history_to_list(const xmlNode *history)
         op->completed = (time_t) completed;
         crm_element_value_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
         op->completed_nsec = completed_nsec;
-        crm_element_value_int(xml_op, F_STONITH_STATE, &state);
+        crm_element_value_int(xml_op, PCMK__XA_ST_STATE, &state);
         op->state = (enum op_state) state;
 
         /* @COMPAT We can't use stonith__xe_get_result() here because
@@ -367,14 +367,14 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                     crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
                 crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
-                crm_xml_add(entry, F_STONITH_ACTION, op->action);
+                crm_xml_add(entry, PCMK__XA_ST_DEVICE_ACTION, op->action);
                 crm_xml_add(entry, PCMK__XA_ST_ORIGIN, op->originator);
                 crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
                 crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
                 crm_xml_add_ll(entry, PCMK__XA_ST_DATE, op->completed);
                 crm_xml_add_ll(entry, PCMK__XA_ST_DATE_NSEC,
                                op->completed_nsec);
-                crm_xml_add_int(entry, F_STONITH_STATE, op->state);
+                crm_xml_add_int(entry, PCMK__XA_ST_STATE, op->state);
                 stonith__xe_set_result(entry, &op->result);
             }
     }
@@ -519,7 +519,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             * otherwise broadcast what we have on top
             * marking as differential and merge in afterwards
             */
-            if (!history || !pcmk__xe_attr_is_true(history, F_STONITH_DIFFERENTIAL)) {
+            if (!history
+                || !pcmk__xe_attr_is_true(history, PCMK__XA_ST_DIFFERENTIAL)) {
+
                 GHashTable *received_history = NULL;
 
                 if (history != NULL) {
@@ -529,7 +531,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                     stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {
                     crm_trace("Broadcasting history-diff to peers");
-                    pcmk__xe_set_bool_attr(out_history, F_STONITH_DIFFERENTIAL, true);
+                    pcmk__xe_set_bool_attr(out_history,
+                                           PCMK__XA_ST_DIFFERENTIAL, true);
                     stonith_send_broadcast_history(out_history,
                         st_opt_broadcast | st_opt_discard_reply,
                         NULL);

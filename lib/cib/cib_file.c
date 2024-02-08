@@ -218,9 +218,9 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     int call_id = 0;
     int call_options = cib_none;
-    const char *op = crm_element_value(request, F_CIB_OPERATION);
-    const char *section = crm_element_value(request, F_CIB_SECTION);
-    xmlNode *data = get_message_xml(request, F_CIB_CALLDATA);
+    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+    const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
+    xmlNode *data = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
 
     bool changed = false;
     bool read_only = false;
@@ -233,8 +233,8 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__get_operation(op, &operation);
     op_function = file_get_op_function(operation);
 
-    crm_element_value_int(request, F_CIB_CALLID, &call_id);
-    crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
+    crm_element_value_int(request, PCMK__XA_CIB_CALLID, &call_id);
+    crm_element_value_int(request, PCMK__XA_CIB_CALLOPT, &call_options);
 
     read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
 
@@ -327,7 +327,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return rc;
     }
     crm_xml_add(request, PCMK_XE_ACL_TARGET, user_name);
-    crm_xml_add(request, F_CIB_CLIENTID, private->id);
+    crm_xml_add(request, PCMK__XA_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
@@ -1065,7 +1065,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
          request != NULL; request = crm_next_same_xml(request)) {
 
         xmlNode *output = NULL;
-        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
 
         int rc = cib_file_process_request(cib, request, &output);
 
@@ -1156,7 +1156,7 @@ cib_file_process_commit_transaction(const char *op, int options,
                                     xmlNode **result_cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+    const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
     cib_t *cib = NULL;
 
     CRM_CHECK(client_id != NULL, return -EINVAL);

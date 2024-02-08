@@ -108,7 +108,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     op = crm_element_value(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
-        crm_xml_add(request, PCMK__XA_T, T_STONITH_NG);
+        crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(request, PCMK__XA_ST_OP, op);
         crm_xml_add(request, PCMK__XA_ST_CLIENTID, c->id);
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
@@ -176,7 +176,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
     const char *remote_peer = crm_element_value(msg, PCMK__XA_SRC);
     const char *op = crm_element_value(msg, PCMK__XA_ST_OP);
 
-    if (pcmk__str_eq(op, "poke", pcmk__str_none)) {
+    if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
         return;
     }
 
@@ -320,8 +320,8 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
         return;
     }
 
-    notify_data = create_xml_node(NULL, T_STONITH_TIMEOUT_VALUE);
-    crm_xml_add(notify_data, PCMK__XA_T, T_STONITH_TIMEOUT_VALUE);
+    notify_data = create_xml_node(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
+    crm_xml_add(notify_data, PCMK__XA_T, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE);
     crm_xml_add(notify_data, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
 
@@ -351,7 +351,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     CRM_LOG_ASSERT(type != NULL);
 
-    crm_xml_add(update_msg, PCMK__XA_T, T_STONITH_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, type);
     crm_xml_add(update_msg, PCMK__XA_ST_OP, type);
     stonith__xe_set_result(update_msg, result);
@@ -370,60 +370,27 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
  * \internal
  * \brief Send notifications for a configuration change to subscribed clients
  *
- * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD,
- *                    STONITH_OP_DEVICE_DEL, STONITH_OP_LEVEL_ADD, or
- *                    STONITH_OP_LEVEL_DEL)
+ * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD,
+ *                    \c STONITH_OP_DEVICE_DEL, \c STONITH_OP_LEVEL_ADD, or
+ *                    \c STONITH_OP_LEVEL_DEL)
  * \param[in] result  Operation result
- * \param[in] desc    Description of what changed
- * \param[in] active  Current number of devices or topologies in use
+ * \param[in] desc    Description of what changed (either device ID or string
+ *                    representation of level
+ *                    (<tt><target>[<level_index>]</tt>))
  */
-static void
-send_config_notification(const char *op, const pcmk__action_result_t *result,
-                         const char *desc, int active)
+void
+fenced_send_config_notification(const char *op,
+                                const pcmk__action_result_t *result,
+                                const char *desc)
 {
     xmlNode *notify_data = create_xml_node(NULL, op);
 
     CRM_CHECK(notify_data != NULL, return);
 
-    crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
-    crm_xml_add_int(notify_data, F_STONITH_ACTIVE, active);
+    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
 
     fenced_send_notification(op, result, notify_data);
     free_xml(notify_data);
-}
-
-/*!
- * \internal
- * \brief Send notifications for a device change to subscribed clients
- *
- * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD or
- *                    STONITH_OP_DEVICE_DEL)
- * \param[in] result  Operation result
- * \param[in] desc    ID of device that changed
- */
-void
-fenced_send_device_notification(const char *op,
-                                const pcmk__action_result_t *result,
-                                const char *desc)
-{
-    send_config_notification(op, result, desc, g_hash_table_size(device_list));
-}
-
-/*!
- * \internal
- * \brief Send notifications for a topology level change to subscribed clients
- *
- * \param[in] op      Notification type (STONITH_OP_LEVEL_ADD or
- *                    STONITH_OP_LEVEL_DEL)
- * \param[in] result  Operation result
- * \param[in] desc    String representation of level (<target>[<level_index>])
- */
-void
-fenced_send_level_notification(const char *op,
-                               const pcmk__action_result_t *result,
-                               const char *desc)
-{
-    send_config_notification(op, result, desc, g_hash_table_size(topology));
 }
 
 /*!
@@ -507,10 +474,10 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        xmlNode *query = create_xml_node(NULL, "stonith_command");
+        xmlNode *query = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
 
-        crm_xml_add(query, PCMK__XA_T, T_STONITH_NG);
-        crm_xml_add(query, PCMK__XA_ST_OP, "poke");
+        crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+        crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
         crm_debug("Broadcasting our uname because of node %u", node->id);
         send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);

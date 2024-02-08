@@ -35,7 +35,7 @@
 #include <crm/common/xml.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__*
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  include <gnutls/gnutls.h>

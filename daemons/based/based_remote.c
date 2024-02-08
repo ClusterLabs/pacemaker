@@ -421,24 +421,24 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 
     /* unset dangerous options */
     xml_remove_prop(command, PCMK__XA_SRC);
-    xml_remove_prop(command, F_CIB_HOST);
-    xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
+    xml_remove_prop(command, PCMK__XA_CIB_HOST);
+    xml_remove_prop(command, PCMK__XA_CIB_UPDATE);
 
-    crm_xml_add(command, PCMK__XA_T, T_CIB);
-    crm_xml_add(command, F_CIB_CLIENTID, client->id);
-    crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
-    crm_xml_add(command, F_CIB_USER, client->user);
+    crm_xml_add(command, PCMK__XA_T, PCMK__VALUE_CIB);
+    crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
+    crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
+    crm_xml_add(command, PCMK__XA_CIB_USER, client->user);
 
-    if (crm_element_value(command, F_CIB_CALLID) == NULL) {
+    if (crm_element_value(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
-        crm_xml_add(command, F_CIB_CALLID, call_uuid);
+        crm_xml_add(command, PCMK__XA_CIB_CALLID, call_uuid);
         free(call_uuid);
     }
 
-    if (crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
-        crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
+    if (crm_element_value(command, PCMK__XA_CIB_CALLOPT) == NULL) {
+        crm_xml_add_int(command, PCMK__XA_CIB_CALLOPT, 0);
     }
 
     crm_log_xml_trace(command, "Remote command: ");
@@ -516,8 +516,8 @@ cib_remote_msg(gpointer data)
 
         /* send ACK */
         reg = create_xml_node(NULL, "cib_result");
-        crm_xml_add(reg, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(reg, F_CIB_CLIENTID, client->id);
+        crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
         free_xml(reg);
         free_xml(command);

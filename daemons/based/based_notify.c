@@ -124,14 +124,18 @@ cib_notify_send(const xmlNode *xml)
 }
 
 static void
-attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib)
+attach_cib_generation(xmlNode *msg)
 {
     xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
 
-    if (a_cib != NULL) {
-        copy_in_properties(generation, a_cib);
+    if (generation == NULL) {
+        return;
     }
-    add_message_xml(msg, field, generation);
+
+    if (the_cib != NULL) {
+        copy_in_properties(generation, the_cib);
+    }
+    add_message_xml(msg, PCMK__XE_CIB_GENERATION, generation);
     free_xml(generation);
 }
 
@@ -194,13 +198,14 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     crm_xml_add(update_msg, PCMK__XA_T, T_CIB_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, T_CIB_DIFF_NOTIFY);
-    crm_xml_add(update_msg, F_CIB_OPERATION, op);
-    crm_xml_add(update_msg, F_CIB_CLIENTID, client_id);
-    crm_xml_add(update_msg, F_CIB_CLIENTNAME, client_name);
-    crm_xml_add(update_msg, F_CIB_CALLID, call_id);
+    crm_xml_add(update_msg, PCMK__XA_CIB_OP, op);
+    crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
+    crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
+    crm_xml_add(update_msg, PCMK__XA_CIB_CALLID, call_id);
     crm_xml_add(update_msg, PCMK__XA_SRC, origin);
-    crm_xml_add_int(update_msg, F_CIB_RC, result);
+    crm_xml_add_int(update_msg, PCMK__XA_CIB_RC, result);
 
+    // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
         type = (const char *) update->name;
         crm_trace("Setting type to update->name: %s", type);
@@ -208,14 +213,18 @@ cib_diff_notify(const char *op, int result, const char *call_id,
         type = (const char *) diff->name;
         crm_trace("Setting type to new_obj->name: %s", type);
     }
-    crm_xml_add(update_msg, F_CIB_OBJID, pcmk__xe_id(diff));
-    crm_xml_add(update_msg, F_CIB_OBJTYPE, type);
-    attach_cib_generation(update_msg, "cib_generation", the_cib);
 
+    // @COMPAT Unused internally, drop at 3.0.0
+    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT, pcmk__xe_id(diff));
+    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT_TYPE, type);
+    attach_cib_generation(update_msg);
+
+    // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
-        add_message_xml(update_msg, F_CIB_UPDATE, update);
+        add_message_xml(update_msg, PCMK__XE_CIB_UPDATE, update);
     }
-    add_message_xml(update_msg, F_CIB_UPDATE_RESULT, diff);
+
+    add_message_xml(update_msg, PCMK__XA_CIB_UPDATE_RESULT, diff);
 
     crm_log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);

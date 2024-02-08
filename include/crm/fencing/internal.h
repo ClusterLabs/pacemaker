@@ -102,22 +102,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define ST_LEVEL_MAX 10
 
-#  define F_STONITH_STATE         "st_state"
-#  define F_STONITH_ACTIVE        "st_active"
-#  define F_STONITH_DIFFERENTIAL  "st_differential"
-
-#  define F_STONITH_DEVICE        "st_device_id"
-#  define F_STONITH_ACTION        "st_device_action"
-#  define F_STONITH_MERGED        "st_op_merged"
-
-#  define T_STONITH_NG        "stonith-ng"
-#  define T_STONITH_REPLY     "st-reply"
-/*! For async operations, an event from the server containing
- * the total amount of time the server is allowing for the operation
- * to take place is returned to the client. */
-#  define T_STONITH_TIMEOUT_VALUE "st-async-timeout-value"
-#  define T_STONITH_NOTIFY    "st_notify"
-
+// @COMPAT Deprecated since 1.1.17 (and see T773 to drop it)
 #  define STONITH_ATTR_ACTION_OP   "action"
 
 #  define STONITH_OP_EXEC        "st_execute"
@@ -130,6 +115,9 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define STONITH_OP_FENCE_HISTORY   "st_fence_history"
 #  define STONITH_OP_LEVEL_ADD       "st_level_add"
 #  define STONITH_OP_LEVEL_DEL       "st_level_remove"
+#  define STONITH_OP_NOTIFY          "st_notify"
+#  define STONITH_OP_POKE            "poke"
+
 
 #  define STONITH_WATCHDOG_AGENT          "fence_watchdog"
 /* Don't change 2 below as it would break rolling upgrade */

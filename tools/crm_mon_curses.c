@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <crm/common/output.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__history_description()
 #include <crm/pengine/internal.h>
 #include <glib.h>
 #include <pacemaker-internal.h>

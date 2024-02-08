@@ -16,7 +16,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/cib/internal.h>   // PCMK__CIB_REQUEST_MODIFY
+#include <crm/cib/internal.h>   // cib__*
 #include "controld_globals.h"   // controld_globals.cib_conn
 
 static inline void

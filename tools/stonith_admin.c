@@ -29,7 +29,7 @@
 #include <crm/common/output_internal.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__register_messages()
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
 

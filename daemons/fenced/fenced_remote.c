@@ -381,7 +381,7 @@ fencing_result2xml(const remote_fencing_op_t *op)
 
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(notify_data, F_STONITH_ACTION, op->action);
+    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ACTION, op->action);
     crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, op->delegate);
     crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, op->originator);
@@ -402,18 +402,18 @@ void
 fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
-    xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
+    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_ST_REPLY);
     xmlNode *notify_data = fencing_result2xml(op);
 
     count++;
     crm_trace("Broadcasting result to peers");
-    crm_xml_add(bcast, PCMK__XA_T, T_STONITH_NOTIFY);
-    crm_xml_add(bcast, PCMK__XA_SUBT, "broadcast");
-    crm_xml_add(bcast, PCMK__XA_ST_OP, T_STONITH_NOTIFY);
+    crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
+    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+    crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
     crm_xml_add_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
-        pcmk__xe_set_bool_attr(bcast, F_STONITH_MERGED, true);
+        pcmk__xe_set_bool_attr(bcast, PCMK__XA_ST_OP_MERGED, true);
     }
 
     stonith__xe_set_result(notify_data, &op->result);
@@ -584,7 +584,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         }
     }
 
-    if (dup || (crm_element_value(data, F_STONITH_MERGED) != NULL)) {
+    if (dup || (crm_element_value(data, PCMK__XA_ST_OP_MERGED) != NULL)) {
         op_merged = true;
     }
 
@@ -592,7 +592,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
      * with doing the local notifications once we receive
      * the broadcast back. */
     subt = crm_element_value(data, PCMK__XA_SUBT);
-    if (!dup && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
+    if (!dup && !pcmk__str_eq(subt, PCMK__VALUE_BROADCAST, pcmk__str_none)) {
         /* Defer notification until the bcast message arrives */
         fenced_broadcast_op_result(op, op_merged);
         free_xml(local_data);
@@ -1177,7 +1177,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     op->state = st_query;
     op->replies_expected = fencing_active_peers();
-    op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
+    op->action = crm_element_value_copy(dev, PCMK__XA_ST_DEVICE_ACTION);
 
     /* The node initiating the stonith operation. If an operation is relayed,
      * this is the last node the operation lands on. When in standalone mode,
@@ -1329,7 +1329,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
 
     crm_xml_add(query, PCMK__XA_ST_REMOTE_OP, op->id);
     crm_xml_add(query, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(query, F_STONITH_ACTION, op_requested_action(op));
+    crm_xml_add(query, PCMK__XA_ST_DEVICE_ACTION, op_requested_action(op));
     crm_xml_add(query, PCMK__XA_ST_ORIGIN, op->originator);
     crm_xml_add(query, PCMK__XA_ST_CLIENTID, op->client_id);
     crm_xml_add(query, PCMK__XA_ST_CLIENTNAME, op->client_name);
@@ -1879,7 +1879,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
         crm_xml_add(remote_op, PCMK__XA_ST_REMOTE_OP, op->id);
         crm_xml_add(remote_op, PCMK__XA_ST_TARGET, op->target);
-        crm_xml_add(remote_op, F_STONITH_ACTION, op->action);
+        crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ACTION, op->action);
         crm_xml_add(remote_op, PCMK__XA_ST_ORIGIN, op->originator);
         crm_xml_add(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
         crm_xml_add(remote_op, PCMK__XA_ST_CLIENTNAME, op->client_name);
@@ -1894,7 +1894,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
                        op->client_name, timeout_one);
-            crm_xml_add(remote_op, F_STONITH_DEVICE, device);
+            crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ID, device);
 
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
@@ -2380,7 +2380,7 @@ fenced_process_fencing_reply(xmlNode *msg)
 
     stonith__xe_get_result(dev, &result);
 
-    device = crm_element_value(dev, F_STONITH_DEVICE);
+    device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
     if (stonith_remote_op_list) {
         op = g_hash_table_lookup(stonith_remote_op_list, id);
@@ -2411,8 +2411,8 @@ fenced_process_fencing_reply(xmlNode *msg)
         return;
     }
 
-    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT), "broadcast",
-                     pcmk__str_none)) {
+    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
+                     PCMK__VALUE_BROADCAST, pcmk__str_none)) {
 
         if (pcmk__result_ok(&op->result)) {
             op->state = st_done;
@@ -2442,7 +2442,7 @@ fenced_process_fencing_reply(xmlNode *msg)
             return;
         }
 
-        device = crm_element_value(msg, F_STONITH_DEVICE);
+        device = crm_element_value(msg, PCMK__XA_ST_DEVICE_ID);
 
         if ((op->phase == 2) && !pcmk__result_ok(&op->result)) {
             /* A remapped "on" failed, but the node was already turned off
