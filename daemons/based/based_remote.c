@@ -223,7 +223,7 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    if (!pcmk__xe_is(login, T_CIB_COMMAND)) {
+    if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
         crm_err("Unrecognizable message from remote client");
         crm_log_xml_info(login, "bad");
         return FALSE;
@@ -410,7 +410,7 @@ cib_remote_connection_destroy(gpointer user_data)
 static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
-    if (!pcmk__xe_is(command, T_CIB_COMMAND)) {
+    if (!pcmk__xe_is(command, PCMK__XE_CIB_COMMAND)) {
         crm_log_xml_trace(command, "bad");
         return;
     }
@@ -515,7 +515,7 @@ cib_remote_msg(gpointer data)
         }
 
         /* send ACK */
-        reg = create_xml_node(NULL, "cib_result");
+        reg = create_xml_node(NULL, PCMK__XE_CIB_RESULT);
         crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
         crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);

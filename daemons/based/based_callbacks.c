@@ -158,7 +158,7 @@ static xmlNode *
 create_cib_reply(const char *op, const char *call_id, const char *client_id,
                  int call_options, int rc, xmlNode *call_data)
 {
-    xmlNode *reply = create_xml_node(NULL, "cib-reply");
+    xmlNode *reply = create_xml_node(NULL, PCMK__XE_CIB_REPLY);
 
     CRM_ASSERT(reply != NULL);
 
@@ -275,7 +275,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         }
         return;
 
-    } else if (pcmk__str_eq(op, T_CIB_NOTIFY, pcmk__str_none)) {
+    } else if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
         /* Update the notify filters for this client */
         int on_off = 0;
         crm_exit_t status = CRM_EX_OK;
@@ -289,16 +289,19 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         crm_debug("Setting %s callbacks %s for client %s",
                   type, (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
-        if (pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
+        if (pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY, pcmk__str_none)) {
             bit = cib_notify_post;
 
-        } else if (pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
+                                pcmk__str_none)) {
             bit = cib_notify_pre;
 
-        } else if (pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
+                                pcmk__str_none)) {
             bit = cib_notify_confirm;
 
-        } else if (pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                pcmk__str_none)) {
             bit = cib_notify_diff;
 
         } else {
@@ -1610,7 +1613,7 @@ initiate_exit(void)
 
     crm_info("Sending shutdown request to %d peers", active);
 
-    leaving = create_xml_node(NULL, "exit-notification");
+    leaving = create_xml_node(NULL, PCMK__XE_EXIT_NOTIFICATION);
     crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 

@@ -225,7 +225,7 @@ cib_remote_callback_dispatch(gpointer user_data)
         if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
             cib_native_callback(cib, msg, 0, 0);
 
-        } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
             g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
         } else {
@@ -380,7 +380,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     /* login to server */
-    login = create_xml_node(NULL, T_CIB_COMMAND);
+    login = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
     crm_xml_add(login, PCMK_XA_OP, "authenticate");
     crm_xml_add(login, PCMK_XA_USER, private->user);
     crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
@@ -539,10 +539,10 @@ cib_remote_inputfd(cib_t * cib)
 static int
 cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 {
-    xmlNode *notify_msg = create_xml_node(NULL, T_CIB_COMMAND);
+    xmlNode *notify_msg = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    crm_xml_add(notify_msg, PCMK__XA_CIB_OP, T_CIB_NOTIFY);
+    crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
     crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
     crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);

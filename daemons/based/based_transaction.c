@@ -61,7 +61,8 @@ static int
 process_transaction_requests(xmlNodePtr transaction,
                              const pcmk__client_t *client, const char *source)
 {
-    for (xmlNodePtr request = first_named_child(transaction, T_CIB_COMMAND);
+    for (xmlNode *request = first_named_child(transaction,
+                                              PCMK__XE_CIB_COMMAND);
          request != NULL; request = crm_next_same_xml(request)) {
 
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
@@ -127,7 +128,7 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
 
     CRM_ASSERT(result_cib != NULL);
 
-    CRM_CHECK(pcmk__xe_is(transaction, T_CIB_TRANSACTION),
+    CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
 
     /* *result_cib should be a copy of the_cib (created by cib_perform_op()). If

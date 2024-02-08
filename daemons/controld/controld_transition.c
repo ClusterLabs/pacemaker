@@ -40,7 +40,8 @@ do_te_control(long long action,
         controld_globals.transition_graph = NULL;
 
         if (cib_conn != NULL) {
-            cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
+            cib_conn->cmds->del_notify_callback(cib_conn,
+                                                PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                 te_update_diff);
         }
 
@@ -70,12 +71,11 @@ do_te_control(long long action,
         crm_err("Could not set CIB callbacks");
         init_ok = FALSE;
 
-    } else {
-        if (cib_conn->cmds->add_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
-                                                te_update_diff) != pcmk_ok) {
-            crm_err("Could not set CIB notification callback");
-            init_ok = FALSE;
-        }
+    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
+                                                   PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                                   te_update_diff) != pcmk_ok) {
+        crm_err("Could not set CIB notification callback");
+        init_ok = FALSE;
     }
 
     if (init_ok) {

@@ -1061,7 +1061,8 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    for (xmlNode *request = first_named_child(transaction, T_CIB_COMMAND);
+    for (xmlNode *request = first_named_child(transaction,
+                                              PCMK__XE_CIB_COMMAND);
          request != NULL; request = crm_next_same_xml(request)) {
 
         xmlNode *output = NULL;
@@ -1109,7 +1110,7 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
     cib_file_opaque_t *private = cib->variant_opaque;
     xmlNode *saved_cib = private->cib_xml;
 
-    CRM_CHECK(pcmk__xe_is(transaction, T_CIB_TRANSACTION),
+    CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
 
     /* *result_cib should be a copy of private->cib_xml (created by

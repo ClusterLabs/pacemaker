@@ -56,21 +56,23 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     CRM_LOG_ASSERT(type != NULL);
 
     if (pcmk_is_set(client->flags, cib_notify_diff)
-        && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+        && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_confirm)
-               && pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
+                               pcmk__str_none)) {
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_pre)
-               && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
+                               pcmk__str_none)) {
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_post)
-               && pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
-
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY,
+                               pcmk__str_none)) {
         do_send = TRUE;
     }
 
@@ -194,10 +196,10 @@ cib_diff_notify(const char *op, int result, const char *call_id,
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
 
-    update_msg = create_xml_node(NULL, "notify");
+    update_msg = create_xml_node(NULL, PCMK__XE_NOTIFY);
 
-    crm_xml_add(update_msg, PCMK__XA_T, T_CIB_NOTIFY);
-    crm_xml_add(update_msg, PCMK__XA_SUBT, T_CIB_DIFF_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_CIB_OP, op);
     crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
     crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);

@@ -400,7 +400,7 @@ cib_client_init_transaction(cib_t *cib)
     }
 
     if (rc == pcmk_rc_ok) {
-        cib->transaction = create_xml_node(NULL, T_CIB_TRANSACTION);
+        cib->transaction = create_xml_node(NULL, PCMK__XE_CIB_TRANSACTION);
         if (cib->transaction == NULL) {
             rc = ENOMEM;
         }

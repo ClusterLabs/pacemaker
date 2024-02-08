@@ -668,7 +668,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 {
     CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    *op_msg = create_xml_node(NULL, T_CIB_COMMAND);
+    *op_msg = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
     if (*op_msg == NULL) {
         return -EPROTO;
     }

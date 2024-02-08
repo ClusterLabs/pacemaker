@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,28 +67,6 @@ typedef struct lrmd_key_value_s {
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
 
-#define F_LRMD_OPERATION        "lrmd_op"
-#define F_LRMD_CLIENTNAME       "lrmd_clientname"
-#define F_LRMD_IS_IPC_PROVIDER  "lrmd_is_ipc_provider"
-#define F_LRMD_CLIENTID         "lrmd_clientid"
-#define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
-#define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
-#define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
-#define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"
-#define F_LRMD_CALLID           "lrmd_callid"
-#define F_LRMD_CALLOPTS         "lrmd_callopt"
-#define F_LRMD_CALLDATA         "lrmd_calldata"
-#define F_LRMD_RC               "lrmd_rc"
-#define F_LRMD_EXEC_RC          "lrmd_exec_rc"
-#define F_LRMD_OP_STATUS        "lrmd_exec_op_status"
-#define F_LRMD_TIMEOUT          "lrmd_timeout"
-#define F_LRMD_WATCHDOG         "lrmd_watchdog"
-#define F_LRMD_CLASS            "lrmd_class"
-#define F_LRMD_PROVIDER         "lrmd_provider"
-#define F_LRMD_TYPE             "lrmd_type"
-#define F_LRMD_ORIGIN           "lrmd_origin"
-
-#define F_LRMD_RSC_RUN_TIME      "lrmd_run_time"
 #define F_LRMD_RSC_RCCHANGE_TIME "lrmd_rcchange_time"
 #define F_LRMD_RSC_EXEC_TIME     "lrmd_exec_time"
 #define F_LRMD_RSC_QUEUE_TIME    "lrmd_queue_time"

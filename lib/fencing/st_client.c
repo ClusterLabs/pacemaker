@@ -274,7 +274,7 @@ stonith_connection_destroy(gpointer user_data)
 
     crm_trace("Sending destroyed notification");
     blob.stonith = stonith;
-    blob.xml = create_xml_node(NULL, "notify");
+    blob.xml = create_xml_node(NULL, PCMK__XE_NOTIFY);
 
     native = stonith->st_private;
     native->ipc = NULL;

@@ -34,14 +34,6 @@
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
 #define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
-#  define T_CIB_COMMAND		"cib_command"
-#  define T_CIB_NOTIFY		"cib_notify"
-/* notify sub-types */
-#  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
-#  define T_CIB_POST_NOTIFY	"cib_post_notify"
-#  define T_CIB_TRANSACTION	"cib_transaction"
-#  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
-
 /*!
  * \internal
  * \enum cib__op_attr
