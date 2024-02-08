@@ -855,7 +855,6 @@ static const char *
 cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
 {
     const char *value = NULL;
-    char *new_value = NULL;
 
     CRM_ASSERT((option != NULL) && (option->name != NULL));
 
@@ -871,9 +870,7 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
                                   option->alt_name, option->name);
 
                 // Inserting copy with current name ensures we only warn once
-                new_value = strdup(value);
-                g_hash_table_insert(table, strdup(option->name), new_value);
-                value = new_value;
+                pcmk__insert_dup(table, option->name, value);
             }
         }
 
@@ -907,9 +904,7 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
     crm_trace("Using default value '%s' for cluster option '%s'",
               value, option->name);
     if (table != NULL) {
-        new_value = strdup(value);
-        g_hash_table_insert(table, strdup(option->name), new_value);
-        value = new_value;
+        pcmk__insert_dup(table, option->name, value);
     }
     return value;
 }
