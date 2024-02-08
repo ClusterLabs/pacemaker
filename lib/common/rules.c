@@ -1293,3 +1293,133 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
               id, name, pcmk__readable_interval(rule_input->op_interval_ms));
     return pcmk_rc_ok;
 }
+
+/*!
+ * \internal
+ * \brief Evaluate a single rule expression, including any subexpressions
+ *
+ * \param[in,out] expr         XML containing a rule expression
+ * \param[in]     rule_input   Values used to evaluate rule criteria
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ *         passes, some other value if it does not)
+ */
+int
+pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
+                         crm_time_t *next_change)
+{
+    int rc = pcmk_rc_ok;
+    const char *uname = NULL;
+
+    switch (pcmk__expression_type(expr)) {
+        case pcmk__subexpr_rule:
+            rc = pcmk_evaluate_rule(expr, rule_input, next_change);
+            break;
+
+        case pcmk__subexpr_attribute:
+        case pcmk__subexpr_location:
+            /* these expressions can never succeed if there is
+             * no node to compare with
+             */
+            if (rule_input->node_attrs != NULL) {
+                rc = pcmk__evaluate_attr_expression(expr, rule_input);
+            }
+            break;
+
+        case pcmk__subexpr_datetime:
+            rc = pcmk__evaluate_date_expression(expr, rule_input->now,
+                                                next_change);
+            if (rc == pcmk_rc_within_range) {
+                rc = pcmk_rc_ok;
+            }
+            break;
+
+        case pcmk__subexpr_resource:
+            rc = pcmk__evaluate_rsc_expression(expr, rule_input);
+            break;
+
+        case pcmk__subexpr_operation:
+            rc = pcmk__evaluate_op_expression(expr, rule_input);
+            break;
+
+        default:
+            CRM_CHECK(FALSE /* bad type */ , return pcmk_rc_unpack_error);
+            break;
+    }
+    if (rule_input->node_attrs) {
+        uname = g_hash_table_lookup(rule_input->node_attrs, CRM_ATTR_UNAME);
+    }
+
+    crm_trace("Expression %s %s on %s",
+              pcmk__xe_id(expr), ((rc == pcmk_rc_ok)? "passed" : "failed"),
+              pcmk__s(uname, "all nodes"));
+    return rc;
+}
+
+/*!
+ * \brief Evaluate all of a rule's expressions
+ *
+ * \param[in,out] rule         XML containing a rule definition or its id-ref
+ * \param[in]     rule_input   Values used to evaluate rule criteria
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ *         passes, some other value if it does not)
+ */
+int
+pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                   crm_time_t *next_change)
+{
+    xmlNode *expr = NULL;
+    gboolean test = TRUE;
+    gboolean empty = TRUE;
+    gboolean passed = TRUE;
+    gboolean do_and = TRUE;
+    const char *value = NULL;
+
+    rule = expand_idref(rule, NULL);
+    if (rule == NULL) { // Not possible with schema validation enabled
+        return pcmk_rc_unpack_error;
+    }
+
+    value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
+    if (pcmk__str_eq(value, PCMK_VALUE_OR, pcmk__str_casei)) {
+        do_and = FALSE;
+        passed = FALSE;
+
+    } else if (!pcmk__str_eq(value, PCMK_VALUE_AND,
+                             pcmk__str_null_matches|pcmk__str_casei)) {
+        pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
+                          " value '%s', using default ('" PCMK_VALUE_AND "')",
+                          pcmk__xe_id(rule), value);
+    }
+
+    crm_trace("Testing rule %s", pcmk__xe_id(rule));
+    for (expr = pcmk__xe_first_child(rule, NULL, NULL, NULL); expr != NULL;
+         expr = pcmk__xe_next(expr)) {
+
+        test = (pcmk__evaluate_condition(expr, rule_input,
+                                         next_change) == pcmk_rc_ok);
+        empty = FALSE;
+
+        if (test && do_and == FALSE) {
+            crm_trace("Expression %s/%s passed",
+                      pcmk__xe_id(rule), pcmk__xe_id(expr));
+            return pcmk_rc_ok;
+
+        } else if (test == FALSE && do_and) {
+            crm_trace("Expression %s/%s failed",
+                      pcmk__xe_id(rule), pcmk__xe_id(expr));
+            return pcmk_rc_op_unsatisfied;
+        }
+    }
+
+    if (empty) {
+        pcmk__config_err("Ignoring rule %s because it contains no expressions",
+                         pcmk__xe_id(rule));
+    }
+
+    crm_trace("Rule %s %s", pcmk__xe_id(rule), passed ? "passed" : "failed");
+    return passed? pcmk_rc_ok : pcmk_rc_op_unsatisfied;
+}

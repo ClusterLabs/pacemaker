@@ -118,7 +118,6 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     GList *nodes = NULL;
 
     bool do_and = true;
-    bool accept = true;
     bool raw_score = true;
     bool score_allocated = false;
 
@@ -192,24 +191,32 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     }
 
     for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+        int rc = pcmk_rc_ok;
         int score_f = 0;
         pcmk_node_t *node = iter->data;
-        pe_match_data_t match_data = {
-            .re = re_match_data,
-            .params = pe_rsc_params(rsc, node, rsc->cluster),
-            .meta = rsc->meta,
+        pcmk_rule_input_t rule_input = {
+            .now = rsc->cluster->now,
+            .node_attrs = node->details->attrs,
+            .rsc_params = pe_rsc_params(rsc, node, rsc->cluster),
+            .rsc_meta = rsc->meta,
         };
 
-        accept = pe_test_rule(rule_xml, node->details->attrs, pcmk_role_unknown,
-                              rsc->cluster->now, next_change, &match_data);
+        if (re_match_data != NULL) {
+            rule_input.rsc_id = re_match_data->string;
+            rule_input.rsc_id_submatches = re_match_data->pmatch;
+            rule_input.rsc_id_nmatches = re_match_data->nregs;
+        }
+
+        rc = pcmk_evaluate_rule(rule_xml, &rule_input, next_change);
 
         crm_trace("Rule %s %s on %s",
-                  pcmk__xe_id(rule_xml), (accept? "passed" : "failed"),
+                  pcmk__xe_id(rule_xml),
+                  ((rc == pcmk_rc_ok)? "passed" : "failed"),
                   pcmk__node_name(node));
 
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 
-        if (accept) {
+        if (rc == pcmk_rc_ok) {
             pcmk_node_t *local = pe_find_node_id(nodes, node->details->id);
 
             if ((local == NULL) && do_and) {
@@ -226,7 +233,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
             crm_trace("%s has score %s after %s", pcmk__node_name(node),
                       pcmk_readable_score(local->weight), rule_id);
 
-        } else if (do_and && !accept) {
+        } else if (do_and) {
             // Remove it
             pcmk_node_t *delete = pe_find_node_id(nodes, node->details->id);
 

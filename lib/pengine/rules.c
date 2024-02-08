@@ -92,15 +92,22 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
 {
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_hash,
+    pcmk_rule_input_t rule_input = {
+        .node_attrs = node_hash,
         .now = now,
-        .match_data = match_data,
-        .rsc_data = NULL,
-        .op_data = NULL
     };
 
-    return pe_eval_expr(rule, &rule_data, next_change);
+    if (match_data != NULL) {
+        rule_input.rsc_params = match_data->params;
+        rule_input.rsc_meta = match_data->meta;
+        if (match_data->re != NULL) {
+            rule_input.rsc_id = match_data->re->string;
+            rule_input.rsc_id_submatches = match_data->re->pmatch;
+            rule_input.rsc_id_nmatches = match_data->re->nregs;
+        }
+    }
+
+    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
 }
 
 /*!
@@ -124,15 +131,22 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now, crm_time_t *next_change,
                    pe_match_data_t *match_data)
 {
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_hash,
+    pcmk_rule_input_t rule_input = {
         .now = now,
-        .match_data = match_data,
-        .rsc_data = NULL,
-        .op_data = NULL
+        .node_attrs = node_hash,
     };
 
-    return pe_eval_subexpr(expr, &rule_data, next_change);
+    if (match_data != NULL) {
+        rule_input.rsc_params = match_data->params;
+        rule_input.rsc_meta = match_data->meta;
+        if (match_data->re != NULL) {
+            rule_input.rsc_id = match_data->re->string;
+            rule_input.rsc_id_submatches = match_data->re->pmatch;
+            rule_input.rsc_id_nmatches = match_data->re->nregs;
+        }
+    }
+    return pcmk__evaluate_condition(expr, &rule_input,
+                                    next_change) == pcmk_rc_ok;
 }
 
 // Information about a block of nvpair elements
@@ -390,8 +404,11 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
                                               NULL);
          rule != NULL; rule = pcmk__xe_next_same(rule)) {
 
+        pcmk_rule_input_t rule_input = { NULL, };
+
+        map_rule_input(&rule_input, rule_data);
         ruleset_default = FALSE;
-        if (pe_eval_expr(rule, rule_data, next_change)) {
+        if (pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok) {
             /* Only the deprecated PCMK__XE_LIFETIME element of location
              * constraints may contain more than one rule at the top level --
              * the schema limits a block of nvpairs to a single top-level rule.
@@ -418,56 +435,10 @@ gboolean
 pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
              crm_time_t *next_change)
 {
-    xmlNode *expr = NULL;
-    gboolean test = TRUE;
-    gboolean empty = TRUE;
-    gboolean passed = TRUE;
-    gboolean do_and = TRUE;
-    const char *value = NULL;
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    rule = expand_idref(rule, NULL);
-    if (rule == NULL) {
-        return FALSE; // Not possible with schema validation enabled
-    }
-
-    value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
-    if (pcmk__str_eq(value, PCMK_VALUE_OR, pcmk__str_casei)) {
-        do_and = FALSE;
-        passed = FALSE;
-
-    } else if (!pcmk__str_eq(value, PCMK_VALUE_AND,
-                             pcmk__str_null_matches|pcmk__str_casei)) {
-        pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
-                          " value '%s', using default ('" PCMK_VALUE_AND "')",
-                          pcmk__xe_id(rule), value);
-    }
-
-    crm_trace("Testing rule %s", pcmk__xe_id(rule));
-    for (expr = pcmk__xe_first_child(rule, NULL, NULL, NULL); expr != NULL;
-         expr = pcmk__xe_next(expr)) {
-
-        test = pe_eval_subexpr(expr, rule_data, next_change);
-        empty = FALSE;
-
-        if (test && do_and == FALSE) {
-            crm_trace("Expression %s/%s passed",
-                      pcmk__xe_id(rule), pcmk__xe_id(expr));
-            return TRUE;
-
-        } else if (test == FALSE && do_and) {
-            crm_trace("Expression %s/%s failed",
-                      pcmk__xe_id(rule), pcmk__xe_id(expr));
-            return FALSE;
-        }
-    }
-
-    if (empty) {
-        pcmk__config_err("Ignoring rule %s because it contains no expressions",
-                         pcmk__xe_id(rule));
-    }
-
-    crm_trace("Rule %s %s", pcmk__xe_id(rule), passed ? "passed" : "failed");
-    return passed;
+    map_rule_input(&rule_input, rule_data);
+    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
 }
 
 /*!
@@ -483,57 +454,11 @@ gboolean
 pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
                 crm_time_t *next_change)
 {
-    gboolean accept = FALSE;
-    const char *uname = NULL;
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    switch (pcmk__expression_type(expr)) {
-        case pcmk__subexpr_rule:
-            accept = pe_eval_expr(expr, rule_data, next_change);
-            break;
-        case pcmk__subexpr_attribute:
-        case pcmk__subexpr_location:
-            /* these expressions can never succeed if there is
-             * no node to compare with
-             */
-            if (rule_data->node_hash != NULL) {
-                accept = pe__eval_attr_expr(expr, rule_data);
-            }
-            break;
-
-        case pcmk__subexpr_datetime:
-            switch (pcmk__evaluate_date_expression(expr, rule_data->now,
-                                                   next_change)) {
-                case pcmk_rc_within_range:
-                case pcmk_rc_ok:
-                    accept = TRUE;
-                    break;
-
-                default:
-                    accept = FALSE;
-                    break;
-            }
-            break;
-
-        case pcmk__subexpr_resource:
-            accept = pe__eval_rsc_expr(expr, rule_data);
-            break;
-
-        case pcmk__subexpr_operation:
-            accept = pe__eval_op_expr(expr, rule_data);
-            break;
-
-        default:
-            CRM_CHECK(FALSE /* bad type */ , return FALSE);
-            accept = FALSE;
-    }
-    if (rule_data->node_hash) {
-        uname = g_hash_table_lookup(rule_data->node_hash, CRM_ATTR_UNAME);
-    }
-
-    crm_trace("Expression %s %s on %s",
-              pcmk__xe_id(expr), (accept? "passed" : "failed"),
-              pcmk__s(uname, "all nodes"));
-    return accept;
+    map_rule_input(&rule_input, rule_data);
+    return pcmk__evaluate_condition(expr, &rule_input,
+                                    next_change) == pcmk_rc_ok;
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <glib.h>                   // guint, GHashTable
 #include <regex.h>                  // regmatch_t
+#include <libxml/tree.h>            // xmlNode
 #include <crm/common/iso8601.h>     // crm_time_t
 
 #ifdef __cplusplus
@@ -100,6 +101,9 @@ typedef struct pcmk_rule_input {
     //! Number of entries in rsc_id_submatches
     int rsc_id_nmatches;
 } pcmk_rule_input_t;
+
+int pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                       crm_time_t *next_change);
 
 #ifdef __cplusplus
 }
