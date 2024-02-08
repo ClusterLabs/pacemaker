@@ -667,15 +667,32 @@ create_xml_node(xmlNode * parent, const char *name)
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Set a given string as an XML node's content
+ *
+ * \param[in,out] node     Node whose content to set
+ * \param[in]     content  String to set as the content
+ *
+ * \note \c xmlNodeSetContent() does not escape special characters.
+ */
+void
+pcmk__xe_set_content(xmlNode *node, const char *content)
+{
+    if (node != NULL) {
+        char *escaped = pcmk__xml_escape(content, false);
+
+        xmlNodeSetContent(node, (pcmkXmlStr) escaped);
+        free(escaped);
+    }
+}
+
 xmlNode *
 pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
 {
     xmlNode *node = create_xml_node(parent, name);
 
-    if (node != NULL) {
-        xmlNodeSetContent(node, (pcmkXmlStr) content);
-    }
-
+    pcmk__xe_set_content(node, content);
     return node;
 }
 
@@ -1298,101 +1315,253 @@ write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
     return (int) nbytes;
 }
 
-// Replace a portion of a dynamically allocated string (reallocating memory)
-static char *
-replace_text(char *text, int start, size_t *length, const char *replace)
+/*!
+ * \internal
+ * \brief Get consecutive bytes encoding non-ASCII UTF-8 characters
+ *
+ * \param[in] text  String to check
+ *
+ * \return Number of non-ASCII UTF-8 bytes at the beginning of \p text
+ */
+static size_t
+utf8_bytes(const char *text)
 {
-    size_t offset = strlen(replace) - 1; // We have space for 1 char already
+    // Total number of consecutive bytes containing UTF-8 characters
+    size_t c_bytes = 0;
 
-    *length += offset;
-    text = pcmk__realloc(text, *length);
-
-    for (size_t lpc = (*length) - 1; lpc > (start + offset); lpc--) {
-        text[lpc] = text[lpc - offset];
+    if (text == NULL) {
+        return 0;
     }
 
-    memcpy(text + start, replace, offset + 1);
+    /* UTF-8 uses one to four 8-bit bytes per character. The first byte
+     * indicates the width of the character. A byte beginning with a '0' bit is
+     * a one-byte ASCII character.
+     *
+     * A C byte is 8 bits on most systems, but this is not guaranteed.
+     *
+     * Count until we find an ASCII character or an invalid byte. Check bytes
+     * aligned with the C byte boundary.
+     */
+    for (const uint8_t *utf8_byte = (const uint8_t *) text;
+         (*utf8_byte & 0x80) != 0;
+         utf8_byte = (const uint8_t *) (text + c_bytes)) {
+
+        size_t utf8_bits = 0;
+
+        if ((*utf8_byte & 0xf0) == 0xf0) {
+            // Four-byte character (first byte: 11110xxx)
+            utf8_bits = 32;
+
+        } else if ((*utf8_byte & 0xe0) == 0xe0) {
+            // Three-byte character (first byte: 1110xxxx)
+            utf8_bits = 24;
+
+        } else if ((*utf8_byte & 0xc0) == 0xc0) {
+            // Two-byte character (first byte: 110xxxxx)
+            utf8_bits = 16;
+
+        } else {
+            crm_warn("Found invalid UTF-8 character %.2x",
+                     (unsigned char) *utf8_byte);
+            return c_bytes;
+        }
+
+        c_bytes += utf8_bits / CHAR_BIT;
+
+#if (CHAR_BIT != 8) // Coverity complains about dead code without this CPP guard
+        if ((utf8_bits % CHAR_BIT) > 0) {
+            c_bytes++;
+        }
+#endif  // CHAR_BIT != 8
+    }
+
+    return c_bytes;
+}
+
+/*!
+ * \internal
+ * \brief Replace a character in a dynamically allocated string, reallocating
+ *        memory
+ *
+ * \param[in,out] text     String to replace a character in
+ * \param[in,out] index    Index of character to replace with new string; on
+ *                         return, reset to index of end of replacement string
+ * \param[in,out] length   Length of \p text
+ * \param[in]     replace  String to replace character at \p index with (must
+ *                         not be empty)
+ *
+ * \return \p text, with the character at \p index replaced by \p replace
+ */
+static char *
+replace_text(char *text, size_t *index, size_t *length, const char *replace)
+{
+    /* @TODO Replace with GString? Or at least copy char-by-char, escaping
+     * characters as needed, instead of shifting characters on every replacement
+     */
+
+    // We have space for 1 char already
+    size_t offset = strlen(replace) - 1;
+
+    if (offset > 0) {
+        *length += offset;
+        text = pcmk__realloc(text, *length + 1);
+
+        // Shift characters to the right to make room for the replacement string
+        for (size_t i = *length; i > (*index + offset); i--) {
+            text[i] = text[i - offset];
+        }
+    }
+
+    // Replace the character at index by the replacement string
+    memcpy(text + *index, replace, offset + 1);
+
+    // Reset index to the end of replacement string
+    *index += offset;
     return text;
 }
 
 /*!
+ * \internal
+ * \brief Check whether a string has XML special characters that must be escaped
+ *
+ * See \c pcmk__xml_escape() for more details.
+ *
+ * \param[in] text          String to check
+ * \param[in] escape_quote  If \c true, double quotes must be escaped
+ *
+ * \return \c true if \p text has special characters that need to be escaped, or
+ *         \c false otherwise
+ */
+bool
+pcmk__xml_needs_escape(const char *text, bool escape_quote)
+{
+    size_t length = 0;
+
+    if (text == NULL) {
+        return false;
+    }
+    length = strlen(text);
+
+    for (size_t index = 0; index < length; index++) {
+        // Don't escape any non-ASCII characters
+        index += utf8_bytes(&(text[index]));
+
+        switch (text[index]) {
+            case '\0':
+                // Reached end of string by skipping UTF-8 bytes
+                return false;
+            case '<':
+                return true;
+            case '>':
+                // Not necessary, but for symmetry with '<'
+                return true;
+            case '&':
+                return true;
+            case '"':
+                if (escape_quote) {
+                    return true;
+                }
+                break;
+            case '\n':
+            case '\t':
+                // Don't escape newline or tab
+                break;
+            default:
+                if ((text[index] < 0x20) || (text[index] >= 0x7f)) {
+                    // Escape non-printing characters
+                    return true;
+                }
+                break;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Replace special characters with their XML escape sequences
  *
- * \param[in] text  Text to escape
+ * XML allows the escaping of special characters by replacing them with entity
+ * references (for example, <tt>"&quot;"</tt>) or character references (for
+ * example, <tt>"&#13;"</tt>).
+ *
+ * The special characters <tt>'<'</tt> and <tt>'&'</tt> are not allowed in their
+ * literal forms in XML character data. Character data is non-markup text (for
+ * example, the content of a text node).
+ *
+ * Additionally, if an attribute value is delimited by single quotes, then
+ * single quotes must be escaped within the value. Similarly, if an attribute
+ * value is delimited by double quotes, then double quotes must be escaped
+ * within the value.
+ *
+ * For more details, see the "Character Data and Markup" section of the XML
+ * spec, currently section 2.4:
+ * https://www.w3.org/TR/xml/#dt-markup
+ *
+ * Pacemaker always delimits attribute values with double quotes, so this
+ * function doesn't escape single quotes.
+ *
+ * \param[in] text          Text to escape
+ * \param[in] escape_quote  If \c true, escape double quotes (should be enabled
+ *                          for attribute values)
  *
  * \return Newly allocated string equivalent to \p text but with special
- *         characters replaced with XML escape sequences (or NULL if \p text
- *         is NULL)
+ *         characters replaced with XML escape sequences (or \c NULL if \p text
+ *         is \c NULL). If \p text is not \c NULL, the return value is
+ *         guaranteed not to be \c NULL.
+ *
+ * \note There are libxml functions that purport to do this:
+ *       \c xmlEncodeEntitiesReentrant() and \c xmlEncodeSpecialChars().
+ *       However, their escaping is incomplete. See:
+ *       https://discourse.gnome.org/t/intended-use-of-xmlencodeentitiesreentrant-vs-xmlencodespecialchars/19252
  */
 char *
-crm_xml_escape(const char *text)
+pcmk__xml_escape(const char *text, bool escape_quote)
 {
-    size_t length;
-    char *copy;
-
-    /*
-     * When xmlCtxtReadDoc() parses &lt; and friends in a
-     * value, it converts them to their human readable
-     * form.
-     *
-     * If one uses xmlNodeDump() to convert it back to a
-     * string, all is well, because special characters are
-     * converted back to their escape sequences.
-     *
-     * However xmlNodeDump() is randomly dog slow, even with the same
-     * input. So we need to replicate the escaping in our custom
-     * version so that the result can be re-parsed by xmlCtxtReadDoc()
-     * when necessary.
-     */
+    size_t length = 0;
+    char *copy = NULL;
+    char buf[32] = { '\0', };
 
     if (text == NULL) {
         return NULL;
     }
+    length = strlen(text);
+    pcmk__str_update(&copy, text);
 
-    length = 1 + strlen(text);
-    copy = strdup(text);
-    CRM_ASSERT(copy != NULL);
     for (size_t index = 0; index < length; index++) {
-        if(copy[index] & 0x80 && copy[index+1] & 0x80){
-            index++;
-            break;
-        }
+        // Don't escape any non-ASCII characters
+        index += utf8_bytes(&(copy[index]));
+
         switch (copy[index]) {
-            case 0:
+            case '\0':
+                // Reached end of string by skipping UTF-8 bytes
                 break;
             case '<':
-                copy = replace_text(copy, index, &length, "&lt;");
+                copy = replace_text(copy, &index, &length, "&lt;");
                 break;
             case '>':
-                copy = replace_text(copy, index, &length, "&gt;");
-                break;
-            case '"':
-                copy = replace_text(copy, index, &length, "&quot;");
-                break;
-            case '\'':
-                copy = replace_text(copy, index, &length, "&apos;");
+                // Not necessary, but for symmetry with '<'
+                copy = replace_text(copy, &index, &length, "&gt;");
                 break;
             case '&':
-                copy = replace_text(copy, index, &length, "&amp;");
+                copy = replace_text(copy, &index, &length, "&amp;");
                 break;
-            case '\t':
-                /* Might as well just expand to a few spaces... */
-                copy = replace_text(copy, index, &length, "    ");
+            case '"':
+                if (escape_quote) {
+                    copy = replace_text(copy, &index, &length, "&quot;");
+                }
                 break;
             case '\n':
-                copy = replace_text(copy, index, &length, "\\n");
-                break;
-            case '\r':
-                copy = replace_text(copy, index, &length, "\\r");
+            case '\t':
+                // Don't escape newlines and tabs
                 break;
             default:
-                /* Check for and replace non-printing characters with their octal equivalent */
-                if(copy[index] < ' ' || copy[index] > '~') {
-                    char *replace = crm_strdup_printf("\\%.3o", copy[index]);
-
-                    copy = replace_text(copy, index, &length, replace);
-                    free(replace);
+                if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
+                    // Escape non-printing characters
+                    snprintf(buf, sizeof(buf), "&#%.2x;", copy[index]);
+                    copy = replace_text(copy, &index, &length, buf);
                 }
+                break;
         }
     }
     return copy;
@@ -1471,21 +1640,26 @@ static void
 dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
               int depth)
 {
-    /* @COMPAT: Remove when log_data_element() is removed. There are no internal
-     * code paths to this, except through the deprecated log_data_element().
-     */
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
+    const char *content = (const char *) data->content;
+    char *content_esc = NULL;
+
+    if (pcmk__xml_needs_escape(content, false)) {
+        content_esc = pcmk__xml_escape(content, false);
+        content = content_esc;
+    }
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
     }
 
-    g_string_append(buffer, (const gchar *) data->content);
+    g_string_append(buffer, content);
 
     if (pretty) {
         g_string_append_c(buffer, '\n');
     }
+    free(content_esc);
 }
 
 /*!
@@ -2761,6 +2935,66 @@ xml_has_children(const xmlNode * xml_root)
         return TRUE;
     }
     return FALSE;
+}
+
+char *
+crm_xml_escape(const char *text)
+{
+    size_t length = 0;
+    char *copy = NULL;
+
+    if (text == NULL) {
+        return NULL;
+    }
+
+    length = strlen(text);
+    copy = strdup(text);
+    CRM_ASSERT(copy != NULL);
+    for (size_t index = 0; index <= length; index++) {
+        if(copy[index] & 0x80 && copy[index+1] & 0x80){
+            index++;
+            continue;
+        }
+        switch (copy[index]) {
+            case 0:
+                // Sanity only; loop should stop at the last non-null byte
+                break;
+            case '<':
+                copy = replace_text(copy, &index, &length, "&lt;");
+                break;
+            case '>':
+                copy = replace_text(copy, &index, &length, "&gt;");
+                break;
+            case '"':
+                copy = replace_text(copy, &index, &length, "&quot;");
+                break;
+            case '\'':
+                copy = replace_text(copy, &index, &length, "&apos;");
+                break;
+            case '&':
+                copy = replace_text(copy, &index, &length, "&amp;");
+                break;
+            case '\t':
+                /* Might as well just expand to a few spaces... */
+                copy = replace_text(copy, &index, &length, "    ");
+                break;
+            case '\n':
+                copy = replace_text(copy, &index, &length, "\\n");
+                break;
+            case '\r':
+                copy = replace_text(copy, &index, &length, "\\r");
+                break;
+            default:
+                /* Check for and replace non-printing characters with their octal equivalent */
+                if(copy[index] < ' ' || copy[index] > '~') {
+                    char *replace = crm_strdup_printf("\\%.3o", copy[index]);
+
+                    copy = replace_text(copy, &index, &length, replace);
+                    free(replace);
+                }
+        }
+    }
+    return copy;
 }
 
 // LCOV_EXCL_STOP

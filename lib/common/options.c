@@ -85,9 +85,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "network and the type of switches used."),
     },
     {
-        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time",
-        N_("Zero disables polling, while positive values are an interval in "
-            "seconds (unless other units are specified, for example \"5min\")"),
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time", NULL,
         "15min", pcmk__valid_interval_spec,
         pcmk__opt_context_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
@@ -97,7 +95,9 @@ static pcmk__cluster_option_t cluster_options[] = {
             "time-based rules. However, it will also recheck the cluster after "
             "this amount of inactivity, to evaluate rules with date "
             "specifications and serve as a fail-safe for certain types of "
-            "scheduler bugs."),
+            "scheduler bugs. A value of 0 disables polling. A positive value "
+            "sets an interval in seconds, unless other units are specified "
+            "(for example, \"5min\")."),
     },
     {
         PCMK_OPT_FENCE_REACTION, NULL, "select",
@@ -943,70 +943,146 @@ pcmk__cluster_option(GHashTable *options, const char *name)
 
 /*!
  * \internal
- * \brief Add a description element to a meta-data string
+ * \brief Add a description element to an OCF-like metadata XML node
  *
- * \param[in,out] s       Meta-data string to add to
+ * Include a translation based on the current locale if \c ENABLE_NLS is
+ * defined.
+ *
+ * \param[in,out] parent  Parent XML node
  * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
  *                        \c PCMK_XE_SHORTDESC)
  * \param[in]     desc    Textual description to add
- * \param[in]     values  If not \p NULL, the allowed values for the parameter
- * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
- *                        each line
+ *
+ * \return Standard Pacemaker return code
  */
-static void
-add_desc(GString *s, const char *tag, const char *desc, const char *values,
-         const char *spaces)
+static int
+add_desc(xmlNode *parent, const char *tag, const char *desc)
 {
-    char *escaped_en = crm_xml_escape(desc);
+    xmlNode *node = pcmk_create_xml_text_node(parent, tag, desc);
 
-    if (spaces != NULL) {
-        g_string_append(s, spaces);
+    if (node == NULL) {
+        return ENOMEM;
     }
-    pcmk__g_strcat(s,
-                   "<", tag, " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">",
-                   escaped_en, NULL);
-
-    if (values != NULL) {
-        // Append a period if desc doesn't end in "." or ".)"
-        if (!pcmk__str_empty(escaped_en)
-            && (s->str[s->len - 1] != '.')
-            && ((s->str[s->len - 2] != '.') || (s->str[s->len - 1] != ')'))) {
-
-            g_string_append_c(s, '.');
-        }
-        pcmk__g_strcat(s, " Allowed values: ", values, NULL);
-        g_string_append_c(s, '.');
-    }
-    pcmk__g_strcat(s, "</", tag, ">\n", NULL);
+    crm_xml_add(node, PCMK_XA_LANG, PCMK__VALUE_EN);
 
 #ifdef ENABLE_NLS
     {
         static const char *locale = NULL;
 
-        char *localized = crm_xml_escape(_(desc));
-
-        if (strcmp(escaped_en, localized) != 0) {
-            if (locale == NULL) {
-                locale = strtok(setlocale(LC_ALL, NULL), "_");
-            }
-
-            if (spaces != NULL) {
-                g_string_append(s, spaces);
-            }
-            pcmk__g_strcat(s,
-                           "<", tag, " " PCMK_XA_LANG "=\"", locale, "\">",
-                           localized, NULL);
-
-            if (values != NULL) {
-                pcmk__g_strcat(s, _("  Allowed values: "), _(values), NULL);
-            }
-            pcmk__g_strcat(s, "</", tag, ">\n", NULL);
+        if (strcmp(desc, _(desc)) == 0) {
+            return pcmk_rc_ok;
         }
-        free(localized);
+
+        if (locale == NULL) {
+            locale = strtok(setlocale(LC_ALL, NULL), "_");
+        }
+
+        node = pcmk_create_xml_text_node(parent, tag, _(desc));
+        if (node == NULL) {
+            return ENOMEM;
+        }
+        crm_xml_add(node, PCMK_XA_LANG, locale);
     }
 #endif
+    return pcmk_rc_ok;
+}
 
-    free(escaped_en);
+/*!
+ * \internal
+ * \brief Add a \c PCMK_XE_OPTION element for each of an option's allowed values
+ *
+ * \param[in,out] parent  Parent \c PCMK_XE_CONTENT node
+ * \param[in]     option  Option whose allowed values to add
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+add_allowed_values(xmlNode *parent, const pcmk__cluster_option_t *option)
+{
+    const char *delim = ", ";
+    char *str = NULL;
+    char *ptr = NULL;
+    int rc = pcmk_rc_ok;
+
+    pcmk__str_update(&str, option->values);
+    ptr = strtok(str, delim);
+
+    while (ptr != NULL) {
+        xmlNode *allowed_value = create_xml_node(parent, PCMK_XE_OPTION);
+
+        if (allowed_value == NULL) {
+            rc = ENOMEM;
+            goto done;
+        }
+        crm_xml_add(allowed_value, PCMK_XA_VALUE, ptr);
+        ptr = strtok(NULL, delim);
+    }
+
+done:
+    free(str);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
+ *
+ * \param[in,out] parent  Parent \c PCMK_XE_PARAMETERS node
+ * \param[in]     option  Option to add as a \c PCMK_XE_PARAMETER element
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
+{
+    const char *desc_long = option->description_long;
+    const char *desc_short = option->description_short;
+    xmlNode *parameter = NULL;
+    xmlNode *content = NULL;
+    int rc = pcmk_rc_ok;
+
+    // The standard requires long and short parameter descriptions
+    CRM_ASSERT((desc_long != NULL) || (desc_short != NULL));
+
+    if (desc_long == NULL) {
+        desc_long = desc_short;
+    } else if (desc_short == NULL) {
+        desc_short = desc_long;
+    }
+
+    // The standard requires a parameter type
+    CRM_ASSERT(option->type != NULL);
+
+    parameter = create_xml_node(parent, PCMK_XE_PARAMETER);
+    if (parameter == NULL) {
+        return ENOMEM;
+    }
+
+    crm_xml_add(parameter, PCMK_XA_NAME, option->name);
+
+    rc = add_desc(parameter, PCMK_XE_LONGDESC, desc_long);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    rc = add_desc(parameter, PCMK_XE_SHORTDESC, desc_short);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    content = create_xml_node(parameter, PCMK_XE_CONTENT);
+    if (content == NULL) {
+        return ENOMEM;
+    }
+
+    crm_xml_add(content, PCMK_XA_TYPE, option->type);
+    crm_xml_add(content, PCMK_XA_DEFAULT, option->default_value);
+
+    if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
+        return add_allowed_values(content, option);
+    }
+
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1024,99 +1100,59 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
  *
  * \return A string containing OCF-like option metadata XML
  *
- * \note The caller is responsible for freeing the return value using
- *       \c g_free().
+ * \note The caller is responsible for freeing the return value using \c free().
  */
-gchar *
+char *
 pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              enum pcmk__opt_context filter,
                              pcmk__cluster_option_t *option_list, int len)
 {
-    // Large enough to hold current cluster options with room for growth (2^15)
-    GString *s = g_string_sized_new(32768);
+    xmlNode *top = create_xml_node(NULL, PCMK_XE_RESOURCE_AGENT);
+    xmlNode *parameters = NULL;
+    char *result = NULL;
 
-    pcmk__g_strcat(s,
-                   "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
-                   "<" PCMK_XE_RESOURCE_AGENT " "
-                       PCMK_XA_NAME "=\"", name, "\" "
-                       PCMK_XA_VERSION "=\"" PACEMAKER_VERSION "\">\n"
+    if (top == NULL) {
+        goto done;
+    }
+    crm_xml_add(top, PCMK_XA_NAME, name);
+    crm_xml_add(top, PCMK_XA_VERSION, PACEMAKER_VERSION);
 
-                   "  <" PCMK_XE_VERSION ">" PCMK_OCF_VERSION
-                     "</" PCMK_XE_VERSION ">\n", NULL);
+    if (pcmk_create_xml_text_node(top, PCMK_XE_VERSION,
+                                  PCMK_OCF_VERSION) == NULL) {
+        goto done;
+    }
 
-    add_desc(s, PCMK_XE_LONGDESC, desc_long, NULL, "  ");
-    add_desc(s, PCMK_XE_SHORTDESC, desc_short, NULL, "  ");
+    if ((desc_long != NULL)
+        && (add_desc(top, PCMK_XE_LONGDESC, desc_long) != pcmk_rc_ok)) {
+        goto done;
+    }
+    if ((desc_short != NULL)
+        && (add_desc(top, PCMK_XE_SHORTDESC, desc_short) != pcmk_rc_ok)) {
+        goto done;
+    }
 
-    g_string_append(s, "  <" PCMK_XE_PARAMETERS ">\n");
+    parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
+    if (parameters == NULL) {
+        goto done;
+    }
 
     for (int lpc = 0; lpc < len; lpc++) {
-        const char *opt_name = option_list[lpc].name;
-        const char *opt_type = option_list[lpc].type;
-        const char *opt_values = option_list[lpc].values;
-        const char *opt_default = option_list[lpc].default_value;
-        const char *opt_desc_short = option_list[lpc].description_short;
-        const char *opt_desc_long = option_list[lpc].description_long;
-
         if ((filter != pcmk__opt_context_none)
             && (filter != option_list[lpc].context)) {
             continue;
         }
 
-        // The standard requires long and short parameter descriptions
-        CRM_ASSERT((opt_desc_short != NULL) || (opt_desc_long != NULL));
-
-        if (opt_desc_short == NULL) {
-            opt_desc_short = opt_desc_long;
-        } else if (opt_desc_long == NULL) {
-            opt_desc_long = opt_desc_short;
+        if (add_option_metadata(parameters, &option_list[lpc]) != pcmk_rc_ok) {
+            goto done;
         }
-
-        // The standard requires a parameter type
-        CRM_ASSERT(opt_type != NULL);
-
-        pcmk__g_strcat(s,
-                       "    <" PCMK_XE_PARAMETER " "
-                               PCMK_XA_NAME "=\"", opt_name, "\">\n", NULL);
-
-        add_desc(s, PCMK_XE_LONGDESC, opt_desc_long, opt_values, "      ");
-        add_desc(s, PCMK_XE_SHORTDESC, opt_desc_short, NULL, "      ");
-
-        pcmk__g_strcat(s, "      <" PCMK_XE_CONTENT " "
-                                    PCMK_XA_TYPE "=\"", opt_type, "\"", NULL);
-        if (opt_default != NULL) {
-            pcmk__g_strcat(s,
-                           " " PCMK_XA_DEFAULT "=\"", opt_default, "\"", NULL);
-        }
-
-        if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
-            char *str = strdup(opt_values);
-            const char *delim = ", ";
-            char *ptr = strtok(str, delim);
-
-            g_string_append(s, ">\n");
-
-            while (ptr != NULL) {
-                pcmk__g_strcat(s,
-                               "        <" PCMK_XE_OPTION " "
-                                           PCMK_XA_VALUE "=\"", ptr, "\" />\n",
-                               NULL);
-                ptr = strtok(NULL, delim);
-            }
-            g_string_append(s, "      </" PCMK_XE_CONTENT ">\n");
-            free(str);
-
-        } else {
-            g_string_append(s, "/>\n");
-        }
-
-        g_string_append(s, "    </" PCMK_XE_PARAMETER ">\n");
     }
-    g_string_append(s,
-                    "  </" PCMK_XE_PARAMETERS ">\n"
-                    "</" PCMK_XE_RESOURCE_AGENT ">\n");
 
-    return g_string_free(s, FALSE);
+    result = dump_xml_formatted_with_text(top);
+
+done:
+    free_xml(top);
+    return result;
 }
 
 /*!
@@ -1132,10 +1168,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
  *
  * \return A string containing OCF-like cluster option metadata XML
  *
- * \note The caller is responsible for freeing the return value using
- *       \c g_free().
+ * \note The caller is responsible for freeing the return value using \c free().
  */
-gchar *
+char *
 pcmk__cluster_option_metadata(const char *name, const char *desc_short,
                               const char *desc_long,
                               enum pcmk__opt_context filter)

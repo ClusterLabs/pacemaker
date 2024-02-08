@@ -179,7 +179,8 @@ main(int argc, char **argv)
 
         if (input == NULL) {
             exit_code = CRM_EX_DATAERR;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Couldn't parse input from STDIN\n");
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Couldn't parse input from STDIN");
             goto done;
         }
     } else if (options.input_xml != NULL) {
@@ -188,7 +189,7 @@ main(int argc, char **argv)
         if (input == NULL) {
             exit_code = CRM_EX_DATAERR;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Couldn't parse input string: %s\n", options.input_xml);
+                        "Couldn't parse input string: %s", options.input_xml);
             goto done;
         }
     }

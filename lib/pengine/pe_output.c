@@ -1544,16 +1544,20 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *uname = crm_element_value(xml_op, PCMK_XA_UNAME);
     const char *call_id = crm_element_value(xml_op, PCMK__XA_CALL_ID);
     const char *exitstatus = NULL;
-    const char *exit_reason = crm_element_value(xml_op, PCMK_XA_EXIT_REASON);
+    const char *exit_reason = pcmk__s(crm_element_value(xml_op,
+                                                        PCMK_XA_EXIT_REASON),
+                                      "none");
     const char *status_s = NULL;
 
     time_t epoch = 0;
+    char *exit_reason_esc = NULL;
     char *rc_s = NULL;
-    char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
     xmlNodePtr node = NULL;
 
-    exit_reason = pcmk__s(reason_s, "");
-
+    if (pcmk__xml_needs_escape(exit_reason, true)) {
+        exit_reason_esc = pcmk__xml_escape(exit_reason, true);
+        exit_reason = exit_reason_esc;
+    }
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_OP_STATUS), &status,
                        0);
@@ -1603,7 +1607,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         free(rc_change);
     }
 
-    free(reason_s);
+    free(exit_reason_esc);
     return pcmk_rc_ok;
 }
 

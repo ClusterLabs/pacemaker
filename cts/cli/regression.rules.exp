@@ -37,7 +37,6 @@ log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expec
 log_xmllib_err 	error: XML Error: invalidxml
 log_xmllib_err 	error: XML Error: ^
 crm_rule: Couldn't parse input string: invalidxml
-
 =#=#=#= End test: crm_rule given invalid input XML - Invalid data given (65) =#=#=#=
 * Passed: crm_rule       - crm_rule given invalid input XML
 =#=#=#= Begin test: crm_rule given invalid input XML (XML) =#=#=#=
@@ -50,8 +49,7 @@ log_xmllib_err 	error: XML Error: ^
 <pacemaker-result api-version="X" request="crm_rule -c -r blahblah -X invalidxml --output-as=xml">
   <status code="65" message="Invalid data given">
     <errors>
-      <error>crm_rule: Couldn't parse input string: invalidxml
-</error>
+      <error>crm_rule: Couldn't parse input string: invalidxml</error>
     </errors>
   </status>
 </pacemaker-result>
@@ -65,7 +63,6 @@ log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expec
 log_xmllib_err 	error: XML Error: invalidxml
 log_xmllib_err 	error: XML Error: ^
 crm_rule: Couldn't parse input from STDIN
-
 =#=#=#= End test: crm_rule given invalid input XML on stdin - Invalid data given (65) =#=#=#=
 * Passed: echo           - crm_rule given invalid input XML on stdin
 =#=#=#= Begin test: crm_rule given invalid input XML on stdin (XML) =#=#=#=
@@ -78,8 +75,7 @@ log_xmllib_err 	error: XML Error: ^
 <pacemaker-result api-version="X" request="crm_rule -c -r blahblah -X - --output-as=xml">
   <status code="65" message="Invalid data given">
     <errors>
-      <error>crm_rule: Couldn't parse input from STDIN
-</error>
+      <error>crm_rule: Couldn't parse input from STDIN</error>
     </errors>
   </status>
 </pacemaker-result>

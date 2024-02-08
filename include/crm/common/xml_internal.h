@@ -217,6 +217,9 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
+bool pcmk__xml_needs_escape(const char *text, bool escape_quote);
+char *pcmk__xml_escape(const char *text, bool escape_quote);
+
 /*!
  * \internal
  * \brief Get the root directory to scan XML artefacts of given kind for
@@ -345,6 +348,8 @@ pcmk__xe_next(const xmlNode *child)
     }
     return next;
 }
+
+void pcmk__xe_set_content(xmlNode *node, const char *content);
 
 /*!
  * \internal

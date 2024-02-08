@@ -701,8 +701,6 @@ systemd_unit_metadata(const char *name, int timeout)
     char *desc = NULL;
     char *path = NULL;
 
-    char *escaped = NULL;
-
     if (invoke_unit_by_name(name, NULL, &path) == pcmk_rc_ok) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
         desc = systemd_get_property(path, "Description", NULL, NULL, NULL,
@@ -711,12 +709,16 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    escaped = crm_xml_escape(desc);
+    if (pcmk__xml_needs_escape(desc, false)) {
+        char *escaped = pcmk__xml_escape(desc, false);
 
-    meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
+        free(desc);
+        desc = escaped;
+    }
+
+    meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
     free(desc);
     free(path);
-    free(escaped);
     return meta;
 }
 

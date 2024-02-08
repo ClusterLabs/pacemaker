@@ -71,6 +71,9 @@ crm_element_name(const xmlNode *xml)
     return (xml == NULL)? NULL : (const char *) xml->name;
 }
 
+//! \deprecated Do not use
+char *crm_xml_escape(const char *text);
+
 #ifdef __cplusplus
 }
 #endif
