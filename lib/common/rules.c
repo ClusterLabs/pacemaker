@@ -1153,6 +1153,48 @@ done:
 
 /*!
  * \internal
+ * \brief Evaluate a resource rule expression
+ *
+ * \param[in] expr        XML of a rule's \c PCMK_XE_RSC_EXPRESSION subelement
+ * \param[in] rule_input  Values used to evaluate rule criteria
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ *         passes, some other value if it does not)
+ */
+int
+pcmk__evaluate_rsc_expression(const xmlNode *expr,
+                              const pcmk_rule_input_t *rule_input)
+{
+    const char *class = crm_element_value(expr, PCMK_XA_CLASS);
+    const char *provider = crm_element_value(expr, PCMK_XA_PROVIDER);
+    const char *type = crm_element_value(expr, PCMK_XA_TYPE);
+
+    crm_trace("Testing rsc_defaults expression: %s", pcmk__xe_id(expr));
+
+    if (class != NULL &&
+        !pcmk__str_eq(class, rule_input->rsc_standard, pcmk__str_none)) {
+        crm_trace("Class doesn't match: %s != %s", class, rule_input->rsc_standard);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    if ((provider == NULL && rule_input->rsc_provider != NULL) ||
+        (provider != NULL && rule_input->rsc_provider == NULL) ||
+        !pcmk__str_eq(provider, rule_input->rsc_provider, pcmk__str_none)) {
+        crm_trace("Provider doesn't match: %s != %s", provider, rule_input->rsc_provider);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    if (type != NULL &&
+        !pcmk__str_eq(type, rule_input->rsc_agent, pcmk__str_none)) {
+        crm_trace("Agent doesn't match: %s != %s", type, rule_input->rsc_agent);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Evaluate an operation rule expression
  *
  * \param[in] op_expression  XML of a rule's \c PCMK_XE_OP_EXPRESSION subelement
