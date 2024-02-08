@@ -28,6 +28,41 @@
 CRM_TRACE_INIT_DATA(pe_rules);
 
 /*!
+ * \internal
+ * \brief Map pe_rule_eval_data_t to pcmk_rule_input_t
+ *
+ * \param[out] new  New data struct
+ * \param[in]  old  Old data struct
+ */
+static void
+map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
+{
+    if (old == NULL) {
+        return;
+    }
+    new->now = old->now;
+    new->node_attrs = old->node_hash;
+    if (old->rsc_data != NULL) {
+        new->rsc_standard = old->rsc_data->standard;
+        new->rsc_provider = old->rsc_data->provider;
+        new->rsc_agent = old->rsc_data->agent;
+    }
+    if (old->match_data != NULL) {
+        new->rsc_params = old->match_data->params;
+        new->rsc_meta = old->match_data->meta;
+        if (old->match_data->re != NULL) {
+            new->rsc_id = old->match_data->re->string;
+            new->rsc_id_submatches = old->match_data->re->pmatch;
+            new->rsc_id_nmatches = old->match_data->re->nregs;
+        }
+    }
+    if (old->op_data != NULL) {
+        new->op_name = old->op_data->op_name;
+        new->op_interval_ms = old->op_data->interval;
+    }
+}
+
+/*!
  * \brief Evaluate any rules contained by given XML element
  *
  * \param[in,out] xml          XML element to check for rules
@@ -502,116 +537,6 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 
 /*!
  * \internal
- * \brief Check whether an attribute expression evaluates to \c true
- *
- * \param[in]   l_val   Value on left-hand side of comparison
- * \param[in]   r_val   Value on right-hand side of comparison
- * \param[in]   type    How to interpret the values
- * \param[in]   op      Type of comparison.
- *
- * \return  \c true if expression evaluates to \c true, \c false
- *          otherwise
- */
-static bool
-accept_attr_expr(const char *l_val, const char *r_val, enum pcmk__type type,
-                 enum pcmk__comparison op)
-{
-    int cmp;
-
-    switch (op) {
-        case pcmk__comparison_defined:
-            return (l_val != NULL);
-
-        case pcmk__comparison_undefined:
-            return (l_val == NULL);
-
-        default:
-            break;
-    }
-
-    cmp = pcmk__cmp_by_type(l_val, r_val, type);
-
-    switch (op) {
-        case pcmk__comparison_eq:
-            return (cmp == 0);
-
-        case pcmk__comparison_ne:
-            return (cmp != 0);
-
-        default:
-            break;
-    }
-
-    if ((l_val == NULL) || (r_val == NULL)) {
-        // The comparison is meaningless from this point on
-        return false;
-    }
-
-    switch (op) {
-        case pcmk__comparison_lt:
-            return (cmp < 0);
-
-        case pcmk__comparison_lte:
-            return (cmp <= 0);
-
-        case pcmk__comparison_gt:
-            return (cmp > 0);
-
-        case pcmk__comparison_gte:
-            return (cmp >= 0);
-
-        default: // Not possible with schema validation enabled
-            return false;
-    }
-}
-
-/*!
- * \internal
- * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
- *
- * \param[in] value       value given in rule expression
- * \param[in] source      Reference value source
- * \param[in] match_data  If not NULL, resource back-references and params
- */
-static const char *
-expand_value_source(const char *value, enum pcmk__reference_source source,
-                    const pe_match_data_t *match_data)
-{
-    GHashTable *table = NULL;
-
-    if (pcmk__str_empty(value)) {
-        /* @COMPAT When we can break backward compatibility, drop this block so
-         * empty strings are treated as such (there should never be an empty
-         * string as an instance attribute or meta-attribute name, so those will
-         * get NULL anyway, but it could matter for literal comparisons)
-         */
-        return NULL;
-    }
-
-    switch (source) {
-        case pcmk__source_literal:
-            return value;
-
-        case pcmk__source_instance_attrs:
-            table = match_data->params;
-            break;
-
-        case pcmk__source_meta_attrs:
-            table = match_data->meta;
-            break;
-
-        default:
-            return NULL; // Not possible
-    }
-
-    if (table == NULL) {
-        return NULL;
-    }
-    return (const char *) g_hash_table_lookup(table, value);
-}
-
-/*!
- * \internal
  * \brief Evaluate a node attribute expression based on #uname, #id, #kind,
  *        or a generic node attribute
  *
@@ -623,97 +548,10 @@ expand_value_source(const char *value, enum pcmk__reference_source source,
 gboolean
 pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    gboolean attr_allocated = FALSE;
-    const char *h_val = NULL;
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    const char *id = pcmk__xe_id(expr);
-    const char *attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
-    const char *op = NULL;
-    const char *type_s = crm_element_value(expr, PCMK_XA_TYPE);
-    const char *value = crm_element_value(expr, PCMK_XA_VALUE);
-    const char *value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
-
-    enum pcmk__comparison comparison = pcmk__comparison_unknown;
-    enum pcmk__type type = pcmk__type_unknown;
-
-    if (attr == NULL) {
-        pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
-                         " not specified", pcmk__s(id, "without ID"));
-        return FALSE;
-    }
-
-    // Get and validate operation
-    op = crm_element_value(expr, PCMK_XA_OPERATION);
-    comparison = pcmk__parse_comparison(op);
-    if (comparison == pcmk__comparison_unknown) {
-        // Not possible with schema validation enabled
-        if (op == NULL) {
-            pcmk__config_err("Treating expression %s as not passing "
-                             "because it has no " PCMK_XA_OPERATION,
-                             pcmk__s(id, "without ID"));
-        } else {
-            pcmk__config_err("Treating expression %s as not passing "
-                             "because '%s' is not a valid " PCMK_XA_OPERATION,
-                             pcmk__s(id, "without ID"), op);
-        }
-        return FALSE;
-    }
-
-    if (rule_data->match_data != NULL) {
-        enum pcmk__reference_source source = pcmk__source_unknown;
-
-        // Expand any regular expression submatches (%0-%9) in attribute name
-        if (rule_data->match_data->re != NULL) {
-            const char *match = rule_data->match_data->re->string;
-            const regmatch_t *submatches = rule_data->match_data->re->pmatch;
-            const int nmatches = rule_data->match_data->re->nregs;
-            char *resolved_attr = pcmk__replace_submatches(attr, match,
-                                                           submatches,
-                                                           nmatches);
-
-            if (resolved_attr != NULL) {
-                attr = (const char *) resolved_attr;
-                attr_allocated = TRUE;
-            }
-        }
-
-        // Get value appropriate to PCMK_XA_VALUE_SOURCE
-        source = pcmk__parse_source(value_source);
-        if (source == pcmk__source_unknown) {
-            // Not possible with schema validation enabled
-            // @COMPAT Fail expression once we can break backward compatibility
-            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
-                              " value '%s', using default "
-                              "('" PCMK_VALUE_LITERAL "')",
-                              pcmk__s(id, "without ID"), value_source);
-            source = pcmk__source_literal;
-        }
-        value = expand_value_source(value, source, rule_data->match_data);
-    }
-
-    if (rule_data->node_hash != NULL) {
-        h_val = (const char *)g_hash_table_lookup(rule_data->node_hash, attr);
-    }
-
-    if (attr_allocated) {
-        free((char *)attr);
-        attr = NULL;
-    }
-
-    // Get and validate value type (after expanding value)
-    type = pcmk__parse_type(type_s, comparison, h_val, value);
-    if (type == pcmk__type_unknown) {
-        /* Not possible with schema validation enabled
-         *
-         * @COMPAT When we can break behavioral backward compatibility, treat
-         * the expression as not passing.
-         */
-        pcmk__config_warn("Non-empty node attribute values will be treated as "
-                          "equal for expression %s because '%s' is not a "
-                          "valid type", pcmk__s(id, "without ID"), type);
-    }
-
-    return accept_attr_expr(h_val, value, type, comparison);
+    map_rule_input(&rule_input, rule_data);
+    return pcmk__evaluate_attr_expression(expr, &rule_input) == pcmk_rc_ok;
 }
 
 gboolean

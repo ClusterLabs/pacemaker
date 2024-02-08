@@ -13,7 +13,7 @@
 #include <regex.h>                      // regmatch_t
 #include <libxml/tree.h>                // xmlNode
 
-#include <crm/common/rules.h>           // enum expression_type
+#include <crm/common/rules.h>           // enum expression_type, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
 
 // How node attribute values may be compared in rules
@@ -59,5 +59,7 @@ char *pcmk__replace_submatches(const char *string, const char *match,
 int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    const crm_time_t *now,
                                    crm_time_t *next_change);
+int pcmk__evaluate_attr_expression(const xmlNode *expr,
+                                   const pcmk_rule_input_t *rule_input);
 
 #endif // PCMK__CRM_COMMON_RULES_INTERNAL__H
