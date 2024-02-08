@@ -1155,41 +1155,70 @@ done:
  * \internal
  * \brief Evaluate an operation rule expression
  *
- * \param[in] expr        XML of a rule's \c PCMK_XE_OP_EXPRESSION subelement
- * \param[in] rule_input  Values used to evaluate rule criteria
+ * \param[in] op_expression  XML of a rule's \c PCMK_XE_OP_EXPRESSION subelement
+ * \param[in] rule_input     Values used to evaluate rule criteria
  *
- * \return Standard Pacemaker return code
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ *         is satisfied, some other value if it is not)
  */
 int
-pcmk__evaluate_op_expression(const xmlNode *expr,
+pcmk__evaluate_op_expression(const xmlNode *op_expression,
                              const pcmk_rule_input_t *rule_input)
 {
-    const char *name = crm_element_value(expr, PCMK_XA_NAME);
-    const char *interval_s = crm_element_value(expr, PCMK_META_INTERVAL);
+    const char *id = NULL;
+    const char *name = NULL;
+    const char *interval_s = NULL;
     guint interval_ms = 0U;
 
-    crm_trace("Testing op_defaults expression: %s", pcmk__xe_id(expr));
-
-    if (rule_input->op_name == NULL) {
-        crm_trace("No operation data provided");
-        return pcmk_rc_op_unsatisfied;
+    if ((op_expression == NULL) || (rule_input == NULL)) {
+        return EINVAL;
     }
 
+    // Get operation expression ID (for logging)
+    id = pcmk__xe_id(op_expression);
+    if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_op_unsatisfied
+         */
+        pcmk__config_warn(PCMK_XE_OP_EXPRESSION " element has no " PCMK_XA_ID);
+        id = "without ID"; // for logging
+    }
+
+    // Validate operation name
+    name = crm_element_value(op_expression, PCMK_XA_NAME);
+    if (name == NULL) { // Not possible with schema validation enabled
+        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                          "passing because it has no " PCMK_XA_NAME, id);
+        return pcmk_rc_unpack_error;
+    }
+
+    // Validate operation interval
+    interval_s = crm_element_value(op_expression, PCMK_META_INTERVAL);
     if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
-        crm_trace("Could not parse interval: %s", interval_s);
-        return pcmk_rc_op_unsatisfied;
+        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                          "passing because '%s' is not a valid interval",
+                          id, interval_s);
+        return pcmk_rc_unpack_error;
     }
 
-    if ((interval_s != NULL) && (interval_ms != rule_input->op_interval_ms)) {
-        crm_trace("Interval doesn't match: %d != %d",
-                  interval_ms, rule_input->op_interval_ms);
-        return pcmk_rc_op_unsatisfied;
-    }
-
+    // Compare operation name
     if (!pcmk__str_eq(name, rule_input->op_name, pcmk__str_none)) {
-        crm_trace("Name doesn't match: %s != %s", name, rule_input->op_name);
+        crm_trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because "
+                  "actual name '%s' doesn't match '%s'",
+                  id, pcmk__s(rule_input->op_name, ""), name);
         return pcmk_rc_op_unsatisfied;
     }
 
+    // Compare operation interval (unspecified interval matches all)
+    if ((interval_s != NULL) && (interval_ms != rule_input->op_interval_ms)) {
+        crm_trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because "
+                  "actual interval %s doesn't match %s",
+                  id, pcmk__readable_interval(rule_input->op_interval_ms),
+                  pcmk__readable_interval(interval_ms));
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    crm_trace(PCMK_XE_OP_EXPRESSION " %s is satisfied (name %s, interval %s)",
+              id, name, pcmk__readable_interval(rule_input->op_interval_ms));
     return pcmk_rc_ok;
 }
