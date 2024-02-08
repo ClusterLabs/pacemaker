@@ -18,6 +18,7 @@ header_HEADERS		= cib.h			\
 			  crm.h			\
 			  crm_compat.h		\
 			  lrmd.h		\
+			  lrmd_compat.h		\
 			  lrmd_events.h		\
 			  msg_xml.h		\
 			  msg_xml_compat.h	\
