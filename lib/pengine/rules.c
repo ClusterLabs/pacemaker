@@ -567,37 +567,10 @@ pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 gboolean
 pe__eval_rsc_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    const char *class = crm_element_value(expr, PCMK_XA_CLASS);
-    const char *provider = crm_element_value(expr, PCMK_XA_PROVIDER);
-    const char *type = crm_element_value(expr, PCMK_XA_TYPE);
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    crm_trace("Testing rsc_defaults expression: %s", pcmk__xe_id(expr));
-
-    if (rule_data->rsc_data == NULL) {
-        crm_trace("No resource data provided");
-        return FALSE;
-    }
-
-    if (class != NULL &&
-        !pcmk__str_eq(class, rule_data->rsc_data->standard, pcmk__str_none)) {
-        crm_trace("Class doesn't match: %s != %s", class, rule_data->rsc_data->standard);
-        return FALSE;
-    }
-
-    if ((provider == NULL && rule_data->rsc_data->provider != NULL) ||
-        (provider != NULL && rule_data->rsc_data->provider == NULL) ||
-        !pcmk__str_eq(provider, rule_data->rsc_data->provider, pcmk__str_none)) {
-        crm_trace("Provider doesn't match: %s != %s", provider, rule_data->rsc_data->provider);
-        return FALSE;
-    }
-
-    if (type != NULL &&
-        !pcmk__str_eq(type, rule_data->rsc_data->agent, pcmk__str_none)) {
-        crm_trace("Agent doesn't match: %s != %s", type, rule_data->rsc_data->agent);
-        return FALSE;
-    }
-
-    return TRUE;
+    map_rule_input(&rule_input, rule_data);
+    return pcmk__evaluate_rsc_expression(expr, &rule_input) == pcmk_rc_ok;
 }
 
 // Deprecated functions kept only for backward API compatibility
