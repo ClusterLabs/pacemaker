@@ -537,7 +537,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
     crm_xml_add_int(op_msg, PCMK__XA_LRMD_CALLOPT, options);
 
     if (data != NULL) {
-        add_message_xml(op_msg, PCMK__XA_LRMD_CALLDATA, data);
+        add_message_xml(op_msg, PCMK__XE_LRMD_CALLDATA, data);
     }
 
     crm_trace("Created executor %s command with call options %.8lx (%d)",
