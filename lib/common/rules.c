@@ -1150,3 +1150,46 @@ done:
     free(expanded_attr);
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Evaluate an operation rule expression
+ *
+ * \param[in] expr        XML of a rule's \c PCMK_XE_OP_EXPRESSION subelement
+ * \param[in] rule_input  Values used to evaluate rule criteria
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__evaluate_op_expression(const xmlNode *expr,
+                             const pcmk_rule_input_t *rule_input)
+{
+    const char *name = crm_element_value(expr, PCMK_XA_NAME);
+    const char *interval_s = crm_element_value(expr, PCMK_META_INTERVAL);
+    guint interval_ms = 0U;
+
+    crm_trace("Testing op_defaults expression: %s", pcmk__xe_id(expr));
+
+    if (rule_input->op_name == NULL) {
+        crm_trace("No operation data provided");
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
+        crm_trace("Could not parse interval: %s", interval_s);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    if ((interval_s != NULL) && (interval_ms != rule_input->op_interval_ms)) {
+        crm_trace("Interval doesn't match: %d != %d",
+                  interval_ms, rule_input->op_interval_ms);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    if (!pcmk__str_eq(name, rule_input->op_name, pcmk__str_none)) {
+        crm_trace("Name doesn't match: %s != %s", name, rule_input->op_name);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    return pcmk_rc_ok;
+}

@@ -558,34 +558,10 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 gboolean
 pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 {
-    const char *name = crm_element_value(expr, PCMK_XA_NAME);
-    const char *interval_s = crm_element_value(expr, PCMK_META_INTERVAL);
-    guint interval_ms = 0U;
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    crm_trace("Testing op_defaults expression: %s", pcmk__xe_id(expr));
-
-    if (rule_data->op_data == NULL) {
-        crm_trace("No operations data provided");
-        return FALSE;
-    }
-
-    if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
-        crm_trace("Could not parse interval: %s", interval_s);
-        return FALSE;
-    }
-
-    if ((interval_s != NULL) && (interval_ms != rule_data->op_data->interval)) {
-        crm_trace("Interval doesn't match: %d != %d",
-                  interval_ms, rule_data->op_data->interval);
-        return FALSE;
-    }
-
-    if (!pcmk__str_eq(name, rule_data->op_data->op_name, pcmk__str_none)) {
-        crm_trace("Name doesn't match: %s != %s", name, rule_data->op_data->op_name);
-        return FALSE;
-    }
-
-    return TRUE;
+    map_rule_input(&rule_input, rule_data);
+    return pcmk__evaluate_op_expression(expr, &rule_input) == pcmk_rc_ok;
 }
 
 gboolean
