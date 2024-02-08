@@ -3400,6 +3400,9 @@ for t in $tests; do
         -e 's|^/tmp/cts-cli\.shadow\.[^/]*/|/tmp/cts-cli.shadow/|' \
         -e 's|"/tmp/cts-cli\.shadow\.[^/]*/|"/tmp/cts-cli.shadow/|' \
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
+        -e 's|^/tmp/cts-cli\.ta_outfile\.[^:]*:|/tmp/cts-cli.ta_outfile:|' \
+        -e 's|^/tmp/cts-cli\.ta_outfile\.[^ ]* fails to validate|/tmp/cts-cli.ta_outfile fails to validate|' \
+        -e 's|^/tmp/cts-cli\.xmllint_outfile\.[^:]*:|/tmp/cts-cli.xmllint_outfile:|' \
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
