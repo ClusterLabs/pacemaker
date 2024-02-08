@@ -550,7 +550,7 @@ function test_crm_mon() {
 
     desc="XML output of active unmanaged resource on offline node"
     cmd="crm_mon -1 --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Brief text output of active unmanaged resource on offline node"
     cmd="crm_mon -1 --brief"
@@ -1039,19 +1039,19 @@ function test_tools() {
 
     desc="Set a non-existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Set an existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Delete an existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy -d description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Delete a non-existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy -d description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Set a non-existent attribute for a resource element without output-as=xml"
     cmd="crm_resource -r dummy --set-parameter=description -v test_description --element"
@@ -1095,7 +1095,7 @@ function test_tools() {
 
     desc="Show XML configuration of resource, output as XML"
     cmd="crm_resource -q -r dummy --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
@@ -1580,7 +1580,7 @@ function test_tools() {
 
     desc="Update a promotable score attribute to -INFINITY (XML)"
     cmd="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Query after updating a promotable score attribute to -INFINITY"
     cmd="crm_attribute -N cluster01 -p -G"
@@ -1588,7 +1588,7 @@ function test_tools() {
 
     desc="Query after updating a promotable score attribute to -INFINITY (XML)"
     cmd="crm_attribute -N cluster01 -p -G --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string"
     cmd="crm_attribute -N cluster01 -p '' -G"
@@ -3230,7 +3230,7 @@ function test_feature_set() {
 
     desc="XML output, no mixed status"
     cmd="crm_mon --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     # Modify the CIB to fake that the cluster has mixed versions
     desc="Fake inconsistent feature set"
@@ -3243,7 +3243,7 @@ function test_feature_set() {
 
     desc="XML output, mixed status"
     cmd="crm_mon --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_shadow_dir
 }
