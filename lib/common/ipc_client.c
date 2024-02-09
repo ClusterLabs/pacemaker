@@ -338,7 +338,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
         return ENOMSG;
     }
 
-    msg = string2xml(buffer);
+    msg = pcmk__xml_parse_string(buffer);
     if (msg == NULL) {
         crm_warn("Malformed message received from %s IPC",
                  pcmk_ipc_name(api, true));
@@ -1265,13 +1265,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 /* Got it */
                 break;
             } else if (hdr->qb.id < request_id) {
-                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                xmlNode *bad = pcmk__xml_parse_string(crm_ipc_buffer(client));
 
                 crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "OldIpcReply");
 
             } else {
-                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                xmlNode *bad = pcmk__xml_parse_string(crm_ipc_buffer(client));
 
                 crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "ImpossibleReply");
@@ -1430,7 +1430,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
                   crm_ipc_buffer(client));
 
         if (reply) {
-            *reply = string2xml(crm_ipc_buffer(client));
+            *reply = pcmk__xml_parse_string(crm_ipc_buffer(client));
         }
 
     } else {

@@ -16,7 +16,7 @@
 static void
 set_attr(void **state)
 {
-    xmlNode *node = string2xml("<node/>");
+    xmlNode *node = pcmk__xml_parse_string("<node/>");
 
     pcmk__xe_set_bool_attr(node, "a", true);
     pcmk__xe_set_bool_attr(node, "b", false);

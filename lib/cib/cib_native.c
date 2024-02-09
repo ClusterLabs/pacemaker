@@ -187,7 +187,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
         return 0;
     }
 
-    msg = string2xml(buffer);
+    msg = pcmk__xml_parse_string(buffer);
 
     if (msg == NULL) {
         crm_warn("Received a NULL message from the CIB manager");

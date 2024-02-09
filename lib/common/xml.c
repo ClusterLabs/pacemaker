@@ -834,72 +834,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 xmlNode *
 string2xml(const char *input)
 {
-    xmlNode *xml = NULL;
-    xmlDocPtr output = NULL;
-    xmlParserCtxtPtr ctxt = NULL;
-    const xmlError *last_error = NULL;
-
-    if (input == NULL) {
-        crm_err("Can't parse NULL input");
-        return NULL;
-    }
-
-    /* create a parser context */
-    ctxt = xmlNewParserCtxt();
-    CRM_CHECK(ctxt != NULL, return NULL);
-
-    xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
-    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                            PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-    if (output == NULL) {
-        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-        if (output) {
-            crm_warn("Successfully recovered from XML errors "
-                     "(note: a future release will treat this as a fatal failure)");
-        }
-    }
-
-    if (output) {
-        xml = xmlDocGetRootElement(output);
-    }
-    last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
-        /*
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
-         */
-        crm_warn("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                 last_error->domain, last_error->level, last_error->code, last_error->message);
-
-        if (last_error->code == XML_ERR_DOCUMENT_EMPTY) {
-            CRM_LOG_ASSERT("Cannot parse an empty string");
-
-        } else if (last_error->code != XML_ERR_DOCUMENT_END) {
-            crm_err("Couldn't%s parse %d chars: %s", xml ? " fully" : "", (int)strlen(input),
-                    input);
-            if (xml != NULL) {
-                crm_log_xml_err(xml, "Partial");
-            }
-
-        } else {
-            int len = strlen(input);
-            int lpc = 0;
-
-            while(lpc < len) {
-                crm_warn("Parse error[+%.3d]: %.80s", lpc, input+lpc);
-                lpc += 80;
-            }
-
-            CRM_LOG_ASSERT("String parsing error");
-        }
-    }
-
-    xmlFreeParserCtxt(ctxt);
-    return xml;
+    return pcmk__xml_parse_string(input);
 }
 
 /*!
@@ -1134,6 +1069,60 @@ pcmk__xml_parse_file(const char *filename)
 
         if (xml != NULL) {
             crm_log_xml_err(xml, "Partial");
+        }
+    }
+
+    xmlFreeParserCtxt(ctxt);
+    return xml;
+}
+
+/*!
+ * \internal
+ * \brief Parse XML from a string
+ *
+ * \param[in] input  String to parse
+ *
+ * \return XML tree parsed from the given string; may be \c NULL or only partial
+ *         on error
+ */
+xmlNode *
+pcmk__xml_parse_string(const char *input)
+{
+    xmlNode *xml = NULL;
+    xmlDoc *output = NULL;
+    xmlParserCtxt *ctxt = NULL;
+    const xmlError *last_error = NULL;
+
+    if (input == NULL) {
+        crm_err("Can't parse NULL input");
+        return NULL;
+    }
+
+    // Create a parser context
+    ctxt = xmlNewParserCtxt();
+    CRM_CHECK(ctxt != NULL, return NULL);
+
+    xmlCtxtResetLastError(ctxt);
+    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
+
+    parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input, NULL,
+                      NULL);
+
+    if (output != NULL) {
+        xml = xmlDocGetRootElement(output);
+    }
+
+    last_error = xmlCtxtGetLastError(ctxt);
+    if (last_error != NULL) {
+        crm_err("Couldn't %sparse XML from string: %s "
+                CRM_XS " (domain=%d, level=%d, code=%d)",
+                ((xml != NULL)? "fully " : ""), last_error->message,
+                last_error->domain, last_error->level, last_error->code);
+
+        crm_info("XML parse error: %s", input);
+
+        if (xml != NULL) {
+            crm_log_xml_info(xml, "Partial");
         }
     }
 

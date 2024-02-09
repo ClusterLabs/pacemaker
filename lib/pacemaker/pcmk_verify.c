@@ -38,7 +38,7 @@ pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib_obj
     }
 
     if (*first == '<') {
-        *cib_object = string2xml(cib_source);
+        *cib_object = pcmk__xml_parse_string(cib_source);
     } else {
         *cib_object = pcmk__xml_parse_file(cib_source);
     }

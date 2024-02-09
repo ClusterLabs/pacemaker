@@ -361,7 +361,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         xmlNodePtr doc = NULL;
 
         if (stdout_data != NULL) {
-            doc = string2xml(stdout_data);
+            doc = pcmk__xml_parse_string(stdout_data);
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
@@ -429,7 +429,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         xmlNodePtr doc = NULL;
 
         if (stdout_data != NULL) {
-            doc = string2xml(stdout_data);
+            doc = pcmk__xml_parse_string(stdout_data);
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);

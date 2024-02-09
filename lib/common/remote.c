@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -592,7 +592,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 
     CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
 
-    xml = string2xml(remote->buffer + header->payload_offset);
+    xml = pcmk__xml_parse_string(remote->buffer + header->payload_offset);
     if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
         crm_warn("Couldn't parse v%d message, we only understand v%d",
                  header->version, REMOTE_MSG_VERSION);

@@ -184,7 +184,7 @@ main(int argc, char **argv)
             goto done;
         }
     } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+        input = pcmk__xml_parse_string(options.input_xml);
 
         if (input == NULL) {
             exit_code = CRM_EX_DATAERR;

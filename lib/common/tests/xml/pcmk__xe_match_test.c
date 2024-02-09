@@ -39,7 +39,7 @@ const char *str1 =
 
 static void
 bad_input(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     assert_null(pcmk__xe_match(NULL, NULL, NULL, NULL));
     assert_null(pcmk__xe_match(NULL, NULL, NULL, "attrX"));
@@ -49,7 +49,7 @@ bad_input(void **state) {
 
 static void
 not_found(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     /* No node with an attrX attribute */
     assert_null(pcmk__xe_match(xml, NULL, "attrX", NULL));
@@ -65,7 +65,7 @@ not_found(void **state) {
 
 static void
 find_attrB(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
     xmlNode *result = NULL;
 
     /* Find the first node with attrB */
@@ -83,7 +83,7 @@ find_attrB(void **state) {
 
 static void
 find_attrA_matching(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
     xmlNode *result = NULL;
 
     /* Find attrA=456 */

@@ -18,7 +18,7 @@
 static void
 run_one_test(const char *t, const char *x, int expected) {
     crm_time_t *tm = crm_time_new(t);
-    xmlNodePtr xml = string2xml(x);
+    xmlNodePtr xml = pcmk__xml_parse_string(x);
 
     assert_int_equal(pe_cron_range_satisfied(tm, xml), expected);
 

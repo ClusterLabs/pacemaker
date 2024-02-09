@@ -326,7 +326,7 @@ cib_cs_dispatch(cpg_handle_t handle,
         return;
     }
     if (kind == crm_class_cluster) {
-        xml = string2xml(data);
+        xml = pcmk__xml_parse_string(data);
         if (xml == NULL) {
             crm_err("Invalid XML: '%.120s'", data);
             free(data);

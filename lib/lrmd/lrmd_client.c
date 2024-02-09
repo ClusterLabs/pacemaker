@@ -346,7 +346,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->callback != NULL) {
-        xmlNode *msg = string2xml(buffer);
+        xmlNode *msg = pcmk__xml_parse_string(buffer);
 
         lrmd_dispatch_internal(lrmd, msg);
         free_xml(msg);

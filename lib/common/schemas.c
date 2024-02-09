@@ -1416,7 +1416,7 @@ external_refs_in_schema(GList **list, const char *contents)
      * the XML file.  Otherwise, the xpath query will always return nothing.
      */
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
-    xmlNode *xml = string2xml(contents);
+    xmlNode *xml = pcmk__xml_parse_string(contents);
 
     crm_foreach_xpath_result(xml, search, append_href, list);
     free_xml(xml);
