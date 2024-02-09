@@ -932,12 +932,23 @@ stdin2xml(void)
     return xml_obj;
 }
 
+/*!
+ * \internal
+ * \brief Decompress a <tt>bzip2</tt>-compressed file into a string buffer
+ *
+ * \param[in] filename  Name of file to decompress
+ *
+ * \return Newly allocated string with the decompressed contents of \p filename,
+ *         or \c NULL on error.
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
 static char *
 decompress_file(const char *filename)
 {
     char *buffer = NULL;
     int rc = 0;
-    size_t length = 0, read_len = 0;
+    size_t length = 0;
     BZFILE *bz_file = NULL;
     FILE *input = fopen(filename, "r");
 
@@ -947,41 +958,38 @@ decompress_file(const char *filename)
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-    rc = pcmk__bzlib2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
+    if (rc != BZ_OK) {
+        rc = pcmk__bzlib2rc(rc);
         crm_err("Could not prepare to read compressed %s: %s "
                 CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
-        BZ2_bzReadClose(&rc, bz_file);
-        fclose(input);
-        return NULL;
+        goto done;
     }
 
-    rc = BZ_OK;
     // cppcheck seems not to understand the abort-logic in pcmk__realloc
     // cppcheck-suppress memleak
-    while (rc == BZ_OK) {
-        buffer = pcmk__realloc(buffer, PCMK__BUFFER_SIZE + length + 1);
+    do {
+        int read_len = 0;
+
+        buffer = pcmk__realloc(buffer, length + PCMK__BUFFER_SIZE + 1);
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, PCMK__BUFFER_SIZE);
 
-        crm_trace("Read %ld bytes from file: %d", (long)read_len, rc);
-
-        if (rc == BZ_OK || rc == BZ_STREAM_END) {
+        if ((rc == BZ_OK) || (rc == BZ_STREAM_END)) {
+            crm_trace("Read %ld bytes from file: %d", (long) read_len, rc);
             length += read_len;
         }
-    }
+    } while (rc == BZ_OK);
 
-    buffer[length] = '\0';
-
-    rc = pcmk__bzlib2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
+    if (rc != BZ_STREAM_END) {
+        rc = pcmk__bzlib2rc(rc);
         crm_err("Could not read compressed %s: %s " CRM_XS " rc=%d",
                 filename, pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
+    } else {
+        buffer[length] = '\0';
     }
 
+done:
     BZ2_bzReadClose(&rc, bz_file);
     fclose(input);
     return buffer;
