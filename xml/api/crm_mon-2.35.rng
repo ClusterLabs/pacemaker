@@ -167,7 +167,7 @@
     <define name="tickets-list">
         <element name="tickets">
             <zeroOrMore>
-                <ref name="element-ticket" />
+                <externalRef href="ticket-2.35.rng" />
             </zeroOrMore>
         </element>
     </define>
@@ -177,22 +177,6 @@
             <zeroOrMore>
                 <ref name="element-ban" />
             </zeroOrMore>
-        </element>
-    </define>
-
-    <define name="element-ticket">
-        <element name="ticket">
-            <attribute name="id"> <text /> </attribute>
-            <attribute name="status">
-                <choice>
-                    <value>granted</value>
-                    <value>revoked</value>
-                </choice>
-            </attribute>
-            <attribute name="standby"> <data type="boolean" /> </attribute>
-            <optional>
-                <attribute name="last-granted"> <text /> </attribute>
-            </optional>
         </element>
     </define>
 
