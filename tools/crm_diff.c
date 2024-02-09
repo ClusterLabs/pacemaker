@@ -331,7 +331,7 @@ main(int argc, char **argv)
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
-        object_1 = stdin2xml();
+        object_1 = pcmk__xml_read(NULL);
 
     } else if (options.xml_file_1 != NULL) {
         object_1 = pcmk__xml_read(options.xml_file_1);
@@ -342,7 +342,7 @@ main(int argc, char **argv)
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
-        object_2 = stdin2xml();
+        object_2 = pcmk__xml_read(NULL);
 
     } else if (options.xml_file_2 != NULL) {
         object_2 = pcmk__xml_read(options.xml_file_2);
