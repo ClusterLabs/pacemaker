@@ -936,12 +936,6 @@ read_stdin(void)
     return buf;
 }
 
-xmlNode *
-stdin2xml(void)
-{
-    return pcmk__xml_parse_file(NULL);
-}
-
 /*!
  * \internal
  * \brief Decompress a <tt>bzip2</tt>-compressed file into a string buffer
@@ -3041,6 +3035,12 @@ xmlNode *
 filename2xml(const char *filename)
 {
     return pcmk__xml_parse_file(filename);
+}
+
+xmlNode *
+stdin2xml(void)
+{
+    return pcmk__xml_parse_file(NULL);
 }
 
 // LCOV_EXCL_STOP

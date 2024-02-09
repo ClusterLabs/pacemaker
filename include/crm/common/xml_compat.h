@@ -97,6 +97,9 @@ gboolean can_prune_leaf(xmlNode *xml_node);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *filename2xml(const char *filename);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *stdin2xml(void);
+
 #ifdef __cplusplus
 }
 #endif
