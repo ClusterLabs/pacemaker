@@ -31,14 +31,9 @@ pcmk__parse_cib(pcmk__output_t *out, const char *cib_source, xmlNodePtr *cib_obj
         crm_info("Reading XML from: live cluster");
         rc = cib__signon_query(out, NULL, cib_object);
 
-    }  else if (cib_source[0] == '<') {
+    } else if (cib_source[0] == '<') {
+        // @TODO More robust check -- what if there's leading whitespace?
         *cib_object = string2xml(cib_source);
-        if (*cib_object == NULL) {
-            rc = ENODATA;
-        }
-
-    } else if (strcmp(cib_source, "-") == 0) {
-        *cib_object = stdin2xml();
         if (*cib_object == NULL) {
             rc = ENODATA;
         }

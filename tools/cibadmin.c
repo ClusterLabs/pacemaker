@@ -664,8 +664,8 @@ main(int argc, char **argv)
         source = "input string";
 
     } else if (options.input_stdin) {
+        input = pcmk__xml_parse_file(NULL);
         source = "STDIN";
-        input = stdin2xml();
 
     } else if (options.acl_render_mode != pcmk__acl_render_none) {
         char *username = pcmk__uid2username(geteuid());

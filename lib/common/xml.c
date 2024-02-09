@@ -939,12 +939,7 @@ read_stdin(void)
 xmlNode *
 stdin2xml(void)
 {
-    char *xml_buffer = read_stdin();
-    xmlNode *xml_obj = string2xml(xml_buffer);
-
-    free(xml_buffer);
-    crm_log_xml_trace(xml_obj, "Created fragment");
-    return xml_obj;
+    return pcmk__xml_parse_file(NULL);
 }
 
 /*!
