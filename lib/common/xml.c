@@ -829,12 +829,6 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
     return copy;
 }
 
-xmlNode *
-string2xml(const char *input)
-{
-    return pcmk__xml_parse(input);
-}
-
 /*!
  * \internal
  * \brief Read from \c stdin until EOF or error
@@ -3019,6 +3013,12 @@ xmlNode *
 stdin2xml(void)
 {
     return pcmk__xml_read(NULL);
+}
+
+xmlNode *
+string2xml(const char *input)
+{
+    return pcmk__xml_parse(input);
 }
 
 // LCOV_EXCL_STOP
