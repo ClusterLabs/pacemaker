@@ -902,32 +902,47 @@ string2xml(const char *input)
     return xml;
 }
 
+/*!
+ * \internal
+ * \brief Read from \c stdin until EOF or error
+ *
+ * \return Newly allocated string containing the bytes read from \c stdin, or
+ *         \c NULL on error
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+static char *
+read_stdin(void)
+{
+    char *buf = NULL;
+    size_t length = 0;
+
+    do {
+        size_t bytes_read = 0;
+
+        buf = pcmk__realloc(buf, length + PCMK__BUFFER_SIZE + 1);
+        bytes_read = fread(buf + length, 1, PCMK__BUFFER_SIZE, stdin);
+        length += bytes_read;
+    } while ((feof(stdin) == 0) && (ferror(stdin) == 0));
+
+    if (ferror(stdin) != 0) {
+        crm_err("Error reading input from stdin");
+        free(buf);
+        buf = NULL;
+    } else {
+        buf[length] = '\0';
+    }
+    clearerr(stdin);
+    return buf;
+}
+
 xmlNode *
 stdin2xml(void)
 {
-    size_t data_length = 0;
-    size_t read_chars = 0;
+    char *xml_buffer = read_stdin();
+    xmlNode *xml_obj = string2xml(xml_buffer);
 
-    char *xml_buffer = NULL;
-    xmlNode *xml_obj = NULL;
-
-    do {
-        xml_buffer = pcmk__realloc(xml_buffer, data_length + PCMK__BUFFER_SIZE);
-        read_chars = fread(xml_buffer + data_length, 1, PCMK__BUFFER_SIZE,
-                           stdin);
-        data_length += read_chars;
-    } while (read_chars == PCMK__BUFFER_SIZE);
-
-    if (data_length == 0) {
-        crm_warn("No XML supplied on stdin");
-        free(xml_buffer);
-        return NULL;
-    }
-
-    xml_buffer[data_length] = '\0';
-    xml_obj = string2xml(xml_buffer);
     free(xml_buffer);
-
     crm_log_xml_trace(xml_obj, "Created fragment");
     return xml_obj;
 }
@@ -1080,8 +1095,19 @@ pcmk__xml_parse_file(const char *filename)
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
     if (use_stdin) {
-        parse_xml_recover(&output, xmlCtxtReadFd, ctxt, STDIN_FILENO, NULL,
-                          NULL);
+        /* @COMPAT After dropping XML_PARSE_RECOVER, we can avoid capturing
+         * stdin into a buffer and instead call
+         * xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL, XML_PARSE_NOBLANKS);
+         *
+         * For now we have to save the input so that we can use it twice.
+         */
+        char *input = read_stdin();
+
+        if (input != NULL) {
+            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
+                              NULL, NULL);
+            free(input);
+        }
 
     } else if (pcmk__ends_with_ext(filename, ".bz2")) {
         char *input = decompress_file(filename);
