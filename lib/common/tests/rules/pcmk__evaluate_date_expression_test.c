@@ -66,7 +66,7 @@ assert_date_expression(const xmlNode *xml, const char *now_s,
 static void
 null_invalid(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_LT_VALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_LT_VALID);
     crm_time_t *t = crm_time_new("2024-02-01");
 
     assert_int_equal(pcmk__evaluate_date_expression(NULL, NULL, NULL), EINVAL);
@@ -80,7 +80,7 @@ null_invalid(void **state)
 static void
 null_next_change_ok(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_LT_VALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_LT_VALID);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_within_range);
     free_xml(xml);
@@ -95,7 +95,7 @@ static void
 id_missing(void **state)
 {
     // Currently acceptable
-    xmlNodePtr xml = string2xml(EXPR_ID_MISSING);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_ID_MISSING);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_within_range);
     free_xml(xml);
@@ -108,7 +108,7 @@ id_missing(void **state)
 static void
 op_invalid(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_OP_INVALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_OP_INVALID);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -121,7 +121,7 @@ op_invalid(void **state)
 static void
 lt_missing_end(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_LT_MISSING_END);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_LT_MISSING_END);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -135,7 +135,7 @@ lt_missing_end(void **state)
 static void
 lt_invalid_end(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_LT_INVALID_END);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_LT_INVALID_END);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -144,7 +144,7 @@ lt_invalid_end(void **state)
 static void
 lt_valid(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_LT_VALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_LT_VALID);
 
     // Now and next change are both before end
     assert_date_expression(xml, "2023-01-01 05:00:00", "2024-02-01 10:00:00",
@@ -172,7 +172,7 @@ lt_valid(void **state)
 static void
 gt_missing_start(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_GT_MISSING_START);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_GT_MISSING_START);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -186,7 +186,7 @@ gt_missing_start(void **state)
 static void
 gt_invalid_start(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_GT_INVALID_START);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_GT_INVALID_START);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -200,7 +200,7 @@ gt_invalid_start(void **state)
 static void
 gt_valid(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_GT_VALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_GT_VALID);
 
     // Now and next change are both before start
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -232,7 +232,7 @@ gt_valid(void **state)
 static void
 range_missing(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_MISSING);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_MISSING);
     crm_time_t *t = crm_time_new("2024-01-01");
 
     assert_int_equal(pcmk__evaluate_date_expression(xml, t, NULL),
@@ -251,7 +251,7 @@ range_missing(void **state)
 static void
 range_invalid_start_invalid_end(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_INVALID_START_INVALID_END);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_INVALID_START_INVALID_END);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -265,7 +265,7 @@ range_invalid_start_invalid_end(void **state)
 static void
 range_invalid_start_only(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_INVALID_START_ONLY);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_INVALID_START_ONLY);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -279,7 +279,7 @@ range_invalid_start_only(void **state)
 static void
 range_valid_start_only(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_START_ONLY);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_VALID_START_ONLY);
 
     // Now and next change are before start
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -308,7 +308,7 @@ range_valid_start_only(void **state)
 static void
 range_invalid_end_only(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_INVALID_END_ONLY);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_INVALID_END_ONLY);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -322,7 +322,7 @@ range_invalid_end_only(void **state)
 static void
 range_valid_end_only(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_END_ONLY);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_VALID_END_ONLY);
 
     // Now and next change are before end
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -353,7 +353,7 @@ static void
 range_valid_start_invalid_end(void **state)
 {
     // Currently treated same as start without end
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_START_INVALID_END);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_VALID_START_INVALID_END);
 
     // Now and next change are before start
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -384,7 +384,7 @@ static void
 range_invalid_start_valid_end(void **state)
 {
     // Currently treated same as end without start
-    xmlNodePtr xml = string2xml(EXPR_RANGE_INVALID_START_VALID_END);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_INVALID_START_VALID_END);
 
     // Now and next change are before end
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -414,7 +414,7 @@ range_invalid_start_valid_end(void **state)
 static void
 range_valid_start_valid_end(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_START_VALID_END);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_VALID_START_VALID_END);
 
     // Now and next change are before start
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -455,7 +455,7 @@ static void
 range_valid_start_invalid_duration(void **state)
 {
     // Currently treated same as end equals start
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_START_INVALID_DURATION);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_VALID_START_INVALID_DURATION);
 
     // Now and next change are before start
     assert_date_expression(xml, "2024-02-01 04:30:05", "2024-01-01 11:00:00",
@@ -487,7 +487,7 @@ range_valid_start_invalid_duration(void **state)
 static void
 range_valid_start_valid_duration(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_START_VALID_DURATION);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_RANGE_VALID_START_VALID_DURATION);
 
     // Now and next change are before start
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -528,7 +528,9 @@ static void
 range_valid_start_duration_missing_id(void **state)
 {
     // Currently acceptable
-    xmlNodePtr xml = string2xml(EXPR_RANGE_VALID_START_DURATION_MISSING_ID);
+    xmlNodePtr xml = NULL;
+
+    xml = pcmk__xml_parse(EXPR_RANGE_VALID_START_DURATION_MISSING_ID);
 
     // Now and next change are before start
     assert_date_expression(xml, "2024-01-01 04:30:05", "2024-01-01 11:00:00",
@@ -564,7 +566,7 @@ range_valid_start_duration_missing_id(void **state)
 static void
 spec_missing(void **state)
 {
-    xmlNodePtr xml = string2xml(EXPR_SPEC_MISSING);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_SPEC_MISSING);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_undetermined);
     free_xml(xml);
@@ -581,7 +583,7 @@ static void
 spec_invalid(void **state)
 {
     // Currently treated as date_spec with no ranges (which passes)
-    xmlNodePtr xml = string2xml(EXPR_SPEC_INVALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_SPEC_INVALID);
 
     assert_date_expression(xml, "2024-01-01", NULL, NULL, pcmk_rc_ok);
     free_xml(xml);
@@ -598,7 +600,7 @@ static void
 spec_valid(void **state)
 {
     // date_spec does not currently support next_change
-    xmlNodePtr xml = string2xml(EXPR_SPEC_VALID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_SPEC_VALID);
 
     // Now is just before spec start
     assert_date_expression(xml, "2024-01-01 23:59:59", NULL, NULL,
@@ -631,7 +633,7 @@ static void
 spec_missing_id(void **state)
 {
     // Currently acceptable; date_spec does not currently support next_change
-    xmlNodePtr xml = string2xml(EXPR_SPEC_MISSING_ID);
+    xmlNodePtr xml = pcmk__xml_parse(EXPR_SPEC_MISSING_ID);
 
     // Now is just before spec start
     assert_date_expression(xml, "2024-01-01 23:59:59", NULL, NULL,

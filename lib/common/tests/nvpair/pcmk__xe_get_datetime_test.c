@@ -31,7 +31,7 @@
 static void
 null_invalid(void **state)
 {
-    xmlNode *xml = string2xml(REFERENCE_XML);
+    xmlNode *xml = pcmk__xml_parse(REFERENCE_XML);
     crm_time_t *t = NULL;
 
     assert_int_equal(pcmk__xe_get_datetime(NULL, NULL, NULL), EINVAL);
@@ -51,7 +51,7 @@ null_invalid(void **state)
 static void
 nonnull_time_invalid(void **state)
 {
-    xmlNode *xml = string2xml(REFERENCE_XML);
+    xmlNode *xml = pcmk__xml_parse(REFERENCE_XML);
     crm_time_t *t = crm_time_new_undefined();
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), EINVAL);
@@ -63,7 +63,7 @@ nonnull_time_invalid(void **state)
 static void
 attr_missing(void **state)
 {
-    xmlNode *xml = string2xml(REFERENCE_XML);
+    xmlNode *xml = pcmk__xml_parse(REFERENCE_XML);
     crm_time_t *t = NULL;
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_MISSING, &t), pcmk_rc_ok);
@@ -75,7 +75,7 @@ attr_missing(void **state)
 static void
 attr_valid(void **state)
 {
-    xmlNode *xml = string2xml(REFERENCE_XML);
+    xmlNode *xml = pcmk__xml_parse(REFERENCE_XML);
     crm_time_t *t = NULL;
     crm_time_t *reference = crm_time_new(REFERENCE_ISO8601);
 
@@ -90,7 +90,7 @@ attr_valid(void **state)
 static void
 attr_invalid(void **state)
 {
-    xmlNode *xml = string2xml(BAD_XML);
+    xmlNode *xml = pcmk__xml_parse(BAD_XML);
     crm_time_t *t = NULL;
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t),

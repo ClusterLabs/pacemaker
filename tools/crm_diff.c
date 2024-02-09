@@ -327,7 +327,7 @@ main(int argc, char **argv)
     }
 
     if (options.raw_1) {
-        object_1 = string2xml(options.xml_file_1);
+        object_1 = pcmk__xml_parse(options.xml_file_1);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
@@ -338,7 +338,7 @@ main(int argc, char **argv)
     }
 
     if (options.raw_2) {
-        object_2 = string2xml(options.xml_file_2);
+        object_2 = pcmk__xml_parse(options.xml_file_2);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");

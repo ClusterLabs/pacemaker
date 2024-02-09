@@ -1054,7 +1054,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     private = st->st_private;
 
     blob.stonith = st;
-    blob.xml = string2xml(buffer);
+    blob.xml = pcmk__xml_parse(buffer);
     if (blob.xml == NULL) {
         crm_warn("Received malformed message from fencer: %s", buffer);
         return 0;

@@ -893,7 +893,7 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
         g_hash_table_replace(metadata_cache, strdup(agent), buffer);
     }
 
-    *metadata = string2xml(buffer);
+    *metadata = pcmk__xml_parse(buffer);
     return pcmk_rc_ok;
 }
 

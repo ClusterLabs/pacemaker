@@ -165,7 +165,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -ENODATA;
     }
 
-    xml = string2xml(result->action_stdout);
+    xml = pcmk__xml_parse(result->action_stdout);
     stonith__destroy_action(action);
 
     if (xml == NULL) {

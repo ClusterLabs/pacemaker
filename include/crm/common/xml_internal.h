@@ -477,6 +477,7 @@ void pcmk__sort_schemas(void);
  */
 
 xmlNode *pcmk__xml_read(const char *filename);
+xmlNode *pcmk__xml_parse(const char *input);
 
 
 // @COMPAT Remove when v1 patchsets are removed

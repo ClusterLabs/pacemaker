@@ -433,7 +433,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
 
     CRM_ASSERT(text[header->size_uncompressed - 1] == 0);
 
-    xml = string2xml(text);
+    xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
 
     free(uncompressed);

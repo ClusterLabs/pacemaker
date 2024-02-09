@@ -199,7 +199,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
         return;
     }
     if (kind == crm_class_cluster) {
-        xml = string2xml(data);
+        xml = pcmk__xml_parse(data);
         if (xml == NULL) {
             crm_err("Invalid XML: '%.120s'", data);
             free(data);

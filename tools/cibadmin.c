@@ -660,7 +660,7 @@ main(int argc, char **argv)
         source = options.input_file;
 
     } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+        input = pcmk__xml_parse(options.input_xml);
         source = "input string";
 
     } else if (options.input_stdin) {

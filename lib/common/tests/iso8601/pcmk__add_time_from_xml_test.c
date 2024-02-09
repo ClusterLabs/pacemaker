@@ -31,7 +31,7 @@
 static void
 null_time_invalid(void **state)
 {
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(NULL, pcmk__time_years, xml),
                      EINVAL);
@@ -55,7 +55,7 @@ null_xml_ok(void **state)
 static void
 invalid_component(void **state)
 {
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(NULL, pcmk__time_unknown, xml),
                      EINVAL);
@@ -67,7 +67,7 @@ missing_attr(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = pcmk_copy_time(t);
-    xmlNode *xml = string2xml(YEARS_INVALID);
+    xmlNode *xml = pcmk__xml_parse(YEARS_INVALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_months, xml),
                      pcmk_rc_ok);
@@ -83,7 +83,7 @@ invalid_attr(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = pcmk_copy_time(t);
-    xmlNode *xml = string2xml(YEARS_INVALID);
+    xmlNode *xml = pcmk__xml_parse(YEARS_INVALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml),
                      pcmk_rc_unpack_error);
@@ -101,12 +101,12 @@ out_of_range_attr(void **state)
     crm_time_t *reference = pcmk_copy_time(t);
     xmlNode *xml = NULL;
 
-    xml = string2xml(YEARS_TOO_BIG);
+    xml = pcmk__xml_parse(YEARS_TOO_BIG);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
     assert_int_equal(crm_time_compare(t, reference), 0);
     free_xml(xml);
 
-    xml = string2xml(YEARS_TOO_SMALL);
+    xml = pcmk__xml_parse(YEARS_TOO_SMALL);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
     assert_int_equal(crm_time_compare(t, reference), 0);
     free_xml(xml);
@@ -120,7 +120,7 @@ add_years(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2025-01-01 15:00:00");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml),
                      pcmk_rc_ok);
@@ -136,7 +136,7 @@ add_months(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2024-03-01 15:00:00");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_months, xml),
                      pcmk_rc_ok);
@@ -152,7 +152,7 @@ add_weeks(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2024-01-22 15:00:00");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_weeks, xml),
                      pcmk_rc_ok);
@@ -168,7 +168,7 @@ add_days(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2023-12-31 15:00:00");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_days, xml),
                      pcmk_rc_ok);
@@ -184,7 +184,7 @@ add_hours(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2024-01-01 16:00:00");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_hours, xml),
                      pcmk_rc_ok);
@@ -200,7 +200,7 @@ add_minutes(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2024-01-01 15:01:00");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_minutes, xml),
                      pcmk_rc_ok);
@@ -216,7 +216,7 @@ add_seconds(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *reference = crm_time_new("2024-01-01 15:00:01");
-    xmlNode *xml = string2xml(ALL_VALID);
+    xmlNode *xml = pcmk__xml_parse(ALL_VALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_seconds, xml),
                      pcmk_rc_ok);

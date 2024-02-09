@@ -19,7 +19,7 @@
 static void
 run_one_test(const char *t, const char *x, int expected) {
     crm_time_t *tm = crm_time_new(t);
-    xmlNodePtr xml = string2xml(x);
+    xmlNodePtr xml = pcmk__xml_parse(x);
 
     assert_int_equal(pcmk__evaluate_date_spec(xml, tm), expected);
 
@@ -29,9 +29,9 @@ run_one_test(const char *t, const char *x, int expected) {
 
 static void
 null_invalid(void **state) {
-    xmlNodePtr xml = string2xml("<" PCMK_XE_DATE_SPEC " "
-                                PCMK_XA_ID "='spec' "
-                                PCMK_XA_YEARS "='2019'/>");
+    xmlNodePtr xml = pcmk__xml_parse("<" PCMK_XE_DATE_SPEC " "
+                                     PCMK_XA_ID "='spec' "
+                                     PCMK_XA_YEARS "='2019'/>");
     crm_time_t *tm = crm_time_new(NULL);
 
     assert_int_equal(pcmk__evaluate_date_spec(NULL, NULL), EINVAL);
