@@ -1028,6 +1028,29 @@ pcmk__strip_xml_text(xmlNode *xml)
     }
 }
 
+// @COMPAT Remove macro at 3.0.0 when we drop XML_PARSE_RECOVER
+/*!
+ * \internal
+ * \brief Try to parse XML first without and then with recovery enabled
+ *
+ * \param[out] result  Where to store the resulting XML doc (<tt>xmlDoc **</tt>)
+ * \param[in]  fn      XML parser function
+ * \param[in]  ...     All arguments for \p fn except the final one (an
+ *                     \c xmlParserOption group)
+ */
+#define parse_xml_recover(result, fn, ...) do {                             \
+        *result = fn(__VA_ARGS__, PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);    \
+        if (*result == NULL) {                                              \
+            *result = fn(__VA_ARGS__, PCMK__XML_PARSE_OPTS_WITH_RECOVER);   \
+                                                                            \
+            if (*result != NULL) {                                          \
+                crm_warn("Successfully recovered from XML errors "          \
+                         "(note: a future release will treat this as a "    \
+                         "fatal failure)");                                 \
+            }                                                               \
+        }                                                                   \
+    } while (0);
+
 /*!
  * \internal
  * \brief Parse XML from a file
@@ -1042,10 +1065,6 @@ pcmk__strip_xml_text(xmlNode *xml)
 xmlNode *
 pcmk__xml_read(const char *filename)
 {
-    static const char *recovered = "Successfully recovered from XML errors "
-                                   "(note: a future release will treat this as "
-                                   "a fatal failure)";
-
     bool use_stdin = pcmk__str_eq(filename, "-", pcmk__str_null_matches);
     xmlNode *xml = NULL;
     xmlDoc *output = NULL;
@@ -1060,44 +1079,18 @@ pcmk__xml_read(const char *filename)
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
     if (use_stdin) {
-        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL,
-                               PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL,
-                                   PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output != NULL) {
-                crm_warn("%s", recovered);
-            }
-        }
+        parse_xml_recover(&output, xmlCtxtReadFd, ctxt, STDIN_FILENO, NULL,
+                          NULL);
 
     } else if (pcmk__ends_with_ext(filename, ".bz2")) {
         char *input = decompress_file(filename);
 
-        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                    PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output != NULL) {
-                crm_warn("%s", recovered);
-            }
-        }
-
+        parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
+                          NULL, NULL);
         free(input);
 
     } else {
-        output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                 PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output != NULL) {
-                crm_warn("%s", recovered);
-            }
-        }
+        parse_xml_recover(&output, xmlCtxtReadFile, ctxt, filename, NULL);
     }
 
     if (output != NULL) {
