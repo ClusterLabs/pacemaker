@@ -1046,8 +1046,10 @@ pcmk__xml_parse_file(const char *filename)
     static const char *recovered = "Successfully recovered from XML errors "
                                    "(note: a future release will treat this as "
                                    "a fatal failure)";
+
+    bool use_stdin = pcmk__str_eq(filename, "-", pcmk__str_null_matches);
     xmlNode *xml = NULL;
-    xmlDocPtr output = NULL;
+    xmlDoc *output = NULL;
     xmlParserCtxt *ctxt = NULL;
     const xmlError *last_error = NULL;
 
@@ -1058,12 +1060,12 @@ pcmk__xml_parse_file(const char *filename)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
-        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
+    if (use_stdin) {
+        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL,
                                PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
 
         if (output == NULL) {
-            output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
+            output = xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL,
                                    PCMK__XML_PARSE_OPTS_WITH_RECOVER);
             if (output != NULL) {
                 crm_warn("%s", recovered);
@@ -1113,19 +1115,15 @@ pcmk__xml_parse_file(const char *filename)
     }
 
     last_error = xmlCtxtGetLastError(ctxt);
-    if ((last_error != NULL) && (last_error->code != XML_ERR_OK)) {
-        /* crm_abort(__FILE__,__func__,__LINE__,
-         *           "last_error->code != XML_ERR_OK", TRUE, TRUE);
-         */
-        crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                last_error->domain, last_error->level, last_error->code,
-                last_error->message);
+    if (last_error != NULL) {
+        crm_err("Couldn't %sparse XML from %s: %s "
+                CRM_XS " (domain=%d, level=%d, code=%d)",
+                ((xml != NULL)? "fully " : ""), (use_stdin? "stdin" : filename),
+                last_error->message, last_error->domain, last_error->level,
+                last_error->code);
 
         if (xml != NULL) {
-            crm_err("Couldn't fully parse %s", filename);
             crm_log_xml_err(xml, "Partial");
-        } else {
-            crm_err("Couldn't parse %s", filename);
         }
     }
 
