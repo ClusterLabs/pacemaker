@@ -1086,9 +1086,11 @@ pcmk__xml_parse_file(const char *filename)
     } else if (pcmk__ends_with_ext(filename, ".bz2")) {
         char *input = decompress_file(filename);
 
-        parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
-                          NULL, NULL);
-        free(input);
+        if (input != NULL) {
+            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
+                              NULL, NULL);
+            free(input);
+        }
 
     } else {
         parse_xml_recover(&output, xmlCtxtReadFile, ctxt, filename, NULL);
