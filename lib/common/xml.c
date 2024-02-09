@@ -1038,7 +1038,6 @@ pcmk__xml_read(const char *filename)
                                    "a fatal failure)";
     xmlNode *xml = NULL;
     xmlDocPtr output = NULL;
-    bool uncompressed = true;
     xmlParserCtxt *ctxt = NULL;
     const xmlError *last_error = NULL;
 
@@ -1048,10 +1047,6 @@ pcmk__xml_read(const char *filename)
 
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
-
-    if (filename != NULL) {
-        uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
-    }
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
@@ -1065,19 +1060,7 @@ pcmk__xml_read(const char *filename)
             }
         }
 
-    } else if (uncompressed) {
-        output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                 PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output != NULL) {
-                crm_warn("%s", recovered);
-            }
-        }
-
-    } else {
+    } else if (pcmk__ends_with_ext(filename, ".bz2")) {
         char *input = decompress_file(filename);
 
         output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
@@ -1092,6 +1075,18 @@ pcmk__xml_read(const char *filename)
         }
 
         free(input);
+
+    } else {
+        output = xmlCtxtReadFile(ctxt, filename, NULL,
+                                 PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
+
+        if (output == NULL) {
+            output = xmlCtxtReadFile(ctxt, filename, NULL,
+                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
+            if (output != NULL) {
+                crm_warn("%s", recovered);
+            }
+        }
     }
 
     if (output != NULL) {
