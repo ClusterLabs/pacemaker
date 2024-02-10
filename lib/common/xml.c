@@ -638,38 +638,6 @@ pcmk__xe_create(xmlNode *parent, const char *name)
     return node;
 }
 
-xmlNode *
-create_xml_node(xmlNode *parent, const char *name)
-{
-    // Like pcmk__xe_create(), but returns NULL on failure
-    xmlNode *node = NULL;
-
-    CRM_CHECK(!pcmk__str_empty(name), return NULL);
-
-    if (parent == NULL) {
-        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
-
-        if (doc == NULL) {
-            return NULL;
-        }
-
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            xmlFreeDoc(doc);
-            return NULL;
-        }
-        xmlDocSetRootElement(doc, node);
-
-    } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            return NULL;
-        }
-    }
-    pcmk__mark_xml_created(node);
-    return node;
-}
-
 /*!
  * \internal
  * \brief Set a given string as an XML node's content
@@ -2300,6 +2268,38 @@ copy_xml(xmlNode *src)
 
     xmlDocSetRootElement(doc, copy);
     return copy;
+}
+
+xmlNode *
+create_xml_node(xmlNode *parent, const char *name)
+{
+    // Like pcmk__xe_create(), but returns NULL on failure
+    xmlNode *node = NULL;
+
+    CRM_CHECK(!pcmk__str_empty(name), return NULL);
+
+    if (parent == NULL) {
+        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+
+        if (doc == NULL) {
+            return NULL;
+        }
+
+        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            xmlFreeDoc(doc);
+            return NULL;
+        }
+        xmlDocSetRootElement(doc, node);
+
+    } else {
+        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            return NULL;
+        }
+    }
+    pcmk__mark_xml_created(node);
+    return node;
 }
 
 // LCOV_EXCL_STOP

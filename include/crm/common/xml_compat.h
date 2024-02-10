@@ -95,6 +95,9 @@ xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 //! \deprecated Do not use
 gboolean can_prune_leaf(xmlNode *xml_node);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *create_xml_node(xmlNode *parent, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

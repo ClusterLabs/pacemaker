@@ -66,15 +66,6 @@ void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
 /*
- * Create a node named "name" as a child of "parent"
- * If parent is NULL, creates an unconnected node.
- *
- * Returns the created node
- *
- */
-xmlNode *create_xml_node(xmlNode * parent, const char *name);
-
-/*
  * Create a node named "name" as a child of "parent", giving it the provided
  * text content.
  * If parent is NULL, creates an unconnected node.
