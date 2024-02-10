@@ -478,6 +478,9 @@ void pcmk__sort_schemas(void);
 xmlNode *pcmk__xml_parse_file(const char *filename);
 xmlNode *pcmk__xml_parse_string(const char *input);
 
+int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
+                       bool compress, int *nbytes);
+
 // @COMPAT Remove when v1 patchsets are removed
 xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
 
