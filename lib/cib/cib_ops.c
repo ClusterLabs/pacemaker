@@ -579,8 +579,13 @@ update_cib_object(xmlNode * parent, xmlNode * update)
             if (replace[lpc] == ',' || replace[lpc] == 0) {
                 if (last != lpc) {
                     char *replace_item = strndup(replace + last, lpc - last);
-                    xmlNode *remove = find_xml_node(target, replace_item,
-                                                    FALSE);
+                    xmlNode *remove = NULL;
+
+                    if (replace_item == NULL) {
+                        return -errno;
+                    }
+
+                    remove = find_xml_node(target, replace_item, false);
 
                     if (remove != NULL) {
                         crm_trace("Replacing node <%s> in <%s>",
