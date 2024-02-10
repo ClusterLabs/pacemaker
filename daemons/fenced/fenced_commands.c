@@ -2381,7 +2381,7 @@ add_action_reply(xmlNode *xml, const char *action,
                  const stonith_device_t *device, const char *target,
                  gboolean allow_suicide)
 {
-    xmlNode *child = create_xml_node(xml, PCMK__XE_ST_DEVICE_ACTION);
+    xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
     crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
@@ -2433,7 +2433,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     }
 
     /* Pack the results into XML */
-    list = create_xml_node(NULL, __func__);
+    list = pcmk__xe_create(NULL, __func__);
     crm_xml_add(list, PCMK__XA_ST_TARGET, query->target);
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
@@ -2447,7 +2447,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         available_devices++;
 
-        dev = create_xml_node(list, PCMK__XE_ST_DEVICE_ID);
+        dev = pcmk__xe_create(list, PCMK__XE_ST_DEVICE_ID);
         crm_xml_add(dev, PCMK_XA_ID, device->id);
         crm_xml_add(dev, PCMK__XA_NAMESPACE, device->namespace);
         crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
@@ -2491,7 +2491,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* A query without a target wants device parameters */
         if (query->target == NULL) {
-            xmlNode *attrs = create_xml_node(dev, PCMK__XE_ATTRIBUTES);
+            xmlNode *attrs = pcmk__xe_create(dev, PCMK__XE_ATTRIBUTES);
 
             g_hash_table_foreach(device->params, hash2field, attrs);
         }
@@ -2667,7 +2667,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     if (stand_alone) {
         /* Do notification with a clean data object */
-        xmlNode *notify_data = create_xml_node(NULL, PCMK__XE_ST_NOTIFY_FENCE);
+        xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
         crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
@@ -2967,7 +2967,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 {
     xmlNode *reply = NULL;
 
-    reply = create_xml_node(NULL, PCMK__XE_ST_REPLY);
+    reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
@@ -3021,7 +3021,7 @@ static xmlNode *
 construct_async_reply(const async_command_t *cmd,
                       const pcmk__action_result_t *result)
 {
-    xmlNode *reply = create_xml_node(NULL, PCMK__XE_ST_REPLY);
+    xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
@@ -3177,7 +3177,7 @@ is_privileged(const pcmk__client_t *c, const char *op)
 static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
-    xmlNode *reply = create_xml_node(NULL, "reply");
+    xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
     CRM_ASSERT(request->ipc_client != NULL);
     crm_xml_add(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);

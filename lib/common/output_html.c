@@ -112,7 +112,7 @@ html_init(pcmk__output_t *out) {
 
     priv->parent_q = g_queue_new();
 
-    priv->root = create_xml_node(NULL, "html");
+    priv->root = pcmk__xe_create(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
     crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
@@ -164,7 +164,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
         pcmk_create_xml_text_node(head_node, "title", out->request);
     }
 
-    charset_node = create_xml_node(head_node, PCMK__XE_META);
+    charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
     crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
@@ -181,7 +181,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     pcmk_create_xml_text_node(head_node, "style", stylesheet_default);
 
     if (stylesheet_link != NULL) {
-        htmlNodePtr link_node = create_xml_node(head_node, "link");
+        htmlNodePtr link_node = pcmk__xe_create(head_node, "link");
         pcmk__xe_set_props(link_node, "rel", "stylesheet",
                            "href", stylesheet_link,
                            NULL);

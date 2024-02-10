@@ -86,7 +86,7 @@ topology_remove_helper(const char *node, int level)
 {
     char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-    xmlNode *data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_INDEX, level);

@@ -322,7 +322,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
         return;
     }
 
-    notify_data = create_xml_node(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
+    notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
     crm_xml_add(notify_data, PCMK__XA_T, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE);
     crm_xml_add(notify_data, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
@@ -349,7 +349,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
                          xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
-    xmlNode *update_msg = create_xml_node(NULL, PCMK__XE_NOTIFY);
+    xmlNode *update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
     CRM_LOG_ASSERT(type != NULL);
 
@@ -385,9 +385,7 @@ fenced_send_config_notification(const char *op,
                                 const pcmk__action_result_t *result,
                                 const char *desc)
 {
-    xmlNode *notify_data = create_xml_node(NULL, op);
-
-    CRM_CHECK(notify_data != NULL, return);
+    xmlNode *notify_data = pcmk__xe_create(NULL, op);
 
     crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
 
@@ -476,7 +474,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        xmlNode *query = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
+        xmlNode *query = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
 
         crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);

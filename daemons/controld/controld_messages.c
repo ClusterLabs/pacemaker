@@ -804,7 +804,7 @@ handle_ping(const xmlNode *msg)
 
     // Build reply
 
-    ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
@@ -845,10 +845,10 @@ handle_node_list(const xmlNode *request)
     xmlNode *reply_data = NULL;
 
     // Create message data for reply
-    reply_data = create_xml_node(NULL, PCMK_XE_NODES);
+    reply_data = pcmk__xe_create(NULL, PCMK_XE_NODES);
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-        xmlNode *xml = create_xml_node(reply_data, PCMK_XE_NODE);
+        xmlNode *xml = pcmk__xe_create(reply_data, PCMK_XE_NODE);
 
         crm_xml_add_ll(xml, PCMK_XA_ID, (long long) node->id); // uint32_t
         crm_xml_add(xml, PCMK_XA_UNAME, node->uname);
@@ -885,7 +885,7 @@ handle_node_info_request(const xmlNode *msg)
 
     // Build reply
 
-    reply_data = create_xml_node(NULL, PCMK_XE_NODE);
+    reply_data = pcmk__xe_create(NULL, PCMK_XE_NODE);
     crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum

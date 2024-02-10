@@ -377,7 +377,7 @@ undo_op_remap(remote_fencing_op_t *op)
 static xmlNode *
 fencing_result2xml(const remote_fencing_op_t *op)
 {
-    xmlNode *notify_data = create_xml_node(NULL, PCMK__XE_ST_NOTIFY_FENCE);
+    xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
@@ -402,7 +402,7 @@ void
 fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
-    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_ST_REPLY);
+    xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
     xmlNode *notify_data = fencing_result2xml(op);
 
     count++;
@@ -565,7 +565,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     undo_op_remap(op);
 
     if (data == NULL) {
-        data = create_xml_node(NULL, "remote-op");
+        data = pcmk__xe_create(NULL, "remote-op");
         local_data = data;
 
     } else if (op->delegate == NULL) {

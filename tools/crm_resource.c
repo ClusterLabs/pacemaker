@@ -1094,7 +1094,7 @@ set_property(void)
 
     CRM_LOG_ASSERT(options.prop_name != NULL);
 
-    msg_data = create_xml_node(NULL, options.rsc_type);
+    msg_data = pcmk__xe_create(NULL, options.rsc_type);
     crm_xml_add(msg_data, PCMK_XA_ID, options.rsc_id);
     crm_xml_add(msg_data, options.prop_name, options.prop_value);
 

@@ -17,7 +17,7 @@
 static void
 is_xml_acl_enabled_without_node(void **state)
 {
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     assert_false(xml_acl_enabled(test_xml));
 
     test_xml->doc->_private = NULL;
@@ -35,7 +35,7 @@ is_xml_acl_enabled_with_node(void **state)
 {
     xml_doc_private_t *docpriv;
     
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
 
     // allocate memory for _private, which is NULL by default
     test_xml->doc->_private = pcmk__assert_alloc(1, sizeof(xml_doc_private_t));

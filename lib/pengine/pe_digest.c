@@ -103,7 +103,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 {
     xmlNode *action_config = NULL;
 
-    data->params_all = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+    data->params_all = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
 
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
@@ -199,7 +199,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (old_version) {
-        data->params_secure = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+        data->params_secure = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
         if (overrides != NULL) {
             g_hash_table_foreach(overrides, hash2field, data->params_secure);
         }

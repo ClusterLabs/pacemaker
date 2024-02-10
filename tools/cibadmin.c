@@ -889,7 +889,7 @@ do_work(xmlNode *input, xmlNode **output)
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
 
         if (status == NULL) {
-            create_xml_node(input, PCMK_XE_STATUS);
+            pcmk__xe_create(input, PCMK_XE_STATUS);
         }
     }
 

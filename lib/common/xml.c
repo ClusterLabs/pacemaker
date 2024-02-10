@@ -602,19 +602,53 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a new XML element under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ *
+ * \return Newly created XML element (guaranteed not to be \c NULL)
+ */
 xmlNode *
-create_xml_node(xmlNode * parent, const char *name)
+pcmk__xe_create(xmlNode *parent, const char *name)
 {
-    xmlDoc *doc = NULL;
     xmlNode *node = NULL;
 
-    if (pcmk__str_empty(name)) {
-        CRM_CHECK(name != NULL && name[0] == 0, return NULL);
-        return NULL;
-    }
+    CRM_ASSERT(!pcmk__str_empty(name));
 
     if (parent == NULL) {
-        doc = xmlNewDoc(PCMK__XML_VERSION);
+        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+
+        pcmk__mem_assert(doc);
+
+        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        pcmk__mem_assert(node);
+
+        xmlDocSetRootElement(doc, node);
+
+    } else {
+        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        pcmk__mem_assert(node);
+    }
+    pcmk__mark_xml_created(node);
+    return node;
+}
+
+xmlNode *
+create_xml_node(xmlNode *parent, const char *name)
+{
+    // Like pcmk__xe_create(), but returns NULL on failure
+    xmlNode *node = NULL;
+
+    CRM_CHECK(!pcmk__str_empty(name), return NULL);
+
+    if (parent == NULL) {
+        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+
         if (doc == NULL) {
             return NULL;
         }
@@ -659,7 +693,7 @@ pcmk__xe_set_content(xmlNode *node, const char *content)
 xmlNode *
 pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
 {
-    xmlNode *node = create_xml_node(parent, name);
+    xmlNode *node = pcmk__xe_create(parent, name);
 
     pcmk__xe_set_content(node, content);
     return node;
@@ -1663,8 +1697,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     }
 
     if (target == NULL) {
-        target = create_xml_node(parent, object_name);
-        CRM_CHECK(target != NULL, return);
+        target = pcmk__xe_create(parent, object_name);
 #if XML_PARSER_DEBUG
         crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
@@ -1772,7 +1805,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
 
     } else {
         if (*children == NULL) {
-            *children = create_xml_node(NULL, __func__);
+            *children = pcmk__xe_create(NULL, __func__);
         }
         pcmk__xml_copy(*children, root);
         match_found = 1;
@@ -1881,7 +1914,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 
     CRM_CHECK(input != NULL, return NULL);
 
-    result = create_xml_node(parent, (const char *) input->name);
+    result = pcmk__xe_create(parent, (const char *) input->name);
     nvpairs = pcmk_xml_attrs2nvpairs(input);
     nvpairs = pcmk_sort_nvpairs(nvpairs);
     pcmk_nvpairs2xml_attrs(nvpairs, result);

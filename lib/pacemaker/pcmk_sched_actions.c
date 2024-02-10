@@ -1094,7 +1094,7 @@ add_op_digest_to_xml(const lrmd_event_data_t *op, xmlNode *update)
     if (op->params == NULL) {
         return;
     }
-    args_xml = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+    args_xml = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     pcmk__filter_op_for_digest(args_xml);
     digest = calculate_operation_digest(args_xml, NULL);
@@ -1204,7 +1204,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
   again:
     xml_op = pcmk__xe_match(parent, PCMK__XE_LRM_RSC_OP, PCMK_XA_ID, op_id);
     if (xml_op == NULL) {
-        xml_op = create_xml_node(parent, PCMK__XE_LRM_RSC_OP);
+        xml_op = pcmk__xe_create(parent, PCMK__XE_LRM_RSC_OP);
     }
 
     if (op->user_data == NULL) {

@@ -264,7 +264,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         status = NULL;
     }
     if (status == NULL) {
-        create_xml_node(root, PCMK_XE_STATUS);
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Do this before schema validation happens */

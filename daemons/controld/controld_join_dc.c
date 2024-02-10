@@ -864,7 +864,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      * weren't known before
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
-    tmp1 = create_xml_node(NULL, PCMK_XE_NODE);
+    tmp1 = pcmk__xe_create(NULL, PCMK_XE_NODE);
     crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
@@ -909,7 +909,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         if (crm_remote_peer_cache_size() != 0) {
             GHashTableIter iter;
             crm_node_t *node = NULL;
-            xmlNode *remotes = create_xml_node(acknak, PCMK_XE_NODES);
+            xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);
 
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -919,7 +919,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                     continue;
                 }
 
-                remote = create_xml_node(remotes, PCMK_XE_NODE);
+                remote = pcmk__xe_create(remotes, PCMK_XE_NODE);
                 pcmk__xe_set_props(remote,
                                    PCMK_XA_ID, node->uname,
                                    PCMK__XA_NODE_STATE, node->state,

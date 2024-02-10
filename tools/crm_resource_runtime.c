@@ -347,10 +347,10 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = create_xml_node(NULL, (const char *) rsc->xml->name);
+                xml_top = pcmk__xe_create(NULL, (const char *) rsc->xml->name);
                 crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
-                xml_obj = create_xml_node(xml_top, attr_set_type);
+                xml_obj = pcmk__xe_create(xml_top, attr_set_type);
                 crm_xml_add(xml_obj, PCMK_XA_ID, rsc_attr_set);
                 break;
 

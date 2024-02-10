@@ -138,7 +138,7 @@ pcmk__attrd_api_methods(void)
 static xmlNode *
 create_attrd_op(const char *user_name)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __func__);
+    xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
@@ -456,7 +456,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
              * then we also add the task to each child node in populate_update_op
              * so attrd_client_update knows what form of update is taking place.
              */
-            child = create_xml_node(request, PCMK_XE_OP);
+            child = pcmk__xe_create(request, PCMK_XE_OP);
             target = pcmk__node_attr_target(pair->node);
 
             if (target != NULL) {

@@ -47,7 +47,7 @@ static void
 invalid_name(void **state)
 {
     GList *already_included = NULL;
-    xmlNode *parent = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    xmlNode *parent = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
     pcmk__build_schema_xml_node(parent, "pacemaker-9.0", &already_included);
     assert_null(parent->children);
@@ -59,7 +59,7 @@ static void
 single_schema(void **state)
 {
     GList *already_included = NULL;
-    xmlNode *parent = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    xmlNode *parent = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
     xmlNode *schema_node = NULL;
     xmlNode *file_node = NULL;
     int i = 0;
@@ -101,7 +101,7 @@ static void
 multiple_schemas(void **state)
 {
     GList *already_included = NULL;
-    xmlNode *parent = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    xmlNode *parent = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
     xmlNode *schema_node = NULL;
     xmlNode *file_node = NULL;
     int i = 0;

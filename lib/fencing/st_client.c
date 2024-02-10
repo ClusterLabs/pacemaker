@@ -274,7 +274,7 @@ stonith_connection_destroy(gpointer user_data)
 
     crm_trace("Sending destroyed notification");
     blob.stonith = stonith;
-    blob.xml = create_xml_node(NULL, PCMK__XE_NOTIFY);
+    blob.xml = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
     native = stonith->st_private;
     native->ipc = NULL;
@@ -295,8 +295,8 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
                                const stonith_key_value_t *params,
                                const char *rsc_provides)
 {
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
-    xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
 
 #if HAVE_STONITH_STONITH_H
     if (namespace == st_namespace_any) {
@@ -351,7 +351,7 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
+    data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
@@ -370,7 +370,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
 
     CRM_CHECK(node || pattern || (attr && value), return -EINVAL);
 
-    data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
+    data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
 
     if (node) {
@@ -423,8 +423,7 @@ create_level_registration_xml(const char *node, const char *pattern,
 
     CRM_CHECK(node || pattern || (attr && value), return NULL);
 
-    data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
-    CRM_CHECK(data, return NULL);
+    data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_ID, level);
@@ -553,7 +552,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
     CRM_CHECK(devices != NULL, return -EINVAL);
 
-    data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
+    data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_ST_TARGET, target);
     crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, PCMK_ACTION_OFF);
@@ -610,7 +609,7 @@ stonith_api_call(stonith_t *stonith, int call_options, const char *id,
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, PCMK__XE_ST_DEVICE_ID);
+    data = pcmk__xe_create(NULL, PCMK__XE_ST_DEVICE_ID);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_ST_DEVICE_ID, id);
     crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, action);
@@ -672,7 +671,7 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, __func__);
+    data = pcmk__xe_create(NULL, __func__);
     crm_xml_add(data, PCMK__XA_ST_TARGET, node);
     crm_xml_add(data, PCMK__XA_ST_DEVICE_ACTION, action);
     crm_xml_add_int(data, PCMK__XA_ST_TIMEOUT, timeout);
@@ -713,7 +712,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
     *history = NULL;
 
     if (node) {
-        data = create_xml_node(NULL, __func__);
+        data = pcmk__xe_create(NULL, __func__);
         crm_xml_add(data, PCMK__XA_ST_TARGET, node);
     }
 
@@ -809,11 +808,11 @@ stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
 xmlNode *
 stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data, int call_options)
 {
-    xmlNode *op_msg = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
+    xmlNode *op_msg = NULL;
 
-    CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
+    op_msg = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
     crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     crm_xml_add(op_msg, PCMK__XA_ST_OP, op);
     crm_xml_add_int(op_msg, PCMK__XA_ST_CALLID, call_id);
@@ -1139,7 +1138,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         rc = -ENOTCONN;
     } else {
         xmlNode *reply = NULL;
-        xmlNode *hello = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
+        xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
 
         crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
@@ -1193,7 +1192,7 @@ static int
 stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 {
     int rc = pcmk_ok;
-    xmlNode *notify_msg = create_xml_node(NULL, __func__);
+    xmlNode *notify_msg = pcmk__xe_create(NULL, __func__);
     stonith_private_t *native = stonith->st_private;
 
     if (stonith->state != stonith_disconnected) {

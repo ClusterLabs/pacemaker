@@ -489,7 +489,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 {
     GString *list = NULL;
 
-    *result = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+    *result = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
 
     /* Consider all parameters only except private ones to be consistent with
      * what scheduler does with calculate_secure_digest().
@@ -892,10 +892,10 @@ controld_update_resource_history(const char *node_name,
     }
 
     // <status>
-    update = create_xml_node(NULL, PCMK_XE_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
     //   <node_state ...>
-    xml = create_xml_node(update, PCMK__XE_NODE_STATE);
+    xml = pcmk__xe_create(update, PCMK__XE_NODE_STATE);
     if (pcmk__str_eq(node_name, controld_globals.our_nodename,
                      pcmk__str_casei)) {
         node_id = controld_globals.our_uuid;
@@ -908,14 +908,14 @@ controld_update_resource_history(const char *node_name,
     crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
-    xml = create_xml_node(xml, PCMK__XE_LRM);
+    xml = pcmk__xe_create(xml, PCMK__XE_LRM);
     crm_xml_add(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
-    xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCES);
+    xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
-    xml = create_xml_node(xml, PCMK__XE_LRM_RESOURCE);
+    xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
     crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
     crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
@@ -964,7 +964,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     CRM_CHECK(op != NULL, return);
 
-    xml_top = create_xml_node(NULL, PCMK__XE_LRM_RSC_OP);
+    xml_top = pcmk__xe_create(NULL, PCMK__XE_LRM_RSC_OP);
     crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
     crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 

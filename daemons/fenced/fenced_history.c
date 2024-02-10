@@ -41,8 +41,8 @@ stonith_send_broadcast_history(xmlNode *history,
                                int callopts,
                                const char *target)
 {
-    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
-    xmlNode *data = create_xml_node(NULL, __func__);
+    xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
+    xmlNode *data = pcmk__xe_create(NULL, __func__);
 
     if (target) {
         crm_xml_add(data, PCMK__XA_ST_TARGET, target);
@@ -309,7 +309,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     if (stonith_remote_op_list) {
             char *id = NULL;
 
-            history = create_xml_node(NULL, PCMK__XE_ST_HISTORY);
+            history = pcmk__xe_create(NULL, PCMK__XE_ST_HISTORY);
 
             g_hash_table_iter_init(&iter, stonith_remote_op_list);
             while (g_hash_table_iter_next(&iter, (void **)&id, (void **)&op)) {
@@ -361,7 +361,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
 
                 cnt++;
                 crm_trace("Attaching op %s", op->id);
-                entry = create_xml_node(history, STONITH_OP_EXEC);
+                entry = pcmk__xe_create(history, STONITH_OP_EXEC);
                 if (add_id) {
                     crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }

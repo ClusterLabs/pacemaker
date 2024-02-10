@@ -369,14 +369,14 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          * template or tag. Add the corresponding PCMK_XE_RESOURCE_SET
          * containing the resources derived from or tagged with it.
          */
-        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
+        *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
         for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
             const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
-            rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
+            rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
             crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
@@ -390,10 +390,10 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          */
         xmlNode *rsc_ref = NULL;
 
-        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
+        *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
-        rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
+        rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
         crm_xml_add(rsc_ref, PCMK_XA_ID, id);
 
     } else {

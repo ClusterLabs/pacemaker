@@ -26,7 +26,7 @@
 static xmlNode *
 attrd_confirmation(int callid)
 {
-    xmlNode *node = create_xml_node(NULL, __func__);
+    xmlNode *node = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(node, PCMK__XA_SRC, get_local_node_name());
@@ -151,7 +151,7 @@ attrd_cpg_destroy(gpointer unused)
 void
 attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 {
-    xmlNode *op = create_xml_node(NULL, PCMK_XE_OP);
+    xmlNode *op = pcmk__xe_create(NULL, PCMK_XE_OP);
 
     crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     attrd_add_value_xml(op, a, v, false);
@@ -390,7 +390,7 @@ broadcast_unseen_local_values(void)
                 crm_trace("* %s[%s]='%s' is local-only",
                           a->id, v->nodename, readable_value(v));
                 if (sync == NULL) {
-                    sync = create_xml_node(NULL, __func__);
+                    sync = pcmk__xe_create(NULL, __func__);
                     crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
                 }
                 attrd_add_value_xml(sync, a, v, a->timeout_ms && a->timer);
@@ -546,7 +546,7 @@ attrd_peer_sync(crm_node_t *peer)
 
     attribute_t *a = NULL;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __func__);
+    xmlNode *sync = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
