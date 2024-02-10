@@ -36,6 +36,8 @@ log_xmllib_err 	error: XML Error: ^
 log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 log_xmllib_err 	error: XML Error: invalidxml
 log_xmllib_err 	error: XML Error: ^
+pcmk__xml_parse_string 	error: Couldn't parse XML from string: Start tag expected, '<' not found
+ | (domain=1, level=3, code=4)
 crm_rule: Couldn't parse input string: invalidxml
 =#=#=#= End test: crm_rule given invalid input XML - Invalid data given (65) =#=#=#=
 * Passed: crm_rule       - crm_rule given invalid input XML
@@ -46,6 +48,8 @@ log_xmllib_err 	error: XML Error: ^
 log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 log_xmllib_err 	error: XML Error: invalidxml
 log_xmllib_err 	error: XML Error: ^
+pcmk__xml_parse_string 	error: Couldn't parse XML from string: Start tag expected, '<' not found
+ | (domain=1, level=3, code=4)
 <pacemaker-result api-version="X" request="crm_rule -c -r blahblah -X invalidxml --output-as=xml">
   <status code="65" message="Invalid data given">
     <errors>
@@ -62,6 +66,8 @@ log_xmllib_err 	error: XML Error: ^
 log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 log_xmllib_err 	error: XML Error: invalidxml
 log_xmllib_err 	error: XML Error: ^
+pcmk__xml_parse_file 	error: Couldn't parse XML from stdin: Start tag expected, '<' not found
+ | (domain=1, level=3, code=4)
 crm_rule: Couldn't parse input from STDIN
 =#=#=#= End test: crm_rule given invalid input XML on stdin - Invalid data given (65) =#=#=#=
 * Passed: echo           - crm_rule given invalid input XML on stdin
@@ -72,6 +78,8 @@ log_xmllib_err 	error: XML Error: ^
 log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 log_xmllib_err 	error: XML Error: invalidxml
 log_xmllib_err 	error: XML Error: ^
+pcmk__xml_parse_file 	error: Couldn't parse XML from stdin: Start tag expected, '<' not found
+ | (domain=1, level=3, code=4)
 <pacemaker-result api-version="X" request="crm_rule -c -r blahblah -X - --output-as=xml">
   <status code="65" message="Invalid data given">
     <errors>
