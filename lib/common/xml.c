@@ -1316,29 +1316,6 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
 }
 
 /*!
- * \brief Write XML to a file descriptor
- *
- * \param[in] xml       XML to write
- * \param[in] filename  Name of file being written (for logging only)
- * \param[in] fd        Open file descriptor corresponding to filename
- * \param[in] compress  Whether to compress XML before writing
- *
- * \return Number of bytes written on success, -errno otherwise
- */
-int
-write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-             gboolean compress)
-{
-    int nbytes = 0;
-    int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
-
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return nbytes;
-}
-
-/*!
  * \brief Write XML to a file
  *
  * \param[in] xml       XML to write
@@ -3050,6 +3027,19 @@ xmlNode *
 string2xml(const char *input)
 {
     return pcmk__xml_parse(input);
+}
+
+int
+write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+             gboolean compress)
+{
+    int nbytes = 0;
+    int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
+
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
+    }
+    return nbytes;
 }
 
 // LCOV_EXCL_STOP

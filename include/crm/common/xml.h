@@ -109,8 +109,6 @@ xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const
  *
  * Whitespace between tags is discarded.
  */
-int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-                 gboolean compress);
 int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 
 char *dump_xml_formatted(const xmlNode *xml);
