@@ -598,7 +598,8 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     crm_trace("Unpacking synapse %s action sets",
               crm_element_value(xml_synapse, PCMK_XA_ID));
 
-    for (action_set = first_named_child(xml_synapse, "action_set");
+    for (action_set = pcmk__xe_first_child(xml_synapse, "action_set", NULL,
+                                           NULL);
          action_set != NULL; action_set = crm_next_same_xml(action_set)) {
 
         for (xmlNode *action = pcmk__xe_first_child_any(action_set);
@@ -621,10 +622,12 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
-    for (xmlNode *inputs = first_named_child(xml_synapse, "inputs");
+    for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, "inputs", NULL,
+                                                NULL);
          inputs != NULL; inputs = crm_next_same_xml(inputs)) {
 
-        for (xmlNode *trigger = first_named_child(inputs, "trigger");
+        for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
+                                                     NULL);
              trigger != NULL; trigger = crm_next_same_xml(trigger)) {
 
             for (xmlNode *input = pcmk__xe_first_child_any(trigger);
@@ -739,7 +742,9 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     }
 
     // Unpack each child <synapse> element
-    for (const xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
+    for (const xmlNode *synapse_xml = pcmk__xe_first_child(xml_graph,
+                                                           "synapse", NULL,
+                                                           NULL);
          synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
@@ -850,7 +855,8 @@ pcmk__event_from_graph_action(const xmlNode *resource,
     CRM_CHECK(action != NULL, return NULL);
     CRM_CHECK(action->type == pcmk__rsc_graph_action, return NULL);
 
-    action_resource = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
+    action_resource = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
+                                           NULL);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");
                                        return NULL);
 

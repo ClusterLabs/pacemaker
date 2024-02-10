@@ -351,7 +351,8 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
 
-    for (xmlNode *rule = first_named_child(ruleset, PCMK_XE_RULE);
+    for (xmlNode *rule = pcmk__xe_first_child(ruleset, PCMK_XE_RULE, NULL,
+                                              NULL);
          rule != NULL; rule = crm_next_same_xml(rule)) {
 
         ruleset_default = FALSE;

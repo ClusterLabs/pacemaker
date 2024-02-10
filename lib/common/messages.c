@@ -155,7 +155,8 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 xmlNode *
 get_message_xml(const xmlNode *msg, const char *field)
 {
-    return pcmk__xe_first_child_any(first_named_child(msg, field));
+    return pcmk__xe_first_child_any(pcmk__xe_first_child(msg, field, NULL,
+                                                         NULL));
 }
 
 gboolean

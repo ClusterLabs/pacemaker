@@ -555,8 +555,9 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     add_topology_level(change->children);
 
                 } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-                    xmlNode *match = first_named_child(change,
-                                                       PCMK_XE_CHANGE_RESULT);
+                    xmlNode *match = pcmk__xe_first_child(change,
+                                                          PCMK_XE_CHANGE_RESULT,
+                                                          NULL, NULL);
 
                     if(match) {
                         remove_topology_level(match->children);
@@ -580,7 +581,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
             } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
                 /* Changes to the whole config section, possibly including the topology as a whild */
-                if(first_named_child(change, PCMK_XE_FENCING_TOPOLOGY) == NULL) {
+                if (pcmk__xe_first_child(change, PCMK_XE_FENCING_TOPOLOGY, NULL,
+                                         NULL) == NULL) {
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
                               op, add[0], add[1], add[2], xpath);
 

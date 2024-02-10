@@ -1270,7 +1270,9 @@ unpack_node_history(const xmlNode *status, bool fence,
     int rc = pcmk_rc_ok;
 
     // Loop through all PCMK__XE_NODE_STATE entries in CIB status
-    for (const xmlNode *state = first_named_child(status, PCMK__XE_NODE_STATE);
+    for (const xmlNode *state = pcmk__xe_first_child(status,
+                                                     PCMK__XE_NODE_STATE, NULL,
+                                                     NULL);
          state != NULL; state = crm_next_same_xml(state)) {
 
         const char *id = pcmk__xe_id(state);
@@ -2706,7 +2708,8 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     /* Build a list of individual PCMK__XE_LRM_RSC_OP entries, so we can sort
      * them
      */
-    for (rsc_op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
+    for (rsc_op = pcmk__xe_first_child(lrm_resource, PCMK__XE_LRM_RSC_OP, NULL,
+                                       NULL);
          rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
 
         op_list = g_list_prepend(op_list, rsc_op);
@@ -2844,8 +2847,9 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     }
 
     // Unpack each PCMK__XE_LRM_RESOURCE entry
-    for (const xmlNode *rsc_entry = first_named_child(xml,
-                                                      PCMK__XE_LRM_RESOURCE);
+    for (const xmlNode *rsc_entry = pcmk__xe_first_child(xml,
+                                                         PCMK__XE_LRM_RESOURCE,
+                                                         NULL, NULL);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
@@ -3042,7 +3046,8 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         return false;
     }
 
-    for (xmlNode *op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
+    for (xmlNode *op = pcmk__xe_first_child(lrm_resource, PCMK__XE_LRM_RSC_OP,
+                                            NULL, NULL);
          op != NULL; op = crm_next_same_xml(op)) {
         const char * task = NULL;
 

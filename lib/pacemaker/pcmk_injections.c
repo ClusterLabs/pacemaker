@@ -59,13 +59,15 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
 
     out->message(out, "inject-attr", name, value, cib_node);
 
-    attrs = first_named_child(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
+    attrs = pcmk__xe_first_child(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES, NULL,
+                                 NULL);
     if (attrs == NULL) {
         attrs = pcmk__xe_create(cib_node, PCMK__XE_TRANSIENT_ATTRIBUTES);
         crm_xml_add(attrs, PCMK_XA_ID, node_uuid);
     }
 
-    instance_attrs = first_named_child(attrs, PCMK_XE_INSTANCE_ATTRIBUTES);
+    instance_attrs = pcmk__xe_first_child(attrs, PCMK_XE_INSTANCE_ATTRIBUTES,
+                                          NULL, NULL);
     if (instance_attrs == NULL) {
         instance_attrs = pcmk__xe_create(attrs, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_add(instance_attrs, PCMK_XA_ID, node_uuid);
@@ -431,7 +433,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     crm_info("Injecting new resource %s into node state '%s'",
              lrm_name, pcmk__xe_id(cib_node));
 
-    lrm = first_named_child(cib_node, PCMK__XE_LRM);
+    lrm = pcmk__xe_first_child(cib_node, PCMK__XE_LRM, NULL, NULL);
     if (lrm == NULL) {
         const char *node_uuid = pcmk__xe_id(cib_node);
 
@@ -439,7 +441,7 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         crm_xml_add(lrm, PCMK_XA_ID, node_uuid);
     }
 
-    container = first_named_child(lrm, PCMK__XE_LRM_RESOURCES);
+    container = pcmk__xe_first_child(lrm, PCMK__XE_LRM_RESOURCES, NULL, NULL);
     if (container == NULL) {
         container = pcmk__xe_create(lrm, PCMK__XE_LRM_RESOURCES);
     }

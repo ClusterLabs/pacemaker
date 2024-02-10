@@ -225,7 +225,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         node_xml = output;
 
     } else {
-        node_xml = first_named_child(output, PCMK_XE_NODE);
+        node_xml = pcmk__xe_first_child(output, PCMK_XE_NODE, NULL, NULL);
     }
 
     for (; node_xml != NULL; node_xml = crm_next_same_xml(node_xml)) {

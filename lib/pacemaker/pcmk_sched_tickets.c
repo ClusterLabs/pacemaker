@@ -252,7 +252,8 @@ unpack_rsc_ticket_set(xmlNode *set, pcmk_ticket_t *ticket,
 
     role = crm_element_value(set, PCMK_XA_ROLE);
 
-    for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
+    for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
+                                                 NULL, NULL);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
         pcmk_resource_t *resource = NULL;
@@ -479,8 +480,8 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         xml_obj = expanded_xml;
     }
 
-    for (set = first_named_child(xml_obj, PCMK_XE_RESOURCE_SET); set != NULL;
-         set = crm_next_same_xml(set)) {
+    for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
+         set != NULL; set = crm_next_same_xml(set)) {
 
         const char *loss_policy = NULL;
 

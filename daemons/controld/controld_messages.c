@@ -624,8 +624,10 @@ handle_failcount_op(xmlNode * stored_msg)
     xmlNode *xml_op = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
 
     if (xml_op) {
-        xmlNode *xml_rsc = first_named_child(xml_op, PCMK_XE_PRIMITIVE);
-        xmlNode *xml_attrs = first_named_child(xml_op, PCMK__XE_ATTRIBUTES);
+        xmlNode *xml_rsc = pcmk__xe_first_child(xml_op, PCMK_XE_PRIMITIVE, NULL,
+                                                NULL);
+        xmlNode *xml_attrs = pcmk__xe_first_child(xml_op, PCMK__XE_ATTRIBUTES,
+                                                  NULL, NULL);
 
         if (xml_rsc) {
             rsc = pcmk__xe_id(xml_rsc);
@@ -699,7 +701,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         xmlNode *rsc_xml = NULL;
         int rc = pcmk_rc_ok;
 
-        rsc_xml = first_named_child(msg_data, PCMK_XE_PRIMITIVE);
+        rsc_xml = pcmk__xe_first_child(msg_data, PCMK_XE_PRIMITIVE, NULL, NULL);
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
         rsc_id = pcmk__xe_id(rsc_xml);

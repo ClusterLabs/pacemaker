@@ -150,7 +150,8 @@ is_config_change(xmlNode *xml)
     GList *gIter = NULL;
     xml_node_private_t *nodepriv = NULL;
     xml_doc_private_t *docpriv;
-    xmlNode *config = first_named_child(xml, PCMK_XE_CONFIGURATION);
+    xmlNode *config = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
+                                           NULL);
 
     if (config) {
         nodepriv = config->_private;
@@ -1192,8 +1193,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             free_xml(match);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            const xmlNode *child = first_named_child(change,
-                                                     PCMK_XE_CHANGE_RESULT);
+            const xmlNode *child = pcmk__xe_first_child(change,
+                                                        PCMK_XE_CHANGE_RESULT,
+                                                        NULL, NULL);
             const xmlNode *attrs = pcmk__xml_first_child(child);
 
             if (attrs == NULL) {

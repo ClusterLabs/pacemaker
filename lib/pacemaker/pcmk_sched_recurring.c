@@ -63,8 +63,9 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
 {
     const char *id = NULL;
 
-    for (xmlNode *op = first_named_child(rsc->ops_xml, PCMK_XE_OP); op != NULL;
-         op = crm_next_same_xml(op)) {
+    for (xmlNode *op = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL,
+                                            NULL);
+         op != NULL; op = crm_next_same_xml(op)) {
 
         // Check whether action name and interval match
         if (!pcmk__str_eq(crm_element_value(op, PCMK_XA_NAME), name,
@@ -611,8 +612,9 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
                     rsc->id);
 
-    for (xmlNode *op = first_named_child(rsc->ops_xml, PCMK_XE_OP); op != NULL;
-         op = crm_next_same_xml(op)) {
+    for (xmlNode *op = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL,
+                                            NULL);
+         op != NULL; op = crm_next_same_xml(op)) {
 
         struct op_history op_history = { NULL, };
 

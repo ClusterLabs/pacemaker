@@ -94,7 +94,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crmalerts = output;
     if ((crmalerts != NULL) && !pcmk__xe_is(crmalerts, PCMK_XE_ALERTS)) {
-        crmalerts = first_named_child(crmalerts, PCMK_XE_ALERTS);
+        crmalerts = pcmk__xe_first_child(crmalerts, PCMK_XE_ALERTS, NULL, NULL);
     }
     if (!crmalerts) {
         crm_notice("CIB query result has no " PCMK_XE_ALERTS " section");

@@ -30,7 +30,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     }
 
     // @COMPAT PCMK__XE_LIFETIME is deprecated
-    lifetime = first_named_child(xml_obj, PCMK__XE_LIFETIME);
+    lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
     if (pe_evaluate_rules(lifetime, NULL, scheduler->now, NULL) == FALSE) {
         return pcmk_rc_ok;
     }

@@ -791,7 +791,7 @@ fencer_metadata(void)
                  pcmk__opt_none, fencer_options, true);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
-    metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
+    metadata = pcmk__xe_first_child(top, PCMK_XE_RESOURCE_AGENT, NULL, NULL);
 
     metadata_s = g_string_sized_new(16384);
     pcmk__xml_string(metadata, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,

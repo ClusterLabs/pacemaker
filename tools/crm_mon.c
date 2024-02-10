@@ -1940,7 +1940,7 @@ crm_diff_update_element_v2(xmlNode *change, void *userdata)
         return pcmk_rc_ok;
 
     } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-        match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
+        match = pcmk__xe_first_child(change, PCMK_XE_CHANGE_RESULT, NULL, NULL);
         if(match) {
             match = match->children;
         }
@@ -1960,7 +1960,8 @@ crm_diff_update_element_v2(xmlNode *change, void *userdata)
                                     NULL));
 
     } else if (strcmp(name, PCMK_XE_CIB) == 0) {
-        pcmk__xe_foreach_child(first_named_child(match, PCMK_XE_STATUS),
+        pcmk__xe_foreach_child(pcmk__xe_first_child(match, PCMK_XE_STATUS, NULL,
+                                                    NULL),
                                NULL, handle_op_for_node, NULL);
 
     } else if (strcmp(name, PCMK_XE_STATUS) == 0) {

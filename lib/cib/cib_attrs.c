@@ -685,8 +685,8 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     rc = -ENXIO;
     *uname = NULL;
 
-    for (a_child = first_named_child(xml_obj, PCMK_XE_NODE); a_child != NULL;
-         a_child = crm_next_same_xml(a_child)) {
+    for (a_child = pcmk__xe_first_child(xml_obj, PCMK_XE_NODE, NULL, NULL);
+         a_child != NULL; a_child = crm_next_same_xml(a_child)) {
         child_name = pcmk__xe_id(a_child);
 
         if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {

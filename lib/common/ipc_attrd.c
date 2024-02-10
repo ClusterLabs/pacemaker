@@ -30,8 +30,10 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
     name = crm_element_value(msg_data, PCMK__XA_ATTR_NAME);
 
-    for (xmlNode *node = first_named_child(msg_data, PCMK_XE_NODE);
+    for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
+                                              NULL);
          node != NULL; node = crm_next_same_xml(node)) {
+
         pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
         pair->node = crm_element_value(node, PCMK__XA_ATTR_HOST);

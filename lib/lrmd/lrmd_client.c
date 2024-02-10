@@ -1883,7 +1883,9 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     if ((rc != pcmk_ok) || (output_xml == NULL)) {
         return rc;
     }
-    for (xmlNode *rsc_xml = first_named_child(output_xml, PCMK__XE_LRMD_RSC);
+    for (const xmlNode *rsc_xml = pcmk__xe_first_child(output_xml,
+                                                       PCMK__XE_LRMD_RSC, NULL,
+                                                       NULL);
          (rsc_xml != NULL) && (rc == pcmk_ok);
          rsc_xml = crm_next_same_xml(rsc_xml)) {
 
@@ -1892,7 +1894,9 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
             crm_err("Could not parse recurring operation information from executor");
             continue;
         }
-        for (xmlNode *op_xml = first_named_child(rsc_xml, PCMK__XE_LRMD_RSC_OP);
+        for (const xmlNode *op_xml = pcmk__xe_first_child(rsc_xml,
+                                                          PCMK__XE_LRMD_RSC_OP,
+                                                          NULL, NULL);
              op_xml != NULL; op_xml = crm_next_same_xml(op_xml)) {
 
             lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
