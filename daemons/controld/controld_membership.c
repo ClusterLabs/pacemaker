@@ -228,7 +228,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         node_xml = pcmk__xe_first_child(output, PCMK_XE_NODE, NULL, NULL);
     }
 
-    for (; node_xml != NULL; node_xml = crm_next_same_xml(node_xml)) {
+    for (; node_xml != NULL; node_xml = pcmk__xe_next_same(node_xml)) {
         const char *node_uuid = NULL;
         const char *node_uname = NULL;
         GHashTableIter iter;

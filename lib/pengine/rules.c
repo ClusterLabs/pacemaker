@@ -353,7 +353,7 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 
     for (xmlNode *rule = pcmk__xe_first_child(ruleset, PCMK_XE_RULE, NULL,
                                               NULL);
-         rule != NULL; rule = crm_next_same_xml(rule)) {
+         rule != NULL; rule = pcmk__xe_next_same(rule)) {
 
         ruleset_default = FALSE;
         if (pe_eval_expr(rule, rule_data, next_change)) {

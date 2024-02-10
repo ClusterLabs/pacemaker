@@ -409,7 +409,7 @@ attrd_client_update(pcmk__request_t *request)
              */
             for (xmlNode *child = pcmk__xe_first_child(xml, PCMK_XE_OP, NULL,
                                                        NULL);
-                 child != NULL; child = crm_next_same_xml(child)) {
+                 child != NULL; child = pcmk__xe_next_same(child)) {
 
                 attr = crm_element_value(child, PCMK__XA_ATTR_NAME);
                 value = crm_element_value(child, PCMK__XA_ATTR_VALUE);

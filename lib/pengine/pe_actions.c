@@ -89,7 +89,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
 {
     for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
                                                    NULL, NULL);
-         operation != NULL; operation = crm_next_same_xml(operation)) {
+         operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
         bool enabled = false;
         const char *config_name = NULL;
@@ -481,7 +481,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          */
         for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
                                                        NULL, NULL);
-             operation != NULL; operation = crm_next_same_xml(operation)) {
+             operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
             bool enabled = false;
             const char *promote_on_fail = NULL;
@@ -650,7 +650,8 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
 
     for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
                                                    NULL, NULL);
-         operation != NULL; operation = crm_next_same_xml(operation)) {
+         operation != NULL; operation = pcmk__xe_next_same(operation)) {
+
         bool enabled = false;
         guint interval_ms = 0U;
         const char *interval_spec = crm_element_value(operation,
@@ -1423,7 +1424,7 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
     };
 
     for (child = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL, NULL);
-         child != NULL; child = crm_next_same_xml(child)) {
+         child != NULL; child = pcmk__xe_next_same(child)) {
 
         if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
                 pcmk__str_casei)) {

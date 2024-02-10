@@ -156,7 +156,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
                                                       NULL, NULL);
-         change != NULL; change = crm_next_same_xml(change)) {
+         change != NULL; change = pcmk__xe_next_same(change)) {
 
         const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
         const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);

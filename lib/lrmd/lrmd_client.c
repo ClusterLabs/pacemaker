@@ -1887,7 +1887,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
                                                        PCMK__XE_LRMD_RSC, NULL,
                                                        NULL);
          (rsc_xml != NULL) && (rc == pcmk_ok);
-         rsc_xml = crm_next_same_xml(rsc_xml)) {
+         rsc_xml = pcmk__xe_next_same(rsc_xml)) {
 
         rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         if (rsc_id == NULL) {
@@ -1897,7 +1897,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
         for (const xmlNode *op_xml = pcmk__xe_first_child(rsc_xml,
                                                           PCMK__XE_LRMD_RSC_OP,
                                                           NULL, NULL);
-             op_xml != NULL; op_xml = crm_next_same_xml(op_xml)) {
+             op_xml != NULL; op_xml = pcmk__xe_next_same(op_xml)) {
 
             lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
 

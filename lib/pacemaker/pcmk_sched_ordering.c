@@ -636,7 +636,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     for (const xmlNode *xml_rsc = pcmk__xe_first_child(set,
                                                        PCMK_XE_RESOURCE_REF,
                                                        NULL, NULL);
-         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+         xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
         EXPAND_CONSTRAINT_IDREF(id, resource, pcmk__xe_id(xml_rsc));
         resources = g_list_append(resources, resource);
@@ -775,7 +775,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, pcmk__xe_id(xml_rsc));
 
@@ -791,7 +791,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
         for (xml_rsc_2 = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF, NULL,
                                               NULL);
-             xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
+             xml_rsc_2 != NULL; xml_rsc_2 = pcmk__xe_next_same(xml_rsc_2)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, pcmk__xe_id(xml_rsc_2));
 
@@ -823,7 +823,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF,
                                                 NULL, NULL);
-                 xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+                 xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
                 rid = pcmk__xe_id(xml_rsc);
             }
@@ -838,7 +838,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
             for (xml_rsc = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF,
                                                 NULL, NULL);
-                 xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+                 xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
                 rid = pcmk__xe_id(xml_rsc);
             }
@@ -860,7 +860,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else if (rsc_1 != NULL) {
         for (xml_rsc = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, pcmk__xe_id(xml_rsc));
             pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2,
@@ -870,7 +870,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else if (rsc_2 != NULL) {
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, pcmk__xe_id(xml_rsc));
             pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2,
@@ -880,14 +880,14 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else {
         for (xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL,
                                             NULL);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, pcmk__xe_id(xml_rsc));
 
             for (xmlNode *xml_rsc_2 = pcmk__xe_first_child(set2,
                                                            PCMK_XE_RESOURCE_REF,
                                                            NULL, NULL);
-                 xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
+                 xml_rsc_2 != NULL; xml_rsc_2 = pcmk__xe_next_same(xml_rsc_2)) {
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, pcmk__xe_id(xml_rsc_2));
                 pcmk__order_resource_actions(rsc_1, action_1, rsc_2,
@@ -1053,7 +1053,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     // If the constraint has resource sets, unpack them
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
-         set != NULL; set = crm_next_same_xml(set)) {
+         set != NULL; set = pcmk__xe_next_same(set)) {
 
         set = expand_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged

@@ -1275,7 +1275,7 @@ unpack_node_history(const xmlNode *status, bool fence,
     for (const xmlNode *state = pcmk__xe_first_child(status,
                                                      PCMK__XE_NODE_STATE, NULL,
                                                      NULL);
-         state != NULL; state = crm_next_same_xml(state)) {
+         state != NULL; state = pcmk__xe_next_same(state)) {
 
         const char *id = pcmk__xe_id(state);
         const char *uname = crm_element_value(state, PCMK_XA_UNAME);
@@ -2712,7 +2712,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
      */
     for (rsc_op = pcmk__xe_first_child(lrm_resource, PCMK__XE_LRM_RSC_OP, NULL,
                                        NULL);
-         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
+         rsc_op != NULL; rsc_op = pcmk__xe_next_same(rsc_op)) {
 
         op_list = g_list_prepend(op_list, rsc_op);
     }
@@ -2852,7 +2852,7 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     for (const xmlNode *rsc_entry = pcmk__xe_first_child(xml,
                                                          PCMK__XE_LRM_RESOURCE,
                                                          NULL, NULL);
-         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
 
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
 
@@ -3050,7 +3050,8 @@ non_monitor_after(const char *rsc_id, const char *node_name,
 
     for (xmlNode *op = pcmk__xe_first_child(lrm_resource, PCMK__XE_LRM_RSC_OP,
                                             NULL, NULL);
-         op != NULL; op = crm_next_same_xml(op)) {
+         op != NULL; op = pcmk__xe_next_same(op)) {
+
         const char * task = NULL;
 
         if (op == xml_op) {

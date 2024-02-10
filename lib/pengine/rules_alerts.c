@@ -104,7 +104,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
     }
 
     for (child = pcmk__xe_first_child(child, PCMK_XE_NVPAIR, NULL, NULL);
-         child != NULL; child = crm_next_same_xml(child)) {
+         child != NULL; child = pcmk__xe_next_same(child)) {
 
         const char *name = crm_element_value(child, PCMK_XA_NAME);
         const char *value = crm_element_value(child, PCMK_XA_VALUE);
@@ -146,7 +146,7 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
             flags |= pcmk__alert_attribute;
             for (attr = pcmk__xe_first_child(event_type, PCMK_XE_ATTRIBUTE,
                                              NULL, NULL);
-                 attr != NULL; attr = crm_next_same_xml(attr)) {
+                 attr != NULL; attr = pcmk__xe_next_same(attr)) {
 
                 attr_name = crm_element_value(attr, PCMK_XA_NAME);
                 if (attr_name) {
@@ -223,7 +223,7 @@ pe_unpack_alerts(const xmlNode *alerts)
     }
 
     for (alert = pcmk__xe_first_child(alerts, PCMK_XE_ALERT, NULL, NULL);
-         alert != NULL; alert = crm_next_same_xml(alert)) {
+         alert != NULL; alert = pcmk__xe_next_same(alert)) {
 
         xmlNode *recipient;
         int recipients = 0;
@@ -260,7 +260,7 @@ pe_unpack_alerts(const xmlNode *alerts)
 
         for (recipient = pcmk__xe_first_child(alert, PCMK_XE_RECIPIENT, NULL,
                                               NULL);
-             recipient != NULL; recipient = crm_next_same_xml(recipient)) {
+             recipient != NULL; recipient = pcmk__xe_next_same(recipient)) {
 
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
 

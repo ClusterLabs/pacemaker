@@ -885,7 +885,7 @@ xml2list(const xmlNode *parent)
     }
 
     for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
-         child != NULL; child = crm_next_same_xml(child)) {
+         child != NULL; child = pcmk__xe_next_same(child)) {
 
         const char *key = crm_element_value(child, PCMK_XA_NAME);
         const char *value = crm_element_value(child, PCMK_XA_VALUE);

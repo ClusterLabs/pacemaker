@@ -229,14 +229,14 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 
     for (xmlNode *set = pcmk__xe_first_child(new_xml, PCMK_XE_RESOURCE_SET,
                                              NULL, NULL);
-         set != NULL; set = crm_next_same_xml(set)) {
+         set != NULL; set = pcmk__xe_next_same(set)) {
 
         GList *tag_refs = NULL;
         GList *iter = NULL;
 
         for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
                                                      NULL, NULL);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             pcmk_resource_t *rsc = NULL;
             pcmk_tag_t *tag = NULL;

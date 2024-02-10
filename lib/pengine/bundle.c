@@ -1075,7 +1075,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_PORT_MAPPING,
                                               NULL, NULL);
-             xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
+             xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
 
             pe__bundle_port_t *port =
                 pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
@@ -1106,7 +1106,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_STORAGE, NULL, NULL);
     for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_STORAGE_MAPPING,
                                           NULL, NULL);
-         xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
+         xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
 
         const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
         const char *target = crm_element_value(xml_child, PCMK_XA_TARGET_DIR);

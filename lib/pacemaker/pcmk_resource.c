@@ -49,7 +49,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     for (xmlNode *lrm_rsc_op = pcmk__xe_first_child(history,
                                                     PCMK__XE_LRM_RSC_OP, NULL,
                                                     NULL);
-         lrm_rsc_op != NULL; lrm_rsc_op = crm_next_same_xml(lrm_rsc_op)) {
+         lrm_rsc_op != NULL; lrm_rsc_op = pcmk__xe_next_same(lrm_rsc_op)) {
 
         const char *digest = crm_element_value(lrm_rsc_op,
                                                PCMK__XA_OP_RESTART_DIGEST);

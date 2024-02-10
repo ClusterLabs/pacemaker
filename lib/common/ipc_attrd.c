@@ -32,7 +32,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
     for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
                                               NULL);
-         node != NULL; node = crm_next_same_xml(node)) {
+         node != NULL; node = pcmk__xe_next_same(node)) {
 
         pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 

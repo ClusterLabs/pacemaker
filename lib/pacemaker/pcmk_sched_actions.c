@@ -1723,7 +1723,7 @@ rsc_history_as_list(const xmlNode *rsc_entry, int *start_index, int *stop_index)
 
     for (xmlNode *rsc_op = pcmk__xe_first_child(rsc_entry, PCMK__XE_LRM_RSC_OP,
                                                 NULL, NULL);
-         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
+         rsc_op != NULL; rsc_op = pcmk__xe_next_same(rsc_op)) {
 
         ops = g_list_prepend(ops, rsc_op);
     }
@@ -1865,7 +1865,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
     for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rscs,
                                                          PCMK__XE_LRM_RESOURCE,
                                                          NULL, NULL);
-         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
 
         if (rsc_entry->children != NULL) {
             GList *result = pcmk__rscs_matching_id(pcmk__xe_id(rsc_entry),

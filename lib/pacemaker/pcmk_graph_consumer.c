@@ -600,7 +600,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     for (action_set = pcmk__xe_first_child(xml_synapse, "action_set", NULL,
                                            NULL);
-         action_set != NULL; action_set = crm_next_same_xml(action_set)) {
+         action_set != NULL; action_set = pcmk__xe_next_same(action_set)) {
 
         for (xmlNode *action = pcmk__xe_first_child_any(action_set);
              action != NULL; action = pcmk__xe_next(action)) {
@@ -624,11 +624,11 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, "inputs", NULL,
                                                 NULL);
-         inputs != NULL; inputs = crm_next_same_xml(inputs)) {
+         inputs != NULL; inputs = pcmk__xe_next_same(inputs)) {
 
         for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
                                                      NULL);
-             trigger != NULL; trigger = crm_next_same_xml(trigger)) {
+             trigger != NULL; trigger = pcmk__xe_next_same(trigger)) {
 
             for (xmlNode *input = pcmk__xe_first_child_any(trigger);
                  input != NULL; input = pcmk__xe_next(input)) {
@@ -745,7 +745,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     for (const xmlNode *synapse_xml = pcmk__xe_first_child(xml_graph,
                                                            "synapse", NULL,
                                                            NULL);
-         synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
+         synapse_xml != NULL; synapse_xml = pcmk__xe_next_same(synapse_xml)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
                                                             synapse_xml);
