@@ -109,7 +109,6 @@ xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const
  *
  * Whitespace between tags is discarded.
  */
-char *dump_xml_formatted_with_text(const xmlNode *xml);
 char *dump_xml_unformatted(const xmlNode *xml);
 
 /*

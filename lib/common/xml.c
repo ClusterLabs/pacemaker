@@ -1887,17 +1887,6 @@ pcmk__xml_dump(const xmlNode *xml, uint32_t flags)
 }
 
 char *
-dump_xml_formatted_with_text(const xmlNode *xml)
-{
-    char *str = NULL;
-    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
-
-    pcmk__str_update(&str, g_str);
-    g_free(g_str);
-    return str;
-}
-
-char *
 dump_xml_unformatted(const xmlNode *xml)
 {
     char *str = NULL;
@@ -3095,6 +3084,17 @@ dump_xml_formatted(const xmlNode *xml)
 {
     char *str = NULL;
     gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
+}
+
+char *
+dump_xml_formatted_with_text(const xmlNode *xml)
+{
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
     pcmk__str_update(&str, g_str);
     g_free(g_str);
