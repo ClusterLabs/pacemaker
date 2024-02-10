@@ -107,6 +107,9 @@ xmlNode *pcmk_create_html_node(xmlNode *parent, const char *element_name,
                                const char *id, const char *class_name,
                                const char *text);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *first_named_child(const xmlNode *parent, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

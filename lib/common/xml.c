@@ -1922,12 +1922,6 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     return result;
 }
 
-xmlNode *
-first_named_child(const xmlNode *parent, const char *name)
-{
-    return pcmk__xe_first_child(parent, name, NULL, NULL);
-}
-
 /*!
  * \brief Get next instance of same XML tag
  *
@@ -2328,6 +2322,12 @@ pcmk_create_html_node(xmlNode *parent, const char *element_name, const char *id,
 
     pcmk__xe_set_content(node, "%s", text);
     return node;
+}
+
+xmlNode *
+first_named_child(const xmlNode *parent, const char *name)
+{
+    return pcmk__xe_first_child(parent, name, NULL, NULL);
 }
 
 // LCOV_EXCL_STOP
