@@ -1898,17 +1898,6 @@ dump_xml_formatted_with_text(const xmlNode *xml)
 }
 
 char *
-dump_xml_formatted(const xmlNode *xml)
-{
-    char *str = NULL;
-    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
-
-    pcmk__str_update(&str, g_str);
-    g_free(g_str);
-    return str;
-}
-
-char *
 dump_xml_unformatted(const xmlNode *xml)
 {
     char *str = NULL;
@@ -3099,6 +3088,17 @@ write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
         return pcmk_rc2legacy(rc);
     }
     return (int) nbytes;
+}
+
+char *
+dump_xml_formatted(const xmlNode *xml)
+{
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
 }
 
 // LCOV_EXCL_STOP
