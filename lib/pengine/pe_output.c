@@ -2385,7 +2385,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
     /* Print history of each of the node's resources */
     for (rsc_entry = pcmk__xe_match_name(lrm_rsc, PCMK__XE_LRM_RESOURCE);
-         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
         const char *rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
         pcmk_resource_t *rsc = pe_find_resource(scheduler->resources, rsc_id);
         const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
@@ -2636,7 +2636,7 @@ node_summary(pcmk__output_t *out, va_list args) {
     }
 
     for (node_state = pcmk__xe_match_name(cib_status, PCMK__XE_NODE_STATE);
-         node_state != NULL; node_state = crm_next_same_xml(node_state)) {
+         node_state != NULL; node_state = pcmk__xe_next_same(node_state)) {
 
         pcmk_node_t *node = pe_find_node_id(scheduler->nodes,
                                             pcmk__xe_id(node_state));

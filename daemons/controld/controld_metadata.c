@@ -169,7 +169,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     // Check supported actions
     match = pcmk__xe_match_name(metadata, PCMK_XE_ACTIONS);
     for (match = pcmk__xe_match_name(match, PCMK_XE_ACTION); match != NULL;
-         match = crm_next_same_xml(match)) {
+         match = pcmk__xe_next_same(match)) {
 
         const char *action_name = crm_element_value(match, PCMK_XA_NAME);
 
@@ -191,7 +191,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     // Build a parameter list
     match = pcmk__xe_match_name(metadata, PCMK_XE_PARAMETERS);
     for (match = pcmk__xe_match_name(match, PCMK_XE_PARAMETER); match != NULL;
-         match = crm_next_same_xml(match)) {
+         match = pcmk__xe_next_same(match)) {
 
         const char *param_name = crm_element_value(match, PCMK_XA_NAME);
 

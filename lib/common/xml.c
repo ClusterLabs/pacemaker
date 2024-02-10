@@ -2640,24 +2640,30 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 }
 
 /*!
- * \brief Get next instance of same XML tag
+ * \internal
+ * \brief Get next sibling XML element with the same name as a given element
  *
- * \param[in] sibling  XML tag to start from
+ * \param[in] node  XML element to start from
  *
- * \return Next sibling XML tag with same name
+ * \return Next sibling XML element with same name
  */
+xmlNode *
+pcmk__xe_next_same(const xmlNode *node)
+{
+    for (xmlNode *match = pcmk__xe_next(node); match != NULL;
+         match = pcmk__xe_next(match)) {
+
+        if (pcmk__xe_is(match, (const char *) node->name)) {
+            return match;
+        }
+    }
+    return NULL;
+}
+
 xmlNode *
 crm_next_same_xml(const xmlNode *sibling)
 {
-    xmlNode *match = pcmk__xe_next(sibling);
-
-    while (match != NULL) {
-        if (pcmk__xe_is(match, (const char *) sibling->name)) {
-            return match;
-        }
-        match = pcmk__xe_next(match);
-    }
-    return NULL;
+    return pcmk__xe_next_same(sibling);
 }
 
 void

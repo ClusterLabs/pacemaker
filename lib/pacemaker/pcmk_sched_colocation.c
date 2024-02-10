@@ -486,7 +486,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
 
     if (local_score > 0) {
         for (xml_rsc = pcmk__xe_match_name(set, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
             resource = pcmk__find_constraint_resource(scheduler->resources,
@@ -522,7 +522,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
          */
 
         for (xml_rsc = pcmk__xe_match_name(set, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xmlNode *xml_rsc_with = NULL;
 
@@ -539,7 +539,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                     | unpack_influence(coloc_id, resource, influence_s);
             for (xml_rsc_with = pcmk__xe_match_name(set, PCMK_XE_RESOURCE_REF);
                  xml_rsc_with != NULL;
-                 xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
+                 xml_rsc_with = pcmk__xe_next_same(xml_rsc_with)) {
 
                 xml_rsc_id = pcmk__xe_id(xml_rsc_with);
                 if (pcmk__str_eq(resource->id, xml_rsc_id, pcmk__str_none)) {
@@ -614,7 +614,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
         for (xml_rsc = pcmk__xe_match_name(set2, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
         }
@@ -637,7 +637,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     } else if (rsc_1 != NULL) { // Only set1 is sequential
         flags = pcmk__coloc_explicit | unpack_influence(id, rsc_1, influence_s);
         for (xml_rsc = pcmk__xe_match_name(set2, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
             rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
@@ -656,7 +656,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     } else if (rsc_2 != NULL) { // Only set2 is sequential
         for (xml_rsc = pcmk__xe_match_name(set1, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xml_rsc_id = pcmk__xe_id(xml_rsc);
             rsc_1 = pcmk__find_constraint_resource(scheduler->resources,
@@ -677,7 +677,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     } else { // Neither set is sequential
         for (xml_rsc = pcmk__xe_match_name(set1, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             xmlNode *xml_rsc_2 = NULL;
 
@@ -697,7 +697,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
                     | unpack_influence(id, rsc_1, influence_s);
             for (xml_rsc_2 = pcmk__xe_match_name(set2, PCMK_XE_RESOURCE_REF);
                  xml_rsc_2 != NULL;
-                 xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
+                 xml_rsc_2 = pcmk__xe_next_same(xml_rsc_2)) {
 
                 xml_rsc_id = pcmk__xe_id(xml_rsc_2);
                 rsc_2 = pcmk__find_constraint_resource(scheduler->resources,
@@ -985,7 +985,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     influence_s = crm_element_value(xml_obj, PCMK_XA_INFLUENCE);
 
     for (set = pcmk__xe_match_name(xml_obj, PCMK_XE_RESOURCE_SET); set != NULL;
-         set = crm_next_same_xml(set)) {
+         set = pcmk__xe_next_same(set)) {
 
         set = expand_idref(set, scheduler->input);
         if (set == NULL) { // Configuration error, message already logged

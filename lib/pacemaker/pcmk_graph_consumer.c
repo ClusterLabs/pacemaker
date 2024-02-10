@@ -598,7 +598,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
               crm_element_value(xml_synapse, PCMK_XA_ID));
 
     for (action_set = pcmk__xe_match_name(xml_synapse, "action_set");
-         action_set != NULL; action_set = crm_next_same_xml(action_set)) {
+         action_set != NULL; action_set = pcmk__xe_next_same(action_set)) {
 
         for (xmlNode *action = pcmk__xml_first_child(action_set);
              action != NULL; action = pcmk__xml_next(action)) {
@@ -621,10 +621,10 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
     for (xmlNode *inputs = pcmk__xe_match_name(xml_synapse, "inputs");
-         inputs != NULL; inputs = crm_next_same_xml(inputs)) {
+         inputs != NULL; inputs = pcmk__xe_next_same(inputs)) {
 
         for (xmlNode *trigger = pcmk__xe_match_name(inputs, "trigger");
-             trigger != NULL; trigger = crm_next_same_xml(trigger)) {
+             trigger != NULL; trigger = pcmk__xe_next_same(trigger)) {
 
             for (xmlNode *input = pcmk__xml_first_child(trigger);
                  input != NULL; input = pcmk__xml_next(input)) {
@@ -739,7 +739,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
 
     // Unpack each child <synapse> element
     for (const xmlNode *synapse_xml = pcmk__xe_match_name(xml_graph, "synapse");
-         synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
+         synapse_xml != NULL; synapse_xml = pcmk__xe_next_same(synapse_xml)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
                                                             synapse_xml);

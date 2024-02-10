@@ -1061,7 +1061,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 
     for (xmlNode *request = pcmk__xe_match_name(transaction,
                                                 PCMK__XE_CIB_COMMAND);
-         request != NULL; request = crm_next_same_xml(request)) {
+         request != NULL; request = pcmk__xe_next_same(request)) {
 
         xmlNode *output = NULL;
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);

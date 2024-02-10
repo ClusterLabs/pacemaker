@@ -48,7 +48,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     // Examine each history entry
     for (xmlNode *lrm_rsc_op = pcmk__xe_match_name(history,
                                                    PCMK__XE_LRM_RSC_OP);
-         lrm_rsc_op != NULL; lrm_rsc_op = crm_next_same_xml(lrm_rsc_op)) {
+         lrm_rsc_op != NULL; lrm_rsc_op = pcmk__xe_next_same(lrm_rsc_op)) {
 
         const char *digest = crm_element_value(lrm_rsc_op,
                                                PCMK__XA_OP_RESTART_DIGEST);

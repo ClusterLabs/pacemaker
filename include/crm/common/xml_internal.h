@@ -364,6 +364,8 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+xmlNode *pcmk__xe_next_same(const xmlNode *node);
+
 void pcmk__xe_set_content(xmlNode *node, const char *content);
 
 xmlNode *pcmk__xe_create_full(xmlNode *parent, const char *name,
