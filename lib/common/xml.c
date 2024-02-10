@@ -659,15 +659,6 @@ pcmk__xe_set_content(xmlNode *node, const char *content)
 }
 
 xmlNode *
-pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
-{
-    xmlNode *node = pcmk__xe_create(parent, name);
-
-    pcmk__xe_set_content(node, content);
-    return node;
-}
-
-xmlNode *
 pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                       const char *class_name, const char *text)
 {
@@ -2300,6 +2291,16 @@ create_xml_node(xmlNode *parent, const char *name)
         }
     }
     pcmk__mark_xml_created(node);
+    return node;
+}
+
+xmlNode *
+pcmk_create_xml_text_node(xmlNode *parent, const char *name,
+                          const char *content)
+{
+    xmlNode *node = pcmk__xe_create(parent, name);
+
+    pcmk__xe_set_content(node, content);
     return node;
 }
 

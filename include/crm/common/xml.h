@@ -66,16 +66,6 @@ void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
 /*
- * Create a node named "name" as a child of "parent", giving it the provided
- * text content.
- * If parent is NULL, creates an unconnected node.
- *
- * Returns the created node
- *
- */
-xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content);
-
-/*
  * Create a new HTML node named "element_name" as a child of "parent", giving it the
  * provided text content.  Optionally, apply a CSS #id and #class.
  *
