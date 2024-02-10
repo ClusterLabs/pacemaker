@@ -1180,6 +1180,65 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
 
 /*!
  * \internal
+ * \brief Write a string to a file stream, compressed using \c bzip2
+ *
+ * \param[in]     text       String to write
+ * \param[in]     filename   Name of file being written (for logging only)
+ * \param[in,out] stream     Open file stream to write to
+ * \param[out]    bytes_out  Number of bytes written (valid only on success)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+write_compressed_stream(char *text, const char *filename, FILE *stream,
+                        unsigned int *bytes_out)
+{
+    unsigned int bytes_in = 0;
+    int bzerror = BZ_OK;
+    int rc = pcmk_rc_ok;
+
+    // (5, 0, 0): (intermediate block size, silent, default workFactor)
+    BZFILE *bz_file = BZ2_bzWriteOpen(&bzerror, stream, 5, 0, 0);
+
+    if (bzerror != BZ_OK) {
+        rc = pcmk__bzlib2rc(bzerror);
+        crm_warn("Not compressing %s: could not prepare file stream: %s "
+                 CRM_XS " rc=%d",
+                 filename, pcmk_rc_str(rc), rc);
+        goto done;
+    }
+
+    BZ2_bzWrite(&bzerror, bz_file, text, strlen(text));
+    if (bzerror != BZ_OK) {
+        rc = pcmk__bzlib2rc(bzerror);
+        crm_warn("Not compressing %s: could not compress data: %s "
+                 CRM_XS " rc=%d errno=%d",
+                 filename, pcmk_rc_str(rc), rc, errno);
+        goto done;
+    }
+
+    BZ2_bzWriteClose(&bzerror, bz_file, 0, &bytes_in, bytes_out);
+    bz_file = NULL;
+    if (bzerror != BZ_OK) {
+        rc = pcmk__bzlib2rc(bzerror);
+        crm_warn("Not compressing %s: could not write compressed data: %s "
+                 CRM_XS " rc=%d errno=%d",
+                 filename, pcmk_rc_str(rc), rc, errno);
+        goto done;
+    }
+
+    crm_trace("Compressed XML for %s from %u bytes to %u",
+              filename, bytes_in, *bytes_out);
+
+done:
+    if (bz_file != NULL) {
+        BZ2_bzWriteClose(&bzerror, bz_file, 0, NULL, NULL);
+    }
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Write XML to a file stream
  *
  * \param[in]     xml       XML to write
@@ -1206,64 +1265,24 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
     CRM_CHECK(!pcmk__str_empty(buffer),
               crm_log_xml_info(xml, "dump-failed");
               rc = pcmk_rc_error;
-              goto bail);
+              goto done);
 
-    if (compress) {
-        unsigned int bytes_in = 0;
-
-        // (5, 0, 0): (intermediate block size, silent, default workFactor)
-        BZFILE *bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 0);
-
-        if (rc != BZ_OK) {
-            rc = pcmk__bzlib2rc(rc);
-            crm_warn("Not compressing %s: could not prepare file stream: %s "
-                     CRM_XS " rc=%d",
-                     filename, pcmk_rc_str(rc), rc);
-        } else {
-            BZ2_bzWrite(&rc, bz_file, buffer, strlen(buffer));
-
-            if (rc != BZ_OK) {
-                rc = pcmk__bzlib2rc(rc);
-                crm_warn("Not compressing %s: could not compress data: %s "
-                         CRM_XS " rc=%d errno=%d",
-                         filename, pcmk_rc_str(rc), rc, errno);
-            }
-        }
-
-        // We'll clean up this redundancy in an upcoming commit
-        if ((rc != pcmk_rc_ok) && (rc != BZ_OK)) {
-            BZ2_bzWriteClose(&rc, bz_file, 0, &bytes_in, &bytes_out);
-
-            if (rc != BZ_OK) {
-                rc = pcmk__bzlib2rc(rc);
-                crm_warn("Not compressing %s: could not write compressed data: %s "
-                         CRM_XS " rc=%d errno=%d",
-                         filename, pcmk_rc_str(rc), rc, errno);
-                bytes_out = 0;  // retry without compression
-            } else {
-                crm_trace("Compressed XML for %s from %u bytes to %u",
-                          filename, bytes_in, bytes_out);
-            }
-        } else {
-            // Still need to close the BZFILE, but do it after checking rc
-            BZ2_bzWriteClose(&rc, bz_file, 0, &bytes_in, &bytes_out);
-        }
-
-        rc = pcmk_rc_ok; // Either true, or we'll retry without compression
+    if (compress
+        && (write_compressed_stream(buffer, filename, stream,
+                                    &bytes_out) == pcmk_rc_ok)) {
+        goto done;
     }
 
-    if (bytes_out == 0) {
-        rc = fprintf(stream, "%s", buffer);
-        if (rc < 0) {
-            rc = errno;
-            crm_perror(LOG_ERR, "writing %s", filename);
-        } else {
-            bytes_out = (unsigned int) rc;
-            rc = pcmk_rc_ok;
-        }
+    rc = fprintf(stream, "%s", buffer);
+    if (rc < 0) {
+        rc = EIO;
+        crm_perror(LOG_ERR, "writing %s", filename);
+        goto done;
     }
+    bytes_out = (unsigned int) rc;
+    rc = pcmk_rc_ok;
 
-bail:
+done:
     if (fflush(stream) != 0) {
         rc = errno;
         crm_perror(LOG_ERR, "flushing %s", filename);
@@ -1276,13 +1295,12 @@ bail:
     }
 
     fclose(stream);
-
     crm_trace("Saved %u bytes to %s as XML", bytes_out, filename);
-    free(buffer);
 
     if (nbytes != NULL) {
         *nbytes = bytes_out;
     }
+    free(buffer);
     return rc;
 }
 
@@ -1311,7 +1329,8 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
         return errno;
     }
 
-    return write_xml_stream(xml, filename, stream, compress, nbytes);
+    return write_xml_stream(xml, pcmk__s(filename, "unnamed file"), stream,
+                            compress, nbytes);
 }
 
 /*!
