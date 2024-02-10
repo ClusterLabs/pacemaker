@@ -436,12 +436,11 @@ dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
 
     fprintf(stdout, "State XML:\n");
     if (state_xml) {
-        char *state_xml_str = NULL;
+        gchar *state_xml_str = pcmk__xml_dump(state_xml, pcmk__xml_fmt_pretty);
 
-        state_xml_str = dump_xml_formatted(state_xml);
         fprintf(stdout, "\n%s", state_xml_str);
         free_xml(state_xml);
-        free(state_xml_str);
+        g_free(state_xml_str);
     }
 
     return rc;
@@ -452,7 +451,7 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
 {
     int rc = pcmk_rc_ok;
     xmlNode *cons_xml = NULL;
-    char *cons_xml_str = NULL;
+    gchar *cons_xml_str = NULL;
 
     rc = find_ticket_constraints(the_cib, ticket_id, &cons_xml);
 
@@ -460,10 +459,10 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
         return rc;
     }
 
-    cons_xml_str = dump_xml_formatted(cons_xml);
+    cons_xml_str = pcmk__xml_dump(cons_xml, pcmk__xml_fmt_pretty);
     fprintf(stdout, "Constraints XML:\n\n%s", cons_xml_str);
     free_xml(cons_xml);
-    free(cons_xml_str);
+    g_free(cons_xml_str);
 
     return rc;
 }

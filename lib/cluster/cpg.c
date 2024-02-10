@@ -898,7 +898,7 @@ pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
     bool rc = true;
     char *data = NULL;
 
-    data = dump_xml_unformatted(msg);
+    data = pcmk__xml_dump(msg, 0);
     rc = send_cluster_text(crm_class_cluster, data, FALSE, node, dest);
     free(data);
     return rc;

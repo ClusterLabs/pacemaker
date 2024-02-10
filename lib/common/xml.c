@@ -1269,17 +1269,17 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
                  bool compress, unsigned int *nbytes)
 {
     // @COMPAT Drop nbytes as arg when we drop write_xml_fd()/write_xml_file()
-    char *buffer = NULL;
+    gchar *buffer = NULL;
     unsigned int bytes_out = 0;
     int rc = pcmk_rc_ok;
 
-    crm_log_xml_trace(xml, "writing");
-
-    buffer = dump_xml_formatted(xml);
+    buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
     CRM_CHECK(!pcmk__str_empty(buffer),
               crm_log_xml_info(xml, "dump-failed");
               rc = pcmk_rc_error;
               goto done);
+
+    crm_log_xml_trace(xml, "writing");
 
     if (compress
         && (write_compressed_stream(buffer, filename, stream,
@@ -1314,7 +1314,7 @@ done:
     if (nbytes != NULL) {
         *nbytes = bytes_out;
     }
-    free(buffer);
+    g_free(buffer);
     return rc;
 }
 
@@ -1860,47 +1860,63 @@ pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
     }
 }
 
+/*!
+ * \internal
+ * \brief Dump an XML tree to a string
+ *
+ * \param[in] xml    XML tree to dump
+ * \param[in] flags  Group of <tt>enum pcmk__xml_fmt_options</tt> flags
+ *
+ * \return Newly allocated string representation of \p xml
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
+gchar *
+pcmk__xml_dump(const xmlNode *xml, uint32_t flags)
+{
+    /* libxml2's xmlNodeDumpOutput() doesn't allow filtering, doesn't escape
+     * special characters thoroughly, and doesn't allow a const argument.
+     *
+     * @COMPAT Can we start including text nodes in all our XML dump functions?
+     */
+    GString *g_buffer = g_string_sized_new(1024);
+
+    pcmk__xml2text(xml, flags, g_buffer, 0);
+    return g_string_free(g_buffer, FALSE);
+}
+
 char *
 dump_xml_formatted_with_text(const xmlNode *xml)
 {
-    /* libxml's xmlNodeDumpOutput() would work here since we're not specifically
-     * filtering out any nodes. However, use pcmk__xml2text() for consistency,
-     * to escape attribute values, and to allow a const argument.
-     */
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
-    pcmk__xml2text(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
 }
 
 char *
 dump_xml_formatted(const xmlNode *xml)
 {
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
 
-    pcmk__xml2text(xml, pcmk__xml_fmt_pretty, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
 }
 
 char *
 dump_xml_unformatted(const xmlNode *xml)
 {
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, 0);
 
-    pcmk__xml2text(xml, 0, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
 }
 
 int

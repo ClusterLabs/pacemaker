@@ -500,7 +500,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 
     CRM_CHECK((remote != NULL) && (msg != NULL), return EINVAL);
 
-    xml_text = dump_xml_unformatted(msg);
+    xml_text = pcmk__xml_dump(msg, 0);
     CRM_CHECK(xml_text != NULL, return EINVAL);
 
     header = calloc(1, sizeof(struct remote_header_v0));

@@ -1148,7 +1148,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         }
     }
 
-    result = dump_xml_formatted_with_text(top);
+    result = pcmk__xml_dump(top, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
 done:
     free_xml(top);

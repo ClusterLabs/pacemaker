@@ -599,7 +599,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
        return ENOMEM; /* errno mightn't be set by allocator */
     }
 
-    buffer = dump_xml_unformatted(message);
+    buffer = pcmk__xml_dump(message, 0);
 
     if (max_send_size == 0) {
         max_send_size = crm_ipc_default_buffer_size();

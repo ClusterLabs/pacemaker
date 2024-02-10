@@ -169,12 +169,15 @@ shadow_default(pcmk__output_t *out, va_list args)
         rc = out->info(out, "Content:");
 
         if (content != NULL) {
-            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+            gchar *buf = pcmk__xml_dump(content,
+                                        pcmk__xml_fmt_pretty
+                                        |pcmk__xml_fmt_text);
 
+            buf = pcmk__trim(buf);
             if (!pcmk__str_empty(buf)) {
                 out->info(out, "%s", buf);
             }
-            free(buf);
+            g_free(buf);
 
         } else {
             out->info(out, "<unknown>");
@@ -239,10 +242,13 @@ shadow_text(pcmk__output_t *out, va_list args)
             rc = out->info(out, "%s", filename);
         }
         if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
-            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+            gchar *buf = pcmk__xml_dump(content,
+                                        pcmk__xml_fmt_pretty
+                                        |pcmk__xml_fmt_text);
 
-            rc = out->info(out, "%s", pcmk__trim(buf));
-            free(buf);
+            buf = pcmk__trim(buf);
+            rc = out->info(out, "%s", buf);
+            g_free(buf);
         }
         if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
             rc = out->message(out, "xml-patchset", diff);
@@ -288,10 +294,11 @@ shadow_xml(pcmk__output_t *out, va_list args)
                                    NULL);
 
     if (content != NULL) {
-        char *buf = dump_xml_formatted_with_text(content);
+        gchar *buf = pcmk__xml_dump(content,
+                                    pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
         out->output_xml(out, PCMK_XE_CONTENT, buf);
-        free(buf);
+        g_free(buf);
     }
 
     if (diff != NULL) {

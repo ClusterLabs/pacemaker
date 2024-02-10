@@ -483,6 +483,8 @@ int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
 int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
                          bool compress, unsigned int *nbytes);
 
+gchar *pcmk__xml_dump(const xmlNode *xml, uint32_t flags);
+
 // @COMPAT Remove when v1 patchsets are removed
 xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
 
