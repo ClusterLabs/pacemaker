@@ -550,7 +550,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     if (object_id == NULL) {
         /*  placeholder object */
-        target = find_xml_node(parent, object_name, FALSE);
+        target = pcmk__xe_match_name(parent, object_name);
 
     } else {
         target = pcmk__xe_match(parent, object_name, PCMK_XA_ID, object_id);
@@ -577,8 +577,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                     char *replace_item = strndup(replace + last, lpc - last);
 
                     if (replace_item != NULL) {
-                        xmlNode *remove = find_xml_node(target, replace_item,
-                                                        false);
+                        xmlNode *remove = pcmk__xe_match_name(target,
+                                                              replace_item);
 
                         if (remove != NULL) {
                             crm_trace("Replacing node <%s> in <%s>",
@@ -671,7 +671,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
               ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
-        equiv_node = find_xml_node(parent, object_name, FALSE);
+        equiv_node = pcmk__xe_match_name(parent, object_name);
     } else {
         equiv_node = pcmk__xe_match(parent, object_name, PCMK_XA_ID, object_id);
     }

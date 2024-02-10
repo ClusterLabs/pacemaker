@@ -2380,8 +2380,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
     xmlNode *rsc_entry = NULL;
     int rc = pcmk_rc_no_output;
 
-    lrm_rsc = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
-    lrm_rsc = find_xml_node(lrm_rsc, PCMK__XE_LRM_RESOURCES, FALSE);
+    lrm_rsc = pcmk__xe_match_name(node_state, PCMK__XE_LRM);
+    lrm_rsc = pcmk__xe_match_name(lrm_rsc, PCMK__XE_LRM_RESOURCES);
 
     /* Print history of each of the node's resources */
     for (rsc_entry = pcmk__xe_match_name(lrm_rsc, PCMK__XE_LRM_RESOURCE);

@@ -323,7 +323,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     crm_xml_add(new_xml, PCMK__META_CLONE,
                 crm_element_value(xml_obj, PCMK__META_CLONE));
 
-    template_ops = find_xml_node(new_xml, PCMK_XE_OPERATIONS, FALSE);
+    template_ops = pcmk__xe_match_name(new_xml, PCMK_XE_OPERATIONS);
 
     for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
          child_xml = pcmk__xe_next(child_xml)) {
@@ -672,7 +672,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->parent = parent;
 
-    ops = find_xml_node((*rsc)->xml, PCMK_XE_OPERATIONS, FALSE);
+    ops = pcmk__xe_match_name((*rsc)->xml, PCMK_XE_OPERATIONS);
     (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);

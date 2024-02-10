@@ -196,13 +196,13 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     }
 
     tag = PCMK__XE_DIFF_REMOVED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
+    diff_child = pcmk__xe_match_name(local_diff, tag);
     if (diff_child == NULL) {
         diff_child = pcmk__xe_create(local_diff, tag);
     }
 
     tag = PCMK_XE_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
+    cib = pcmk__xe_match_name(diff_child, tag);
     if (cib == NULL) {
         cib = pcmk__xe_create(diff_child, tag);
     }
@@ -217,13 +217,13 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     }
 
     tag = PCMK__XE_DIFF_ADDED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
+    diff_child = pcmk__xe_match_name(local_diff, tag);
     if (diff_child == NULL) {
         diff_child = pcmk__xe_create(local_diff, tag);
     }
 
     tag = PCMK_XE_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
+    cib = pcmk__xe_match_name(diff_child, tag);
     if (cib == NULL) {
         cib = pcmk__xe_create(diff_child, tag);
     }
@@ -761,16 +761,16 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
         case 1:
             // @COMPAT Remove when v1 patchsets are removed
             label = added? PCMK__XE_DIFF_ADDED : PCMK__XE_DIFF_REMOVED;
-            *patch_node = find_xml_node(patchset, label, FALSE);
-            cib_node = find_xml_node(*patch_node, PCMK_XE_CIB, FALSE);
+            *patch_node = pcmk__xe_match_name(patchset, label);
+            cib_node = pcmk__xe_match_name(*patch_node, PCMK_XE_CIB);
             if (cib_node != NULL) {
                 *patch_node = cib_node;
             }
             break;
         case 2:
             label = added? PCMK_XE_TARGET : PCMK_XE_SOURCE;
-            *patch_node = find_xml_node(patchset, PCMK_XE_VERSION, FALSE);
-            *patch_node = find_xml_node(*patch_node, label, FALSE);
+            *patch_node = pcmk__xe_match_name(patchset, PCMK_XE_VERSION);
+            *patch_node = pcmk__xe_match_name(*patch_node, label);
             break;
         default:
             crm_warn("Unknown patch format: %d", format);
@@ -929,8 +929,8 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
     int root_nodes_seen = 0;
 
     xmlNode *child_diff = NULL;
-    xmlNode *added = find_xml_node(patchset, PCMK__XE_DIFF_ADDED, FALSE);
-    xmlNode *removed = find_xml_node(patchset, PCMK__XE_DIFF_REMOVED, FALSE);
+    xmlNode *added = pcmk__xe_match_name(patchset, PCMK__XE_DIFF_ADDED);
+    xmlNode *removed = pcmk__xe_match_name(patchset, PCMK__XE_DIFF_REMOVED);
     xmlNode *old = pcmk__xml_copy(NULL, xml);
 
     crm_trace("Subtraction Phase");
@@ -1488,8 +1488,8 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     const char *version = crm_element_value(diff, PCMK_XA_CRM_FEATURE_SET);
 
     xmlNode *child_diff = NULL;
-    xmlNode *added = find_xml_node(diff, PCMK__XE_DIFF_ADDED, FALSE);
-    xmlNode *removed = find_xml_node(diff, PCMK__XE_DIFF_REMOVED, FALSE);
+    xmlNode *added = pcmk__xe_match_name(diff, PCMK__XE_DIFF_ADDED);
+    xmlNode *removed = pcmk__xe_match_name(diff, PCMK__XE_DIFF_REMOVED);
 
     CRM_CHECK(new_xml != NULL, return FALSE);
 

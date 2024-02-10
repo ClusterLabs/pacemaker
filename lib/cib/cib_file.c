@@ -388,7 +388,7 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Add a status section if not already present */
-    if (find_xml_node(root, PCMK_XE_STATUS, FALSE) == NULL) {
+    if (pcmk__xe_match_name(root, PCMK_XE_STATUS) == NULL) {
         pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
@@ -893,11 +893,9 @@ cib_file_prepare_xml(xmlNode *root)
 
     /* Delete status section before writing to file, because
      * we discard it on startup anyway, and users get confused by it */
-    cib_status_root = find_xml_node(root, PCMK_XE_STATUS, TRUE);
-    CRM_LOG_ASSERT(cib_status_root != NULL);
-    if (cib_status_root != NULL) {
-        free_xml(cib_status_root);
-    }
+    cib_status_root = pcmk__xe_match_name(root, PCMK_XE_STATUS);
+    CRM_CHECK(cib_status_root != NULL, return);
+    free_xml(cib_status_root);
 }
 
 /*!
