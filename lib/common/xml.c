@@ -1194,10 +1194,11 @@ static int
 write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
                  bool compress, unsigned int *nbytes)
 {
+    // @COMPAT Drop nbytes as arg when we drop write_xml_fd()/write_xml_file()
     int rc = pcmk_rc_ok;
+    unsigned int bytes_out = 0;
     char *buffer = NULL;
 
-    *nbytes = 0;
     crm_log_xml_trace(xml, "writing");
 
     buffer = dump_xml_formatted(xml);
@@ -1207,7 +1208,7 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
               goto bail);
 
     if (compress) {
-        unsigned int in = 0;
+        unsigned int bytes_in = 0;
         BZFILE *bz_file = NULL;
 
         rc = BZ_OK;
@@ -1229,29 +1230,29 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
         }
 
         if (rc == pcmk_rc_ok) {
-            BZ2_bzWriteClose(&rc, bz_file, 0, &in, nbytes);
+            BZ2_bzWriteClose(&rc, bz_file, 0, &bytes_in, &bytes_out);
             rc = pcmk__bzlib2rc(rc);
 
             if (rc != pcmk_rc_ok) {
                 crm_warn("Not compressing %s: could not write compressed data: %s "
                          CRM_XS " rc=%d errno=%d",
                          filename, pcmk_rc_str(rc), rc, errno);
-                *nbytes = 0; // retry without compression
+                bytes_out = 0;  // retry without compression
             } else {
                 crm_trace("Compressed XML for %s from %u bytes to %u",
-                          filename, in, *nbytes);
+                          filename, bytes_in, bytes_out);
             }
         }
         rc = pcmk_rc_ok; // Either true, or we'll retry without compression
     }
 
-    if (*nbytes == 0) {
+    if (bytes_out == 0) {
         rc = fprintf(stream, "%s", buffer);
         if (rc < 0) {
             rc = errno;
             crm_perror(LOG_ERR, "writing %s", filename);
         } else {
-            *nbytes = (unsigned int) rc;
+            bytes_out = (unsigned int) rc;
             rc = pcmk_rc_ok;
         }
     }
@@ -1271,9 +1272,12 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 
     fclose(stream);
 
-    crm_trace("Saved %d bytes to %s as XML", *nbytes, filename);
+    crm_trace("Saved %d bytes to %s as XML", bytes_out, filename);
     free(buffer);
 
+    if (nbytes != NULL) {
+        *nbytes = bytes_out;
+    }
     return rc;
 }
 
@@ -1291,12 +1295,10 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
  */
 int
 pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
-                   bool compress, int *nbytes)
+                   bool compress, unsigned int *nbytes)
 {
     // @COMPAT Drop compress and nbytes arguments when we drop write_xml_fd()
     FILE *stream = NULL;
-    unsigned int local_nbytes = 0;
-    int rc = pcmk_rc_ok;
 
     CRM_CHECK((xml != NULL) && (fd > 0), return EINVAL);
     stream = fdopen(fd, "w");
@@ -1304,15 +1306,7 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
         return errno;
     }
 
-    rc = write_xml_stream(xml, filename, stream, compress, &local_nbytes);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    if (nbytes != NULL) {
-        *nbytes = (int) local_nbytes;
-    }
-    return pcmk_rc_ok;
+    return write_xml_stream(xml, filename, stream, compress, nbytes);
 }
 
 /*!
@@ -1328,12 +1322,10 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
  */
 int
 pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
-                     int *nbytes)
+                     unsigned int *nbytes)
 {
     // @COMPAT Drop nbytes argument when we drop write_xml_fd()
     FILE *stream = NULL;
-    unsigned int local_nbytes = 0;
-    int rc = pcmk_rc_ok;
 
     CRM_CHECK((xml != NULL) && (filename != NULL), return EINVAL);
     stream = fopen(filename, "w");
@@ -1341,15 +1333,7 @@ pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
         return errno;
     }
 
-    rc = write_xml_stream(xml, filename, stream, compress, &local_nbytes);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    if (nbytes != NULL) {
-        *nbytes = (int) local_nbytes;
-    }
-    return pcmk_rc_ok;
+    return write_xml_stream(xml, filename, stream, compress, nbytes);
 }
 
 /*!
@@ -3042,25 +3026,25 @@ int
 write_xml_fd(const xmlNode *xml, const char *filename, int fd,
              gboolean compress)
 {
-    int nbytes = 0;
+    unsigned int nbytes = 0;
     int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
 
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
-    return nbytes;
+    return (int) nbytes;
 }
 
 int
 write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
 {
-    int nbytes = 0;
+    unsigned int nbytes = 0;
     int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
 
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
-    return nbytes;
+    return (int) nbytes;
 }
 
 // LCOV_EXCL_STOP
