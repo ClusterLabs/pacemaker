@@ -481,6 +481,8 @@ xmlNode *pcmk__xml_parse(const char *input);
 
 int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
                        bool compress, int *nbytes);
+int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
+                         bool compress, int *nbytes);
 
 
 // @COMPAT Remove when v1 patchsets are removed

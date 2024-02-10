@@ -546,10 +546,10 @@ cib_file_signoff(cib_t *cib)
 
         /* Otherwise, it's a simple write */
         } else {
-            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
+            bool compress = pcmk__ends_with_ext(private->filename, ".bz2");
 
-            if (write_xml_file(private->cib_xml, private->filename,
-                               do_bzip) <= 0) {
+            if (pcmk__xml_write_file(private->cib_xml, private->filename,
+                                     compress, NULL) != pcmk_rc_ok) {
                 rc = pcmk_err_generic;
             }
         }
