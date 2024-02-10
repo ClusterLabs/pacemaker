@@ -380,27 +380,6 @@ xml_accept_changes(xmlNode * xml)
     accept_attr_deletions(top);
 }
 
-xmlNode *
-find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
-{
-    xmlNode *result = NULL;
-
-    if (search_path == NULL) {
-        crm_warn("Will never find <NULL>");
-        return NULL;
-    }
-
-    result = pcmk__xe_match_name(root, search_path);
-
-    if (must_find && (result == NULL)) {
-        crm_warn("Could not find %s in %s",
-                 search_path,
-                 ((root != NULL)? (const char *) root->name : "<NULL>"));
-    }
-
-    return result;
-}
-
 /*!
  * \internal
  * \brief Find first XML child element matching given criteria
@@ -3106,6 +3085,27 @@ xmlNode *
 first_named_child(const xmlNode *parent, const char *name)
 {
     return pcmk__xe_match_name(parent, name);
+}
+
+xmlNode *
+find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
+{
+    xmlNode *result = NULL;
+
+    if (search_path == NULL) {
+        crm_warn("Will never find <NULL>");
+        return NULL;
+    }
+
+    result = pcmk__xe_match_name(root, search_path);
+
+    if (must_find && (result == NULL)) {
+        crm_warn("Could not find %s in %s",
+                 search_path,
+                 ((root != NULL)? (const char *) root->name : "<NULL>"));
+    }
+
+    return result;
 }
 
 // LCOV_EXCL_STOP
