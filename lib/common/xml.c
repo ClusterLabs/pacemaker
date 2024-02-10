@@ -1364,27 +1364,6 @@ pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
 }
 
 /*!
- * \brief Write XML to a file
- *
- * \param[in] xml       XML to write
- * \param[in] filename  Name of file to write
- * \param[in] compress  Whether to compress XML before writing
- *
- * \return Number of bytes written on success, -errno otherwise
- */
-int
-write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
-{
-    int nbytes = 0;
-    int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
-
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return nbytes;
-}
-
-/*!
  * \internal
  * \brief Get consecutive bytes encoding non-ASCII UTF-8 characters
  *
@@ -3076,6 +3055,18 @@ write_xml_fd(const xmlNode *xml, const char *filename, int fd,
 {
     int nbytes = 0;
     int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
+
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
+    }
+    return nbytes;
+}
+
+int
+write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
+{
+    int nbytes = 0;
+    int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
 
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
