@@ -467,6 +467,32 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Create a new HTML element under a given parent with ID and class
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ * \param[in]     id      CSS ID of new element (can be \c NULL)
+ * \param[in]     class   CSS class of new element (can be \c NULL)
+ *
+ * \return Newly created XML element (guaranteed not to be \c NULL)
+ */
+xmlNode *
+pcmk__html_create(xmlNode *parent, const char *name, const char *id,
+                  const char *class)
+{
+    xmlNode *node = pcmk__xe_create(parent, name);
+
+    pcmk__xe_set_props(node,
+                       PCMK_XA_CLASS, class,
+                       PCMK_XA_ID, id,
+                       NULL);
+    return node;
+}
+
 void
 pcmk__html_add_header(const char *name, ...) {
     htmlNodePtr header_node;

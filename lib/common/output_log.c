@@ -162,7 +162,7 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     priv = out->priv;
 
     node = pcmk__xe_create(NULL, name);
-    pcmk__xe_set_content(node, buf);
+    pcmk__xe_set_content(node, "%s", buf);
     do_crm_log_xml(priv->log_level, name, node);
     free(node);
 }
