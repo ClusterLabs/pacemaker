@@ -161,7 +161,7 @@ static void
 add_error_node(gpointer data, gpointer user_data) {
     char *str = (char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
-    pcmk_create_xml_text_node(node, PCMK_XE_ERROR, str);
+    pcmk__xe_create_full(node, PCMK_XE_ERROR, str);
 }
 
 static void
@@ -242,14 +242,12 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
                                           NULL);
 
     if (proc_stdout != NULL) {
-        child_node = pcmk_create_xml_text_node(node, PCMK_XE_OUTPUT,
-                                               proc_stdout);
+        child_node = pcmk__xe_create_full(node, PCMK_XE_OUTPUT, proc_stdout);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
-        child_node = pcmk_create_xml_text_node(node, PCMK_XE_OUTPUT,
-                                               proc_stderr);
+        child_node = pcmk__xe_create_full(node, PCMK_XE_OUTPUT, proc_stderr);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 

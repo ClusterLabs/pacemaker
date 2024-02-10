@@ -155,9 +155,9 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     head_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) "head", NULL);
 
     if (title != NULL ) {
-        pcmk_create_xml_text_node(head_node, "title", title);
+        pcmk__xe_create_full(head_node, "title", title);
     } else if (out->request != NULL) {
-        pcmk_create_xml_text_node(head_node, "title", out->request);
+        pcmk__xe_create_full(head_node, "title", out->request);
     }
 
     charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
@@ -174,7 +174,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * stylesheet.  The second can override the first.  At least one should be
      * given.
      */
-    pcmk_create_xml_text_node(head_node, "style", stylesheet_default);
+    pcmk__xe_create_full(head_node, "style", stylesheet_default);
 
     if (stylesheet_link != NULL) {
         htmlNodePtr link_node = pcmk__xe_create(head_node, "link");

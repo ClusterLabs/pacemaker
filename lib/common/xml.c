@@ -619,17 +619,39 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
 
 /*!
  * \internal
- * \brief Create a new XML element under a given parent
+ * \brief Set a given string as an XML node's content
  *
- * \param[in,out] parent  XML element that will be the new element's parent
- *                        (\c NULL to create a new XML document with the new
- *                        node as root)
- * \param[in]     name    Name of new element
+ * \param[in,out] node     Node whose content to set
+ * \param[in]     content  String to set as the content
+ *
+ * \note \c xmlNodeSetContent() does not escape special characters.
+ */
+void
+pcmk__xe_set_content(xmlNode *node, const char *content)
+{
+    if (node != NULL) {
+        char *escaped = pcmk__xml_escape(content, false);
+
+        xmlNodeSetContent(node, (pcmkXmlStr) escaped);
+        free(escaped);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create a new XML element under a given parent with text content
+ *
+ * \param[in,out] parent   XML element that will be the new element's parent
+ *                         (\c NULL to create a new XML document with the new
+ *                         node as root)
+ * \param[in]     name     Name of new element
+ * \param[in]     content  Text to set as the new element's content (can be
+ *                         \c NULL)
  *
  * \return Newly created XML element, or \c NULL on memory allocation failure
  */
 xmlNode *
-pcmk__xe_create(xmlNode *parent, const char *name)
+pcmk__xe_create_full(xmlNode *parent, const char *name, const char *content)
 {
     /* @COMPAT Either assert on memory allocation failure here, or DON'T assert
      * on it in pcmk__xml_copy().
@@ -663,44 +685,22 @@ pcmk__xe_create(xmlNode *parent, const char *name)
             return NULL;
         }
     }
+    pcmk__xe_set_content(node, content);
     pcmk__mark_xml_created(node);
     return node;
-}
-
-/*!
- * \internal
- * \brief Set a given string as an XML node's content
- *
- * \param[in,out] node     Node whose content to set
- * \param[in]     content  String to set as the content
- *
- * \note \c xmlNodeSetContent() does not escape special characters.
- */
-void
-pcmk__xe_set_content(xmlNode *node, const char *content)
-{
-    if (node != NULL) {
-        char *escaped = pcmk__xml_escape(content, false);
-
-        xmlNodeSetContent(node, (pcmkXmlStr) escaped);
-        free(escaped);
-    }
 }
 
 xmlNode *
 pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
 {
-    xmlNode *node = pcmk__xe_create(parent, name);
-
-    pcmk__xe_set_content(node, content);
-    return node;
+    return pcmk__xe_create_full(parent, name, content);
 }
 
 xmlNode *
 pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                       const char *class_name, const char *text)
 {
-    xmlNode *node = pcmk_create_xml_text_node(parent, element_name, text);
+    xmlNode *node = pcmk__xe_create_full(parent, element_name, text);
 
     if (class_name != NULL) {
         crm_xml_add(node, PCMK_XA_CLASS, class_name);

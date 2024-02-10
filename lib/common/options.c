@@ -958,7 +958,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
 static int
 add_desc(xmlNode *parent, const char *tag, const char *desc)
 {
-    xmlNode *node = pcmk_create_xml_text_node(parent, tag, desc);
+    xmlNode *node = pcmk__xe_create_full(parent, tag, desc);
 
     if (node == NULL) {
         return ENOMEM;
@@ -977,7 +977,7 @@ add_desc(xmlNode *parent, const char *tag, const char *desc)
             locale = strtok(setlocale(LC_ALL, NULL), "_");
         }
 
-        node = pcmk_create_xml_text_node(parent, tag, _(desc));
+        node = pcmk__xe_create_full(parent, tag, _(desc));
         if (node == NULL) {
             return ENOMEM;
         }
@@ -1118,8 +1118,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     crm_xml_add(top, PCMK_XA_NAME, name);
     crm_xml_add(top, PCMK_XA_VERSION, PACEMAKER_VERSION);
 
-    if (pcmk_create_xml_text_node(top, PCMK_XE_VERSION,
-                                  PCMK_OCF_VERSION) == NULL) {
+    if (pcmk__xe_create_full(top, PCMK_XE_VERSION, PCMK_OCF_VERSION) == NULL) {
         goto done;
     }
 

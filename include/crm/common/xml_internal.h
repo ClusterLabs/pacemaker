@@ -349,7 +349,26 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
-xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+xmlNode *pcmk__xe_create_full(xmlNode *parent, const char *name,
+                              const char *content);
+
+/*!
+ * \internal
+ * \brief Create a new XML element under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ *
+ * \return Newly created XML element, or \c NULL on memory allocation failure
+ */
+static inline xmlNode *
+pcmk__xe_create(xmlNode *parent, const char *name)
+{
+    return pcmk__xe_create_full(parent, name, NULL);
+}
+
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 
 void pcmk__xe_set_content(xmlNode *node, const char *content);

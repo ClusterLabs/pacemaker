@@ -24,7 +24,8 @@ element_nodes(void **state)
     xmlNode *test_xml_child = pcmk__xe_create(test_xml_root, "test_xml_child");
     xmlNode *test_xml_grandchild = pcmk__xe_create(test_xml_child,
                                                    "test_xml_grandchild");
-    xmlNode *test_xml_text = pcmk_create_xml_text_node(test_xml_root, "text_xml_text", "content");
+    xmlNode *test_xml_text = pcmk__xe_create_full(test_xml_root,
+                                                  "text_xml_text", "content");
     xmlNode *test_xml_comment = pcmk__xml_parse_string("<!-- a comment -->");
 
     crm_xml_add(test_xml_root, "X", "5");    
