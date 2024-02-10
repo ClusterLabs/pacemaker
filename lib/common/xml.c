@@ -691,12 +691,6 @@ pcmk__xe_create_full(xmlNode *parent, const char *name, const char *content)
 }
 
 xmlNode *
-pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
-{
-    return pcmk__xe_create_full(parent, name, content);
-}
-
-xmlNode *
 pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                       const char *class_name, const char *text)
 {
@@ -3120,6 +3114,12 @@ xmlNode *
 create_xml_node(xmlNode *parent, const char *name)
 {
     return pcmk__xe_create(parent, name);
+}
+
+xmlNode *
+pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
+{
+    return pcmk__xe_create_full(parent, name, content);
 }
 
 // LCOV_EXCL_STOP
