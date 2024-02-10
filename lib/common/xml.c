@@ -690,13 +690,6 @@ pcmk__xe_create_full(xmlNode *parent, const char *name, const char *content)
     return node;
 }
 
-xmlNode *
-pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
-                      const char *class_name, const char *text)
-{
-    return pcmk__xe_create_html(parent, element_name, id, class_name, text);
-}
-
 /*!
  * Free an XML element and all of its children, removing it from its parent
  *
@@ -3110,6 +3103,13 @@ xmlNode *
 pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
 {
     return pcmk__xe_create_full(parent, name, content);
+}
+
+xmlNode *
+pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
+                      const char *class_name, const char *text)
+{
+    return pcmk__xe_create_html(parent, element_name, id, class_name, text);
 }
 
 // LCOV_EXCL_STOP
