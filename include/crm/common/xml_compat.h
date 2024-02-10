@@ -119,6 +119,9 @@ char *dump_xml_formatted_with_text(const xmlNode *xml);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 char *dump_xml_unformatted(const xmlNode *xml);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *create_xml_node(xmlNode *parent, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

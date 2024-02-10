@@ -667,12 +667,6 @@ pcmk__xe_create(xmlNode *parent, const char *name)
     return node;
 }
 
-xmlNode *
-create_xml_node(xmlNode * parent, const char *name)
-{
-    return pcmk__xe_create(parent, name);
-}
-
 /*!
  * \internal
  * \brief Set a given string as an XML node's content
@@ -3120,6 +3114,12 @@ dump_xml_unformatted(const xmlNode *xml)
     pcmk__str_update(&str, g_str);
     g_free(g_str);
     return str;
+}
+
+xmlNode *
+create_xml_node(xmlNode *parent, const char *name)
+{
+    return pcmk__xe_create(parent, name);
 }
 
 // LCOV_EXCL_STOP
