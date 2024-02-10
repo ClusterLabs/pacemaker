@@ -113,6 +113,9 @@ int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 char *dump_xml_formatted(const xmlNode *xml);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+char *dump_xml_formatted_with_text(const xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif
