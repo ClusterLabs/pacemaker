@@ -211,6 +211,21 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_match(const xmlNode *parent, const char *node_name,
                         const char *attr_n, const char *attr_v);
 
+/*!
+ * \internal
+ * \brief Find first XML child element with given name
+ *
+ * \param[in] parent  XML element to search
+ * \param[in] name    Name that child must match (\c NULL for any)
+ *
+ * \return Matching XML child element, or \c NULL if none found
+ */
+static inline xmlNode *
+pcmk__xe_match_name(const xmlNode *parent, const char *name)
+{
+    return pcmk__xe_match(parent, name, NULL, NULL);
+}
+
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);

@@ -61,8 +61,8 @@ static int
 process_transaction_requests(xmlNodePtr transaction,
                              const pcmk__client_t *client, const char *source)
 {
-    for (xmlNode *request = first_named_child(transaction,
-                                              PCMK__XE_CIB_COMMAND);
+    for (xmlNode *request = pcmk__xe_match_name(transaction,
+                                                PCMK__XE_CIB_COMMAND);
          request != NULL; request = crm_next_same_xml(request)) {
 
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);

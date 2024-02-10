@@ -72,7 +72,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
-        lifetime = first_named_child(xml_obj, PCMK__XE_LIFETIME);
+        lifetime = pcmk__xe_match_name(xml_obj, PCMK__XE_LIFETIME);
         if (lifetime != NULL) {
             pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
                               "(in %s) is deprecated (the rules it contains "
@@ -220,19 +220,19 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
     bool any_refs = false;
 
     // Short-circuit if there are no sets
-    if (first_named_child(xml_obj, PCMK_XE_RESOURCE_SET) == NULL) {
+    if (pcmk__xe_match_name(xml_obj, PCMK_XE_RESOURCE_SET) == NULL) {
         return NULL;
     }
 
     new_xml = pcmk__xml_copy(NULL, xml_obj);
 
-    for (xmlNode *set = first_named_child(new_xml, PCMK_XE_RESOURCE_SET);
+    for (xmlNode *set = pcmk__xe_match_name(new_xml, PCMK_XE_RESOURCE_SET);
          set != NULL; set = crm_next_same_xml(set)) {
 
         GList *tag_refs = NULL;
         GList *iter = NULL;
 
-        for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
+        for (xmlNode *xml_rsc = pcmk__xe_match_name(set, PCMK_XE_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             pcmk_resource_t *rsc = NULL;

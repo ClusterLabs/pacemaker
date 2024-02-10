@@ -1790,9 +1790,9 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
     xmlNode *rsc_xml = NULL;
 
     // Resource ID is optional
-    rsc_xml = first_named_child(request, PCMK__XE_LRMD_CALLDATA);
+    rsc_xml = pcmk__xe_match_name(request, PCMK__XE_LRMD_CALLDATA);
     if (rsc_xml) {
-        rsc_xml = first_named_child(rsc_xml, PCMK__XE_LRMD_RSC);
+        rsc_xml = pcmk__xe_match_name(rsc_xml, PCMK__XE_LRMD_RSC);
     }
     if (rsc_xml) {
         rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);

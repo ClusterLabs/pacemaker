@@ -688,7 +688,7 @@ commit_shadow_file(GError **error)
 
     if (!options.full_upload) {
         section = PCMK_XE_CONFIGURATION;
-        section_xml = first_named_child(input, section);
+        section_xml = pcmk__xe_match_name(input, section);
     }
 
     rc = real_cib->cmds->replace(real_cib, section, section_xml,

@@ -234,7 +234,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
     }
 
     if (pcmk__xe_is(xml, PCMK__XE_LRM)) {
-        xml = first_named_child(xml, PCMK__XE_LRM_RESOURCES);
+        xml = pcmk__xe_match_name(xml, PCMK__XE_LRM_RESOURCES);
         CRM_CHECK(xml != NULL, return);
     }
 
@@ -377,7 +377,7 @@ static void
 process_node_state_diff(xmlNode *state, xmlNode *change, const char *op,
                         const char *xpath)
 {
-    xmlNode *lrm = first_named_child(state, PCMK__XE_LRM);
+    xmlNode *lrm = pcmk__xe_match_name(state, PCMK__XE_LRM);
 
     process_resource_updates(pcmk__xe_id(state), lrm, change, op, xpath);
 }
@@ -396,8 +396,8 @@ static void
 process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
                  const char *xpath)
 {
-    xmlNode *status = first_named_child(cib, PCMK_XE_STATUS);
-    xmlNode *config = first_named_child(cib, PCMK_XE_CONFIGURATION);
+    xmlNode *status = pcmk__xe_match_name(cib, PCMK_XE_STATUS);
+    xmlNode *config = pcmk__xe_match_name(cib, PCMK_XE_CONFIGURATION);
 
     if (status) {
         process_status_diff(status, change, op, xpath);
@@ -447,7 +447,7 @@ te_update_diff_v2(xmlNode *diff)
             match = change->children;
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
+            match = pcmk__xe_match_name(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;
             }

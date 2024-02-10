@@ -999,11 +999,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_DOCKER);
+    xml_obj = pcmk__xe_match_name(rsc->xml, PCMK_XE_DOCKER);
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {
-        xml_obj = first_named_child(rsc->xml, PCMK__XE_RKT);
+        xml_obj = pcmk__xe_match_name(rsc->xml, PCMK__XE_RKT);
         if (xml_obj != NULL) {
             pcmk__warn_once(pcmk__wo_rkt,
                             "Support for " PCMK__XE_RKT " in bundles "
@@ -1011,7 +1011,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                             "removed in a future release", rsc->id);
             bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
-            xml_obj = first_named_child(rsc->xml, PCMK_XE_PODMAN);
+            xml_obj = pcmk__xe_match_name(rsc->xml, PCMK_XE_PODMAN);
             if (xml_obj != NULL) {
                 bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
             } else {
@@ -1057,7 +1057,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     bundle_data->container_network = crm_element_value_copy(xml_obj,
                                                             PCMK_XA_NETWORK);
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_NETWORK);
+    xml_obj = pcmk__xe_match_name(rsc->xml, PCMK_XE_NETWORK);
     if(xml_obj) {
         bundle_data->ip_range_start =
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
@@ -1072,7 +1072,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             bundle_data->add_host = TRUE;
         }
 
-        for (xml_child = first_named_child(xml_obj, PCMK_XE_PORT_MAPPING);
+        for (xml_child = pcmk__xe_match_name(xml_obj, PCMK_XE_PORT_MAPPING);
              xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
             pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
@@ -1099,8 +1099,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_STORAGE);
-    for (xml_child = first_named_child(xml_obj, PCMK_XE_STORAGE_MAPPING);
+    xml_obj = pcmk__xe_match_name(rsc->xml, PCMK_XE_STORAGE);
+    for (xml_child = pcmk__xe_match_name(xml_obj, PCMK_XE_STORAGE_MAPPING);
          xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
         const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
@@ -1125,7 +1125,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_PRIMITIVE);
+    xml_obj = pcmk__xe_match_name(rsc->xml, PCMK_XE_PRIMITIVE);
     if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;

@@ -624,7 +624,7 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
 
-    for (xmlNode *rule = first_named_child(ruleset, PCMK_XE_RULE);
+    for (xmlNode *rule = pcmk__xe_match_name(ruleset, PCMK_XE_RULE);
          rule != NULL; rule = crm_next_same_xml(rule)) {
 
         ruleset_default = FALSE;
@@ -1061,8 +1061,8 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 
     crm_trace("Testing expression: %s", pcmk__xe_id(expr));
 
-    duration_spec = first_named_child(expr, PCMK_XE_DURATION);
-    date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
+    duration_spec = pcmk__xe_match_name(expr, PCMK_XE_DURATION);
+    date_spec = pcmk__xe_match_name(expr, PCMK_XE_DATE_SPEC);
 
     value = crm_element_value(expr, PCMK_XA_START);
     if (value != NULL) {

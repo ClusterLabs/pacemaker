@@ -541,7 +541,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crmconfig = output;
     if ((crmconfig != NULL) && !pcmk__xe_is(crmconfig, PCMK_XE_CRM_CONFIG)) {
-        crmconfig = first_named_child(crmconfig, PCMK_XE_CRM_CONFIG);
+        crmconfig = pcmk__xe_match_name(crmconfig, PCMK_XE_CRM_CONFIG);
     }
     if (!crmconfig) {
         fsa_data_t *msg_data = NULL;
@@ -603,7 +603,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_configure_fsa_timers(config_hash);
     controld_configure_throttle(config_hash);
 
-    alerts = first_named_child(output, PCMK_XE_ALERTS);
+    alerts = pcmk__xe_match_name(output, PCMK_XE_ALERTS);
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);

@@ -418,7 +418,7 @@ attrd_client_update(pcmk__request_t *request)
              * we also need to apply all the transformations in this function
              * to the children since they don't happen anywhere else.
              */
-            for (xmlNode *child = first_named_child(xml, PCMK_XE_OP);
+            for (xmlNode *child = pcmk__xe_match_name(xml, PCMK_XE_OP);
                  child != NULL; child = crm_next_same_xml(child)) {
 
                 attr = crm_element_value(child, PCMK__XA_ATTR_NAME);

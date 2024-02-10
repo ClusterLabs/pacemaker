@@ -159,7 +159,7 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     pcmk_controld_api_node_t *node_info;
 
     data->reply_type = pcmk_controld_reply_nodes;
-    for (xmlNode *node = first_named_child(msg_data, PCMK_XE_NODE);
+    for (xmlNode *node = pcmk__xe_match_name(msg_data, PCMK_XE_NODE);
          node != NULL; node = crm_next_same_xml(node)) {
 
         long long id_ll = 0;

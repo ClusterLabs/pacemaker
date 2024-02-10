@@ -511,7 +511,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    xmlNode *action_rsc = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
+    xmlNode *action_rsc = pcmk__xe_match_name(action->xml, PCMK_XE_PRIMITIVE);
 
     char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
@@ -669,7 +669,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    xmlNode *rsc = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
+    xmlNode *rsc = pcmk__xe_match_name(action->xml, PCMK_XE_PRIMITIVE);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);

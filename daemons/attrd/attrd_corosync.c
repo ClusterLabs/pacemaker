@@ -575,8 +575,9 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
 
     CRM_CHECK((peer != NULL) && (xml != NULL), return);
     if (xml->children != NULL) {
-        for (xmlNode *child = first_named_child(xml, PCMK_XE_OP); child != NULL;
-             child = crm_next_same_xml(child)) {
+        for (xmlNode *child = pcmk__xe_match_name(xml, PCMK_XE_OP);
+             child != NULL; child = crm_next_same_xml(child)) {
+
             attrd_copy_xml_attributes(xml, child);
             attrd_peer_update_one(peer, child, filter);
 
