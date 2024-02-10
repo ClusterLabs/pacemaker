@@ -349,6 +349,8 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+void pcmk__xe_set_content(xmlNode *node, const char *content);
+
 xmlNode *pcmk__xe_create_full(xmlNode *parent, const char *name,
                               const char *content);
 
@@ -368,10 +370,6 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 {
     return pcmk__xe_create_full(parent, name, NULL);
 }
-
-xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
-
-void pcmk__xe_set_content(xmlNode *node, const char *content);
 
 /*!
  * \internal
@@ -397,6 +395,39 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
 void
 pcmk__xe_set_props(xmlNodePtr node, ...)
 G_GNUC_NULL_TERMINATED;
+
+/*!
+ * \internal
+ * \brief Create a new HTML element under a given parent with ID, class, and
+ *        text
+ *
+ * \param[in,out] parent   XML element that will be the new element's parent
+ *                         (\c NULL to create a new XML document with the new
+ *                         node as root)
+ * \param[in]     name     Name of new element
+ * \param[in]     id       CSS ID of new element (can be \c NULL)
+ * \param[in]     class    CSS class of new element (can be \c NULL)
+ * \param[in]     content  Text to set as the new element's content (can be
+ *                         \c NULL)
+ *
+ * \return Newly created XML element, or \c NULL on memory allocation failure
+ */
+static inline xmlNode *
+pcmk__xe_create_html(xmlNode *parent, const char *name, const char *id,
+                     const char *class, const char *content)
+{
+    xmlNode *node = pcmk__xe_create_full(parent, name, content);
+
+    if (node != NULL) {
+        pcmk__xe_set_props(node,
+                           PCMK_XA_CLASS, class,
+                           PCMK_XA_ID, id,
+                           NULL);
+    }
+    return node;
+}
+
+xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 
 /*!
  * \internal
