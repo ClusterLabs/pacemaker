@@ -104,12 +104,6 @@ xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const cha
 xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                                const char *class_name, const char *text);
 
-/*
- * XML I/O Functions
- *
- * Whitespace between tags is discarded.
- */
-char *dump_xml_unformatted(const xmlNode *xml);
 
 /*
  * Searching & Modifying
