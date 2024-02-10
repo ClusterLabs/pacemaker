@@ -413,7 +413,7 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
  * \internal
  * \brief Find first XML child element matching given criteria
  *
- * \param[in] parent     XML element to search
+ * \param[in] parent     XML element to search (can be \c NULL)
  * \param[in] node_name  If not \c NULL, only match children of this type
  * \param[in] attr_n     If not \c NULL, only match children with an attribute
  *                       of this name.
@@ -426,7 +426,12 @@ xmlNode *
 pcmk__xe_match(const xmlNode *parent, const char *node_name,
                const char *attr_n, const char *attr_v)
 {
-    CRM_CHECK(parent != NULL, return NULL);
+    const char *parent_name = "<null>";
+
+    if (parent != NULL) {
+        parent_name = (const char *) parent->name;
+    }
+
     CRM_CHECK((attr_v == NULL) || (attr_n != NULL), return NULL);
 
     for (xmlNode *child = pcmk__xe_first_child(parent); child != NULL;
@@ -455,11 +460,10 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
 
     if (attr_n != NULL) {
         crm_trace("XML child node <%s %s=%s> not found in %s",
-                  pcmk__s(node_name, "(any)"), attr_n, attr_v,
-                  (const char *) parent->name);
+                  pcmk__s(node_name, "(any)"), attr_n, attr_v, parent_name);
     } else {
         crm_trace("XML child node <%s> not found in %s",
-                  pcmk__s(node_name, "(any)"), (const char *) parent->name);
+                  pcmk__s(node_name, "(any)"), parent_name);
     }
     return NULL;
 }
@@ -3109,10 +3113,6 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
 xmlNode *
 first_named_child(const xmlNode *parent, const char *name)
 {
-    if (parent == NULL) {
-        // Avoid CRM_CHECK() in pcmk__xe_match()
-        return NULL;
-    }
     return pcmk__xe_match_name(parent, name);
 }
 
