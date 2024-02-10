@@ -130,7 +130,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     xmlNode *remote;
     xmlNode *xml_sub;
 
-    remote = create_xml_node(parent, PCMK_XE_PRIMITIVE);
+    remote = pcmk__xe_create(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
     crm_xml_add(remote, PCMK_XA_ID, uname);
@@ -139,7 +139,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     crm_xml_add(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
-    xml_sub = create_xml_node(remote, PCMK_XE_META_ATTRIBUTES);
+    xml_sub = pcmk__xe_create(remote, PCMK_XE_META_ATTRIBUTES);
     crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_META_ATTRIBUTES);
     crm_create_nvpair_xml(xml_sub, NULL,
                           PCMK__META_INTERNAL_RSC, PCMK_VALUE_TRUE);
@@ -157,7 +157,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
 
     // Add instance attributes
     if (port || server) {
-        xml_sub = create_xml_node(remote, PCMK_XE_INSTANCE_ATTRIBUTES);
+        xml_sub = pcmk__xe_create(remote, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_INSTANCE_ATTRIBUTES);
         if (server) {
             crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_ADDR, server);
@@ -168,7 +168,7 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     }
 
     // Add operations
-    xml_sub = create_xml_node(remote, PCMK_XE_OPERATIONS);
+    xml_sub = pcmk__xe_create(remote, PCMK_XE_OPERATIONS);
     crm_create_op_xml(xml_sub, uname, PCMK_ACTION_MONITOR, "30s", "30s");
     if (start_timeout) {
         crm_create_op_xml(xml_sub, uname, PCMK_ACTION_START, "0",

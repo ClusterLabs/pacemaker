@@ -116,7 +116,7 @@ static int sync_in_progress = 0;
 void
 send_sync_request(const char *host)
 {
-    xmlNode *sync_me = create_xml_node(NULL, "sync-me");
+    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
     crm_node_t *peer = NULL;
 
     crm_info("Requesting re-sync from %s", (host? host : "all peers"));
@@ -143,7 +143,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
-    *answer = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
+    *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
     crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(*answer, PCMK__XA_DIGEST, digest);
@@ -156,7 +156,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
         },
         if (the_cib != NULL) {
             // Always include at least the version details
-            xmlNode *shallow = create_xml_node(NULL,
+            xmlNode *shallow = pcmk__xe_create(NULL,
                                                (const char *) the_cib->name);
 
             copy_in_properties(shallow, the_cib);
@@ -218,7 +218,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         rc = update_validation(&scratch, &new_version, 0, TRUE, TRUE);
         if (new_version > current_version) {
-            xmlNode *up = create_xml_node(NULL, __func__);
+            xmlNode *up = pcmk__xe_create(NULL, __func__);
 
             rc = pcmk_ok;
             crm_notice("Upgrade request from %s verified", host);
@@ -258,7 +258,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                      (origin? origin->uname : "lost"));
 
             if (origin) {
-                xmlNode *up = create_xml_node(NULL, __func__);
+                xmlNode *up = pcmk__xe_create(NULL, __func__);
 
                 crm_xml_add(up, PCMK__XA_T, PCMK__VALUE_CIB);
                 crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
@@ -397,7 +397,7 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_NOTIFY_ACTIVATE,
     };
 
-    xmlNode *copy = create_xml_node(NULL, PCMK__XE_COPY);
+    xmlNode *copy = pcmk__xe_create(NULL, PCMK__XE_COPY);
 
     CRM_ASSERT(copy != NULL);
 
@@ -498,7 +498,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
     GList *schemas = NULL;
     GList *already_included = NULL;
 
-    *answer = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
     data = get_message_xml(req, PCMK__XA_CIB_CALLDATA);
     if (data == NULL) {

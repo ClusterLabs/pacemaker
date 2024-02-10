@@ -225,7 +225,7 @@ createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
-    cib_root = create_xml_node(NULL, PCMK_XE_CIB);
+    cib_root = pcmk__xe_create(NULL, PCMK_XE_CIB);
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
@@ -233,19 +233,19 @@ createEmptyCib(int cib_epoch)
     crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
     crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
-    config = create_xml_node(cib_root, PCMK_XE_CONFIGURATION);
-    create_xml_node(cib_root, PCMK_XE_STATUS);
+    config = pcmk__xe_create(cib_root, PCMK_XE_CONFIGURATION);
+    pcmk__xe_create(cib_root, PCMK_XE_STATUS);
 
-    create_xml_node(config, PCMK_XE_CRM_CONFIG);
-    create_xml_node(config, PCMK_XE_NODES);
-    create_xml_node(config, PCMK_XE_RESOURCES);
-    create_xml_node(config, PCMK_XE_CONSTRAINTS);
+    pcmk__xe_create(config, PCMK_XE_CRM_CONFIG);
+    pcmk__xe_create(config, PCMK_XE_NODES);
+    pcmk__xe_create(config, PCMK_XE_RESOURCES);
+    pcmk__xe_create(config, PCMK_XE_CONSTRAINTS);
 
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
     {
-        xmlNode *rsc_defaults = create_xml_node(config, PCMK_XE_RSC_DEFAULTS);
-        xmlNode *meta = create_xml_node(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
-        xmlNode *nvpair = create_xml_node(meta, PCMK_XE_NVPAIR);
+        xmlNode *rsc_defaults = pcmk__xe_create(config, PCMK_XE_RSC_DEFAULTS);
+        xmlNode *meta = pcmk__xe_create(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
+        xmlNode *nvpair = pcmk__xe_create(meta, PCMK_XE_NVPAIR);
 
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
         crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
@@ -409,7 +409,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         scratch = *current_cib;
 
         // Make a copy of the top-level element to store version details
-        top = create_xml_node(NULL, (const char *) scratch->name);
+        top = pcmk__xe_create(NULL, (const char *) scratch->name);
         copy_in_properties(top, scratch);
         patchset_cib = top;
 
@@ -668,7 +668,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 {
     CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    *op_msg = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
+    *op_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     if (*op_msg == NULL) {
         return -EPROTO;
     }
@@ -1038,7 +1038,7 @@ xmlNode *
 cib_get_generation(cib_t * cib)
 {
     xmlNode *the_cib = NULL;
-    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {

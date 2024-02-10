@@ -1008,7 +1008,7 @@ add_allowed_values(xmlNode *parent, const pcmk__cluster_option_t *option)
     ptr = strtok(str, delim);
 
     while (ptr != NULL) {
-        xmlNode *allowed_value = create_xml_node(parent, PCMK_XE_OPTION);
+        xmlNode *allowed_value = pcmk__xe_create(parent, PCMK_XE_OPTION);
 
         if (allowed_value == NULL) {
             rc = ENOMEM;
@@ -1053,7 +1053,7 @@ add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
     // The standard requires a parameter type
     CRM_ASSERT(option->type != NULL);
 
-    parameter = create_xml_node(parent, PCMK_XE_PARAMETER);
+    parameter = pcmk__xe_create(parent, PCMK_XE_PARAMETER);
     if (parameter == NULL) {
         return ENOMEM;
     }
@@ -1070,7 +1070,7 @@ add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
         return rc;
     }
 
-    content = create_xml_node(parameter, PCMK_XE_CONTENT);
+    content = pcmk__xe_create(parameter, PCMK_XE_CONTENT);
     if (content == NULL) {
         return ENOMEM;
     }
@@ -1108,7 +1108,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                              enum pcmk__opt_context filter,
                              pcmk__cluster_option_t *option_list, int len)
 {
-    xmlNode *top = create_xml_node(NULL, PCMK_XE_RESOURCE_AGENT);
+    xmlNode *top = pcmk__xe_create(NULL, PCMK_XE_RESOURCE_AGENT);
     xmlNode *parameters = NULL;
     char *result = NULL;
 
@@ -1132,7 +1132,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         goto done;
     }
 
-    parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
+    parameters = pcmk__xe_create(top, PCMK_XE_PARAMETERS);
     if (parameters == NULL) {
         goto done;
     }

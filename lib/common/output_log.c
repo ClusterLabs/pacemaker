@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -165,7 +165,7 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    node = create_xml_node(NULL, name);
+    node = pcmk__xe_create(NULL, name);
     pcmk__xe_set_content(node, buf);
     do_crm_log_xml(priv->log_level, name, node);
     free(node);

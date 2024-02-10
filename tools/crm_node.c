@@ -547,7 +547,7 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
     xmlNode *xml = NULL;
     int rc = pcmk_rc_ok;
 
-    xml = create_xml_node(NULL, element);
+    xml = pcmk__xe_create(NULL, element);
     if (xml == NULL) {
         return pcmk_rc_error;
     }

@@ -1474,7 +1474,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = create_xml_node(parent, PCMK_XA_FILE);
+    file_node = pcmk__xe_create(parent, PCMK_XA_FILE);
     if (file_node == NULL) {
         free(contents);
         free(path);
@@ -1521,7 +1521,7 @@ void
 pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_included)
 {
     /* First, create an unattached node to add all the schema files to as children. */
-    xmlNode *schema_node = create_xml_node(NULL, PCMK__XA_SCHEMA);
+    xmlNode *schema_node = pcmk__xe_create(NULL, PCMK__XA_SCHEMA);
 
     crm_xml_add(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);

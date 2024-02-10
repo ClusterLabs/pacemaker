@@ -19,7 +19,7 @@ bad_input(void **state) {
 
     pcmk__assert_asserts(pcmk__xe_add_node(NULL, NULL, 0));
 
-    node = create_xml_node(NULL, "test");
+    node = pcmk__xe_create(NULL, "test");
 
     pcmk__xe_add_node(node, NULL, 0);
     assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST));
@@ -34,7 +34,7 @@ bad_input(void **state) {
 
 static void
 expected_input(void **state) {
-    xmlNode *node = create_xml_node(NULL, "test");
+    xmlNode *node = pcmk__xe_create(NULL, "test");
     int i;
 
     pcmk__xe_add_node(node, "somenode", 47);
@@ -49,7 +49,7 @@ expected_input(void **state) {
 
 static void
 repeated_use(void **state) {
-    xmlNode *node = create_xml_node(NULL, "test");
+    xmlNode *node = pcmk__xe_create(NULL, "test");
     int i;
 
     /* Later calls override settings from earlier calls. */

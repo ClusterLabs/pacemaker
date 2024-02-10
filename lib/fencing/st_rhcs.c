@@ -189,11 +189,11 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
-        tmp = create_xml_node(actions, PCMK_XE_ACTION);
+        tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
 
-        tmp = create_xml_node(actions, PCMK_XE_ACTION);
+        tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }

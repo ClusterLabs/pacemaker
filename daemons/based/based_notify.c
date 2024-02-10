@@ -128,7 +128,7 @@ cib_notify_send(const xmlNode *xml)
 static void
 attach_cib_generation(xmlNode *msg)
 {
-    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     if (generation == NULL) {
         return;
@@ -196,7 +196,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
 
-    update_msg = create_xml_node(NULL, PCMK__XE_NOTIFY);
+    update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
     crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);

@@ -40,7 +40,7 @@ static qb_ipcs_service_t *ipcs = NULL;
  */
 static xmlNode *build_query_reply(const char *attr, const char *host)
 {
-    xmlNode *reply = create_xml_node(NULL, __func__);
+    xmlNode *reply = pcmk__xe_create(NULL, __func__);
     attribute_t *a;
 
     if (reply == NULL) {
@@ -67,7 +67,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         /* If a specific node was requested, add its value */
         if (host) {
             v = g_hash_table_lookup(a->values, host);
-            host_value = create_xml_node(reply, PCMK_XE_NODE);
+            host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
             if (host_value == NULL) {
                 free_xml(reply);
                 return NULL;
@@ -82,7 +82,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
             g_hash_table_iter_init(&iter, a->values);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
-                host_value = create_xml_node(reply, PCMK_XE_NODE);
+                host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
                 if (host_value == NULL) {
                     free_xml(reply);
                     return NULL;
@@ -272,7 +272,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
             int status = regexec(&r_patt, attr, 0, NULL, 0);
 
             if (status == 0) {
-                xmlNode *child = create_xml_node(xml, PCMK_XE_OP);
+                xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
 
                 crm_trace("Matched %s with %s", attr, regex);
                 matched = true;

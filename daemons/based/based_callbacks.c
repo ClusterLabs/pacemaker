@@ -158,7 +158,7 @@ static xmlNode *
 create_cib_reply(const char *op, const char *call_id, const char *client_id,
                  int call_options, int rc, xmlNode *call_data)
 {
-    xmlNode *reply = create_xml_node(NULL, PCMK__XE_CIB_REPLY);
+    xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_CIB_REPLY);
 
     CRM_ASSERT(reply != NULL);
 
@@ -265,7 +265,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         if (flags & crm_ipc_client_response) {
-            xmlNode *ack = create_xml_node(NULL, __func__);
+            xmlNode *ack = pcmk__xe_create(NULL, __func__);
 
             crm_xml_add(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
             crm_xml_add(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
@@ -399,7 +399,7 @@ cib_digester_cb(gpointer data)
 {
     if (based_is_primary) {
         char buffer[32];
-        xmlNode *ping = create_xml_node(NULL, PCMK__XE_PING);
+        xmlNode *ping = pcmk__xe_create(NULL, PCMK__XE_PING);
 
         ping_seq++;
         free(ping_digest);
@@ -1613,7 +1613,7 @@ initiate_exit(void)
 
     crm_info("Sending shutdown request to %d peers", active);
 
-    leaving = create_xml_node(NULL, PCMK__XE_EXIT_NOTIFICATION);
+    leaving = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
     crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 

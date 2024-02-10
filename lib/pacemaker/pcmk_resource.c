@@ -132,7 +132,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
         return EINVAL;
     }
 
-    msg_data = create_xml_node(NULL, rsc_type);
+    msg_data = pcmk__xe_create(NULL, rsc_type);
     crm_xml_add(msg_data, PCMK_XA_ID, rsc_id);
 
     rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);

@@ -226,7 +226,7 @@ do_dc_takeover(long long action,
     controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
                                                  cib_scope_local);
 
-    cib = create_xml_node(NULL, PCMK_XE_CIB);
+    cib = pcmk__xe_create(NULL, PCMK_XE_CIB);
     crm_xml_add(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     controld_update_cib(PCMK_XE_CIB, cib, cib_none, feature_update_callback);
 

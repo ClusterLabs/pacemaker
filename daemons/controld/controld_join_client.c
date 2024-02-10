@@ -146,7 +146,7 @@ void
 join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     char *join_id = user_data;
-    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     CRM_LOG_ASSERT(join_id != NULL);
 

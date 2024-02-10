@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,9 +20,10 @@ element_nodes(void **state)
     const char *new_value_child;    
     const char *new_value_grandchild;
 
-    xmlNode *test_xml_root = create_xml_node(NULL, "test_xml_root");
-    xmlNode *test_xml_child = create_xml_node(test_xml_root, "test_xml_child");
-    xmlNode *test_xml_grandchild = create_xml_node(test_xml_child, "test_xml_grandchild");
+    xmlNode *test_xml_root = pcmk__xe_create(NULL, "test_xml_root");
+    xmlNode *test_xml_child = pcmk__xe_create(test_xml_root, "test_xml_child");
+    xmlNode *test_xml_grandchild = pcmk__xe_create(test_xml_child,
+                                                   "test_xml_grandchild");
     xmlNode *test_xml_text = pcmk_create_xml_text_node(test_xml_root, "text_xml_text", "content");
     xmlNode *test_xml_comment = pcmk__xml_parse_string("<!-- a comment -->");
 

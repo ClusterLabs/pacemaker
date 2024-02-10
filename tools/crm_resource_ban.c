@@ -72,9 +72,9 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         return EINVAL;
     }
 
-    fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
+    fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
 
-    location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
+    location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
 
     out->info(out,
@@ -101,8 +101,8 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
 
     } else {
-        xmlNode *rule = create_xml_node(location, PCMK_XE_RULE);
-        xmlNode *expr = create_xml_node(rule, PCMK_XE_EXPRESSION);
+        xmlNode *rule = pcmk__xe_create(location, PCMK_XE_RULE);
+        xmlNode *expr = pcmk__xe_create(rule, PCMK_XE_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
         crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
@@ -114,7 +114,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         crm_xml_add(expr, PCMK_XA_VALUE, host);
         crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
-        expr = create_xml_node(rule, PCMK_XE_DATE_EXPRESSION);
+        expr = pcmk__xe_create(rule, PCMK_XE_DATE_EXPRESSION);
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-lifetime", rsc_id, host);
         crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
         crm_xml_add(expr, PCMK_XA_END, later_s);
@@ -160,9 +160,9 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         return ENOTCONN;
     }
 
-    fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
+    fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
 
-    location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
+    location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
 
     crm_xml_add(location, PCMK_XA_RSC, rsc_id);
@@ -178,8 +178,8 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
 
     } else {
-        xmlNode *rule = create_xml_node(location, PCMK_XE_RULE);
-        xmlNode *expr = create_xml_node(rule, PCMK_XE_EXPRESSION);
+        xmlNode *rule = pcmk__xe_create(location, PCMK_XE_RULE);
+        xmlNode *expr = pcmk__xe_create(rule, PCMK_XE_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-prefer-rule-%s", rsc_id);
         crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
@@ -191,7 +191,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         crm_xml_add(expr, PCMK_XA_VALUE, host);
         crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
-        expr = create_xml_node(rule, PCMK_XE_DATE_EXPRESSION);
+        expr = pcmk__xe_create(rule, PCMK_XE_DATE_EXPRESSION);
         crm_xml_set_id(expr, "cli-prefer-lifetime-end-%s", rsc_id);
         crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
         crm_xml_add(expr, PCMK_XA_END, later_s);
@@ -276,14 +276,14 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
     xmlNode *fragment = NULL;
     xmlNode *location = NULL;
 
-    fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
+    fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
 
     if (clear_ban_constraints == TRUE) {
-        location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
+        location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
         crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
     }
 
-    location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
+    location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     crm_xml_set_id(location, "cli-prefer-%s", rsc_id);
     if (force == FALSE) {
         crm_xml_add(location, PCMK_XE_NODE, host);
@@ -473,8 +473,8 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
             xmlNode *fragment = NULL;
             xmlNode *location = NULL;
 
-            fragment = create_xml_node(NULL, PCMK_XE_CONSTRAINTS);
-            location = create_xml_node(fragment, PCMK_XE_RSC_LOCATION);
+            fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
+            location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
             crm_xml_set_id(location, "%s", pcmk__xe_id(constraint_node));
             crm_log_xml_info(fragment, "Delete");
 

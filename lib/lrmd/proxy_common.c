@@ -29,7 +29,7 @@ static void
 remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 {
     /* sending to the remote node that an ipc connection has been destroyed */
-    xmlNode *msg = create_xml_node(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
     lrmd_internal_proxy_send(lrmd, msg);
@@ -45,7 +45,7 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 void
 remote_proxy_ack_shutdown(lrmd_t *lrmd)
 {
-    xmlNode *msg = create_xml_node(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_ACK);
     lrmd_internal_proxy_send(lrmd, msg);
     free_xml(msg);
@@ -60,7 +60,7 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd)
 void
 remote_proxy_nack_shutdown(lrmd_t *lrmd)
 {
-    xmlNode *msg = create_xml_node(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_NACK);
     lrmd_internal_proxy_send(lrmd, msg);
     free_xml(msg);
@@ -70,7 +70,7 @@ void
 remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
 {
     /* sending to the remote node an event msg. */
-    xmlNode *event = create_xml_node(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *event = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(event, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
     crm_xml_add(event, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
     add_message_xml(event, PCMK__XE_LRMD_IPC_MSG, msg);
@@ -83,7 +83,7 @@ void
 remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
 {
     /* sending to the remote node a response msg. */
-    xmlNode *response = create_xml_node(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *response = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
     crm_xml_add(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
     crm_xml_add_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
@@ -268,7 +268,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
 
             if(rc < 0) {
-                xmlNode *op_reply = create_xml_node(NULL, PCMK__XE_NACK);
+                xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_NACK);
 
                 crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);

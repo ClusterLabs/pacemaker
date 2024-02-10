@@ -389,7 +389,7 @@ load_file_cib(const char *filename, xmlNode **output)
 
     /* Add a status section if not already present */
     if (find_xml_node(root, PCMK_XE_STATUS, FALSE) == NULL) {
-        create_xml_node(root, PCMK_XE_STATUS);
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Validate XML against its specified schema */

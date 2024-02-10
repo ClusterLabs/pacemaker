@@ -594,9 +594,9 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     } else {
         xmlNode *xml_obj = NULL;
 
-        xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
-        xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
-        ticket_state_xml = create_xml_node(xml_obj, PCMK__XE_TICKET_STATE);
+        xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
+        xml_obj = pcmk__xe_create(xml_top, PCMK_XE_TICKETS);
+        ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
     }
 

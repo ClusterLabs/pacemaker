@@ -53,7 +53,7 @@ handle_ping_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
     crm_xml_add(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
@@ -110,7 +110,7 @@ handle_shutdown_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    shutdown = create_xml_node(NULL, PCMK__XE_SHUTDOWN);
+    shutdown = pcmk__xe_create(NULL, PCMK__XE_SHUTDOWN);
 
     if (allowed) {
         crm_notice("Shutting down in response to IPC request %s from %s",
