@@ -1278,6 +1278,44 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 }
 
 /*!
+ * \internal
+ * \brief Write XML to a file descriptor
+ *
+ * \param[in]  xml       XML to write
+ * \param[in]  filename  Name of file being written (for logging only)
+ * \param[in]  fd        Open file descriptor corresponding to \p filename
+ * \param[in]  compress  If \c true, compress XML before writing
+ * \param[out] nbytes    Number of bytes written (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
+                   bool compress, int *nbytes)
+{
+    // @COMPAT Drop compress and nbytes arguments when we drop write_xml_fd()
+    FILE *stream = NULL;
+    unsigned int local_nbytes = 0;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((xml != NULL) && (fd > 0), return EINVAL);
+    stream = fdopen(fd, "w");
+    if (stream == NULL) {
+        return errno;
+    }
+
+    rc = write_xml_stream(xml, filename, stream, compress, &local_nbytes);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    if (nbytes != NULL) {
+        *nbytes = (int) local_nbytes;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Write XML to a file descriptor
  *
  * \param[in] xml       XML to write
@@ -1291,20 +1329,13 @@ int
 write_xml_fd(const xmlNode *xml, const char *filename, int fd,
              gboolean compress)
 {
-    FILE *stream = NULL;
-    unsigned int nbytes = 0;
-    int rc = pcmk_rc_ok;
+    int nbytes = 0;
+    int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
 
-    CRM_CHECK((xml != NULL) && (fd > 0), return -EINVAL);
-    stream = fdopen(fd, "w");
-    if (stream == NULL) {
-        return -errno;
-    }
-    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
-    return (int) nbytes;
+    return nbytes;
 }
 
 /*!

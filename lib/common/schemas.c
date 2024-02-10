@@ -742,7 +742,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
-    write_xml_fd(xml_blob, filename, fd, FALSE);
+    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
 
     dump_file(filename);
 
