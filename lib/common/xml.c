@@ -409,45 +409,58 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
     return NULL;
 }
 
-#define attr_matches(c, n, v) pcmk__str_eq(crm_element_value((c), (n)), \
-                                           (v), pcmk__str_none)
-
 /*!
  * \internal
  * \brief Find first XML child element matching given criteria
  *
  * \param[in] parent     XML element to search
- * \param[in] node_name  If not NULL, only match children of this type
- * \param[in] attr_n     If not NULL, only match children with an attribute
+ * \param[in] node_name  If not \c NULL, only match children of this type
+ * \param[in] attr_n     If not \c NULL, only match children with an attribute
  *                       of this name.
  * \param[in] attr_v     If \p attr_n and this are not NULL, only match children
  *                       with an attribute named \p attr_n and this value
  *
- * \return Matching XML child element, or NULL if none found
+ * \return Matching XML child element, or \c NULL if none found
  */
 xmlNode *
 pcmk__xe_match(const xmlNode *parent, const char *node_name,
                const char *attr_n, const char *attr_v)
 {
     CRM_CHECK(parent != NULL, return NULL);
-    CRM_CHECK(attr_v == NULL || attr_n != NULL, return NULL);
+    CRM_CHECK((attr_v == NULL) || (attr_n != NULL), return NULL);
 
-    for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
-         child = pcmk__xml_next(child)) {
-        if (((node_name == NULL) || pcmk__xe_is(child, node_name))
-            && ((attr_n == NULL) ||
-                (attr_v == NULL && xmlHasProp(child, (pcmkXmlStr) attr_n)) ||
-                (attr_v != NULL && attr_matches(child, attr_n, attr_v)))) {
+    for (xmlNode *child = pcmk__xe_first_child(parent); child != NULL;
+         child = pcmk__xe_next(child)) {
+
+        if ((node_name != NULL) && !pcmk__xe_is(child, node_name)) {
+            // Node name mismatch
+            continue;
+        }
+        if (attr_n == NULL) {
+            // No attribute match needed
+            return child;
+        }
+        if ((attr_v == NULL)
+            && (xmlHasProp(child, (pcmkXmlStr) attr_n) != NULL)) {
+            // attr_v == NULL: Attribute attr_n must be set (to any value)
+            return child;
+        }
+        if ((attr_v != NULL)
+            && pcmk__str_eq(crm_element_value(child, attr_n), attr_v,
+                            pcmk__str_none)) {
+            // attr_v != NULL: Attribute attr_n must be set to value attr_v
             return child;
         }
     }
-    crm_trace("XML child node <%s%s%s%s%s> not found in %s",
-              (node_name? node_name : "(any)"),
-              (attr_n? " " : ""),
-              (attr_n? attr_n : ""),
-              (attr_n? "=" : ""),
-              (attr_n? attr_v : ""),
-              (const char *) parent->name);
+
+    if (attr_n != NULL) {
+        crm_trace("XML child node <%s %s=%s> not found in %s",
+                  pcmk__s(node_name, "(any)"), attr_n, attr_v,
+                  (const char *) parent->name);
+    } else {
+        crm_trace("XML child node <%s> not found in %s",
+                  pcmk__s(node_name, "(any)"), (const char *) parent->name);
+    }
     return NULL;
 }
 
