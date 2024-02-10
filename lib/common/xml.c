@@ -2664,16 +2664,6 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     return result;
 }
 
-xmlNode *
-first_named_child(const xmlNode *parent, const char *name)
-{
-    if (parent == NULL) {
-        // Avoid CRM_CHECK() in pcmk__xe_match()
-        return NULL;
-    }
-    return pcmk__xe_match_name(parent, name);
-}
-
 /*!
  * \brief Get next instance of same XML tag
  *
@@ -3114,6 +3104,16 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
                       const char *class_name, const char *text)
 {
     return pcmk__xe_create_html(parent, element_name, id, class_name, text);
+}
+
+xmlNode *
+first_named_child(const xmlNode *parent, const char *name)
+{
+    if (parent == NULL) {
+        // Avoid CRM_CHECK() in pcmk__xe_match()
+        return NULL;
+    }
+    return pcmk__xe_match_name(parent, name);
 }
 
 // LCOV_EXCL_STOP

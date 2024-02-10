@@ -175,7 +175,6 @@ void crm_xml_cleanup(void);
 void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
-xmlNode *first_named_child(const xmlNode *parent, const char *name);
 xmlNode *crm_next_same_xml(const xmlNode *sibling);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
