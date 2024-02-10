@@ -65,15 +65,6 @@ void copy_in_properties(xmlNode *target, const xmlNode *src);
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
-/*
- * Create a new HTML node named "element_name" as a child of "parent", giving it the
- * provided text content.  Optionally, apply a CSS #id and #class.
- *
- * Returns the created node.
- */
-xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
-                               const char *class_name, const char *text);
-
 
 /*
  * Searching & Modifying
