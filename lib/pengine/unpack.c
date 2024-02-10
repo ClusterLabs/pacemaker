@@ -1069,7 +1069,8 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->unclean = FALSE;
         this_node->details->unseen = FALSE;
     }
-    attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES, FALSE);
+    attrs = pcmk__xe_first_child(state, PCMK__XE_TRANSIENT_ATTRIBUTES, NULL,
+                                 NULL);
     add_node_attrs(attrs, this_node, TRUE, scheduler);
 
     if (pe__shutdown_requested(this_node)) {
@@ -1133,8 +1134,9 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
                             pcmk_scheduler_t *scheduler)
 {
     const char *discovery = NULL;
-    const xmlNode *attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES,
-                                         FALSE);
+    const xmlNode *attrs = pcmk__xe_first_child(state,
+                                                PCMK__XE_TRANSIENT_ATTRIBUTES,
+                                                NULL, NULL);
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
@@ -2837,11 +2839,11 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     bool found_orphaned_container_filler = false;
 
     // Drill down to PCMK__XE_LRM_RESOURCES section
-    xml = find_xml_node(xml, PCMK__XE_LRM, FALSE);
+    xml = pcmk__xe_first_child(xml, PCMK__XE_LRM, NULL, NULL);
     if (xml == NULL) {
         return;
     }
-    xml = find_xml_node(xml, PCMK__XE_LRM_RESOURCES, FALSE);
+    xml = pcmk__xe_first_child(xml, PCMK__XE_LRM_RESOURCES, NULL, NULL);
     if (xml == NULL) {
         return;
     }
@@ -5099,11 +5101,14 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     GList *intermediate = NULL;
 
     xmlNode *tmp = NULL;
-    xmlNode *status = find_xml_node(scheduler->input, PCMK_XE_STATUS, TRUE);
+    xmlNode *status = pcmk__xe_first_child(scheduler->input, PCMK_XE_STATUS,
+                                           NULL, NULL);
 
     pcmk_node_t *this_node = NULL;
 
     xmlNode *node_state = NULL;
+
+    CRM_CHECK(status != NULL, return NULL);
 
     for (node_state = pcmk__xe_first_child_any(status); node_state != NULL;
          node_state = pcmk__xe_next(node_state)) {
@@ -5135,8 +5140,10 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                  */
                 xmlNode *lrm_rsc = NULL;
 
-                tmp = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
-                tmp = find_xml_node(tmp, PCMK__XE_LRM_RESOURCES, FALSE);
+                tmp = pcmk__xe_first_child(node_state, PCMK__XE_LRM, NULL,
+                                           NULL);
+                tmp = pcmk__xe_first_child(tmp, PCMK__XE_LRM_RESOURCES, NULL,
+                                           NULL);
 
                 for (lrm_rsc = pcmk__xe_first_child_any(tmp); lrm_rsc != NULL;
                      lrm_rsc = pcmk__xe_next(lrm_rsc)) {

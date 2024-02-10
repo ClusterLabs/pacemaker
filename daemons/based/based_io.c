@@ -257,7 +257,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = find_xml_node(root, PCMK_XE_STATUS, FALSE);
+    status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
     if (discard_status && status != NULL) {
         // Strip out the PCMK_XE_STATUS section if there is one
         free_xml(status);

@@ -369,30 +369,22 @@ xml_accept_changes(xmlNode * xml)
 xmlNode *
 find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
 {
-    xmlNode *a_child = NULL;
-    const char *name = (root == NULL)? "<NULL>" : (const char *) root->name;
+    xmlNode *result = NULL;
 
     if (search_path == NULL) {
         crm_warn("Will never find <NULL>");
         return NULL;
     }
 
-    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
-        if (strcmp((const char *)a_child->name, search_path) == 0) {
-            return a_child;
-        }
+    result = pcmk__xe_first_child(root, search_path, NULL, NULL);
+
+    if (must_find && (result == NULL)) {
+        crm_warn("Could not find %s in %s",
+                 search_path,
+                 ((root != NULL)? (const char *) root->name : "<NULL>"));
     }
 
-    if (must_find) {
-        crm_warn("Could not find %s in %s.", search_path, name);
-    } else if (root != NULL) {
-        crm_trace("Could not find %s in %s.", search_path, name);
-    } else {
-        crm_trace("Could not find %s in <NULL>.", search_path);
-    }
-
-    return NULL;
+    return result;
 }
 
 /*!
