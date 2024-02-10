@@ -69,9 +69,6 @@ void fix_plus_plus_recursive(xmlNode * target);
 /*
  * Searching & Modifying
  */
-xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
-                       gboolean must_find);
-
 void xml_remove_prop(xmlNode * obj, const char *name);
 
 gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
