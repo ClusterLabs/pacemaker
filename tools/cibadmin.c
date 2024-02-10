@@ -92,9 +92,10 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        char *buffer = dump_xml_formatted(xml);
+        gchar *buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+
         fprintf(stdout, "%s", buffer);
-        free(buffer);
+        g_free(buffer);
     }
 }
 
@@ -565,13 +566,14 @@ main(int argc, char **argv)
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
-        char *buf = NULL;
+        gchar *buf = NULL;
 
         output = createEmptyCib(1);
         crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
-        buf = dump_xml_formatted(output);
+
+        buf = pcmk__xml_dump(output, pcmk__xml_fmt_pretty);
         fprintf(stdout, "%s", buf);
-        free(buf);
+        g_free(buf);
         goto done;
     }
 

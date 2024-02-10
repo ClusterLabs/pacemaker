@@ -588,6 +588,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     unsigned int total = 0;
     char *compressed = NULL;
     char *buffer = NULL;
+    gchar *g_buffer = NULL;
     pcmk__ipc_header_t *header = NULL;
 
     if ((message == NULL) || (result == NULL)) {
@@ -599,7 +600,9 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
        return ENOMEM; /* errno mightn't be set by allocator */
     }
 
-    buffer = dump_xml_unformatted(message);
+    g_buffer = pcmk__xml_dump(message, 0);
+    pcmk__str_update(&buffer, g_buffer);
+    g_free(g_buffer);
 
     if (max_send_size == 0) {
         max_send_size = crm_ipc_default_buffer_size();

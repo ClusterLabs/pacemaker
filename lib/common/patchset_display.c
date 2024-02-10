@@ -414,10 +414,11 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
     const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     if (patchset != NULL) {
-        char *buf = dump_xml_formatted_with_text(patchset);
+        gchar *buf = pcmk__xml_dump(patchset,
+                                    pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
         out->output_xml(out, PCMK_XE_XML_PATCHSET, buf);
-        free(buf);
+        g_free(buf);
         return pcmk_rc_ok;
     }
     crm_trace("Empty patch");

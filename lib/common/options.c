@@ -978,7 +978,7 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
     pcmk__output_t *tmp_out = NULL;
     xmlNode *top = NULL;
     const xmlNode *metadata = NULL;
-    char *metadata_s = NULL;
+    gchar *metadata_s = NULL;
 
     int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
     if (rc != pcmk_rc_ok) {
@@ -990,13 +990,14 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
-    metadata_s = dump_xml_formatted_with_text(metadata);
+    metadata_s = pcmk__xml_dump(metadata,
+                                pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
     out->output_xml(out, PCMK_XE_METADATA, metadata_s);
 
     pcmk__output_free(tmp_out);
     free_xml(top);
-    free(metadata_s);
+    g_free(metadata_s);
     return pcmk_rc_ok;
 }
 

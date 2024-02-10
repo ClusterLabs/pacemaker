@@ -145,6 +145,7 @@ enum pcmk__xml_fmt_options {
     //! Include the closing tag of an XML element
     pcmk__xml_fmt_close      = (1 << 5),
 
+    // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
 
@@ -483,6 +484,8 @@ int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
                        bool compress, unsigned int *nbytes);
 int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
                          bool compress, unsigned int *nbytes);
+
+gchar *pcmk__xml_dump(const xmlNode *xml, uint32_t flags);
 
 
 // @COMPAT Remove when v1 patchsets are removed
