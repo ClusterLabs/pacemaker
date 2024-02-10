@@ -161,8 +161,6 @@ void crm_xml_cleanup(void);
 void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
-xmlNode *crm_next_same_xml(const xmlNode *sibling);
-
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
