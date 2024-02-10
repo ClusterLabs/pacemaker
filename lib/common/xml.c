@@ -1327,6 +1327,43 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
 }
 
 /*!
+ * \internal
+ * \brief Write XML to a file
+ *
+ * \param[in]  xml       XML to write
+ * \param[in]  filename  Name of file to write
+ * \param[in]  compress  If \c true, compress XML before writing
+ * \param[out] nbytes    Number of bytes written (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
+                     int *nbytes)
+{
+    // @COMPAT Drop nbytes argument when we drop write_xml_fd()
+    FILE *stream = NULL;
+    unsigned int local_nbytes = 0;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((xml != NULL) && (filename != NULL), return EINVAL);
+    stream = fopen(filename, "w");
+    if (stream == NULL) {
+        return errno;
+    }
+
+    rc = write_xml_stream(xml, filename, stream, compress, &local_nbytes);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    if (nbytes != NULL) {
+        *nbytes = (int) local_nbytes;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Write XML to a file
  *
  * \param[in] xml       XML to write
@@ -1338,20 +1375,13 @@ pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
 int
 write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
 {
-    FILE *stream = NULL;
-    unsigned int nbytes = 0;
-    int rc = pcmk_rc_ok;
+    int nbytes = 0;
+    int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
 
-    CRM_CHECK((xml != NULL) && (filename != NULL), return -EINVAL);
-    stream = fopen(filename, "w");
-    if (stream == NULL) {
-        return -errno;
-    }
-    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
     if (rc != pcmk_rc_ok) {
         return pcmk_rc2legacy(rc);
     }
-    return (int) nbytes;
+    return nbytes;
 }
 
 /*!
@@ -1940,7 +1970,7 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     }
 
     crm_info("Saving %s to %s", desc, filename);
-    write_xml_file(xml, filename, FALSE);
+    pcmk__xml_write_file(xml, filename, false, NULL);
     free(f);
 }
 

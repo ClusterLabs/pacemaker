@@ -1276,10 +1276,10 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
             goto done;
         }
 
-        rc = write_xml_file(scheduler->input, shadow_file, FALSE);
-
-        if (rc < 0) {
-            out->err(out, "Could not populate shadow cib: %s (%d)", pcmk_strerror(rc), rc);
+        rc = pcmk__xml_write_file(scheduler->input, shadow_file, false, NULL);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Could not populate shadow cib: %s (%d)",
+                     pcmk_rc_str(rc), rc);
             goto done;
         }
 

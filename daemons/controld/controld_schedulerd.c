@@ -64,7 +64,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == pcmk_ok) {
         char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        if (write_xml_file(output, filename, TRUE) < 0) {
+        if (pcmk__xml_write_file(output, filename, true, NULL) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
                     filename);
         } else {

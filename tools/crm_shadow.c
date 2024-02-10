@@ -520,18 +520,16 @@ static int
 write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
                   GError **error)
 {
-    int rc = write_xml_file(xml, filename, FALSE);
+    int rc = pcmk__xml_write_file(xml, filename, false, NULL);
 
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not %s the shadow instance '%s': %s",
                     reset? "reset" : "create", options.instance,
                     pcmk_rc_str(rc));
-        return rc;
     }
-    return pcmk_rc_ok;
+    return rc;
 }
 
 /*!
