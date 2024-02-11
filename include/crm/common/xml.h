@@ -80,9 +80,6 @@ void fix_plus_plus_recursive(xmlNode * target);
 /*
  * Searching & Modifying
  */
-gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
-                           gboolean delete_only);
-
 gboolean update_xml_child(xmlNode * child, xmlNode * to_update);
 
 int find_xml_children(xmlNode ** children, xmlNode * root,
