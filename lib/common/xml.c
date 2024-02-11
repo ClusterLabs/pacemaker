@@ -569,6 +569,56 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
 
 /*!
  * \internal
+ * \brief Remove an XML attribute from an element
+ *
+ * \param[in,out] element  XML element that owns \p attr
+ * \param[in,out] attr     XML attribut to remove from \p element
+ *
+ * \return Standard Pacemaker return code (\c EPERM if ACLs prevent removal of
+ *         attributes from \p element, or \c pcmk_rc_ok otherwise)
+ */
+static int
+remove_xe_attr(xmlNode *element, xmlAttr *attr)
+{
+    if (attr == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
+        // ACLs apply to element, not to particular attributes
+        crm_trace("ACLs prevent removal of attributes from %s element",
+                  (const char *) element->name);
+        return EPERM;
+    }
+
+    if (pcmk__tracking_xml_changes(element, false)) {
+        // Leave in place (marked for removal) until after diff is calculated
+        set_parent_flag(element, pcmk__xf_dirty);
+        pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
+                            pcmk__xf_deleted);
+    } else {
+        xmlRemoveProp(attr);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Remove a named attribute from an XML element
+ *
+ * \param[in,out] element  XML element to remove an attribute from
+ * \param[in]     name     Name of attribute to remove
+ */
+void
+pcmk__xe_remove_attr(xmlNode *element, const char *name)
+{
+    if (name != NULL) {
+        remove_xe_attr(element, xmlHasProp(element, (pcmkXmlStr) name));
+    }
+}
+
+/*!
+ * \internal
  * \brief Remove an XML element's attributes that match some criteria
  *
  * \param[in,out] element    XML element to modify
@@ -586,20 +636,8 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
-                crm_trace("ACLs prevent removal of attributes (%s and "
-                          "possibly others) from %s element",
-                          (const char *) a->name, (const char *) element->name);
-                return; // ACLs apply to element, not particular attributes
-            }
-
-            if (pcmk__tracking_xml_changes(element, false)) {
-                // Leave (marked for removal) until after diff is calculated
-                set_parent_flag(element, pcmk__xf_dirty);
-                pcmk__set_xml_flags((xml_node_private_t *) a->_private,
-                                    pcmk__xf_deleted);
-            } else {
-                xmlRemoveProp(a);
+            if (remove_xe_attr(element, a) != pcmk_rc_ok) {
+                return;
             }
         }
     }
@@ -1890,23 +1928,7 @@ pcmk__xml2fd(int fd, xmlNode *cur)
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
-    if (crm_element_value(obj, name) == NULL) {
-        return;
-    }
-
-    if (pcmk__check_acl(obj, NULL, pcmk__xf_acl_write) == FALSE) {
-        crm_trace("Cannot remove %s from %s", name, obj->name);
-
-    } else if (pcmk__tracking_xml_changes(obj, FALSE)) {
-        /* Leave in place (marked for removal) until after the diff is calculated */
-        xmlAttr *attr = xmlHasProp(obj, (pcmkXmlStr) name);
-        xml_node_private_t *nodepriv = attr->_private;
-
-        set_parent_flag(obj, pcmk__xf_dirty);
-        pcmk__set_xml_flags(nodepriv, pcmk__xf_deleted);
-    } else {
-        xmlUnsetProp(obj, (pcmkXmlStr) name);
-    }
+    pcmk__xe_remove_attr(obj, name);
 }
 
 void
@@ -1976,7 +1998,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     nodepriv->flags = 0;
 
     // Check ACLs and mark restored value for later removal
-    xml_remove_prop(new_xml, attr_name);
+    remove_xe_attr(new_xml, attr);
 
     crm_trace("XML attribute %s=%s was removed from %s",
               attr_name, old_value, element);
