@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <stdint.h>         // uint8_t, uint32_t
 #include <stdbool.h>        // bool
 #include <sys/types.h>      // size_t
-#include <glib.h>           // GList
+#include <glib.h>           // gchar, GList
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
@@ -33,8 +33,8 @@
  * (e.g. when checking differences) that something was deleted.
  */
 typedef struct pcmk__deleted_xml_s {
-        char *path;
-        int position;
+    gchar *path;
+    int position;
 } pcmk__deleted_xml_t;
 
 typedef struct xml_node_private_s {
