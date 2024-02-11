@@ -1811,6 +1811,36 @@ find_xml_children(xmlNode ** children, xmlNode * root,
     return match_found;
 }
 
+/*!
+ * \internal
+ * \brief Replace one XML node with a copy of another XML node
+ *
+ * This function handles change tracking and applies ACLs.
+ *
+ * \param[in,out] old  XML node to replace
+ * \param[in]     new  XML node to copy as replacement for \p old
+ *
+ * \note This frees \p old.
+ */
+static void
+replace_node(xmlNode *old, xmlNode *new)
+{
+    new = xmlCopyNode(new, 1);
+    pcmk__mem_assert(new);
+
+    // May be unnecessary but avoids slight changes to some test outputs
+    reset_xml_node_flags(new);
+
+    old = xmlReplaceNode(old, new);
+
+    if (xml_tracking_changes(new)) {
+        // Replaced sections may have included relevant ACLs
+        pcmk__apply_acl(new);
+    }
+    xml_calculate_changes(old, new);
+    xmlFreeNode(old);
+}
+
 gboolean
 replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
 {
@@ -1856,25 +1886,9 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             free_xml(child);
 
         } else {
-            xmlNode *old = child;
-            xmlNode *new = xmlCopyNode(update, 1);
-
-            pcmk__mem_assert(new);
-
             crm_log_xml_trace(child, "replace-match");
             crm_log_xml_trace(update, "replace-with");
-
-            // May be unnecessary but avoids slight changes to some test outputs
-            reset_xml_node_flags(new);
-
-            old = xmlReplaceNode(old, new);
-
-            if (xml_tracking_changes(new)) {
-                // Replaced sections may have included relevant ACLs
-                pcmk__apply_acl(new);
-            }
-            xml_calculate_changes(old, new);
-            xmlFreeNode(old);
+            replace_node(child, update);
         }
         return TRUE;
     }
