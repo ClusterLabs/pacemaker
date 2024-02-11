@@ -770,72 +770,70 @@ pcmk_free_xml_subtree(xmlNode *xml)
 }
 
 static void
-free_xml_with_position(xmlNode * child, int position)
+free_xml_with_position(xmlNode *child, int position)
 {
-    if (child != NULL) {
-        xmlNode *top = NULL;
-        xmlDoc *doc = child->doc;
-        xml_node_private_t *nodepriv = child->_private;
-        xml_doc_private_t *docpriv = NULL;
+    xmlDoc *doc = NULL;
+    xml_node_private_t *nodepriv = NULL;
 
-        if (doc != NULL) {
-            top = xmlDocGetRootElement(doc);
-        }
+    if (child == NULL) {
+        return;
+    }
+    doc = child->doc;
+    nodepriv = child->_private;
 
-        if (doc != NULL && top == child) {
-            /* Free everything */
-            xmlFreeDoc(doc);
+    if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
+        // Free everything
+        xmlFreeDoc(doc);
+        return;
+    }
 
-        } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
-            GString *xpath = NULL;
+    if (!pcmk__check_acl(child, NULL, pcmk__xf_acl_write)) {
+        GString *xpath = NULL;
 
-            pcmk__if_tracing({}, return);
-            xpath = pcmk__element_xpath(child);
-            qb_log_from_external_source(__func__, __FILE__,
-                                        "Cannot remove %s %x", LOG_TRACE,
-                                        __LINE__, 0, (const char *) xpath->str,
-                                        nodepriv->flags);
+        pcmk__if_tracing({}, return);
+        xpath = pcmk__element_xpath(child);
+        qb_log_from_external_source(__func__, __FILE__,
+                                    "Cannot remove %s %x", LOG_TRACE,
+                                    __LINE__, 0, xpath->str, nodepriv->flags);
+        g_string_free(xpath, TRUE);
+        return;
+    }
+
+    if ((doc != NULL) && pcmk__tracking_xml_changes(child, false)
+        && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+
+        xml_doc_private_t *docpriv = doc->_private;
+        GString *xpath = pcmk__element_xpath(child);
+
+        if (xpath != NULL) {
+            pcmk__deleted_xml_t *deleted_obj = NULL;
+
+            crm_trace("Deleting %s %p from %p", xpath->str, child, doc);
+
+            deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
+            deleted_obj->path = pcmk__str_copy(xpath->str);
+
             g_string_free(xpath, TRUE);
-            return;
 
-        } else {
-            if (doc && pcmk__tracking_xml_changes(child, FALSE)
-                && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+            deleted_obj->position = -1;
 
-                GString *xpath = pcmk__element_xpath(child);
+            // Record the position only for XML comments for now
+            if (child->type == XML_COMMENT_NODE) {
+                if (position >= 0) {
+                    deleted_obj->position = position;
 
-                if (xpath != NULL) {
-                    pcmk__deleted_xml_t *deleted_obj = NULL;
-
-                    crm_trace("Deleting %s %p from %p",
-                              (const char *) xpath->str, child, doc);
-
-                    deleted_obj =
-                        pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
-
-                    deleted_obj->path = pcmk__str_copy(xpath->str);
-                    g_string_free(xpath, TRUE);
-
-                    deleted_obj->position = -1;
-                    /* Record the "position" only for XML comments for now */
-                    if (child->type == XML_COMMENT_NODE) {
-                        if (position >= 0) {
-                            deleted_obj->position = position;
-
-                        } else {
-                            deleted_obj->position = pcmk__xml_position(child,
-                                                                       pcmk__xf_skip);
-                        }
-                    }
-
-                    docpriv = doc->_private;
-                    docpriv->deleted_objs = g_list_append(docpriv->deleted_objs, deleted_obj);
-                    pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
+                } else {
+                    deleted_obj->position = pcmk__xml_position(child,
+                                                               pcmk__xf_skip);
                 }
             }
-            pcmk_free_xml_subtree(child);
+
+            docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
+                                                  deleted_obj);
+            pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
         }
     }
+    pcmk_free_xml_subtree(child);
 }
 
 
