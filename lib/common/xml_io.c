@@ -438,7 +438,7 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
  * \return String representation of \p type
  */
 static const char *
-xml_element_type2str(xmlElementType type)
+xml_element_type_text(xmlElementType type)
 {
     static const char *const element_type_names[] = {
         [XML_ELEMENT_NODE]       = "element",
@@ -514,7 +514,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             break;
         default:
             crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
-                     xml_element_type2str(data->type), data->type);
+                     xml_element_type_text(data->type), data->type);
             break;
     }
 }
