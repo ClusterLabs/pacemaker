@@ -213,6 +213,8 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
+
+void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
