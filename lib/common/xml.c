@@ -1814,41 +1814,45 @@ find_xml_children(xmlNode ** children, xmlNode * root,
 gboolean
 replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
 {
-    gboolean can_delete = FALSE;
-
-    const char *up_id = NULL;
+    bool is_match = false;
     const char *child_id = NULL;
-    const char *right_val = NULL;
+    const char *update_id = NULL;
 
     CRM_CHECK(child != NULL, return FALSE);
     CRM_CHECK(update != NULL, return FALSE);
 
-    up_id = pcmk__xe_id(update);
     child_id = pcmk__xe_id(child);
+    update_id = pcmk__xe_id(update);
 
-    if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
-        can_delete = TRUE;
-    }
-    if (!pcmk__xe_is(update, (const char *) child->name)) {
-        can_delete = FALSE;
-    }
-    if (can_delete && delete_only) {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
-             a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
+    /* Match element name and (if provided in update XML) element ID. Don't
+     * match search root (child is search root if parent == NULL).
+     */
+    is_match = (parent != NULL)
+               && pcmk__xe_is(update, (const char *) child->name)
+               && ((update_id == NULL)
+                   || pcmk__str_eq(update_id, child_id, pcmk__str_none));
 
-            right_val = crm_element_value(child, p_name);
-            if (!pcmk__str_eq(p_value, right_val, pcmk__str_casei)) {
-                can_delete = FALSE;
+    /* For deletion, match all attributes provided in update. A matching node
+     * can have additional attributes, but values must match for provided ones.
+     */
+    if (is_match && delete_only) {
+        for (xmlAttr *attr = pcmk__xe_first_attr(update); attr != NULL;
+             attr = attr->next) {
+            const char *name = (const char *) attr->name;
+            const char *update_val = pcmk__xml_attr_value(attr);
+            const char *child_val = crm_element_value(child, name);
+
+            if (!pcmk__str_eq(update_val, child_val, pcmk__str_casei)) {
+                is_match = false;
                 break;
             }
         }
     }
 
-    if (can_delete && (parent != NULL)) {
-        crm_log_xml_trace(child, "Delete match found...");
+    if (is_match) {
         if (delete_only) {
+            crm_log_xml_trace(child, "delete-match");
+            crm_log_xml_trace(update, "delete-search");
             free_xml(child);
 
         } else {
@@ -1856,6 +1860,9 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             xmlNode *new = xmlCopyNode(update, 1);
 
             pcmk__mem_assert(new);
+
+            crm_log_xml_trace(child, "replace-match");
+            crm_log_xml_trace(update, "replace-with");
 
             // May be unnecessary but avoids slight changes to some test outputs
             reset_xml_node_flags(new);
@@ -1872,11 +1879,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
         return TRUE;
     }
 
-    if (can_delete) {
-        crm_log_xml_debug(child, "Cannot delete the search root");
-    }
-
-    // Current node not a match; search the rest of the tree depth-first
+    // Current node not a match; search the rest of the subtree depth-first
     parent = child;
     for (child = pcmk__xml_first_child(parent); child != NULL;
          child = pcmk__xml_next(child)) {
@@ -1886,6 +1889,8 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             return TRUE;
         }
     }
+
+    // No match found in this subtree
     return FALSE;
 }
 
