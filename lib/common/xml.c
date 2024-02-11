@@ -1841,6 +1841,104 @@ replace_node(xmlNode *old, xmlNode *new)
     xmlFreeNode(old);
 }
 
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and replace the first matching element
+ *
+ * \param[in,out] parent       Parent of \p child (should be \c NULL everywhere
+ *                             except in the recursive call)
+ * \param[in,out] child        Root element of XML tree to search
+ * \param[in]     update       XML to match and replace with. A matching element
+ *                             must share the same element name and ID (if any)
+ *                             as \p update. If \p delete_only is \c false, the
+ *                             match is replaced with a copy of \p update.
+ * \param[in]     delete_only  If \c true, delete a matching element instead of
+ *                             replacing it. Additionally, a matching element
+ *                             must contain all attribute values belonging to
+ *                             \p update.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_replace_match(xmlNode *parent, xmlNode *child, xmlNode *update,
+                       bool delete_only)
+{
+    /* @TODO Create a recursive helper so that callers don't need to pass a NULL
+     * parent argument.
+     *
+     * @TODO Try to extract delete into a different function from replace.
+     * Ideally separate tree traversal from any work.
+     *
+     * @COMPAT Some of this behavior is questionable for general use but is
+     * required for backward compatibility by cib_process_replace() and
+     * cib_process_delete(). Consider moving some of this to libcib since those
+     * are the only callers. Behavior can change at a major version release if
+     * desired.
+     */
+    bool is_match = false;
+    const char *child_id = NULL;
+    const char *update_id = NULL;
+
+    CRM_CHECK((child != NULL) && (update != NULL), return EINVAL);
+
+    child_id = pcmk__xe_id(child);
+    update_id = pcmk__xe_id(update);
+
+    /* Match element name and (if provided in update XML) element ID. Don't
+     * match search root (child is search root if parent == NULL).
+     */
+    is_match = (parent != NULL)
+               && pcmk__xe_is(update, (const char *) child->name)
+               && ((update_id == NULL)
+                   || pcmk__str_eq(update_id, child_id, pcmk__str_none));
+
+    /* For deletion, match all attributes provided in update. A matching node
+     * can have additional attributes, but values must match for provided ones.
+     */
+    if (is_match && delete_only) {
+        for (xmlAttr *attr = pcmk__xe_first_attr(update); attr != NULL;
+             attr = attr->next) {
+            const char *name = (const char *) attr->name;
+            const char *update_val = pcmk__xml_attr_value(attr);
+            const char *child_val = crm_element_value(child, name);
+
+            if (!pcmk__str_eq(update_val, child_val, pcmk__str_casei)) {
+                is_match = false;
+                break;
+            }
+        }
+    }
+
+    if (is_match) {
+        if (delete_only) {
+            crm_log_xml_trace(child, "delete-match");
+            crm_log_xml_trace(update, "delete-search");
+            free_xml(child);
+
+        } else {
+            crm_log_xml_trace(child, "replace-match");
+            crm_log_xml_trace(update, "replace-with");
+            replace_node(child, update);
+        }
+        return pcmk_rc_ok;
+    }
+
+    // Current node not a match; search the rest of the subtree depth-first
+    parent = child;
+    for (child = pcmk__xe_first_child(parent, NULL, NULL, NULL); child != NULL;
+         child = pcmk__xe_next(child)) {
+
+        // Only delete/replace the first match
+        if (pcmk__xe_replace_match(parent, child, update,
+                                   delete_only) == pcmk_rc_ok) {
+            return pcmk_rc_ok;
+        }
+    }
+
+    // No match found in this subtree
+    return ENXIO;
+}
+
 gboolean
 replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
 {

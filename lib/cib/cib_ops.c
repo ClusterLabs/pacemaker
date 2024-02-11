@@ -406,13 +406,12 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 
     } else {
         xmlNode *obj_root = NULL;
-        gboolean ok = TRUE;
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
-        ok = replace_xml_child(NULL, obj_root, input, FALSE);
-        if (ok == FALSE) {
+        result = pcmk__xe_find_replace(NULL, obj_root, input, false);
+        result = pcmk_rc2legacy(result);
+        if (result != pcmk_ok) {
             crm_trace("No matching object to replace");
-            result = -ENXIO;
         }
     }
 
@@ -420,11 +419,12 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 }
 
 static int
-replace_child(xmlNode *child, void *userdata)
+delete_child(xmlNode *child, void *userdata)
 {
     xmlNode *obj_root = userdata;
 
-    if (replace_xml_child(NULL, obj_root, child, TRUE) == FALSE) {
+    if (pcmk__xe_find_replace(NULL, obj_root, child,
+                              true) != pcmk_rc_ok) {
         crm_trace("No matching object to delete: %s=%s",
                   child->name, pcmk__xe_id(child));
     }
@@ -452,9 +452,9 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
 
     obj_root = pcmk_find_cib_element(*result_cib, section);
     if (pcmk__xe_is(input, section)) {
-        pcmk__xe_foreach_child(input, NULL, replace_child, obj_root);
+        pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
     } else {
-        replace_child(input, obj_root);
+        delete_child(input, obj_root);
     }
 
     return pcmk_ok;
