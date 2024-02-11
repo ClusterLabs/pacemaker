@@ -1197,12 +1197,6 @@ pcmk__xml_escape(const char *text, bool escape_quote)
     return copy;
 }
 
-void
-xml_remove_prop(xmlNode * obj, const char *name)
-{
-    pcmk__xe_remove_attr(obj, name);
-}
-
 /*!
  * \internal
  * \brief Set a flag on all attributes of an XML element
@@ -2348,6 +2342,12 @@ xmlNode *
 crm_next_same_xml(const xmlNode *sibling)
 {
     return pcmk__xe_next_same(sibling);
+}
+
+void
+xml_remove_prop(xmlNode * obj, const char *name)
+{
+    pcmk__xe_remove_attr(obj, name);
 }
 
 // LCOV_EXCL_STOP
