@@ -158,7 +158,7 @@ free_deleted_object(void *data)
     if(data) {
         pcmk__deleted_xml_t *deleted_obj = data;
 
-        free(deleted_obj->path);
+        g_free(deleted_obj->path);
         free(deleted_obj);
     }
 }
@@ -811,10 +811,7 @@ free_xml_with_position(xmlNode *child, int position)
             crm_trace("Deleting %s %p from %p", xpath->str, child, doc);
 
             deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
-            deleted_obj->path = pcmk__str_copy(xpath->str);
-
-            g_string_free(xpath, TRUE);
-
+            deleted_obj->path = g_string_free(xpath, FALSE);
             deleted_obj->position = -1;
 
             // Record the position only for XML comments for now
