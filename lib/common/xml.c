@@ -1926,12 +1926,6 @@ pcmk__xml2fd(int fd, xmlNode *cur)
 }
 
 void
-xml_remove_prop(xmlNode * obj, const char *name)
-{
-    pcmk__xe_remove_attr(obj, name);
-}
-
-void
 save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
 {
     char *f = NULL;
@@ -3134,6 +3128,12 @@ xmlNode *
 crm_next_same_xml(const xmlNode *sibling)
 {
     return pcmk__xe_next_same(sibling);
+}
+
+void
+xml_remove_prop(xmlNode * obj, const char *name)
+{
+    pcmk__xe_remove_attr(obj, name);
 }
 
 // LCOV_EXCL_STOP

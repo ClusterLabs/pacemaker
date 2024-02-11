@@ -141,6 +141,9 @@ xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *crm_next_same_xml(const xmlNode *sibling);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void xml_remove_prop(xmlNode *obj, const char *name);
+
 #ifdef __cplusplus
 }
 #endif
