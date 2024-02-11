@@ -467,7 +467,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                                  "delete", force);
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        xml_remove_prop(rsc->xml, attr_name);
+        pcmk__xe_remove_attr(rsc->xml, attr_name);
         CRM_ASSERT(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);

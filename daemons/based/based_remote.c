@@ -420,9 +420,9 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     /* unset dangerous options */
-    xml_remove_prop(command, PCMK__XA_SRC);
-    xml_remove_prop(command, PCMK__XA_CIB_HOST);
-    xml_remove_prop(command, PCMK__XA_CIB_UPDATE);
+    pcmk__xe_remove_attr(command, PCMK__XA_SRC);
+    pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
+    pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
 
     crm_xml_add(command, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);

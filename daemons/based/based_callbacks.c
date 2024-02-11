@@ -957,7 +957,7 @@ forward_request(xmlNode *request)
     send_cluster_message(peer, crm_msg_cib, request, FALSE);
 
     // Return the request to its original state
-    xml_remove_prop(request, PCMK__XA_CIB_DELEGATED_FROM);
+    pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
 static gboolean

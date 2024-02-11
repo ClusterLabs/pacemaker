@@ -546,7 +546,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 
         } else {
             crm_trace("Removing attr %s from the xml result", param->rap_name);
-            xml_remove_prop(*result, param->rap_name);
+            pcmk__xe_remove_attr(*result, param->rap_name);
         }
     }
 

@@ -726,7 +726,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
         const char *p_name = (const char *) xIter->name;
         const char *p_value = pcmk__xml_attr_value(xIter);
 
-        xml_remove_prop(target, p_name); // Preserve patch order
+        pcmk__xe_remove_attr(target, p_name);   // Preserve patch order
         crm_xml_add(target, p_name, p_value);
     }
 
@@ -905,7 +905,7 @@ purge_v1_diff_markers(xmlNode *node)
 
     CRM_CHECK(node != NULL, return);
 
-    xml_remove_prop(node, PCMK__XA_CRM_DIFF_MARKER);
+    pcmk__xe_remove_attr(node, PCMK__XA_CRM_DIFF_MARKER);
     for (child = pcmk__xml_first_child(node); child != NULL;
          child = pcmk__xml_next(child)) {
         purge_v1_diff_markers(child);

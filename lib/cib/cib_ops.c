@@ -591,8 +591,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 last = lpc + 1;
             }
         }
-        xml_remove_prop(update, PCMK__XA_REPLACE);
-        xml_remove_prop(target, PCMK__XA_REPLACE);
+        pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
+        pcmk__xe_remove_attr(target, PCMK__XA_REPLACE);
     }
 
     copy_in_properties(target, update);

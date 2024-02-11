@@ -350,7 +350,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
         GHashTableIter vIter;
 
         crm_debug("Setting %s for all hosts to %s", attr, value);
-        xml_remove_prop(xml, PCMK__XA_ATTR_HOST_ID);
+        pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_HOST_ID);
         g_hash_table_iter_init(&vIter, a->values);
 
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
@@ -452,7 +452,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
-    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
+    pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {

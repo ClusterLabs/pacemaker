@@ -973,7 +973,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
              * PCMK_XA_ACTION
              */
             crm_xml_add(rsc_set_first, PCMK_XA_ACTION, action_first);
-            xml_remove_prop(*expanded_xml, PCMK_XA_FIRST_ACTION);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_FIRST_ACTION);
         }
         any_sets = true;
     }
@@ -994,7 +994,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
              * PCMK_XA_ACTION
              */
             crm_xml_add(rsc_set_then, PCMK_XA_ACTION, action_then);
-            xml_remove_prop(*expanded_xml, PCMK_XA_THEN_ACTION);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_THEN_ACTION);
         }
         any_sets = true;
     }

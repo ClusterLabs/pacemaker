@@ -602,7 +602,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
 
     for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
         const char *key = (const char *)list_iter->data;
-        xml_remove_prop(ticket_state_xml, key);
+        pcmk__xe_remove_attr(ticket_state_xml, key);
     }
 
     ticket = find_ticket(ticket_id, scheduler);

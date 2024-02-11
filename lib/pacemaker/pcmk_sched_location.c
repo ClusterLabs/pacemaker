@@ -477,7 +477,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
              * PCMK_XA_ROLE attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
-            xml_remove_prop(*expanded_xml, PCMK_XA_ROLE);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
         }
         crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
 

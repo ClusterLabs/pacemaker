@@ -434,7 +434,7 @@ sync_our_cib(xmlNode * request, gboolean all)
         crm_xml_add(replace_request, PCMK__XA_CIB_ISREPLYTO, host);
     }
     if (all) {
-        xml_remove_prop(replace_request, PCMK__XA_CIB_HOST);
+        pcmk__xe_remove_attr(replace_request, PCMK__XA_CIB_HOST);
     }
 
     crm_xml_add(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
