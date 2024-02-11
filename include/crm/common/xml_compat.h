@@ -120,6 +120,10 @@ xmlNode *crm_next_same_xml(const xmlNode *sibling);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 void xml_remove_prop(xmlNode *obj, const char *name);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
+                           gboolean delete_only);
+
 #ifdef __cplusplus
 }
 #endif
