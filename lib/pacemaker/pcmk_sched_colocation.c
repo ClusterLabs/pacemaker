@@ -912,7 +912,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
              * PCMK_XA_ROLE
              */
             crm_xml_add(dependent_set, PCMK_XA_ROLE, dependent_role);
-            xml_remove_prop(*expanded_xml, PCMK_XA_RSC_ROLE);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_RSC_ROLE);
         }
         any_sets = true;
     }
@@ -933,7 +933,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
              * PCMK_XA_ROLE
              */
             crm_xml_add(primary_set, PCMK_XA_ROLE, primary_role);
-            xml_remove_prop(*expanded_xml, PCMK_XA_WITH_RSC_ROLE);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_WITH_RSC_ROLE);
         }
         any_sets = true;
     }

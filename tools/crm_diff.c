@@ -191,13 +191,13 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
             tmp = pcmk__xe_first_child(patch, tags[i], NULL, NULL);
             if (tmp) {
                 for (lpc = 0; lpc < nvfields; lpc++) {
-                    xml_remove_prop(tmp, vfields[lpc]);
+                    pcmk__xe_remove_attr(tmp, vfields[lpc]);
                 }
 
                 tmp = pcmk__xe_first_child(tmp, PCMK_XE_CIB, NULL, NULL);
                 if (tmp) {
                     for (lpc = 0; lpc < nvfields; lpc++) {
-                        xml_remove_prop(tmp, vfields[lpc]);
+                        pcmk__xe_remove_attr(tmp, vfields[lpc]);
                     }
                 }
             }

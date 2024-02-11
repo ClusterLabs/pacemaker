@@ -606,19 +606,19 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                 if (origin != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
                 } else {
-                    xml_remove_prop(scratch, PCMK_XA_UPDATE_ORIGIN);
+                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
                 }
 
                 if (client != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
                 } else {
-                    xml_remove_prop(scratch, PCMK_XA_UPDATE_CLIENT);
+                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
                 }
 
                 if (user != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
                 } else {
-                    xml_remove_prop(scratch, PCMK_XA_UPDATE_USER);
+                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
                 }
             }
         }

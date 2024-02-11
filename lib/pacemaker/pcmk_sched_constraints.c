@@ -405,7 +405,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     /* Remove the "attr" attribute referencing the template/tag */
     if (*rsc_set != NULL) {
-        xml_remove_prop(xml_obj, attr);
+        pcmk__xe_remove_attr(xml_obj, attr);
     }
 
     return true;

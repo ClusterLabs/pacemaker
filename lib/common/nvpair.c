@@ -1045,7 +1045,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         return NULL;
 
     } else if (old_value && !value) {
-        xml_remove_prop(node, name);
+        pcmk__xe_remove_attr(node, name);
         return NULL;
     }
 

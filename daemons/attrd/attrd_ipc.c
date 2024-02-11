@@ -130,8 +130,8 @@ attrd_client_clear_failure(pcmk__request_t *request)
     }
 
     /* Make sure attribute and value are not set, so we delete via regex */
-    xml_remove_prop(xml, PCMK__XA_ATTR_NAME);
-    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
+    pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_NAME);
+    pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
     return attrd_client_update(request);
 }
@@ -270,7 +270,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                  * regex and replace it with the name.
                  */
                 attrd_copy_xml_attributes(xml, child);
-                xml_remove_prop(child, PCMK__XA_ATTR_REGEX);
+                pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
                 crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
             }
         }

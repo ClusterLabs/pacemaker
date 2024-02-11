@@ -295,7 +295,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     // Unset (DC should set appropriate value)
-    xml_remove_prop(root, PCMK_XA_DC_UUID);
+    pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
     if (discard_status) {
         crm_log_xml_trace(root, "[on-disk]");
