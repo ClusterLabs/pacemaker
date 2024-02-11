@@ -1815,7 +1815,6 @@ gboolean
 replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
 {
     gboolean can_delete = FALSE;
-    xmlNode *child_of_child = NULL;
 
     const char *up_id = NULL;
     const char *child_id = NULL;
@@ -1842,13 +1841,14 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             right_val = crm_element_value(child, p_name);
             if (!pcmk__str_eq(p_value, right_val, pcmk__str_casei)) {
                 can_delete = FALSE;
+                break;
             }
         }
     }
 
-    if (can_delete && parent != NULL) {
+    if (can_delete && (parent != NULL)) {
         crm_log_xml_trace(child, "Delete match found...");
-        if (delete_only || update == NULL) {
+        if (delete_only) {
             free_xml(child);
 
         } else {
@@ -1870,27 +1870,23 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             xmlFreeNode(old);
         }
         return TRUE;
-
-    } else if (can_delete) {
-        crm_log_xml_debug(child, "Cannot delete the search root");
-        can_delete = FALSE;
     }
 
-    child_of_child = pcmk__xml_first_child(child);
-    while (child_of_child) {
-        xmlNode *next = pcmk__xml_next(child_of_child);
+    if (can_delete) {
+        crm_log_xml_debug(child, "Cannot delete the search root");
+    }
 
-        can_delete = replace_xml_child(child, child_of_child, update, delete_only);
+    // Current node not a match; search the rest of the tree depth-first
+    parent = child;
+    for (child = pcmk__xml_first_child(parent); child != NULL;
+         child = pcmk__xml_next(child)) {
 
-        /* only delete the first one */
-        if (can_delete) {
-            child_of_child = NULL;
-        } else {
-            child_of_child = next;
+        // Only delete/replace the first match
+        if (replace_xml_child(parent, child, update, delete_only)) {
+            return TRUE;
         }
     }
-
-    return can_delete;
+    return FALSE;
 }
 
 xmlNode *
