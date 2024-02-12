@@ -470,12 +470,88 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
 
 /*!
  * \internal
+ * \brief Set an XML attribute, expanding \c ++ and \c += where appropriate
+ *
+ * If \p target already has an attribute named \p name set to an integer value
+ * and \p value is an addition assignment expression on \p name, then expand
+ * \p value to an integer and set attribute \p name to the expanded value in
+ * \p target.
+ *
+ * Otherwise, set attribute \c name on \p target using the literal \p value.
+ *
+ * For example, suppose \p target has an attribute named \c "X" with value
+ * \c "5", and that \p name is \c "X".
+ * * If \p value is \c "X++", the new value of \c "X" in \p target is \c "6".
+ * * If \p value is \c "X+=3", the new value of \c "X" in \p target is \c "8".
+ * * If \p value is \c "val", the new value of \c "X" in \p target is \c "val".
+ * * If \p value is \c "Y++", the new value of \c "X" in \p target is \c "Y++".
+ *
+ * \param[in,out] target  XML node whose attribute to set
+ * \param[in]     name    Name of the attribute to set
+ * \param[in]     value   New value of attribute to set
+ *
+ * \note The original attribute value in \p target and the number in an
+ *       assignment expression in \p value are parsed as scores. For more
+ *       details, refer to \c char2score().
+ */
+#if defined(PCMK__UNIT_TESTING)
+void
+#else
+static void
+#endif  // defined(PCMK__UNIT_TESTING)
+pcmk__xa_set_expand(xmlNode *target, const char *name, const char *value)
+{
+    // @TODO Consider moving to nvpair.c for logical separation
+    const char *old_value = NULL;
+
+    CRM_CHECK((target != NULL) && (name != NULL) && (value != NULL), return);
+
+    old_value = crm_element_value(target, name);
+
+    /* If no previous value, skip to default case and set the value unexpanded.
+     *
+     * @COMPAT Should we try to expand, assuming 0 for the old value? This
+     * doesn't seem fundamentally different from the "expanding ourselves" case
+     * mentioned below -- it's old=<unset>/new="X++" versus old="X++"/new="X++".
+     */
+    if (old_value != NULL) {
+        const char *n = name;
+        const char *v = value;
+
+        // Stop at first character that differs between name and value
+        for (; *n == *v; n++, v++);
+
+        // If value begins with name followed by a "++" or "+="
+        if (((*n == '\0') && (*v++ == '+'))
+            && ((*v == '+') || (*v == '='))) {
+
+            // If we're expanding ourselves, no previous value was set; use 0
+            int old_value_i = (old_value != value)? char2score(old_value) : 0;
+
+            /* value="X++": new value of X is old_value + 1
+             * value="X+=Y": new value of X is old_value + Y (for some number Y)
+             */
+            int add = (*v == '+')? 1 : char2score(++v);
+
+            crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
+            return;
+        }
+    }
+
+    // Default case: set the attribute unexpanded (with value treated literally)
+    if (old_value != value) {
+        crm_xml_add(target, name, value);
+    }
+}
+
+/*!
+ * \internal
  * \brief Copy XML attributes, expanding \c ++ and \c += and checking ACLs
  *
  * This is similar to \c xmlCopyPropList(), with at least two notable
  * differences:
- * * \c ++ and \c += are expanded where appropriate. See \c expand_plus_plus()
- *   for details.
+ * * \c ++ and \c += are expanded where appropriate. See
+ *   \c pcmk__xa_set_expand() for details.
  * * This function returns immediately if ACLs prevent any attribute from being
  *   copied to \p target.
  *
@@ -495,7 +571,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
         const char *name = (const char *) attr->name;
         const char *value = pcmk__xml_attr_value(attr);
 
-        expand_plus_plus(target, name, value);
+        pcmk__xa_set_expand(target, name, value);
         if (xml_acl_denied(target)) {
             crm_trace("Cannot copy %s=%s to %s",
                       name, value, (const char *) target->name);
@@ -523,7 +599,7 @@ fix_plus_plus_recursive(xmlNode *target)
         const char *p_name = (const char *) a->name;
         const char *p_value = pcmk__xml_attr_value(a);
 
-        expand_plus_plus(target, p_name, p_value);
+        pcmk__xa_set_expand(target, p_name, p_value);
     }
     for (child = pcmk__xml_first_child(target); child != NULL;
          child = pcmk__xml_next(child)) {
@@ -531,81 +607,10 @@ fix_plus_plus_recursive(xmlNode *target)
     }
 }
 
-/*!
- * \brief Update current XML attribute value per parsed integer assignment
-          statement
- *
- * \param[in,out]   target  an XML node, containing a XML attribute that is
- *                          initialized to some numeric value, to be processed
- * \param[in]       name    name of the XML attribute, e.g. X, whose value
- *                          should be updated
- * \param[in]       value   assignment statement, e.g. "X++" or
- *                          "X+=5", to be applied to the initialized value.
- *
- * \note The original XML attribute value is treated as 0 if non-numeric and
- *       truncated to be an integer if decimal-point-containing.
- * \note The final XML attribute value is truncated to not exceed 1000000.
- * \note Undefined behavior if unexpected input.
- */
 void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
-    int offset = 1;
-    int name_len = 0;
-    int int_value = 0;
-    int value_len = 0;
-
-    const char *old_value = NULL;
-
-    if (target == NULL || value == NULL || name == NULL) {
-        return;
-    }
-
-    old_value = crm_element_value(target, name);
-
-    if (old_value == NULL) {
-        /* if no previous value, set unexpanded */
-        goto set_unexpanded;
-
-    } else if (strstr(value, name) != value) {
-        goto set_unexpanded;
-    }
-
-    name_len = strlen(name);
-    value_len = strlen(value);
-    if (value_len < (name_len + 2)
-        || value[name_len] != '+' || (value[name_len + 1] != '+' && value[name_len + 1] != '=')) {
-        goto set_unexpanded;
-    }
-
-    /* if we are expanding ourselves,
-     * then no previous value was set and leave int_value as 0
-     */
-    if (old_value != value) {
-        int_value = char2score(old_value);
-    }
-
-    if (value[name_len + 1] != '+') {
-        const char *offset_s = value + (name_len + 2);
-
-        offset = char2score(offset_s);
-    }
-    int_value += offset;
-
-    if (int_value > PCMK_SCORE_INFINITY) {
-        int_value = PCMK_SCORE_INFINITY;
-    }
-
-    crm_xml_add_int(target, name, int_value);
-    return;
-
-  set_unexpanded:
-    if (old_value == value) {
-        /* the old value is already set, nothing to do */
-        return;
-    }
-    crm_xml_add(target, name, value);
-    return;
+    pcmk__xa_set_expand(target, name, value);
 }
 
 /*!
@@ -2476,11 +2481,14 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
     if (as_diff == FALSE) {
-        /* So that expand_plus_plus() gets called */
+        // So that pcmk__xa_set_expand() gets called
         pcmk__xe_copy_attrs(target, update);
 
     } else {
-        /* No need for expand_plus_plus(), just raw speed */
+        /* No need for pcmk__xa_set_expand(), so use faster method
+         *
+         * @TODO pcmk__xe_copy_attrs() also checks ACLs. Should we do that here?
+         */
         for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
              a = a->next) {
             const char *p_value = pcmk__xml_attr_value(a);
@@ -2729,7 +2737,7 @@ pcmk__xe_find_replace(xmlNode *xml, xmlNode *replace)
  *
  * "Update" means to make a target subtree match a source subtree in children
  * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c expand_plus_plus()).
+ * expanded where appropriate (see \c pcmk__xa_set_expand()).
  *
  * A match is defined as follows:
  * * \p xml and \p user_data are both element nodes of the same type.
@@ -2775,7 +2783,7 @@ update_matching_xe(xmlNode *xml, void *user_data)
  *
  * "Update" means to make a target subtree match a source subtree in children
  * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c expand_plus_plus()).
+ * expanded where appropriate (see \c pcmk__xa_set_expand()).
  *
  * A match with a node \c node is defined as follows:
  * * \c node and \p update are both element nodes of the same type.
