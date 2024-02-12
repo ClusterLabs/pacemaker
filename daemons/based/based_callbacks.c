@@ -169,7 +169,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 
     if (call_data != NULL) {
         crm_trace("Attaching reply output");
-        add_message_xml(reply, PCMK__XA_CIB_CALLDATA, call_data);
+        pcmk__message_add_xml(reply, PCMK__XA_CIB_CALLDATA, call_data);
     }
 
     crm_log_xml_explicit(reply, "cib:reply");
@@ -1002,7 +1002,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
             CRM_ASSERT(digest != NULL);
         }
 
-        add_message_xml(msg, PCMK__XA_CIB_UPDATE_DIFF, result_diff);
+        pcmk__message_add_xml(msg, PCMK__XA_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_explicit(msg, "copy");
         return send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
 
