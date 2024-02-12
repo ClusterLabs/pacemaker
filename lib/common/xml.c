@@ -493,6 +493,82 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
 
 /*!
  * \internal
+ * \brief Set an XML attribute, expanding \c ++ and \c += where appropriate
+ *
+ * If \p target already has an attribute named \p name set to an integer value
+ * and \p value is an addition assignment expression on \p name, then expand
+ * \p value to an integer and set attribute \p name to the expanded value in
+ * \p target.
+ *
+ * Otherwise, set attribute \p name on \p target using the literal \p value.
+ *
+ * The original attribute value in \p target and the number in an assignment
+ * expression in \p value are parsed and added as scores (that is, their values
+ * are capped at \c INFINITY and \c -INFINITY). For more details, refer to
+ * \c char2score().
+ *
+ * For example, suppose \p target has an attribute named \c "X" with value
+ * \c "5", and that \p name is \c "X".
+ * * If \p value is \c "X++", the new value of \c "X" in \p target is \c "6".
+ * * If \p value is \c "X+=3", the new value of \c "X" in \p target is \c "8".
+ * * If \p value is \c "val", the new value of \c "X" in \p target is \c "val".
+ * * If \p value is \c "Y++", the new value of \c "X" in \p target is \c "Y++".
+ *
+ * \param[in,out] target  XML node whose attribute to set
+ * \param[in]     name    Name of the attribute to set
+ * \param[in]     value   New value of attribute to set
+ *
+ * \return Standard Pacemaker return code (specifically, \c EINVAL on invalid
+ *         argument, or \c pcmk_rc_ok otherwise)
+ */
+int
+pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
+{
+    const char *old_value = NULL;
+
+    CRM_CHECK((target != NULL) && (name != NULL), return EINVAL);
+
+    if (value == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    old_value = crm_element_value(target, name);
+
+    // If no previous value, skip to default case and set the value unexpanded.
+    if (old_value != NULL) {
+        const char *n = name;
+        const char *v = value;
+
+        // Stop at first character that differs between name and value
+        for (; (*n == *v) && (*n != '\0'); n++, v++);
+
+        // If value begins with name followed by a "++" or "+="
+        if ((*n == '\0')
+            && (*v++ == '+')
+            && ((*v == '+') || (*v == '='))) {
+
+            // If we're expanding ourselves, no previous value was set; use 0
+            int old_value_i = (old_value != value)? char2score(old_value) : 0;
+
+            /* value="X++": new value of X is old_value + 1
+             * value="X+=Y": new value of X is old_value + Y (for some number Y)
+             */
+            int add = (*v == '+')? 1 : char2score(++v);
+
+            crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
+            return pcmk_rc_ok;
+        }
+    }
+
+    // Default case: set the attribute unexpanded (with value treated literally)
+    if (old_value != value) {
+        crm_xml_add(target, name, value);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Copy XML attributes from a source element to a target element
  *
  * This is similar to \c xmlCopyPropList() except that attributes are marked
@@ -517,7 +593,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
             && (crm_element_value(target, name) != NULL)) {
             continue;
         }
-        expand_plus_plus(target, name, value);
+        pcmk__xe_set_score(target, name, value);
     }
 }
 
@@ -540,62 +616,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
-    int offset = 1;
-    int name_len = 0;
-    int int_value = 0;
-    int value_len = 0;
-
-    const char *old_value = NULL;
-
-    if (target == NULL || value == NULL || name == NULL) {
-        return;
-    }
-
-    old_value = crm_element_value(target, name);
-
-    if (old_value == NULL) {
-        /* if no previous value, set unexpanded */
-        goto set_unexpanded;
-
-    } else if (strstr(value, name) != value) {
-        goto set_unexpanded;
-    }
-
-    name_len = strlen(name);
-    value_len = strlen(value);
-    if (value_len < (name_len + 2)
-        || value[name_len] != '+' || (value[name_len + 1] != '+' && value[name_len + 1] != '=')) {
-        goto set_unexpanded;
-    }
-
-    /* if we are expanding ourselves,
-     * then no previous value was set and leave int_value as 0
-     */
-    if (old_value != value) {
-        int_value = char2score(old_value);
-    }
-
-    if (value[name_len + 1] != '+') {
-        const char *offset_s = value + (name_len + 2);
-
-        offset = char2score(offset_s);
-    }
-    int_value += offset;
-
-    if (int_value > PCMK_SCORE_INFINITY) {
-        int_value = PCMK_SCORE_INFINITY;
-    }
-
-    crm_xml_add_int(target, name, int_value);
-    return;
-
-  set_unexpanded:
-    if (old_value == value) {
-        /* the old value is already set, nothing to do */
-        return;
-    }
-    crm_xml_add(target, name, value);
-    return;
+    pcmk__xe_set_score(target, name, value);
 }
 
 /*!
@@ -1700,7 +1721,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         pcmk__xe_copy_attrs(target, update, pcmk__xaf_none);
 
     } else {
-        /* No need for expand_plus_plus(), just raw speed */
+        // No need for pcmk__xe_set_score(), so use faster method
         for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
              a = a->next) {
             const char *p_value = pcmk__xml_attr_value(a);
@@ -1938,7 +1959,7 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
  *
  * "Update" means to make a target subtree match a source subtree in children
  * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c expand_plus_plus()).
+ * expanded where appropriate (see \c pcmk__xe_set_score()).
  *
  * A match is defined as follows:
  * * \p xml and \p user_data are both element nodes of the same type.
@@ -1982,7 +2003,7 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
  *
  * "Update" means to make a target subtree match a source subtree in children
  * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c expand_plus_plus()).
+ * expanded where appropriate (see \c pcmk__xe_set_score()).
  *
  * A match with a node \c node is defined as follows:
  * * \c node and \p update are both element nodes of the same type.

@@ -131,6 +131,9 @@ bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
 G_GNUC_INTERNAL
 void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
 
+G_GNUC_INTERNAL
+int pcmk__xe_set_score(xmlNode *target, const char *name, const char *value);
+
 /*
  * Date/times
  */
