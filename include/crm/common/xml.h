@@ -67,19 +67,6 @@ void expand_plus_plus(xmlNode * target, const char *name, const char *value);
  */
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 
-static inline const char *
-crm_map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (strcmp((const char *) xml->name, "master") == 0) {
-        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
-}
-
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
