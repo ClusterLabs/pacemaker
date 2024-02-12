@@ -151,6 +151,11 @@ gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 gboolean update_xml_child(xmlNode *child, xmlNode *to_update);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+int find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
+                      const char *field, const char *value,
+                      gboolean search_matches);
+
 #ifdef __cplusplus
 }
 #endif
