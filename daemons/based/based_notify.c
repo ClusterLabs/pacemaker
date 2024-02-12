@@ -133,7 +133,7 @@ attach_cib_generation(xmlNode *msg)
     if (the_cib != NULL) {
         copy_in_properties(generation, the_cib);
     }
-    add_message_xml(msg, PCMK__XE_CIB_GENERATION, generation);
+    pcmk__message_add_xml(msg, PCMK__XE_CIB_GENERATION, generation);
     free_xml(generation);
 }
 
@@ -219,10 +219,10 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
-        add_message_xml(update_msg, PCMK__XE_CIB_UPDATE, update);
+        pcmk__message_add_xml(update_msg, PCMK__XE_CIB_UPDATE, update);
     }
 
-    add_message_xml(update_msg, PCMK__XA_CIB_UPDATE_RESULT, diff);
+    pcmk__message_add_xml(update_msg, PCMK__XA_CIB_UPDATE_RESULT, diff);
 
     crm_log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);

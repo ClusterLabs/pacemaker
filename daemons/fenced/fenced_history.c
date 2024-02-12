@@ -53,7 +53,7 @@ stonith_send_broadcast_history(xmlNode *history,
     crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
 
     pcmk__xml_copy(data, history);
-    add_message_xml(bcast, PCMK__XA_ST_CALLDATA, data);
+    pcmk__message_add_xml(bcast, PCMK__XA_ST_CALLDATA, data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
 
     free_xml(data);

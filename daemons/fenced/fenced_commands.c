@@ -2510,7 +2510,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
     if (list != NULL) {
         crm_log_xml_trace(list, "Add query results");
-        add_message_xml(query->reply, PCMK__XA_ST_CALLDATA, list);
+        pcmk__message_add_xml(query->reply, PCMK__XA_ST_CALLDATA, list);
     }
 
     stonith_send_reply(query->reply, query->call_options, query->remote_peer,
@@ -3005,7 +3005,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             crm_xml_add(reply, name, value);
         }
         if (data != NULL) {
-            add_message_xml(reply, PCMK__XA_ST_CALLDATA, data);
+            pcmk__message_add_xml(reply, PCMK__XA_ST_CALLDATA, data);
         }
     }
     return reply;

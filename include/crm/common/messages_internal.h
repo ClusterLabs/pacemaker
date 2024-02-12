@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
 #include <crm/common/results_internal.h>    // pcmk__action_result_t
+#include <crm/common/xml_internal.h>        // pcmk__xml_copy()
 
 enum pcmk__request_flags {
     pcmk__request_none          = UINT32_C(0),
@@ -117,6 +118,30 @@ pcmk__request_origin(const pcmk__request_t *request)
     } else {
         return "(unspecified)";
     }
+}
+
+/*!
+ * \internal
+ * \brief Store a deep copy of an XML node in a named wrapper under a parent
+ *
+ * Result:
+ * * \p msg contains a new element named \p name
+ * * The \p name element contains a copy of \p src
+ *
+ * The copy can then be retrieved via <tt>get_message_xml(msg, name)</tt>. This
+ * is a convenience function for adding arbitrary XML to a message (for example,
+ * an IPC or CPG message).
+ *
+ * \param[in,out] msg   Parent to create the wrapper element under
+ * \param[in]     name  Name of wrapper element
+ * \param[in]     src   XML to copy
+ */
+static inline void
+pcmk__message_add_xml(xmlNode *msg, const char *name, xmlNode *src)
+{
+    // No way to retrieve the copy later if msg == NULL
+    CRM_CHECK(msg != NULL, return);
+    pcmk__xml_copy(pcmk__xe_create(msg, name), src);
 }
 
 #endif // PCMK__CRM_COMMON_MESSAGES_INTERNAL__H
