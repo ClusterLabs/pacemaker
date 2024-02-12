@@ -1769,39 +1769,6 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 #endif
 }
 
-int
-find_xml_children(xmlNode ** children, xmlNode * root,
-                  const char *tag, const char *field, const char *value, gboolean search_matches)
-{
-    int match_found = 0;
-
-    CRM_CHECK(root != NULL, return FALSE);
-    CRM_CHECK(children != NULL, return FALSE);
-
-    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
-
-    } else if (value != NULL && !pcmk__str_eq(value, crm_element_value(root, field), pcmk__str_casei)) {
-
-    } else {
-        if (*children == NULL) {
-            *children = pcmk__xe_create(NULL, __func__);
-        }
-        pcmk__xml_copy(*children, root);
-        match_found = 1;
-    }
-
-    if (search_matches || match_found == 0) {
-        xmlNode *child = NULL;
-
-        for (child = pcmk__xml_first_child(root); child != NULL;
-             child = pcmk__xml_next(child)) {
-            match_found += find_xml_children(children, child, tag, field, value, search_matches);
-        }
-    }
-
-    return match_found;
-}
-
 /*!
  * \internal
  * \brief Delete an XML subtree if it matches a search element
@@ -2635,6 +2602,42 @@ gboolean
 update_xml_child(xmlNode *child, xmlNode *to_update)
 {
     return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
+}
+
+int
+find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
+                  const char *field, const char *value, gboolean search_matches)
+{
+    int match_found = 0;
+
+    CRM_CHECK(root != NULL, return FALSE);
+    CRM_CHECK(children != NULL, return FALSE);
+
+    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
+
+    } else if ((value != NULL)
+               && !pcmk__str_eq(value, crm_element_value(root, field),
+                                pcmk__str_casei)) {
+
+    } else {
+        if (*children == NULL) {
+            *children = pcmk__xe_create(NULL, __func__);
+        }
+        pcmk__xml_copy(*children, root);
+        match_found = 1;
+    }
+
+    if (search_matches || match_found == 0) {
+        xmlNode *child = NULL;
+
+        for (child = pcmk__xml_first_child(root); child != NULL;
+             child = pcmk__xml_next(child)) {
+            match_found += find_xml_children(children, child, tag, field, value,
+                                             search_matches);
+        }
+    }
+
+    return match_found;
 }
 
 // LCOV_EXCL_STOP
