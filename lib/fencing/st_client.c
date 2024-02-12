@@ -821,7 +821,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
     crm_xml_add_int(op_msg, PCMK__XA_ST_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(op_msg, PCMK__XA_ST_CALLDATA, data);
+        pcmk__message_add_xml(op_msg, PCMK__XA_ST_CALLDATA, data);
     }
 
     return op_msg;

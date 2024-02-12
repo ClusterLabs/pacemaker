@@ -690,7 +690,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
+        pcmk__message_add_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
     }
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
