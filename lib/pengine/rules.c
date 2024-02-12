@@ -361,25 +361,6 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 }
 
 /*!
- * \brief Evaluate all of a rule's expressions
- *
- * \param[in,out] rule         XML containing a rule definition or its id-ref
- * \param[in]     rule_data    Matching parameters to check against rule
- * \param[out]    next_change  If not NULL, set to when evaluation will change
- *
- * \return TRUE if \p rule_data passes \p rule, otherwise FALSE
- */
-gboolean
-pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
-             crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
-}
-
-/*!
  * \brief Evaluate a single rule expression, including any subexpressions
  *
  * \param[in,out] expr         XML containing a rule expression
@@ -539,6 +520,16 @@ pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
                         pe_match_data_t *match_data)
 {
     return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
+}
+
+gboolean
+pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
+             crm_time_t *next_change)
+{
+    pcmk_rule_input_t rule_input = { NULL, };
+
+    map_rule_input(&rule_input, rule_data);
+    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
 }
 
 void
