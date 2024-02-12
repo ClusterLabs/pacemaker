@@ -516,31 +516,6 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
     }
 }
 
-void
-copy_in_properties(xmlNode *target, const xmlNode *src)
-{
-    if (src == NULL) {
-        crm_warn("No node to copy properties from");
-
-    } else if (target == NULL) {
-        crm_err("No node to copy properties into");
-
-    } else {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
-
-            expand_plus_plus(target, p_name, p_value);
-            if (xml_acl_denied(target)) {
-                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
-                return;
-            }
-        }
-    }
-
-    return;
-}
-
 /*!
  * \brief Update current XML attribute value per parsed integer assignment
           statement
@@ -2655,6 +2630,29 @@ fix_plus_plus_recursive(xmlNode *target)
          child = pcmk__xe_next(child)) {
 
         fix_plus_plus_recursive(child);
+    }
+}
+
+void
+copy_in_properties(xmlNode *target, const xmlNode *src)
+{
+    if (src == NULL) {
+        crm_warn("No node to copy properties from");
+
+    } else if (target == NULL) {
+        crm_err("No node to copy properties into");
+
+    } else {
+        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
+            const char *p_name = (const char *) a->name;
+            const char *p_value = pcmk__xml_attr_value(a);
+
+            expand_plus_plus(target, p_name, p_value);
+            if (xml_acl_denied(target)) {
+                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
+                return;
+            }
+        }
     }
 }
 
