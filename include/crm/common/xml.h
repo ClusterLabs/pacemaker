@@ -80,8 +80,6 @@ void fix_plus_plus_recursive(xmlNode * target);
 /*
  * Searching & Modifying
  */
-gboolean update_xml_child(xmlNode * child, xmlNode * to_update);
-
 int find_xml_children(xmlNode ** children, xmlNode * root,
                       const char *tag, const char *field, const char *value,
                       gboolean search_matches);

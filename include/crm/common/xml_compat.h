@@ -148,6 +148,9 @@ void xml_remove_prop(xmlNode *obj, const char *name);
 gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
                            gboolean delete_only);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+gboolean update_xml_child(xmlNode *child, xmlNode *to_update);
+
 #ifdef __cplusplus
 }
 #endif
