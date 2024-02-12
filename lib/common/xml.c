@@ -1772,36 +1772,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 gboolean
 update_xml_child(xmlNode * child, xmlNode * to_update)
 {
-    gboolean can_update = TRUE;
-    xmlNode *child_of_child = NULL;
-
-    CRM_CHECK(child != NULL, return FALSE);
-    CRM_CHECK(to_update != NULL, return FALSE);
-
-    if (!pcmk__xe_is(to_update, (const char *) child->name)) {
-        can_update = FALSE;
-
-    } else if (!pcmk__str_eq(pcmk__xe_id(to_update), pcmk__xe_id(child),
-                             pcmk__str_none)) {
-        can_update = FALSE;
-
-    } else if (can_update) {
-#if XML_PARSER_DEBUG
-        crm_log_xml_trace(child, "Update match found...");
-#endif
-        pcmk__xml_update(NULL, child, to_update, false);
-    }
-
-    for (child_of_child = pcmk__xml_first_child(child); child_of_child != NULL;
-         child_of_child = pcmk__xml_next(child_of_child)) {
-        /* only update the first one */
-        if (can_update) {
-            break;
-        }
-        can_update = update_xml_child(child_of_child, to_update);
-    }
-
-    return can_update;
+    return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
 }
 
 int
@@ -2023,10 +1994,11 @@ replace_xe_if_matching(xmlNode *xml, void *user_data)
 int
 pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
 {
-    /* @COMPAT Some of this behavior (like not matching the tree root) is
-     * questionable for general use but is required for backward compatibility
-     * by cib_process_replace() and cib_process_delete(). Behavior can change at
-     * a major version release if desired.
+    /* @COMPAT Some of this behavior (like not matching the tree root, which is
+     * allowed by pcmk__xe_update_match()) is questionable for general use but
+     * required for backward compatibility by cib_process_replace() and
+     * cib_process_delete(). Behavior can change at a major version release if
+     * desired.
      */
     CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
 
@@ -2037,6 +2009,92 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
             // Found and replaced an element
             return pcmk_rc_ok;
         }
+    }
+
+    // No match found in this subtree
+    return ENXIO;
+}
+
+/*!
+ * \internal
+ * \brief Update one XML subtree with another if the two match
+ *
+ * "Update" means to make a target subtree match a source subtree in children
+ * and attributes, recursively. \c "++" and \c "+=" in attribute values are
+ * expanded where appropriate (see \c expand_plus_plus()).
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * \p xml and \p user_data have the same \c PCMK_XA_ID attribute value, or
+ *   \c PCMK_XA_ID is unset in both
+ *
+ * \param[in,out] xml        XML subtree to update with \p user_data upon match
+ * \param[in]     user_data  XML to update \p xml with upon match
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was updated by \p user_data)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+update_xe_if_matching(xmlNode *xml, void *user_data)
+{
+    xmlNode *update = user_data;
+
+    if (!pcmk__xe_is(update, (const char *) xml->name)) {
+        // No match: either not both elements, or different element types
+        return true;
+    }
+
+    if (!pcmk__str_eq(pcmk__xe_id(xml), pcmk__xe_id(update), pcmk__str_none)) {
+        // No match: ID mismatch
+        return true;
+    }
+
+#if XML_PARSER_DEBUG
+    crm_log_xml_trace(xml, "update-match");
+    crm_log_xml_trace(update, "update-with");
+#endif  // XML_PARSER_DEBUG
+    pcmk__xml_update(NULL, xml, update, false);
+
+    // Found a match and replaced it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and update the first matching element
+ *
+ * "Update" means to make a target subtree match a source subtree in children
+ * and attributes, recursively. \c "++" and \c "+=" in attribute values are
+ * expanded where appropriate (see \c expand_plus_plus()).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p update are both element nodes of the same type.
+ * * \c node and \p user_data have the same \c PCMK_XA_ID attribute value, or
+ *   \c PCMK_XA_ID is unset in both
+ *
+ * \param[in,out] xml     XML tree to search
+ * \param[in]     update  XML to update a matching element with
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful update and an error code otherwise)
+ */
+int
+pcmk__xe_update_match(xmlNode *xml, xmlNode *update)
+{
+    /* @COMPAT In pcmk__xe_delete_match() and pcmk__xe_replace_match(), we
+     * compare IDs only if the equivalent of the update argument has an ID.
+     * Here, we're stricter: we consider it a mismatch if only one element has
+     * an ID attribute, or if both elements have IDs but they don't match.
+     *
+     * Perhaps we should align the behavior at a major version release.
+     */
+    CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
+
+    if (!pcmk__xml_tree_foreach(xml, update_xe_if_matching, update)) {
+        // Found and updated an element
+        return pcmk_rc_ok;
     }
 
     // No match found in this subtree
