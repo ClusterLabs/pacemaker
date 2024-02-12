@@ -1273,7 +1273,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 CRM_LOG_ASSERT(position == 0);
                 xmlAddChild(match, child);
             }
-            pcmk__mark_xml_created(child);
+            pcmk__xml_foreach_dfs(child, pcmk__xml_mark_created, NULL);
 
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             int position = 0;
