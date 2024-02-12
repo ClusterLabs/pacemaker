@@ -499,14 +499,17 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
                     xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
                     xmlNode **answer)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
+
     const char *after_ver = NULL;
     GList *schemas = NULL;
     GList *already_included = NULL;
 
     *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
-    data = get_message_xml(req, PCMK__XE_CIB_CALLDATA);
+    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     if (data == NULL) {
         crm_warn("No data specified in request");
         return -EPROTO;

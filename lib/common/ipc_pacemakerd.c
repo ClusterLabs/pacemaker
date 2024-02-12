@@ -193,6 +193,7 @@ static bool
 dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     crm_exit_t status = CRM_EX_OK;
+    xmlNode *wrapper = NULL;
     xmlNode *msg_data = NULL;
     pcmk_pacemakerd_api_reply_t reply_data = {
         pcmk_pacemakerd_reply_unknown
@@ -226,7 +227,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
-    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
+    wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
+    msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
     crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
 
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {

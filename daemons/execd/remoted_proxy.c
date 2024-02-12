@@ -149,7 +149,11 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
     const char *session = crm_element_value(xml, PCMK__XA_LRMD_IPC_SESSION);
     const char *msg_type = crm_element_value(xml, PCMK__XA_LRMD_IPC_OP);
-    xmlNode *msg = get_message_xml(xml, PCMK__XE_LRMD_IPC_MSG);
+
+    xmlNode *wrapper = pcmk__xe_first_child(xml, PCMK__XE_LRMD_IPC_MSG, NULL,
+                                            NULL);
+    xmlNode *msg = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
     pcmk__client_t *ipc_client;
     int rc = pcmk_rc_ok;
 

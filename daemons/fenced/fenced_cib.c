@@ -326,7 +326,9 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
     char *reason = NULL;
-    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     for (change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change)) {
@@ -391,7 +393,9 @@ static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
     int format = 1;
-    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     CRM_ASSERT(patchset);
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
@@ -506,7 +510,9 @@ update_fencing_topology(const char *event, xmlNode * msg)
     int format = 1;
     const char *xpath;
     xmlXPathObjectPtr xpathObj = NULL;
-    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     CRM_ASSERT(patchset);
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
@@ -628,6 +634,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
      */
     if (local_cib != NULL) {
         int rc = pcmk_ok;
+        xmlNode *wrapper = NULL;
         xmlNode *patchset = NULL;
 
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
@@ -635,7 +642,10 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
 
-        patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+        wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT, NULL,
+                                       NULL);
+        patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:

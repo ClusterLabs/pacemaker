@@ -546,7 +546,9 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * to send to ourselves over IPC -- do it directly.
          */
         int flags = 0;
-        xmlNode *request = get_message_xml(msg, PCMK__XE_LRMD_IPC_MSG);
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
+                                                NULL, NULL);
+        xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);

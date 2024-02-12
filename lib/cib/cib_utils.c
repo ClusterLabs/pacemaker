@@ -75,6 +75,7 @@ int
 cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
 {
     int rc = pcmk_err_generic;
+    xmlNode *wrapper = NULL;
 
     CRM_ASSERT(patchset != NULL);
     *patchset = NULL;
@@ -93,7 +94,8 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return pcmk_legacy2rc(rc);
     }
 
-    *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT, NULL, NULL);
+    *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (*patchset == NULL) {
         crm_err("CIB diff notification received with no patchset");
@@ -779,9 +781,12 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
+        xmlNode *wrapper = NULL;
+
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        output = get_message_xml(msg, PCMK__XE_CIB_CALLDATA);
+        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+        output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     }
 
     blob = cib__lookup_id(call_id);
@@ -915,6 +920,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
 {
     int rc = pcmk_err_generic;
 
+    xmlNode *wrapper = NULL;
     xmlNode *diff = NULL;
 
     CRM_ASSERT(event);
@@ -922,7 +928,9 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(output);
 
     crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
-    diff = get_message_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
+    wrapper = pcmk__xe_first_child(event, PCMK__XA_CIB_UPDATE_RESULT, NULL,
+                                   NULL);
+    diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (rc < pcmk_ok || diff == NULL) {
         return rc;

@@ -2006,7 +2006,9 @@ crm_diff_update_element_v2(xmlNode *change, void *userdata)
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
-    xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     pcmk__xe_foreach_child(diff, NULL, crm_diff_update_element_v2, NULL);
 }
@@ -2035,7 +2037,9 @@ crm_diff_update(const char *event, xmlNode * msg)
     int rc = -1;
     static bool stale = FALSE;
     gboolean cib_updated = FALSE;
-    xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     out->progress(out, false);
 

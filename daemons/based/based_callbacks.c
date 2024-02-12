@@ -426,7 +426,10 @@ process_ping_reply(xmlNode *reply)
     uint64_t seq = 0;
     const char *host = crm_element_value(reply, PCMK__XA_SRC);
 
-    xmlNode *pong = get_message_xml(reply, PCMK__XE_CIB_CALLDATA);
+    xmlNode *wrapper = pcmk__xe_first_child(reply, PCMK__XE_CIB_CALLDATA, NULL,
+                                            NULL);
+    xmlNode *pong = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
     const char *seq_s = crm_element_value(pong, PCMK__XA_CIB_PING_ID);
     const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
@@ -462,7 +465,10 @@ process_ping_reply(xmlNode *reply)
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *remote_cib = get_message_xml(pong, PCMK__XE_CIB_CALLDATA);
+            xmlNode *wrapper = pcmk__xe_first_child(pong, PCMK__XE_CIB_CALLDATA,
+                                                    NULL, NULL);
+            xmlNode *remote_cib = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
             const char *admin_epoch_s = NULL;
             const char *epoch_s = NULL;
             const char *num_updates_s = NULL;
@@ -1304,21 +1310,29 @@ static xmlNode *
 prepare_input(const xmlNode *request, enum cib__op_type type,
               const char **section)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *input = NULL;
 
     *section = NULL;
 
     switch (type) {
         case cib__op_apply_patch:
-            if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-                input = get_message_xml(request, PCMK__XA_CIB_UPDATE_DIFF);
-            } else {
-                input = get_message_xml(request, PCMK__XE_CIB_CALLDATA);
+            {
+                const char *wrapper_name = PCMK__XE_CIB_CALLDATA;
+
+                if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
+                    wrapper_name = PCMK__XA_CIB_UPDATE_DIFF;
+                }
+                wrapper = pcmk__xe_first_child(request, wrapper_name, NULL,
+                                               NULL);
+                input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
             }
             break;
 
         default:
-            input = get_message_xml(request, PCMK__XE_CIB_CALLDATA);
+            wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA, NULL,
+                                           NULL);
+            input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
             *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
             break;
     }

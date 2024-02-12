@@ -188,10 +188,14 @@ fsa_dump_queue(int log_level)
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {
+    xmlNode *wrapper = NULL;
+
     ha_msg_input_t *copy = pcmk__assert_alloc(1, sizeof(ha_msg_input_t));
 
     copy->msg = (orig != NULL)? pcmk__xml_copy(NULL, orig->msg) : NULL;
-    copy->xml = get_message_xml(copy->msg, PCMK__XE_CRM_XML);
+
+    wrapper = pcmk__xe_first_child(copy->msg, PCMK__XE_CRM_XML, NULL, NULL);
+    copy->xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     return copy;
 }
 
@@ -425,7 +429,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         is_local = true;
 
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-        xmlNode *msg_data = get_message_xml(msg, PCMK__XE_CRM_XML);
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CRM_XML, NULL,
+                                                NULL);
+        xmlNode *msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
         if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
@@ -539,6 +545,7 @@ bool
 controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_client,
                                const char *proxy_session)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *message_data = NULL;
     const char *client_name = NULL;
     const char *op = crm_element_value(client_msg, PCMK__XA_CRM_TASK);
@@ -556,7 +563,8 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
         return true;
     }
 
-    message_data = get_message_xml(client_msg, PCMK__XE_CRM_XML);
+    wrapper = pcmk__xe_first_child(client_msg, PCMK__XE_CRM_XML, NULL, NULL);
+    message_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     client_name = crm_element_value(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
@@ -621,7 +629,10 @@ handle_failcount_op(xmlNode * stored_msg)
     char *interval_spec = NULL;
     guint interval_ms = 0;
     gboolean is_remote_node = FALSE;
-    xmlNode *xml_op = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
+
+    xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML, NULL,
+                                            NULL);
+    xmlNode *xml_op = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (xml_op) {
         xmlNode *xml_rsc = pcmk__xe_first_child(xml_op, PCMK_XE_PRIMITIVE, NULL,
@@ -672,7 +683,9 @@ static enum crmd_fsa_input
 handle_lrm_delete(xmlNode *stored_msg)
 {
     const char *mode = NULL;
-    xmlNode *msg_data = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
+    xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML, NULL,
+                                            NULL);
+    xmlNode *msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     CRM_CHECK(msg_data != NULL, return I_NULL);
 
@@ -1159,7 +1172,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         }
 
     } else if (strcmp(op, CRM_OP_MAINTENANCE_NODES) == 0) {
-        xmlNode *xml = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
+        xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML,
+                                                NULL, NULL);
+        xmlNode *xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         remote_ra_process_maintenance_nodes(xml);
 
@@ -1268,16 +1283,21 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         pcmk__ipc_send_xml(client_channel, 0, msg, crm_ipc_server_event);
 
     } else if (pcmk__str_eq(sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        xmlNode *data = get_message_xml(msg, PCMK__XE_CRM_XML);
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CRM_XML, NULL,
+                                                NULL);
+        xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         process_te_message(msg, data);
 
     } else if (pcmk__str_eq(sys, CRM_SYSTEM_LRMD, pcmk__str_none)) {
         fsa_data_t fsa_data;
         ha_msg_input_t fsa_input;
+        xmlNode *wrapper = NULL;
 
         fsa_input.msg = msg;
-        fsa_input.xml = get_message_xml(msg, PCMK__XE_CRM_XML);
+
+        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CRM_XML, NULL, NULL);
+        fsa_input.xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         fsa_data.id = 0;
         fsa_data.actions = 0;

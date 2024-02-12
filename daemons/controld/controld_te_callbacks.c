@@ -542,6 +542,7 @@ te_update_diff_v2(xmlNode *diff)
 void
 te_update_diff(const char *event, xmlNode * msg)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *diff = NULL;
     const char *op = NULL;
     int rc = -EINVAL;
@@ -570,7 +571,9 @@ te_update_diff(const char *event, xmlNode * msg)
     }
 
     op = crm_element_value(msg, PCMK__XA_CIB_OP);
-    diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+
+    wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT, NULL, NULL);
+    diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
