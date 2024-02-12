@@ -1769,12 +1769,6 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 #endif
 }
 
-gboolean
-update_xml_child(xmlNode * child, xmlNode * to_update)
-{
-    return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
-}
-
 int
 find_xml_children(xmlNode ** children, xmlNode * root,
                   const char *tag, const char *field, const char *value, gboolean search_matches)
@@ -2635,6 +2629,12 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
 
     // No match found in this subtree
     return FALSE;
+}
+
+gboolean
+update_xml_child(xmlNode *child, xmlNode *to_update)
+{
+    return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP
