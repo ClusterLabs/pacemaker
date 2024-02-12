@@ -21,7 +21,7 @@ target_is_NULL(void **state)
 
     pcmk__xe_set_props(test_xml_1, "test_prop", "test_value", NULL);
 
-    copy_in_properties(test_xml_2, test_xml_1);
+    pcmk__xe_copy_attrs(test_xml_2, test_xml_1);
 
     assert_ptr_equal(test_xml_2, NULL);
 }
@@ -32,7 +32,7 @@ src_is_NULL(void **state)
     xmlNode *test_xml_1 = NULL;
     xmlNode *test_xml_2 = pcmk__xe_create(NULL, "test_xml_2");
 
-    copy_in_properties(test_xml_2, test_xml_1);
+    pcmk__xe_copy_attrs(test_xml_2, test_xml_1);
 
     assert_ptr_equal(test_xml_2->properties, NULL);
 }
@@ -48,7 +48,7 @@ copying_is_successful(void **state)
 
     pcmk__xe_set_props(test_xml_1, "test_prop", "test_value", NULL);
 
-    copy_in_properties(test_xml_2, test_xml_1);
+    pcmk__xe_copy_attrs(test_xml_2, test_xml_1);
 
     xml_1_value = crm_element_value(test_xml_1, "test_prop");
     xml_2_value = crm_element_value(test_xml_2, "test_prop");

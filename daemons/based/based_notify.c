@@ -131,7 +131,7 @@ attach_cib_generation(xmlNode *msg)
     xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
+        pcmk__xe_copy_attrs(generation, the_cib);
     }
     pcmk__message_add_xml(msg, PCMK__XE_CIB_GENERATION, generation);
     free_xml(generation);

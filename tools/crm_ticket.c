@@ -559,7 +559,7 @@ ticket_state_xml(pcmk__output_t *out, va_list args)
     ticket_node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
                                                PCMK_XA_ID, ticket_id,
                                                NULL);
-    copy_in_properties(ticket_node, state_xml);
+    pcmk__xe_copy_attrs(ticket_node, state_xml);
     pcmk__output_xml_pop_parent(out);
 
     return pcmk_rc_ok;
