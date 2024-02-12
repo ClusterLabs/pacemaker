@@ -126,26 +126,36 @@ reset_xml_node_flags(xmlNode *xml, void *user_data)
     return true;
 }
 
-// Set xpf_created flag on XML node and any children
-void
-pcmk__mark_xml_created(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Set \c pcmk__xf_created flag on an XML node
+ *
+ * \param[in,out] xml        Node whose flag to set
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop
++ *         traversing (because change tracking is disabled)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+bool
+pcmk__xml_mark_created(xmlNode *xml, void *user_data)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     CRM_ASSERT(xml != NULL);
     nodepriv = xml->_private;
 
-    if (nodepriv && pcmk__tracking_xml_changes(xml, FALSE)) {
-        if (!pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
-            pcmk__mark_xml_node_dirty(xml);
-        }
-        for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-             cIter = pcmk__xml_next(cIter)) {
-            pcmk__mark_xml_created(cIter);
-        }
+    if (!pcmk__tracking_xml_changes(xml, false)) {
+        // Tracking is disabled for entire document, so stop traversal
+        return false;
     }
+
+    if ((nodepriv != NULL) && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
+        pcmk__mark_xml_node_dirty(xml);
+    }
+    return true;
 }
 
 #define XML_DOC_PRIVATE_MAGIC   0x81726354UL
@@ -714,7 +724,8 @@ pcmk__xe_create(xmlNode *parent, const char *name)
         node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
         pcmk__mem_assert(node);
     }
-    pcmk__mark_xml_created(node);
+
+    pcmk__xml_tree_foreach(node, pcmk__xml_mark_created, NULL);
     return node;
 }
 
@@ -885,7 +896,7 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         xmlAddChild(parent, copy);
     }
 
-    pcmk__mark_xml_created(copy);
+    pcmk__xml_tree_foreach(copy, pcmk__xml_mark_created, NULL);
     return copy;
 }
 
@@ -1529,7 +1540,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
-        pcmk__mark_xml_created(new_xml);
+        pcmk__xml_tree_foreach(new_xml, pcmk__xml_mark_created, NULL);
         pcmk__apply_creation_acl(new_xml, check_top);
         return;
     }
@@ -2357,7 +2368,7 @@ add_node_copy(xmlNode *parent, xmlNode *src_node)
         return NULL;
     }
     xmlAddChild(parent, child);
-    pcmk__mark_xml_created(child);
+    pcmk__xml_tree_foreach(child, pcmk__xml_mark_created, NULL);
     return child;
 }
 
@@ -2504,7 +2515,7 @@ create_xml_node(xmlNode *parent, const char *name)
             return NULL;
         }
     }
-    pcmk__mark_xml_created(node);
+    pcmk__xml_tree_foreach(node, pcmk__xml_mark_created, NULL);
     return node;
 }
 
