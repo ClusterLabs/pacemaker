@@ -359,7 +359,9 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
     stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
-        add_message_xml(update_msg, PCMK__XE_ST_CALLDATA, data);
+        xmlNode *wrapper = pcmk__xe_create(update_msg, PCMK__XE_ST_CALLDATA);
+
+        pcmk__xml_copy(wrapper, data);
     }
 
     crm_trace("Notifying clients");

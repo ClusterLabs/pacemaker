@@ -403,7 +403,8 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
     xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
-    xmlNode *notify_data = fencing_result2xml(op);
+    xmlNode *wrapper = NULL;
+    xmlNode *notify_data = NULL;
 
     count++;
     crm_trace("Broadcasting result to peers");
@@ -416,11 +417,12 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
         pcmk__xe_set_bool_attr(bcast, PCMK__XA_ST_OP_MERGED, true);
     }
 
+    wrapper = pcmk__xe_create(bcast, PCMK__XE_ST_CALLDATA);
+    notify_data = fencing_result2xml(op);
     stonith__xe_set_result(notify_data, &op->result);
+    xmlAddChild(wrapper, notify_data);
 
-    add_message_xml(bcast, PCMK__XE_ST_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
-    free_xml(notify_data);
     free_xml(bcast);
 
     return;

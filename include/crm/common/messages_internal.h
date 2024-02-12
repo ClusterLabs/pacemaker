@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
 #include <crm/common/results_internal.h>    // pcmk__action_result_t
+#include <crm/common/xml_internal.h>        // pcmk__xml_copy()
 
 enum pcmk__request_flags {
     pcmk__request_none          = UINT32_C(0),
