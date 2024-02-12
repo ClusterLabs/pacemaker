@@ -408,7 +408,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         xmlNode *obj_root = NULL;
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
-        result = pcmk__xe_find_replace(NULL, obj_root, input, false);
+        result = pcmk__xe_replace_match(obj_root, input, false);
         result = pcmk_rc2legacy(result);
         if (result != pcmk_ok) {
             crm_trace("No matching object to replace");
@@ -423,8 +423,7 @@ delete_child(xmlNode *child, void *userdata)
 {
     xmlNode *obj_root = userdata;
 
-    if (pcmk__xe_find_replace(NULL, obj_root, child,
-                              true) != pcmk_rc_ok) {
+    if (pcmk__xe_replace_match(obj_root, child, true) != pcmk_rc_ok) {
         crm_trace("No matching object to delete: %s=%s",
                   child->name, pcmk__xe_id(child));
     }
