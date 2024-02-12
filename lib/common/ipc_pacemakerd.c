@@ -226,7 +226,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
-    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
+    msg_data = pcmk__message_get_xml(reply, PCMK__XE_CRM_XML);
     crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
 
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {

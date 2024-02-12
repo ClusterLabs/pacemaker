@@ -1933,7 +1933,7 @@ static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
-    xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *diff = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     for (change = pcmk__xml_first_child(diff); change != NULL;
          change = pcmk__xml_next(change)) {
@@ -2039,7 +2039,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     int rc = -1;
     static bool stale = FALSE;
     gboolean cib_updated = FALSE;
-    xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *diff = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     out->progress(out, false);
 

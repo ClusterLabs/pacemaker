@@ -128,9 +128,10 @@ pcmk__request_origin(const pcmk__request_t *request)
  * * \p msg contains a new element named \p name
  * * The \p name element contains a copy of \p src
  *
- * The copy can then be retrieved via <tt>get_message_xml(msg, name)</tt>. This
- * is a convenience function for adding arbitrary XML to a message (for example,
- * an IPC or CPG message).
+ * The copy can then be retrieved via <tt>pcmk__message_get_xml(msg, name)</tt>.
+ *
+ * This is a convenience function intended for adding an arbitrary XML payload
+ * to a message (for example, an IPC or CPG message).
  *
  * \param[in,out] msg   Parent to create the wrapper element under
  * \param[in]     name  Name of wrapper element
@@ -142,6 +143,26 @@ pcmk__message_add_xml(xmlNode *msg, const char *name, xmlNode *src)
     // No way to retrieve the copy later if msg == NULL
     CRM_CHECK(msg != NULL, return);
     pcmk__xml_copy(pcmk__xe_create(msg, name), src);
+}
+
+/*!
+ * \internal
+ * \brief Get an XML node from a named wrapper a given parent
+ *
+ * This is a convenience function intended for retrieving an arbitrary XML
+ * payload from a message (for example, an IPC or CPG message). The payload
+ * should have been added by <tt>pcmk__message_add_xml(msg, name, src)</tt>,
+ * for some XML node \c src.
+ *
+ * \param[in] msg   Parent that contains the wrapper element
+ * \param[in] name  Name of wrapper element
+ *
+ * \returns First child of the first child element of \p msg named \p name
+ */
+static inline xmlNode *
+pcmk__message_get_xml(const xmlNode *msg, const char *name)
+{
+    return pcmk__xml_first_child(pcmk__xe_match_name(msg, name));
 }
 
 #endif // PCMK__CRM_COMMON_MESSAGES_INTERNAL__H
