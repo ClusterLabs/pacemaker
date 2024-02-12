@@ -142,6 +142,9 @@ void fix_plus_plus_recursive(xmlNode *target);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 gboolean add_message_xml(xmlNode *msg, const char *field, xmlNode *xml);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *get_message_xml(const xmlNode *msg, const char *field);
+
 #ifdef __cplusplus
 }
 #endif

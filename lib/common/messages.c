@@ -156,14 +156,6 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     return reply;
 }
 
-xmlNode *
-get_message_xml(const xmlNode *msg, const char *field)
-{
-    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
-
-    return pcmk__xe_first_child(child, NULL, NULL, NULL);
-}
-
 /*!
  * \brief Get name to be used as identifier for cluster messages
  *
@@ -301,6 +293,14 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
 
     pcmk__xml_copy(holder, xml);
     return TRUE;
+}
+
+xmlNode *
+get_message_xml(const xmlNode *msg, const char *field)
+{
+    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
+
+    return pcmk__xe_first_child(child, NULL, NULL, NULL);
 }
 
 // LCOV_EXCL_STOP
