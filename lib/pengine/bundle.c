@@ -1554,23 +1554,23 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (print_ip) {
-            out->message(out, crm_map_element_name(replica->ip->xml), show_opts,
-                         replica->ip, only_node, only_rsc);
+            out->message(out, pcmk__map_element_name(replica->ip->xml),
+                         show_opts, replica->ip, only_node, only_rsc);
         }
 
         if (print_child) {
-            out->message(out, crm_map_element_name(replica->child->xml), show_opts,
-                         replica->child, only_node, only_rsc);
+            out->message(out, pcmk__map_element_name(replica->child->xml),
+                         show_opts, replica->child, only_node, only_rsc);
         }
 
         if (print_ctnr) {
-            out->message(out, crm_map_element_name(replica->container->xml), show_opts,
-                         replica->container, only_node, only_rsc);
+            out->message(out, pcmk__map_element_name(replica->container->xml),
+                         show_opts, replica->container, only_node, only_rsc);
         }
 
         if (print_remote) {
-            out->message(out, crm_map_element_name(replica->remote->xml), show_opts,
-                         replica->remote, only_node, only_rsc);
+            out->message(out, pcmk__map_element_name(replica->remote->xml),
+                         show_opts, replica->remote, only_node, only_rsc);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1698,23 +1698,27 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             }
 
             if (print_ip) {
-                out->message(out, crm_map_element_name(replica->ip->xml),
+                out->message(out, pcmk__map_element_name(replica->ip->xml),
                              new_show_opts, replica->ip, only_node, only_rsc);
             }
 
             if (print_child) {
-                out->message(out, crm_map_element_name(replica->child->xml),
-                             new_show_opts, replica->child, only_node, only_rsc);
+                out->message(out, pcmk__map_element_name(replica->child->xml),
+                             new_show_opts, replica->child, only_node,
+                             only_rsc);
             }
 
             if (print_ctnr) {
-                out->message(out, crm_map_element_name(replica->container->xml),
-                             new_show_opts, replica->container, only_node, only_rsc);
+                out->message(out,
+                             pcmk__map_element_name(replica->container->xml),
+                             new_show_opts, replica->container, only_node,
+                             only_rsc);
             }
 
             if (print_remote) {
-                out->message(out, crm_map_element_name(replica->remote->xml),
-                             new_show_opts, replica->remote, only_node, only_rsc);
+                out->message(out, pcmk__map_element_name(replica->remote->xml),
+                             new_show_opts, replica->remote, only_node,
+                             only_rsc);
             }
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1836,23 +1840,27 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {
-                out->message(out, crm_map_element_name(replica->ip->xml),
+                out->message(out, pcmk__map_element_name(replica->ip->xml),
                              new_show_opts, replica->ip, only_node, only_rsc);
             }
 
             if (print_child) {
-                out->message(out, crm_map_element_name(replica->child->xml),
-                             new_show_opts, replica->child, only_node, only_rsc);
+                out->message(out, pcmk__map_element_name(replica->child->xml),
+                             new_show_opts, replica->child, only_node,
+                             only_rsc);
             }
 
             if (print_ctnr) {
-                out->message(out, crm_map_element_name(replica->container->xml),
-                             new_show_opts, replica->container, only_node, only_rsc);
+                out->message(out,
+                             pcmk__map_element_name(replica->container->xml),
+                             new_show_opts, replica->container, only_node,
+                             only_rsc);
             }
 
             if (print_remote) {
-                out->message(out, crm_map_element_name(replica->remote->xml),
-                             new_show_opts, replica->remote, only_node, only_rsc);
+                out->message(out, pcmk__map_element_name(replica->remote->xml),
+                             new_show_opts, replica->remote, only_node,
+                             only_rsc);
             }
 
             out->end_list(out);
