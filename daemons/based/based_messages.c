@@ -159,7 +159,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
             xmlNode *shallow = pcmk__xe_create(NULL,
                                                (const char *) the_cib->name);
 
-            copy_in_properties(shallow, the_cib);
+            pcmk__xe_copy_attrs(shallow, the_cib);
             pcmk__message_add_xml(*answer, PCMK__XA_CIB_CALLDATA, shallow);
             free_xml(shallow);
         }
