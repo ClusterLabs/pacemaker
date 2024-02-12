@@ -498,7 +498,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
 
     *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
-    data = get_message_xml(req, PCMK__XA_CIB_CALLDATA);
+    data = pcmk__message_get_xml(req, PCMK__XA_CIB_CALLDATA);
     if (data == NULL) {
         crm_warn("No data specified in request");
         return -EPROTO;
