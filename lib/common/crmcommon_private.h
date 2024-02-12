@@ -63,6 +63,10 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
+bool pcmk__xml_foreach_dfs(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                           void *user_data);
+
+G_GNUC_INTERNAL
 void pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
                     int depth);
 
