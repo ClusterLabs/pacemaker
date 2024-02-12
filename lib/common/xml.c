@@ -2629,6 +2629,43 @@ delete_matching_xe(xmlNode *xml, void *user_data)
 
 /*!
  * \internal
+ * \brief Search an XML tree depth-first and delete the first matching element
+ *
+ * Do not attempt to delete the tree root (\p xml).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p search are both element nodes of the same type.
+ * * If \p search has attributes set, \c node has those attributes set to the
+ *   same values. (\c node may have additional attributes set to arbitrary
+ *   values.)
+ *
+ * \param[in,out] xml     XML subtree to search
+ * \param[in]     search  Element to match against
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful deletion and an error code otherwise)
+ */
+int
+pcmk__xe_find_delete(xmlNode *xml, xmlNode *search)
+{
+    // See @COMPAT and @TODO comments in pcmk__xe_find_replace()
+    CRM_CHECK((xml != NULL) && (search != NULL), return EINVAL);
+
+    for (xml = pcmk__xe_first_child(xml); xml != NULL;
+         xml = pcmk__xe_next(xml)) {
+
+        if (!pcmk__xml_foreach_dfs(xml, delete_matching_xe, search)) {
+            // Found and deleted an element
+            return pcmk_rc_ok;
+        }
+    }
+
+    // No match found in this subtree
+    return ENXIO;
+}
+
+/*!
+ * \internal
  * \brief Replace one XML node with a copy of another XML node
  *
  * This function handles change tracking and applies ACLs.
@@ -2705,22 +2742,21 @@ replace_matching_xe(xmlNode *xml, void *user_data)
  * \internal
  * \brief Search an XML tree depth-first and replace the first matching element
  *
- * Do not attempt to replace or delete the tree root (\p xml).
+ * Do not attempt to replace the tree root (\p xml).
  *
- * \param[in,out] xml          XML tree to search
- * \param[in]     update       XML to match and replace with. A matching element
- *                             must share the same element name and ID (if any)
- *                             as \p update. If \p delete_only is \c false, the
- *                             match is replaced with a copy of \p update.
- * \param[in]     delete_only  If \c true, delete a matching element instead of
- *                             replacing it. Additionally, a matching element
- *                             must contain all attribute values belonging to
- *                             \p update.
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p replace are both element nodes of the same type.
+ * * If \p replace has the \c PCMK_XA_ID attribute set, then \c node has
+ *   \c PCMK_XA_ID set to the same value.
  *
- * \return Standard Pacemaker return code
+ * \param[in,out] xml      XML tree to search
+ * \param[in]     replace  XML to replace a matching element with a copy of
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful replacement and an error code otherwise)
  */
 int
-pcmk__xe_find_replace(xmlNode *xml, xmlNode *update, bool delete_only)
+pcmk__xe_find_replace(xmlNode *xml, xmlNode *replace)
 {
     /* @COMPAT This function has never considered ACLs. It probably should.
      *
@@ -2733,19 +2769,13 @@ pcmk__xe_find_replace(xmlNode *xml, xmlNode *update, bool delete_only)
      * @TODO Why don't we allow matching (and replacing or deleting) the tree
      * root?
      */
-    bool (*fn)(xmlNode *, void *) = replace_matching_xe;
-
-    if (delete_only) {
-        fn = delete_matching_xe;
-    }
-
-    CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
+    CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
 
     for (xml = pcmk__xe_first_child(xml); xml != NULL;
          xml = pcmk__xe_next(xml)) {
 
-        if (!pcmk__xml_foreach_dfs(xml, fn, update)) {
-            // Found and replaced or deleted an element
+        if (!pcmk__xml_foreach_dfs(xml, replace_matching_xe, replace)) {
+            // Found and replaced an element
             return pcmk_rc_ok;
         }
     }

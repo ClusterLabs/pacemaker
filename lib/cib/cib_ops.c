@@ -409,7 +409,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         xmlNode *obj_root = NULL;
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
-        result = pcmk__xe_find_replace(obj_root, input, false);
+        result = pcmk__xe_find_replace(obj_root, input);
         if (result != pcmk_rc_ok) {
             crm_trace("No matching object to replace");
         }
@@ -442,13 +442,13 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
         for (child = pcmk__xml_first_child(input); child;
              child = pcmk__xml_next(child)) {
 
-            if (pcmk__xe_find_replace(obj_root, child, true) != pcmk_rc_ok) {
+            if (pcmk__xe_find_delete(obj_root, child) != pcmk_rc_ok) {
                 crm_trace("No matching object to delete: %s=%s",
                           child->name, pcmk__xe_id(child));
             }
         }
 
-    } else if (pcmk__xe_find_replace(obj_root, input, true) != pcmk_rc_ok) {
+    } else if (pcmk__xe_find_delete(obj_root, input) != pcmk_rc_ok) {
         crm_trace("No matching object to delete: %s=%s",
                   input->name, pcmk__xe_id(input));
     }

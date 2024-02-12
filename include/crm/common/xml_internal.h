@@ -230,7 +230,8 @@ void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
-int pcmk__xe_find_replace(xmlNode *xml, xmlNode *update, bool delete_only);
+int pcmk__xe_find_delete(xmlNode *xml, xmlNode *search);
+int pcmk__xe_find_replace(xmlNode *xml, xmlNode *replace);
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
