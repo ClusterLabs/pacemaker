@@ -468,29 +468,47 @@ pcmk__xe_match(const xmlNode *parent, const char *node_name,
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Copy XML attributes, expanding \c ++ and \c += and checking ACLs
+ *
+ * This is similar to \c xmlCopyPropList(), with at least two notable
+ * differences:
+ * * \c ++ and \c += are expanded where appropriate. See \c expand_plus_plus()
+ *   for details.
+ * * This function returns immediately if ACLs prevent any attribute from being
+ *   copied to \p target.
+ *
+ * \param[in,out] target  XML element to receive copied attributes from \p src
+ * \param[in]     src     XML element whose attributes to copy to \p target
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
+{
+    CRM_CHECK((src != NULL) && (target != NULL), return EINVAL);
+
+    for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
+         attr = attr->next) {
+
+        const char *name = (const char *) attr->name;
+        const char *value = pcmk__xml_attr_value(attr);
+
+        expand_plus_plus(target, name, value);
+        if (xml_acl_denied(target)) {
+            crm_trace("Cannot copy %s=%s to %s",
+                      name, value, (const char *) target->name);
+            return EPERM;
+        }
+    }
+    return pcmk_rc_ok;
+}
+
 void
 copy_in_properties(xmlNode *target, const xmlNode *src)
 {
-    if (src == NULL) {
-        crm_warn("No node to copy properties from");
-
-    } else if (target == NULL) {
-        crm_err("No node to copy properties into");
-
-    } else {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
-
-            expand_plus_plus(target, p_name, p_value);
-            if (xml_acl_denied(target)) {
-                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
-                return;
-            }
-        }
-    }
-
-    return;
+    pcmk__xe_copy_attrs(target, src);
 }
 
 /*!
@@ -2465,7 +2483,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */
-        copy_in_properties(target, update);
+        pcmk__xe_copy_attrs(target, update);
 
     } else {
         /* No need for expand_plus_plus(), just raw speed */

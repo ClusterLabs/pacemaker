@@ -450,6 +450,7 @@ pcmk__xe_create_html(xmlNode *parent, const char *name, const char *id,
 }
 
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src);
 
 /*!
  * \internal
