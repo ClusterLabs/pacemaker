@@ -17,6 +17,7 @@
 
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/nvpair_internal.h>
+#include <crm/common/rules_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/rules_internal.h>
@@ -98,21 +99,6 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
     };
 
     return pe_eval_subexpr(expr, &rule_data, next_change);
-}
-
-static crm_time_t *
-parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
-{
-    crm_time_t *end = pcmk_copy_time(start);
-
-    pcmk__add_time_from_xml(end, pcmk__time_years, duration_spec);
-    pcmk__add_time_from_xml(end, pcmk__time_months, duration_spec);
-    pcmk__add_time_from_xml(end, pcmk__time_weeks, duration_spec);
-    pcmk__add_time_from_xml(end, pcmk__time_days, duration_spec);
-    pcmk__add_time_from_xml(end, pcmk__time_hours, duration_spec);
-    pcmk__add_time_from_xml(end, pcmk__time_minutes, duration_spec);
-    pcmk__add_time_from_xml(end, pcmk__time_seconds, duration_spec);
-    return end;
 }
 
 // Information about a block of nvpair elements
@@ -875,7 +861,10 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
     pcmk__xe_get_datetime(expr, PCMK_XA_END, &end);
 
     if (start != NULL && end == NULL && duration_spec != NULL) {
-        end = parse_xml_duration(start, duration_spec);
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return the result of this if it fails
+         */
+        pcmk__unpack_duration(duration_spec, start, &end);
     }
 
     if (pcmk__str_eq(op, "in_range", pcmk__str_null_matches | pcmk__str_casei)) {
