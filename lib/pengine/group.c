@@ -385,8 +385,8 @@ pe__group_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), show_opts, child_rsc,
-                     only_node, only_rsc);
+        out->message(out, (const char *) child_rsc->xml->name, show_opts,
+                     child_rsc, only_node, only_rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -443,7 +443,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
                          pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
-            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
+            out->message(out, (const char *) child_rsc->xml->name, show_opts,
                          child_rsc, only_node, only_rsc);
         }
     }

@@ -892,7 +892,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
+        out->message(out, (const char *) child_rsc->xml->name, show_opts,
                      child_rsc, only_node, all);
     }
 
@@ -1028,7 +1028,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, (gpointer) "*");
-            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
+            out->message(out, (const char *) child_rsc->xml->name, show_opts,
                          child_rsc, only_node, all);
             g_list_free(all);
         }
