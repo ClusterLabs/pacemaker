@@ -169,7 +169,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_debug("Respond to join offer join-%s from %s",
                   join_id, controld_globals.dc_name);
-        copy_in_properties(generation, output);
+        pcmk__xe_copy_attrs(generation, output);
 
         reply = create_request(CRM_OP_JOIN_REQUEST, generation,
                                controld_globals.dc_name, CRM_SYSTEM_DC,

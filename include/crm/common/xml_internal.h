@@ -425,6 +425,8 @@ xmlNode *pcmk__xe_next_same(const xmlNode *node);
 void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
 
+void pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src);
+
 /*!
  * \internal
  * \brief Like pcmk__xe_set_props, but takes a va_list instead of

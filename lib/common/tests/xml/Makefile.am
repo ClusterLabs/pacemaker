@@ -12,6 +12,7 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = crm_xml_init_test 		\
+		 pcmk__xe_copy_attrs_test	\
 		 pcmk__xe_first_child_test	\
 		 pcmk__xe_foreach_child_test 	\
 		 pcmk__xml_escape_test		\

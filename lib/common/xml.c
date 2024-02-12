@@ -491,6 +491,31 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Copy XML attributes, expanding \c ++ and \c +=
+ *
+ * This is similar to \c xmlCopyPropList() except that \c ++ and \c += are
+ * expanded where appropriate. See \c expand_plus_plus() for details.
+ *
+ * \param[in,out] target  XML element to receive copied attributes from \p src
+ * \param[in]     src     XML element whose attributes to copy to \p target
+ */
+void
+pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
+{
+    CRM_CHECK((src != NULL) && (target != NULL), return);
+
+    for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
+         attr = attr->next) {
+
+        const char *name = (const char *) attr->name;
+        const char *value = pcmk__xml_attr_value(attr);
+
+        expand_plus_plus(target, name, value);
+    }
+}
+
 void
 copy_in_properties(xmlNode *target, const xmlNode *src)
 {
@@ -1693,7 +1718,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */
-        copy_in_properties(target, update);
+        pcmk__xe_copy_attrs(target, update);
 
     } else {
         /* No need for expand_plus_plus(), just raw speed */
