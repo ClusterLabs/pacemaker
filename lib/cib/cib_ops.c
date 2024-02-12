@@ -493,7 +493,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
     CRM_CHECK(obj_root != NULL, return -EINVAL);
 
-    if (update_xml_child(obj_root, input) == FALSE) {
+    if (pcmk__xe_find_update(obj_root, input) != pcmk_rc_ok) {
         if (options & cib_can_create) {
             pcmk__xml_copy(obj_root, input);
         } else {
@@ -935,7 +935,7 @@ cib_process_xpath(const char *op, int options, const char *section,
             }
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
-            if (update_xml_child(match, input) == FALSE) {
+            if (pcmk__xe_find_update(match, input) != pcmk_rc_ok) {
                 rc = -ENXIO;
             } else if ((options & cib_multiple) == 0) {
                 break;

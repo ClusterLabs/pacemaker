@@ -232,6 +232,7 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     void *user_data);
 int pcmk__xe_find_delete(xmlNode *xml, xmlNode *search);
 int pcmk__xe_find_replace(xmlNode *xml, xmlNode *replace);
+int pcmk__xe_find_update(xmlNode *xml, xmlNode *update);
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
