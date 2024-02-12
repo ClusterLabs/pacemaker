@@ -36,8 +36,6 @@ void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
 
 gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
                        crm_time_t *next_change);
-gboolean pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
-                         crm_time_t *next_change);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/rules_compat.h>

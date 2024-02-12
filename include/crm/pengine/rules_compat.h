@@ -74,6 +74,10 @@ gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
 gboolean pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
                       crm_time_t *next_change);
 
+//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
+gboolean pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
+                         crm_time_t *next_change);
+
 //! \deprecated Use pe_unpack_nvpairs() instead
 void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
                                 const char *set_name, GHashTable *node_hash,

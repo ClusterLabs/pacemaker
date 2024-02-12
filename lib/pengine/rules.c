@@ -361,26 +361,6 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 }
 
 /*!
- * \brief Evaluate a single rule expression, including any subexpressions
- *
- * \param[in,out] expr         XML containing a rule expression
- * \param[in]     rule_data    Matching parameters to check against expression
- * \param[out]    next_change  If not NULL, set to when evaluation will change
- *
- * \return TRUE if \p rule_data passes \p expr, otherwise FALSE
- */
-gboolean
-pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
-                crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk__evaluate_condition(expr, &rule_input,
-                                    next_change) == pcmk_rc_ok;
-}
-
-/*!
  * \internal
  * \brief Evaluate a node attribute expression based on #uname, #id, #kind,
  *        or a generic node attribute
@@ -530,6 +510,17 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
 
     map_rule_input(&rule_input, rule_data);
     return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
+}
+
+gboolean
+pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
+                crm_time_t *next_change)
+{
+    pcmk_rule_input_t rule_input = { NULL, };
+
+    map_rule_input(&rule_input, rule_data);
+    return pcmk__evaluate_condition(expr, &rule_input,
+                                    next_change) == pcmk_rc_ok;
 }
 
 void
