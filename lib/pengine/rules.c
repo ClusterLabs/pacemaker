@@ -360,43 +360,6 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     return ruleset_default;
 }
 
-/*!
- * \internal
- * \brief Evaluate a node attribute expression based on #uname, #id, #kind,
- *        or a generic node attribute
- *
- * \param[in] expr       XML of rule expression
- * \param[in] rule_data  The match_data and node_hash members are used
- *
- * \return TRUE if rule_data satisfies the expression, FALSE otherwise
- */
-gboolean
-pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk__evaluate_attr_expression(expr, &rule_input) == pcmk_rc_ok;
-}
-
-gboolean
-pe__eval_op_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk__evaluate_op_expression(expr, &rule_input) == pcmk_rc_ok;
-}
-
-gboolean
-pe__eval_rsc_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk__evaluate_rsc_expression(expr, &rule_input) == pcmk_rc_ok;
-}
-
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
