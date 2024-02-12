@@ -135,6 +135,11 @@ bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
 G_GNUC_INTERNAL
 void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
 
+#if defined(PCMK__UNIT_TESTING)
+G_GNUC_INTERNAL
+void pcmk__xa_set_expand(xmlNode *target, const char *name, const char *value);
+#endif  // defined(PCMK__UNIT_TESTING)
+
 /*
  * Date/times
  */
