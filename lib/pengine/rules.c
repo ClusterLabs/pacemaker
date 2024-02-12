@@ -300,15 +300,11 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                     always_first, overwrite, next_change);
 }
 
-/*!
- * \brief Evaluate rules
- *
- * \param[in,out] ruleset      XML possibly containing rule sub-elements
- * \param[in]     rule_data
- * \param[out]    next_change  If not NULL, set to when evaluation will change
- *
- * \return TRUE if there are no rules or
- */
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/pengine/rules_compat.h>
+
 gboolean
 pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
               crm_time_t *next_change)
@@ -319,11 +315,6 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     return pcmk__evaluate_rules(ruleset, &rule_input,
                                 next_change) == pcmk_rc_ok;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/pengine/rules_compat.h>
 
 gboolean
 pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
