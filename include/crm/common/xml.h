@@ -50,8 +50,6 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-xmlNode *get_message_xml(const xmlNode *msg, const char *field);
-
 /*
  * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *

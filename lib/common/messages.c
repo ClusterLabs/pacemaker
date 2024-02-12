@@ -156,12 +156,6 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     return reply;
 }
 
-xmlNode *
-get_message_xml(const xmlNode *msg, const char *field)
-{
-    return pcmk__message_get_xml(msg, field);
-}
-
 /*!
  * \brief Get name to be used as identifier for cluster messages
  *
@@ -299,6 +293,12 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
 
     pcmk__xml_copy(holder, xml);
     return TRUE;
+}
+
+xmlNode *
+get_message_xml(const xmlNode *msg, const char *field)
+{
+    return pcmk__message_get_xml(msg, field);
 }
 
 // LCOV_EXCL_STOP
