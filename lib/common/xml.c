@@ -30,6 +30,37 @@
 #define XML_PARSER_DEBUG 0
 #endif
 
+/*!
+ * \internal
+ * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
+ *
+ * \param[in,out] xml        XML tree to traverse
+ * \param[in,out] fn         Function to call for each node (returns \c true to
+ *                           continue traversing the tree or \c false to stop)
+ * \param[in,out] user_data  Argument to \p fn
+ *
+ * \return \c false if any \p fn call returned \c false, or \c true otherwise
+ *
+ * \note This function is recursive.
+ */
+bool
+pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                       void *user_data)
+{
+    if (!fn(xml, user_data)) {
+        return false;
+    }
+
+    for (xml = pcmk__xml_first_child(xml); xml != NULL;
+         xml = pcmk__xml_next(xml)) {
+
+        if (!pcmk__xml_tree_foreach(xml, fn, user_data)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool
 pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
 {
@@ -1813,6 +1844,56 @@ find_xml_children(xmlNode ** children, xmlNode * root,
 
 /*!
  * \internal
+ * \brief Delete an XML subtree if it matches a search element
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * If \p user_data has attributes set, \p xml has those attributes set to the
+ *   same values. (\p xml may have additional attributes set to arbitrary
+ *   values.)
+ *
+ * \param[in,out] xml        XML subtree to delete upon match
+ * \param[in]     user_data  Search element
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was deleted)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+delete_xe_if_matching(xmlNode *xml, void *user_data)
+{
+    xmlNode *search = user_data;
+
+    if (!pcmk__xe_is(search, (const char *) xml->name)) {
+        // No match: either not both elements, or different element types
+        return true;
+    }
+
+    for (const xmlAttr *attr = pcmk__xe_first_attr(search); attr != NULL;
+         attr = attr->next) {
+
+        const char *search_val = pcmk__xml_attr_value(attr);
+        const char *xml_val = crm_element_value(xml, (const char *) attr->name);
+
+        if (!pcmk__str_eq(search_val, xml_val, pcmk__str_casei)) {
+            // No match: an attr in xml doesn't match the attr in search
+            return true;
+        }
+    }
+
+#if XML_PARSER_DEBUG
+    crm_log_xml_trace(xml, "delete-match");
+    crm_log_xml_trace(search, "delete-search");
+#endif  // XML_PARSER_DEBUG
+    free_xml(xml);
+
+    // Found a match and deleted it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Replace one XML node with a copy of another XML node
  *
  * This function handles change tracking and applies ACLs.
@@ -1843,11 +1924,60 @@ replace_node(xmlNode *old, xmlNode *new)
 
 /*!
  * \internal
+ * \brief Replace one XML subtree with a copy of another if the two match
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * If \p user_data has the \c PCMK_XA_ID attribute set, then \p xml has
+ *   \c PCMK_XA_ID set to the same value.
+ *
+ * \param[in,out] xml        XML subtree to replace with \p user_data upon match
+ * \param[in]     user_data  XML to replace \p xml with a copy of upon match
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was replaced by \p user_data)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+replace_xe_if_matching(xmlNode *xml, void *user_data)
+{
+    xmlNode *replace = user_data;
+    const char *xml_id = NULL;
+    const char *replace_id = NULL;
+
+    xml_id = pcmk__xe_id(xml);
+    replace_id = pcmk__xe_id(replace);
+
+    if (!pcmk__xe_is(replace, (const char *) xml->name)) {
+        // No match: either not both elements, or different element types
+        return true;
+    }
+
+    if ((replace_id != NULL)
+        && !pcmk__str_eq(replace_id, xml_id, pcmk__str_none)) {
+
+        // No match: ID was provided in replace and doesn't match xml's ID
+        return true;
+    }
+
+#if XML_PARSER_DEBUG
+    crm_log_xml_trace(xml, "replace-match");
+    crm_log_xml_trace(replace, "replace-with");
+#endif  // XML_PARSER_DEBUG
+    replace_node(xml, replace);
+
+    // Found a match and replaced it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Search an XML tree depth-first and replace the first matching element
  *
- * \param[in,out] parent       Parent of \p child (should be \c NULL everywhere
- *                             except in the recursive call)
- * \param[in,out] child        Root element of XML tree to search
+ * This function does not attempt to match the tree root (\p xml).
+ *
+ * \param[in,out] xml          XML tree to search
  * \param[in]     update       XML to match and replace with. A matching element
  *                             must share the same element name and ID (if any)
  *                             as \p update. If \p delete_only is \c false, the
@@ -1860,77 +1990,26 @@ replace_node(xmlNode *old, xmlNode *new)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__xe_replace_match(xmlNode *parent, xmlNode *child, xmlNode *update,
-                       bool delete_only)
+pcmk__xe_replace_match(xmlNode *xml, xmlNode *update, bool delete_only)
 {
-    /* @TODO Create a recursive helper so that callers don't need to pass a NULL
-     * parent argument.
-     *
-     * @TODO Try to extract delete into a different function from replace.
-     * Ideally separate tree traversal from any work.
-     *
-     * @COMPAT Some of this behavior is questionable for general use but is
-     * required for backward compatibility by cib_process_replace() and
-     * cib_process_delete(). Consider moving some of this to libcib since those
-     * are the only callers. Behavior can change at a major version release if
-     * desired.
+    /* @COMPAT Some of this behavior (like not matching the tree root) is
+     * questionable for general use but is required for backward compatibility
+     * by cib_process_replace() and cib_process_delete(). Behavior can change at
+     * a major version release if desired.
      */
-    bool is_match = false;
-    const char *child_id = NULL;
-    const char *update_id = NULL;
+    bool (*fn)(xmlNode *, void *) = replace_xe_if_matching;
 
-    CRM_CHECK((child != NULL) && (update != NULL), return EINVAL);
-
-    child_id = pcmk__xe_id(child);
-    update_id = pcmk__xe_id(update);
-
-    /* Match element name and (if provided in update XML) element ID. Don't
-     * match search root (child is search root if parent == NULL).
-     */
-    is_match = (parent != NULL)
-               && pcmk__xe_is(update, (const char *) child->name)
-               && ((update_id == NULL)
-                   || pcmk__str_eq(update_id, child_id, pcmk__str_none));
-
-    /* For deletion, match all attributes provided in update. A matching node
-     * can have additional attributes, but values must match for provided ones.
-     */
-    if (is_match && delete_only) {
-        for (xmlAttr *attr = pcmk__xe_first_attr(update); attr != NULL;
-             attr = attr->next) {
-            const char *name = (const char *) attr->name;
-            const char *update_val = pcmk__xml_attr_value(attr);
-            const char *child_val = crm_element_value(child, name);
-
-            if (!pcmk__str_eq(update_val, child_val, pcmk__str_casei)) {
-                is_match = false;
-                break;
-            }
-        }
+    if (delete_only) {
+        fn = delete_xe_if_matching;
     }
 
-    if (is_match) {
-        if (delete_only) {
-            crm_log_xml_trace(child, "delete-match");
-            crm_log_xml_trace(update, "delete-search");
-            free_xml(child);
+    CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
 
-        } else {
-            crm_log_xml_trace(child, "replace-match");
-            crm_log_xml_trace(update, "replace-with");
-            replace_node(child, update);
-        }
-        return pcmk_rc_ok;
-    }
+    for (xml = pcmk__xe_first_child(xml, NULL, NULL, NULL); xml != NULL;
+         xml = pcmk__xe_next(xml)) {
 
-    // Current node not a match; search the rest of the subtree depth-first
-    parent = child;
-    for (child = pcmk__xe_first_child(parent, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
-
-        // Only delete/replace the first match
-        if (pcmk__xe_replace_match(parent, child, update,
-                                   delete_only) == pcmk_rc_ok) {
+        if (!pcmk__xml_tree_foreach(xml, fn, update)) {
+            // Found and replaced or deleted an element
             return pcmk_rc_ok;
         }
     }
