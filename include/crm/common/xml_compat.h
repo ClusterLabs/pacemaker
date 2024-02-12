@@ -14,6 +14,7 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/nvpair.h>  // crm_xml_add()
+#include <crm/common/xml_names.h>   // PCMK_XE_CLONE
 
 #ifdef __cplusplus
 extern "C" {
@@ -141,6 +142,20 @@ gboolean add_message_xml(xmlNode *msg, const char *field, xmlNode *xml);
 
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *get_message_xml(const xmlNode *msg, const char *field);
+
+//! \deprecated Do not use
+static inline const char *
+crm_map_element_name(const xmlNode *xml)
+{
+    if (xml == NULL) {
+        return NULL;
+    } else if (strcmp((const char *) xml->name, "master") == 0) {
+        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
+        return PCMK_XE_CLONE;
+    } else {
+        return (const char *) xml->name;
+    }
+}
 
 #ifdef __cplusplus
 }
