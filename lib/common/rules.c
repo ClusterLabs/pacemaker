@@ -1463,3 +1463,39 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Evaluate all rules contained within an element
+ *
+ * \param[in,out] xml          XML element possibly containing rule subelements
+ * \param[in]     rule_input   Values used to evaluate rule criteria
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code (pcmk_rc_ok if there are no contained
+ *         rules or any contained rule passes, otherwise the result of the last
+ *         rule)
+ * \deprecated On code paths leading to this function, the schema allows
+ *             multiple top-level rules only in the deprecated lifetime element
+ *             of location constraints. The code also allows multiple top-level
+ *             rules when unpacking attribute sets, but this is deprecated and
+ *             already prevented by schema validation. This function can be
+ *             dropped when support for those is dropped.
+ */
+int
+pcmk__evaluate_rules(xmlNode *xml, const pcmk_rule_input_t *rule_input,
+                     crm_time_t *next_change)
+{
+    // If there are no rules, pass by default
+    int rc = pcmk_rc_ok;
+
+    for (xmlNode *rule = pcmk__xe_first_child(xml, PCMK_XE_RULE, NULL, NULL);
+         rule != NULL; rule = pcmk__xe_next_same(rule)) {
+
+        rc = pcmk_evaluate_rule(rule, rule_input, next_change);
+        if (rc == pcmk_rc_ok) {
+            break;
+        }
+    }
+    return rc;
+}

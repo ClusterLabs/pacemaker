@@ -76,15 +76,12 @@ gboolean
 pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
                   crm_time_t *next_change)
 {
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_hash,
+    pcmk_rule_input_t rule_input = {
+        .node_attrs = node_hash,
         .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
     };
 
-    return pe_eval_rules(ruleset, &rule_data, next_change);
+    return pcmk__evaluate_rules(ruleset, &rule_input, next_change);
 }
 
 // Information about a block of nvpair elements
@@ -198,9 +195,12 @@ unpack_attr_set(gpointer data, gpointer user_data)
 {
     sorted_set_t *pair = data;
     unpack_data_t *unpack_data = user_data;
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    if (!pe_eval_rules(pair->attr_set, unpack_data->rule_data,
-                       unpack_data->next_change)) {
+    map_rule_input(&rule_input, unpack_data->rule_data);
+
+    if (pcmk__evaluate_rules(pair->attr_set, &rule_input,
+                             unpack_data->next_change) != pcmk_rc_ok) {
         return;
     }
 
@@ -335,29 +335,11 @@ gboolean
 pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
               crm_time_t *next_change)
 {
-    // If there are no rules, pass by default
-    gboolean ruleset_default = TRUE;
+    pcmk_rule_input_t rule_input = { NULL, };
 
-    for (xmlNode *rule = pcmk__xe_first_child(ruleset, PCMK_XE_RULE, NULL,
-                                              NULL);
-         rule != NULL; rule = pcmk__xe_next_same(rule)) {
-
-        pcmk_rule_input_t rule_input = { NULL, };
-
-        map_rule_input(&rule_input, rule_data);
-        ruleset_default = FALSE;
-        if (pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok) {
-            /* Only the deprecated PCMK__XE_LIFETIME element of location
-             * constraints may contain more than one rule at the top level --
-             * the schema limits a block of nvpairs to a single top-level rule.
-             * So, this effectively means that a lifetime is active if any rule
-             * it contains is active.
-             */
-            return TRUE;
-        }
-    }
-
-    return ruleset_default;
+    map_rule_input(&rule_input, rule_data);
+    return pcmk__evaluate_rules(ruleset, &rule_input,
+                                next_change) == pcmk_rc_ok;
 }
 
 // Deprecated functions kept only for backward API compatibility
