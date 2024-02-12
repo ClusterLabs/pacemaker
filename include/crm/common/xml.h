@@ -70,7 +70,6 @@ void fix_plus_plus_recursive(xmlNode * target);
  * Searching & Modifying
  */
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
 static inline const char *
 crm_map_element_name(const xmlNode *xml)
