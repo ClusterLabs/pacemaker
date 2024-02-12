@@ -570,7 +570,7 @@ te_update_diff(const char *event, xmlNode * msg)
     }
 
     op = crm_element_value(msg, PCMK__XA_CIB_OP);
-    diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    diff = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
