@@ -104,21 +104,26 @@ pcmk__mark_xml_node_dirty(xmlNode *xml)
     set_parent_flag(xml, pcmk__xf_dirty);
 }
 
-// Clear flags on XML node and its children
-static void
-reset_xml_node_flags(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Clear flags on an XML node
+ *
+ * \param[in,out] xml        XML node whose flags to reset
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+reset_xml_node_flags(xmlNode *xml, void *user_data)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (nodepriv) {
-        nodepriv->flags = 0;
+    if (nodepriv != NULL) {
+        nodepriv->flags = pcmk__xf_none;
     }
-
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        reset_xml_node_flags(cIter);
-    }
+    return true;
 }
 
 // Set xpf_created flag on XML node and any children
@@ -1440,7 +1445,7 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     xmlNode *candidate = pcmk__xml_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
-    reset_xml_node_flags(candidate);
+    pcmk__xml_tree_foreach(candidate, reset_xml_node_flags, NULL);
 
     // Check whether ACLs allow the deletion
     pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
@@ -1843,7 +1848,7 @@ replace_node(xmlNode *old, xmlNode *new)
     pcmk__mem_assert(new);
 
     // May be unnecessary but avoids slight changes to some test outputs
-    reset_xml_node_flags(new);
+    pcmk__xml_tree_foreach(new, reset_xml_node_flags, NULL);
 
     old = xmlReplaceNode(old, new);
 
