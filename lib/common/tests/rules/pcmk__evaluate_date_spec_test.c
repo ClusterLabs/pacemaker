@@ -27,18 +27,18 @@ run_one_test(const char *t, const char *x, int expected) {
 }
 
 static void
-no_time_given(void **state) {
-    assert_int_equal(pcmk__evaluate_date_spec(NULL, NULL),
-                     pcmk_rc_op_unsatisfied);
-}
-
-static void
-any_time_satisfies_empty_spec(void **state) {
+null_invalid(void **state) {
+    xmlNodePtr xml = string2xml("<" PCMK_XE_DATE_SPEC " "
+                                PCMK_XA_ID "='spec' "
+                                PCMK_XA_YEARS "='2019'/>");
     crm_time_t *tm = crm_time_new(NULL);
 
-    assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_date_spec(NULL, NULL), EINVAL);
+    assert_int_equal(pcmk__evaluate_date_spec(xml, NULL), EINVAL);
+    assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), EINVAL);
 
     crm_time_free(tm);
+    free_xml(xml);
 }
 
 static void
@@ -179,8 +179,7 @@ time_after_monthdays_range(void **state) {
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test(no_time_given),
-                cmocka_unit_test(any_time_satisfies_empty_spec),
+                cmocka_unit_test(null_invalid),
                 cmocka_unit_test(time_satisfies_year_spec),
                 cmocka_unit_test(time_after_year_spec),
                 cmocka_unit_test(time_satisfies_year_range),
