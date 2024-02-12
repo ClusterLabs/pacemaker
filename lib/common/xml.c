@@ -505,12 +505,6 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
     return pcmk_rc_ok;
 }
 
-void
-copy_in_properties(xmlNode *target, const xmlNode *src)
-{
-    pcmk__xe_copy_attrs(target, src);
-}
-
 /*!
  * \brief Parse integer assignment statements on this node and all its child
  *        nodes
@@ -3431,6 +3425,12 @@ find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
     }
 
     return match_found;
+}
+
+void
+copy_in_properties(xmlNode *target, const xmlNode *src)
+{
+    pcmk__xe_copy_attrs(target, src);
 }
 
 // LCOV_EXCL_STOP

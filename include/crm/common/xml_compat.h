@@ -180,6 +180,9 @@ crm_map_element_name(const xmlNode *xml)
     }
 }
 
+//! \deprecated Do not use
+void copy_in_properties(xmlNode *target, const xmlNode *src);
+
 #ifdef __cplusplus
 }
 #endif
