@@ -358,21 +358,23 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
     return position;
 }
 
-// Remove all attributes marked as deleted from an XML node
-static void
-accept_attr_deletions(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Remove all attributes marked as deleted from an XML node
+ *
+ * \param[in,out] xml        XML node whose deleted attributes to remove
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+static bool
+accept_attr_deletions(xmlNode *xml, void *user_data)
 {
-    // Clear XML node's flags
-    ((xml_node_private_t *) xml->_private)->flags = pcmk__xf_none;
-
-    // Remove this XML node's attributes that were marked as deleted
+    reset_xml_node_flags(xml, NULL);
     pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
-
-    // Recursively do the same for this XML node's children
-    for (xmlNodePtr cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        accept_attr_deletions(cIter);
-    }
+    return true;
 }
 
 /*!
@@ -421,7 +423,7 @@ xml_accept_changes(xmlNode * xml)
     }
 
     docpriv->flags = pcmk__xf_none;
-    accept_attr_deletions(top);
+    pcmk__xml_foreach_dfs(top, accept_attr_deletions, NULL);
 }
 
 /*!
