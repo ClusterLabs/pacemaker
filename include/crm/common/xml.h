@@ -101,8 +101,6 @@ const char *get_schema_name(int version);
 const char *xml_latest_schema(void);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 
-void free_xml(xmlNode * child);
-
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,

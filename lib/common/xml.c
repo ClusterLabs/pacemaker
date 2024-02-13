@@ -865,12 +865,6 @@ pcmk__xml_free(xmlNode *node)
     free_xml_with_position(node, -1);
 }
 
-void
-free_xml(xmlNode * child)
-{
-    pcmk__xml_free(child);
-}
-
 /*!
  * \internal
  * \brief Make a deep copy of an XML node under a given parent
@@ -2667,6 +2661,12 @@ pcmk_free_xml_subtree(xmlNode *xml)
 {
     xmlUnlinkNode(xml); // Detaches from parent and siblings
     xmlFreeNode(xml);   // Frees
+}
+
+void
+free_xml(xmlNode *child)
+{
+    pcmk__xml_free(child);
 }
 
 // LCOV_EXCL_STOP
