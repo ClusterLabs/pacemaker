@@ -194,7 +194,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
          an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = expand_idref(an_attr, top);
+            xmlNode *ref_nvpair = pcmk__xe_expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
@@ -284,7 +284,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             const char *score = NULL;
             sorted_set_t *pair = NULL;
-            xmlNode *expanded_attr_set = expand_idref(attr_set, top);
+            xmlNode *expanded_attr_set = pcmk__xe_expand_idref(attr_set, top);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled
@@ -425,7 +425,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     gboolean do_and = TRUE;
     const char *value = NULL;
 
-    rule = expand_idref(rule, NULL);
+    rule = pcmk__xe_expand_idref(rule, NULL);
     if (rule == NULL) {
         return FALSE; // Not possible with schema validation enabled
     }

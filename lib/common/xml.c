@@ -2108,36 +2108,56 @@ pcmk__xml_cleanup(void)
     xmlCleanupParser();
 }
 
+/*!
+ * \internal
+ * \brief Get the XML element whose \c PCMK_XA_ID matches an \c PCMK_XA_ID_REF
+ *
+ * \param[in] query   Element whose \c PCMK_XA_ID_REF attribute to match
+ * \param[in] target  Tree whose document to search for element with matching
+ *                    \c PCMK_XA_ID (\c NULL to search the document containing
+ *                    \p query)
+ *
+ * \return If \p query has a \c PCMK_XA_ID_REF attribute, node in the document
+ *         containing \p target whose \c PCMK_XA_ID attribute matches;
+ *         otherwise, \p query
+ */
 xmlNode *
-expand_idref(xmlNode * input, xmlNode * top)
+pcmk__xe_expand_idref(xmlNode *query, xmlNode *target)
 {
     char *xpath = NULL;
     const char *ref = NULL;
     xmlNode *result = NULL;
 
-    if (input == NULL) {
+    if (query == NULL) {
         return NULL;
     }
 
-    ref = crm_element_value(input, PCMK_XA_ID_REF);
+    ref = crm_element_value(query, PCMK_XA_ID_REF);
     if (ref == NULL) {
-        return input;
+        return query;
     }
 
-    if (top == NULL) {
-        top = input;
+    if (target == NULL) {
+        target = query;
     }
 
-    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
-    result = get_xpath_object(xpath, top, LOG_DEBUG);
-    if (result == NULL) { // Not possible with schema validation enabled
+    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", query->name, ref);
+    result = get_xpath_object(xpath, target, LOG_DEBUG);
+    if (result == NULL) {
+        // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
                          "a valid object " CRM_XS " xpath=%s",
-                         input->name, ref, xpath);
+                         query->name, ref, xpath);
     }
     free(xpath);
     return result;
+}
+
+xmlNode *
+expand_idref(xmlNode * input, xmlNode * top)
+{
+    return pcmk__xe_expand_idref(input, top);
 }
 
 char *

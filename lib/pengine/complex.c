@@ -674,7 +674,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->parent = parent;
 
     ops = pcmk__xe_first_child((*rsc)->xml, PCMK_XE_OPERATIONS, NULL, NULL);
-    (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
+    (*rsc)->ops_xml = pcmk__xe_expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {

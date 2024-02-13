@@ -218,6 +218,8 @@ xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
 
+xmlNode *pcmk__xe_expand_idref(xmlNode *query, xmlNode *target);
+
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
