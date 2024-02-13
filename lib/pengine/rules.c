@@ -125,7 +125,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
          an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = expand_idref(an_attr, NULL);
+            xmlNode *ref_nvpair = pcmk__xe_expand_idref(an_attr, NULL);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
@@ -206,7 +206,7 @@ make_pairs(const xmlNode *xml_obj, const char *set_name)
          attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            xmlNode *expanded_attr_set = expand_idref(attr_set, NULL);
+            xmlNode *expanded_attr_set = pcmk__xe_expand_idref(attr_set, NULL);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled

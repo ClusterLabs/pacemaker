@@ -2172,8 +2172,19 @@ pcmk__xml_cleanup(void)
     xmlCleanupParser();
 }
 
+/*!
+ * \internal
+ * \brief Get the XML element whose \c PCMK_XA_ID matches an \c PCMK_XA_ID_REF
+ *
+ * \param[in] input   Element whose \c PCMK_XA_ID_REF attribute to check
+ * \param[in] search  Root of search for node with matching \c PCMK_XA_ID
+ *                    (\c NULL to use \p input)
+ *
+ * \return If \p input has a \c PCMK_XA_ID_REF attribute, node in \p search
+ *         whose \c PCMK_XA_ID attribute matches; otherwise, \p input
+ */
 xmlNode *
-expand_idref(xmlNode * input, xmlNode * top)
+pcmk__xe_expand_idref(xmlNode *input, xmlNode *search)
 {
     char *xpath = NULL;
     const char *ref = NULL;
@@ -2188,13 +2199,14 @@ expand_idref(xmlNode * input, xmlNode * top)
         return input;
     }
 
-    if (top == NULL) {
-        top = input;
+    if (search == NULL) {
+        search = input;
     }
 
     xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
-    result = get_xpath_object(xpath, top, LOG_DEBUG);
-    if (result == NULL) { // Not possible with schema validation enabled
+    result = get_xpath_object(xpath, search, LOG_DEBUG);
+    if (result == NULL) {
+        // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
                          "a valid object " CRM_XS " xpath=%s",
@@ -2202,6 +2214,12 @@ expand_idref(xmlNode * input, xmlNode * top)
     }
     free(xpath);
     return result;
+}
+
+xmlNode *
+expand_idref(xmlNode * input, xmlNode * top)
+{
+    return pcmk__xe_expand_idref(input, top);
 }
 
 char *

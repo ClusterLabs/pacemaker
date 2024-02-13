@@ -1395,7 +1395,7 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
         return EINVAL;
     }
 
-    rule = expand_idref(rule, NULL);
+    rule = pcmk__xe_expand_idref(rule, NULL);
     if (rule == NULL) {
         // Not possible with schema validation enabled; message already logged
         return pcmk_rc_unpack_error;

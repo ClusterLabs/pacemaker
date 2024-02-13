@@ -221,6 +221,8 @@ xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
 
+xmlNode *pcmk__xe_expand_idref(xmlNode *input, xmlNode *search);
+
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
