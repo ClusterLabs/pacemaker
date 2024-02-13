@@ -27,7 +27,7 @@ setup(void **state) {
 
 static int
 teardown(void **state) {
-    crm_xml_cleanup();
+    pcmk__xml_cleanup();
     return 0;
 }
 

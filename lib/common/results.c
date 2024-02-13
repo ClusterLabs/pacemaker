@@ -943,7 +943,7 @@ crm_exit(crm_exit_t rc)
     }
 
     mainloop_cleanup();
-    crm_xml_cleanup();
+    pcmk__xml_cleanup();
 
     free(pcmk__our_nodename);
 

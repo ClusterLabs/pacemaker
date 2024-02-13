@@ -2094,10 +2094,16 @@ pcmk__xml_init(void)
 }
 
 void
-crm_xml_cleanup(void)
+pcmk__xml_cleanup(void)
 {
     crm_schema_cleanup();
     xmlCleanupParser();
+}
+
+void
+crm_xml_cleanup(void)
+{
+    pcmk__xml_cleanup();
 }
 
 #define XPATH_MAX 512
