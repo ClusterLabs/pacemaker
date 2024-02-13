@@ -26,7 +26,7 @@ static int
 setup(void **state) {
     char *path = NULL;
 
-    crm_xml_init();
+    pcmk__xml_init();
 
     path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
     input = pcmk__xml_parse_file(path);

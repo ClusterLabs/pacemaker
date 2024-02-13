@@ -2877,26 +2877,43 @@ pcmk__xe_next_same(const xmlNode *node)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Initialize the Pacemaker XML environment
+ *
+ * Set an XML buffer allocation scheme, set XML node create and destroy
+ * callbacks, and load schemas into the cache.
+ */
 void
-crm_xml_init(void)
+pcmk__xml_init(void)
 {
-    static bool init = true;
+    // @TODO Try to find a better caller than crm_log_preinit()
+    static bool initialized = false;
 
-    if(init) {
-        init = false;
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
+    if (!initialized) {
+        initialized = true;
+
+        /* Double the buffer size when the buffer needs to grow. The default
+         * allocator XML_BUFFER_ALLOC_EXACT was found to cause poor performance
+         * due to the number of reallocs.
          */
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
-        /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(free_private_data);
+        // Initialize private data at node creation
         xmlRegisterNodeDefault(new_private_data);
 
+        // Free private data at node destruction
+        xmlDeregisterNodeDefault(free_private_data);
+
+        // Load schemas into the cache
         crm_schema_init();
     }
+}
+
+void
+crm_xml_init(void)
+{
+    pcmk__xml_init();
 }
 
 void
