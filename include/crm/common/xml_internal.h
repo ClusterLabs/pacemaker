@@ -379,6 +379,7 @@ void pcmk__xe_set_content(xmlNode *node, const char *content);
 
 xmlNode *pcmk__xe_create_full(xmlNode *parent, const char *name,
                               const char *content);
+void pcmk__xml_free_full(xmlNode *node, int position, bool ignore_acl);
 
 /*!
  * \internal

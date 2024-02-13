@@ -785,29 +785,40 @@ pcmk_free_xml_subtree(xmlNode *xml)
     xmlFreeNode(xml);   // Frees
 }
 
-static void
-free_xml_with_position(xmlNode *child, int position)
+/*!
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
+ *
+ * If \p node is the root of its document, free the entire document.
+ *
+ * \param[in,out] node        XML node to free
+ * \param[in]     position    Position of \p node among its siblings for change
+ *                            tracking (negative to calculate automatically if
+ *                            needed)
+ * \param[in]     ignore_acl  If \c true, free XML regardless of ACLs
+ */
+void
+pcmk__xml_free_full(xmlNode *node, int position, bool ignore_acl)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
-    if (child == NULL) {
+    if (node == NULL) {
         return;
     }
-    doc = child->doc;
-    nodepriv = child->_private;
+    doc = node->doc;
+    nodepriv = node->_private;
 
-    if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
-        // Free everything
+    if ((doc != NULL) && (xmlDocGetRootElement(doc) == node)) {
         xmlFreeDoc(doc);
         return;
     }
 
-    if (!pcmk__check_acl(child, NULL, pcmk__xf_acl_write)) {
+    if (!ignore_acl && !pcmk__check_acl(node, NULL, pcmk__xf_acl_write)) {
         GString *xpath = NULL;
 
         pcmk__if_tracing({}, return);
-        xpath = pcmk__element_xpath(child);
+        xpath = pcmk__element_xpath(node);
         qb_log_from_external_source(__func__, __FILE__,
                                     "Cannot remove %s %x", LOG_TRACE,
                                     __LINE__, 0, xpath->str, nodepriv->flags);
@@ -815,45 +826,46 @@ free_xml_with_position(xmlNode *child, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(child, false)
+    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
-        GString *xpath = pcmk__element_xpath(child);
+        GString *xpath = pcmk__element_xpath(node);
 
         if (xpath != NULL) {
             pcmk__deleted_xml_t *deleted_obj = NULL;
 
-            crm_trace("Deleting %s %p from %p", xpath->str, child, doc);
+            crm_trace("Deleting %s %p from %p", xpath->str, node, doc);
 
             deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
             deleted_obj->path = g_string_free(xpath, FALSE);
             deleted_obj->position = -1;
 
             // Record the position only for XML comments for now
-            if (child->type == XML_COMMENT_NODE) {
+            if (node->type == XML_COMMENT_NODE) {
                 if (position >= 0) {
                     deleted_obj->position = position;
 
                 } else {
-                    deleted_obj->position = pcmk__xml_position(child,
+                    deleted_obj->position = pcmk__xml_position(node,
                                                                pcmk__xf_skip);
                 }
             }
 
             docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
                                                   deleted_obj);
-            pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
+            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
         }
     }
-    pcmk_free_xml_subtree(child);
-}
 
+    xmlUnlinkNode(node);
+    xmlFreeNode(node);
+}
 
 void
 free_xml(xmlNode * child)
 {
-    free_xml_with_position(child, -1);
+    pcmk__xml_free_full(child, -1, false);
 }
 
 /*!
@@ -1015,7 +1027,7 @@ pcmk__strip_xml_text(xmlNode *xml)
         switch (iter->type) {
             case XML_TEXT_NODE:
                 /* Remove it */
-                pcmk_free_xml_subtree(iter);
+                pcmk__xml_free_full(iter, -1, true);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -2227,8 +2239,8 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
 
     // Remove the child again (which will track it in document's deleted_objs)
-    free_xml_with_position(candidate,
-                           pcmk__xml_position(old_child, pcmk__xf_skip));
+    pcmk__xml_free_full(candidate, pcmk__xml_position(old_child, pcmk__xf_skip),
+                        false);
 
     if (pcmk__xml_match(new_parent, old_child, true) == NULL) {
         pcmk__set_xml_flags((xml_node_private_t *) (old_child->_private),
