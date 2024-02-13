@@ -78,7 +78,7 @@ pcmk__xml_test_setup_group(void **state)
      * segmentation faults or assertions in functions related to change
      * tracking and ACLs. There's no harm in doing this before all tests.
      */
-    crm_xml_init();
+    pcmk__xml_init();
     return 0;
 }
 
