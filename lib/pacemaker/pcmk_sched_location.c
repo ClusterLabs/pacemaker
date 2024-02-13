@@ -126,7 +126,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     enum rsc_role_e role = pcmk_role_unknown;
     enum pcmk__combine combine = pcmk__combine_unknown;
 
-    rule_xml = expand_idref(rule_xml, rsc->cluster->input);
+    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
         return false; // Error already logged
     }
@@ -550,7 +550,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
          set != NULL; set = pcmk__xe_next_same(set)) {
 
         any_sets = true;
-        set = expand_idref(set, scheduler->input);
+        set = pcmk__xe_resolve_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 

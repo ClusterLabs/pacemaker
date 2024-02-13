@@ -993,7 +993,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
          set != NULL; set = pcmk__xe_next_same(set)) {
 
-        set = expand_idref(set, scheduler->input);
+        set = pcmk__xe_resolve_idref(set, scheduler->input);
         if (set == NULL) { // Configuration error, message already logged
             if (expanded_xml != NULL) {
                 pcmk__xml_free(expanded_xml);
