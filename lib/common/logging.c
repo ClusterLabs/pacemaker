@@ -823,7 +823,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
 
     have_logging = true;
 
-    crm_xml_init(); /* Sets buffer allocation strategy */
+    pcmk__xml_init();
 
     if (crm_trace_nonlog == 0) {
         crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
