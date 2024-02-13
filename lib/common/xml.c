@@ -2150,11 +2150,23 @@ pcmk__xml_init(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Tear down the Pacemaker XML environment
+ *
+ * Destroy schema cache and clean up memory allocated by libxml2.
+ */
 void
-crm_xml_cleanup(void)
+pcmk__xml_cleanup(void)
 {
     crm_schema_cleanup();
     xmlCleanupParser();
+}
+
+void
+crm_xml_cleanup(void)
+{
+    pcmk__xml_cleanup();
 }
 
 #define XPATH_MAX 512

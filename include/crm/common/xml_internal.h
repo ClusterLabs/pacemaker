@@ -166,6 +166,7 @@ enum pcmk__xml_fmt_options {
 };
 
 void pcmk__xml_init(void);
+void pcmk__xml_cleanup(void);
 
 int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
                    int depth, uint32_t options);
