@@ -2434,6 +2434,7 @@ void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                  bool as_diff)
 {
+    // @COMPAT Drop as_diff argument when apply_xml_diff() is removed
     xmlNode *a_child = NULL;
     const char *object_name = NULL,
                *object_href = NULL,
