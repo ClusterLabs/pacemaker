@@ -191,7 +191,7 @@ main(int argc, char **argv)
     }
 
     if (options.cib_save != NULL) {
-        write_xml_file(cib_object, options.cib_save, FALSE);
+        pcmk__xml_write_file(cib_object, options.cib_save, false, NULL);
     }
 
     scheduler = pe_new_working_set();
@@ -202,7 +202,7 @@ main(int argc, char **argv)
                     "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
-    
+
     scheduler->priv = out;
 
     rc = pcmk__verify(scheduler, out, cib_object);
@@ -233,7 +233,7 @@ main(int argc, char **argv)
     free(options.xml_string);
 
     if (cib_object != NULL) {
-        free_xml(cib_object);      
+        pcmk__xml_free(cib_object);
     }
 
     if (exit_code == CRM_EX_OK) {

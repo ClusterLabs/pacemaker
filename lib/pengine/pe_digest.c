@@ -35,9 +35,9 @@ pe__free_digests(gpointer ptr)
     pcmk__op_digest_t *data = ptr;
 
     if (data != NULL) {
-        free_xml(data->params_all);
-        free_xml(data->params_secure);
-        free_xml(data->params_restart);
+        pcmk__xml_free(data->params_all);
+        pcmk__xml_free(data->params_secure);
+        pcmk__xml_free(data->params_restart);
 
         free(data->digest_all_calc);
         free(data->digest_restart_calc);
@@ -103,7 +103,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 {
     xmlNode *action_config = NULL;
 
-    data->params_all = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+    data->params_all = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
 
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
@@ -199,7 +199,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (old_version) {
-        data->params_secure = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+        data->params_secure = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
         if (overrides != NULL) {
             g_hash_table_foreach(overrides, hash2field, data->params_secure);
         }
@@ -208,7 +208,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
 
     } else {
         // Start with a copy of all parameters
-        data->params_secure = copy_xml(data->params_all);
+        data->params_secure = pcmk__xml_copy(NULL, data->params_all);
     }
 
     if (secure_list != NULL) {
@@ -235,7 +235,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
      * Remove any timeout that made it this far, to match.
      */
     if (old_version) {
-        xml_remove_prop(data->params_secure, CRM_META "_" PCMK_META_TIMEOUT);
+        pcmk__xe_remove_attr(data->params_secure,
+                             CRM_META "_" PCMK_META_TIMEOUT);
     }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
@@ -270,7 +271,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     }
 
     // Start with a copy of all parameters
-    data->params_restart = copy_xml(data->params_all);
+    data->params_restart = pcmk__xml_copy(NULL, data->params_all);
 
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);

@@ -105,10 +105,10 @@ patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 static void
 print_patch(xmlNode *patch)
 {
-    char *buffer = dump_xml_formatted(patch);
+    gchar *buffer = pcmk__xml_dump(patch, pcmk__xml_fmt_pretty);
 
     printf("%s", buffer);
-    free(buffer);
+    g_free(buffer);
     fflush(stdout);
 }
 
@@ -116,13 +116,13 @@ print_patch(xmlNode *patch)
 static int
 apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 {
-    xmlNode *output = copy_xml(input);
+    xmlNode *output = pcmk__xml_copy(NULL, input);
     int rc = xml_apply_patchset(output, patch, as_cib);
 
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
-        free_xml(output);
+        pcmk__xml_free(output);
         return rc;
     }
 
@@ -136,7 +136,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
         crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
-        free_xml(output);
+        pcmk__xml_free(output);
     }
     return pcmk_rc_ok;
 }
@@ -167,10 +167,10 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 
     crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if (format == 2) {
-        xmlNode *version_xml = find_xml_node(patch, PCMK_XE_VERSION, FALSE);
+        xmlNode *version_xml = pcmk__xe_match_name(patch, PCMK_XE_VERSION);
 
         if (version_xml) {
-            free_xml(version_xml);
+            pcmk__xml_free(version_xml);
         }
 
     } else {
@@ -185,16 +185,16 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
             xmlNode *tmp = NULL;
             int lpc;
 
-            tmp = find_xml_node(patch, tags[i], FALSE);
+            tmp = pcmk__xe_match_name(patch, tags[i]);
             if (tmp) {
                 for (lpc = 0; lpc < nvfields; lpc++) {
-                    xml_remove_prop(tmp, vfields[lpc]);
+                    pcmk__xe_remove_attr(tmp, vfields[lpc]);
                 }
 
-                tmp = find_xml_node(tmp, PCMK_XE_CIB, FALSE);
+                tmp = pcmk__xe_match_name(tmp, PCMK_XE_CIB);
                 if (tmp) {
                     for (lpc = 0; lpc < nvfields; lpc++) {
-                        xml_remove_prop(tmp, vfields[lpc]);
+                        pcmk__xe_remove_attr(tmp, vfields[lpc]);
                     }
                 }
             }
@@ -253,7 +253,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
 
     pcmk__log_xml_patchset(LOG_NOTICE, output);
     print_patch(output);
-    free_xml(output);
+    pcmk__xml_free(output);
 
     /* pcmk_rc_error means there's a non-empty diff.
      * @COMPAT Choose a more descriptive return code, like one that maps to
@@ -327,25 +327,25 @@ main(int argc, char **argv)
     }
 
     if (options.raw_1) {
-        object_1 = string2xml(options.xml_file_1);
+        object_1 = pcmk__xml_parse_string(options.xml_file_1);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
-        object_1 = stdin2xml();
+        object_1 = pcmk__xml_parse_file(NULL);
 
     } else if (options.xml_file_1 != NULL) {
-        object_1 = filename2xml(options.xml_file_1);
+        object_1 = pcmk__xml_parse_file(options.xml_file_1);
     }
 
     if (options.raw_2) {
-        object_2 = string2xml(options.xml_file_2);
+        object_2 = pcmk__xml_parse_string(options.xml_file_2);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
-        object_2 = stdin2xml();
+        object_1 = pcmk__xml_parse_file(NULL);
 
     } else if (options.xml_file_2 != NULL) {
-        object_2 = filename2xml(options.xml_file_2);
+        object_2 = pcmk__xml_parse_file(options.xml_file_2);
     }
 
     if (object_1 == NULL) {
@@ -371,8 +371,8 @@ done:
     pcmk__free_arg_context(context);
     free(options.xml_file_1);
     free(options.xml_file_2);
-    free_xml(object_1);
-    free_xml(object_2);
+    pcmk__xml_free(object_1);
+    pcmk__xml_free(object_2);
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);

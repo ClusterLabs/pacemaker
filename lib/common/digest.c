@@ -67,7 +67,7 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
     }
 
     buffer = dump_xml_for_digest(input);
-    CRM_CHECK(buffer->len > 0, free_xml(copy);
+    CRM_CHECK(buffer->len > 0, pcmk__xml_free(copy);
               g_string_free(buffer, TRUE);
               return NULL);
 
@@ -75,7 +75,7 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
     crm_log_xml_trace(input, "digest:source");
 
     g_string_free(buffer, TRUE);
-    free_xml(copy);
+    pcmk__xml_free(copy);
     return digest;
 }
 

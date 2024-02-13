@@ -39,17 +39,17 @@ const char *str1 =
 
 static void
 bad_input(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     assert_null(pcmk__xe_match(NULL, NULL, NULL, NULL));
     assert_null(pcmk__xe_match(NULL, NULL, NULL, "attrX"));
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 not_found(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     /* No node with an attrX attribute */
     assert_null(pcmk__xe_match(xml, NULL, "attrX", NULL));
@@ -60,12 +60,12 @@ not_found(void **state) {
     /* No nodeA node with attrA=XYZ */
     assert_null(pcmk__xe_match(xml, "nodeA", "attrA", "XYZ"));
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 find_attrB(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
     xmlNode *result = NULL;
 
     /* Find the first node with attrB */
@@ -78,12 +78,12 @@ find_attrB(void **state) {
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "5");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 find_attrA_matching(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
     xmlNode *result = NULL;
 
     /* Find attrA=456 */
@@ -96,7 +96,7 @@ find_attrA_matching(void **state) {
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "4");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

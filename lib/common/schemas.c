@@ -742,14 +742,14 @@ validate_xml_verbose(const xmlNode *xml_blob)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
-    write_xml_fd(xml_blob, filename, fd, FALSE);
+    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
 
     dump_file(filename);
 
     doc = xmlReadFile(filename, NULL, 0);
     xml = xmlDocGetRootElement(doc);
     rc = validate_xml(xml, NULL, FALSE);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     unlink(filename);
     free(filename);
@@ -1011,7 +1011,7 @@ apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
               schema->name, schema->transform);
     final = apply_transformation(upgrade, schema->transform, to_logs);
     if (upgrade != xml) {
-        free_xml(upgrade);
+        pcmk__xml_free(upgrade);
         upgrade = NULL;
     }
 
@@ -1029,7 +1029,7 @@ apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
             crm_warn("Upgrade-leave transformation %s.xsl failed", transform_leave);
             final = upgrade;
         } else {
-            free_xml(upgrade);
+            pcmk__xml_free(upgrade);
         }
         free(transform_leave);
     }
@@ -1193,7 +1193,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                     crm_info("Transformation %s.xsl successful", schema->transform);
                     lpc = next;
                     *best = next;
-                    free_xml(xml);
+                    pcmk__xml_free(xml);
                     xml = upgrade;
                     rc = pcmk_ok;
 
@@ -1201,7 +1201,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                     crm_err("Transformation %s.xsl did not produce a valid configuration",
                             schema->transform);
                     crm_log_xml_info(upgrade, "transform:bad");
-                    free_xml(upgrade);
+                    pcmk__xml_free(upgrade);
                     rc = -pcmk_err_schema_validation;
                 }
                 next = -1;
@@ -1243,7 +1243,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
 
-        converted = copy_xml(*xml);
+        converted = pcmk__xml_copy(NULL, *xml);
         update_validation(&converted, &version, 0, TRUE, to_logs);
 
         value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);
@@ -1290,13 +1290,13 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                 }
             }
 
-            free_xml(converted);
+            pcmk__xml_free(converted);
             converted = NULL;
             rc = FALSE;
 
         } else {
             // Updated configuration schema is acceptable
-            free_xml(*xml);
+            pcmk__xml_free(*xml);
             *xml = converted;
 
             if (version < xml_latest_schema_index(known_schemas)) {
@@ -1416,10 +1416,10 @@ external_refs_in_schema(GList **list, const char *contents)
      * the XML file.  Otherwise, the xpath query will always return nothing.
      */
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
-    xmlNode *xml = string2xml(contents);
+    xmlNode *xml = pcmk__xml_parse_string(contents);
 
     crm_foreach_xpath_result(xml, search, append_href, list);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -1474,7 +1474,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = create_xml_node(parent, PCMK_XA_FILE);
+    file_node = pcmk__xe_create(parent, PCMK_XA_FILE);
     if (file_node == NULL) {
         free(contents);
         free(path);
@@ -1521,7 +1521,7 @@ void
 pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_included)
 {
     /* First, create an unattached node to add all the schema files to as children. */
-    xmlNode *schema_node = create_xml_node(NULL, PCMK__XA_SCHEMA);
+    xmlNode *schema_node = pcmk__xe_create(NULL, PCMK__XA_SCHEMA);
 
     crm_xml_add(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
@@ -1533,7 +1533,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
     if (schema_node->children != NULL) {
         xmlAddChild(parent, schema_node);
     } else {
-        free_xml(schema_node);
+        pcmk__xml_free(schema_node);
     }
 }
 

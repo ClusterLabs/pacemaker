@@ -338,7 +338,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
         return ENOMSG;
     }
 
-    msg = string2xml(buffer);
+    msg = pcmk__xml_parse_string(buffer);
     if (msg == NULL) {
         crm_warn("Malformed message received from %s IPC",
                  pcmk_ipc_name(api, true));
@@ -346,7 +346,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
     }
 
     more = call_api_dispatch(api, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 
     if (more) {
         return EINPROGRESS;
@@ -697,7 +697,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     if (reply != NULL) {
         bool more = call_api_dispatch(api, reply);
 
-        free_xml(reply);
+        pcmk__xml_free(reply);
 
         while (more) {
             rc = crm_ipc_read(api->ipc);
@@ -755,7 +755,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
 
     switch (api->server) {
         case pcmk_ipc_attrd:
-            request = create_xml_node(NULL, __func__);
+            request = pcmk__xe_create(NULL, __func__);
             crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
             crm_xml_add(request, PCMK__XA_SRC, crm_system_name);
             crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
@@ -811,7 +811,7 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
         return EOPNOTSUPP;
     }
     rc = pcmk__send_ipc_request(api, request);
-    free_xml(request);
+    pcmk__xml_free(request);
 
     crm_debug("%s peer cache purge of node %s[%lu]: rc=%d",
               pcmk_ipc_name(api, true), node_name, (unsigned long) nodeid, rc);
@@ -1265,13 +1265,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 /* Got it */
                 break;
             } else if (hdr->qb.id < request_id) {
-                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                xmlNode *bad = pcmk__xml_parse_string(crm_ipc_buffer(client));
 
                 crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "OldIpcReply");
 
             } else {
-                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                xmlNode *bad = pcmk__xml_parse_string(crm_ipc_buffer(client));
 
                 crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "ImpossibleReply");
@@ -1430,7 +1430,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
                   crm_ipc_buffer(client));
 
         if (reply) {
-            *reply = string2xml(crm_ipc_buffer(client));
+            *reply = pcmk__xml_parse_string(crm_ipc_buffer(client));
         }
 
     } else {

@@ -139,7 +139,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         goto err;
     }
 
-    metadata = string2xml(metadata_str);
+    metadata = pcmk__xml_parse_string(metadata_str);
     if (!metadata) {
         reason = "Metadata is not valid XML";
         goto err;
@@ -153,7 +153,8 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;
-        xmlNode *version_element = first_named_child(metadata, PCMK_XE_VERSION);
+        xmlNode *version_element = pcmk__xe_match_name(metadata,
+                                                       PCMK_XE_VERSION);
 
         if (version_element != NULL) {
             content = xmlNodeGetContent(version_element);
@@ -166,9 +167,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Check supported actions
-    match = first_named_child(metadata, PCMK_XE_ACTIONS);
-    for (match = first_named_child(match, PCMK_XE_ACTION); match != NULL;
-         match = crm_next_same_xml(match)) {
+    match = pcmk__xe_match_name(metadata, PCMK_XE_ACTIONS);
+    for (match = pcmk__xe_match_name(match, PCMK_XE_ACTION); match != NULL;
+         match = pcmk__xe_next_same(match)) {
 
         const char *action_name = crm_element_value(match, PCMK_XA_NAME);
 
@@ -188,9 +189,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Build a parameter list
-    match = first_named_child(metadata, PCMK_XE_PARAMETERS);
-    for (match = first_named_child(match, PCMK_XE_PARAMETER); match != NULL;
-         match = crm_next_same_xml(match)) {
+    match = pcmk__xe_match_name(metadata, PCMK_XE_PARAMETERS);
+    for (match = pcmk__xe_match_name(match, PCMK_XE_PARAMETER); match != NULL;
+         match = pcmk__xe_next_same(match)) {
 
         const char *param_name = crm_element_value(match, PCMK_XA_NAME);
 
@@ -228,7 +229,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     g_hash_table_replace(mdc, key, md);
-    free_xml(metadata);
+    pcmk__xml_free(metadata);
     return md;
 
 err:
@@ -236,7 +237,7 @@ err:
              rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
              pcmk__s(rsc->provider, ""), rsc->type, reason);
     free(key);
-    free_xml(metadata);
+    pcmk__xml_free(metadata);
     metadata_free(md);
     return NULL;
 }

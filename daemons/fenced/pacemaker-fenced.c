@@ -115,7 +115,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
         send_cluster_message(NULL, crm_msg_stonith_ng, request, FALSE);
-        free_xml(request);
+        pcmk__xml_free(request);
         return 0;
     }
 
@@ -142,7 +142,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return 0;
 }
 
@@ -199,7 +199,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
         return;
     }
     if (kind == crm_class_cluster) {
-        xml = string2xml(data);
+        xml = pcmk__xml_parse_string(data);
         if (xml == NULL) {
             crm_err("Invalid XML: '%.120s'", data);
             free(data);
@@ -209,7 +209,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
         stonith_peer_callback(xml, NULL);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     free(data);
     return;
 }
@@ -252,7 +252,7 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
 uint64_t
 get_stonith_flag(const char *name)
 {
-    if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
         return st_callback_notify_fence;
 
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
@@ -261,10 +261,12 @@ get_stonith_flag(const char *name)
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
         return st_callback_device_del;
 
-    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY,
+                            pcmk__str_none)) {
         return st_callback_notify_history;
 
-    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
+                            pcmk__str_none)) {
         return st_callback_notify_history_synced;
 
     }
@@ -320,7 +322,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
         return;
     }
 
-    notify_data = create_xml_node(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
+    notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_ASYNC_TIMEOUT_VALUE);
     crm_xml_add(notify_data, PCMK__XA_T, PCMK__VALUE_ST_ASYNC_TIMEOUT_VALUE);
     crm_xml_add(notify_data, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
@@ -331,7 +333,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
         pcmk__ipc_send_xml(client, 0, notify_data, crm_ipc_server_event);
     }
 
-    free_xml(notify_data);
+    pcmk__xml_free(notify_data);
 }
 
 /*!
@@ -347,7 +349,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
                          xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
-    xmlNode *update_msg = create_xml_node(NULL, PCMK__XE_NOTIFY);
+    xmlNode *update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
     CRM_LOG_ASSERT(type != NULL);
 
@@ -357,12 +359,12 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
     stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
-        add_message_xml(update_msg, PCMK__XA_ST_CALLDATA, data);
+        pcmk__message_add_xml(update_msg, PCMK__XA_ST_CALLDATA, data);
     }
 
     crm_trace("Notifying clients");
     pcmk__foreach_ipc_client(stonith_notify_client, update_msg);
-    free_xml(update_msg);
+    pcmk__xml_free(update_msg);
     crm_trace("Notify complete");
 }
 
@@ -383,14 +385,14 @@ fenced_send_config_notification(const char *op,
                                 const pcmk__action_result_t *result,
                                 const char *desc)
 {
-    xmlNode *notify_data = create_xml_node(NULL, op);
+    xmlNode *notify_data = pcmk__xe_create(NULL, op);
 
     CRM_CHECK(notify_data != NULL, return);
 
     crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
 
     fenced_send_notification(op, result, notify_data);
-    free_xml(notify_data);
+    pcmk__xml_free(notify_data);
 }
 
 /*!
@@ -474,7 +476,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        xmlNode *query = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
+        xmlNode *query = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
 
         crm_xml_add(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
@@ -482,7 +484,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
         crm_debug("Broadcasting our uname because of node %u", node->id);
         send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
 
-        free_xml(query);
+        pcmk__xml_free(query);
     }
 }
 

@@ -230,7 +230,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return pcmk_rc_schema_validation;
     }
 
-    target = copy_xml(xmlDocGetRootElement((xmlDoc *) cib_doc));
+    target = pcmk__xml_copy(NULL, xmlDocGetRootElement((xmlDoc *) cib_doc));
     if (target == NULL) {
         return EINVAL;
     }

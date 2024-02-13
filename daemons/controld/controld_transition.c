@@ -177,7 +177,7 @@ do_te_invoke(long long action,
         pcmk__log_graph(LOG_TRACE, controld_globals.transition_graph);
 
         if (graph_data != input->xml) {
-            free_xml(graph_data);
+            pcmk__xml_free(graph_data);
         }
     }
 }

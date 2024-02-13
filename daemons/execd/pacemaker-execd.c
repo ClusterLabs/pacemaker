@@ -89,9 +89,11 @@ get_stonith_connection(void)
             stonith_api_delete(stonith_api);
             stonith_api = NULL;
         } else {
-            stonith_api->cmds->register_notification(stonith_api,
-                                                     T_STONITH_NOTIFY_DISCONNECT,
-                                                     stonith_connection_destroy_cb);
+            stonith_api_operations_t *cmds = stonith_api->cmds;
+
+            cmds->register_notification(stonith_api,
+                                        PCMK__VALUE_ST_NOTIFY_DISCONNECT,
+                                        stonith_connection_destroy_cb);
         }
     }
     return stonith_api;
@@ -162,7 +164,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     process_lrmd_message(client, id, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return 0;
 }
 
@@ -282,11 +284,7 @@ static gboolean
 lrmd_exit(gpointer data)
 {
     crm_info("Terminating with %d clients", pcmk__ipc_client_count());
-    if (stonith_api) {
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
-        stonith_api->cmds->disconnect(stonith_api);
-        stonith_api_delete(stonith_api);
-    }
+    stonith_api_delete(stonith_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }

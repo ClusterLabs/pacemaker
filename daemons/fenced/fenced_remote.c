@@ -258,7 +258,7 @@ free_remote_op(gpointer data)
         g_list_free_full(op->query_results, free_remote_query);
     }
     if (op->request) {
-        free_xml(op->request);
+        pcmk__xml_free(op->request);
         op->request = NULL;
     }
     if (op->devices_list) {
@@ -377,7 +377,7 @@ undo_op_remap(remote_fencing_op_t *op)
 static xmlNode *
 fencing_result2xml(const remote_fencing_op_t *op)
 {
-    xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+    xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
@@ -402,7 +402,7 @@ void
 fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
-    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_ST_REPLY);
+    xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
     xmlNode *notify_data = fencing_result2xml(op);
 
     count++;
@@ -418,10 +418,10 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 
     stonith__xe_set_result(notify_data, &op->result);
 
-    add_message_xml(bcast, PCMK__XA_ST_CALLDATA, notify_data);
+    pcmk__message_add_xml(bcast, PCMK__XA_ST_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
-    free_xml(notify_data);
-    free_xml(bcast);
+    pcmk__xml_free(notify_data);
+    pcmk__xml_free(bcast);
 
     return;
 }
@@ -463,13 +463,14 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
 
     /* bcast to all local clients that the fencing operation happend */
     notify_data = fencing_result2xml(op);
-    fenced_send_notification(T_STONITH_NOTIFY_FENCE, &op->result, notify_data);
-    free_xml(notify_data);
-    fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+    fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, &op->result,
+                             notify_data);
+    pcmk__xml_free(notify_data);
+    fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
 
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
-    free_xml(reply);
+    pcmk__xml_free(reply);
 }
 
 /*!
@@ -564,7 +565,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     undo_op_remap(op);
 
     if (data == NULL) {
-        data = create_xml_node(NULL, "remote-op");
+        data = pcmk__xe_create(NULL, "remote-op");
         local_data = data;
 
     } else if (op->delegate == NULL) {
@@ -595,7 +596,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     if (!dup && !pcmk__str_eq(subt, PCMK__VALUE_BROADCAST, pcmk__str_none)) {
         /* Defer notification until the bcast message arrives */
         fenced_broadcast_op_result(op, op_merged);
-        free_xml(local_data);
+        pcmk__xml_free(local_data);
         return;
     }
 
@@ -629,11 +630,11 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         op->query_results = NULL;
     }
     if (op->request) {
-        free_xml(op->request);
+        pcmk__xml_free(op->request);
         op->request = NULL;
     }
 
-    free_xml(local_data);
+    pcmk__xml_free(local_data);
 }
 
 /*!
@@ -1214,7 +1215,9 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     }
 
     op->target = crm_element_value_copy(dev, PCMK__XA_ST_TARGET);
-    op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
+
+    // @TODO Figure out how to avoid copying XML here
+    op->request = pcmk__xml_copy(NULL, request);
     crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     op->call_options = call_options;
 
@@ -1253,7 +1256,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     if (op->state != st_duplicate) {
         /* kick history readers */
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 
     /* safe to trim as long as that doesn't touch pending ops */
@@ -1345,7 +1348,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     }
 
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
-    free_xml(query);
+    pcmk__xml_free(query);
 
     query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
     op->query_timer = g_timeout_add((1000 * query_timeout), remote_op_query_timeout, op);
@@ -1687,7 +1690,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
                                         pcmk__node_search_cluster),
                          crm_msg_stonith_ng, update, FALSE);
 
-    free_xml(update);
+    pcmk__xml_free(update);
 
     for (iter = op->duplicates; iter != NULL; iter = iter->next) {
         remote_fencing_op_t *dup = iter->data;
@@ -1943,7 +1946,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                                             pcmk__node_search_cluster),
                              crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
-        free_xml(remote_op);
+        pcmk__xml_free(remote_op);
         return;
 
     } else if (op->phase == st_phase_on) {

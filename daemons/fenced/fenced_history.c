@@ -41,8 +41,8 @@ stonith_send_broadcast_history(xmlNode *history,
                                int callopts,
                                const char *target)
 {
-    xmlNode *bcast = create_xml_node(NULL, PCMK__XE_STONITH_COMMAND);
-    xmlNode *data = create_xml_node(NULL, __func__);
+    xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
+    xmlNode *data = pcmk__xe_create(NULL, __func__);
 
     if (target) {
         crm_xml_add(data, PCMK__XA_ST_TARGET, target);
@@ -51,14 +51,13 @@ stonith_send_broadcast_history(xmlNode *history,
     crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
     crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
     crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
-    if (history) {
-        add_node_copy(data, history);
-    }
-    add_message_xml(bcast, PCMK__XA_ST_CALLDATA, data);
+
+    pcmk__xml_copy(data, history);
+    pcmk__message_add_xml(bcast, PCMK__XA_ST_CALLDATA, data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
 
-    free_xml(data);
-    free_xml(bcast);
+    pcmk__xml_free(data);
+    pcmk__xml_free(bcast);
 }
 
 static gboolean
@@ -99,7 +98,7 @@ stonith_fence_history_cleanup(const char *target,
         g_hash_table_foreach_remove(stonith_remote_op_list,
                              stonith_remove_history_entry,
                              (gpointer) target);
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 
@@ -310,7 +309,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     if (stonith_remote_op_list) {
             char *id = NULL;
 
-            history = create_xml_node(NULL, PCMK__XE_ST_HISTORY);
+            history = pcmk__xe_create(NULL, PCMK__XE_ST_HISTORY);
 
             g_hash_table_iter_init(&iter, stonith_remote_op_list);
             while (g_hash_table_iter_next(&iter, (void **)&id, (void **)&op)) {
@@ -362,7 +361,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
 
                 cnt++;
                 crm_trace("Attaching op %s", op->id);
-                entry = create_xml_node(history, STONITH_OP_EXEC);
+                entry = pcmk__xe_create(history, STONITH_OP_EXEC);
                 if (add_id) {
                     crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
@@ -420,11 +419,11 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
 
     if (updated) {
         stonith_fence_history_trim();
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 
     if (cnt == 0) {
-        free_xml(history);
+        pcmk__xml_free(history);
         return NULL;
     } else {
         return history;
@@ -492,7 +491,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
            is done so send a notification for anything
            that smells like history-sync
          */
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY_SYNCED, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED, NULL,
+                                 NULL);
         if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
@@ -552,5 +552,5 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                   stonith_remote_op_list);
         *output = stonith_local_history(FALSE, target);
     }
-    free_xml(out_history);
+    pcmk__xml_free(out_history);
 }

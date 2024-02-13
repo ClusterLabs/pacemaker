@@ -220,7 +220,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     int call_options = cib_none;
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
-    xmlNode *data = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
+    xmlNode *data = pcmk__message_get_xml(request, PCMK__XA_CIB_CALLDATA);
 
     bool changed = false;
     bool read_only = false;
@@ -262,7 +262,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
 
         if (result_cib != private->cib_xml) {
-            free_xml(private->cib_xml);
+            pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
         }
         cib_set_file_flags(private, cib_file_flag_dirty);
@@ -275,9 +275,9 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
 done:
     if ((result_cib != private->cib_xml) && (result_cib != *output)) {
-        free_xml(result_cib);
+        pcmk__xml_free(result_cib);
     }
-    free_xml(cib_diff);
+    pcmk__xml_free(cib_diff);
     return rc;
 }
 
@@ -338,7 +338,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if ((output_data != NULL) && (output != NULL)) {
         if (output->doc == private->cib_xml->doc) {
-            *output_data = copy_xml(output);
+            *output_data = pcmk__xml_copy(NULL, output);
         } else {
             *output_data = output;
         }
@@ -349,9 +349,9 @@ done:
         && (output->doc != private->cib_xml->doc)
         && ((output_data == NULL) || (output != *output_data))) {
 
-        free_xml(output);
+        pcmk__xml_free(output);
     }
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -382,14 +382,14 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Parse XML from file */
-    root = filename2xml(filename);
+    root = pcmk__xml_parse_file(filename);
     if (root == NULL) {
         return -pcmk_err_schema_validation;
     }
 
     /* Add a status section if not already present */
-    if (find_xml_node(root, PCMK_XE_STATUS, FALSE) == NULL) {
-        create_xml_node(root, PCMK_XE_STATUS);
+    if (pcmk__xe_match_name(root, PCMK_XE_STATUS) == NULL) {
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Validate XML against its specified schema */
@@ -397,7 +397,7 @@ load_file_cib(const char *filename, xmlNode **output)
         const char *schema = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
 
         crm_err("CIB does not validate against %s, or that schema is unknown", schema);
-        free_xml(root);
+        pcmk__xml_free(root);
         return -pcmk_err_schema_validation;
     }
 
@@ -546,10 +546,10 @@ cib_file_signoff(cib_t *cib)
 
         /* Otherwise, it's a simple write */
         } else {
-            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
+            bool compress = pcmk__ends_with_ext(private->filename, ".bz2");
 
-            if (write_xml_file(private->cib_xml, private->filename,
-                               do_bzip) <= 0) {
+            if (pcmk__xml_write_file(private->cib_xml, private->filename,
+                                     compress, NULL) != pcmk_rc_ok) {
                 rc = pcmk_err_generic;
             }
         }
@@ -563,7 +563,7 @@ cib_file_signoff(cib_t *cib)
     }
 
     /* Free the in-memory CIB */
-    free_xml(private->cib_xml);
+    pcmk__xml_free(private->cib_xml);
     private->cib_xml = NULL;
     return rc;
 }
@@ -763,7 +763,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Parse XML */
-    local_root = filename2xml(filename);
+    local_root = pcmk__xml_parse_file(filename);
     if (local_root == NULL) {
         crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
         return -pcmk_err_cib_corrupt;
@@ -777,7 +777,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     /* Verify that digests match */
     if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
         free(local_sigfile);
-        free_xml(local_root);
+        pcmk__xml_free(local_root);
         return -pcmk_err_cib_modified;
     }
 
@@ -785,7 +785,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     if (root) {
         *root = local_root;
     } else {
-        free_xml(local_root);
+        pcmk__xml_free(local_root);
     }
     return pcmk_ok;
 }
@@ -893,11 +893,9 @@ cib_file_prepare_xml(xmlNode *root)
 
     /* Delete status section before writing to file, because
      * we discard it on startup anyway, and users get confused by it */
-    cib_status_root = find_xml_node(root, PCMK_XE_STATUS, TRUE);
-    CRM_LOG_ASSERT(cib_status_root != NULL);
-    if (cib_status_root != NULL) {
-        free_xml(cib_status_root);
-    }
+    cib_status_root = pcmk__xe_match_name(root, PCMK_XE_STATUS);
+    CRM_CHECK(cib_status_root != NULL, return);
+    pcmk__xml_free(cib_status_root);
 }
 
 /*!
@@ -980,7 +978,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     }
 
     /* Write out the CIB */
-    if (write_xml_fd(cib_root, tmp_cib, fd, FALSE) <= 0) {
+    if (pcmk__xml_write_fd(cib_root, tmp_cib, fd, false, NULL) != pcmk_rc_ok) {
         crm_err("Changes couldn't be written to %s", tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
@@ -1061,9 +1059,9 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    for (xmlNode *request = first_named_child(transaction,
-                                              PCMK__XE_CIB_COMMAND);
-         request != NULL; request = crm_next_same_xml(request)) {
+    for (xmlNode *request = pcmk__xe_match_name(transaction,
+                                                PCMK__XE_CIB_COMMAND);
+         request != NULL; request = pcmk__xe_next_same(request)) {
 
         xmlNode *output = NULL;
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
@@ -1100,7 +1098,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
  *
  * \note The caller is responsible for replacing the \p cib argument's
  *       \p private->cib_xml with \p result_cib on success, and for freeing
- *       \p result_cib using \p free_xml() on failure.
+ *       \p result_cib using \p pcmk__xml_free() on failure.
  */
 static int
 cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
@@ -1121,7 +1119,7 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
      * * cib_perform_op() will infer changes for the commit request at the end.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
-              *result_cib = copy_xml(private->cib_xml));
+              *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
 
     crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
               "working CIB",

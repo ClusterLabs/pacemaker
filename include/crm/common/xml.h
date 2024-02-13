@@ -50,137 +50,13 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
-xmlNode *get_message_xml(const xmlNode *msg, const char *field);
-
-/*
- * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
- *
- * The gist is the same as with \c{xmlCopyPropList(target, src->properties)}.
- * The function exits prematurely when any attribute cannot be copied for
- * ACLs violation.  Even without bailing out, the result can possibly be
- * incosistent with expectations in that case, hence the caller shall,
- * aposteriori, verify that no document-level-tracked denial was indicated
- * with \c{xml_acl_denied(target)} and drop whole such intermediate object.
- *
- * \param[in,out] target  Element to receive attributes from #src element
- * \param[in]     src     Element carrying attributes to copy over to #target
- *
- * \note Original commit 1c632c506 sadly haven't stated which otherwise
- *       assumed behaviours of xmlCopyPropList were missing beyond otherwise
- *       custom extensions like said ACLs and "atomic increment" (that landed
- *       later on, anyway).
- */
-void copy_in_properties(xmlNode *target, const xmlNode *src);
-
-void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
-/*
- * Create a node named "name" as a child of "parent"
- * If parent is NULL, creates an unconnected node.
- *
- * Returns the created node
- *
- */
-xmlNode *create_xml_node(xmlNode * parent, const char *name);
-
-/*
- * Create a node named "name" as a child of "parent", giving it the provided
- * text content.
- * If parent is NULL, creates an unconnected node.
- *
- * Returns the created node
- *
- */
-xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content);
-
-/*
- * Create a new HTML node named "element_name" as a child of "parent", giving it the
- * provided text content.  Optionally, apply a CSS #id and #class.
- *
- * Returns the created node.
- */
-xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
-                               const char *class_name, const char *text);
-
-/*
- *
- */
-void purge_diff_markers(xmlNode * a_node);
-
-/*
- * Returns a deep copy of src_node
- *
- */
-xmlNode *copy_xml(xmlNode * src_node);
-
-/*
- * Add a copy of xml_node to new_parent
- */
-xmlNode *add_node_copy(xmlNode * new_parent, xmlNode * xml_node);
-
-/*
- * XML I/O Functions
- *
- * Whitespace between tags is discarded.
- */
-xmlNode *filename2xml(const char *filename);
-
-xmlNode *stdin2xml(void);
-
-xmlNode *string2xml(const char *input);
-
-int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-                 gboolean compress);
-int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
-
-char *dump_xml_formatted(const xmlNode *xml);
-char *dump_xml_formatted_with_text(const xmlNode *xml);
-char *dump_xml_unformatted(const xmlNode *xml);
-
-/*
- * Diff related Functions
- */
-xmlNode *diff_xml_object(xmlNode * left, xmlNode * right, gboolean suppress);
-
-xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
-                             gboolean full, gboolean * changed, const char *marker);
-
-gboolean can_prune_leaf(xmlNode * xml_node);
 
 /*
  * Searching & Modifying
  */
-xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
-                       gboolean must_find);
-
-void xml_remove_prop(xmlNode * obj, const char *name);
-
-gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
-                           gboolean delete_only);
-
-gboolean update_xml_child(xmlNode * child, xmlNode * to_update);
-
-int find_xml_children(xmlNode ** children, xmlNode * root,
-                      const char *tag, const char *field, const char *value,
-                      gboolean search_matches);
-
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
-
-static inline const char *
-crm_map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (strcmp((const char *) xml->name, "master") == 0) {
-        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
-}
 
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
@@ -236,25 +112,10 @@ const char *get_schema_name(int version);
 const char *xml_latest_schema(void);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 
-/*!
- * \brief Initialize the CRM XML subsystem
- *
- * This method sets global XML settings and loads pacemaker schemas into the cache.
- */
-void crm_xml_init(void);
-void crm_xml_cleanup(void);
-
-void pcmk_free_xml_subtree(xmlNode *xml);
-void free_xml(xmlNode * child);
-
-xmlNode *first_named_child(const xmlNode *parent, const char *name);
-xmlNode *crm_next_same_xml(const xmlNode *sibling);
-
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
-xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);

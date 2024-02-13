@@ -128,17 +128,17 @@ cib_notify_send(const xmlNode *xml)
 static void
 attach_cib_generation(xmlNode *msg)
 {
-    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     if (generation == NULL) {
         return;
     }
 
     if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
+        pcmk__xe_copy_attrs(generation, the_cib);
     }
-    add_message_xml(msg, PCMK__XE_CIB_GENERATION, generation);
-    free_xml(generation);
+    pcmk__message_add_xml(msg, PCMK__XE_CIB_GENERATION, generation);
+    pcmk__xml_free(generation);
 }
 
 void
@@ -196,7 +196,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
 
-    update_msg = create_xml_node(NULL, PCMK__XE_NOTIFY);
+    update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
     crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
     crm_xml_add(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
@@ -223,12 +223,12 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
-        add_message_xml(update_msg, PCMK__XE_CIB_UPDATE, update);
+        pcmk__message_add_xml(update_msg, PCMK__XE_CIB_UPDATE, update);
     }
 
-    add_message_xml(update_msg, PCMK__XA_CIB_UPDATE_RESULT, diff);
+    pcmk__message_add_xml(update_msg, PCMK__XA_CIB_UPDATE_RESULT, diff);
 
     crm_log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);
-    free_xml(update_msg);
+    pcmk__xml_free(update_msg);
 }

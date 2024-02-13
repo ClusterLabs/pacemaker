@@ -257,14 +257,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = find_xml_node(root, PCMK_XE_STATUS, FALSE);
+    status = pcmk__xe_match_name(root, PCMK_XE_STATUS);
     if (discard_status && status != NULL) {
         // Strip out the PCMK_XE_STATUS section if there is one
-        free_xml(status);
+        pcmk__xml_free(status);
         status = NULL;
     }
     if (status == NULL) {
-        create_xml_node(root, PCMK_XE_STATUS);
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Do this before schema validation happens */
@@ -295,7 +295,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     // Unset (DC should set appropriate value)
-    xml_remove_prop(root, PCMK_XA_DC_UUID);
+    pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
     if (discard_status) {
         crm_log_xml_trace(root, "[on-disk]");
@@ -337,7 +337,7 @@ uninitializeCib(void)
 
     crm_debug("Deallocating the CIB.");
 
-    free_xml(tmp_cib);
+    pcmk__xml_free(tmp_cib);
 
     crm_debug("The CIB has been deallocated.");
 
@@ -356,7 +356,7 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
 
         CRM_ASSERT(new_cib != saved_cib);
         the_cib = new_cib;
-        free_xml(saved_cib);
+        pcmk__xml_free(saved_cib);
         if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
             crm_debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(cib_writer);
@@ -407,7 +407,7 @@ write_cib_contents(gpointer p)
     /* Make a copy of the CIB to write (possibly in a forked child) */
     if (p) {
         /* Synchronous write out */
-        cib_local = copy_xml(p);
+        cib_local = pcmk__xml_copy(NULL, p);
 
     } else {
         int pid = 0;
@@ -444,14 +444,14 @@ write_cib_contents(gpointer p)
         /* In theory, we can scribble on the_cib here and not affect the parent,
          * but let's be safe anyway.
          */
-        cib_local = copy_xml(the_cib);
+        cib_local = pcmk__xml_copy(NULL, the_cib);
     }
 
     /* Write the CIB */
     exit_rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
 
     /* A nonzero exit code will cause further writes to be disabled */
-    free_xml(cib_local);
+    pcmk__xml_free(cib_local);
     if (p == NULL) {
         crm_exit_t exit_code = CRM_EX_OK;
 

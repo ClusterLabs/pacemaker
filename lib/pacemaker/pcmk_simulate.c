@@ -338,20 +338,20 @@ profile_file(const char *xml_file, long long repeat,
 
     CRM_ASSERT(out != NULL);
 
-    cib_object = filename2xml(xml_file);
+    cib_object = pcmk__xml_parse_file(xml_file);
     start = clock();
 
     if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
-        create_xml_node(cib_object, PCMK_XE_STATUS);
+        pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return;
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return;
     }
 
@@ -363,8 +363,11 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
-        xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
+        xmlNode *input = cib_object;
 
+        if (repeat > 1) {
+            input = pcmk__xml_copy(NULL, cib_object);
+        }
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
@@ -508,7 +511,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    xmlNode *action_rsc = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
+    xmlNode *action_rsc = pcmk__xe_match_name(action->xml, PCMK_XE_PRIMITIVE);
 
     char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
@@ -580,7 +583,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         crm_err("Could not simulate action %d history for resource %s",
                 action->id, resource);
         free(node);
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
         return EINVAL;
     }
 
@@ -646,7 +649,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
   done:
     free(node);
-    free_xml(cib_node);
+    pcmk__xml_free(cib_node);
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     return pcmk_rc_ok;
@@ -666,7 +669,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
     const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    xmlNode *rsc = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
+    xmlNode *rsc = pcmk__xe_match_name(action->xml, PCMK_XE_PRIMITIVE);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
@@ -721,7 +724,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
         g_string_free(xpath, TRUE);
     }
 
@@ -868,9 +871,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     if (input_file != NULL) {
-        rc = write_xml_file(input, input_file, FALSE);
-        if (rc < 0) {
-            rc = pcmk_legacy2rc(rc);
+        rc = pcmk__xml_write_file(input, input_file, false, NULL);
+        if (rc != pcmk_rc_ok) {
             goto simulate_done;
         }
     }
@@ -927,8 +929,9 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            rc = write_xml_file(scheduler->graph, graph_file, FALSE);
-            if (rc < 0) {
+            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false,
+                                      NULL);
+            if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_graph_error;
                 goto simulate_done;
             }

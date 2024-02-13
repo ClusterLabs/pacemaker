@@ -88,7 +88,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
-        free_xml(op_msg);
+        pcmk__xml_free(op_msg);
         return rc;
     }
 
@@ -98,7 +98,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     } else {
         pcmk__remote_send_xml(&private->command, op_msg);
     }
-    free_xml(op_msg);
+    pcmk__xml_free(op_msg);
 
     if ((call_options & cib_discard_reply)) {
         crm_trace("Discarding reply");
@@ -143,7 +143,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             crm_err("Received a __future__ reply:" " %d (wanted %d)", reply_id, msg_id);
         }
 
-        free_xml(op_reply);
+        pcmk__xml_free(op_reply);
         op_reply = NULL;
 
         /* wasn't the right reply, try and read some more */
@@ -189,16 +189,16 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         /* do nothing more */
 
     } else if (!(call_options & cib_discard_reply)) {
-        xmlNode *tmp = get_message_xml(op_reply, PCMK__XA_CIB_CALLDATA);
+        xmlNode *tmp = pcmk__message_get_xml(op_reply, PCMK__XA_CIB_CALLDATA);
 
         if (tmp == NULL) {
             crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
         } else {
-            *output_data = copy_xml(tmp);
+            *output_data = pcmk__xml_copy(NULL, tmp);
         }
     }
 
-    free_xml(op_reply);
+    pcmk__xml_free(op_reply);
 
     return rc;
 }
@@ -232,7 +232,7 @@ cib_remote_callback_dispatch(gpointer user_data)
             crm_err("Unknown message type: %s", type);
         }
 
-        free_xml(msg);
+        pcmk__xml_free(msg);
         msg = pcmk__remote_message_xml(&private->callback);
     }
 
@@ -380,14 +380,14 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     /* login to server */
-    login = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
+    login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     crm_xml_add(login, PCMK_XA_OP, "authenticate");
     crm_xml_add(login, PCMK_XA_USER, private->user);
     crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
     crm_xml_add(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
 
     pcmk__remote_send_xml(connection, login);
-    free_xml(login);
+    pcmk__xml_free(login);
 
     rc = pcmk_ok;
     if (pcmk__read_remote_message(connection, -1) == ENOTCONN) {
@@ -417,7 +417,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             connection->token = strdup(tmp_ticket);
         }
     }
-    free_xml(answer);
+    pcmk__xml_free(answer);
     answer = NULL;
 
     if (rc != 0) {
@@ -470,7 +470,7 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     if (rc == pcmk_ok) {
         rc = pcmk__remote_send_xml(&private->command, hello);
         rc = pcmk_rc2legacy(rc);
-        free_xml(hello);
+        pcmk__xml_free(hello);
     }
 
     if (rc == pcmk_ok) {
@@ -539,14 +539,14 @@ cib_remote_inputfd(cib_t * cib)
 static int
 cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 {
-    xmlNode *notify_msg = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
+    xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
     crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
     crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);
-    free_xml(notify_msg);
+    pcmk__xml_free(notify_msg);
     return pcmk_ok;
 }
 

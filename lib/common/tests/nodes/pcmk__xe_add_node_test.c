@@ -19,7 +19,7 @@ bad_input(void **state) {
 
     pcmk__assert_asserts(pcmk__xe_add_node(NULL, NULL, 0));
 
-    node = create_xml_node(NULL, "test");
+    node = pcmk__xe_create(NULL, "test");
 
     pcmk__xe_add_node(node, NULL, 0);
     assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST));
@@ -29,12 +29,12 @@ bad_input(void **state) {
     assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST));
     assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST_ID));
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
 expected_input(void **state) {
-    xmlNode *node = create_xml_node(NULL, "test");
+    xmlNode *node = pcmk__xe_create(NULL, "test");
     int i;
 
     pcmk__xe_add_node(node, "somenode", 47);
@@ -44,12 +44,12 @@ expected_input(void **state) {
                      crm_element_value_int(node, PCMK__XA_ATTR_HOST_ID, &i));
     assert_int_equal(i, 47);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
 repeated_use(void **state) {
-    xmlNode *node = create_xml_node(NULL, "test");
+    xmlNode *node = pcmk__xe_create(NULL, "test");
     int i;
 
     /* Later calls override settings from earlier calls. */
@@ -62,7 +62,7 @@ repeated_use(void **state) {
                      crm_element_value_int(node, PCMK__XA_ATTR_HOST_ID, &i));
     assert_int_equal(i, 3);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

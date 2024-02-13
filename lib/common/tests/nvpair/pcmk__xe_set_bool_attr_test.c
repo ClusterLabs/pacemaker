@@ -16,7 +16,7 @@
 static void
 set_attr(void **state)
 {
-    xmlNode *node = string2xml("<node/>");
+    xmlNode *node = pcmk__xml_parse_string("<node/>");
 
     pcmk__xe_set_bool_attr(node, "a", true);
     pcmk__xe_set_bool_attr(node, "b", false);
@@ -24,7 +24,7 @@ set_attr(void **state)
     assert_string_equal(crm_element_value(node, "a"), PCMK_VALUE_TRUE);
     assert_string_equal(crm_element_value(node, "b"), PCMK_VALUE_FALSE);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

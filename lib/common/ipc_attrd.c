@@ -30,8 +30,8 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
     name = crm_element_value(msg_data, PCMK__XA_ATTR_NAME);
 
-    for (xmlNode *node = first_named_child(msg_data, PCMK_XE_NODE);
-         node != NULL; node = crm_next_same_xml(node)) {
+    for (xmlNode *node = pcmk__xe_match_name(msg_data, PCMK_XE_NODE);
+         node != NULL; node = pcmk__xe_next_same(node)) {
         pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
 
         CRM_ASSERT(pair != NULL);
@@ -140,7 +140,7 @@ pcmk__attrd_api_methods(void)
 static xmlNode *
 create_attrd_op(const char *user_name)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __func__);
+    xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
@@ -211,7 +211,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -262,7 +262,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -299,7 +299,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
     pcmk__xe_add_node(request, node, 0);
 
     rc = connect_and_send_attrd_request(api, request);
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -324,7 +324,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -402,7 +402,7 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -458,7 +458,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
              * then we also add the task to each child node in populate_update_op
              * so attrd_client_update knows what form of update is taking place.
              */
-            child = create_xml_node(request, PCMK_XE_OP);
+            child = pcmk__xe_create(request, PCMK_XE_OP);
             target = pcmk__node_attr_target(pair->node);
 
             if (target != NULL) {
@@ -478,7 +478,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
      */
     if (pcmk__is_daemon) {
         rc = connect_and_send_attrd_request(api, request);
-        free_xml(request);
+        pcmk__xml_free(request);
     }
 
     return rc;

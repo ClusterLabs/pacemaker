@@ -424,7 +424,8 @@ purge_xml_attributes(xmlNode *xml)
     }
 
     if (!readable_children) {
-        free_xml(xml); /* Nothing readable under here, purge completely */
+        // Nothing readable under here, so purge completely
+        pcmk__xml_free(xml);
     }
     return readable_children;
 }
@@ -456,7 +457,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     }
 
     crm_trace("Filtering XML copy using user '%s' ACLs", user);
-    target = copy_xml(xml);
+    target = pcmk__xml_copy(NULL, xml);
     if (target == NULL) {
         return true;
     }
@@ -505,7 +506,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     } else {
         crm_trace("User '%s' without ACLs denied access to entire XML document",
                   user);
-        free_xml(target);
+        pcmk__xml_free(target);
         target = NULL;
     }
 
@@ -586,7 +587,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
         } else if (check_top) {
             crm_trace("ACLs disallow creation of <%s> with id=\"%s\"",
                       xml->name, display_id(xml));
-            pcmk_free_xml_subtree(xml);
+            pcmk__xml_free_full(xml, -1, true);
             return;
 
         } else {

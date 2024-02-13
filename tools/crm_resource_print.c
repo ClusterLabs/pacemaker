@@ -30,7 +30,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     }
 
     // @COMPAT PCMK__XE_LIFETIME is deprecated
-    lifetime = first_named_child(xml_obj, PCMK__XE_LIFETIME);
+    lifetime = pcmk__xe_match_name(xml_obj, PCMK__XE_LIFETIME);
     if (pe_evaluate_rules(lifetime, NULL, scheduler->now, NULL) == FALSE) {
         return pcmk_rc_ok;
     }
@@ -125,7 +125,8 @@ cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, crm_map_element_name(rsc->xml), show_opts, rsc, all, all);
+    out->message(out, pcmk__map_element_name(rsc->xml), show_opts, rsc, all,
+                 all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
@@ -361,7 +362,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         xmlNodePtr doc = NULL;
 
         if (stdout_data != NULL) {
-            doc = string2xml(stdout_data);
+            doc = pcmk__xml_parse_string(stdout_data);
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);
@@ -429,7 +430,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         xmlNodePtr doc = NULL;
 
         if (stdout_data != NULL) {
-            doc = string2xml(stdout_data);
+            doc = pcmk__xml_parse_string(stdout_data);
         }
         if (doc != NULL) {
             out->output_xml(out, PCMK_XE_COMMAND, stdout_data);

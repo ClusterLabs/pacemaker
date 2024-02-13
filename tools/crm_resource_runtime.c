@@ -153,7 +153,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
   done:
     g_string_free(xpath, TRUE);
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     return rc;
 }
 
@@ -364,10 +364,10 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = create_xml_node(NULL, (const char *) rsc->xml->name);
+                xml_top = pcmk__xe_create(NULL, (const char *) rsc->xml->name);
                 crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
-                xml_obj = create_xml_node(xml_top, attr_set_type);
+                xml_obj = pcmk__xe_create(xml_top, attr_set_type);
                 crm_xml_add(xml_obj, PCMK_XA_ID, rsc_attr_set);
                 break;
 
@@ -397,7 +397,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                       pcmk__s(attr_name, ""), attr_value);
         }
 
-        free_xml(xml_top);
+        pcmk__xml_free(xml_top);
 
         free(lookup_id);
         free(found_attr_id);
@@ -467,7 +467,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                                  "delete", force);
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        xml_remove_prop(rsc->xml, attr_name);
+        pcmk__xe_remove_attr(rsc->xml, attr_name);
         CRM_ASSERT(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
@@ -527,7 +527,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         free(lookup_id);
-        free_xml(xml_obj);
+        pcmk__xml_free(xml_obj);
         free(found_attr_id);
     }
     g_list_free(resources);
@@ -1237,7 +1237,7 @@ update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
     rc = update_scheduler_input(scheduler, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML");
-        free_xml(cib_xml_copy);
+        pcmk__xml_free(cib_xml_copy);
         return rc;
     }
 
@@ -1276,10 +1276,10 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
             goto done;
         }
 
-        rc = write_xml_file(scheduler->input, shadow_file, FALSE);
-
-        if (rc < 0) {
-            out->err(out, "Could not populate shadow cib: %s (%d)", pcmk_strerror(rc), rc);
+        rc = pcmk__xml_write_file(scheduler->input, shadow_file, false, NULL);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Could not populate shadow cib: %s (%d)",
+                     pcmk_rc_str(rc), rc);
             goto done;
         }
 

@@ -317,19 +317,18 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    new_xml = copy_xml(template);
+    new_xml = pcmk__xml_copy(NULL, template);
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_add(new_xml, PCMK_XA_ID, id);
     crm_xml_add(new_xml, PCMK__META_CLONE,
                 crm_element_value(xml_obj, PCMK__META_CLONE));
 
-    template_ops = find_xml_node(new_xml, PCMK_XE_OPERATIONS, FALSE);
+    template_ops = pcmk__xe_match_name(new_xml, PCMK_XE_OPERATIONS);
 
     for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
          child_xml = pcmk__xe_next(child_xml)) {
-        xmlNode *new_child = NULL;
 
-        new_child = add_node_copy(new_xml, child_xml);
+        xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
         if (pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
             rsc_ops = new_child;
@@ -354,7 +353,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             char *key = template_op_key(op);
 
             if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
-                add_node_copy(rsc_ops, op);
+                pcmk__xml_copy(rsc_ops, op);
             }
 
             free(key);
@@ -364,15 +363,15 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             g_hash_table_destroy(rsc_ops_hash);
         }
 
-        free_xml(template_ops);
+        pcmk__xml_free(template_ops);
     }
 
-    /*free_xml(*expanded_xml); */
+    /*pcmk__xml_free(*expanded_xml); */
     *expanded_xml = new_xml;
 
 #if 0 /* Disable multi-level templates for now */
     if (!unpack_template(new_xml, expanded_xml, scheduler)) {
-       free_xml(*expanded_xml);
+       pcmk__xml_free(*expanded_xml);
        *expanded_xml = NULL;
        return FALSE;
     }
@@ -673,8 +672,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->parent = parent;
 
-    ops = find_xml_node((*rsc)->xml, PCMK_XE_OPERATIONS, FALSE);
-    (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
+    ops = pcmk__xe_match_name((*rsc)->xml, PCMK_XE_OPERATIONS);
+    (*rsc)->ops_xml = pcmk__xe_expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
@@ -1033,14 +1032,14 @@ common_free(pcmk_resource_t * rsc)
     if ((rsc->parent == NULL)
         && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
 
-        free_xml(rsc->xml);
+        pcmk__xml_free(rsc->xml);
         rsc->xml = NULL;
-        free_xml(rsc->orig_xml);
+        pcmk__xml_free(rsc->orig_xml);
         rsc->orig_xml = NULL;
 
         /* if rsc->orig_xml, then rsc->xml is an expanded xml from a template */
     } else if (rsc->orig_xml) {
-        free_xml(rsc->xml);
+        pcmk__xml_free(rsc->xml);
         rsc->xml = NULL;
     }
     if (rsc->running_on) {

@@ -143,7 +143,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
      * However, v1 patchsets can only exist during rolling upgrades from
      * Pacemaker 1.1.11, so not worth worrying about.
      */
-    removed = find_xml_node(patchset, PCMK__XE_DIFF_REMOVED, FALSE);
+    removed = pcmk__xe_match_name(patchset, PCMK__XE_DIFF_REMOVED);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "- ", child, 0,
@@ -159,7 +159,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
     }
 
     is_first = true;
-    added = find_xml_node(patchset, PCMK__XE_DIFF_ADDED, FALSE);
+    added = pcmk__xe_match_name(patchset, PCMK__XE_DIFF_ADDED);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "+ ", child, 0,
@@ -235,7 +235,7 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            xmlNode *clist = first_named_child(change, PCMK_XE_CHANGE_LIST);
+            xmlNode *clist = pcmk__xe_match_name(change, PCMK_XE_CHANGE_LIST);
             GString *buffer_set = NULL;
             GString *buffer_unset = NULL;
 
@@ -411,10 +411,11 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
     const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     if (patchset != NULL) {
-        char *buf = dump_xml_formatted_with_text(patchset);
+        gchar *buf = pcmk__xml_dump(patchset,
+                                    pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
         out->output_xml(out, PCMK_XE_XML_PATCHSET, buf);
-        free(buf);
+        g_free(buf);
         return pcmk_rc_ok;
     }
     crm_trace("Empty patch");

@@ -165,7 +165,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -ENODATA;
     }
 
-    xml = string2xml(result->action_stdout);
+    xml = pcmk__xml_parse_string(result->action_stdout);
     stonith__destroy_action(action);
 
     if (xml == NULL) {
@@ -189,11 +189,11 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
-        tmp = create_xml_node(actions, PCMK_XE_ACTION);
+        tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
 
-        tmp = create_xml_node(actions, PCMK_XE_ACTION);
+        tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
@@ -208,7 +208,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         *metadata = xml;
 
     } else {
-        free_xml(xml);
+        pcmk__xml_free(xml);
     }
 
     return pcmk_ok;
@@ -224,26 +224,26 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 int
 stonith__rhcs_metadata(const char *agent, int timeout_sec, char **output)
 {
-    char *buffer = NULL;
+    gchar *buffer = NULL;
     xmlNode *xml = NULL;
 
     int rc = stonith__rhcs_get_metadata(agent, timeout_sec, &xml);
 
     if (rc != pcmk_ok) {
-        free_xml(xml);
+        pcmk__xml_free(xml);
         return rc;
     }
 
-    buffer = dump_xml_formatted_with_text(xml);
-    free_xml(xml);
+    buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
+    pcmk__xml_free(xml);
     if (buffer == NULL) {
         return -pcmk_err_schema_validation;
     }
-    if (output) {
-        *output = buffer;
-    } else {
-        free(buffer);
+
+    if (output != NULL) {
+        pcmk__str_update(output, buffer);
     }
+    g_free(buffer);
     return pcmk_ok;
 }
 
@@ -288,7 +288,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             }
         }
 
-        free_xml(metadata);
+        pcmk__xml_free(metadata);
 
         remaining_timeout -= time(NULL) - start_time;
 

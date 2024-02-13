@@ -156,7 +156,7 @@ async_fence_helper(gpointer user_data)
         return TRUE;
     }
 
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE,
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     notify_callback);
 
     call_id = st->cmds->fence_with_delay(st,

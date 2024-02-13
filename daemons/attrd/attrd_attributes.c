@@ -139,7 +139,7 @@ xmlNode *
 attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                     const attribute_value_t *v, bool force_write)
 {
-    xmlNode *xml = create_xml_node(parent, __func__);
+    xmlNode *xml = pcmk__xe_create(parent, __func__);
 
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
     crm_xml_add(xml, PCMK__XA_ATTR_SET_TYPE, a->set_type);

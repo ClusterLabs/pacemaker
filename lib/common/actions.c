@@ -526,7 +526,7 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
 
     CRM_CHECK(prefix && task && interval_spec, return NULL);
 
-    xml_op = create_xml_node(parent, PCMK_XE_OP);
+    xml_op = pcmk__xe_create(parent, PCMK_XE_OP);
     crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval_spec);
     crm_xml_add(xml_op, PCMK_META_INTERVAL, interval_spec);
     crm_xml_add(xml_op, PCMK_XA_NAME, task);

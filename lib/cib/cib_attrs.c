@@ -193,33 +193,33 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
     if (rc == pcmk_rc_ok) {
         if (handle_multiples(out, xml_search, attr_name) == ENOTUNIQ) {
-            free_xml(xml_search);
+            pcmk__xml_free(xml_search);
             return ENOTUNIQ;
         } else {
             pcmk__str_update(&local_attr_id,
                              crm_element_value(xml_search, PCMK_XA_ID));
             attr_id = local_attr_id;
-            free_xml(xml_search);
+            pcmk__xml_free(xml_search);
             goto do_modify;
         }
 
     } else if (rc != ENXIO) {
-        free_xml(xml_search);
+        pcmk__xml_free(xml_search);
         return rc;
 
         /* } else if(attr_id == NULL) { */
         /*     return EINVAL; */
 
     } else {
-        free_xml(xml_search);
+        pcmk__xml_free(xml_search);
         crm_trace("%s does not exist, create it", attr_name);
         if (pcmk__str_eq(section, PCMK_XE_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
             section = PCMK_XE_STATUS;
             node_type = PCMK_XE_TICKETS;
 
-            xml_top = create_xml_node(xml_obj, PCMK_XE_STATUS);
-            xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
+            xml_top = pcmk__xe_create(xml_obj, PCMK_XE_STATUS);
+            xml_obj = pcmk__xe_create(xml_top, PCMK_XE_TICKETS);
 
         } else if (pcmk__str_eq(section, PCMK_XE_NODES, pcmk__str_casei)) {
 
@@ -228,8 +228,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             }
 
             if (pcmk__str_eq(node_type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
-                xml_top = create_xml_node(xml_obj, PCMK_XE_NODES);
-                xml_obj = create_xml_node(xml_top, PCMK_XE_NODE);
+                xml_top = pcmk__xe_create(xml_obj, PCMK_XE_NODES);
+                xml_obj = pcmk__xe_create(xml_top, PCMK_XE_NODE);
                 crm_xml_add(xml_obj, PCMK_XA_TYPE, PCMK_VALUE_REMOTE);
                 crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
                 crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
@@ -243,7 +243,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
                 return EINVAL;
             }
 
-            xml_top = create_xml_node(xml_obj, PCMK__XE_NODE_STATE);
+            xml_top = pcmk__xe_create(xml_obj, PCMK__XE_NODE_STATE);
             crm_xml_add(xml_top, PCMK_XA_ID, node_uuid);
             xml_obj = xml_top;
 
@@ -288,7 +288,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
         crm_trace("Creating %s/%s", section, tag);
         if (tag != NULL) {
-            xml_obj = create_xml_node(xml_obj, tag);
+            xml_obj = pcmk__xe_create(xml_obj, tag);
             crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
             if (xml_top == NULL) {
                 xml_top = xml_obj;
@@ -299,17 +299,17 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             && !pcmk__str_eq(node_type, PCMK_XE_TICKETS, pcmk__str_casei)) {
 
             if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
-                xml_obj = create_xml_node(xml_obj,
+                xml_obj = pcmk__xe_create(xml_obj,
                                           PCMK_XE_CLUSTER_PROPERTY_SET);
             } else {
-                xml_obj = create_xml_node(xml_obj, PCMK_XE_META_ATTRIBUTES);
+                xml_obj = pcmk__xe_create(xml_obj, PCMK_XE_META_ATTRIBUTES);
             }
 
         } else if (set_type) {
-            xml_obj = create_xml_node(xml_obj, set_type);
+            xml_obj = pcmk__xe_create(xml_obj, set_type);
 
         } else {
-            xml_obj = create_xml_node(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES);
+            xml_obj = pcmk__xe_create(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES);
         }
         crm_xml_add(xml_obj, PCMK_XA_ID, set_name);
 
@@ -340,7 +340,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
     free(local_set_name);
     free(local_attr_id);
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
 
     return rc;
 }
@@ -390,13 +390,13 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
                        attr_name, user_name, &xml_search);
 
         if (rc != pcmk_rc_ok || handle_multiples(out, xml_search, attr_name) == ENOTUNIQ) {
-            free_xml(xml_search);
+            pcmk__xml_free(xml_search);
             return rc;
         } else {
             pcmk__str_update(&local_attr_id,
                              crm_element_value(xml_search, PCMK_XA_ID));
             attr_id = local_attr_id;
-            free_xml(xml_search);
+            pcmk__xml_free(xml_search);
         }
     }
 
@@ -415,7 +415,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
     }
 
     free(local_attr_id);
-    free_xml(xml_obj);
+    pcmk__xml_free(xml_obj);
     return rc;
 }
 
@@ -446,7 +446,7 @@ find_nvpair_attr_delegate(cib_t *cib, const char *attr, const char *section,
     }
 
     out->finish(out, CRM_EX_OK, true, NULL);
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     pcmk__output_free(out);
     return pcmk_rc2legacy(rc);
 }
@@ -502,7 +502,7 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
     }
 
     out->finish(out, CRM_EX_OK, true, NULL);
-    free_xml(result);
+    pcmk__xml_free(result);
     pcmk__output_free(out);
     return pcmk_rc2legacy(rc);
 }
@@ -653,7 +653,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
         rc = -ENXIO;
     }
     free(xpath_string);
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_free(host_lowercase);
 
     if (rc != pcmk_ok) {
@@ -711,7 +711,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
         }
     }
 
-    free_xml(fragment);
+    pcmk__xml_free(fragment);
     return rc;
 }
 

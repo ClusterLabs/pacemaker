@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,16 +36,16 @@ const char *str1 =
 
 static void
 bad_input(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     pcmk__assert_asserts(pcmk__xe_foreach_child(xml, NULL, NULL, NULL));
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 name_given_test(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     /* The handler should be called once for every <level1> node. */
     expect_function_call(compare_name_handler);
@@ -53,12 +53,12 @@ name_given_test(void **state) {
     expect_function_call(compare_name_handler);
 
     pcmk__xe_foreach_child(xml, "level1", compare_name_handler, (void *) "level1");
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 no_name_given_test(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
 
     /* The handler should be called once for every <level1> node. */
     expect_function_call(compare_name_handler);
@@ -66,14 +66,14 @@ no_name_given_test(void **state) {
     expect_function_call(compare_name_handler);
 
     pcmk__xe_foreach_child(xml, NULL, compare_name_handler, (void *) "level1");
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 name_doesnt_exist_test(void **state) {
-    xmlNode *xml = string2xml(str1);
+    xmlNode *xml = pcmk__xml_parse_string(str1);
     pcmk__xe_foreach_child(xml, "xxx", compare_name_handler, NULL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 const char *str2 =
@@ -100,26 +100,26 @@ const char *str2 =
 
 static void
 multiple_levels_test(void **state) {
-    xmlNode *xml = string2xml(str2);
+    xmlNode *xml = pcmk__xml_parse_string(str2);
 
     /* The handler should be called once for every <level1> node. */
     expect_function_call(compare_name_handler);
     expect_function_call(compare_name_handler);
 
     pcmk__xe_foreach_child(xml, "level1", compare_name_handler, (void *) "level1");
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
 multiple_levels_no_name_test(void **state) {
-    xmlNode *xml = string2xml(str2);
+    xmlNode *xml = pcmk__xml_parse_string(str2);
 
     /* The handler should be called once for every <level1> node. */
     expect_function_call(compare_name_handler);
     expect_function_call(compare_name_handler);
 
     pcmk__xe_foreach_child(xml, NULL, compare_name_handler, (void *) "level1");
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 const char *str3 =
@@ -147,7 +147,7 @@ static int any_of_handler(xmlNode *xml, void *userdata) {
 
 static void
 any_of_test(void **state) {
-    xmlNode *xml = string2xml(str3);
+    xmlNode *xml = pcmk__xml_parse_string(str3);
 
     /* The handler should be called once for every <nodeX> node. */
     expect_function_call(any_of_handler);
@@ -155,7 +155,7 @@ any_of_test(void **state) {
     expect_function_call(any_of_handler);
 
     pcmk__xe_foreach_child(xml, NULL, any_of_handler, NULL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int stops_on_first_handler(xmlNode *xml, void *userdata) {
@@ -190,7 +190,7 @@ static int stops_on_third_handler(xmlNode *xml, void *userdata) {
 
 static void
 one_of_test(void **state) {
-    xmlNode *xml = string2xml(str3);
+    xmlNode *xml = pcmk__xml_parse_string(str3);
 
     /* The handler should be called once. */
     expect_function_call(stops_on_first_handler);
@@ -202,7 +202,7 @@ one_of_test(void **state) {
     expect_function_call(stops_on_third_handler);
     assert_int_equal(pcmk__xe_foreach_child(xml, "node3", stops_on_third_handler, NULL), pcmk_rc_error);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

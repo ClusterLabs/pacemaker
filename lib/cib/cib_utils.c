@@ -93,7 +93,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return pcmk_legacy2rc(rc);
     }
 
-    *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    *patchset = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (*patchset == NULL) {
         crm_err("CIB diff notification received with no patchset");
@@ -154,8 +154,8 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
     // Matches if and only if element_xpath is part of a changed path
     element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
 
-    for (const xmlNode *change = first_named_child(patchset, PCMK_XE_CHANGE);
-         change != NULL; change = crm_next_same_xml(change)) {
+    for (const xmlNode *change = pcmk__xe_match_name(patchset, PCMK_XE_CHANGE);
+         change != NULL; change = pcmk__xe_next_same(change)) {
 
         const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
         const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
@@ -218,14 +218,16 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
  * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
  *
  * \return Newly created XML for empty CIB
- * \note It is the caller's responsibility to free the result with free_xml().
+ *
+ * \note It is the caller's responsibility to free the result with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
-    cib_root = create_xml_node(NULL, PCMK_XE_CIB);
+    cib_root = pcmk__xe_create(NULL, PCMK_XE_CIB);
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
 
@@ -233,19 +235,19 @@ createEmptyCib(int cib_epoch)
     crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
     crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
-    config = create_xml_node(cib_root, PCMK_XE_CONFIGURATION);
-    create_xml_node(cib_root, PCMK_XE_STATUS);
+    config = pcmk__xe_create(cib_root, PCMK_XE_CONFIGURATION);
+    pcmk__xe_create(cib_root, PCMK_XE_STATUS);
 
-    create_xml_node(config, PCMK_XE_CRM_CONFIG);
-    create_xml_node(config, PCMK_XE_NODES);
-    create_xml_node(config, PCMK_XE_RESOURCES);
-    create_xml_node(config, PCMK_XE_CONSTRAINTS);
+    pcmk__xe_create(config, PCMK_XE_CRM_CONFIG);
+    pcmk__xe_create(config, PCMK_XE_NODES);
+    pcmk__xe_create(config, PCMK_XE_RESOURCES);
+    pcmk__xe_create(config, PCMK_XE_CONSTRAINTS);
 
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
     {
-        xmlNode *rsc_defaults = create_xml_node(config, PCMK_XE_RSC_DEFAULTS);
-        xmlNode *meta = create_xml_node(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
-        xmlNode *nvpair = create_xml_node(meta, PCMK_XE_NVPAIR);
+        xmlNode *rsc_defaults = pcmk__xe_create(config, PCMK_XE_RSC_DEFAULTS);
+        xmlNode *meta = pcmk__xe_create(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
+        xmlNode *nvpair = pcmk__xe_create(meta, PCMK_XE_NVPAIR);
 
         crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
         crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
@@ -390,14 +392,14 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
         } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
-            *output = copy_xml(*output);
+            *output = pcmk__xml_copy(NULL, *output);
 
         } else if ((*output)->doc == (*current_cib)->doc) {
             /* Give them a copy they can free */
-            *output = copy_xml(*output);
+            *output = pcmk__xml_copy(NULL, *output);
         }
 
-        free_xml(cib_filtered);
+        pcmk__xml_free(cib_filtered);
         return rc;
     }
 
@@ -409,8 +411,8 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         scratch = *current_cib;
 
         // Make a copy of the top-level element to store version details
-        top = create_xml_node(NULL, (const char *) scratch->name);
-        copy_in_properties(top, scratch);
+        top = pcmk__xe_create(NULL, (const char *) scratch->name);
+        pcmk__xe_copy_attrs(top, scratch);
         patchset_cib = top;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -422,7 +424,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         *current_cib = scratch;
 
     } else {
-        scratch = copy_xml(*current_cib);
+        scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -539,7 +541,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
                 int format = 1;
-                xmlNode *cib_copy = copy_xml(patchset_cib);
+                xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
 
                 crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
@@ -555,7 +557,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                             format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
                             test_rc);
                 }
-                free_xml(cib_copy);
+                pcmk__xml_free(cib_copy);
             },
             {}
         );
@@ -605,19 +607,19 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                 if (origin != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
                 } else {
-                    xml_remove_prop(scratch, PCMK_XA_UPDATE_ORIGIN);
+                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
                 }
 
                 if (client != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
                 } else {
-                    xml_remove_prop(scratch, PCMK_XA_UPDATE_CLIENT);
+                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
                 }
 
                 if (user != NULL) {
                     crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
                 } else {
-                    xml_remove_prop(scratch, PCMK_XA_UPDATE_USER);
+                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
                 }
             }
         }
@@ -646,16 +648,16 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         if (*result_cib == NULL) {
             crm_debug("Pre-filtered the entire cib result");
         }
-        free_xml(scratch);
+        pcmk__xml_free(scratch);
     }
 
     if(diff) {
         *diff = local_diff;
     } else {
-        free_xml(local_diff);
+        pcmk__xml_free(local_diff);
     }
 
-    free_xml(top);
+    pcmk__xml_free(top);
     crm_trace("Done");
     return rc;
 }
@@ -668,7 +670,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 {
     CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    *op_msg = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
+    *op_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     if (*op_msg == NULL) {
         return -EPROTO;
     }
@@ -690,12 +692,12 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
+        pcmk__message_add_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
     }
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
         CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
-                  free_xml(*op_msg); return -EPROTO);
+                  pcmk__xml_free(*op_msg); return -EPROTO);
     }
     return pcmk_ok;
 }
@@ -758,7 +760,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
     }
 
     if (rc == pcmk_rc_ok) {
-        add_node_copy(cib->transaction, request);
+        pcmk__xml_copy(cib->transaction, request);
 
     } else {
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
@@ -781,7 +783,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     if (msg != NULL) {
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        output = get_message_xml(msg, PCMK__XA_CIB_CALLDATA);
+        output = pcmk__message_get_xml(msg, PCMK__XA_CIB_CALLDATA);
     }
 
     blob = cib__lookup_id(call_id);
@@ -922,7 +924,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(output);
 
     crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
-    diff = get_message_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
+    diff = pcmk__message_get_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (rc < pcmk_ok || diff == NULL) {
         return rc;
@@ -944,7 +946,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                 crm_trace("Masking error, we already have the supplied update");
                 return pcmk_ok;
             }
-            free_xml(*output);
+            pcmk__xml_free(*output);
             *output = NULL;
             return rc;
         }
@@ -1038,12 +1040,12 @@ xmlNode *
 cib_get_generation(cib_t * cib)
 {
     xmlNode *the_cib = NULL;
-    xmlNode *generation = create_xml_node(NULL, PCMK__XE_GENERATION_TUPLE);
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
-        free_xml(the_cib);
+        pcmk__xe_copy_attrs(generation, the_cib);
+        pcmk__xml_free(the_cib);
     }
 
     return generation;

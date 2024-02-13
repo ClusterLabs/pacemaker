@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,6 +73,133 @@ crm_element_name(const xmlNode *xml)
 
 //! \deprecated Do not use
 char *crm_xml_escape(const char *text);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *copy_xml(xmlNode *src_node);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
+
+//! \deprecated Do not use
+void purge_diff_markers(xmlNode *a_node);
+
+//! \deprecated Do not use
+xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
+
+//! \deprecated Do not use
+xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                             gboolean full, gboolean *changed,
+                             const char *marker);
+
+//! \deprecated Do not use
+gboolean can_prune_leaf(xmlNode *xml_node);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *filename2xml(const char *filename);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *stdin2xml(void);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *string2xml(const char *input);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+                 gboolean compress);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+char *dump_xml_formatted(const xmlNode *xml);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+char *dump_xml_formatted_with_text(const xmlNode *xml);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+char *dump_xml_unformatted(const xmlNode *xml);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *create_xml_node(xmlNode *parent, const char *name);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *pcmk_create_xml_text_node(xmlNode *parent, const char *name,
+                                   const char *content);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *pcmk_create_html_node(xmlNode *parent, const char *element_name,
+                               const char *id, const char *class_name,
+                               const char *text);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *first_named_child(const xmlNode *parent, const char *name);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
+                       gboolean must_find);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *crm_next_same_xml(const xmlNode *sibling);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void xml_remove_prop(xmlNode *obj, const char *name);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
+                           gboolean delete_only);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+gboolean update_xml_child(xmlNode *child, xmlNode *to_update);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+int find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
+                      const char *field, const char *value,
+                      gboolean search_matches);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *get_xpath_object_relative(const char *xpath, xmlNode *xml_obj,
+                                   int error_level);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+gboolean add_message_xml(xmlNode *msg, const char *field, xmlNode *xml);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *get_message_xml(const xmlNode *msg, const char *field);
+
+//! \deprecated Do not use
+static inline const char *
+crm_map_element_name(const xmlNode *xml)
+{
+    if (xml == NULL) {
+        return NULL;
+    } else if (strcmp((const char *) xml->name, "master") == 0) {
+        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
+        return PCMK_XE_CLONE;
+    } else {
+        return (const char *) xml->name;
+    }
+}
+
+//! \deprecated Do not use
+void copy_in_properties(xmlNode *target, const xmlNode *src);
+
+//! \deprecated Do not use
+void expand_plus_plus(xmlNode * target, const char *name, const char *value);
+
+//! \deprecated Do not use
+void crm_xml_init(void);
+
+//! \deprecated Do not use
+void crm_xml_cleanup(void);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void pcmk_free_xml_subtree(xmlNode *xml);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void free_xml(xmlNode *child);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *expand_idref(xmlNode *input, xmlNode *top);
 
 #ifdef __cplusplus
 }

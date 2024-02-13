@@ -289,7 +289,7 @@ attrd_handle_request(pcmk__request_t *request)
             crm_err("Not sending CPG reply to client");
         }
 
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     reason = request->result.exit_reason;
@@ -318,7 +318,7 @@ attrd_handle_request(pcmk__request_t *request)
 void
 attrd_broadcast_protocol(void)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __func__);
+    xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
@@ -333,7 +333,7 @@ attrd_broadcast_protocol(void)
 
     attrd_send_message(NULL, attrd_op, false); /* ends up at attrd_peer_message() */
 
-    free_xml(attrd_op);
+    pcmk__xml_free(attrd_op);
 }
 
 gboolean

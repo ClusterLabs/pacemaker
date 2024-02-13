@@ -40,7 +40,7 @@ static qb_ipcs_service_t *ipcs = NULL;
  */
 static xmlNode *build_query_reply(const char *attr, const char *host)
 {
-    xmlNode *reply = create_xml_node(NULL, __func__);
+    xmlNode *reply = pcmk__xe_create(NULL, __func__);
     attribute_t *a;
 
     if (reply == NULL) {
@@ -67,9 +67,9 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         /* If a specific node was requested, add its value */
         if (host) {
             v = g_hash_table_lookup(a->values, host);
-            host_value = create_xml_node(reply, PCMK_XE_NODE);
+            host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
             if (host_value == NULL) {
-                free_xml(reply);
+                pcmk__xml_free(reply);
                 return NULL;
             }
             pcmk__xe_add_node(host_value, host, 0);
@@ -82,9 +82,9 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
             g_hash_table_iter_init(&iter, a->values);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
-                host_value = create_xml_node(reply, PCMK_XE_NODE);
+                host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
                 if (host_value == NULL) {
-                    free_xml(reply);
+                    pcmk__xml_free(reply);
                     return NULL;
                 }
                 pcmk__xe_add_node(host_value, v->nodename, 0);
@@ -141,8 +141,8 @@ attrd_client_clear_failure(pcmk__request_t *request)
     }
 
     /* Make sure attribute and value are not set, so we delete via regex */
-    xml_remove_prop(xml, PCMK__XA_ATTR_NAME);
-    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
+    pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_NAME);
+    pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
     return attrd_client_update(request);
 }
@@ -272,7 +272,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
             int status = regexec(&r_patt, attr, 0, NULL, 0);
 
             if (status == 0) {
-                xmlNode *child = create_xml_node(xml, PCMK_XE_OP);
+                xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
 
                 crm_trace("Matched %s with %s", attr, regex);
                 matched = true;
@@ -281,7 +281,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                  * regex and replace it with the name.
                  */
                 attrd_copy_xml_attributes(xml, child);
-                xml_remove_prop(child, PCMK__XA_ATTR_REGEX);
+                pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
                 crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
             }
         }
@@ -418,8 +418,8 @@ attrd_client_update(pcmk__request_t *request)
              * we also need to apply all the transformations in this function
              * to the children since they don't happen anywhere else.
              */
-            for (xmlNode *child = first_named_child(xml, PCMK_XE_OP);
-                 child != NULL; child = crm_next_same_xml(child)) {
+            for (xmlNode *child = pcmk__xe_match_name(xml, PCMK_XE_OP);
+                 child != NULL; child = pcmk__xe_next_same(child)) {
 
                 attr = crm_element_value(child, PCMK__XA_ATTR_NAME);
                 value = crm_element_value(child, PCMK__XA_ATTR_VALUE);
@@ -601,7 +601,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         pcmk__reset_request(&request);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return 0;
 }
 

@@ -20,6 +20,7 @@
 
 #  include <crm/crm.h>  /* transitively imports qblog.h */
 #  include <crm/common/output_internal.h>
+#  include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 
 #  include <libxml/relaxng.h>
 
@@ -161,6 +162,9 @@ enum pcmk__xml_fmt_options {
     pcmk__xml_fmt_diff_short = (1 << 9),
 };
 
+void pcmk__xml_init(void);
+void pcmk__xml_cleanup(void);
+
 int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
                    int depth, uint32_t options);
 int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
@@ -211,9 +215,31 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_match(const xmlNode *parent, const char *node_name,
                         const char *attr_n, const char *attr_v);
 
+/*!
+ * \internal
+ * \brief Find first XML child element with given name
+ *
+ * \param[in] parent  XML element to search
+ * \param[in] name    Name that child must match (\c NULL for any)
+ *
+ * \return Matching XML child element, or \c NULL if none found
+ */
+static inline xmlNode *
+pcmk__xe_match_name(const xmlNode *parent, const char *name)
+{
+    return pcmk__xe_match(parent, name, NULL, NULL);
+}
+
+xmlNode *pcmk__xe_expand_idref(xmlNode *input, xmlNode *search);
+
+void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
+
+int pcmk__xe_find_delete(xmlNode *xml, xmlNode *search);
+int pcmk__xe_find_replace(xmlNode *xml, xmlNode *replace);
+int pcmk__xe_find_update(xmlNode *xml, xmlNode *update);
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
@@ -349,7 +375,44 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+xmlNode *pcmk__xe_next_same(const xmlNode *node);
+
 void pcmk__xe_set_content(xmlNode *node, const char *content);
+
+xmlNode *pcmk__xe_create_full(xmlNode *parent, const char *name,
+                              const char *content);
+void pcmk__xml_free_full(xmlNode *node, int position, bool ignore_acl);
+
+/*!
+ * \internal
+ * \brief Create a new XML element under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ *
+ * \return Newly created XML element, or \c NULL on memory allocation failure
+ */
+static inline xmlNode *
+pcmk__xe_create(xmlNode *parent, const char *name)
+{
+    return pcmk__xe_create_full(parent, name, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
+ *
+ * If \p xml is the root of its document, free the entire document.
+ *
+ * \param[in,out] xml  XML node to free
+ */
+static inline void
+pcmk__xml_free(xmlNode *xml)
+{
+    pcmk__xml_free_full(xml, -1, false);
+}
 
 /*!
  * \internal
@@ -375,6 +438,40 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
 void
 pcmk__xe_set_props(xmlNodePtr node, ...)
 G_GNUC_NULL_TERMINATED;
+
+/*!
+ * \internal
+ * \brief Create a new HTML element under a given parent with ID, class, and
+ *        text
+ *
+ * \param[in,out] parent   XML element that will be the new element's parent
+ *                         (\c NULL to create a new XML document with the new
+ *                         node as root)
+ * \param[in]     name     Name of new element
+ * \param[in]     id       CSS ID of new element (can be \c NULL)
+ * \param[in]     class    CSS class of new element (can be \c NULL)
+ * \param[in]     content  Text to set as the new element's content (can be
+ *                         \c NULL)
+ *
+ * \return Newly created XML element, or \c NULL on memory allocation failure
+ */
+static inline xmlNode *
+pcmk__xe_create_html(xmlNode *parent, const char *name, const char *id,
+                     const char *class, const char *content)
+{
+    xmlNode *node = pcmk__xe_create_full(parent, name, content);
+
+    if (node != NULL) {
+        pcmk__xe_set_props(node,
+                           PCMK_XA_CLASS, class,
+                           PCMK_XA_ID, id,
+                           NULL);
+    }
+    return node;
+}
+
+xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src);
 
 /*!
  * \internal
@@ -468,5 +565,35 @@ gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
 void pcmk__log_known_schemas(void);
 const char *pcmk__remote_schema_dir(void);
 void pcmk__sort_schemas(void);
+
+
+/*
+ * I/O
+ */
+xmlNode *pcmk__xml_parse_file(const char *filename);
+xmlNode *pcmk__xml_parse_string(const char *input);
+
+int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
+                       bool compress, unsigned int *nbytes);
+int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
+                         bool compress, unsigned int *nbytes);
+
+gchar *pcmk__xml_dump(const xmlNode *xml, uint32_t flags);
+
+// @COMPAT Remove when v1 patchsets are removed
+xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
+
+// @COMPAT Drop at 3.0.0 when "master" is removed
+static inline const char *
+pcmk__map_element_name(const xmlNode *xml)
+{
+    if (xml == NULL) {
+        return NULL;
+    } else if (pcmk__xe_is(xml, PCMK__XE_PROMOTABLE_LEGACY)) {
+        return PCMK_XE_CLONE;
+    } else {
+        return (const char *) xml->name;
+    }
+}
 
 #endif // PCMK__XML_INTERNAL__H

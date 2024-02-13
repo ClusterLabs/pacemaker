@@ -958,7 +958,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
 static int
 add_desc(xmlNode *parent, const char *tag, const char *desc)
 {
-    xmlNode *node = pcmk_create_xml_text_node(parent, tag, desc);
+    xmlNode *node = pcmk__xe_create_full(parent, tag, desc);
 
     if (node == NULL) {
         return ENOMEM;
@@ -977,7 +977,7 @@ add_desc(xmlNode *parent, const char *tag, const char *desc)
             locale = strtok(setlocale(LC_ALL, NULL), "_");
         }
 
-        node = pcmk_create_xml_text_node(parent, tag, _(desc));
+        node = pcmk__xe_create_full(parent, tag, _(desc));
         if (node == NULL) {
             return ENOMEM;
         }
@@ -1008,7 +1008,7 @@ add_allowed_values(xmlNode *parent, const pcmk__cluster_option_t *option)
     ptr = strtok(str, delim);
 
     while (ptr != NULL) {
-        xmlNode *allowed_value = create_xml_node(parent, PCMK_XE_OPTION);
+        xmlNode *allowed_value = pcmk__xe_create(parent, PCMK_XE_OPTION);
 
         if (allowed_value == NULL) {
             rc = ENOMEM;
@@ -1053,7 +1053,7 @@ add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
     // The standard requires a parameter type
     CRM_ASSERT(option->type != NULL);
 
-    parameter = create_xml_node(parent, PCMK_XE_PARAMETER);
+    parameter = pcmk__xe_create(parent, PCMK_XE_PARAMETER);
     if (parameter == NULL) {
         return ENOMEM;
     }
@@ -1070,7 +1070,7 @@ add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
         return rc;
     }
 
-    content = create_xml_node(parameter, PCMK_XE_CONTENT);
+    content = pcmk__xe_create(parameter, PCMK_XE_CONTENT);
     if (content == NULL) {
         return ENOMEM;
     }
@@ -1108,7 +1108,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                              enum pcmk__opt_context filter,
                              pcmk__cluster_option_t *option_list, int len)
 {
-    xmlNode *top = create_xml_node(NULL, PCMK_XE_RESOURCE_AGENT);
+    xmlNode *top = pcmk__xe_create(NULL, PCMK_XE_RESOURCE_AGENT);
     xmlNode *parameters = NULL;
     char *result = NULL;
 
@@ -1118,8 +1118,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     crm_xml_add(top, PCMK_XA_NAME, name);
     crm_xml_add(top, PCMK_XA_VERSION, PACEMAKER_VERSION);
 
-    if (pcmk_create_xml_text_node(top, PCMK_XE_VERSION,
-                                  PCMK_OCF_VERSION) == NULL) {
+    if (pcmk__xe_create_full(top, PCMK_XE_VERSION, PCMK_OCF_VERSION) == NULL) {
         goto done;
     }
 
@@ -1132,7 +1131,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         goto done;
     }
 
-    parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
+    parameters = pcmk__xe_create(top, PCMK_XE_PARAMETERS);
     if (parameters == NULL) {
         goto done;
     }
@@ -1148,10 +1147,10 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         }
     }
 
-    result = dump_xml_formatted_with_text(top);
+    result = pcmk__xml_dump(top, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
 done:
-    free_xml(top);
+    pcmk__xml_free(top);
     return result;
 }
 

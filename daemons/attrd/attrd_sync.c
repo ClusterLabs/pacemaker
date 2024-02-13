@@ -350,7 +350,7 @@ free_action(gpointer data)
     struct confirmation_action *action = (struct confirmation_action *) data;
     g_list_free_full(action->respondents, free);
     mainloop_timer_del(action->timer);
-    free_xml(action->xml);
+    pcmk__xml_free(action->xml);
     free(action->client_id);
     free(action);
 }
@@ -514,7 +514,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 
     action->respondents = respondents;
     action->fn = fn;
-    action->xml = copy_xml(request->xml);
+    action->xml = pcmk__xml_copy(NULL, request->xml);
 
     action->client_id = strdup(request->ipc_client->id);
     CRM_ASSERT(action->client_id != NULL);

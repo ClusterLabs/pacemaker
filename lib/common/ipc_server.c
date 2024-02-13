@@ -433,7 +433,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
 
     CRM_ASSERT(text[header->size_uncompressed - 1] == 0);
 
-    xml = string2xml(text);
+    xml = pcmk__xml_parse_string(text);
     crm_log_xml_trace(xml, "[IPC received]");
 
     free(uncompressed);
@@ -599,7 +599,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
        return ENOMEM; /* errno mightn't be set by allocator */
     }
 
-    buffer = dump_xml_unformatted(message);
+    buffer = pcmk__xml_dump(message, 0);
 
     if (max_send_size == 0) {
         max_send_size = crm_ipc_default_buffer_size();
@@ -777,7 +777,9 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
  * \param[in] status    Exit status code to add to ack
  *
  * \return Newly created XML for ack
- * \note The caller is responsible for freeing the return value with free_xml().
+ *
+ * \note The caller is responsible for freeing the return value with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
@@ -786,7 +788,7 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
     xmlNode *ack = NULL;
 
     if (pcmk_is_set(flags, crm_ipc_client_response)) {
-        ack = create_xml_node(NULL, tag);
+        ack = pcmk__xe_create(NULL, tag);
         crm_xml_add(ack, PCMK_XA_FUNCTION, function);
         crm_xml_add_int(ack, PCMK__XA_LINE, line);
         crm_xml_add_int(ack, PCMK_XA_STATUS, (int) status);
@@ -824,7 +826,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
         crm_log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
-        free_xml(ack);
+        pcmk__xml_free(ack);
     }
     return rc;
 }

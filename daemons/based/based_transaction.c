@@ -61,9 +61,9 @@ static int
 process_transaction_requests(xmlNodePtr transaction,
                              const pcmk__client_t *client, const char *source)
 {
-    for (xmlNode *request = first_named_child(transaction,
-                                              PCMK__XE_CIB_COMMAND);
-         request != NULL; request = crm_next_same_xml(request)) {
+    for (xmlNode *request = pcmk__xe_match_name(transaction,
+                                                PCMK__XE_CIB_COMMAND);
+         request != NULL; request = pcmk__xe_next_same(request)) {
 
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
         const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
@@ -139,7 +139,7 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
      * * cib_perform_op() will infer changes for the commit request at the end.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
-              *result_cib = copy_xml(the_cib));
+              *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
     crm_trace("Committing transaction for %s to working CIB", source);

@@ -64,6 +64,7 @@ extern "C" {
 #define PCMK__XE_ST_DEVICE_ACTION       "st_device_action"
 #define PCMK__XE_ST_DEVICE_ID           "st_device_id"
 #define PCMK__XE_ST_HISTORY             "st_history"
+#define PCMK__XE_ST_NOTIFY_FENCE        "st_notify_fence"
 #define PCMK__XE_ST_REPLY               "st-reply"
 #define PCMK__XE_STONITH_COMMAND        "stonith_command"
 #define PCMK__XE_TICKET_STATE           "ticket_state"

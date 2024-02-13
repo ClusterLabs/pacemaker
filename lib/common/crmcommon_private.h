@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <stdint.h>         // uint8_t, uint32_t
 #include <stdbool.h>        // bool
 #include <sys/types.h>      // size_t
-#include <glib.h>           // GList
+#include <glib.h>           // gchar, GList
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
@@ -33,8 +33,8 @@
  * (e.g. when checking differences) that something was deleted.
  */
 typedef struct pcmk__deleted_xml_s {
-        char *path;
-        int position;
+    gchar *path;
+    int position;
 } pcmk__deleted_xml_t;
 
 typedef struct xml_node_private_s {
@@ -63,6 +63,10 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
+bool pcmk__xml_foreach_dfs(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                           void *user_data);
+
+G_GNUC_INTERNAL
 void pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
                     int depth);
 
@@ -70,7 +74,7 @@ G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-void pcmk__mark_xml_created(xmlNode *xml);
+bool pcmk__xml_mark_created(xmlNode *xml, void *user_data);
 
 G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml,
@@ -124,6 +128,11 @@ bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
+
+#if defined(PCMK__UNIT_TESTING)
+G_GNUC_INTERNAL
+void pcmk__xa_set_expand(xmlNode *target, const char *name, const char *value);
+#endif  // defined(PCMK__UNIT_TESTING)
 
 /*
  * IPC

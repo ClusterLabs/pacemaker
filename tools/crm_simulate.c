@@ -359,23 +359,23 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         }
 
     } else if (pcmk__str_eq(input, "-", pcmk__str_casei)) {
-        cib_object = filename2xml(NULL);
+        cib_object = pcmk__xml_parse_file(NULL);
 
     } else {
-        cib_object = filename2xml(input);
+        cib_object = pcmk__xml_parse_file(input);
     }
 
     if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
-        create_xml_node(cib_object, PCMK_XE_STATUS);
+        pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return pcmk_rc_transform_failed;
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return pcmk_rc_schema_validation;
     }
 
@@ -388,20 +388,17 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         free(pid);
     }
 
-    rc = write_xml_file(cib_object, output, FALSE);
-    free_xml(cib_object);
-    cib_object = NULL;
-
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
+    rc = pcmk__xml_write_file(cib_object, output, false, NULL);
+    if (rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT,
                     "Could not create '%s': %s", output, pcmk_rc_str(rc));
-        return rc;
     } else {
         setenv("CIB_file", output, 1);
-        free(local_output);
-        return pcmk_rc_ok;
     }
+
+    pcmk__xml_free(cib_object);
+    free(local_output);
+    return rc;
 }
 
 static GOptionContext *

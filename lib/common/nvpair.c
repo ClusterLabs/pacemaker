@@ -680,7 +680,7 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
     xmlNode *xml_node = user_data;
 
     if (isdigit(name[0])) {
-        xmlNode *tmp = create_xml_node(xml_node, PCMK__XE_PARAM);
+        xmlNode *tmp = pcmk__xe_create(xml_node, PCMK__XE_PARAM);
 
         crm_xml_add(tmp, PCMK_XA_NAME, name);
         crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
@@ -779,7 +779,7 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
      */
     CRM_CHECK(id || name, return NULL);
 
-    nvp = create_xml_node(parent, PCMK_XE_NVPAIR);
+    nvp = pcmk__xe_create(parent, PCMK_XE_NVPAIR);
     CRM_CHECK(nvp, return NULL);
 
     if (id) {
@@ -839,7 +839,7 @@ xml2list(const xmlNode *parent)
 
     CRM_CHECK(parent != NULL, return nvpair_hash);
 
-    nvpair_list = find_xml_node(parent, PCMK__XE_ATTRIBUTES, FALSE);
+    nvpair_list = pcmk__xe_match_name(parent, PCMK__XE_ATTRIBUTES);
     if (nvpair_list == NULL) {
         crm_trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");
@@ -1021,7 +1021,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         return NULL;
 
     } else if (old_value && !value) {
-        xml_remove_prop(node, name);
+        pcmk__xe_remove_attr(node, name);
         return NULL;
     }
 

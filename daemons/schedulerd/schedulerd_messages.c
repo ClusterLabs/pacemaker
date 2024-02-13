@@ -57,7 +57,7 @@ handle_pecalc_request(pcmk__request_t *request)
     };
 
     xmlNode *msg = request->xml;
-    xmlNode *xml_data = get_message_xml(msg, PCMK__XE_CRM_XML);
+    xmlNode *xml_data = pcmk__message_get_xml(msg, PCMK__XE_CRM_XML);
 
     static char *last_digest = NULL;
     static char *filename = NULL;
@@ -79,9 +79,9 @@ handle_pecalc_request(pcmk__request_t *request)
 
     digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
                                             CRM_FEATURE_SET);
-    converted = copy_xml(xml_data);
+    converted = pcmk__xml_copy(NULL, xml_data);
     if (!cli_config_update(&converted, NULL, TRUE)) {
-        scheduler->graph = create_xml_node(NULL, PCMK__XE_TRANSITION_GRAPH);
+        scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
         crm_xml_add_int(scheduler->graph, "transition_id", 0);
         crm_xml_add_int(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
@@ -165,7 +165,7 @@ handle_pecalc_request(pcmk__request_t *request)
         unlink(filename);
         crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
                        (long long) execution_date);
-        write_xml_file(xml_data, filename, TRUE);
+        pcmk__xml_write_file(xml_data, filename, true, NULL);
         pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
                                     ++seq, series_wrap);
     }
@@ -173,7 +173,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
 done:
-    free_xml(converted);
+    pcmk__xml_free(converted);
     pe_free_working_set(scheduler);
 
     return reply;
@@ -282,7 +282,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
         if (reply != NULL) {
             pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
-            free_xml(reply);
+            pcmk__xml_free(reply);
         }
 
         reason = request.result.exit_reason;
@@ -305,7 +305,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         pcmk__reset_request(&request);
     }
 
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 

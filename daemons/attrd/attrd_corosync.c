@@ -26,7 +26,7 @@
 static xmlNode *
 attrd_confirmation(int callid)
 {
-    xmlNode *node = create_xml_node(NULL, __func__);
+    xmlNode *node = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(node, PCMK__XA_SRC, get_local_node_name());
@@ -91,7 +91,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
              */
             crm_debug("Sending %s a confirmation", peer->uname);
             attrd_send_message(peer, reply, false);
-            free_xml(reply);
+            pcmk__xml_free(reply);
         }
 
         pcmk__reset_request(&request);
@@ -113,7 +113,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     }
 
     if (kind == crm_class_cluster) {
-        xml = string2xml(data);
+        xml = pcmk__xml_parse_string(data);
     }
 
     if (xml == NULL) {
@@ -124,7 +124,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
                            xml);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     free(data);
 }
 
@@ -151,12 +151,12 @@ attrd_cpg_destroy(gpointer unused)
 void
 attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 {
-    xmlNode *op = create_xml_node(NULL, PCMK_XE_OP);
+    xmlNode *op = pcmk__xe_create(NULL, PCMK_XE_OP);
 
     crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     attrd_add_value_xml(op, a, v, false);
     attrd_send_message(NULL, op, false);
-    free_xml(op);
+    pcmk__xml_free(op);
 }
 
 #define state_text(state) pcmk__s((state), "in unknown state")
@@ -350,7 +350,7 @@ attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
         GHashTableIter vIter;
 
         crm_debug("Setting %s for all hosts to %s", attr, value);
-        xml_remove_prop(xml, PCMK__XA_ATTR_HOST_ID);
+        pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_HOST_ID);
         g_hash_table_iter_init(&vIter, a->values);
 
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
@@ -391,7 +391,7 @@ broadcast_unseen_local_values(void)
                 crm_trace("* %s[%s]='%s' is local-only",
                           a->id, v->nodename, readable_value(v));
                 if (sync == NULL) {
-                    sync = create_xml_node(NULL, __func__);
+                    sync = pcmk__xe_create(NULL, __func__);
                     crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
                 }
                 attrd_add_value_xml(sync, a, v, a->timeout_ms && a->timer);
@@ -402,7 +402,7 @@ broadcast_unseen_local_values(void)
     if (sync != NULL) {
         crm_debug("Broadcasting local-only values");
         attrd_send_message(NULL, sync, false);
-        free_xml(sync);
+        pcmk__xml_free(sync);
     }
 }
 
@@ -452,7 +452,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
-    xml_remove_prop(xml, PCMK__XA_ATTR_VALUE);
+    pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
@@ -547,7 +547,7 @@ attrd_peer_sync(crm_node_t *peer)
 
     attribute_t *a = NULL;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __func__);
+    xmlNode *sync = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
@@ -564,7 +564,7 @@ attrd_peer_sync(crm_node_t *peer)
 
     crm_debug("Syncing values to %s", readable_peer(peer));
     attrd_send_message(peer, sync, false);
-    free_xml(sync);
+    pcmk__xml_free(sync);
 }
 
 void
@@ -575,8 +575,9 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
 
     CRM_CHECK((peer != NULL) && (xml != NULL), return);
     if (xml->children != NULL) {
-        for (xmlNode *child = first_named_child(xml, PCMK_XE_OP); child != NULL;
-             child = crm_next_same_xml(child)) {
+        for (xmlNode *child = pcmk__xe_match_name(xml, PCMK_XE_OP);
+             child != NULL; child = pcmk__xe_next_same(child)) {
+
             attrd_copy_xml_attributes(xml, child);
             attrd_peer_update_one(peer, child, filter);
 

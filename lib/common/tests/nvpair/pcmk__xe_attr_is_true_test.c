@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,33 +15,33 @@
 static void
 empty_input(void **state)
 {
-    xmlNode *node = string2xml("<node/>");
+    xmlNode *node = pcmk__xml_parse_string("<node/>");
 
     assert_false(pcmk__xe_attr_is_true(NULL, NULL));
     assert_false(pcmk__xe_attr_is_true(NULL, "whatever"));
     assert_false(pcmk__xe_attr_is_true(node, NULL));
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
 attr_missing(void **state)
 {
-    xmlNode *node = string2xml("<node a=\"true\" b=\"false\"/>");
+    xmlNode *node = pcmk__xml_parse_string("<node a=\"true\" b=\"false\"/>");
 
     assert_false(pcmk__xe_attr_is_true(node, "c"));
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
 attr_present(void **state)
 {
-    xmlNode *node = string2xml("<node a=\"true\" b=\"false\"/>");
+    xmlNode *node = pcmk__xml_parse_string("<node a=\"true\" b=\"false\"/>");
 
     assert_true(pcmk__xe_attr_is_true(node, "a"));
     assert_false(pcmk__xe_attr_is_true(node, "b"));
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

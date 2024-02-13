@@ -366,7 +366,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
          an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = expand_idref(an_attr, top);
+            xmlNode *ref_nvpair = pcmk__xe_expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
@@ -456,7 +456,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             const char *score = NULL;
             sorted_set_t *pair = NULL;
-            xmlNode *expanded_attr_set = expand_idref(attr_set, top);
+            xmlNode *expanded_attr_set = pcmk__xe_expand_idref(attr_set, top);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled
@@ -624,8 +624,8 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
 
-    for (xmlNode *rule = first_named_child(ruleset, PCMK_XE_RULE);
-         rule != NULL; rule = crm_next_same_xml(rule)) {
+    for (xmlNode *rule = pcmk__xe_match_name(ruleset, PCMK_XE_RULE);
+         rule != NULL; rule = pcmk__xe_next_same(rule)) {
 
         ruleset_default = FALSE;
         if (pe_eval_expr(rule, rule_data, next_change)) {
@@ -662,7 +662,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     gboolean do_and = TRUE;
     const char *value = NULL;
 
-    rule = expand_idref(rule, NULL);
+    rule = pcmk__xe_expand_idref(rule, NULL);
     if (rule == NULL) {
         return FALSE; // Not possible with schema validation enabled
     }
@@ -1061,8 +1061,8 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 
     crm_trace("Testing expression: %s", pcmk__xe_id(expr));
 
-    duration_spec = first_named_child(expr, PCMK_XE_DURATION);
-    date_spec = first_named_child(expr, PCMK_XE_DATE_SPEC);
+    duration_spec = pcmk__xe_match_name(expr, PCMK_XE_DURATION);
+    date_spec = pcmk__xe_match_name(expr, PCMK_XE_DATE_SPEC);
 
     value = crm_element_value(expr, PCMK_XA_START);
     if (value != NULL) {

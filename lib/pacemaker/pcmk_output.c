@@ -1017,13 +1017,11 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
                xmlNode *digest_source)
 {
     if (digest != NULL) {
-        xmlNodePtr digest_xml = create_xml_node(parent, PCMK_XE_DIGEST);
+        xmlNodePtr digest_xml = pcmk__xe_create(parent, PCMK_XE_DIGEST);
 
         crm_xml_add(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
         crm_xml_add(digest_xml, PCMK_XA_HASH, digest);
-        if (digest_source != NULL) {
-            add_node_copy(digest_xml, digest_source);
-        }
+        pcmk__xml_copy(digest_xml, digest_source);
     }
 }
 

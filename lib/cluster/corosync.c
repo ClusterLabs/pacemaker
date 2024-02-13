@@ -648,7 +648,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
             any = true;
 
             if (xml_parent) {
-                xmlNode *node = create_xml_node(xml_parent, PCMK_XE_NODE);
+                xmlNode *node = pcmk__xe_create(xml_parent, PCMK_XE_NODE);
 
                 crm_xml_set_id(node, "%u", nodeid);
                 crm_xml_add(node, PCMK_XA_UNAME, name);

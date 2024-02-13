@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,13 +13,15 @@
 
 #include <glib.h>
 
+#include "crmcommon_private.h"  // pcmk__xa_set_expand()
+
 static void
 value_is_name_plus_plus(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "6");
 }
@@ -28,9 +30,9 @@ static void
 value_is_name_plus_equals_integer(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X+=2");
+    pcmk__xa_set_expand(test_xml, "X", "X+=2");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "7");
 }
@@ -42,9 +44,9 @@ target_is_NULL(void **state)
 {
 
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(NULL, "X", "X++");
+    pcmk__xa_set_expand(NULL, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "5");
 }
@@ -53,9 +55,9 @@ static void
 name_is_NULL(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, NULL, "X++");
+    pcmk__xa_set_expand(test_xml, NULL, "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "5");
 }
@@ -64,9 +66,9 @@ static void
 value_is_NULL(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", NULL);
+    pcmk__xa_set_expand(test_xml, "X", NULL);
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "5");
 }
@@ -77,9 +79,9 @@ static void
 value_is_wrong_name(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "Y++");
+    pcmk__xa_set_expand(test_xml, "X", "Y++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "Y++");
 }
@@ -88,9 +90,9 @@ static void
 value_is_only_an_integer(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "2");
+    pcmk__xa_set_expand(test_xml, "X", "2");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "2");
 }
@@ -101,9 +103,9 @@ static void
 variable_is_initialized_to_be_NULL(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", NULL);
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "X++");
 }
@@ -112,9 +114,9 @@ static void
 variable_is_initialized_to_be_non_numeric(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "hello");
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "1");
 }
@@ -123,9 +125,9 @@ static void
 variable_is_initialized_to_be_non_numeric_2(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "hello");
-    expand_plus_plus(test_xml, "X", "X+=2");
+    pcmk__xa_set_expand(test_xml, "X", "X+=2");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "2");
 }
@@ -134,9 +136,9 @@ static void
 variable_is_initialized_to_be_numeric_and_decimal_point_containing(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5.01");
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "6");
 }
@@ -145,9 +147,9 @@ static void
 variable_is_initialized_to_be_numeric_and_decimal_point_containing_2(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5.50");
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "6");
 }
@@ -156,9 +158,9 @@ static void
 variable_is_initialized_to_be_numeric_and_decimal_point_containing_3(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5.99");
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "6");
 }
@@ -167,9 +169,9 @@ static void
 value_is_non_numeric(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X+=hello");
+    pcmk__xa_set_expand(test_xml, "X", "X+=hello");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "5");
 }
@@ -178,9 +180,9 @@ static void
 value_is_numeric_and_decimal_point_containing(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X+=2.01");
+    pcmk__xa_set_expand(test_xml, "X", "X+=2.01");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "7");
 }
@@ -189,9 +191,9 @@ static void
 value_is_numeric_and_decimal_point_containing_2(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X+=1.50");
+    pcmk__xa_set_expand(test_xml, "X", "X+=1.50");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "6");
 }
@@ -200,9 +202,9 @@ static void
 value_is_numeric_and_decimal_point_containing_3(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X+=1.99");
+    pcmk__xa_set_expand(test_xml, "X", "X+=1.99");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "6");
 }
@@ -213,9 +215,9 @@ static void
 name_is_undefined(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "Y", "5");
-    expand_plus_plus(test_xml, "X", "X++");
+    pcmk__xa_set_expand(test_xml, "X", "X++");
     new_value = crm_element_value(test_xml, "X");
     assert_string_equal(new_value, "X++");
 }
@@ -226,9 +228,9 @@ static void
 assignment_result_is_too_large(void **state)
 {
     const char *new_value;
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     crm_xml_add(test_xml, "X", "5");
-    expand_plus_plus(test_xml, "X", "X+=100000000000");
+    pcmk__xa_set_expand(test_xml, "X", "X+=100000000000");
     new_value = crm_element_value(test_xml, "X");
     printf("assignment result is too large %s\n", new_value);
     assert_string_equal(new_value, "1000000");

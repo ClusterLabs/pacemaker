@@ -1069,7 +1069,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->unclean = FALSE;
         this_node->details->unseen = FALSE;
     }
-    attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES, FALSE);
+    attrs = pcmk__xe_match_name(state, PCMK__XE_TRANSIENT_ATTRIBUTES);
     add_node_attrs(attrs, this_node, TRUE, scheduler);
 
     if (pe__shutdown_requested(this_node)) {
@@ -1133,8 +1133,8 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
                             pcmk_scheduler_t *scheduler)
 {
     const char *discovery = NULL;
-    const xmlNode *attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES,
-                                         FALSE);
+    const xmlNode *attrs = pcmk__xe_match_name(state,
+                                               PCMK__XE_TRANSIENT_ATTRIBUTES);
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
@@ -1269,8 +1269,9 @@ unpack_node_history(const xmlNode *status, bool fence,
     int rc = pcmk_rc_ok;
 
     // Loop through all PCMK__XE_NODE_STATE entries in CIB status
-    for (const xmlNode *state = first_named_child(status, PCMK__XE_NODE_STATE);
-         state != NULL; state = crm_next_same_xml(state)) {
+    for (const xmlNode *state = pcmk__xe_match_name(status,
+                                                    PCMK__XE_NODE_STATE);
+         state != NULL; state = pcmk__xe_next_same(state)) {
 
         const char *id = pcmk__xe_id(state);
         const char *uname = crm_element_value(state, PCMK_XA_UNAME);
@@ -1955,9 +1956,9 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
                      pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
-    xmlNode *xml_rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
+    xmlNode *xml_rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
-    copy_in_properties(xml_rsc, rsc_entry);
+    pcmk__xe_copy_attrs(xml_rsc, rsc_entry);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 
@@ -2706,8 +2707,8 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     /* Build a list of individual PCMK__XE_LRM_RSC_OP entries, so we can sort
      * them
      */
-    for (rsc_op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
-         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
+    for (rsc_op = pcmk__xe_match_name(lrm_resource, PCMK__XE_LRM_RSC_OP);
+         rsc_op != NULL; rsc_op = pcmk__xe_next_same(rsc_op)) {
 
         op_list = g_list_prepend(op_list, rsc_op);
     }
@@ -2834,19 +2835,19 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     bool found_orphaned_container_filler = false;
 
     // Drill down to PCMK__XE_LRM_RESOURCES section
-    xml = find_xml_node(xml, PCMK__XE_LRM, FALSE);
+    xml = pcmk__xe_match_name(xml, PCMK__XE_LRM);
     if (xml == NULL) {
         return;
     }
-    xml = find_xml_node(xml, PCMK__XE_LRM_RESOURCES, FALSE);
+    xml = pcmk__xe_match_name(xml, PCMK__XE_LRM_RESOURCES);
     if (xml == NULL) {
         return;
     }
 
     // Unpack each PCMK__XE_LRM_RESOURCE entry
-    for (const xmlNode *rsc_entry = first_named_child(xml,
-                                                      PCMK__XE_LRM_RESOURCE);
-         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+    for (const xmlNode *rsc_entry = pcmk__xe_match_name(xml,
+                                                        PCMK__XE_LRM_RESOURCE);
+         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
 
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
 
@@ -3042,8 +3043,8 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         return false;
     }
 
-    for (xmlNode *op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
-         op != NULL; op = crm_next_same_xml(op)) {
+    for (xmlNode *op = pcmk__xe_match_name(lrm_resource, PCMK__XE_LRM_RSC_OP);
+         op != NULL; op = pcmk__xe_next_same(op)) {
         const char * task = NULL;
 
         if (op == xml_op) {
@@ -3500,7 +3501,7 @@ record_failed_op(struct action_history *history)
               history->key, pcmk__node_name(history->node));
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
     crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
-    add_node_copy(history->rsc->cluster->failed, history->xml);
+    pcmk__xml_copy(history->rsc->cluster->failed, history->xml);
 }
 
 static char *
@@ -5096,11 +5097,13 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     GList *intermediate = NULL;
 
     xmlNode *tmp = NULL;
-    xmlNode *status = find_xml_node(scheduler->input, PCMK_XE_STATUS, TRUE);
+    xmlNode *status = pcmk__xe_match_name(scheduler->input, PCMK_XE_STATUS);
 
     pcmk_node_t *this_node = NULL;
 
     xmlNode *node_state = NULL;
+
+    CRM_CHECK(status != NULL, return NULL);
 
     for (node_state = pcmk__xe_first_child(status); node_state != NULL;
          node_state = pcmk__xe_next(node_state)) {
@@ -5132,8 +5135,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                  */
                 xmlNode *lrm_rsc = NULL;
 
-                tmp = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
-                tmp = find_xml_node(tmp, PCMK__XE_LRM_RESOURCES, FALSE);
+                tmp = pcmk__xe_match_name(node_state, PCMK__XE_LRM);
+                tmp = pcmk__xe_match_name(tmp, PCMK__XE_LRM_RESOURCES);
 
                 for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;
                      lrm_rsc = pcmk__xe_next(lrm_rsc)) {

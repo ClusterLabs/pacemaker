@@ -92,9 +92,10 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        char *buffer = dump_xml_formatted(xml);
+        gchar *buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+
         fprintf(stdout, "%s", buffer);
-        free(buffer);
+        g_free(buffer);
     }
 }
 
@@ -565,13 +566,14 @@ main(int argc, char **argv)
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
-        char *buf = NULL;
+        gchar *buf = NULL;
 
         output = createEmptyCib(1);
         crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
-        buf = dump_xml_formatted(output);
+
+        buf = pcmk__xml_dump(output, pcmk__xml_fmt_pretty);
         fprintf(stdout, "%s", buf);
-        free(buf);
+        g_free(buf);
         goto done;
     }
 
@@ -656,16 +658,16 @@ main(int argc, char **argv)
     }
 
     if (options.input_file != NULL) {
-        input = filename2xml(options.input_file);
+        input = pcmk__xml_parse_file(options.input_file);
         source = options.input_file;
 
     } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+        input = pcmk__xml_parse_string(options.input_xml);
         source = "input string";
 
     } else if (options.input_stdin) {
+        input = pcmk__xml_parse_file(NULL);
         source = "STDIN";
-        input = stdin2xml();
 
     } else if (options.acl_render_mode != pcmk__acl_render_none) {
         char *username = pcmk__uid2username(geteuid());
@@ -808,7 +810,7 @@ main(int argc, char **argv)
                                          options.cmd_options) == pcmk_ok) {
                     update_validation(&obj, &version, 0, TRUE, FALSE);
                 }
-                free_xml(obj);
+                pcmk__xml_free(obj);
 
             } else if (output) {
                 validate_xml_verbose(output);
@@ -863,8 +865,8 @@ done:
     free(options.validate_with);
 
     g_free(acl_cred);
-    free_xml(input);
-    free_xml(output);
+    pcmk__xml_free(input);
+    pcmk__xml_free(output);
 
     rc = cib__clean_up_connection(&the_cib);
     if (exit_code == CRM_EX_OK) {
@@ -885,7 +887,7 @@ do_work(xmlNode *input, xmlNode **output)
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
 
         if (status == NULL) {
-            create_xml_node(input, PCMK_XE_STATUS);
+            pcmk__xe_create(input, PCMK_XE_STATUS);
         }
     }
 

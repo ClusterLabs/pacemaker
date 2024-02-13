@@ -45,6 +45,35 @@
 #define PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER    (XML_PARSE_NOBLANKS)
 #define PCMK__XML_PARSE_OPTS_WITH_RECOVER       (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
 
+/*!
+ * \internal
+ * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
+ *
+ * \param[in,out] xml        XML tree to traverse
+ * \param[in,out] fn         Function to call on each node (returns \c true to
+ *                           continue traversing the tree or \c false to stop)
+ * \param[in,out] user_data  Argument to \p fn
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop
+ */
+bool
+pcmk__xml_foreach_dfs(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                      void *user_data)
+{
+    if (!fn(xml, user_data)) {
+        return false;
+    }
+
+    for (xml = pcmk__xml_first_child(xml); xml != NULL;
+         xml = pcmk__xml_next(xml)) {
+
+        if (!pcmk__xml_foreach_dfs(xml, fn, user_data)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool
 pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
 {
@@ -93,43 +122,58 @@ pcmk__mark_xml_node_dirty(xmlNode *xml)
     set_parent_flag(xml, pcmk__xf_dirty);
 }
 
-// Clear flags on XML node and its children
-static void
-reset_xml_node_flags(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Clear flags on an XML node
+ *
+ * \param[in,out] xml        XML node whose flags to reset
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+static bool
+reset_xml_node_flags(xmlNode *xml, void *user_data)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (nodepriv) {
-        nodepriv->flags = 0;
+    if (nodepriv != NULL) {
+        nodepriv->flags = pcmk__xf_none;
     }
-
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        reset_xml_node_flags(cIter);
-    }
+    return true;
 }
 
-// Set xpf_created flag on XML node and any children
-void
-pcmk__mark_xml_created(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Set \c xpf_created flag on an XML node
+ *
+ * \param[in,out] xml        Node whose flag to set
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop
++ *         traversing (because change tracking is disabled)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+bool
+pcmk__xml_mark_created(xmlNode *xml, void *user_data)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     CRM_ASSERT(xml != NULL);
     nodepriv = xml->_private;
 
-    if (nodepriv && pcmk__tracking_xml_changes(xml, FALSE)) {
-        if (!pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
-            pcmk__mark_xml_node_dirty(xml);
-        }
-        for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-             cIter = pcmk__xml_next(cIter)) {
-            pcmk__mark_xml_created(cIter);
-        }
+    if (!pcmk__tracking_xml_changes(xml, false)) {
+        // Tracking is disabled for entire document, so stop traversal
+        return false;
     }
+
+    if ((nodepriv != NULL) && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
+        pcmk__mark_xml_node_dirty(xml);
+    }
+    return true;
 }
 
 #define XML_DOC_PRIVATE_MAGIC   0x81726354UL
@@ -142,7 +186,7 @@ free_deleted_object(void *data)
     if(data) {
         pcmk__deleted_xml_t *deleted_obj = data;
 
-        free(deleted_obj->path);
+        g_free(deleted_obj->path);
         free(deleted_obj);
     }
 }
@@ -314,21 +358,23 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
     return position;
 }
 
-// Remove all attributes marked as deleted from an XML node
-static void
-accept_attr_deletions(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Remove all attributes marked as deleted from an XML node
+ *
+ * \param[in,out] xml        XML node whose deleted attributes to remove
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+static bool
+accept_attr_deletions(xmlNode *xml, void *user_data)
 {
-    // Clear XML node's flags
-    ((xml_node_private_t *) xml->_private)->flags = pcmk__xf_none;
-
-    // Remove this XML node's attributes that were marked as deleted
+    reset_xml_node_flags(xml, NULL);
     pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
-
-    // Recursively do the same for this XML node's children
-    for (xmlNodePtr cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        accept_attr_deletions(cIter);
-    }
+    return true;
 }
 
 /*!
@@ -377,103 +423,179 @@ xml_accept_changes(xmlNode * xml)
     }
 
     docpriv->flags = pcmk__xf_none;
-    accept_attr_deletions(top);
+    pcmk__xml_foreach_dfs(top, accept_attr_deletions, NULL);
 }
-
-xmlNode *
-find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
-{
-    xmlNode *a_child = NULL;
-    const char *name = (root == NULL)? "<NULL>" : (const char *) root->name;
-
-    if (search_path == NULL) {
-        crm_warn("Will never find <NULL>");
-        return NULL;
-    }
-
-    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
-        if (strcmp((const char *)a_child->name, search_path) == 0) {
-            return a_child;
-        }
-    }
-
-    if (must_find) {
-        crm_warn("Could not find %s in %s.", search_path, name);
-    } else if (root != NULL) {
-        crm_trace("Could not find %s in %s.", search_path, name);
-    } else {
-        crm_trace("Could not find %s in <NULL>.", search_path);
-    }
-
-    return NULL;
-}
-
-#define attr_matches(c, n, v) pcmk__str_eq(crm_element_value((c), (n)), \
-                                           (v), pcmk__str_none)
 
 /*!
  * \internal
  * \brief Find first XML child element matching given criteria
  *
- * \param[in] parent     XML element to search
- * \param[in] node_name  If not NULL, only match children of this type
- * \param[in] attr_n     If not NULL, only match children with an attribute
+ * \param[in] parent     XML element to search (can be \c NULL)
+ * \param[in] node_name  If not \c NULL, only match children of this type
+ * \param[in] attr_n     If not \c NULL, only match children with an attribute
  *                       of this name.
  * \param[in] attr_v     If \p attr_n and this are not NULL, only match children
  *                       with an attribute named \p attr_n and this value
  *
- * \return Matching XML child element, or NULL if none found
+ * \return Matching XML child element, or \c NULL if none found
  */
 xmlNode *
 pcmk__xe_match(const xmlNode *parent, const char *node_name,
                const char *attr_n, const char *attr_v)
 {
-    CRM_CHECK(parent != NULL, return NULL);
-    CRM_CHECK(attr_v == NULL || attr_n != NULL, return NULL);
+    const char *parent_name = "<null>";
 
-    for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
-         child = pcmk__xml_next(child)) {
-        if (((node_name == NULL) || pcmk__xe_is(child, node_name))
-            && ((attr_n == NULL) ||
-                (attr_v == NULL && xmlHasProp(child, (pcmkXmlStr) attr_n)) ||
-                (attr_v != NULL && attr_matches(child, attr_n, attr_v)))) {
+    if (parent != NULL) {
+        parent_name = (const char *) parent->name;
+    }
+
+    CRM_CHECK((attr_v == NULL) || (attr_n != NULL), return NULL);
+
+    for (xmlNode *child = pcmk__xe_first_child(parent); child != NULL;
+         child = pcmk__xe_next(child)) {
+
+        if ((node_name != NULL) && !pcmk__xe_is(child, node_name)) {
+            // Node name mismatch
+            continue;
+        }
+        if (attr_n == NULL) {
+            // No attribute match needed
+            return child;
+        }
+        if ((attr_v == NULL)
+            && (xmlHasProp(child, (pcmkXmlStr) attr_n) != NULL)) {
+            // attr_v == NULL: Attribute attr_n must be set (to any value)
+            return child;
+        }
+        if ((attr_v != NULL)
+            && pcmk__str_eq(crm_element_value(child, attr_n), attr_v,
+                            pcmk__str_none)) {
+            // attr_v != NULL: Attribute attr_n must be set to value attr_v
             return child;
         }
     }
-    crm_trace("XML child node <%s%s%s%s%s> not found in %s",
-              (node_name? node_name : "(any)"),
-              (attr_n? " " : ""),
-              (attr_n? attr_n : ""),
-              (attr_n? "=" : ""),
-              (attr_n? attr_v : ""),
-              (const char *) parent->name);
+
+    if (attr_n != NULL) {
+        crm_trace("XML child node <%s %s=%s> not found in %s",
+                  pcmk__s(node_name, "(any)"), attr_n, attr_v, parent_name);
+    } else {
+        crm_trace("XML child node <%s> not found in %s",
+                  pcmk__s(node_name, "(any)"), parent_name);
+    }
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Set an XML attribute, expanding \c ++ and \c += where appropriate
+ *
+ * If \p target already has an attribute named \p name set to an integer value
+ * and \p value is an addition assignment expression on \p name, then expand
+ * \p value to an integer and set attribute \p name to the expanded value in
+ * \p target.
+ *
+ * Otherwise, set attribute \c name on \p target using the literal \p value.
+ *
+ * For example, suppose \p target has an attribute named \c "X" with value
+ * \c "5", and that \p name is \c "X".
+ * * If \p value is \c "X++", the new value of \c "X" in \p target is \c "6".
+ * * If \p value is \c "X+=3", the new value of \c "X" in \p target is \c "8".
+ * * If \p value is \c "val", the new value of \c "X" in \p target is \c "val".
+ * * If \p value is \c "Y++", the new value of \c "X" in \p target is \c "Y++".
+ *
+ * \param[in,out] target  XML node whose attribute to set
+ * \param[in]     name    Name of the attribute to set
+ * \param[in]     value   New value of attribute to set
+ *
+ * \note The original attribute value in \p target and the number in an
+ *       assignment expression in \p value are parsed as scores. For more
+ *       details, refer to \c char2score().
+ */
+#if defined(PCMK__UNIT_TESTING)
 void
-copy_in_properties(xmlNode *target, const xmlNode *src)
+#else
+static void
+#endif  // defined(PCMK__UNIT_TESTING)
+pcmk__xa_set_expand(xmlNode *target, const char *name, const char *value)
 {
-    if (src == NULL) {
-        crm_warn("No node to copy properties from");
+    // @TODO Consider moving to nvpair.c for logical separation
+    const char *old_value = NULL;
 
-    } else if (target == NULL) {
-        crm_err("No node to copy properties into");
+    CRM_CHECK((target != NULL) && (name != NULL) && (value != NULL), return);
 
-    } else {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
+    old_value = crm_element_value(target, name);
 
-            expand_plus_plus(target, p_name, p_value);
-            if (xml_acl_denied(target)) {
-                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
-                return;
-            }
+    /* If no previous value, skip to default case and set the value unexpanded.
+     *
+     * @COMPAT Should we try to expand, assuming 0 for the old value? This
+     * doesn't seem fundamentally different from the "expanding ourselves" case
+     * mentioned below -- it's old=<unset>/new="X++" versus old="X++"/new="X++".
+     */
+    if (old_value != NULL) {
+        const char *n = name;
+        const char *v = value;
+
+        // Stop at first character that differs between name and value
+        for (; *n == *v; n++, v++);
+
+        // If value begins with name followed by a "++" or "+="
+        if (((*n == '\0') && (*v++ == '+'))
+            && ((*v == '+') || (*v == '='))) {
+
+            // If we're expanding ourselves, no previous value was set; use 0
+            int old_value_i = (old_value != value)? char2score(old_value) : 0;
+
+            /* value="X++": new value of X is old_value + 1
+             * value="X+=Y": new value of X is old_value + Y (for some number Y)
+             */
+            int add = (*v == '+')? 1 : char2score(++v);
+
+            crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
+            return;
         }
     }
 
-    return;
+    // Default case: set the attribute unexpanded (with value treated literally)
+    if (old_value != value) {
+        crm_xml_add(target, name, value);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Copy XML attributes, expanding \c ++ and \c += and checking ACLs
+ *
+ * This is similar to \c xmlCopyPropList(), with at least two notable
+ * differences:
+ * * \c ++ and \c += are expanded where appropriate. See
+ *   \c pcmk__xa_set_expand() for details.
+ * * This function returns immediately if ACLs prevent any attribute from being
+ *   copied to \p target.
+ *
+ * \param[in,out] target  XML element to receive copied attributes from \p src
+ * \param[in]     src     XML element whose attributes to copy to \p target
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
+{
+    CRM_CHECK((src != NULL) && (target != NULL), return EINVAL);
+
+    for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
+         attr = attr->next) {
+
+        const char *name = (const char *) attr->name;
+        const char *value = pcmk__xml_attr_value(attr);
+
+        pcmk__xa_set_expand(target, name, value);
+        if (xml_acl_denied(target)) {
+            crm_trace("Cannot copy %s=%s to %s",
+                      name, value, (const char *) target->name);
+            return EPERM;
+        }
+    }
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -494,7 +616,7 @@ fix_plus_plus_recursive(xmlNode *target)
         const char *p_name = (const char *) a->name;
         const char *p_value = pcmk__xml_attr_value(a);
 
-        expand_plus_plus(target, p_name, p_value);
+        pcmk__xa_set_expand(target, p_name, p_value);
     }
     for (child = pcmk__xml_first_child(target); child != NULL;
          child = pcmk__xml_next(child)) {
@@ -503,80 +625,53 @@ fix_plus_plus_recursive(xmlNode *target)
 }
 
 /*!
- * \brief Update current XML attribute value per parsed integer assignment
-          statement
+ * \internal
+ * \brief Remove an XML attribute from an element
  *
- * \param[in,out]   target  an XML node, containing a XML attribute that is
- *                          initialized to some numeric value, to be processed
- * \param[in]       name    name of the XML attribute, e.g. X, whose value
- *                          should be updated
- * \param[in]       value   assignment statement, e.g. "X++" or
- *                          "X+=5", to be applied to the initialized value.
+ * \param[in,out] element  XML element that owns \p attr
+ * \param[in,out] attr     XML attribut to remove from \p element
  *
- * \note The original XML attribute value is treated as 0 if non-numeric and
- *       truncated to be an integer if decimal-point-containing.
- * \note The final XML attribute value is truncated to not exceed 1000000.
- * \note Undefined behavior if unexpected input.
+ * \return Standard Pacemaker return code (\c EPERM if ACLs prevent removal of
+ *         attributes from \p element, or \c pcmk_rc_ok otherwise)
+ */
+static int
+remove_xe_attr(xmlNode *element, xmlAttr *attr)
+{
+    if (attr == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
+        // ACLs apply to element, not to particular attributes
+        crm_trace("ACLs prevent removal of attributes from %s element",
+                  (const char *) element->name);
+        return EPERM;
+    }
+
+    if (pcmk__tracking_xml_changes(element, false)) {
+        // Leave in place (marked for removal) until after diff is calculated
+        set_parent_flag(element, pcmk__xf_dirty);
+        pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
+                            pcmk__xf_deleted);
+    } else {
+        xmlRemoveProp(attr);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Remove a named attribute from an XML element
+ *
+ * \param[in,out] element  XML element to remove an attribute from
+ * \param[in]     name     Name of attribute to remove
  */
 void
-expand_plus_plus(xmlNode * target, const char *name, const char *value)
+pcmk__xe_remove_attr(xmlNode *element, const char *name)
 {
-    int offset = 1;
-    int name_len = 0;
-    int int_value = 0;
-    int value_len = 0;
-
-    const char *old_value = NULL;
-
-    if (target == NULL || value == NULL || name == NULL) {
-        return;
+    if (name != NULL) {
+        remove_xe_attr(element, xmlHasProp(element, (pcmkXmlStr) name));
     }
-
-    old_value = crm_element_value(target, name);
-
-    if (old_value == NULL) {
-        /* if no previous value, set unexpanded */
-        goto set_unexpanded;
-
-    } else if (strstr(value, name) != value) {
-        goto set_unexpanded;
-    }
-
-    name_len = strlen(name);
-    value_len = strlen(value);
-    if (value_len < (name_len + 2)
-        || value[name_len] != '+' || (value[name_len + 1] != '+' && value[name_len + 1] != '=')) {
-        goto set_unexpanded;
-    }
-
-    /* if we are expanding ourselves,
-     * then no previous value was set and leave int_value as 0
-     */
-    if (old_value != value) {
-        int_value = char2score(old_value);
-    }
-
-    if (value[name_len + 1] != '+') {
-        const char *offset_s = value + (name_len + 2);
-
-        offset = char2score(offset_s);
-    }
-    int_value += offset;
-
-    if (int_value > PCMK_SCORE_INFINITY) {
-        int_value = PCMK_SCORE_INFINITY;
-    }
-
-    crm_xml_add_int(target, name, int_value);
-    return;
-
-  set_unexpanded:
-    if (old_value == value) {
-        /* the old value is already set, nothing to do */
-        return;
-    }
-    crm_xml_add(target, name, value);
-    return;
 }
 
 /*!
@@ -598,73 +693,11 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
-                crm_trace("ACLs prevent removal of attributes (%s and "
-                          "possibly others) from %s element",
-                          (const char *) a->name, (const char *) element->name);
-                return; // ACLs apply to element, not particular attributes
-            }
-
-            if (pcmk__tracking_xml_changes(element, false)) {
-                // Leave (marked for removal) until after diff is calculated
-                set_parent_flag(element, pcmk__xf_dirty);
-                pcmk__set_xml_flags((xml_node_private_t *) a->_private,
-                                    pcmk__xf_deleted);
-            } else {
-                xmlRemoveProp(a);
+            if (remove_xe_attr(element, a) != pcmk_rc_ok) {
+                return;
             }
         }
     }
-}
-
-xmlNode *
-add_node_copy(xmlNode * parent, xmlNode * src_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
-
-    child = xmlDocCopyNode(src_node, parent->doc, 1);
-    if (child == NULL) {
-        return NULL;
-    }
-    xmlAddChild(parent, child);
-    pcmk__mark_xml_created(child);
-    return child;
-}
-
-xmlNode *
-create_xml_node(xmlNode * parent, const char *name)
-{
-    xmlDoc *doc = NULL;
-    xmlNode *node = NULL;
-
-    if (pcmk__str_empty(name)) {
-        CRM_CHECK(name != NULL && name[0] == 0, return NULL);
-        return NULL;
-    }
-
-    if (parent == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
-        if (doc == NULL) {
-            return NULL;
-        }
-
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            xmlFreeDoc(doc);
-            return NULL;
-        }
-        xmlDocSetRootElement(doc, node);
-
-    } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            return NULL;
-        }
-    }
-    pcmk__mark_xml_created(node);
-    return node;
 }
 
 /*!
@@ -687,238 +720,232 @@ pcmk__xe_set_content(xmlNode *node, const char *content)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a new XML element under a given parent with text content
+ *
+ * \param[in,out] parent   XML element that will be the new element's parent
+ *                         (\c NULL to create a new XML document with the new
+ *                         node as root)
+ * \param[in]     name     Name of new element
+ * \param[in]     content  Text to set as the new element's content (can be
+ *                         \c NULL)
+ *
+ * \return Newly created XML element, or \c NULL on memory allocation failure
+ */
 xmlNode *
-pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
+pcmk__xe_create_full(xmlNode *parent, const char *name, const char *content)
 {
-    xmlNode *node = create_xml_node(parent, name);
+    /* @COMPAT Either assert on memory allocation failure here, or DON'T assert
+     * on it in pcmk__xml_copy().
+     * * If we choose to assert here, then keep a separate function body for
+     *   create_xml_node() so that it doesn't assert.
+     * * If we choose not to assert, and instead to return NULL, then NULL-check
+     *   return values of both functions in all callers.
+     */
+    xmlNode *node = NULL;
 
+    CRM_CHECK(!pcmk__str_empty(name), return NULL);
+
+    if (parent == NULL) {
+        // libxml2 supports only XML 1.0
+        xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
+
+        if (doc == NULL) {
+            return NULL;
+        }
+
+        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            xmlFreeDoc(doc);
+            return NULL;
+        }
+        xmlDocSetRootElement(doc, node);
+
+    } else {
+        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            return NULL;
+        }
+    }
     pcmk__xe_set_content(node, content);
-    return node;
-}
-
-xmlNode *
-pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
-                      const char *class_name, const char *text)
-{
-    xmlNode *node = pcmk_create_xml_text_node(parent, element_name, text);
-
-    if (class_name != NULL) {
-        crm_xml_add(node, PCMK_XA_CLASS, class_name);
-    }
-
-    if (id != NULL) {
-        crm_xml_add(node, PCMK_XA_ID, id);
-    }
-
+    pcmk__xml_foreach_dfs(node, pcmk__xml_mark_created, NULL);
     return node;
 }
 
 /*!
- * Free an XML element and all of its children, removing it from its parent
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
- * \param[in,out] xml  XML element to free
+ * If \p node is the root of its document, free the entire document.
+ *
+ * \param[in,out] node        XML node to free
+ * \param[in]     position    Position of \p node among its siblings for change
+ *                            tracking (negative to calculate automatically if
+ *                            needed)
+ * \param[in]     ignore_acl  If \c true, free XML regardless of ACLs
  */
 void
-pcmk_free_xml_subtree(xmlNode *xml)
+pcmk__xml_free_full(xmlNode *node, int position, bool ignore_acl)
 {
-    xmlUnlinkNode(xml); // Detaches from parent and siblings
-    xmlFreeNode(xml);   // Frees
-}
+    xmlDoc *doc = NULL;
+    xml_node_private_t *nodepriv = NULL;
 
-static void
-free_xml_with_position(xmlNode * child, int position)
-{
-    if (child != NULL) {
-        xmlNode *top = NULL;
-        xmlDoc *doc = child->doc;
-        xml_node_private_t *nodepriv = child->_private;
-        xml_doc_private_t *docpriv = NULL;
+    if (node == NULL) {
+        return;
+    }
+    doc = node->doc;
+    nodepriv = node->_private;
 
-        if (doc != NULL) {
-            top = xmlDocGetRootElement(doc);
-        }
+    if ((doc != NULL) && (xmlDocGetRootElement(doc) == node)) {
+        xmlFreeDoc(doc);
+        return;
+    }
 
-        if (doc != NULL && top == child) {
-            /* Free everything */
-            xmlFreeDoc(doc);
+    if (!ignore_acl && !pcmk__check_acl(node, NULL, pcmk__xf_acl_write)) {
+        GString *xpath = NULL;
 
-        } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
-            GString *xpath = NULL;
+        pcmk__if_tracing({}, return);
+        xpath = pcmk__element_xpath(node);
+        qb_log_from_external_source(__func__, __FILE__,
+                                    "Cannot remove %s %x", LOG_TRACE,
+                                    __LINE__, 0, xpath->str, nodepriv->flags);
+        g_string_free(xpath, TRUE);
+        return;
+    }
 
-            pcmk__if_tracing({}, return);
-            xpath = pcmk__element_xpath(child);
-            qb_log_from_external_source(__func__, __FILE__,
-                                        "Cannot remove %s %x", LOG_TRACE,
-                                        __LINE__, 0, (const char *) xpath->str,
-                                        nodepriv->flags);
-            g_string_free(xpath, TRUE);
-            return;
+    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
+        && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
-        } else {
-            if (doc && pcmk__tracking_xml_changes(child, FALSE)
-                && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        xml_doc_private_t *docpriv = doc->_private;
+        GString *xpath = pcmk__element_xpath(node);
 
-                GString *xpath = pcmk__element_xpath(child);
+        if (xpath != NULL) {
+            pcmk__deleted_xml_t *deleted_obj = NULL;
 
-                if (xpath != NULL) {
-                    pcmk__deleted_xml_t *deleted_obj = NULL;
+            crm_trace("Deleting %s %p from %p", xpath->str, node, doc);
 
-                    crm_trace("Deleting %s %p from %p",
-                              (const char *) xpath->str, child, doc);
+            deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
+            deleted_obj->path = g_string_free(xpath, FALSE);
+            deleted_obj->position = -1;
 
-                    deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
-                    deleted_obj->path = strdup((const char *) xpath->str);
+            // Record the position only for XML comments for now
+            if (node->type == XML_COMMENT_NODE) {
+                if (position >= 0) {
+                    deleted_obj->position = position;
 
-                    CRM_ASSERT(deleted_obj->path != NULL);
-                    g_string_free(xpath, TRUE);
-
-                    deleted_obj->position = -1;
-                    /* Record the "position" only for XML comments for now */
-                    if (child->type == XML_COMMENT_NODE) {
-                        if (position >= 0) {
-                            deleted_obj->position = position;
-
-                        } else {
-                            deleted_obj->position = pcmk__xml_position(child,
-                                                                       pcmk__xf_skip);
-                        }
-                    }
-
-                    docpriv = doc->_private;
-                    docpriv->deleted_objs = g_list_append(docpriv->deleted_objs, deleted_obj);
-                    pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
+                } else {
+                    deleted_obj->position = pcmk__xml_position(node,
+                                                               pcmk__xf_skip);
                 }
             }
-            pcmk_free_xml_subtree(child);
+
+            docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
+                                                  deleted_obj);
+            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
         }
     }
+
+    xmlUnlinkNode(node);
+    xmlFreeNode(node);
 }
 
-
-void
-free_xml(xmlNode * child)
-{
-    free_xml_with_position(child, -1);
-}
-
+/*!
+ * \internal
+ * \brief Make a deep copy of an XML node under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the copy's parent (\c NULL
+ *                        to create a new XML document with the copy as root)
+ * \param[in]     src     XML node to copy
+ *
+ * \return Deep copy of \p src, or \c NULL if \p src is \c NULL
+ */
 xmlNode *
-copy_xml(xmlNode * src)
+pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 {
-    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
-    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+    xmlNode *copy = NULL;
 
-    CRM_ASSERT(copy != NULL);
-    xmlDocSetRootElement(doc, copy);
+    if (src == NULL) {
+        return NULL;
+    }
+
+    if (parent == NULL) {
+        xmlDoc *doc = NULL;
+
+        // The copy will be the root element of a new document
+        CRM_ASSERT(src->type == XML_ELEMENT_NODE);
+
+        // libxml2 supports only XML 1.0.
+        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        CRM_ASSERT(doc != NULL);
+
+        copy = xmlDocCopyNode(src, doc, 1);
+        CRM_ASSERT(copy != NULL);
+
+        xmlDocSetRootElement(doc, copy);
+
+    } else {
+        copy = xmlDocCopyNode(src, parent->doc, 1);
+        CRM_ASSERT(copy != NULL);
+
+        xmlAddChild(parent, copy);
+    }
+
+    pcmk__xml_foreach_dfs(copy, pcmk__xml_mark_created, NULL);
     return copy;
 }
 
-xmlNode *
-string2xml(const char *input)
+/*!
+ * \internal
+ * \brief Read from \c stdin until EOF or error
+ *
+ * \return Newly allocated string containing the bytes read from \c stdin, or
+ *         \c NULL on error
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+static char *
+read_stdin(void)
 {
-    xmlNode *xml = NULL;
-    xmlDocPtr output = NULL;
-    xmlParserCtxtPtr ctxt = NULL;
-    const xmlError *last_error = NULL;
-
-    if (input == NULL) {
-        crm_err("Can't parse NULL input");
-        return NULL;
-    }
-
-    /* create a parser context */
-    ctxt = xmlNewParserCtxt();
-    CRM_CHECK(ctxt != NULL, return NULL);
-
-    xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
-    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                            PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-    if (output == NULL) {
-        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-        if (output) {
-            crm_warn("Successfully recovered from XML errors "
-                     "(note: a future release will treat this as a fatal failure)");
-        }
-    }
-
-    if (output) {
-        xml = xmlDocGetRootElement(output);
-    }
-    last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
-        /*
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
-         */
-        crm_warn("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                 last_error->domain, last_error->level, last_error->code, last_error->message);
-
-        if (last_error->code == XML_ERR_DOCUMENT_EMPTY) {
-            CRM_LOG_ASSERT("Cannot parse an empty string");
-
-        } else if (last_error->code != XML_ERR_DOCUMENT_END) {
-            crm_err("Couldn't%s parse %d chars: %s", xml ? " fully" : "", (int)strlen(input),
-                    input);
-            if (xml != NULL) {
-                crm_log_xml_err(xml, "Partial");
-            }
-
-        } else {
-            int len = strlen(input);
-            int lpc = 0;
-
-            while(lpc < len) {
-                crm_warn("Parse error[+%.3d]: %.80s", lpc, input+lpc);
-                lpc += 80;
-            }
-
-            CRM_LOG_ASSERT("String parsing error");
-        }
-    }
-
-    xmlFreeParserCtxt(ctxt);
-    return xml;
-}
-
-xmlNode *
-stdin2xml(void)
-{
-    size_t data_length = 0;
-    size_t read_chars = 0;
-
-    char *xml_buffer = NULL;
-    xmlNode *xml_obj = NULL;
+    char *buf = NULL;
+    size_t length = 0;
 
     do {
-        xml_buffer = pcmk__realloc(xml_buffer, data_length + PCMK__BUFFER_SIZE);
-        read_chars = fread(xml_buffer + data_length, 1, PCMK__BUFFER_SIZE,
-                           stdin);
-        data_length += read_chars;
-    } while (read_chars == PCMK__BUFFER_SIZE);
+        size_t bytes_read = 0;
 
-    if (data_length == 0) {
-        crm_warn("No XML supplied on stdin");
-        free(xml_buffer);
-        return NULL;
+        buf = pcmk__realloc(buf, length + PCMK__BUFFER_SIZE + 1);
+        bytes_read = fread(buf + length, 1, PCMK__BUFFER_SIZE, stdin);
+        length += bytes_read;
+    } while ((feof(stdin) == 0) && (ferror(stdin) == 0));
+
+    if (ferror(stdin) != 0) {
+        crm_err("Error reading input from stdin");
+        free(buf);
+        buf = NULL;
+    } else {
+        buf[length] = '\0';
     }
-
-    xml_buffer[data_length] = '\0';
-    xml_obj = string2xml(xml_buffer);
-    free(xml_buffer);
-
-    crm_log_xml_trace(xml_obj, "Created fragment");
-    return xml_obj;
+    clearerr(stdin);
+    return buf;
 }
 
+/*!
+ * \internal
+ * \brief Decompress a <tt>bzip2</tt>-compressed file into a string buffer
+ *
+ * \param[in] filename  Name of file to decompress
+ *
+ * \return Newly allocated string with the decompressed contents of \p filename,
+ *         or \c NULL on error.
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
 static char *
 decompress_file(const char *filename)
 {
     char *buffer = NULL;
     int rc = 0;
-    size_t length = 0, read_len = 0;
+    size_t length = 0;
     BZFILE *bz_file = NULL;
     FILE *input = fopen(filename, "r");
 
@@ -928,41 +955,38 @@ decompress_file(const char *filename)
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-    rc = pcmk__bzlib2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
+    if (rc != BZ_OK) {
+        rc = pcmk__bzlib2rc(rc);
         crm_err("Could not prepare to read compressed %s: %s "
                 CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
-        BZ2_bzReadClose(&rc, bz_file);
-        fclose(input);
-        return NULL;
+        goto done;
     }
 
-    rc = BZ_OK;
     // cppcheck seems not to understand the abort-logic in pcmk__realloc
     // cppcheck-suppress memleak
-    while (rc == BZ_OK) {
-        buffer = pcmk__realloc(buffer, PCMK__BUFFER_SIZE + length + 1);
+    do {
+        int read_len = 0;
+
+        buffer = pcmk__realloc(buffer, length + PCMK__BUFFER_SIZE + 1);
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, PCMK__BUFFER_SIZE);
 
-        crm_trace("Read %ld bytes from file: %d", (long)read_len, rc);
-
-        if (rc == BZ_OK || rc == BZ_STREAM_END) {
+        if ((rc == BZ_OK) || (rc == BZ_STREAM_END)) {
+            crm_trace("Read %ld bytes from file: %d", (long) read_len, rc);
             length += read_len;
         }
-    }
+    } while (rc == BZ_OK);
 
-    buffer[length] = '\0';
-
-    rc = pcmk__bzlib2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
+    if (rc != BZ_STREAM_END) {
+        rc = pcmk__bzlib2rc(rc);
         crm_err("Could not read compressed %s: %s " CRM_XS " rc=%d",
                 filename, pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
+    } else {
+        buffer[length] = '\0';
     }
 
+done:
     BZ2_bzReadClose(&rc, bz_file);
     fclose(input);
     return buffer;
@@ -985,7 +1009,7 @@ pcmk__strip_xml_text(xmlNode *xml)
         switch (iter->type) {
             case XML_TEXT_NODE:
                 /* Remove it */
-                pcmk_free_xml_subtree(iter);
+                pcmk__xml_free_full(iter, -1, true);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -1002,90 +1026,161 @@ pcmk__strip_xml_text(xmlNode *xml)
     }
 }
 
+// @COMPAT Remove macro at 3.0.0 when we drop XML_PARSE_RECOVER
+/*!
+ * \internal
+ * \brief Try to parse XML first without and then with recovery enabled
+ *
+ * \param[out] result  Where to store the resulting XML doc (<tt>xmlDoc **</tt>)
+ * \param[in]  fn      XML parser function
+ * \param[in]  ...     All arguments for \p fn except the final one (an
+ *                     \c xmlParserOption group)
+ */
+#define parse_xml_recover(result, fn, ...) do {                             \
+        *result = fn(__VA_ARGS__, PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);    \
+        if (*result == NULL) {                                              \
+            *result = fn(__VA_ARGS__, PCMK__XML_PARSE_OPTS_WITH_RECOVER);   \
+                                                                            \
+            if (*result != NULL) {                                          \
+                crm_warn("Successfully recovered from XML errors "          \
+                         "(note: a future release will treat this as a "    \
+                         "fatal failure)");                                 \
+            }                                                               \
+        }                                                                   \
+    } while (0);
+
+/*!
+ * \internal
+ * \brief Parse XML from a file
+ *
+ * \param[in] filename  Name of file containing XML (\c NULL or \c "-" for
+ *                      \c stdin); if \p filename ends in \c ".bz2", the file
+ *                      will be decompressed using \c bzip2
+ *
+ * \return XML tree parsed from the given file; may be \c NULL or only partial
+ *         on error
+ */
 xmlNode *
-filename2xml(const char *filename)
+pcmk__xml_parse_file(const char *filename)
 {
+    bool use_stdin = pcmk__str_eq(filename, "-", pcmk__str_null_matches);
     xmlNode *xml = NULL;
-    xmlDocPtr output = NULL;
-    bool uncompressed = true;
-    xmlParserCtxtPtr ctxt = NULL;
+    xmlDoc *output = NULL;
+    xmlParserCtxt *ctxt = NULL;
     const xmlError *last_error = NULL;
 
-    /* create a parser context */
+    // Create a parser context
     ctxt = xmlNewParserCtxt();
     CRM_CHECK(ctxt != NULL, return NULL);
 
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    if (filename) {
-        uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
-    }
+    if (use_stdin) {
+        /* @COMPAT After dropping XML_PARSE_RECOVER, we can avoid capturing
+         * stdin into a buffer and instead call
+         * xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL, XML_PARSE_NOBLANKS);
+         *
+         * For now we have to save the input so that we can use it twice.
+         */
+        char *input = read_stdin();
 
-    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
-        /* STDIN_FILENO == fileno(stdin) */
-        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
-                               PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
-                                   PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
-            }
+        if (input != NULL) {
+            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
+                              NULL, NULL);
+            free(input);
         }
 
-    } else if (uncompressed) {
-        output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                 PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
-            }
-        }        
-
-    } else {
+    } else if (pcmk__ends_with_ext(filename, ".bz2")) {
         char *input = decompress_file(filename);
 
-        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
+        if (input != NULL) {
+            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
+                              NULL, NULL);
+            free(input);
+        }
 
-        if (output == NULL) {
-            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                    PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
-            }
-        }        
-
-        free(input);
+    } else {
+        parse_xml_recover(&output, xmlCtxtReadFile, ctxt, filename, NULL);
     }
 
-    if (output && (xml = xmlDocGetRootElement(output))) {
-        pcmk__strip_xml_text(xml);
+    if (output != NULL) {
+        xml = xmlDocGetRootElement(output);
+        if (xml != NULL) {
+            /* @TODO Should we really be stripping out text? This seems like an
+             * overly broad way to get rid of whitespace, if that's the goal.
+             * Text nodes may be invalid in most or all Pacemaker inputs, but
+             * stripping them in a generic "parse XML from file" function may
+             * not be the best way to ignore them.
+             */
+            pcmk__strip_xml_text(xml);
+        }
     }
 
     last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
-        /*
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
-         */
-        crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                last_error->domain, last_error->level, last_error->code, last_error->message);
+    if (last_error != NULL) {
+        crm_err("Couldn't %sparse XML from %s: %s "
+                CRM_XS " (domain=%d, level=%d, code=%d)",
+                ((xml != NULL)? "fully " : ""), (use_stdin? "stdin" : filename),
+                last_error->message, last_error->domain, last_error->level,
+                last_error->code);
 
-        if (last_error && last_error->code != XML_ERR_OK) {
-            crm_err("Couldn't%s parse %s", xml ? " fully" : "", filename);
-            if (xml != NULL) {
-                crm_log_xml_err(xml, "Partial");
-            }
+        if (xml != NULL) {
+            crm_log_xml_err(xml, "Partial");
+        }
+    }
+
+    xmlFreeParserCtxt(ctxt);
+    return xml;
+}
+
+/*!
+ * \internal
+ * \brief Parse XML from a string
+ *
+ * \param[in] input  String to parse
+ *
+ * \return XML tree parsed from the given string; may be \c NULL or only partial
+ *         on error
+ */
+xmlNode *
+pcmk__xml_parse_string(const char *input)
+{
+    xmlNode *xml = NULL;
+    xmlDoc *output = NULL;
+    xmlParserCtxt *ctxt = NULL;
+    const xmlError *last_error = NULL;
+
+    if (input == NULL) {
+        crm_err("Can't parse NULL input");
+        return NULL;
+    }
+
+    // Create a parser context
+    ctxt = xmlNewParserCtxt();
+    CRM_CHECK(ctxt != NULL, return NULL);
+
+    xmlCtxtResetLastError(ctxt);
+    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
+
+    parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input, NULL,
+                      NULL);
+
+    if (output != NULL) {
+        xml = xmlDocGetRootElement(output);
+    }
+
+    last_error = xmlCtxtGetLastError(ctxt);
+    if (last_error != NULL) {
+        crm_err("Couldn't %sparse XML from string: %s "
+                CRM_XS " (domain=%d, level=%d, code=%d)",
+                ((xml != NULL)? "fully " : ""), last_error->message,
+                last_error->domain, last_error->level, last_error->code);
+
+        crm_info("XML parse error: %s", input);
+
+        if (xml != NULL) {
+            crm_log_xml_info(xml, "Partial");
         }
     }
 
@@ -1160,11 +1255,74 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
 
 /*!
  * \internal
+ * \brief Write a string to a file stream, compressed using \c bzip2
+ *
+ * \param[in,out] text       String to write
+ * \param[in]     filename   Name of file being written (for logging only)
+ * \param[in,out] stream     Open file stream to write to
+ * \param[out]    bytes_out  Number of bytes written (valid only on success)
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note bzlib uses \p text as a <tt>void *</tt>, so there's no guarantee it
+ *       won't be modified.
+ */
+static int
+write_compressed_stream(char *text, const char *filename, FILE *stream,
+                        unsigned int *bytes_out)
+{
+    unsigned int bytes_in = 0;
+    int bzerror = BZ_OK;
+    int rc = pcmk_rc_ok;
+
+    // (5, 0, 0): (intermediate block size, silent, default workFactor)
+    BZFILE *bz_file = BZ2_bzWriteOpen(&bzerror, stream, 5, 0, 0);
+
+    if (bzerror != BZ_OK) {
+        rc = pcmk__bzlib2rc(bzerror);
+        crm_warn("Not compressing %s: could not prepare file stream: %s "
+                 CRM_XS " rc=%d",
+                 filename, pcmk_rc_str(rc), rc);
+        goto done;
+    }
+
+    BZ2_bzWrite(&bzerror, bz_file, text, strlen(text));
+    if (bzerror != BZ_OK) {
+        rc = pcmk__bzlib2rc(bzerror);
+        crm_warn("Not compressing %s: could not compress data: %s "
+                 CRM_XS " rc=%d errno=%d",
+                 filename, pcmk_rc_str(rc), rc, errno);
+        goto done;
+    }
+
+    BZ2_bzWriteClose(&bzerror, bz_file, 0, &bytes_in, bytes_out);
+    bz_file = NULL;
+    if (bzerror != BZ_OK) {
+        rc = pcmk__bzlib2rc(bzerror);
+        crm_warn("Not compressing %s: could not write compressed data: %s "
+                 CRM_XS " rc=%d errno=%d",
+                 filename, pcmk_rc_str(rc), rc, errno);
+        goto done;
+    }
+
+    crm_trace("Compressed XML for %s from %u bytes to %u",
+              filename, bytes_in, *bytes_out);
+
+done:
+    if (bz_file != NULL) {
+        BZ2_bzWriteClose(&bzerror, bz_file, 0, NULL, NULL);
+    }
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Write XML to a file stream
  *
  * \param[in]     xml       XML to write
  * \param[in]     filename  Name of file being written (for logging only)
- * \param[in,out] stream    Open file stream corresponding to filename
+ * \param[in,out] stream    Open file stream corresponding to filename (closed
+ *                          when this function returns)
  * \param[in]     compress  Whether to compress XML before writing
  * \param[out]    nbytes    Number of bytes written
  *
@@ -1174,145 +1332,110 @@ static int
 write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
                  bool compress, unsigned int *nbytes)
 {
+    // @COMPAT Drop nbytes as arg when we drop write_xml_fd()/write_xml_file()
+    gchar *buffer = NULL;
+    unsigned int bytes_out = 0;
     int rc = pcmk_rc_ok;
-    char *buffer = NULL;
 
-    *nbytes = 0;
+    buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+    CRM_CHECK(!pcmk__str_empty(buffer),
+              crm_log_xml_info(xml, "dump-failed");
+              rc = pcmk_rc_error;
+              goto done);
+
     crm_log_xml_trace(xml, "writing");
 
-    buffer = dump_xml_formatted(xml);
-    CRM_CHECK(buffer && strlen(buffer),
-              crm_log_xml_warn(xml, "formatting failed");
-              rc = pcmk_rc_error;
-              goto bail);
-
-    if (compress) {
-        unsigned int in = 0;
-        BZFILE *bz_file = NULL;
-
-        rc = BZ_OK;
-        bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            crm_warn("Not compressing %s: could not prepare file stream: %s "
-                     CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
-        } else {
-            BZ2_bzWrite(&rc, bz_file, buffer, strlen(buffer));
-            rc = pcmk__bzlib2rc(rc);
-
-            if (rc != pcmk_rc_ok) {
-                crm_warn("Not compressing %s: could not compress data: %s "
-                         CRM_XS " rc=%d errno=%d",
-                         filename, pcmk_rc_str(rc), rc, errno);
-            }
-        }
-
-        if (rc == pcmk_rc_ok) {
-            BZ2_bzWriteClose(&rc, bz_file, 0, &in, nbytes);
-            rc = pcmk__bzlib2rc(rc);
-
-            if (rc != pcmk_rc_ok) {
-                crm_warn("Not compressing %s: could not write compressed data: %s "
-                         CRM_XS " rc=%d errno=%d",
-                         filename, pcmk_rc_str(rc), rc, errno);
-                *nbytes = 0; // retry without compression
-            } else {
-                crm_trace("Compressed XML for %s from %u bytes to %u",
-                          filename, in, *nbytes);
-            }
-        }
-        rc = pcmk_rc_ok; // Either true, or we'll retry without compression
+    if (compress
+        && (write_compressed_stream(buffer, filename, stream,
+                                    &bytes_out) == pcmk_rc_ok)) {
+        goto done;
     }
 
-    if (*nbytes == 0) {
-        rc = fprintf(stream, "%s", buffer);
-        if (rc < 0) {
-            rc = errno;
-            crm_perror(LOG_ERR, "writing %s", filename);
-        } else {
-            *nbytes = (unsigned int) rc;
-            rc = pcmk_rc_ok;
-        }
+    rc = fprintf(stream, "%s", buffer);
+    if (rc < 0) {
+        rc = EIO;
+        crm_perror(LOG_ERR, "writing %s", filename);
+        goto done;
     }
+    bytes_out = (unsigned int) rc;
+    rc = pcmk_rc_ok;
 
-  bail:
-
+done:
     if (fflush(stream) != 0) {
         rc = errno;
         crm_perror(LOG_ERR, "flushing %s", filename);
     }
 
-    /* Don't report error if the file does not support synchronization */
-    if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
+    // Don't report error if the file does not support synchronization
+    if ((fsync(fileno(stream)) < 0) && (errno != EROFS) && (errno != EINVAL)) {
         rc = errno;
         crm_perror(LOG_ERR, "synchronizing %s", filename);
     }
 
     fclose(stream);
+    crm_trace("Saved %u bytes to %s as XML", bytes_out, filename);
 
-    crm_trace("Saved %d bytes to %s as XML", *nbytes, filename);
-    free(buffer);
-
+    if (nbytes != NULL) {
+        *nbytes = bytes_out;
+    }
+    g_free(buffer);
     return rc;
 }
 
 /*!
+ * \internal
  * \brief Write XML to a file descriptor
  *
- * \param[in] xml       XML to write
- * \param[in] filename  Name of file being written (for logging only)
- * \param[in] fd        Open file descriptor corresponding to filename
- * \param[in] compress  Whether to compress XML before writing
+ * \param[in]  xml       XML to write
+ * \param[in]  filename  Name of file being written (for logging only)
+ * \param[in]  fd        Open file descriptor corresponding to \p filename
+ * \param[in]  compress  If \c true, compress XML before writing
+ * \param[out] nbytes    Number of bytes written (can be \c NULL)
  *
- * \return Number of bytes written on success, -errno otherwise
+ * \return Standard Pacemaker return code
  */
 int
-write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-             gboolean compress)
+pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
+                   bool compress, unsigned int *nbytes)
 {
+    // @COMPAT Drop compress and nbytes arguments when we drop write_xml_fd()
     FILE *stream = NULL;
-    unsigned int nbytes = 0;
-    int rc = pcmk_rc_ok;
 
-    CRM_CHECK((xml != NULL) && (fd > 0), return -EINVAL);
+    CRM_CHECK((xml != NULL) && (fd > 0), return EINVAL);
     stream = fdopen(fd, "w");
     if (stream == NULL) {
-        return -errno;
+        return errno;
     }
-    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
+
+    return write_xml_stream(xml, pcmk__s(filename, "unnamed file"), stream,
+                            compress, nbytes);
 }
 
 /*!
+ * \internal
  * \brief Write XML to a file
  *
- * \param[in] xml       XML to write
- * \param[in] filename  Name of file to write
- * \param[in] compress  Whether to compress XML before writing
+ * \param[in]  xml       XML to write
+ * \param[in]  filename  Name of file to write
+ * \param[in]  compress  If \c true, compress XML before writing
+ * \param[out] nbytes    Number of bytes written (can be \c NULL)
  *
- * \return Number of bytes written on success, -errno otherwise
+ * \return Standard Pacemaker return code
  */
 int
-write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
+pcmk__xml_write_file(const xmlNode *xml, const char *filename, bool compress,
+                     unsigned int *nbytes)
 {
+    // @COMPAT Drop nbytes argument when we drop write_xml_fd()
     FILE *stream = NULL;
-    unsigned int nbytes = 0;
-    int rc = pcmk_rc_ok;
 
-    CRM_CHECK((xml != NULL) && (filename != NULL), return -EINVAL);
+    CRM_CHECK((xml != NULL) && (filename != NULL), return EINVAL);
     stream = fopen(filename, "w");
     if (stream == NULL) {
-        return -errno;
+        return errno;
     }
-    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
+
+    return write_xml_stream(xml, filename, stream, compress, nbytes);
 }
 
 /*!
@@ -1726,7 +1849,7 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
  * \return String representation of \p type
  */
 static const char *
-xml_element_type2str(xmlElementType type)
+xml_element_type_text(xmlElementType type)
 {
     static const char *const element_type_names[] = {
         [XML_ELEMENT_NODE]       = "element",
@@ -1796,52 +1919,35 @@ pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
             break;
         default:
             crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
-                     xml_element_type2str(data->type), data->type);
+                     xml_element_type_text(data->type), data->type);
             break;
     }
 }
 
-char *
-dump_xml_formatted_with_text(const xmlNode *xml)
+/*!
+ * \internal
+ * \brief Dump an XML tree to a string
+ *
+ * \param[in] xml    XML tree to dump
+ * \param[in] flags  Group of <tt>enum pcmk__xml_fmt_options</tt> flags
+ *
+ * \return Newly allocated string representation of \p xml
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
+gchar *
+pcmk__xml_dump(const xmlNode *xml, uint32_t flags)
 {
-    /* libxml's xmlNodeDumpOutput() would work here since we're not specifically
-     * filtering out any nodes. However, use pcmk__xml2text() for consistency,
-     * to escape attribute values, and to allow a const argument.
+    /* libxml2's xmlNodeDumpOutput() doesn't allow filtering, doesn't escape
+     * special characters thoroughly, and doesn't allow a const argument.
+     *
+     * @COMPAT Can we start including text nodes in all our XML dump functions?
      */
-    char *buffer = NULL;
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
-}
-
-char *
-dump_xml_formatted(const xmlNode *xml)
-{
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
-
-    pcmk__xml2text(xml, pcmk__xml_fmt_pretty, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
-}
-
-char *
-dump_xml_unformatted(const xmlNode *xml)
-{
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
-
-    pcmk__xml2text(xml, 0, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
+    pcmk__xml2text(xml, flags, g_buffer, 0);
+    return g_string_free(g_buffer, FALSE);
 }
 
 int
@@ -1866,28 +1972,6 @@ pcmk__xml2fd(int fd, xmlNode *cur)
 }
 
 void
-xml_remove_prop(xmlNode * obj, const char *name)
-{
-    if (crm_element_value(obj, name) == NULL) {
-        return;
-    }
-
-    if (pcmk__check_acl(obj, NULL, pcmk__xf_acl_write) == FALSE) {
-        crm_trace("Cannot remove %s from %s", name, obj->name);
-
-    } else if (pcmk__tracking_xml_changes(obj, FALSE)) {
-        /* Leave in place (marked for removal) until after the diff is calculated */
-        xmlAttr *attr = xmlHasProp(obj, (pcmkXmlStr) name);
-        xml_node_private_t *nodepriv = attr->_private;
-
-        set_parent_flag(obj, pcmk__xf_dirty);
-        pcmk__set_xml_flags(nodepriv, pcmk__xf_deleted);
-    } else {
-        xmlUnsetProp(obj, (pcmkXmlStr) name);
-    }
-}
-
-void
 save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
 {
     char *f = NULL;
@@ -1901,7 +1985,7 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     }
 
     crm_info("Saving %s to %s", desc, filename);
-    write_xml_file(xml, filename, FALSE);
+    pcmk__xml_write_file(xml, filename, false, NULL);
     free(f);
 }
 
@@ -1954,7 +2038,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     nodepriv->flags = 0;
 
     // Check ACLs and mark restored value for later removal
-    xml_remove_prop(new_xml, attr_name);
+    remove_xe_attr(new_xml, attr);
 
     crm_trace("XML attribute %s=%s was removed from %s",
               attr_name, old_value, element);
@@ -2128,17 +2212,17 @@ static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
 {
     // Re-create the child element so we can check ACLs
-    xmlNode *candidate = add_node_copy(new_parent, old_child);
+    xmlNode *candidate = pcmk__xml_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
-    reset_xml_node_flags(candidate);
+    pcmk__xml_foreach_dfs(candidate, reset_xml_node_flags, NULL);
 
     // Check whether ACLs allow the deletion
     pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
 
     // Remove the child again (which will track it in document's deleted_objs)
-    free_xml_with_position(candidate,
-                           pcmk__xml_position(old_child, pcmk__xf_skip));
+    pcmk__xml_free_full(candidate, pcmk__xml_position(old_child, pcmk__xf_skip),
+                        false);
 
     if (pcmk__xml_match(new_parent, old_child, true) == NULL) {
         pcmk__set_xml_flags((xml_node_private_t *) (old_child->_private),
@@ -2170,12 +2254,11 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
 static void
 mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
     if (old_xml == NULL) {
-        pcmk__mark_xml_created(new_xml);
+        pcmk__xml_foreach_dfs(new_xml, pcmk__xml_mark_created, NULL);
         pcmk__apply_creation_acl(new_xml, check_top);
         return;
     }
@@ -2192,11 +2275,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     xml_diff_attrs(old_xml, new_xml);
 
     // Check for differences in the original children
-    for (cIter = pcmk__xml_first_child(old_xml); cIter != NULL; ) {
-        xmlNode *old_child = cIter;
-        xmlNode *new_child = pcmk__xml_match(new_xml, cIter, true);
+    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
+         old_child = pcmk__xml_next(old_child)) {
 
-        cIter = pcmk__xml_next(cIter);
+        xmlNode *new_child = pcmk__xml_match(new_xml, old_child, true);
+
         if(new_child) {
             mark_xml_changes(old_child, new_child, TRUE);
 
@@ -2206,11 +2289,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     }
 
     // Check for moved or created children
-    for (cIter = pcmk__xml_first_child(new_xml); cIter != NULL; ) {
-        xmlNode *new_child = cIter;
-        xmlNode *old_child = pcmk__xml_match(old_xml, cIter, true);
+    for (xmlNode *new_child = pcmk__xml_first_child(new_xml); new_child != NULL;
+         new_child = pcmk__xml_next(new_child)) {
 
-        cIter = pcmk__xml_next(cIter);
+        xmlNode *old_child = pcmk__xml_match(old_xml, new_child, true);
+
         if(old_child == NULL) {
             // This is a newly created child
             nodepriv = new_child->_private;
@@ -2251,47 +2334,6 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
     }
 
     mark_xml_changes(old_xml, new_xml, FALSE);
-}
-
-gboolean
-can_prune_leaf(xmlNode * xml_node)
-{
-    xmlNode *cIter = NULL;
-    gboolean can_prune = TRUE;
-
-    CRM_CHECK(xml_node != NULL, return FALSE);
-
-    /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed for
-     * rolling upgrades)
-     */
-    if (pcmk__strcase_any_of((const char *) xml_node->name,
-                             PCMK_XE_RESOURCE_REF, PCMK_XE_OBJ_REF,
-                             PCMK_XE_ROLE, PCMK__XE_ROLE_REF,
-                             NULL)) {
-        return FALSE;
-    }
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-
-        if (strcmp(p_name, PCMK_XA_ID) == 0) {
-            continue;
-        }
-        can_prune = FALSE;
-    }
-
-    cIter = pcmk__xml_first_child(xml_node);
-    while (cIter) {
-        xmlNode *child = cIter;
-
-        cIter = pcmk__xml_next(cIter);
-        if (can_prune_leaf(child)) {
-            free_xml(child);
-        } else {
-            can_prune = FALSE;
-        }
-    }
-    return can_prune;
 }
 
 /*!
@@ -2362,7 +2404,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
     }
 
     if (target == NULL) {
-        add_node_copy(parent, update);
+        pcmk__xml_copy(parent, update);
 
     } else if (!pcmk__str_eq((const char *)target->content, (const char *)update->content, pcmk__str_casei)) {
         xmlFree(target->content);
@@ -2386,6 +2428,7 @@ void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                  bool as_diff)
 {
+    // @COMPAT Drop as_diff argument when apply_xml_diff() is removed
     xmlNode *a_child = NULL;
     const char *object_name = NULL,
                *object_href = NULL,
@@ -2421,7 +2464,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     }
 
     if (target == NULL) {
-        target = create_xml_node(parent, object_name);
+        target = pcmk__xe_create(parent, object_name);
         CRM_CHECK(target != NULL, return);
 #if XML_PARSER_DEBUG
         crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
@@ -2443,11 +2486,14 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
     if (as_diff == FALSE) {
-        /* So that expand_plus_plus() gets called */
-        copy_in_properties(target, update);
+        // So that pcmk__xa_set_expand() gets called
+        pcmk__xe_copy_attrs(target, update);
 
     } else {
-        /* No need for expand_plus_plus(), just raw speed */
+        /* No need for pcmk__xa_set_expand(), so use faster method
+         *
+         * @TODO pcmk__xe_copy_attrs() also checks ACLs. Should we do that here?
+         */
         for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
              a = a->next) {
             const char *p_value = pcmk__xml_attr_value(a);
@@ -2480,154 +2526,300 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 #endif
 }
 
-gboolean
-update_xml_child(xmlNode * child, xmlNode * to_update)
+/*!
+ * \internal
+ * \brief Delete an XML subtree if it matches a search element
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * If \p user_data has attributes set, \p xml has those attributes set to the
+ *   same values. (\p xml may have additional attributes set to arbitrary
+ *   values.)
+ *
+ * \param[in,out] xml        XML subtree to delete upon match
+ * \param[in]     user_data  Search element
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was deleted)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+static bool
+delete_matching_xe(xmlNode *xml, void *user_data)
 {
-    gboolean can_update = TRUE;
-    xmlNode *child_of_child = NULL;
+    xmlNode *search = user_data;
 
-    CRM_CHECK(child != NULL, return FALSE);
-    CRM_CHECK(to_update != NULL, return FALSE);
+    if (!pcmk__xe_is(search, (const char *) xml->name)) {
+        // No match: not both elements, or different element types
+        return true;
+    }
 
-    if (!pcmk__xe_is(to_update, (const char *) child->name)) {
-        can_update = FALSE;
+    for (const xmlAttr *attr = pcmk__xe_first_attr(search); attr != NULL;
+         attr = attr->next) {
 
-    } else if (!pcmk__str_eq(pcmk__xe_id(to_update), pcmk__xe_id(child),
-                             pcmk__str_none)) {
-        can_update = FALSE;
+        const char *search_val = pcmk__xml_attr_value(attr);
+        const char *xml_val = crm_element_value(xml, (const char *) attr->name);
 
-    } else if (can_update) {
+        if (!pcmk__str_eq(search_val, xml_val, pcmk__str_casei)) {
+            /* No match: An attr in xml doesn't match the attr in search
+             *
+             * @TODO Case-sensitive?
+             */
+            return true;
+        }
+    }
+
 #if XML_PARSER_DEBUG
-        crm_log_xml_trace(child, "Update match found...");
-#endif
-        pcmk__xml_update(NULL, child, to_update, false);
-    }
+    crm_log_xml_trace(xml, "delete-match");
+    crm_log_xml_trace(search, "delete-search");
+#endif  // XML_PARSER_DEBUG
+    pcmk__xml_free(xml);
 
-    for (child_of_child = pcmk__xml_first_child(child); child_of_child != NULL;
-         child_of_child = pcmk__xml_next(child_of_child)) {
-        /* only update the first one */
-        if (can_update) {
-            break;
-        }
-        can_update = update_xml_child(child_of_child, to_update);
-    }
-
-    return can_update;
+    // Found a match and deleted it; stop traversing tree
+    return false;
 }
 
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and delete the first matching element
+ *
+ * Do not attempt to delete the tree root (\p xml).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p search are both element nodes of the same type.
+ * * If \p search has attributes set, \c node has those attributes set to the
+ *   same values. (\c node may have additional attributes set to arbitrary
+ *   values.)
+ *
+ * \param[in,out] xml     XML subtree to search
+ * \param[in]     search  Element to match against
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful deletion and an error code otherwise)
+ */
 int
-find_xml_children(xmlNode ** children, xmlNode * root,
-                  const char *tag, const char *field, const char *value, gboolean search_matches)
+pcmk__xe_find_delete(xmlNode *xml, xmlNode *search)
 {
-    int match_found = 0;
+    // See @COMPAT and @TODO comments in pcmk__xe_find_replace()
+    CRM_CHECK((xml != NULL) && (search != NULL), return EINVAL);
 
-    CRM_CHECK(root != NULL, return FALSE);
-    CRM_CHECK(children != NULL, return FALSE);
+    for (xml = pcmk__xe_first_child(xml); xml != NULL;
+         xml = pcmk__xe_next(xml)) {
 
-    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
-
-    } else if (value != NULL && !pcmk__str_eq(value, crm_element_value(root, field), pcmk__str_casei)) {
-
-    } else {
-        if (*children == NULL) {
-            *children = create_xml_node(NULL, __func__);
-        }
-        add_node_copy(*children, root);
-        match_found = 1;
-    }
-
-    if (search_matches || match_found == 0) {
-        xmlNode *child = NULL;
-
-        for (child = pcmk__xml_first_child(root); child != NULL;
-             child = pcmk__xml_next(child)) {
-            match_found += find_xml_children(children, child, tag, field, value, search_matches);
+        if (!pcmk__xml_foreach_dfs(xml, delete_matching_xe, search)) {
+            // Found and deleted an element
+            return pcmk_rc_ok;
         }
     }
 
-    return match_found;
+    // No match found in this subtree
+    return ENXIO;
 }
 
-gboolean
-replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
+/*!
+ * \internal
+ * \brief Replace one XML node with a copy of another XML node
+ *
+ * This function handles change tracking and applies ACLs.
+ *
+ * \param[in,out] old  XML node to replace (freed on exit)
+ * \param[in]     new  XML node to copy as replacement for \p old
+ */
+static void
+replace_node(xmlNode *old, xmlNode *new)
 {
-    gboolean can_delete = FALSE;
-    xmlNode *child_of_child = NULL;
+    new = xmlCopyNode(new, 1);
+    CRM_ASSERT(new != NULL);
 
-    const char *up_id = NULL;
-    const char *child_id = NULL;
-    const char *right_val = NULL;
+    // May be unnecessary but avoids slight changes to some test outputs
+    pcmk__xml_foreach_dfs(new, reset_xml_node_flags, NULL);
 
-    CRM_CHECK(child != NULL, return FALSE);
-    CRM_CHECK(update != NULL, return FALSE);
+    old = xmlReplaceNode(old, new);
 
-    up_id = pcmk__xe_id(update);
-    child_id = pcmk__xe_id(child);
-
-    if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
-        can_delete = TRUE;
+    if (xml_tracking_changes(new)) {
+        // Replaced sections may have included relevant ACLs
+        pcmk__apply_acl(new);
     }
-    if (!pcmk__xe_is(update, (const char *) child->name)) {
-        can_delete = FALSE;
-    }
-    if (can_delete && delete_only) {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
-             a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
+    xml_calculate_changes(old, new);
+    xmlFreeNode(old);
+}
 
-            right_val = crm_element_value(child, p_name);
-            if (!pcmk__str_eq(p_value, right_val, pcmk__str_casei)) {
-                can_delete = FALSE;
-            }
+/*!
+ * \internal
+ * \brief Replace one XML subtree with a copy of another if the two match
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * If \p user_data has the \c PCMK_XA_ID attribute set, then \p xml has
+ *   \c PCMK_XA_ID set to the same value.
+ *
+ * \param[in,out] xml        XML subtree to replace with \p user_data upon match
+ * \param[in]     user_data  XML to replace \p xml with a copy of upon match
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was replaced by \p user_data)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+static bool
+replace_matching_xe(xmlNode *xml, void *user_data)
+{
+    xmlNode *replace = user_data;
+    const char *xml_id = pcmk__xe_id(xml);
+    const char *replace_id = pcmk__xe_id(replace);
+
+    if (!pcmk__xe_is(replace, (const char *) xml->name)) {
+        // No match: not both elements, or different element types
+        return true;
+    }
+
+    if ((replace_id != NULL)
+        && !pcmk__str_eq(replace_id, xml_id, pcmk__str_none)) {
+
+        // No match: ID was provided in replace and doesn't match xml's ID
+        return true;
+    }
+
+#if XML_PARSER_DEBUG
+    crm_log_xml_trace(xml, "replace-match");
+    crm_log_xml_trace(replace, "replace-with");
+#endif  // XML_PARSER_DEBUG
+    replace_node(xml, replace);
+
+    // Found a match and replaced it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and replace the first matching element
+ *
+ * Do not attempt to replace the tree root (\p xml).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p replace are both element nodes of the same type.
+ * * If \p replace has the \c PCMK_XA_ID attribute set, then \c node has
+ *   \c PCMK_XA_ID set to the same value.
+ *
+ * \param[in,out] xml      XML tree to search
+ * \param[in]     replace  XML to replace a matching element with a copy of
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful replacement and an error code otherwise)
+ */
+int
+pcmk__xe_find_replace(xmlNode *xml, xmlNode *replace)
+{
+    /* @COMPAT This function has never considered ACLs. It probably should.
+     *
+     * @COMPAT Some of this behavior is questionable for general use but is
+     * required for backward compatibility by cib_process_replace() and
+     * cib_process_delete(). Consider moving some of this to libcib since those
+     * are the only callers. Behavior can change at a major version release if
+     * desired.
+     *
+     * @TODO Why don't we allow matching (and replacing or deleting) the tree
+     * root? This is not the case for pcmk__xe_find_update().
+     */
+    CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
+
+    for (xml = pcmk__xe_first_child(xml); xml != NULL;
+         xml = pcmk__xe_next(xml)) {
+
+        if (!pcmk__xml_foreach_dfs(xml, replace_matching_xe, replace)) {
+            // Found and replaced an element
+            return pcmk_rc_ok;
         }
     }
 
-    if (can_delete && parent != NULL) {
-        crm_log_xml_trace(child, "Delete match found...");
-        if (delete_only || update == NULL) {
-            free_xml(child);
+    // No match found in this subtree
+    return ENXIO;
+}
 
-        } else {
-            xmlNode *old = child;
-            xmlNode *new = xmlCopyNode(update, 1);
+/*!
+ * \internal
+ * \brief Update one XML subtree with another if the two match
+ *
+ * "Update" means to make a target subtree match a source subtree in children
+ * and attributes, recursively. \c "++" and \c "+=" in attribute values are
+ * expanded where appropriate (see \c pcmk__xa_set_expand()).
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * \p xml and \p user_data have the \c PCMK_XA_ID attribute set to the same
+ *   non-<tt>NULL</tt> value.
+ *
+ * \param[in,out] xml        XML subtree to update with \p user_data upon match
+ * \param[in]     user_data  XML to update \p xml with upon match
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was updated by \p user_data)
+ *
+ * \note This is compatible with \c pcmk__xml_foreach_dfs().
+ */
+static bool
+update_matching_xe(xmlNode *xml, void *user_data)
+{
+    xmlNode *update = user_data;
 
-            CRM_ASSERT(new != NULL);
-
-            // May be unnecessary but avoids slight changes to some test outputs
-            reset_xml_node_flags(new);
-
-            old = xmlReplaceNode(old, new);
-
-            if (xml_tracking_changes(new)) {
-                // Replaced sections may have included relevant ACLs
-                pcmk__apply_acl(new);
-            }
-            xml_calculate_changes(old, new);
-            xmlFreeNode(old);
-        }
-        return TRUE;
-
-    } else if (can_delete) {
-        crm_log_xml_debug(child, "Cannot delete the search root");
-        can_delete = FALSE;
+    if (!pcmk__xe_is(update, (const char *) xml->name)) {
+        // No match: not both elements, or different element types
+        return true;
     }
 
-    child_of_child = pcmk__xml_first_child(child);
-    while (child_of_child) {
-        xmlNode *next = pcmk__xml_next(child_of_child);
-
-        can_delete = replace_xml_child(child, child_of_child, update, delete_only);
-
-        /* only delete the first one */
-        if (can_delete) {
-            child_of_child = NULL;
-        } else {
-            child_of_child = next;
-        }
+    if (!pcmk__str_eq(pcmk__xe_id(xml), pcmk__xe_id(update), pcmk__str_none)) {
+        // No match: ID mismatch
+        return true;
     }
 
-    return can_delete;
+#if XML_PARSER_DEBUG
+    crm_log_xml_trace(xml, "update-match");
+    crm_log_xml_trace(replace, "update-with");
+#endif  // XML_PARSER_DEBUG
+    pcmk__xml_update(NULL, xml, update, false);
+
+    // Found a match and replaced it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and update the first matching element
+ *
+ * "Update" means to make a target subtree match a source subtree in children
+ * and attributes, recursively. \c "++" and \c "+=" in attribute values are
+ * expanded where appropriate (see \c pcmk__xa_set_expand()).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p update are both element nodes of the same type.
+ * * \c node and \p update have the \c PCMK_XA_ID attribute set to the same
+ *   non-<tt>NULL</tt> value.
+ *
+ * \param[in,out] xml     XML tree to search
+ * \param[in]     update  XML to update a matching element with
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful update and an error code otherwise)
+ */
+int
+pcmk__xe_find_update(xmlNode *xml, xmlNode *update)
+{
+    /* @COMPAT In pcmk__xe_find_replace() and pcmk__xe_find_delete(), we compare
+     * IDs only if the equivalent of the update argument has an ID. Here, we're
+     * stricter: we consider it a mismatch if only one element has an ID
+     * attribute, or if both elements have IDs but they don't match.
+     *
+     * Perhaps we should align the behavior at a major version release.
+     */
+    CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
+
+    if (!pcmk__xml_foreach_dfs(xml, update_matching_xe, update)) {
+        // Found and updated an element
+        return pcmk_rc_ok;
+    }
+
+    // No match found in this subtree
+    return ENXIO;
 }
 
 xmlNode *
@@ -2639,7 +2831,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 
     CRM_CHECK(input != NULL, return NULL);
 
-    result = create_xml_node(parent, (const char *) input->name);
+    result = pcmk__xe_create(parent, (const char *) input->name);
     nvpairs = pcmk_xml_attrs2nvpairs(input);
     nvpairs = pcmk_sort_nvpairs(nvpairs);
     pcmk_nvpairs2xml_attrs(nvpairs, result);
@@ -2651,26 +2843,28 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
         if (recursive) {
             sorted_xml(child, result, recursive);
         } else {
-            add_node_copy(result, child);
+            pcmk__xml_copy(result, child);
         }
     }
 
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Get next sibling XML element with the same name as a given element
+ *
+ * \param[in] node  XML element to start from
+ *
+ * \return Next sibling XML element with same name
+ */
 xmlNode *
-first_named_child(const xmlNode *parent, const char *name)
+pcmk__xe_next_same(const xmlNode *node)
 {
-    xmlNode *match = NULL;
-
-    for (match = pcmk__xe_first_child(parent); match != NULL;
+    for (xmlNode *match = pcmk__xe_next(node); match != NULL;
          match = pcmk__xe_next(match)) {
-        /*
-         * name == NULL gives first child regardless of name; this is
-         * semantically incorrect in this function, but may be necessary
-         * due to prior use of xml_child_iter_filter
-         */
-        if ((name == NULL) || pcmk__xe_is(match, name)) {
+
+        if (pcmk__xe_is(match, (const char *) node->name)) {
             return match;
         }
     }
@@ -2678,59 +2872,58 @@ first_named_child(const xmlNode *parent, const char *name)
 }
 
 /*!
- * \brief Get next instance of same XML tag
+ * \internal
+ * \brief Initialize the Pacemaker XML environment
  *
- * \param[in] sibling  XML tag to start from
- *
- * \return Next sibling XML tag with same name
+ * Set an XML buffer allocation scheme, set XML node create and destroy
+ * callbacks, and load schemas into the cache.
  */
-xmlNode *
-crm_next_same_xml(const xmlNode *sibling)
-{
-    xmlNode *match = pcmk__xe_next(sibling);
-
-    while (match != NULL) {
-        if (pcmk__xe_is(match, (const char *) sibling->name)) {
-            return match;
-        }
-        match = pcmk__xe_next(match);
-    }
-    return NULL;
-}
-
 void
-crm_xml_init(void)
+pcmk__xml_init(void)
 {
-    static bool init = true;
+    // @TODO Try to find a better caller than crm_log_preinit()
+    static bool initialized = false;
 
-    if(init) {
-        init = false;
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
+    if (!initialized) {
+        initialized = true;
+
+        /* Double the buffer size when the buffer needs to grow. The default
+         * allocator XML_BUFFER_ALLOC_EXACT was found to cause poor performance
+         * due to the number of reallocs.
          */
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
-        /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(free_private_data);
+        // Initialize private data at node creation
         xmlRegisterNodeDefault(new_private_data);
 
+        // Free private data at node destruction
+        xmlDeregisterNodeDefault(free_private_data);
+
+        // Load schemas into the cache
         crm_schema_init();
     }
 }
 
 void
-crm_xml_cleanup(void)
+pcmk__xml_cleanup(void)
 {
     crm_schema_cleanup();
     xmlCleanupParser();
 }
 
-#define XPATH_MAX 512
-
+/*!
+ * \internal
+ * \brief Get the XML element whose \c PCMK_XA_ID matches an \c PCMK_XA_ID_REF
+ *
+ * \param[in] input   Element whose \c PCMK_XA_ID_REF attribute to check
+ * \param[in] search  Root of search for node with matching \c PCMK_XA_ID
+ *                    (\c NULL to use \p input)
+ *
+ * \return If \p input has a \c PCMK_XA_ID_REF attribute, node in \p search
+ *         whose \c PCMK_XA_ID attribute matches; otherwise, \p input
+ */
 xmlNode *
-expand_idref(xmlNode * input, xmlNode * top)
+pcmk__xe_expand_idref(xmlNode *input, xmlNode *search)
 {
     char *xpath = NULL;
     const char *ref = NULL;
@@ -2745,13 +2938,14 @@ expand_idref(xmlNode * input, xmlNode * top)
         return input;
     }
 
-    if (top == NULL) {
-        top = input;
+    if (search == NULL) {
+        search = input;
     }
 
     xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
-    result = get_xpath_object(xpath, top, LOG_DEBUG);
-    if (result == NULL) { // Not possible with schema validation enabled
+    result = get_xpath_object(xpath, search, LOG_DEBUG);
+    if (result == NULL) {
+        // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
                          "a valid object " CRM_XS " xpath=%s",
@@ -2902,7 +3096,7 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 void
 crm_destroy_xml(gpointer data)
 {
-    free_xml(data);
+    pcmk__xml_free(data);
 }
 
 xmlDoc *
@@ -2920,11 +3114,27 @@ getDocPtr(xmlNode *node)
     return doc;
 }
 
+xmlNode *
+add_node_copy(xmlNode *parent, xmlNode *src_node)
+{
+    xmlNode *child = NULL;
+
+    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
+
+    child = xmlDocCopyNode(src_node, parent->doc, 1);
+    if (child == NULL) {
+        return NULL;
+    }
+    xmlAddChild(parent, child);
+    pcmk__xml_foreach_dfs(child, pcmk__xml_mark_created, NULL);
+    return child;
+}
+
 int
 add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
 {
     add_node_copy(parent, child);
-    free_xml(child);
+    pcmk__xml_free(child);
     return 1;
 }
 
@@ -2995,6 +3205,303 @@ crm_xml_escape(const char *text)
         }
     }
     return copy;
+}
+
+xmlNode *
+copy_xml(xmlNode *src)
+{
+    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+
+    CRM_ASSERT(copy != NULL);
+    xmlDocSetRootElement(doc, copy);
+    return copy;
+}
+
+xmlNode *
+filename2xml(const char *filename)
+{
+    return pcmk__xml_parse_file(filename);
+}
+
+xmlNode *
+stdin2xml(void)
+{
+    return pcmk__xml_parse_file(NULL);
+}
+
+xmlNode *
+string2xml(const char *input)
+{
+    return pcmk__xml_parse_string(input);
+}
+
+int
+write_xml_fd(const xmlNode *xml, const char *filename, int fd,
+             gboolean compress)
+{
+    unsigned int nbytes = 0;
+    int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
+
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
+    }
+    return (int) nbytes;
+}
+
+int
+write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
+{
+    unsigned int nbytes = 0;
+    int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
+
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
+    }
+    return (int) nbytes;
+}
+
+char *
+dump_xml_formatted(const xmlNode *xml)
+{
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
+}
+
+char *
+dump_xml_formatted_with_text(const xmlNode *xml)
+{
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
+
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
+}
+
+char *
+dump_xml_unformatted(const xmlNode *xml)
+{
+    char *str = NULL;
+    gchar *g_str = pcmk__xml_dump(xml, 0);
+
+    pcmk__str_update(&str, g_str);
+    g_free(g_str);
+    return str;
+}
+
+xmlNode *
+create_xml_node(xmlNode *parent, const char *name)
+{
+    return pcmk__xe_create(parent, name);
+}
+
+xmlNode *
+pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
+{
+    return pcmk__xe_create_full(parent, name, content);
+}
+
+xmlNode *
+pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
+                      const char *class_name, const char *text)
+{
+    return pcmk__xe_create_html(parent, element_name, id, class_name, text);
+}
+
+xmlNode *
+first_named_child(const xmlNode *parent, const char *name)
+{
+    return pcmk__xe_match_name(parent, name);
+}
+
+xmlNode *
+find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
+{
+    xmlNode *result = NULL;
+
+    if (search_path == NULL) {
+        crm_warn("Will never find <NULL>");
+        return NULL;
+    }
+
+    result = pcmk__xe_match_name(root, search_path);
+
+    if (must_find && (result == NULL)) {
+        crm_warn("Could not find %s in %s",
+                 search_path,
+                 ((root != NULL)? (const char *) root->name : "<NULL>"));
+    }
+
+    return result;
+}
+
+xmlNode *
+crm_next_same_xml(const xmlNode *sibling)
+{
+    return pcmk__xe_next_same(sibling);
+}
+
+void
+xml_remove_prop(xmlNode * obj, const char *name)
+{
+    pcmk__xe_remove_attr(obj, name);
+}
+
+gboolean
+replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
+{
+    gboolean is_match = FALSE;
+    const char *child_id = NULL;
+    const char *update_id = NULL;
+
+    CRM_CHECK(child != NULL, return FALSE);
+    CRM_CHECK(update != NULL, return FALSE);
+
+    child_id = pcmk__xe_id(child);
+    update_id = pcmk__xe_id(update);
+
+    /* Match element name and (if provided in update XML) ID. Don't match search
+     * root (parent == NULL).
+     */
+    is_match = (parent != NULL)
+               && pcmk__xe_is(update, (const char *) child->name)
+               && ((update_id == NULL)
+                   || pcmk__str_eq(update_id, child_id, pcmk__str_none));
+
+    /* For deletion, match all attributes provided in update. A matching node
+     * can have additional attributes, but values must match for provided ones.
+     */
+    if (is_match && delete_only) {
+        for (xmlAttr *attr = pcmk__xe_first_attr(update); attr != NULL;
+             attr = attr->next) {
+            const char *name = (const char *) attr->name;
+            const char *left_val = pcmk__xml_attr_value(attr);
+            const char *right_val = crm_element_value(child, name);
+
+            if (!pcmk__str_eq(left_val, right_val, pcmk__str_casei)) {
+                is_match = FALSE;
+                break;
+            }
+        }
+    }
+
+    if (is_match) {
+        if (delete_only) {
+            crm_log_xml_trace(child, "delete-match");
+            crm_log_xml_trace(update, "delete-search");
+            pcmk__xml_free(child);
+
+        } else {
+            crm_log_xml_trace(child, "replace-match");
+            crm_log_xml_trace(update, "replace-with");
+            replace_node(child, update);
+        }
+        return TRUE;
+    }
+
+    // Current node not a match; search the rest of the tree depth-first
+    parent = child;
+    for (child = pcmk__xml_first_child(parent); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        // Only delete/replace the first match
+        if (replace_xml_child(parent, child, update, delete_only)) {
+            return TRUE;
+        }
+    }
+
+    // No match found in this subtree
+    return FALSE;
+}
+
+gboolean
+update_xml_child(xmlNode *child, xmlNode *to_update)
+{
+    return pcmk__xe_find_update(child, to_update) == pcmk_rc_ok;
+}
+
+int
+find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
+                  const char *field, const char *value, gboolean search_matches)
+{
+    int match_found = 0;
+
+    CRM_CHECK(root != NULL, return FALSE);
+    CRM_CHECK(children != NULL, return FALSE);
+
+    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
+
+    } else if ((value != NULL)
+               && !pcmk__str_eq(value, crm_element_value(root, field),
+                                pcmk__str_casei)) {
+
+    } else {
+        if (*children == NULL) {
+            *children = pcmk__xe_create(NULL, __func__);
+        }
+        pcmk__xml_copy(*children, root);
+        match_found = 1;
+    }
+
+    if (search_matches || match_found == 0) {
+        xmlNode *child = NULL;
+
+        for (child = pcmk__xml_first_child(root); child != NULL;
+             child = pcmk__xml_next(child)) {
+            match_found += find_xml_children(children, child, tag, field, value,
+                                             search_matches);
+        }
+    }
+
+    return match_found;
+}
+
+void
+copy_in_properties(xmlNode *target, const xmlNode *src)
+{
+    pcmk__xe_copy_attrs(target, src);
+}
+
+void
+expand_plus_plus(xmlNode * target, const char *name, const char *value)
+{
+    pcmk__xa_set_expand(target, name, value);
+}
+
+void
+crm_xml_init(void)
+{
+    pcmk__xml_init();
+}
+
+void
+crm_xml_cleanup(void)
+{
+    pcmk__xml_cleanup();
+}
+
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
+}
+
+void
+free_xml(xmlNode *child)
+{
+    pcmk__xml_free(child);
+}
+
+xmlNode *
+expand_idref(xmlNode *input, xmlNode *top)
+{
+    return pcmk__xe_expand_idref(input, top);
 }
 
 // LCOV_EXCL_STOP

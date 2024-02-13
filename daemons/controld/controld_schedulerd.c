@@ -64,7 +64,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == pcmk_ok) {
         char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        if (write_xml_file(output, filename, TRUE) < 0) {
+        if (pcmk__xml_write_file(output, filename, true, NULL) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
                     filename);
         } else {
@@ -143,16 +143,16 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
          *
          * The name of the top level element here is irrelevant.  Nothing checks it.
          */
-        fsa_input.msg = create_xml_node(NULL, "dummy-reply");
+        fsa_input.msg = pcmk__xe_create(NULL, "dummy-reply");
         crm_xml_add(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
         crm_xml_add(fsa_input.msg, PCMK__XA_CRM_TGRAPH_IN,
                     reply->data.graph.input);
 
-        crm_data_node = create_xml_node(fsa_input.msg, PCMK__XE_CRM_XML);
-        add_node_copy(crm_data_node, reply->data.graph.tgraph);
+        crm_data_node = pcmk__xe_create(fsa_input.msg, PCMK__XE_CRM_XML);
+        pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
-        free_xml(fsa_input.msg);
+        pcmk__xml_free(fsa_input.msg);
 
     } else {
         crm_info("%s calculation %s is obsolete", CRM_OP_PECALC, msg_ref);
@@ -409,13 +409,13 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
         configuration = pcmk__xe_match(xml, PCMK_XE_CONFIGURATION, NULL, NULL);
         if (configuration == NULL) {
-            configuration = create_xml_node(xml, PCMK_XE_CONFIGURATION);
+            configuration = pcmk__xe_create(xml, PCMK_XE_CONFIGURATION);
         }
 
         crm_config = pcmk__xe_match(configuration, PCMK_XE_CRM_CONFIG, NULL,
                                     NULL);
         if (crm_config == NULL) {
-            crm_config = create_xml_node(configuration, PCMK_XE_CRM_CONFIG);
+            crm_config = pcmk__xe_create(configuration, PCMK_XE_CRM_CONFIG);
         }
 
         cluster_property_set = pcmk__xe_match(crm_config,
@@ -423,12 +423,12 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
                                               NULL, NULL);
         if (cluster_property_set == NULL) {
             cluster_property_set =
-                create_xml_node(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
+                pcmk__xe_create(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
             crm_xml_add(cluster_property_set, PCMK_XA_ID,
                         PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
         }
 
-        xml = create_xml_node(cluster_property_set, PCMK_XE_NVPAIR);
+        xml = pcmk__xe_create(cluster_property_set, PCMK_XE_NVPAIR);
 
         crm_xml_set_id(xml, "%s-%s",
                        PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);

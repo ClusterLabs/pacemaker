@@ -174,8 +174,8 @@ main(int argc, char **argv)
     }
 
     // Parse the input XML specified by the command-line options, if any
-    if (pcmk__str_eq(options.input_xml, "-", pcmk__str_casei)) {
-        input = stdin2xml();
+    if (pcmk__str_eq(options.input_xml, "-", pcmk__str_none)) {
+        input = pcmk__xml_parse_file(NULL);
 
         if (input == NULL) {
             exit_code = CRM_EX_DATAERR;
@@ -184,7 +184,7 @@ main(int argc, char **argv)
             goto done;
         }
     } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+        input = pcmk__xml_parse_string(options.input_xml);
 
         if (input == NULL) {
             exit_code = CRM_EX_DATAERR;
@@ -214,7 +214,7 @@ done:
     pcmk__free_arg_context(context);
 
     crm_time_free(rule_date);
-    free_xml(input);
+    pcmk__xml_free(input);
 
     pcmk__output_and_clear_error(&error, out);
 

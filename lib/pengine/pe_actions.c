@@ -87,8 +87,8 @@ static xmlNode *
 find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
                          guint interval_ms, bool include_disabled)
 {
-    for (xmlNode *operation = first_named_child(rsc->ops_xml, PCMK_XE_OP);
-         operation != NULL; operation = crm_next_same_xml(operation)) {
+    for (xmlNode *operation = pcmk__xe_match_name(rsc->ops_xml, PCMK_XE_OP);
+         operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
         bool enabled = false;
         const char *config_name = NULL;
@@ -482,8 +482,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          * block (which may have rules that need to be evaluated) rather than
          * XML properties.
          */
-        for (xmlNode *operation = first_named_child(rsc->ops_xml, PCMK_XE_OP);
-             operation != NULL; operation = crm_next_same_xml(operation)) {
+        for (xmlNode *operation = pcmk__xe_match_name(rsc->ops_xml, PCMK_XE_OP);
+             operation != NULL; operation = pcmk__xe_next_same(operation)) {
             bool enabled = false;
             const char *promote_on_fail = NULL;
 
@@ -654,8 +654,8 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
     guint min_interval_ms = G_MAXUINT;
     xmlNode *op = NULL;
 
-    for (xmlNode *operation = first_named_child(rsc->ops_xml, PCMK_XE_OP);
-         operation != NULL; operation = crm_next_same_xml(operation)) {
+    for (xmlNode *operation = pcmk__xe_match_name(rsc->ops_xml, PCMK_XE_OP);
+         operation != NULL; operation = pcmk__xe_next_same(operation)) {
         bool enabled = false;
         guint interval_ms = 0U;
         const char *interval_spec = crm_element_value(operation,
@@ -1434,8 +1434,8 @@ pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
         .op_data = NULL
     };
 
-    for (child = first_named_child(rsc->ops_xml, PCMK_XE_OP);
-         child != NULL; child = crm_next_same_xml(child)) {
+    for (child = pcmk__xe_match_name(rsc->ops_xml, PCMK_XE_OP);
+         child != NULL; child = pcmk__xe_next_same(child)) {
         if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
                 pcmk__str_casei)) {
             timeout_spec = crm_element_value(child, PCMK_META_TIMEOUT);

@@ -420,9 +420,9 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     /* unset dangerous options */
-    xml_remove_prop(command, PCMK__XA_SRC);
-    xml_remove_prop(command, PCMK__XA_CIB_HOST);
-    xml_remove_prop(command, PCMK__XA_CIB_UPDATE);
+    pcmk__xe_remove_attr(command, PCMK__XA_SRC);
+    pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
+    pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
 
     crm_xml_add(command, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
@@ -499,7 +499,7 @@ cib_remote_msg(gpointer data)
 
         command = pcmk__remote_message_xml(client->remote);
         if (cib_remote_auth(command) == FALSE) {
-            free_xml(command);
+            pcmk__xml_free(command);
             return -1;
         }
 
@@ -515,19 +515,19 @@ cib_remote_msg(gpointer data)
         }
 
         /* send ACK */
-        reg = create_xml_node(NULL, PCMK__XE_CIB_RESULT);
+        reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
         crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
         crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
-        free_xml(reg);
-        free_xml(command);
+        pcmk__xml_free(reg);
+        pcmk__xml_free(command);
     }
 
     command = pcmk__remote_message_xml(client->remote);
     while (command) {
         crm_trace("Remote client message received");
         cib_handle_remote_msg(client, command);
-        free_xml(command);
+        pcmk__xml_free(command);
         command = pcmk__remote_message_xml(client->remote);
     }
 

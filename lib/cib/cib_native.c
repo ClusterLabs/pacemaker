@@ -95,14 +95,14 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (!(call_options & cib_sync_call)) {
         crm_trace("Async call, returning %d", cib->call_id);
         CRM_CHECK(cib->call_id != 0, return -ENOMSG);
-        free_xml(op_reply);
+        pcmk__xml_free(op_reply);
         return cib->call_id;
     }
 
     rc = pcmk_ok;
     crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
-        xmlNode *tmp = get_message_xml(op_reply, PCMK__XA_CIB_CALLDATA);
+        xmlNode *tmp = pcmk__message_get_xml(op_reply, PCMK__XA_CIB_CALLDATA);
 
         crm_trace("Synchronous reply %d received", reply_id);
         if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
@@ -111,9 +111,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
         if (output_data == NULL || (call_options & cib_discard_reply)) {
             crm_trace("Discarding reply");
-
-        } else if (tmp != NULL) {
-            *output_data = copy_xml(tmp);
+        } else {
+            *output_data = pcmk__xml_copy(NULL, tmp);
         }
 
     } else if (reply_id <= 0) {
@@ -167,8 +166,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         cib->state = cib_disconnected;
     }
 
-    free_xml(op_msg);
-    free_xml(op_reply);
+    pcmk__xml_free(op_msg);
+    pcmk__xml_free(op_reply);
     return rc;
 }
 
@@ -188,7 +187,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
         return 0;
     }
 
-    msg = string2xml(buffer);
+    msg = pcmk__xml_parse_string(buffer);
 
     if (msg == NULL) {
         crm_warn("Received a NULL message from the CIB manager");
@@ -210,7 +209,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
         crm_err("Unknown message type: %s", type);
     }
 
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 
@@ -349,12 +348,12 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
                     rc = -EPROTO;
                 }
             }
-            free_xml(reply);
+            pcmk__xml_free(reply);
 
         } else {
             rc = -ECOMM;
         }
-        free_xml(hello);
+        pcmk__xml_free(hello);
     }
 
     if (rc == pcmk_ok) {
@@ -400,7 +399,7 @@ static int
 cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     int rc = pcmk_ok;
-    xmlNode *notify_msg = create_xml_node(NULL, PCMK__XE_CIB_CALLBACK);
+    xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_CALLBACK);
     cib_native_opaque_t *native = cib->variant_opaque;
 
     if (cib->state != cib_disconnected) {
@@ -415,7 +414,7 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
         }
     }
 
-    free_xml(notify_msg);
+    pcmk__xml_free(notify_msg);
     return rc;
 }
 

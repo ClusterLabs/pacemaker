@@ -780,7 +780,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                                               target_role, true);
 
         list_node = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
-        pcmk_create_html_node(list_node, PCMK__XE_SPAN, NULL, cl, s);
+        pcmk__xe_create_html(list_node, PCMK__XE_SPAN, NULL, cl, s);
         g_free(s);
     }
 

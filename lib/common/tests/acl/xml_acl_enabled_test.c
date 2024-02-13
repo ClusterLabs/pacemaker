@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 static void
 is_xml_acl_enabled_without_node(void **state)
 {
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
     assert_false(xml_acl_enabled(test_xml));
 
     test_xml->doc->_private = NULL;
@@ -35,7 +35,7 @@ is_xml_acl_enabled_with_node(void **state)
 {
     xml_doc_private_t *docpriv;
     
-    xmlNode *test_xml = create_xml_node(NULL, "test_xml");
+    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
 
     // allocate memory for _private, which is NULL by default
     test_xml->doc->_private = calloc(1, sizeof(xml_doc_private_t));

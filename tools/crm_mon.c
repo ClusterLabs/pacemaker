@@ -922,13 +922,17 @@ setup_fencer_connection(void)
     if (rc == pcmk_ok) {
         crm_trace("Setting up stonith callbacks");
         if (options.watch_fencing) {
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+            st->cmds->register_notification(st,
+                                            PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_event);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                            mon_st_callback_event);
         } else {
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+            st->cmds->register_notification(st,
+                                            PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_display);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_HISTORY,
+                                            mon_st_callback_display);
         }
     } else {
         stonith_api_delete(st);
@@ -1929,7 +1933,7 @@ static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
-    xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *diff = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     for (change = pcmk__xml_first_child(diff); change != NULL;
          change = pcmk__xml_next(change)) {
@@ -1950,7 +1954,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             continue;
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
+            match = pcmk__xe_match_name(change, PCMK_XE_CHANGE_RESULT);
             if(match) {
                 match = match->children;
             }
@@ -1970,7 +1974,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
                                         NULL));
 
         } else if (strcmp(name, PCMK_XE_CIB) == 0) {
-            pcmk__xe_foreach_child(first_named_child(match, PCMK_XE_STATUS),
+            pcmk__xe_foreach_child(pcmk__xe_match_name(match, PCMK_XE_STATUS),
                                    NULL, handle_op_for_node, NULL);
 
         } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
@@ -2035,7 +2039,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     int rc = -1;
     static bool stale = FALSE;
     gboolean cib_updated = FALSE;
-    xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *diff = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     out->progress(out, false);
 
@@ -2046,14 +2050,14 @@ crm_diff_update(const char *event, xmlNode * msg)
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(current_cib); current_cib = NULL;
+                pcmk__xml_free(current_cib); current_cib = NULL;
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
                 break;
             default:
                 crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(current_cib); current_cib = NULL;
+                pcmk__xml_free(current_cib); current_cib = NULL;
         }
     }
 

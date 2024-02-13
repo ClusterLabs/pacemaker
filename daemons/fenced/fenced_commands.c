@@ -737,7 +737,7 @@ free_device(gpointer data)
 
     mainloop_destroy_trigger(device->work);
 
-    free_xml(device->agent_metadata);
+    pcmk__xml_free(device->agent_metadata);
     free(device->namespace);
     if (device->on_target_actions != NULL) {
         g_string_free(device->on_target_actions, TRUE);
@@ -893,7 +893,7 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
         g_hash_table_replace(metadata_cache, strdup(agent), buffer);
     }
 
-    *metadata = string2xml(buffer);
+    *metadata = pcmk__xml_parse_string(buffer);
     return pcmk_rc_ok;
 }
 
@@ -2393,7 +2393,7 @@ add_action_reply(xmlNode *xml, const char *action,
                  const stonith_device_t *device, const char *target,
                  gboolean allow_suicide)
 {
-    xmlNode *child = create_xml_node(xml, PCMK__XE_ST_DEVICE_ACTION);
+    xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
     crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
@@ -2445,7 +2445,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     }
 
     /* Pack the results into XML */
-    list = create_xml_node(NULL, __func__);
+    list = pcmk__xe_create(NULL, __func__);
     crm_xml_add(list, PCMK__XA_ST_TARGET, query->target);
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
@@ -2459,7 +2459,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         available_devices++;
 
-        dev = create_xml_node(list, PCMK__XE_ST_DEVICE_ID);
+        dev = pcmk__xe_create(list, PCMK__XE_ST_DEVICE_ID);
         crm_xml_add(dev, PCMK_XA_ID, device->id);
         crm_xml_add(dev, PCMK__XA_NAMESPACE, device->namespace);
         crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
@@ -2503,7 +2503,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* A query without a target wants device parameters */
         if (query->target == NULL) {
-            xmlNode *attrs = create_xml_node(dev, PCMK__XE_ATTRIBUTES);
+            xmlNode *attrs = pcmk__xe_create(dev, PCMK__XE_ATTRIBUTES);
 
             g_hash_table_foreach(device->params, hash2field, attrs);
         }
@@ -2521,20 +2521,20 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
     if (list != NULL) {
         crm_log_xml_trace(list, "Add query results");
-        add_message_xml(query->reply, PCMK__XA_ST_CALLDATA, list);
+        pcmk__message_add_xml(query->reply, PCMK__XA_ST_CALLDATA, list);
     }
 
     stonith_send_reply(query->reply, query->call_options, query->remote_peer,
                        client);
 
 done:
-    free_xml(query->reply);
+    pcmk__xml_free(query->reply);
     free(query->remote_peer);
     free(query->client_id);
     free(query->target);
     free(query->action);
     free(query);
-    free_xml(list);
+    pcmk__xml_free(list);
     g_list_free_full(devices, free);
 }
 
@@ -2675,11 +2675,11 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
     }
 
     crm_log_xml_trace(reply, "Reply");
-    free_xml(reply);
+    pcmk__xml_free(reply);
 
     if (stand_alone) {
         /* Do notification with a clean data object */
-        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
         crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
@@ -2689,8 +2689,9 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
         crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
 
-        fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
+                                 notify_data);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 
@@ -2978,7 +2979,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 {
     xmlNode *reply = NULL;
 
-    reply = create_xml_node(NULL, PCMK__XE_ST_REPLY);
+    reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
@@ -3015,7 +3016,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             crm_xml_add(reply, name, value);
         }
         if (data != NULL) {
-            add_message_xml(reply, PCMK__XA_ST_CALLDATA, data);
+            pcmk__message_add_xml(reply, PCMK__XA_ST_CALLDATA, data);
         }
     }
     return reply;
@@ -3032,7 +3033,7 @@ static xmlNode *
 construct_async_reply(const async_command_t *cmd,
                       const pcmk__action_result_t *result)
 {
-    xmlNode *reply = create_xml_node(NULL, PCMK__XE_ST_REPLY);
+    xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
     crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
@@ -3188,7 +3189,7 @@ is_privileged(const pcmk__client_t *c, const char *op)
 static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
-    xmlNode *reply = create_xml_node(NULL, "reply");
+    xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
     CRM_ASSERT(request->ipc_client != NULL);
     crm_xml_add(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
@@ -3440,7 +3441,7 @@ handle_history_request(pcmk__request_t *request)
          */
         reply = fenced_construct_reply(request->xml, data, &request->result);
     }
-    free_xml(data);
+    pcmk__xml_free(data);
     return reply;
 }
 
@@ -3611,7 +3612,7 @@ handle_request(pcmk__request_t *request)
             stonith_send_reply(reply, request->call_options,
                                request->peer, request->ipc_client);
         }
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     reason = request->result.exit_reason;

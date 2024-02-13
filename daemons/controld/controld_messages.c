@@ -191,8 +191,8 @@ copy_ha_msg_input(ha_msg_input_t * orig)
     ha_msg_input_t *copy = calloc(1, sizeof(ha_msg_input_t));
 
     CRM_ASSERT(copy != NULL);
-    copy->msg = (orig && orig->msg)? copy_xml(orig->msg) : NULL;
-    copy->xml = get_message_xml(copy->msg, PCMK__XE_CRM_XML);
+    copy->msg = (orig != NULL)? pcmk__xml_copy(NULL, orig->msg) : NULL;
+    copy->xml = pcmk__message_get_xml(copy->msg, PCMK__XE_CRM_XML);
     return copy;
 }
 
@@ -215,7 +215,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
 
             case fsa_dt_xml:
                 foo = fsa_data->data;
-                free_xml(foo);
+                pcmk__xml_free(foo);
                 break;
 
             case fsa_dt_lrm:
@@ -426,7 +426,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         is_local = true;
 
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-        xmlNode *msg_data = get_message_xml(msg, PCMK__XE_CRM_XML);
+        xmlNode *msg_data = pcmk__message_get_xml(msg, PCMK__XE_CRM_XML);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
         if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
@@ -557,7 +557,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
         return true;
     }
 
-    message_data = get_message_xml(client_msg, PCMK__XE_CRM_XML);
+    message_data = pcmk__message_get_xml(client_msg, PCMK__XE_CRM_XML);
 
     client_name = crm_element_value(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
@@ -622,11 +622,11 @@ handle_failcount_op(xmlNode * stored_msg)
     char *interval_spec = NULL;
     guint interval_ms = 0;
     gboolean is_remote_node = FALSE;
-    xmlNode *xml_op = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
+    xmlNode *xml_op = pcmk__message_get_xml(stored_msg, PCMK__XE_CRM_XML);
 
     if (xml_op) {
-        xmlNode *xml_rsc = first_named_child(xml_op, PCMK_XE_PRIMITIVE);
-        xmlNode *xml_attrs = first_named_child(xml_op, PCMK__XE_ATTRIBUTES);
+        xmlNode *xml_rsc = pcmk__xe_match_name(xml_op, PCMK_XE_PRIMITIVE);
+        xmlNode *xml_attrs = pcmk__xe_match_name(xml_op, PCMK__XE_ATTRIBUTES);
 
         if (xml_rsc) {
             rsc = pcmk__xe_id(xml_rsc);
@@ -671,7 +671,7 @@ static enum crmd_fsa_input
 handle_lrm_delete(xmlNode *stored_msg)
 {
     const char *mode = NULL;
-    xmlNode *msg_data = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
+    xmlNode *msg_data = pcmk__message_get_xml(stored_msg, PCMK__XE_CRM_XML);
 
     CRM_CHECK(msg_data != NULL, return I_NULL);
 
@@ -700,7 +700,7 @@ handle_lrm_delete(xmlNode *stored_msg)
         xmlNode *rsc_xml = NULL;
         int rc = pcmk_rc_ok;
 
-        rsc_xml = first_named_child(msg_data, PCMK_XE_PRIMITIVE);
+        rsc_xml = pcmk__xe_match_name(msg_data, PCMK_XE_PRIMITIVE);
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
         rsc_id = pcmk__xe_id(rsc_xml);
@@ -805,7 +805,7 @@ handle_ping(const xmlNode *msg)
 
     // Build reply
 
-    ping = create_xml_node(NULL, PCMK__XE_PING_RESPONSE);
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
     crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
@@ -820,10 +820,10 @@ handle_ping(const xmlNode *msg)
 
     // Send reply
     reply = create_reply(msg, ping);
-    free_xml(ping);
+    pcmk__xml_free(ping);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -846,10 +846,10 @@ handle_node_list(const xmlNode *request)
     xmlNode *reply_data = NULL;
 
     // Create message data for reply
-    reply_data = create_xml_node(NULL, PCMK_XE_NODES);
+    reply_data = pcmk__xe_create(NULL, PCMK_XE_NODES);
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-        xmlNode *xml = create_xml_node(reply_data, PCMK_XE_NODE);
+        xmlNode *xml = pcmk__xe_create(reply_data, PCMK_XE_NODE);
 
         crm_xml_add_ll(xml, PCMK_XA_ID, (long long) node->id); // uint32_t
         crm_xml_add(xml, PCMK_XA_UNAME, node->uname);
@@ -858,10 +858,10 @@ handle_node_list(const xmlNode *request)
 
     // Create and send reply
     reply = create_reply(request, reply_data);
-    free_xml(reply_data);
+    pcmk__xml_free(reply_data);
     if (reply) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -886,7 +886,7 @@ handle_node_info_request(const xmlNode *msg)
 
     // Build reply
 
-    reply_data = create_xml_node(NULL, PCMK_XE_NODE);
+    reply_data = pcmk__xe_create(NULL, PCMK_XE_NODE);
     crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
@@ -917,10 +917,10 @@ handle_node_info_request(const xmlNode *msg)
 
     // Send reply
     reply = create_reply(msg, reply_data);
-    free_xml(reply_data);
+    pcmk__xml_free(reply_data);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -1145,7 +1145,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
             }
-            free_xml(msg);
+            pcmk__xml_free(msg);
 
         } else {
             reap_crm_member(id, name);
@@ -1158,7 +1158,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         }
 
     } else if (strcmp(op, CRM_OP_MAINTENANCE_NODES) == 0) {
-        xmlNode *xml = get_message_xml(stored_msg, PCMK__XE_CRM_XML);
+        xmlNode *xml = pcmk__message_get_xml(stored_msg, PCMK__XE_CRM_XML);
 
         remote_ra_process_maintenance_nodes(xml);
 
@@ -1267,7 +1267,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         pcmk__ipc_send_xml(client_channel, 0, msg, crm_ipc_server_event);
 
     } else if (pcmk__str_eq(sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        xmlNode *data = get_message_xml(msg, PCMK__XE_CRM_XML);
+        xmlNode *data = pcmk__message_get_xml(msg, PCMK__XE_CRM_XML);
 
         process_te_message(msg, data);
 
@@ -1276,7 +1276,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         ha_msg_input_t fsa_input;
 
         fsa_input.msg = msg;
-        fsa_input.xml = get_message_xml(msg, PCMK__XE_CRM_XML);
+        fsa_input.xml = pcmk__message_get_xml(msg, PCMK__XE_CRM_XML);
 
         fsa_data.id = 0;
         fsa_data.actions = 0;
@@ -1303,7 +1303,7 @@ delete_ha_msg_input(ha_msg_input_t * orig)
     if (orig == NULL) {
         return;
     }
-    free_xml(orig->msg);
+    pcmk__xml_free(orig->msg);
     free(orig);
 }
 
@@ -1332,6 +1332,6 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     }
 
     send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 

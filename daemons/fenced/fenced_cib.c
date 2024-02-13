@@ -86,7 +86,7 @@ topology_remove_helper(const char *node, int level)
 {
     char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-    xmlNode *data = create_xml_node(NULL, PCMK_XE_FENCING_LEVEL);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
@@ -95,7 +95,7 @@ topology_remove_helper(const char *node, int level)
     fenced_unregister_level(data, &desc, &result);
     fenced_send_config_notification(STONITH_OP_LEVEL_DEL, &result, desc);
     pcmk__reset_result(&result);
-    free_xml(data);
+    pcmk__xml_free(data);
     free(desc);
 }
 
@@ -327,7 +327,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     xmlNode *change = NULL;
     char *reason = NULL;
     bool needs_update = FALSE;
-    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *patchset = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
@@ -392,7 +392,7 @@ static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
     int format = 1;
-    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *patchset = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
@@ -430,7 +430,7 @@ watchdog_device_update(void)
                            */
                     NULL);
             rc = stonith_device_register(xml, TRUE);
-            free_xml(xml);
+            pcmk__xml_free(xml);
             if (rc != pcmk_ok) {
                 rc = pcmk_legacy2rc(rc);
                 exit_code = CRM_EX_FATAL;
@@ -507,7 +507,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
     int format = 1;
     const char *xpath;
     xmlXPathObjectPtr xpathObj = NULL;
-    xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    xmlNode *patchset = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     CRM_ASSERT(patchset);
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
@@ -557,8 +557,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     add_topology_level(change->children);
 
                 } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-                    xmlNode *match = first_named_child(change,
-                                                       PCMK_XE_CHANGE_RESULT);
+                    xmlNode *match = pcmk__xe_match_name(change,
+                                                         PCMK_XE_CHANGE_RESULT);
 
                     if(match) {
                         remove_topology_level(match->children);
@@ -582,7 +582,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
             } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
                 /* Changes to the whole config section, possibly including the topology as a whild */
-                if(first_named_child(change, PCMK_XE_FENCING_TOPOLOGY) == NULL) {
+                if (pcmk__xe_match_name(change,
+                                        PCMK_XE_FENCING_TOPOLOGY) == NULL) {
                     crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
                               op, add[0], add[1], add[2], xpath);
 
@@ -633,7 +634,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
 
-        patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+        patchset = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
         switch (rc) {
             case pcmk_ok:
@@ -642,12 +643,12 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(local_cib);
+                pcmk__xml_free(local_cib);
                 local_cib = NULL;
                 break;
             default:
                 crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(local_cib);
+                pcmk__xml_free(local_cib);
                 local_cib = NULL;
         }
     }
@@ -683,7 +684,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 {
     crm_info("Updating device list from CIB");
     have_cib_devices = TRUE;
-    local_cib = copy_xml(output);
+    local_cib = pcmk__xml_copy(NULL, output);
 
     pcmk__refresh_node_caches_from_cib(local_cib);
     update_stonith_watchdog_timeout_ms(local_cib);
@@ -720,7 +721,7 @@ fenced_cib_cleanup(void)
                                            update_cib_cache_cb);
         cib__clean_up_connection(&cib_api);
     }
-    free_xml(local_cib);
+    pcmk__xml_free(local_cib);
     local_cib = NULL;
 }
 

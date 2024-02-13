@@ -266,7 +266,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     inc_num = pcmk__itoa(clone_data->total_clones);
     inc_max = pcmk__itoa(clone_data->clone_max);
 
-    child_copy = copy_xml(clone_data->xml_obj_child);
+    child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
 
     crm_xml_add(child_copy, PCMK__META_CLONE, inc_num);
 
@@ -895,7 +895,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
+        out->message(out, pcmk__map_element_name(child_rsc->xml), show_opts,
                      child_rsc, only_node, all);
     }
 
@@ -1031,7 +1031,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, (gpointer) "*");
-            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
+            out->message(out, pcmk__map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, all);
             g_list_free(all);
         }
@@ -1213,10 +1213,10 @@ clone_free(pcmk_resource_t * rsc)
 
         CRM_ASSERT(child_rsc);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        free_xml(child_rsc->xml);
+        pcmk__xml_free(child_rsc->xml);
         child_rsc->xml = NULL;
         /* There could be a saved unexpanded xml */
-        free_xml(child_rsc->orig_xml);
+        pcmk__xml_free(child_rsc->orig_xml);
         child_rsc->orig_xml = NULL;
         child_rsc->fns->free(child_rsc);
     }

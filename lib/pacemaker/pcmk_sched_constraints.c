@@ -72,7 +72,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
-        lifetime = first_named_child(xml_obj, PCMK__XE_LIFETIME);
+        lifetime = pcmk__xe_match_name(xml_obj, PCMK__XE_LIFETIME);
         if (lifetime != NULL) {
             pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
                               "(in %s) is deprecated (the rules it contains "
@@ -211,7 +211,8 @@ pcmk__valid_resource_or_tag(const pcmk_scheduler_t *scheduler, const char *id,
  * \param[in]     scheduler  Scheduler data
  *
  * \return Equivalent XML with resource tags replaced (or NULL if none)
- * \note It is the caller's responsibility to free the result with free_xml().
+ * \note It is the caller's responsibility to free the return value with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
@@ -220,20 +221,20 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
     bool any_refs = false;
 
     // Short-circuit if there are no sets
-    if (first_named_child(xml_obj, PCMK_XE_RESOURCE_SET) == NULL) {
+    if (pcmk__xe_match_name(xml_obj, PCMK_XE_RESOURCE_SET) == NULL) {
         return NULL;
     }
 
-    new_xml = copy_xml(xml_obj);
+    new_xml = pcmk__xml_copy(NULL, xml_obj);
 
-    for (xmlNode *set = first_named_child(new_xml, PCMK_XE_RESOURCE_SET);
-         set != NULL; set = crm_next_same_xml(set)) {
+    for (xmlNode *set = pcmk__xe_match_name(new_xml, PCMK_XE_RESOURCE_SET);
+         set != NULL; set = pcmk__xe_next_same(set)) {
 
         GList *tag_refs = NULL;
         GList *iter = NULL;
 
-        for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+        for (xmlNode *xml_rsc = pcmk__xe_match_name(set, PCMK_XE_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             pcmk_resource_t *rsc = NULL;
             pcmk_tag_t *tag = NULL;
@@ -243,7 +244,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                 pcmk__config_err("Ignoring resource sets for constraint '%s' "
                                  "because '%s' is not a valid resource or tag",
                                  pcmk__xe_id(xml_obj), pcmk__xe_id(xml_rsc));
-                free_xml(new_xml);
+                pcmk__xml_free(new_xml);
                 return NULL;
 
             } else if (rsc) {
@@ -310,13 +311,13 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
         for (iter = tag_refs; iter != NULL; iter = iter->next) {
             xmlNode *tag_ref = iter->data;
 
-            free_xml(tag_ref);
+            pcmk__xml_free(tag_ref);
         }
         g_list_free(tag_refs);
     }
 
     if (!any_refs) {
-        free_xml(new_xml);
+        pcmk__xml_free(new_xml);
         new_xml = NULL;
     }
     return new_xml;
@@ -369,14 +370,14 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          * template or tag. Add the corresponding PCMK_XE_RESOURCE_SET
          * containing the resources derived from or tagged with it.
          */
-        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
+        *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
         for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
             const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
-            rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
+            rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
             crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
@@ -390,10 +391,10 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          */
         xmlNode *rsc_ref = NULL;
 
-        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
+        *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
-        rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
+        rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
         crm_xml_add(rsc_ref, PCMK_XA_ID, id);
 
     } else {
@@ -402,7 +403,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     /* Remove the "attr" attribute referencing the template/tag */
     if (*rsc_set != NULL) {
-        xml_remove_prop(xml_obj, attr);
+        pcmk__xe_remove_attr(xml_obj, attr);
     }
 
     return true;

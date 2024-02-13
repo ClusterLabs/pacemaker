@@ -85,7 +85,7 @@ post_cache_update(int instance)
     no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
                            AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
     send_cluster_message(NULL, crm_msg_crmd, no_op, FALSE);
-    free_xml(no_op);
+    pcmk__xml_free(no_op);
 }
 
 static void
@@ -131,7 +131,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
        return NULL;
     }
 
-    node_state = create_xml_node(parent, PCMK__XE_NODE_STATE);
+    node_state = pcmk__xe_create(parent, PCMK__XE_NODE_STATE);
 
     if (pcmk_is_set(node->flags, crm_remote_node)) {
         pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
@@ -139,7 +139,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
     if (crm_xml_add(node_state, PCMK_XA_ID, crm_peer_uuid(node)) == NULL) {
         crm_info("Node update for %s cancelled: no ID", node->uname);
-        free_xml(node_state);
+        pcmk__xml_free(node_state);
         return NULL;
     }
 
@@ -271,7 +271,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
 
-            node_state_xml = create_xml_node(NULL, PCMK__XE_NODE_STATE);
+            node_state_xml = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
             crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
             crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
 
@@ -280,7 +280,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                                                     cib_scope_local);
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
-            free_xml(node_state_xml);
+            pcmk__xml_free(node_state_xml);
         }
     }
 }
@@ -309,7 +309,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     int call_id = 0;
     gboolean from_hashtable = TRUE;
-    xmlNode *node_list = create_xml_node(NULL, PCMK_XE_NODES);
+    xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
     if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
@@ -335,7 +335,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                 }
 
                 /* We need both to be valid */
-                new_node = create_xml_node(node_list, PCMK_XE_NODE);
+                new_node = pcmk__xe_create(node_list, PCMK_XE_NODE);
                 crm_xml_add(new_node, PCMK_XA_ID, node->uuid);
                 crm_xml_add(new_node, PCMK_XA_UNAME, node->uname);
 
@@ -372,8 +372,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         GHashTableIter iter;
         crm_node_t *node = NULL;
 
-        free_xml(node_list);
-        node_list = create_xml_node(NULL, PCMK_XE_STATUS);
+        pcmk__xml_free(node_list);
+        node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -390,7 +390,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         controld_update_cib(PCMK_XE_STATUS, node_list, cib_scope_local,
                             crmd_node_update_complete);
     }
-    free_xml(node_list);
+    pcmk__xml_free(node_list);
 }
 
 static void
@@ -427,14 +427,14 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
             || force_update)) {
         xmlNode *update = NULL;
 
-        update = create_xml_node(NULL, PCMK_XE_CIB);
+        update = pcmk__xe_create(NULL, PCMK_XE_CIB);
         crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         crm_xml_add(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
         controld_update_cib(PCMK_XE_CIB, update, cib_scope_local,
                             cib_quorum_update_complete);
-        free_xml(update);
+        pcmk__xml_free(update);
 
         /* Quorum changes usually cause a new transition via other activity:
          * quorum gained via a node joining will abort via the node join,
