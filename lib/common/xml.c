@@ -2216,12 +2216,6 @@ pcmk__xe_expand_idref(xmlNode *input, xmlNode *search)
     return result;
 }
 
-xmlNode *
-expand_idref(xmlNode * input, xmlNode * top)
-{
-    return pcmk__xe_expand_idref(input, top);
-}
-
 char *
 pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
 {
@@ -2784,6 +2778,12 @@ void
 free_xml(xmlNode *child)
 {
     pcmk__xml_free(child);
+}
+
+xmlNode *
+expand_idref(xmlNode *input, xmlNode *top)
+{
+    return pcmk__xe_expand_idref(input, top);
 }
 
 // LCOV_EXCL_STOP
