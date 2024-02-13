@@ -2911,8 +2911,6 @@ pcmk__xml_cleanup(void)
     xmlCleanupParser();
 }
 
-#define XPATH_MAX 512
-
 xmlNode *
 expand_idref(xmlNode * input, xmlNode * top)
 {
