@@ -175,6 +175,9 @@ void pcmk_free_xml_subtree(xmlNode *xml);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 void free_xml(xmlNode *child);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *expand_idref(xmlNode *input, xmlNode *top);
+
 #ifdef __cplusplus
 }
 #endif
