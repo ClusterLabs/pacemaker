@@ -195,6 +195,9 @@ void crm_xml_cleanup(void);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 void pcmk_free_xml_subtree(xmlNode *xml);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void free_xml(xmlNode *child);
+
 #ifdef __cplusplus
 }
 #endif
