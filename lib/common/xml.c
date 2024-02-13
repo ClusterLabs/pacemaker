@@ -598,28 +598,6 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 }
 
 /*!
- * \brief Update current XML attribute value per parsed integer assignment
-          statement
- *
- * \param[in,out]   target  an XML node, containing a XML attribute that is
- *                          initialized to some numeric value, to be processed
- * \param[in]       name    name of the XML attribute, e.g. X, whose value
- *                          should be updated
- * \param[in]       value   assignment statement, e.g. "X++" or
- *                          "X+=5", to be applied to the initialized value.
- *
- * \note The original XML attribute value is treated as 0 if non-numeric and
- *       truncated to be an integer if decimal-point-containing.
- * \note The final XML attribute value is truncated to not exceed 1000000.
- * \note Undefined behavior if unexpected input.
- */
-void
-expand_plus_plus(xmlNode * target, const char *name, const char *value)
-{
-    pcmk__xe_set_score(target, name, value);
-}
-
-/*!
  * \internal
  * \brief Remove an XML attribute from an element
  *
@@ -2679,6 +2657,12 @@ copy_in_properties(xmlNode *target, const xmlNode *src)
             }
         }
     }
+}
+
+void
+expand_plus_plus(xmlNode * target, const char *name, const char *value)
+{
+    pcmk__xe_set_score(target, name, value);
 }
 
 // LCOV_EXCL_STOP

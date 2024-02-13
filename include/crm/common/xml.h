@@ -39,8 +39,6 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-void expand_plus_plus(xmlNode * target, const char *name, const char *value);
-
 
 /*
  * Searching & Modifying

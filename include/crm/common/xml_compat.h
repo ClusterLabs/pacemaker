@@ -186,6 +186,9 @@ crm_map_element_name(const xmlNode *xml)
 //! \deprecated Do not use
 void copy_in_properties(xmlNode *target, const xmlNode *src);
 
+//! \deprecated Do not use
+void expand_plus_plus(xmlNode * target, const char *name, const char *value);
+
 #ifdef __cplusplus
 }
 #endif
