@@ -53,14 +53,6 @@ char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
                                      const char *version);
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-/*!
- * \brief Initialize the CRM XML subsystem
- *
- * This method sets global XML settings and loads pacemaker schemas into the cache.
- */
-void crm_xml_init(void);
-
 void crm_xml_cleanup(void);
 
 void pcmk_free_xml_subtree(xmlNode *xml);
