@@ -774,18 +774,6 @@ pcmk__xe_create_full(xmlNode *parent, const char *name, const char *content)
 }
 
 /*!
- * Free an XML element and all of its children, removing it from its parent
- *
- * \param[in,out] xml  XML element to free
- */
-void
-pcmk_free_xml_subtree(xmlNode *xml)
-{
-    xmlUnlinkNode(xml); // Detaches from parent and siblings
-    xmlFreeNode(xml);   // Frees
-}
-
-/*!
  * \internal
  * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
@@ -3491,6 +3479,13 @@ void
 crm_xml_cleanup(void)
 {
     pcmk__xml_cleanup();
+}
+
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
 }
 
 // LCOV_EXCL_STOP
