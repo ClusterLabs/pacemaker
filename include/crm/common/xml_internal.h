@@ -230,6 +230,8 @@ pcmk__xe_match_name(const xmlNode *parent, const char *name)
     return pcmk__xe_match(parent, name, NULL, NULL);
 }
 
+xmlNode *pcmk__xe_expand_idref(xmlNode *input, xmlNode *search);
+
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),

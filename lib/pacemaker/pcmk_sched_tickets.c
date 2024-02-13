@@ -485,7 +485,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         const char *loss_policy = NULL;
 
         any_sets = true;
-        set = expand_idref(set, scheduler->input);
+        set = pcmk__xe_expand_idref(set, scheduler->input);
         loss_policy = crm_element_value(xml_obj, PCMK_XA_LOSS_POLICY);
 
         if ((set == NULL) // Configuration error, message already logged
