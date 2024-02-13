@@ -186,6 +186,9 @@ void copy_in_properties(xmlNode *target, const xmlNode *src);
 //! \deprecated Do not use
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 
+//! \deprecated Do not use
+void crm_xml_init(void);
+
 #ifdef __cplusplus
 }
 #endif
