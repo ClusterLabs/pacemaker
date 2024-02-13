@@ -125,7 +125,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
                                 cib_options);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(fragment);
+    pcmk__xml_free(fragment);
     free(later_s);
 
     if (rc != pcmk_rc_ok && promoted_role_only && strcmp(promoted_role, PCMK__ROLE_PROMOTED) == 0) {
@@ -202,7 +202,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
                                 cib_options);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(fragment);
+    pcmk__xml_free(fragment);
     free(later_s);
 
     if (rc != pcmk_rc_ok && promoted_role_only && strcmp(promoted_role, PCMK__ROLE_PROMOTED) == 0) {
@@ -298,7 +298,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
         rc = pcmk_legacy2rc(rc);
     }
 
-    free_xml(fragment);
+    pcmk__xml_free(fragment);
     return rc;
 }
 
@@ -486,7 +486,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
                 goto done;
             }
 
-            free_xml(fragment);
+            pcmk__xml_free(fragment);
         }
 
         crm_time_free(end);

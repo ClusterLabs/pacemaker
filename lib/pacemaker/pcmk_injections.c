@@ -139,7 +139,7 @@ create_node_entry(cib_t *cib_conn, const char *node)
         /* Not bothering with subsequent query to see if it exists,
            we'll bomb out later in the call to query_node_uuid()... */
 
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
     }
 
     free(xpath);
@@ -285,7 +285,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         crm_xml_add(cib_object, PCMK_XA_UNAME, node);
         cib_conn->cmds->create(cib_conn, PCMK_XE_STATUS, cib_object,
                                cib_sync_call|cib_scope_local);
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath|cib_sync_call|cib_scope_local);
@@ -544,7 +544,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
                            cib_sync_call|cib_scope_local);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
     return rc;
 }
 
@@ -678,7 +678,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
     }
 
     for (iter = injections->node_down; iter != NULL; iter = iter->next) {
@@ -693,7 +693,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
 
         xpath = crm_strdup_printf("//" PCMK__XE_NODE_STATE
                                   "[@" PCMK_XA_UNAME "='%s']"
@@ -724,7 +724,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
         rc = cib->cmds->modify(cib, PCMK_XE_STATUS, cib_node,
                                cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
     }
 
     for (iter = injections->ticket_grant; iter != NULL; iter = iter->next) {

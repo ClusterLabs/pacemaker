@@ -122,7 +122,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
-        free_xml(output);
+        pcmk__xml_free(output);
         return rc;
     }
 
@@ -136,7 +136,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
         crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
-        free_xml(output);
+        pcmk__xml_free(output);
     }
     return pcmk_rc_ok;
 }
@@ -170,7 +170,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
         xmlNode *version_xml = pcmk__xe_match_name(patch, PCMK_XE_VERSION);
 
         if (version_xml) {
-            free_xml(version_xml);
+            pcmk__xml_free(version_xml);
         }
 
     } else {
@@ -253,7 +253,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
 
     pcmk__log_xml_patchset(LOG_NOTICE, output);
     print_patch(output);
-    free_xml(output);
+    pcmk__xml_free(output);
 
     /* pcmk_rc_error means there's a non-empty diff.
      * @COMPAT Choose a more descriptive return code, like one that maps to
@@ -371,8 +371,8 @@ done:
     pcmk__free_arg_context(context);
     free(options.xml_file_1);
     free(options.xml_file_2);
-    free_xml(object_1);
-    free_xml(object_2);
+    pcmk__xml_free(object_1);
+    pcmk__xml_free(object_2);
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);

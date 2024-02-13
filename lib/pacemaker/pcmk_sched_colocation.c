@@ -895,7 +895,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, PCMK_XA_RSC, true,
                           scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -916,7 +916,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &primary_set, PCMK_XA_WITH_RSC, true,
                           scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -935,7 +935,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (any_sets) {
         crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_COLOCATION);
     } else {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
     }
 
@@ -990,7 +990,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         set = expand_idref(set, scheduler->input);
         if (set == NULL) { // Configuration error, message already logged
             if (expanded_xml != NULL) {
-                free_xml(expanded_xml);
+                pcmk__xml_free(expanded_xml);
             }
             return;
         }
@@ -1009,7 +1009,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     if (expanded_xml) {
-        free_xml(expanded_xml);
+        pcmk__xml_free(expanded_xml);
         xml_obj = orig_xml;
     }
 

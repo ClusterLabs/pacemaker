@@ -962,7 +962,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, PCMK_XA_FIRST, true,
                           scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -983,7 +983,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, PCMK_XA_THEN, true,
                           scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -1002,7 +1002,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (any_sets) {
         crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
     }
 
@@ -1050,7 +1050,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             || (unpack_order_set(set, kind, invert, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml != NULL) {
-                free_xml(expanded_xml);
+                pcmk__xml_free(expanded_xml);
             }
             return;
         }
@@ -1060,7 +1060,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             if (order_rsc_sets(id, last, set, kind, scheduler,
                                symmetry) != pcmk_rc_ok) {
                 if (expanded_xml != NULL) {
-                    free_xml(expanded_xml);
+                    pcmk__xml_free(expanded_xml);
                 }
                 return;
             }
@@ -1069,7 +1069,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
                 && (order_rsc_sets(id, set, last, kind, scheduler,
                                    ordering_symmetric_inverse) != pcmk_rc_ok)) {
                 if (expanded_xml != NULL) {
-                    free_xml(expanded_xml);
+                    pcmk__xml_free(expanded_xml);
                 }
                 return;
             }
@@ -1079,7 +1079,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     }
 
     if (expanded_xml) {
-        free_xml(expanded_xml);
+        pcmk__xml_free(expanded_xml);
         xml_obj = orig_xml;
     }
 

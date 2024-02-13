@@ -363,15 +363,15 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             g_hash_table_destroy(rsc_ops_hash);
         }
 
-        free_xml(template_ops);
+        pcmk__xml_free(template_ops);
     }
 
-    /*free_xml(*expanded_xml); */
+    /*pcmk__xml_free(*expanded_xml); */
     *expanded_xml = new_xml;
 
 #if 0 /* Disable multi-level templates for now */
     if (!unpack_template(new_xml, expanded_xml, scheduler)) {
-       free_xml(*expanded_xml);
+       pcmk__xml_free(*expanded_xml);
        *expanded_xml = NULL;
        return FALSE;
     }
@@ -1032,14 +1032,14 @@ common_free(pcmk_resource_t * rsc)
     if ((rsc->parent == NULL)
         && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
 
-        free_xml(rsc->xml);
+        pcmk__xml_free(rsc->xml);
         rsc->xml = NULL;
-        free_xml(rsc->orig_xml);
+        pcmk__xml_free(rsc->orig_xml);
         rsc->orig_xml = NULL;
 
         /* if rsc->orig_xml, then rsc->xml is an expanded xml from a template */
     } else if (rsc->orig_xml) {
-        free_xml(rsc->xml);
+        pcmk__xml_free(rsc->xml);
         rsc->xml = NULL;
     }
     if (rsc->running_on) {

@@ -1233,7 +1233,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
         if (relay_message(reply, TRUE) == FALSE) {
             crm_log_xml_err(reply, "Unable to route reply");
         }
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 }
 
@@ -1376,7 +1376,7 @@ static void
 free_metadata_cb_data(struct metadata_cb_data *data)
 {
     lrmd_free_rsc_info(data->rsc);
-    free_xml(data->input_xml);
+    pcmk__xml_free(data->input_xml);
     free(data);
 }
 
@@ -1786,8 +1786,8 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
         crm_log_xml_err(reply, "Unable to route reply");
     }
 
-    free_xml(update);
-    free_xml(reply);
+    pcmk__xml_free(update);
+    pcmk__xml_free(reply);
 }
 
 gboolean

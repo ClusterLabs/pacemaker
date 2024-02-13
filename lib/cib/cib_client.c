@@ -445,7 +445,7 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
             crm_trace("No transaction found for CIB client %s", client_id);
         }
     }
-    free_xml(cib->transaction);
+    pcmk__xml_free(cib->transaction);
     cib->transaction = NULL;
     return rc;
 }

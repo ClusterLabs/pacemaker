@@ -749,7 +749,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
     doc = xmlReadFile(filename, NULL, 0);
     xml = xmlDocGetRootElement(doc);
     rc = validate_xml(xml, NULL, FALSE);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     unlink(filename);
     free(filename);
@@ -1011,7 +1011,7 @@ apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
               schema->name, schema->transform);
     final = apply_transformation(upgrade, schema->transform, to_logs);
     if (upgrade != xml) {
-        free_xml(upgrade);
+        pcmk__xml_free(upgrade);
         upgrade = NULL;
     }
 
@@ -1029,7 +1029,7 @@ apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
             crm_warn("Upgrade-leave transformation %s.xsl failed", transform_leave);
             final = upgrade;
         } else {
-            free_xml(upgrade);
+            pcmk__xml_free(upgrade);
         }
         free(transform_leave);
     }
@@ -1193,7 +1193,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                     crm_info("Transformation %s.xsl successful", schema->transform);
                     lpc = next;
                     *best = next;
-                    free_xml(xml);
+                    pcmk__xml_free(xml);
                     xml = upgrade;
                     rc = pcmk_ok;
 
@@ -1201,7 +1201,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                     crm_err("Transformation %s.xsl did not produce a valid configuration",
                             schema->transform);
                     crm_log_xml_info(upgrade, "transform:bad");
-                    free_xml(upgrade);
+                    pcmk__xml_free(upgrade);
                     rc = -pcmk_err_schema_validation;
                 }
                 next = -1;
@@ -1290,13 +1290,13 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                 }
             }
 
-            free_xml(converted);
+            pcmk__xml_free(converted);
             converted = NULL;
             rc = FALSE;
 
         } else {
             // Updated configuration schema is acceptable
-            free_xml(*xml);
+            pcmk__xml_free(*xml);
             *xml = converted;
 
             if (version < xml_latest_schema_index(known_schemas)) {
@@ -1419,7 +1419,7 @@ external_refs_in_schema(GList **list, const char *contents)
     xmlNode *xml = pcmk__xml_parse_string(contents);
 
     crm_foreach_xpath_result(xml, search, append_href, list);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -1533,7 +1533,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
     if (schema_node->children != NULL) {
         xmlAddChild(parent, schema_node);
     } else {
-        free_xml(schema_node);
+        pcmk__xml_free(schema_node);
     }
 }
 

@@ -23,7 +23,7 @@ empty_input(void **state)
     assert_int_equal(pcmk__xe_get_bool_attr(node, NULL, &value), EINVAL);
     assert_int_equal(pcmk__xe_get_bool_attr(node, "whatever", NULL), EINVAL);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -33,7 +33,7 @@ attr_missing(void **state)
     bool value;
 
     assert_int_equal(pcmk__xe_get_bool_attr(node, "c", &value), ENODATA);
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -51,7 +51,7 @@ attr_present(void **state)
     assert_false(value);
     assert_int_equal(pcmk__xe_get_bool_attr(node, "c", &value), pcmk_rc_bad_input);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

@@ -167,7 +167,7 @@ start_join_round(void)
         max_generation_from = NULL;
     }
     if (max_generation_xml != NULL) {
-        free_xml(max_generation_xml);
+        pcmk__xml_free(max_generation_xml);
         max_generation_xml = NULL;
     }
     controld_clear_fsa_input_flags(R_HAVE_CIB);
@@ -252,7 +252,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     crm_info("Sending join-%d offer to %s", current_join_id, member->uname);
     send_cluster_message(member, crm_msg_crmd, offer, TRUE);
-    free_xml(offer);
+    pcmk__xml_free(offer);
 
     crm_update_peer_join(__func__, member, crm_join_welcomed);
 }
@@ -511,7 +511,7 @@ do_dc_join_filter_offer(long long action,
             crm_log_xml_debug(max_generation_xml, "Old max generation");
             crm_log_xml_debug(generation, "New max generation");
 
-            free_xml(max_generation_xml);
+            pcmk__xml_free(max_generation_xml);
             max_generation_xml = pcmk__xml_copy(NULL, join_ack->xml);
             pcmk__str_update(&max_generation_from, join_from);
         }
@@ -625,7 +625,7 @@ free_max_generation(void)
     free(max_generation_from);
     max_generation_from = NULL;
 
-    free_xml(max_generation_xml);
+    pcmk__xml_free(max_generation_xml);
     max_generation_xml = NULL;
 }
 
@@ -812,7 +812,7 @@ do_dc_join_ack(long long action,
 
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, state,
                            cib_scope_local|cib_can_create|cib_transaction);
-    free_xml(execd_state);
+    pcmk__xml_free(execd_state);
     if (rc != pcmk_ok) {
         goto done;
     }
@@ -868,7 +868,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_xml_add(tmp1, PCMK_XA_ID, crm_peer_uuid(join_node));
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
-    free_xml(tmp1);
+    pcmk__xml_free(tmp1);
 
     if (join_node->join == crm_join_nack_quiet) {
         crm_trace("Not sending nack message to node %s with feature set older "
@@ -929,7 +929,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         }
     }
     send_cluster_message(join_node, crm_msg_crmd, acknak, TRUE);
-    free_xml(acknak);
+    pcmk__xml_free(acknak);
     return;
 }
 

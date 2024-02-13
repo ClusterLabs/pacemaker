@@ -211,7 +211,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -262,7 +262,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -299,7 +299,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
     pcmk__xe_add_node(request, node, 0);
 
     rc = connect_and_send_attrd_request(api, request);
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -324,7 +324,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -402,7 +402,7 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     rc = connect_and_send_attrd_request(api, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -478,7 +478,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
      */
     if (pcmk__is_daemon) {
         rc = connect_and_send_attrd_request(api, request);
-        free_xml(request);
+        pcmk__xml_free(request);
     }
 
     return rc;

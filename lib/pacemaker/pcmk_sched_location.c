@@ -466,7 +466,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -483,7 +483,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     } else {
         // No sets
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
     }
 
@@ -558,14 +558,14 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml) {
-                free_xml(expanded_xml);
+                pcmk__xml_free(expanded_xml);
             }
             return;
         }
     }
 
     if (expanded_xml) {
-        free_xml(expanded_xml);
+        pcmk__xml_free(expanded_xml);
         xml_obj = orig_xml;
     }
 

@@ -1150,7 +1150,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     result = pcmk__xml_dump(top, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
 
 done:
-    free_xml(top);
+    pcmk__xml_free(top);
     return result;
 }
 

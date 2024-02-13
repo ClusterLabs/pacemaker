@@ -218,7 +218,9 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
  * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
  *
  * \return Newly created XML for empty CIB
- * \note It is the caller's responsibility to free the result with free_xml().
+ *
+ * \note It is the caller's responsibility to free the result with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 createEmptyCib(int cib_epoch)
@@ -397,7 +399,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
             *output = pcmk__xml_copy(NULL, *output);
         }
 
-        free_xml(cib_filtered);
+        pcmk__xml_free(cib_filtered);
         return rc;
     }
 
@@ -555,7 +557,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                             format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
                             test_rc);
                 }
-                free_xml(cib_copy);
+                pcmk__xml_free(cib_copy);
             },
             {}
         );
@@ -646,16 +648,16 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         if (*result_cib == NULL) {
             crm_debug("Pre-filtered the entire cib result");
         }
-        free_xml(scratch);
+        pcmk__xml_free(scratch);
     }
 
     if(diff) {
         *diff = local_diff;
     } else {
-        free_xml(local_diff);
+        pcmk__xml_free(local_diff);
     }
 
-    free_xml(top);
+    pcmk__xml_free(top);
     crm_trace("Done");
     return rc;
 }
@@ -695,7 +697,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
         CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
-                  free_xml(*op_msg); return -EPROTO);
+                  pcmk__xml_free(*op_msg); return -EPROTO);
     }
     return pcmk_ok;
 }
@@ -944,7 +946,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                 crm_trace("Masking error, we already have the supplied update");
                 return pcmk_ok;
             }
-            free_xml(*output);
+            pcmk__xml_free(*output);
             *output = NULL;
             return rc;
         }
@@ -1043,7 +1045,7 @@ cib_get_generation(cib_t * cib)
     cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {
         pcmk__xe_copy_attrs(generation, the_cib);
-        free_xml(the_cib);
+        pcmk__xml_free(the_cib);
     }
 
     return generation;

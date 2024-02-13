@@ -439,7 +439,7 @@ dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
         gchar *state_xml_str = pcmk__xml_dump(state_xml, pcmk__xml_fmt_pretty);
 
         fprintf(stdout, "\n%s", state_xml_str);
-        free_xml(state_xml);
+        pcmk__xml_free(state_xml);
         g_free(state_xml_str);
     }
 
@@ -461,7 +461,7 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
 
     cons_xml_str = pcmk__xml_dump(cons_xml, pcmk__xml_fmt_pretty);
     fprintf(stdout, "Constraints XML:\n\n%s", cons_xml_str);
-    free_xml(cons_xml);
+    pcmk__xml_free(cons_xml);
     g_free(cons_xml_str);
 
     return rc;
@@ -634,7 +634,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
         rc = pcmk_legacy2rc(rc);
     }
 
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
     return rc;
 }
 
@@ -663,7 +663,7 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
         fprintf(stdout, "Cleaned up %s\n", ticket_id);
     }
 
-    free_xml(ticket_state_xml);
+    pcmk__xml_free(ticket_state_xml);
     return rc;
 }
 

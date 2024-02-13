@@ -346,7 +346,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
     }
 
     more = call_api_dispatch(api, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 
     if (more) {
         return EINPROGRESS;
@@ -697,7 +697,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     if (reply != NULL) {
         bool more = call_api_dispatch(api, reply);
 
-        free_xml(reply);
+        pcmk__xml_free(reply);
 
         while (more) {
             rc = crm_ipc_read(api->ipc);
@@ -811,7 +811,7 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
         return EOPNOTSUPP;
     }
     rc = pcmk__send_ipc_request(api, request);
-    free_xml(request);
+    pcmk__xml_free(request);
 
     crm_debug("%s peer cache purge of node %s[%lu]: rc=%d",
               pcmk_ipc_name(api, true), node_name, (unsigned long) nodeid, rc);

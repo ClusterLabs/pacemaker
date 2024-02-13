@@ -380,7 +380,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     rc = pcmk_legacy2rc(rc);
 
 done:
-    free_xml(update);
+    pcmk__xml_free(update);
     return rc;
 }
 

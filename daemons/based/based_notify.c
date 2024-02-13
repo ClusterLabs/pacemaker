@@ -138,7 +138,7 @@ attach_cib_generation(xmlNode *msg)
         pcmk__xe_copy_attrs(generation, the_cib);
     }
     pcmk__message_add_xml(msg, PCMK__XE_CIB_GENERATION, generation);
-    free_xml(generation);
+    pcmk__xml_free(generation);
 }
 
 void
@@ -230,5 +230,5 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     crm_log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);
-    free_xml(update_msg);
+    pcmk__xml_free(update_msg);
 }

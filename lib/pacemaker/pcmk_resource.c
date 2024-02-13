@@ -139,7 +139,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
     rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(msg_data);
+    pcmk__xml_free(msg_data);
     return rc;
 }
 

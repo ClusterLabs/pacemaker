@@ -780,7 +780,7 @@ free_graph_action(gpointer user_data)
     if (action->params != NULL) {
         g_hash_table_destroy(action->params);
     }
-    free_xml(action->xml);
+    pcmk__xml_free(action->xml);
     free(action);
 }
 

@@ -69,7 +69,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             v = g_hash_table_lookup(a->values, host);
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
             if (host_value == NULL) {
-                free_xml(reply);
+                pcmk__xml_free(reply);
                 return NULL;
             }
             pcmk__xe_add_node(host_value, host, 0);
@@ -84,7 +84,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
                 host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
                 if (host_value == NULL) {
-                    free_xml(reply);
+                    pcmk__xml_free(reply);
                     return NULL;
                 }
                 pcmk__xe_add_node(host_value, v->nodename, 0);
@@ -601,7 +601,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         pcmk__reset_request(&request);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return 0;
 }
 

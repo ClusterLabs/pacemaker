@@ -705,7 +705,7 @@ commit_shadow_file(GError **error)
 done:
     free(filename);
     cib_delete(real_cib);
-    free_xml(input);
+    pcmk__xml_free(input);
 }
 
 /*!
@@ -741,7 +741,7 @@ create_shadow_empty(pcmk__output_t *out, GError **error)
 
 done:
     free(filename);
-    free_xml(output);
+    pcmk__xml_free(output);
 }
 
 /*!
@@ -801,7 +801,7 @@ create_shadow_from_cib(pcmk__output_t *out, bool reset, GError **error)
 
 done:
     free(filename);
-    free_xml(output);
+    pcmk__xml_free(output);
 }
 
 /*!
@@ -910,7 +910,7 @@ show_shadow_contents(pcmk__output_t *out, GError **error)
                      options.instance, NULL, output, NULL, shadow_disp_content);
         out->quiet = quiet_orig;
 
-        free_xml(output);
+        pcmk__xml_free(output);
     }
 
 done:
@@ -971,9 +971,9 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
 
 done:
     free(filename);
-    free_xml(old_config);
-    free_xml(new_config);
-    free_xml(diff);
+    pcmk__xml_free(old_config);
+    pcmk__xml_free(new_config);
+    pcmk__xml_free(diff);
 }
 
 /*!

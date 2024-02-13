@@ -853,7 +853,7 @@ pcmk__xml_free_full(xmlNode *node, int position, bool ignore_acl)
 void
 free_xml(xmlNode * child)
 {
-    pcmk__xml_free_full(child, -1, false);
+    pcmk__xml_free(child);
 }
 
 /*!
@@ -2579,7 +2579,7 @@ delete_matching_xe(xmlNode *xml, void *user_data)
     crm_log_xml_trace(xml, "delete-match");
     crm_log_xml_trace(search, "delete-search");
 #endif  // XML_PARSER_DEBUG
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     // Found a match and deleted it; stop traversing tree
     return false;
@@ -3092,7 +3092,7 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 void
 crm_destroy_xml(gpointer data)
 {
-    free_xml(data);
+    pcmk__xml_free(data);
 }
 
 xmlDoc *
@@ -3130,7 +3130,7 @@ int
 add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
 {
     add_node_copy(parent, child);
-    free_xml(child);
+    pcmk__xml_free(child);
     return 1;
 }
 
@@ -3390,7 +3390,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
         if (delete_only) {
             crm_log_xml_trace(child, "delete-match");
             crm_log_xml_trace(update, "delete-search");
-            free_xml(child);
+            pcmk__xml_free(child);
 
         } else {
             crm_log_xml_trace(child, "replace-match");

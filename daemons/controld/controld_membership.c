@@ -85,7 +85,7 @@ post_cache_update(int instance)
     no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
                            AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
     send_cluster_message(NULL, crm_msg_crmd, no_op, FALSE);
-    free_xml(no_op);
+    pcmk__xml_free(no_op);
 }
 
 static void
@@ -139,7 +139,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
     if (crm_xml_add(node_state, PCMK_XA_ID, crm_peer_uuid(node)) == NULL) {
         crm_info("Node update for %s cancelled: no ID", node->uname);
-        free_xml(node_state);
+        pcmk__xml_free(node_state);
         return NULL;
     }
 
@@ -280,7 +280,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                                                     cib_scope_local);
             fsa_register_cib_callback(delete_call_id, strdup(node_uuid),
                                       remove_conflicting_node_callback);
-            free_xml(node_state_xml);
+            pcmk__xml_free(node_state_xml);
         }
     }
 }
@@ -372,7 +372,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         GHashTableIter iter;
         crm_node_t *node = NULL;
 
-        free_xml(node_list);
+        pcmk__xml_free(node_list);
         node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
         g_hash_table_iter_init(&iter, crm_peer_cache);
@@ -390,7 +390,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         controld_update_cib(PCMK_XE_STATUS, node_list, cib_scope_local,
                             crmd_node_update_complete);
     }
-    free_xml(node_list);
+    pcmk__xml_free(node_list);
 }
 
 static void
@@ -434,7 +434,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
         controld_update_cib(PCMK_XE_CIB, update, cib_scope_local,
                             cib_quorum_update_complete);
-        free_xml(update);
+        pcmk__xml_free(update);
 
         /* Quorum changes usually cause a new transition via other activity:
          * quorum gained via a node joining will abort via the node join,

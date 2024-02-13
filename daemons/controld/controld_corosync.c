@@ -59,7 +59,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
                                  PCMK_VALUE_ONLINE);
         }
         crmd_ha_msg_filter(xml);
-        free_xml(xml);
+        pcmk__xml_free(xml);
     } else {
         crm_err("Invalid message class (%d): %.100s", kind, data);
     }

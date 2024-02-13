@@ -179,7 +179,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
                                  existing_cib, result_cib, answer);
     }
 
-    CRM_CHECK(*answer == NULL, free_xml(*answer));
+    CRM_CHECK(*answer == NULL, pcmk__xml_free(*answer));
     *answer = NULL;
 
     if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
@@ -247,7 +247,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
     crm_trace("Processing \"%s\" event", op);
 
     if (*result_cib != existing_cib) {
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
     }
     *result_cib = createEmptyCib(0);
     pcmk__xe_copy_attrs(*result_cib, existing_cib);
@@ -401,7 +401,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         }
 
         if (*result_cib != existing_cib) {
-            free_xml(*result_cib);
+            pcmk__xml_free(*result_cib);
         }
         *result_cib = pcmk__xml_copy(NULL, input);
 
@@ -486,7 +486,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         tmp_section = pcmk__xe_create(NULL, section);
         cib_process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
                           NULL, result_cib, answer);
-        free_xml(tmp_section);
+        pcmk__xml_free(tmp_section);
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
     }
@@ -517,7 +517,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
             crm_debug("Destroying %s", match_path);
             free(match_path);
-            free_xml(match);
+            pcmk__xml_free(match);
         }
 
         freeXpathObject(xpathObj);
@@ -582,7 +582,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                         if (remove != NULL) {
                             crm_trace("Replacing node <%s> in <%s>",
                                       replace_item, target->name);
-                            free_xml(remove);
+                            pcmk__xml_free(remove);
                         }
                         free(replace_item);
                     }
@@ -766,7 +766,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
         *answer = failed;
 
     } else {
-        free_xml(failed);
+        pcmk__xml_free(failed);
     }
 
     return result;
@@ -787,7 +787,7 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
               (pcmk_is_set(options, cib_force_diff)? " (global update)" : ""));
 
     if (*result_cib != existing_cib) {
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
     }
     *result_cib = pcmk__xml_copy(NULL, existing_cib);
 
@@ -927,7 +927,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 break;
             }
 
-            free_xml(match);
+            pcmk__xml_free(match);
             if ((options & cib_multiple) == 0) {
                 break;
             }
@@ -996,7 +996,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                                 pcmk__str_none)) {
             xmlNode *parent = match->parent;
 
-            free_xml(match);
+            pcmk__xml_free(match);
             pcmk__xml_copy(parent, input);
 
             if ((options & cib_multiple) == 0) {

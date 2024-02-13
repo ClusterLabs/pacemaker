@@ -62,7 +62,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
             cmd = create_request(task, pseudo->xml, node->uname,
                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
             send_cluster_message(node, crm_msg_crmd, cmd, FALSE);
-            free_xml(cmd);
+            pcmk__xml_free(cmd);
         }
 
         remote_ra_process_maintenance_nodes(pseudo->xml);
@@ -174,7 +174,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                              pcmk__node_search_cluster),
                               crm_msg_crmd, cmd, TRUE);
     free(counter);
-    free_xml(cmd);
+    pcmk__xml_free(cmd);
 
     if (rc == FALSE) {
         crm_err("Action %d failed: send", action->id);
@@ -305,7 +305,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_STATUS, state,
                                 cib_scope_local);
     fsa_register_cib_callback(rc, NULL, cib_action_updated);
-    free_xml(state);
+    pcmk__xml_free(state);
 
     crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",
               rc, action->id, task_uuid, target);
@@ -432,7 +432,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     free(counter);
-    free_xml(cmd);
+    pcmk__xml_free(cmd);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_executed);
 

@@ -424,7 +424,8 @@ purge_xml_attributes(xmlNode *xml)
     }
 
     if (!readable_children) {
-        free_xml(xml); /* Nothing readable under here, purge completely */
+        // Nothing readable under here, so purge completely
+        pcmk__xml_free(xml);
     }
     return readable_children;
 }
@@ -505,7 +506,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     } else {
         crm_trace("User '%s' without ACLs denied access to entire XML document",
                   user);
-        free_xml(target);
+        pcmk__xml_free(target);
         target = NULL;
     }
 

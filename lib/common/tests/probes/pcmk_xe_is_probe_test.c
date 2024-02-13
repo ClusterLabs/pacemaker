@@ -20,34 +20,34 @@ op_is_probe_test(void **state)
 
     node = pcmk__xml_parse_string("<" PCMK__XE_LRM_RSC_OP "/>");
     assert_false(pcmk_xe_is_probe(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 
     node = pcmk__xml_parse_string("<" PCMK__XE_LRM_RSC_OP " "
                                   PCMK__XA_OPERATION_KEY "=\"blah\" "
                                   PCMK_META_INTERVAL "=\"30s\"/>");
     assert_false(pcmk_xe_is_probe(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 
     node = pcmk__xml_parse_string("<" PCMK__XE_LRM_RSC_OP " "
                                   PCMK_XA_OPERATION
                                       "=\"" PCMK_ACTION_MONITOR "\" "
                                   PCMK_META_INTERVAL "=\"30s\"/>");
     assert_false(pcmk_xe_is_probe(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 
     node = pcmk__xml_parse_string("<" PCMK__XE_LRM_RSC_OP " "
                                   PCMK_XA_OPERATION
                                       "=\"" PCMK_ACTION_START "\" "
                                   PCMK_META_INTERVAL "=\"0\"/>");
     assert_false(pcmk_xe_is_probe(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 
     node = pcmk__xml_parse_string("<" PCMK__XE_LRM_RSC_OP " "
                                   PCMK_XA_OPERATION
                                       "=\"" PCMK_ACTION_MONITOR "\" "
                                   PCMK_META_INTERVAL "=\"0\"/>");
     assert_true(pcmk_xe_is_probe(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

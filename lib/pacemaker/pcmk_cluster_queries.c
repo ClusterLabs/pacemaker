@@ -877,7 +877,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
             out->info(out, "No nodes configured");
         }
 
-        free_xml(xml_node);
+        pcmk__xml_free(xml_node);
     }
 
     return rc;

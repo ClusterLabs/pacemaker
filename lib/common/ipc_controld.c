@@ -105,7 +105,7 @@ post_connect(pcmk_ipc_api_t *api)
                                  PCMK__CONTROLD_API_MAJOR,
                                  PCMK__CONTROLD_API_MINOR);
     rc = pcmk__send_ipc_request(api, hello);
-    free_xml(hello);
+    pcmk__xml_free(hello);
     if (rc != pcmk_rc_ok) {
         crm_info("Could not send IPC hello to %s: %s " CRM_XS " rc=%s",
                  pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
@@ -388,8 +388,8 @@ pcmk_controld_api_reprobe(pcmk_ipc_api_t *api, const char *target_node,
     request = create_controller_request(api, CRM_OP_REPROBE, router_node,
                                         msg_data);
     rc = send_controller_request(api, request, true);
-    free_xml(msg_data);
-    free_xml(request);
+    pcmk__xml_free(msg_data);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -417,7 +417,7 @@ pcmk_controld_api_node_info(pcmk_ipc_api_t *api, uint32_t nodeid)
     }
 
     rc = send_controller_request(api, request, true);
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -441,7 +441,7 @@ pcmk_controld_api_ping(pcmk_ipc_api_t *api, const char *node_name)
         return EINVAL;
     }
     rc = send_controller_request(api, request, true);
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -463,7 +463,7 @@ pcmk_controld_api_list_nodes(pcmk_ipc_api_t *api)
                                         NULL);
     if (request != NULL) {
         rc = send_controller_request(api, request, true);
-        free_xml(request);
+        pcmk__xml_free(request);
     }
     return rc;
 }
@@ -525,8 +525,8 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
 
     request = create_controller_request(api, op, router_node, msg_data);
     rc = send_controller_request(api, request, true);
-    free_xml(msg_data);
-    free_xml(request);
+    pcmk__xml_free(msg_data);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -652,7 +652,7 @@ create_hello_message(const char *uuid, const char *client_name,
                 "Request creation failed", client_name, uuid);
         return NULL;
     }
-    free_xml(hello_node);
+    pcmk__xml_free(hello_node);
 
     crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
     return hello;

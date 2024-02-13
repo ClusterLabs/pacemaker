@@ -43,7 +43,7 @@ cib_not_connected(void **state)
      * calls, so signon() will return ENOTCONN.  Check that we handle that.
      */
     assert_int_equal(pcmk_resource_delete(&xml, "rsc", "primitive"), ENOTCONN);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -100,11 +100,11 @@ bad_input(void **state)
      * that it returns EINVAL if both parameters aren't given.
      */
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", NULL), EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     assert_int_equal(pcmk_resource_delete(&xml, NULL, "primitive"), EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static xmlNode *
@@ -140,12 +140,12 @@ incorrect_type(void **state)
      * there.
      */
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", "clone"), pcmk_rc_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     result = find_rsc("Fencing");
     assert_non_null(result);
 
-    free_xml(result);
+    pcmk__xml_free(result);
 }
 
 static void
@@ -155,12 +155,12 @@ correct_type(void **state)
     xmlNode *result = NULL;
 
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", "primitive"), pcmk_rc_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     result = find_rsc("Fencing");
     assert_null(result);
 
-    free_xml(result);
+    pcmk__xml_free(result);
 }
 
 static void
@@ -172,7 +172,7 @@ unknown_resource(void **state)
      * that doesn't exist.
      */
     assert_int_equal(pcmk_resource_delete(&xml, "no_such_resource", "primitive"), pcmk_rc_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 /* There are two kinds of tests in this file:

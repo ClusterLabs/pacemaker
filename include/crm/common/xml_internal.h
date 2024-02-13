@@ -400,6 +400,20 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 
 /*!
  * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
+ *
+ * If \p xml is the root of its document, free the entire document.
+ *
+ * \param[in,out] xml  XML node to free
+ */
+static inline void
+pcmk__xml_free(xmlNode *xml)
+{
+    pcmk__xml_free_full(xml, -1, false);
+}
+
+/*!
+ * \internal
  * \brief Like pcmk__xe_set_props, but takes a va_list instead of
  *        arguments directly.
  *

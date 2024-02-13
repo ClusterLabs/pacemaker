@@ -343,7 +343,7 @@ remote_node_up(const char *node_name)
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
      */
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
-    free_xml(update);
+    pcmk__xml_free(update);
 }
 
 enum down_opts {
@@ -391,7 +391,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     create_node_state_update(node, node_update_cluster, update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
-    free_xml(update);
+    pcmk__xml_free(update);
 }
 
 /*!
@@ -1418,7 +1418,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
             lrm_remote_clear_flags(lrm_state, remote_in_maint);
         }
     }
-    free_xml(update);
+    pcmk__xml_free(update);
 }
 
 #define XPATH_PSEUDO_MAINTENANCE "//" PCMK__XE_PSEUDO_EVENT         \

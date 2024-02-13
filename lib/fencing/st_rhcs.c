@@ -208,7 +208,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         *metadata = xml;
 
     } else {
-        free_xml(xml);
+        pcmk__xml_free(xml);
     }
 
     return pcmk_ok;
@@ -230,12 +230,12 @@ stonith__rhcs_metadata(const char *agent, int timeout_sec, char **output)
     int rc = stonith__rhcs_get_metadata(agent, timeout_sec, &xml);
 
     if (rc != pcmk_ok) {
-        free_xml(xml);
+        pcmk__xml_free(xml);
         return rc;
     }
 
     buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     if (buffer == NULL) {
         return -pcmk_err_schema_validation;
     }
@@ -288,7 +288,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             }
         }
 
-        free_xml(metadata);
+        pcmk__xml_free(metadata);
 
         remaining_timeout -= time(NULL) - start_time;
 
