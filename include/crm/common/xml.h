@@ -101,8 +101,6 @@ const char *get_schema_name(int version);
 const char *xml_latest_schema(void);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 
-void crm_xml_cleanup(void);
-
 void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
