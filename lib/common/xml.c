@@ -1487,7 +1487,6 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
 static void
 mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
@@ -1509,11 +1508,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     xml_diff_attrs(old_xml, new_xml);
 
     // Check for differences in the original children
-    for (cIter = pcmk__xml_first_child(old_xml); cIter != NULL; ) {
-        xmlNode *old_child = cIter;
-        xmlNode *new_child = pcmk__xml_match(new_xml, cIter, true);
+    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
+         old_child = pcmk__xml_next(old_child)) {
 
-        cIter = pcmk__xml_next(cIter);
+        xmlNode *new_child = pcmk__xml_match(new_xml, old_child, true);
+
         if(new_child) {
             mark_xml_changes(old_child, new_child, TRUE);
 
@@ -1523,11 +1522,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     }
 
     // Check for moved or created children
-    for (cIter = pcmk__xml_first_child(new_xml); cIter != NULL; ) {
-        xmlNode *new_child = cIter;
-        xmlNode *old_child = pcmk__xml_match(old_xml, cIter, true);
+    for (xmlNode *new_child = pcmk__xml_first_child(new_xml); new_child != NULL;
+         new_child = pcmk__xml_next(new_child)) {
 
-        cIter = pcmk__xml_next(cIter);
+        xmlNode *old_child = pcmk__xml_match(old_xml, new_child, true);
+
         if(old_child == NULL) {
             // This is a newly created child
             nodepriv = new_child->_private;
