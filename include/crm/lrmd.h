@@ -67,24 +67,6 @@ typedef struct lrmd_key_value_s {
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
 
-#define F_LRMD_RSC_RCCHANGE_TIME "lrmd_rcchange_time"
-#define F_LRMD_RSC_EXEC_TIME     "lrmd_exec_time"
-#define F_LRMD_RSC_QUEUE_TIME    "lrmd_queue_time"
-
-#define F_LRMD_RSC_ID           "lrmd_rsc_id"
-#define F_LRMD_RSC_ACTION       "lrmd_rsc_action"
-#define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
-#define F_LRMD_RSC_OUTPUT       "lrmd_rsc_output"
-#define F_LRMD_RSC_EXIT_REASON  "lrmd_rsc_exit_reason"
-#define F_LRMD_RSC_START_DELAY  "lrmd_rsc_start_delay"
-#define F_LRMD_RSC_INTERVAL     "lrmd_rsc_interval"
-#define F_LRMD_RSC_DELETED      "lrmd_rsc_deleted"
-#define F_LRMD_RSC              "lrmd_rsc"
-
-#define F_LRMD_ALERT_ID           "lrmd_alert_id"
-#define F_LRMD_ALERT_PATH         "lrmd_alert_path"
-#define F_LRMD_ALERT              "lrmd_alert"
-
 #define LRMD_OP_RSC_REG           "lrmd_rsc_register"
 #define LRMD_OP_RSC_EXEC          "lrmd_rsc_exec"
 #define LRMD_OP_RSC_CANCEL        "lrmd_rsc_cancel"
@@ -105,21 +87,6 @@ typedef struct lrmd_key_value_s {
 #define LRMD_IPC_OP_SHUTDOWN_REQ  "shutdown_req"
 #define LRMD_IPC_OP_SHUTDOWN_ACK  "shutdown_ack"
 #define LRMD_IPC_OP_SHUTDOWN_NACK "shutdown_nack"
-
-#define F_LRMD_IPC_OP           "lrmd_ipc_op"
-#define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
-#define F_LRMD_IPC_SESSION      "lrmd_ipc_session"
-#define F_LRMD_IPC_CLIENT       "lrmd_ipc_client"
-#define F_LRMD_IPC_USER         "lrmd_ipc_user"
-#define F_LRMD_IPC_MSG          "lrmd_ipc_msg"
-#define F_LRMD_IPC_MSG_ID       "lrmd_ipc_msg_id"
-#define F_LRMD_IPC_MSG_FLAGS    "lrmd_ipc_msg_flags"
-
-#define T_LRMD           "lrmd"
-#define T_LRMD_REPLY     "lrmd_reply"
-#define T_LRMD_NOTIFY    "lrmd_notify"
-#define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
-#define T_LRMD_RSC_OP    "lrmd_rsc_op"
 /* *INDENT-ON* */
 
 /*!

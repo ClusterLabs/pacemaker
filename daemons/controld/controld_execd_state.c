@@ -493,12 +493,12 @@ static void
 crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
+    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
-        const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
+        const char *channel = crm_element_value(msg, PCMK__XA_LRMD_IPC_SERVER);
 
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
         if (!remote_ra_controlling_guest(lrm_state)) {
@@ -549,12 +549,13 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * to send to ourselves over IPC -- do it directly.
          */
         int flags = 0;
-        xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
+        xmlNode *request = get_message_xml(msg, PCMK__XE_LRMD_IPC_MSG);
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);
         crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
-        pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
+        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
+                              lrm_state->node_name);
 
         /* Pacemaker Remote nodes don't know their own names (as known to the
          * cluster). When getting a node info request with no name or ID, add
@@ -574,7 +575,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         crmd_proxy_dispatch(session, request);
 
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
+        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
         if (flags & crm_ipc_client_response) {
             int msg_id = 0;
             xmlNode *op_reply = create_xml_node(NULL, PCMK__XE_ACK);
@@ -582,7 +583,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
             crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
 
-            crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
+            crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
             remote_proxy_relay_response(proxy, op_reply, msg_id);
 
             free_xml(op_reply);

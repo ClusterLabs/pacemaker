@@ -86,6 +86,90 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_RUN_TIME "lrmd_run_time"
 
+//! \deprecated Do not use
+#define F_LRMD_RSC_RCCHANGE_TIME "lrmd_rcchange_time"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_EXEC_TIME "lrmd_exec_time"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_QUEUE_TIME "lrmd_queue_time"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_ID "lrmd_rsc_id"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_ACTION "lrmd_rsc_action"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_OUTPUT "lrmd_rsc_output"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_EXIT_REASON "lrmd_rsc_exit_reason"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_START_DELAY "lrmd_rsc_start_delay"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_INTERVAL "lrmd_rsc_interval"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC_DELETED "lrmd_rsc_deleted"
+
+//! \deprecated Do not use
+#define F_LRMD_RSC "lrmd_rsc"
+
+//! \deprecated Do not use
+#define F_LRMD_ALERT_ID "lrmd_alert_id"
+
+//! \deprecated Do not use
+#define F_LRMD_ALERT_PATH "lrmd_alert_path"
+
+//! \deprecated Do not use
+#define F_LRMD_ALERT "lrmd_alert"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_OP "lrmd_ipc_op"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_IPC_SERVER "lrmd_ipc_server"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_SESSION "lrmd_ipc_session"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_CLIENT "lrmd_ipc_client"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_USER "lrmd_ipc_user"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_MSG "lrmd_ipc_msg"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_MSG_ID "lrmd_ipc_msg_id"
+
+//! \deprecated Do not use
+#define F_LRMD_IPC_MSG_FLAGS "lrmd_ipc_msg_flags"
+
+//! \deprecated Do not use
+#define T_LRMD "lrmd"
+
+//! \deprecated Do not use
+#define T_LRMD_REPLY "lrmd_reply"
+
+//! \deprecated Do not use
+#define T_LRMD_NOTIFY "lrmd_notify"
+
+//! \deprecated Do not use
+#define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
+
+//! \deprecated Do not use
+#define T_LRMD_RSC_OP "lrmd_rsc_op"
+
 #ifdef __cplusplus
 }
 #endif
