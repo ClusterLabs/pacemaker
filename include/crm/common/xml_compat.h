@@ -196,6 +196,9 @@ void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 //! \deprecated Call \c crm_log_init() or \c crm_log_cli_init() instead
 void crm_xml_init(void);
 
+//! \deprecated Exit with \c crm_exit() instead
+void crm_xml_cleanup(void);
+
 #ifdef __cplusplus
 }
 #endif

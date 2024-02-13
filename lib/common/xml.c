@@ -2163,12 +2163,6 @@ pcmk__xml_cleanup(void)
     xmlCleanupParser();
 }
 
-void
-crm_xml_cleanup(void)
-{
-    pcmk__xml_cleanup();
-}
-
 #define XPATH_MAX 512
 
 xmlNode *
@@ -2748,6 +2742,12 @@ void
 crm_xml_init(void)
 {
     pcmk__xml_init();
+}
+
+void
+crm_xml_cleanup(void)
+{
+    pcmk__xml_cleanup();
 }
 
 // LCOV_EXCL_STOP
