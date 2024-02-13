@@ -607,12 +607,6 @@ fix_plus_plus_recursive(xmlNode *target)
     }
 }
 
-void
-expand_plus_plus(xmlNode * target, const char *name, const char *value)
-{
-    pcmk__xa_set_expand(target, name, value);
-}
-
 /*!
  * \internal
  * \brief Remove an XML attribute from an element
@@ -3439,6 +3433,12 @@ void
 copy_in_properties(xmlNode *target, const xmlNode *src)
 {
     pcmk__xe_copy_attrs(target, src);
+}
+
+void
+expand_plus_plus(xmlNode * target, const char *name, const char *value)
+{
+    pcmk__xa_set_expand(target, name, value);
 }
 
 // LCOV_EXCL_STOP

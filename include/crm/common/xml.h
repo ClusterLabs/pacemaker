@@ -50,7 +50,6 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
 
