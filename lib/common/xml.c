@@ -2151,12 +2151,6 @@ pcmk__xml_init(void)
 }
 
 void
-crm_xml_init(void)
-{
-    pcmk__xml_init();
-}
-
-void
 crm_xml_cleanup(void)
 {
     crm_schema_cleanup();
@@ -2734,6 +2728,12 @@ void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
     pcmk__xe_set_score(target, name, value);
+}
+
+void
+crm_xml_init(void)
+{
+    pcmk__xml_init();
 }
 
 // LCOV_EXCL_STOP
