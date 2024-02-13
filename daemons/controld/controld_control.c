@@ -120,7 +120,7 @@ do_shutdown_req(long long action,
     if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 
 void
@@ -399,7 +399,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     controld_trigger_fsa();
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 

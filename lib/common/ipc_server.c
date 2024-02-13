@@ -771,7 +771,9 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
  * \param[in] status    Exit status code to add to ack
  *
  * \return Newly created XML for ack
- * \note The caller is responsible for freeing the return value with free_xml().
+ *
+ * \note The caller is responsible for freeing the return value with
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
@@ -818,7 +820,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
         crm_log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
-        free_xml(ack);
+        pcmk__xml_free(ack);
     }
     return rc;
 }

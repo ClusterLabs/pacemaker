@@ -57,7 +57,7 @@ stonith_send_broadcast_history(xmlNode *history,
 
     pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, bcast);
 
-    free_xml(bcast);
+    pcmk__xml_free(bcast);
 }
 
 static gboolean
@@ -439,7 +439,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     }
 
     if (cnt == 0) {
-        free_xml(history);
+        pcmk__xml_free(history);
         return NULL;
     } else {
         return history;
@@ -568,5 +568,5 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                   stonith_remote_op_list);
         *output = stonith_local_history(FALSE, target);
     }
-    free_xml(out_history);
+    pcmk__xml_free(out_history);
 }

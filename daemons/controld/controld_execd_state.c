@@ -585,7 +585,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
             remote_proxy_relay_response(proxy, op_reply, msg_id);
 
-            free_xml(op_reply);
+            pcmk__xml_free(op_reply);
         }
 
     } else {

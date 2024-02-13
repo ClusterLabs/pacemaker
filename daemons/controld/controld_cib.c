@@ -477,7 +477,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
  *       secure digest, we want parameters that *are* marked private for the
  *       string, but parameters that are *not* marked private for the XML.
  * \note It is the caller's responsibility to free the string return value with
- *       \p g_string_free() and the XML result with \p free_xml().
+ *       \p g_string_free() and the XML result with \p pcmk__xml_free().
  */
 static GString *
 build_parameter_list(const lrmd_event_data_t *op,
@@ -608,7 +608,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     if (list != NULL) {
         g_string_free(list, TRUE);
     }
-    free_xml(restart);
+    pcmk__xml_free(restart);
     free(digest);
 }
 
@@ -639,7 +639,7 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         crm_trace("%s: no secure parameters", op->rsc_id);
     }
 
-    free_xml(secure);
+    pcmk__xml_free(secure);
     free(digest);
 }
 
@@ -945,7 +945,7 @@ controld_update_resource_history(const char *node_name,
      */
     crm_log_xml_trace(update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
-    free_xml(update);
+    pcmk__xml_free(update);
 }
 
 /*!
@@ -979,7 +979,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             PCMK_XE_STATUS, xml_top, cib_none);
     crm_log_xml_trace(xml_top, "op:cancel");
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
 }
 
 /* Define xpath to find LRM resource history entry by node and resource */

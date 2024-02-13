@@ -101,7 +101,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SERVER, ipc_channel);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
     crm_debug("Accepted IPC proxy connection (session ID %s) "
               "from uid %d gid %d on channel %s",
               client->id, uid, gid, ipc_channel);
@@ -177,7 +177,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
         crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
         crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, session);
         lrmd_server_send_notify(ipc_proxy, msg);
-        free_xml(msg);
+        pcmk__xml_free(msg);
         return;
     }
 
@@ -258,9 +258,9 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
-              free_xml(request); return FALSE);
+              pcmk__xml_free(request); return FALSE);
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
-              free_xml(request); return FALSE);
+              pcmk__xml_free(request); return FALSE);
 
     /* This ensures that synced request/responses happen over the event channel
      * in the controller, allowing the controller to process the messages async.
@@ -282,8 +282,8 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     lrmd_server_send_notify(ipc_proxy, msg);
 
-    free_xml(request);
-    free_xml(msg);
+    pcmk__xml_free(request);
+    pcmk__xml_free(msg);
     return 0;
 }
 
@@ -309,7 +309,7 @@ ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy)
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, "0");
 
     rc = (lrmd_server_send_notify(ipc_proxy, msg) != pcmk_rc_ok)? -1 : 0;
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return rc;
 }
 
@@ -332,7 +332,7 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
         crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
         crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
         lrmd_server_send_notify(ipc_proxy, msg);
-        free_xml(msg);
+        pcmk__xml_free(msg);
     }
 
     g_hash_table_remove(ipc_clients, client->id);

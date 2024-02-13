@@ -88,7 +88,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     if (!pcmk__update_configured_schema(&cib_copy, false)) {
         cib__clean_up_connection(&cib);
-        free_xml(cib_copy);
+        pcmk__xml_free(cib_copy);
         rc = pcmk_rc_schema_validation;
         out->err(out, "Upgrade failed: %s", pcmk_rc_str(rc));
         return rc;
@@ -286,7 +286,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
 
 done:
     stonith_api_delete(stonith);
-    free_xml(current_cib);
+    pcmk__xml_free(current_cib);
     return pcmk_rc_ok;
 }
 

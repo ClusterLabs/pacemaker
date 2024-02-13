@@ -854,7 +854,7 @@ main(int argc, char **argv)
                                              options.cmd_options) == pcmk_ok) {
                         pcmk__update_schema(&obj, NULL, true, false);
                     }
-                    free_xml(obj);
+                    pcmk__xml_free(obj);
 
                 } else if (output != NULL) {
                     // Show validation errors to stderr
@@ -910,8 +910,8 @@ done:
     free(options.validate_with);
 
     g_free(acl_cred);
-    free_xml(input);
-    free_xml(output);
+    pcmk__xml_free(input);
+    pcmk__xml_free(output);
 
     rc = cib__clean_up_connection(&the_cib);
     if (exit_code == CRM_EX_OK) {

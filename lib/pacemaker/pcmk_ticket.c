@@ -40,7 +40,7 @@ build_ticket_modify_xml(cib_t *cib, const char *ticket_id, xmlNode **ticket_stat
 
     } else {
         /* Some other error occurred - clean up and return */
-        free_xml(*ticket_state_xml);
+        pcmk__xml_free(*ticket_state_xml);
     }
 
     return rc;
@@ -134,7 +134,7 @@ pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
 
     if (result != NULL) {
         out->message(out, "ticket-constraints", result);
-        free_xml(result);
+        pcmk__xml_free(result);
     }
 
     free(xpath);
@@ -226,7 +226,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
         out->info(out, "Cleaned up %s", ticket_id);
     }
 
-    free_xml(state);
+    pcmk__xml_free(state);
     return rc;
 }
 
@@ -389,7 +389,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
     if (rc == pcmk_rc_duplicate_id) {
         out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s", ticket_id);
     } else if (rc != pcmk_rc_ok) {
-        free_xml(ticket_state_xml);
+        pcmk__xml_free(ticket_state_xml);
         return rc;
     }
 
@@ -397,7 +397,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
         const char *key = list_iter->data;
 
         if (!force && pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)) {
-            free_xml(ticket_state_xml);
+            pcmk__xml_free(ticket_state_xml);
             return EACCES;
         }
 
@@ -408,7 +408,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
     rc = cib->cmds->replace(cib, PCMK_XE_STATUS, ticket_state_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
     return rc;
 }
 
@@ -461,12 +461,12 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
     if (rc == pcmk_rc_duplicate_id) {
         out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s", ticket_id);
     } else if (rc != pcmk_rc_ok) {
-        free_xml(ticket_state_xml);
+        pcmk__xml_free(ticket_state_xml);
         return rc;
     }
 
     if (!force && g_hash_table_lookup(attr_set, PCMK__XA_GRANTED)) {
-        free_xml(ticket_state_xml);
+        pcmk__xml_free(ticket_state_xml);
         return EACCES;
     }
 
@@ -476,7 +476,7 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
     return rc;
 }
 
@@ -523,7 +523,7 @@ pcmk__ticket_state(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
 
     if (state_xml != NULL) {
         out->message(out, "ticket-state", state_xml);
-        free_xml(state_xml);
+        pcmk__xml_free(state_xml);
     }
 
     return rc;

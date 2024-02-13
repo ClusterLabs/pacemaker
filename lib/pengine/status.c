@@ -113,7 +113,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     crm_trace("Beginning unpack");
 
     if (scheduler->failed != NULL) {
-        free_xml(scheduler->failed);
+        pcmk__xml_free(scheduler->failed);
     }
     scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
 
@@ -351,10 +351,10 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
 
     pe__free_param_checks(scheduler);
     g_list_free(scheduler->stop_needed);
-    free_xml(scheduler->graph);
+    pcmk__xml_free(scheduler->graph);
     crm_time_free(scheduler->now);
-    free_xml(scheduler->input);
-    free_xml(scheduler->failed);
+    pcmk__xml_free(scheduler->input);
+    pcmk__xml_free(scheduler->failed);
 
     set_working_set_defaults(scheduler);
 

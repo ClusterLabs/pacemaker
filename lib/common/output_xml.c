@@ -135,7 +135,7 @@ xml_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     if (has_root_node(out)) {
-        free_xml(priv->root);
+        pcmk__xml_free(priv->root);
         /* The elements of parent_q are xmlNodes that are a part of the
          * priv->root document, so the above line already frees them.  Don't
          * call g_queue_free_full here.

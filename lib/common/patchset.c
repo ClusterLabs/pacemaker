@@ -602,7 +602,7 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     }
 
     if (!*changed) {
-        free_xml(diff);
+        pcmk__xml_free(diff);
         return NULL;
 
     } else if (!full && (id != NULL)) {
@@ -656,7 +656,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     if ((value != NULL) && (strcmp(value, "removed:top") == 0)) {
         crm_trace("We are the root of the deletion: %s.id=%s",
                   target->name, id);
-        free_xml(target);
+        pcmk__xml_free(target);
         free(id);
         return;
     }
@@ -977,7 +977,7 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
 
     purge_v1_diff_markers(xml); // Purge prior to checking digest
 
-    free_xml(old);
+    pcmk__xml_free(old);
     return rc;
 }
 
@@ -1194,7 +1194,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
         } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-            free_xml(match);
+            pcmk__xml_free(match);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
             const xmlNode *child = pcmk__xe_first_child(change,
@@ -1396,7 +1396,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         free(new_digest);
         free(version);
     }
-    free_xml(old);
+    pcmk__xml_free(old);
     return rc;
 }
 
@@ -1434,7 +1434,7 @@ can_prune_leaf_v1(xmlNode *node)
 
         cIter = pcmk__xml_next(cIter);
         if (can_prune_leaf_v1(child)) {
-            free_xml(child);
+            pcmk__xml_free(child);
         } else {
             can_prune = false;
         }
@@ -1456,16 +1456,16 @@ pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
     tmp1 = subtract_v1_xml_object(removed, old, new, false, NULL,
                                   "removed:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf_v1(tmp1)) {
-        free_xml(tmp1);
+        pcmk__xml_free(tmp1);
     }
 
     tmp1 = subtract_v1_xml_object(added, new, old, true, NULL, "added:top");
     if (suppress && (tmp1 != NULL) && can_prune_leaf_v1(tmp1)) {
-        free_xml(tmp1);
+        pcmk__xml_free(tmp1);
     }
 
     if ((added->children == NULL) && (removed->children == NULL)) {
-        free_xml(diff);
+        pcmk__xml_free(diff);
         diff = NULL;
     }
 

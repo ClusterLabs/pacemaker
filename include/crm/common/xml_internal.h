@@ -425,6 +425,7 @@ pcmk__xe_next(const xmlNode *child)
 }
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+void pcmk__xml_free(xmlNode *xml);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 xmlNode *pcmk__xe_next_same(const xmlNode *node);
 

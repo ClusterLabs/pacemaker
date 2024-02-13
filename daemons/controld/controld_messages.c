@@ -218,7 +218,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
 
             case fsa_dt_xml:
                 foo = fsa_data->data;
-                free_xml(foo);
+                pcmk__xml_free(foo);
                 break;
 
             case fsa_dt_lrm:
@@ -834,10 +834,10 @@ handle_ping(const xmlNode *msg)
 
     // Send reply
     reply = create_reply(msg, ping);
-    free_xml(ping);
+    pcmk__xml_free(ping);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -872,10 +872,10 @@ handle_node_list(const xmlNode *request)
 
     // Create and send reply
     reply = create_reply(request, reply_data);
-    free_xml(reply_data);
+    pcmk__xml_free(reply_data);
     if (reply) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -931,10 +931,10 @@ handle_node_info_request(const xmlNode *msg)
 
     // Send reply
     reply = create_reply(msg, reply_data);
-    free_xml(reply_data);
+    pcmk__xml_free(reply_data);
     if (reply != NULL) {
         (void) relay_message(reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
     // Nothing further to do
@@ -1159,7 +1159,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
             }
-            free_xml(msg);
+            pcmk__xml_free(msg);
 
         } else {
             pcmk__cluster_forget_cluster_node(id, name);
@@ -1324,7 +1324,7 @@ delete_ha_msg_input(ha_msg_input_t * orig)
     if (orig == NULL) {
         return;
     }
-    free_xml(orig->msg);
+    pcmk__xml_free(orig->msg);
     free(orig);
 }
 
@@ -1353,6 +1353,6 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     }
 
     pcmk__cluster_send_message(NULL, crm_msg_crmd, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 

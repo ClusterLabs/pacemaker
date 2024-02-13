@@ -27,7 +27,7 @@ cib_not_connected(void **state)
      */
     assert_int_equal(pcmk_ticket_constraints(&xml, NULL), ENOTCONN);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -63,7 +63,7 @@ unknown_ticket(void **state)
 
     assert_int_equal(pcmk_ticket_constraints(&xml, "XYZ"), ENXIO);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -83,7 +83,7 @@ ticket_exists(void **state)
 
     assert_int_equal(numXpathResults(xpath_obj), 1);
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -110,7 +110,7 @@ multiple_tickets(void **state)
     assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketB");
 
     freeXpathObject(xpath_obj);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 /* There are two kinds of tests in this file:

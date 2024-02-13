@@ -41,7 +41,7 @@ assert_op_expression(const char *xml_string, int reference_rc)
 
     assert_int_equal(pcmk__evaluate_op_expression(xml, &rule_input),
                      reference_rc);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 
@@ -63,7 +63,7 @@ null_invalid(void **state)
 
     xml = pcmk__xml_parse(EXPR_FAIL_BOTH);
     assert_int_equal(pcmk__evaluate_op_expression(xml, NULL), EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     assert_op_expression(NULL, EINVAL);
 }

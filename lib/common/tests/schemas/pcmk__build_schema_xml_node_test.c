@@ -55,7 +55,7 @@ invalid_name(void **state)
     pcmk__build_schema_xml_node(parent, "pacemaker-9.0", &already_included);
     assert_null(parent->children);
     assert_null(already_included);
-    free_xml(parent);
+    pcmk__xml_free(parent);
 }
 
 static void
@@ -97,7 +97,7 @@ single_schema(void **state)
     }
 
     g_list_free_full(already_included, free);
-    free_xml(parent);
+    pcmk__xml_free(parent);
 }
 
 static void
@@ -149,7 +149,7 @@ multiple_schemas(void **state)
     }
 
     g_list_free_full(already_included, free);
-    free_xml(parent);
+    pcmk__xml_free(parent);
 }
 
 PCMK__UNIT_TEST(setup, teardown,
