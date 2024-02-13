@@ -16,6 +16,7 @@
 #include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
+#include "../../crmcommon_private.h"
 
 #define ALL_VALID "<duration id=\"duration1\" years=\"1\" months=\"2\" "   \
                    "weeks=\"3\" days=\"-1\" hours=\"1\" minutes=\"1\" "      \

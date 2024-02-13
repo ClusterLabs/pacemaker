@@ -28,23 +28,6 @@ char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__copy_timet(time_t source);
-void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
-
-// For use with pcmk__add_time_from_xml()
-enum pcmk__time_component {
-    pcmk__time_unknown,
-    pcmk__time_years,
-    pcmk__time_months,
-    pcmk__time_weeks,
-    pcmk__time_days,
-    pcmk__time_hours,
-    pcmk__time_minutes,
-    pcmk__time_seconds,
-};
-
-const char *pcmk__time_component_attr(enum pcmk__time_component component);
-int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
-                            const xmlNode *xml);
 
 struct pcmk__time_us {
     int years;

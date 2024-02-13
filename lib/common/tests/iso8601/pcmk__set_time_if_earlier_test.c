@@ -12,7 +12,7 @@
 #include <crm/common/unittest_internal.h>
 
 #include <crm/common/iso8601.h>
-#include <crm/common/iso8601_internal.h>
+#include "../../crmcommon_private.h"
 
 static void
 null_ok(void **state)
