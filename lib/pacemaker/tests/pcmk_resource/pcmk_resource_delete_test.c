@@ -26,6 +26,13 @@ setup_group(void **state)
     return 0;
 }
 
+static int
+teardown_group(void **state)
+{
+    pcmk__xml_cleanup();
+    return 0;
+}
+
 static void
 cib_not_connected(void **state)
 {
@@ -177,7 +184,7 @@ unknown_resource(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(setup_group, NULL,
+PCMK__UNIT_TEST(setup_group, teardown_group,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_input, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(incorrect_type, setup_test, teardown_test),
