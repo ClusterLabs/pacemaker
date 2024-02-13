@@ -49,7 +49,7 @@ null_invalid(void **state)
 
     xml = pcmk__xml_parse(EXPR_ATTRIBUTE);
     assert_int_equal(pcmk__evaluate_condition(xml, NULL, next_change), EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     assert_int_equal(pcmk__evaluate_condition(NULL, &rule_input, next_change),
                      EINVAL);
@@ -70,7 +70,7 @@ invalid_expression(void **state)
                      pcmk_rc_unpack_error);
 
     crm_time_free(next_change);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 
@@ -91,7 +91,7 @@ attribute_expression(void **state)
 
     g_hash_table_destroy(rule_input.node_attrs);
     rule_input.node_attrs = NULL;
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define EXPR_LOCATION                                   \
@@ -113,7 +113,7 @@ location_expression(void **state)
 
     g_hash_table_destroy(rule_input.node_attrs);
     rule_input.node_attrs = NULL;
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define EXPR_DATE                                       \
@@ -153,7 +153,7 @@ resource_expression(void **state)
 
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, NULL),
                      pcmk_rc_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define EXPR_OP                                             \
@@ -168,7 +168,7 @@ op_expression(void **state)
 
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, NULL),
                      pcmk_rc_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define EXPR_SUBRULE                                        \
@@ -183,7 +183,7 @@ subrule(void **state)
     xmlNode *xml = pcmk__xml_parse(EXPR_SUBRULE);
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, NULL),
                      pcmk_rc_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,

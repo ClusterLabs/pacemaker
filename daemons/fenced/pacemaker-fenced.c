@@ -115,7 +115,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
         pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, request);
-        free_xml(request);
+        pcmk__xml_free(request);
         return 0;
     }
 
@@ -142,7 +142,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return 0;
 }
 
@@ -209,7 +209,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
         stonith_peer_callback(xml, NULL);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     free(data);
     return;
 }
@@ -333,7 +333,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
         pcmk__ipc_send_xml(client, 0, notify_data, crm_ipc_server_event);
     }
 
-    free_xml(notify_data);
+    pcmk__xml_free(notify_data);
 }
 
 /*!
@@ -366,7 +366,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     crm_trace("Notifying clients");
     pcmk__foreach_ipc_client(stonith_notify_client, update_msg);
-    free_xml(update_msg);
+    pcmk__xml_free(update_msg);
     crm_trace("Notify complete");
 }
 
@@ -392,7 +392,7 @@ fenced_send_config_notification(const char *op,
     crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, desc);
 
     fenced_send_notification(op, result, notify_data);
-    free_xml(notify_data);
+    pcmk__xml_free(notify_data);
 }
 
 /*!
@@ -484,7 +484,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
         crm_debug("Broadcasting our uname because of node %u", node->id);
         pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
 
-        free_xml(query);
+        pcmk__xml_free(query);
     }
 }
 

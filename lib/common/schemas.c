@@ -1058,7 +1058,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
               schema->name, upgraded_schema->name, schema->transform);
     final = apply_transformation(xml, schema->transform, to_logs);
     if (upgrade != xml) {
-        free_xml(upgrade);
+        pcmk__xml_free(upgrade);
         upgrade = NULL;
     }
 
@@ -1078,7 +1078,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
                      transform_leave);
             final = upgrade;
         } else {
-            free_xml(upgrade);
+            pcmk__xml_free(upgrade);
         }
         free(transform_leave);
     }
@@ -1094,7 +1094,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
                 "XSL transform %s produced an invalid configuration",
                 schema->name, upgraded_schema->name, schema->transform);
         crm_log_xml_debug(final, "bad-transform-result");
-        free_xml(final);
+        pcmk__xml_free(final);
         return NULL;
     }
 
@@ -1221,7 +1221,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             rc = pcmk_rc_transform_failed;
         } else {
             best_schema = current_schema;
-            free_xml(*xml);
+            pcmk__xml_free(*xml);
             *xml = upgrade;
         }
     }
@@ -1328,13 +1328,13 @@ pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
                 }
             }
 
-            free_xml(converted);
+            pcmk__xml_free(converted);
             converted = NULL;
             rc = pcmk_rc_transform_failed;
 
         } else {
             // Updated configuration schema is acceptable
-            free_xml(*xml);
+            pcmk__xml_free(*xml);
             *xml = converted;
 
             if (schema->schema_index < xml_latest_schema_index()) {
@@ -1451,7 +1451,7 @@ external_refs_in_schema(GList **list, const char *contents)
     xmlNode *xml = pcmk__xml_parse(contents);
 
     crm_foreach_xpath_result(xml, search, append_href, list);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -1552,7 +1552,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 
     if (schema_node->children == NULL) {
         // Not needed if empty. May happen if name was invalid, for example.
-        free_xml(schema_node);
+        pcmk__xml_free(schema_node);
     }
 }
 
@@ -1711,7 +1711,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
     doc = xmlReadFile(filename, NULL, 0);
     xml = xmlDocGetRootElement(doc);
     rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     unlink(filename);
     free(filename);

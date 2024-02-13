@@ -2069,14 +2069,14 @@ crm_diff_update(const char *event, xmlNode * msg)
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(current_cib); current_cib = NULL;
+                pcmk__xml_free(current_cib); current_cib = NULL;
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
                 break;
             default:
                 crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
-                free_xml(current_cib); current_cib = NULL;
+                pcmk__xml_free(current_cib); current_cib = NULL;
         }
     }
 

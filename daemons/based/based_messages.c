@@ -131,7 +131,7 @@ send_sync_request(const char *host)
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
     pcmk__cluster_send_message(peer, crm_msg_cib, sync_me);
-    free_xml(sync_me);
+    pcmk__xml_free(sync_me);
 }
 
 int
@@ -244,7 +244,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 pcmk__cluster_send_message(NULL, crm_msg_cib, up);
             }
 
-            free_xml(up);
+            pcmk__xml_free(up);
 
         } else if(rc == pcmk_ok) {
             rc = -pcmk_err_schema_unchanged;
@@ -275,10 +275,10 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 if (!pcmk__cluster_send_message(origin, crm_msg_cib, up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
-                free_xml(up);
+                pcmk__xml_free(up);
             }
         }
-        free_xml(scratch);
+        pcmk__xml_free(scratch);
     }
     return rc;
 }
@@ -331,7 +331,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
               (based_is_primary? "primary": "secondary"));
 
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
 
@@ -346,7 +346,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
 
         pcmk__log_xml_patchset(LOG_INFO, input);
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
     }
@@ -459,7 +459,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     if (!pcmk__cluster_send_message(peer, crm_msg_cib, replace_request)) {
         result = -ENOTCONN;
     }
-    free_xml(replace_request);
+    pcmk__xml_free(replace_request);
     free(digest);
     return result;
 }

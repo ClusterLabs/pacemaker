@@ -214,7 +214,7 @@ done:
     pcmk__free_arg_context(context);
 
     crm_time_free(rule_date);
-    free_xml(input);
+    pcmk__xml_free(input);
 
     pcmk__output_and_clear_error(&error, out);
 

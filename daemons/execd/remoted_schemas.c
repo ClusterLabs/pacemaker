@@ -186,7 +186,7 @@ get_schema_files(void)
                                  write_extra_schema_file, NULL);
     }
 
-    free_xml(reply);
+    pcmk__xml_free(reply);
     cib__clean_up_connection(&cib);
     _exit(pcmk_rc2exitc(rc));
 }

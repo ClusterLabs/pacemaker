@@ -51,7 +51,7 @@ null_invalid(void **state)
 
     xml = pcmk__xml_parse(RULE_OP);
     assert_int_equal(pcmk_evaluate_rule(xml, NULL, next_change), EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     assert_int_equal(pcmk_evaluate_rule(NULL, &rule_input, next_change),
                      EINVAL);
@@ -77,7 +77,7 @@ id_missing(void **state)
                      pcmk_rc_ok);
 
     crm_time_free(next_change);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_IDREF_PARENT "<" PCMK_XE_CIB ">" RULE_OP "</" PCMK_XE_CIB ">"
@@ -94,7 +94,7 @@ good_idref(void **state)
                      pcmk_rc_ok);
 
     crm_time_free(next_change);
-    free_xml(parent_xml);
+    pcmk__xml_free(parent_xml);
 }
 
 static void
@@ -109,7 +109,7 @@ bad_idref(void **state)
                      pcmk_rc_unpack_error);
 
     crm_time_free(next_change);
-    free_xml(parent_xml);
+    pcmk__xml_free(parent_xml);
 }
 
 #define RULE_EMPTY "<" PCMK_XE_RULE " " PCMK_XA_ID "='r' />"
@@ -123,7 +123,7 @@ empty_default(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_EMPTY_AND                                  \
@@ -139,7 +139,7 @@ empty_and(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_EMPTY_OR                                   \
@@ -155,7 +155,7 @@ empty_or(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_DEFAULT_BOOLEAN_OP                             \
@@ -176,7 +176,7 @@ default_boolean_op(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_INVALID_BOOLEAN_OP                             \
@@ -198,7 +198,7 @@ invalid_boolean_op(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_AND_PASSES                                     \
@@ -218,7 +218,7 @@ and_passes(void **state)
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_LONELY_AND                                     \
@@ -235,7 +235,7 @@ lonely_and_passes(void **state)
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_AND_ONE_FAILS                                  \
@@ -256,7 +256,7 @@ and_one_fails(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_AND_TWO_FAIL                                   \
@@ -277,7 +277,7 @@ and_two_fail(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_OR_ONE_PASSES                                  \
@@ -297,7 +297,7 @@ or_one_passes(void **state)
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_OR_TWO_PASS                                    \
@@ -317,7 +317,7 @@ or_two_pass(void **state)
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_LONELY_OR                                      \
@@ -335,7 +335,7 @@ lonely_or_passes(void **state)
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 #define RULE_OR_FAILS                                       \
@@ -356,7 +356,7 @@ or_fails(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,

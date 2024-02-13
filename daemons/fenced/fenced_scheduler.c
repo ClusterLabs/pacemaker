@@ -199,7 +199,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
                                          rsc_provides);
     stonith_key_value_freeall(params, 1, 1);
     CRM_ASSERT(stonith_device_register(xml, TRUE) == pcmk_ok);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 /*!

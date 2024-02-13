@@ -45,12 +45,12 @@ bad_arguments(void **state)
 
     assert_int_equal(pcmk_ticket_get_attr(&xml, NULL, "attrA", NULL), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     assert_int_equal(pcmk_ticket_get_attr(&xml, "ticketA", NULL, NULL), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -64,12 +64,12 @@ unknown_ticket(void **state)
      */
     assert_int_equal(pcmk_ticket_get_attr(&xml, "XYZ", "attrA", NULL), ENXIO);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     assert_int_equal(pcmk_ticket_get_attr(&xml, "ticketA", "XYZ", NULL), ENXIO);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -113,7 +113,7 @@ attribute_exists(void **state)
 
     verify_results(xml, "ticketA", "owner", "1");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -126,7 +126,7 @@ default_no_ticket(void **state)
 
     verify_results(xml, "ticketX", "ABC", "DEFAULT");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -139,7 +139,7 @@ default_no_attribute(void **state)
 
     verify_results(xml, "ticketA", "ABC", "DEFAULT");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,

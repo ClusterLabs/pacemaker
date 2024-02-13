@@ -483,7 +483,7 @@ cib_remote_msg(gpointer data)
 
         command = pcmk__remote_message_xml(client->remote);
         if (cib_remote_auth(command) == FALSE) {
-            free_xml(command);
+            pcmk__xml_free(command);
             return -1;
         }
 
@@ -503,15 +503,15 @@ cib_remote_msg(gpointer data)
         crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
         crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
-        free_xml(reg);
-        free_xml(command);
+        pcmk__xml_free(reg);
+        pcmk__xml_free(command);
     }
 
     command = pcmk__remote_message_xml(client->remote);
     while (command) {
         crm_trace("Remote client message received");
         cib_handle_remote_msg(client, command);
-        free_xml(command);
+        pcmk__xml_free(command);
         command = pcmk__remote_message_xml(client->remote);
     }
 

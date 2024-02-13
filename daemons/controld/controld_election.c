@@ -250,7 +250,7 @@ do_dc_takeover(long long action,
 #endif
 
     controld_trigger_config();
-    free_xml(cib);
+    pcmk__xml_free(cib);
 }
 
 /*	 A_DC_RELEASE	*/
@@ -278,7 +278,7 @@ do_dc_release(long long action,
                                               __func__);
             /* Don't need a based response because controld will stop. */
             fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
-            free_xml(update);
+            pcmk__xml_free(update);
         }
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 

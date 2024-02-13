@@ -380,7 +380,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
     }
 
     sorted_xml(args_xml, action_xml, FALSE);
-    free_xml(args_xml);
+    pcmk__xml_free(args_xml);
 }
 
 /*!

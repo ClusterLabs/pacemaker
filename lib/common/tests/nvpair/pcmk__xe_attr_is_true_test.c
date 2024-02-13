@@ -21,7 +21,7 @@ empty_input(void **state)
     assert_false(pcmk__xe_attr_is_true(NULL, "whatever"));
     assert_false(pcmk__xe_attr_is_true(node, NULL));
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -30,7 +30,7 @@ attr_missing(void **state)
     xmlNode *node = pcmk__xml_parse("<node a=\"true\" b=\"false\"/>");
 
     assert_false(pcmk__xe_attr_is_true(node, "c"));
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -41,7 +41,7 @@ attr_present(void **state)
     assert_true(pcmk__xe_attr_is_true(node, "a"));
     assert_false(pcmk__xe_attr_is_true(node, "b"));
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,

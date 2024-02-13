@@ -37,7 +37,7 @@ assert_set_score(const char *initial, const char *new,
     assert_int_equal(pcmk__xe_set_score(test_xml, name, new), reference_rc);
     assert_string_equal(crm_element_value(test_xml, name), reference_val);
 
-    free_xml(test_xml);
+    pcmk__xml_free(test_xml);
 }
 
 static void
@@ -72,7 +72,7 @@ name_is_NULL(void **state)
     assert_int_equal(pcmk__xe_set_score(test_xml, NULL, "X++"), EINVAL);
     assert_string_equal(crm_element_value(test_xml, "X"), "5");
 
-    free_xml(test_xml);
+    pcmk__xml_free(test_xml);
 }
 
 static void

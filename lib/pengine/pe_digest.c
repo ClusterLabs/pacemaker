@@ -35,9 +35,9 @@ pe__free_digests(gpointer ptr)
     pcmk__op_digest_t *data = ptr;
 
     if (data != NULL) {
-        free_xml(data->params_all);
-        free_xml(data->params_secure);
-        free_xml(data->params_restart);
+        pcmk__xml_free(data->params_all);
+        pcmk__xml_free(data->params_secure);
+        pcmk__xml_free(data->params_restart);
 
         free(data->digest_all_calc);
         free(data->digest_restart_calc);

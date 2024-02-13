@@ -169,8 +169,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         cib->state = cib_disconnected;
     }
 
-    free_xml(op_msg);
-    free_xml(op_reply);
+    pcmk__xml_free(op_msg);
+    pcmk__xml_free(op_reply);
     return rc;
 }
 
@@ -212,7 +212,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
         crm_err("Unknown message type: %s", type);
     }
 
-    free_xml(msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 
@@ -351,12 +351,12 @@ cib_native_signon_raw(cib_t *cib, const char *name, enum cib_conn_type type,
                     rc = -EPROTO;
                 }
             }
-            free_xml(reply);
+            pcmk__xml_free(reply);
 
         } else {
             rc = -ECOMM;
         }
-        free_xml(hello);
+        pcmk__xml_free(hello);
     }
 
     if (rc == pcmk_ok) {
@@ -417,7 +417,7 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
         }
     }
 
-    free_xml(notify_msg);
+    pcmk__xml_free(notify_msg);
     return rc;
 }
 

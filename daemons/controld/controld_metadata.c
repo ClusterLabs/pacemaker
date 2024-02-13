@@ -219,7 +219,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     g_hash_table_replace(mdc, key, md);
-    free_xml(metadata);
+    pcmk__xml_free(metadata);
     return md;
 
 err:
@@ -227,7 +227,7 @@ err:
              rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
              pcmk__s(rsc->provider, ""), rsc->type, reason);
     free(key);
-    free_xml(metadata);
+    pcmk__xml_free(metadata);
     metadata_free(md);
     return NULL;
 }

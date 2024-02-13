@@ -129,7 +129,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         crm_debug("Sending hello to node %u so that it learns our node name", node->id);
         pcmk__cluster_send_message(node, crm_msg_crmd, query);
 
-        free_xml(query);
+        pcmk__xml_free(query);
     }
 
     if (node->uname == NULL) {
@@ -363,7 +363,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         } else {
             fsa_cib_anon_update(PCMK_XE_STATUS, update);
         }
-        free_xml(update);
+        pcmk__xml_free(update);
     }
 
     controld_trigger_fsa();

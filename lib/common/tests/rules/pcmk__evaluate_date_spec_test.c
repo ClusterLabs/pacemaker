@@ -26,7 +26,7 @@ run_one_test(const char *t, const char *x, int expected)
     assert_int_equal(pcmk__evaluate_date_spec(xml, tm), expected);
 
     crm_time_free(tm);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -42,7 +42,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), EINVAL);
 
     crm_time_free(tm);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void

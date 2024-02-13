@@ -164,7 +164,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     process_lrmd_message(client, id, request);
 
-    free_xml(request);
+    pcmk__xml_free(request);
     return 0;
 }
 
