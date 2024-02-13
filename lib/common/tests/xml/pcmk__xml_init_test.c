@@ -21,7 +21,7 @@
 
 static int
 setup(void **state) {
-    crm_xml_init();
+    pcmk__xml_init();
     return 0;
 }
 
