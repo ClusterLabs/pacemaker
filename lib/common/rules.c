@@ -385,6 +385,58 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
 
 /*!
  * \internal
+ * \brief Evaluate a greater-than check for a given date/time
+ *
+ * \param[in]     date_expression  XML of PCMK_XE_DATE_EXPRESSION element
+ * \param[in]     id               Expression ID for logging purposes
+ * \param[in]     now              Date/time to compare
+ * \param[in,out] next_change      If not NULL, set this to when the evaluation
+ *                                 will change, if known and earlier than the
+ *                                 original value
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+evaluate_gt(const xmlNode *date_expression, const char *id,
+            const crm_time_t *now, crm_time_t *next_change)
+{
+    crm_time_t *start = NULL;
+
+    if (pcmk__xe_get_datetime(date_expression, PCMK_XA_START,
+                              &start) != pcmk_rc_ok) {
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                          "passing because " PCMK_XA_START " is invalid",
+                          id);
+        return pcmk_rc_undetermined;
+    }
+
+    if (start == NULL) { // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error
+         */
+        pcmk__config_warn("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
+                          "passing because " PCMK_VALUE_GT " requires "
+                          PCMK_XA_START, id);
+        return pcmk_rc_undetermined;
+    }
+
+    if (crm_time_compare(now, start) > 0) {
+        crm_time_free(start);
+        return pcmk_rc_within_range;
+    }
+
+    // Evaluation doesn't change until second after start time
+    crm_time_add_seconds(start, 1);
+    pcmk__set_time_if_earlier(next_change, start);
+    crm_time_free(start);
+    return pcmk_rc_before_range;
+}
+
+/*!
+ * \internal
  * \brief Evaluate a date_expression
  *
  * \param[in]  expr         XML of rule expression
@@ -417,22 +469,7 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
         // @TODO set next_change appropriately
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
-        crm_time_t *start = NULL;
-
-        pcmk__xe_get_datetime(expr, PCMK_XA_START, &start);
-
-        if (start == NULL) {
-            // gt requires start
-        } else if (crm_time_compare(now, start) > 0) {
-            rc = pcmk_rc_within_range;
-        } else {
-            rc = pcmk_rc_before_range;
-
-            // Evaluation doesn't change until second after start
-            crm_time_add_seconds(start, 1);
-            pcmk__set_time_if_earlier(next_change, start);
-        }
-        crm_time_free(start);
+        rc = evaluate_gt(expr, id, now, next_change);
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
         crm_time_t *end = NULL;
