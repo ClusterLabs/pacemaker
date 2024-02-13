@@ -192,6 +192,9 @@ void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 //! \deprecated Do not use
 void crm_xml_init(void);
 
+//! \deprecated Do not use
+void crm_xml_cleanup(void);
+
 #ifdef __cplusplus
 }
 #endif

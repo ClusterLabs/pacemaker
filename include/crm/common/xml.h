@@ -50,8 +50,6 @@ char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
                                      const char *version);
 
-void crm_xml_cleanup(void);
-
 void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
