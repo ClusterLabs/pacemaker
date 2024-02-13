@@ -23,6 +23,7 @@
 #include <crm/common/nodes_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/common/roles_internal.h>
+#include <crm/common/rules_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

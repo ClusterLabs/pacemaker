@@ -23,6 +23,7 @@ SUBDIRS = \
 	output 		\
 	probes 		\
 	results		\
+	rules		\
 	schemas		\
 	scores		\
 	strings		\

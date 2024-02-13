@@ -11,33 +11,34 @@
 
 #include <glib.h>
 
-#include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules_internal.h>
+#include <crm/common/rules_internal.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 run_one_test(const char *t, const char *x, int expected) {
     crm_time_t *tm = crm_time_new(t);
     xmlNodePtr xml = string2xml(x);
 
-    assert_int_equal(pe_cron_range_satisfied(tm, xml), expected);
+    assert_int_equal(pcmk__evaluate_date_spec(xml, tm), expected);
 
     crm_time_free(tm);
     free_xml(xml);
 }
 
 static void
-no_time_given(void **state) {
-    assert_int_equal(pe_cron_range_satisfied(NULL, NULL), pcmk_rc_op_unsatisfied);
-}
-
-static void
-any_time_satisfies_empty_spec(void **state) {
+null_invalid(void **state) {
+    xmlNodePtr xml = string2xml("<" PCMK_XE_DATE_SPEC " "
+                                PCMK_XA_ID "='spec' "
+                                PCMK_XA_YEARS "='2019'/>");
     crm_time_t *tm = crm_time_new(NULL);
 
-    assert_int_equal(pe_cron_range_satisfied(tm, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_date_spec(NULL, NULL), EINVAL);
+    assert_int_equal(pcmk__evaluate_date_spec(xml, NULL), EINVAL);
+    assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), EINVAL);
 
     crm_time_free(tm);
+    free_xml(xml);
 }
 
 static void
@@ -178,8 +179,7 @@ time_after_monthdays_range(void **state) {
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test(no_time_given),
-                cmocka_unit_test(any_time_satisfies_empty_spec),
+                cmocka_unit_test(null_invalid),
                 cmocka_unit_test(time_satisfies_year_spec),
                 cmocka_unit_test(time_after_year_spec),
                 cmocka_unit_test(time_satisfies_year_range),

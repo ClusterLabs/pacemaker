@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,8 +17,7 @@ SUBDIRS = . tests
 ## libraries
 lib_LTLIBRARIES		= libpe_rules.la 	\
 			  libpe_status.la
-check_LTLIBRARIES 	= libpe_rules_test.la 	\
-			  libpe_status_test.la
+check_LTLIBRARIES 	= libpe_status_test.la
 
 noinst_HEADERS		= pe_status_private.h
 
@@ -63,7 +62,7 @@ libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
 
 #
-# libpe_rules_test and libpe_status_test are only used with unit tests, so we can
+# libpe_status_test is only used with unit tests, so we can
 # mock system calls.  See lib/common/mock.c for details.
 #
 

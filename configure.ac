@@ -2163,6 +2163,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/probes/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
                 lib/common/tests/results/Makefile                   \
+                lib/common/tests/rules/Makefile                     \
                 lib/common/tests/schemas/Makefile                   \
                 lib/common/tests/scores/Makefile                    \
                 lib/common/tests/strings/Makefile                   \
@@ -2187,7 +2188,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pengine/Makefile                                \
                 lib/pengine/tests/Makefile                          \
                 lib/pengine/tests/native/Makefile                   \
-                lib/pengine/tests/rules/Makefile                    \
                 lib/pengine/tests/status/Makefile                   \
                 lib/pengine/tests/unpack/Makefile                   \
                 lib/pengine/tests/utils/Makefile                    \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,6 +64,9 @@ void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
                                 const char *set_name, GHashTable *node_hash,
                                 GHashTable *hash, const char *always_first,
                                 gboolean overwrite, crm_time_t *now);
+
+//! \deprecated Do not use
+enum expression_type find_expression_type(xmlNode *expr);
 
 #ifdef __cplusplus
 }
