@@ -97,31 +97,18 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
     return pe_eval_subexpr(expr, &rule_data, next_change);
 }
 
-static void
-update_field(crm_time_t *t, const xmlNode *xml, const char *attr,
-            void (*time_fn)(crm_time_t *, int))
-{
-    long long value;
-
-    if ((pcmk__scan_ll(crm_element_value(xml, attr), &value, 0LL) == pcmk_rc_ok)
-        && (value != 0LL) && (value >= INT_MIN) && (value <= INT_MAX)) {
-        time_fn(t, (int) value);
-    }
-}
-
 static crm_time_t *
 parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
 {
     crm_time_t *end = pcmk_copy_time(start);
 
-    update_field(end, duration_spec, PCMK_XA_YEARS, crm_time_add_years);
-    update_field(end, duration_spec, PCMK_XA_MONTHS, crm_time_add_months);
-    update_field(end, duration_spec, PCMK_XA_WEEKS, crm_time_add_weeks);
-    update_field(end, duration_spec, PCMK_XA_DAYS, crm_time_add_days);
-    update_field(end, duration_spec, PCMK_XA_HOURS, crm_time_add_hours);
-    update_field(end, duration_spec, PCMK_XA_MINUTES, crm_time_add_minutes);
-    update_field(end, duration_spec, PCMK_XA_SECONDS, crm_time_add_seconds);
-
+    pcmk__add_time_from_xml(end, pcmk__time_years, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_months, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_weeks, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_days, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_hours, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_minutes, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_seconds, duration_spec);
     return end;
 }
 
