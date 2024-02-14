@@ -110,18 +110,19 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         }
     }
 
-    g_string_append(xpath, "//" PCMK_XE_NVPAIR "[");
-    if (attr_id != NULL) {
-        pcmk__g_strcat(xpath, "@" PCMK_XA_ID "=\"", attr_id, "\"", NULL);
-    }
+    g_string_append(xpath, "//" PCMK_XE_NVPAIR);
 
-    if (attr_name != NULL) {
-        if (attr_id != NULL) {
-            g_string_append(xpath, " and ");
-        }
-        pcmk__g_strcat(xpath, "@" PCMK_XA_NAME "=\"", attr_name, "\"", NULL);
+    if (attr_id != NULL && attr_name!= NULL) {
+        pcmk__g_strcat(xpath,
+                       "[@" PCMK_XA_ID "='", attr_id, "' "
+                       "and @" PCMK_XA_NAME "='", attr_name, "']", NULL);
+
+    } else if (attr_id != NULL) {
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", attr_id, "']", NULL);
+
+    } else if (attr_name != NULL) {
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_NAME "='", attr_name, "']", NULL);
     }
-    g_string_append_c(xpath, ']');
 
     rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
@@ -161,21 +162,19 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 static void
 find_matching_attr_resources_recursive(pcmk__output_t *out,
                                        GList /* <pcmk_resource_t*> */ **result,
-                                       pcmk_resource_t *rsc, const char *rsc_id,
-                                       const char * attr_set, const char * attr_set_type,
-                                       const char * attr_id, const char * attr_name,
-                                       cib_t * cib, const char * cmd, int depth)
+                                       pcmk_resource_t *rsc, const char * attr_set,
+                                       const char * attr_set_type, const char * attr_id,
+                                       const char * attr_name, cib_t * cib, int depth)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = clone_strip(rsc->id);
-    char *local_attr_id = NULL;
 
     /* visit the children */
     for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
         find_matching_attr_resources_recursive(out, result,
                                                (pcmk_resource_t *) gIter->data,
-                                               rsc_id, attr_set, attr_set_type,
-                                               attr_id, attr_name, cib, cmd, depth+1);
+                                               attr_set, attr_set_type, attr_id,
+                                               attr_name, cib, depth+1);
         /* do it only once for clones */
         if (rsc->variant == pcmk_rsc_variant_clone) {
             break;
@@ -183,7 +182,7 @@ find_matching_attr_resources_recursive(pcmk__output_t *out,
     }
 
     rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
-                            attr_set, attr_id, attr_name, &local_attr_id);
+                            attr_set, attr_id, attr_name, NULL);
     /* Post-order traversal.
      * The root is always on the list and it is the last item. */
     if((0 == depth) || (pcmk_rc_ok == rc)) {
@@ -191,7 +190,6 @@ find_matching_attr_resources_recursive(pcmk__output_t *out,
         *result = g_list_append(*result, rsc);
     }
 
-    free(local_attr_id);
     free(lookup_id);
 }
 
@@ -206,7 +204,6 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
-    char *local_attr_id = NULL;
     GList * result = NULL;
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
@@ -216,11 +213,8 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
     if ((rsc->parent != NULL)
         && (rsc->parent->variant == pcmk_rsc_variant_clone)) {
-        int rc = pcmk_rc_ok;
-        char *local_attr_id = NULL;
-        rc = find_resource_attr(out, cib, PCMK_XA_ID, rsc_id, attr_set_type,
-                                attr_set, attr_id, attr_name, &local_attr_id);
-        free(local_attr_id);
+        int rc = find_resource_attr(out, cib, PCMK_XA_ID, rsc_id, attr_set_type,
+                                    attr_set, attr_id, attr_name, NULL);
 
         if(rc != pcmk_rc_ok) {
             rsc = rsc->parent;
@@ -237,7 +231,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
             rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id,
                                     attr_set_type, attr_set, attr_id, attr_name,
-                                    &local_attr_id);
+                                    NULL);
 
             if(rc == pcmk_rc_ok) {
                 rsc = child;
@@ -245,15 +239,14 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
                           attr_name, lookup_id, cmd, rsc_id);
             }
 
-            free(local_attr_id);
             free(lookup_id);
         }
         return g_list_append(result, rsc);
     }
     /* If the resource is a group ==> children inherit the attribute if defined. */
-    find_matching_attr_resources_recursive(out, &result, rsc, rsc_id, attr_set,
+    find_matching_attr_resources_recursive(out, &result, rsc, attr_set,
                                            attr_set_type, attr_id, attr_name,
-                                           cib, cmd, 0);
+                                           cib, 0);
     return result;
 }
 

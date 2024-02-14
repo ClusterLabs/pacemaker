@@ -523,12 +523,12 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const char *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const gchar *")
 static int
 resource_search_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    const char *requested_name = va_arg(args, const char *);
+    const gchar *requested_name = va_arg(args, const gchar *);
 
     bool printed = false;
     int rc = pcmk_rc_no_output;
@@ -571,12 +571,12 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const char *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const gchar *")
 static int
 resource_search_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    const char *requested_name = va_arg(args, const char *);
+    const gchar *requested_name = va_arg(args, const gchar *);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_NODES,
                                    PCMK_XA_RESOURCE, requested_name,
