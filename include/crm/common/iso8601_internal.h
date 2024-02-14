@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,6 +28,21 @@ char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__copy_timet(time_t source);
+
+// For use with pcmk__add_time_from_xml()
+enum pcmk__time_component {
+    pcmk__time_unknown,
+    pcmk__time_years,
+    pcmk__time_months,
+    pcmk__time_weeks,
+    pcmk__time_days,
+    pcmk__time_hours,
+    pcmk__time_minutes,
+    pcmk__time_seconds,
+};
+
+int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
+                            const xmlNode *xml);
 
 struct pcmk__time_us {
     int years;

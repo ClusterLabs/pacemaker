@@ -97,31 +97,18 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
     return pe_eval_subexpr(expr, &rule_data, next_change);
 }
 
-static void
-update_field(crm_time_t *t, const xmlNode *xml, const char *attr,
-            void (*time_fn)(crm_time_t *, int))
-{
-    long long value;
-
-    if ((pcmk__scan_ll(crm_element_value(xml, attr), &value, 0LL) == pcmk_rc_ok)
-        && (value != 0LL) && (value >= INT_MIN) && (value <= INT_MAX)) {
-        time_fn(t, (int) value);
-    }
-}
-
 static crm_time_t *
 parse_xml_duration(const crm_time_t *start, const xmlNode *duration_spec)
 {
     crm_time_t *end = pcmk_copy_time(start);
 
-    update_field(end, duration_spec, PCMK_XA_YEARS, crm_time_add_years);
-    update_field(end, duration_spec, PCMK_XA_MONTHS, crm_time_add_months);
-    update_field(end, duration_spec, PCMK_XA_WEEKS, crm_time_add_weeks);
-    update_field(end, duration_spec, PCMK_XA_DAYS, crm_time_add_days);
-    update_field(end, duration_spec, PCMK_XA_HOURS, crm_time_add_hours);
-    update_field(end, duration_spec, PCMK_XA_MINUTES, crm_time_add_minutes);
-    update_field(end, duration_spec, PCMK_XA_SECONDS, crm_time_add_seconds);
-
+    pcmk__add_time_from_xml(end, pcmk__time_years, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_months, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_weeks, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_days, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_hours, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_minutes, duration_spec);
+    pcmk__add_time_from_xml(end, pcmk__time_seconds, duration_spec);
     return end;
 }
 
@@ -568,7 +555,7 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
             break;
 
         case pcmk__subexpr_datetime:
-            switch (pe__eval_date_expr(expr, rule_data, next_change)) {
+            switch (pe__eval_date_expr(expr, rule_data->now, next_change)) {
                 case pcmk_rc_within_range:
                 case pcmk_rc_ok:
                     accept = TRUE;
@@ -869,13 +856,13 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
  * \brief Evaluate a date_expression
  *
  * \param[in]  expr         XML of rule expression
- * \param[in]  rule_data    Only the now member is used
+ * \param[in]  now          Time to use for evaluation
  * \param[out] next_change  If not NULL, set to when evaluation will change
  *
  * \return Standard Pacemaker return code
  */
 int
-pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
+pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
                    crm_time_t *next_change)
 {
     crm_time_t *start = NULL;
@@ -910,10 +897,10 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     if (pcmk__str_eq(op, "in_range", pcmk__str_null_matches | pcmk__str_casei)) {
         if ((start == NULL) && (end == NULL)) {
             // in_range requires at least one of start or end
-        } else if ((start != NULL) && (crm_time_compare(rule_data->now, start) < 0)) {
+        } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
             rc = pcmk_rc_before_range;
             crm_time_set_if_earlier(next_change, start);
-        } else if ((end != NULL) && (crm_time_compare(rule_data->now, end) > 0)) {
+        } else if ((end != NULL) && (crm_time_compare(now, end) > 0)) {
             rc = pcmk_rc_after_range;
         } else {
             rc = pcmk_rc_within_range;
@@ -925,13 +912,13 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
         }
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
-        rc = pcmk__evaluate_date_spec(date_spec, rule_data->now);
+        rc = pcmk__evaluate_date_spec(date_spec, now);
         // @TODO set next_change appropriately
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
         if (start == NULL) {
             // gt requires start
-        } else if (crm_time_compare(rule_data->now, start) > 0) {
+        } else if (crm_time_compare(now, start) > 0) {
             rc = pcmk_rc_within_range;
         } else {
             rc = pcmk_rc_before_range;
@@ -944,7 +931,7 @@ pe__eval_date_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data,
     } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
         if (end == NULL) {
             // lt requires end
-        } else if (crm_time_compare(rule_data->now, end) < 0) {
+        } else if (crm_time_compare(now, end) < 0) {
             rc = pcmk_rc_within_range;
             crm_time_set_if_earlier(next_change, end);
         } else {

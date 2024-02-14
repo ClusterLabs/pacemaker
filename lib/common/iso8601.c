@@ -1427,6 +1427,87 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
     return answer;
 }
 
+/*!
+ * \internal
+ * \brief Add the value of an XML attribute to a time object
+ *
+ * \param[in,out] t          Time object to add to
+ * \param[in]     component  Component of \p t to add to
+ * \param[in]     xml        XML with value to add
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
+                        const xmlNode *xml)
+{
+    long long value;
+    const char *attr = NULL;
+    void (*add)(crm_time_t *, int) = NULL;
+
+    if (t == NULL) {
+        return EINVAL;
+    }
+
+    switch (component) {
+        case pcmk__time_years:
+            attr = PCMK_XA_YEARS;
+            add = crm_time_add_years;
+            break;
+
+        case pcmk__time_months:
+            attr = PCMK_XA_MONTHS;
+            add = crm_time_add_months;
+            break;
+
+        case pcmk__time_weeks:
+            attr = PCMK_XA_WEEKS;
+            add = crm_time_add_weeks;
+            break;
+
+        case pcmk__time_days:
+            attr = PCMK_XA_DAYS;
+            add = crm_time_add_days;
+            break;
+
+        case pcmk__time_hours:
+            attr = PCMK_XA_HOURS;
+            add = crm_time_add_hours;
+            break;
+
+        case pcmk__time_minutes:
+            attr = PCMK_XA_MINUTES;
+            add = crm_time_add_minutes;
+            break;
+
+        case pcmk__time_seconds:
+            attr = PCMK_XA_SECONDS;
+            add = crm_time_add_seconds;
+            break;
+
+        default:
+            return EINVAL;
+    }
+
+    if (xml == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    if (pcmk__scan_ll(crm_element_value(xml, attr), &value,
+                      0LL) != pcmk_rc_ok) {
+        return pcmk_rc_unpack_error;
+    }
+
+    if ((value < INT_MIN) || (value > INT_MAX)) {
+        return ERANGE;
+    }
+
+    if (value != 0LL) {
+        add(t, (int) value);
+    }
+    return pcmk_rc_ok;
+}
+
 crm_time_t *
 crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
 {
