@@ -976,12 +976,40 @@ A custom message can be defined with a unique string identifier, plus
 implementation functions for each supported format. The caller invokes the
 message using the identifier. The user selects the output format via
 ``--output-as``, and the output code automatically calls the appropriate
-implementation function.
+implementation function. Custom messages are useful when you want to output 
+messages that are more complex than a one-line error or informational message, 
+reproducible, and automatically handled by the output formatting system. 
+Custom messages can contain other custom messages.
+
+Custom message functions are implemented as follows: Start with the macro 
+``PCMK__OUTPUT_ARGS``, whose arguments are the message name, followed by the 
+arguments to the message. Then there is the function declaration, for which the 
+arguments are the pointer to the current output object, then a variable argument 
+list.
+
+To output a custom message, you first need to create, i.e. register, the custom 
+message that you want to output. Either call ``register_message``, which 
+registers a custom message at runtime, or make use of the collection of 
+predefined custom messages in ``fmt_functions``, which is defined in 
+``lib/pacemaker/pcmk_output.c``. Once you have the message to be outputted, 
+output it by calling ``message``.
+
+Note: The ``fmt_functions`` functions accommodate all of the output formats; 
+the default implementation accommodates any format that isn't explicitly 
+accommodated. The default output provides valid output for any output format, 
+but you may still want to implement a specific output, i.e. xml, text, or html. 
+The ``message`` function automatically knows which implementation to use, 
+because the ``pcmk__output_s`` contains this information.
 
 The interface (most importantly ``pcmk__output_t``) is declared in
 ``include/crm/common/output*h``. See the API comments and existing tools for
-examples.
+examples. 
 
+Some of its important member functions are ``err``, which formats error messages 
+and ``info``, which formats informational messages. Also, ``list_item``, 
+which formats list items, ``begin_list``, which starts lists, and ``end_list``, 
+which ends lists, are important because lists can be useful, yet differently 
+handled by the different output types.
 
 .. index::
    single: Makefile.am
