@@ -116,6 +116,7 @@ include $(top_srcdir)/mk/tap.mk
 
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c
+libcrmcommon_test_la_SOURCES	+= unittest.c
 libcrmcommon_test_la_LDFLAGS	= $(libcrmcommon_la_LDFLAGS) 	\
 				  -rpath $(libdir) 		\
 				  $(LDFLAGS_WRAP)

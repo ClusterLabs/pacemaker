@@ -19,6 +19,8 @@
 
 #include <cmocka.h>
 
+#include <crm/common/xml.h>
+
 #ifndef CRM_COMMON_UNITTEST_INTERNAL__H
 #define CRM_COMMON_UNITTEST_INTERNAL__H
 
@@ -32,6 +34,21 @@ extern void __gcov_dump(void);
 #else
 #define __gcov_dump()
 #endif
+
+/*!
+ * \internal
+ * \brief Assert that the XML output from an API function is valid
+ *
+ * \param[in] xml   The XML output of some public pacemaker API function
+ *
+ * Run the given XML through xmllint and attempt to validate it against the
+ * api-result.rng schema file.  Assert if validation fails.
+ *
+ * \note PCMK_schema_directory needs to be set to the directory containing
+ *       the built schema files before calling this function.  Typically,
+ *       this will be done in Makefile.am.
+ */
+void pcmk__assert_validates(xmlNode *xml);
 
 /*!
  * \internal
