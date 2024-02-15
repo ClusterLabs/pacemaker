@@ -333,7 +333,8 @@ pe__eval_date_expr(const xmlNode *expr, const crm_time_t *now,
         pcmk__unpack_duration(duration_spec, start, &end);
     }
 
-    if (pcmk__str_eq(op, "in_range", pcmk__str_null_matches | pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK_VALUE_IN_RANGE,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
         if ((start == NULL) && (end == NULL)) {
             // in_range requires at least one of start or end
         } else if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
