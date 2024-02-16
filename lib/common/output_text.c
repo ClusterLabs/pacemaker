@@ -17,10 +17,12 @@
 
 #include "crmcommon_private.h"
 
+// @COMPAT Drop at 3.0.0
 static gboolean fancy = FALSE;
 
+// @COMPAT Drop at 3.0.0
 GOptionEntry pcmk__text_output_entries[] = {
-    { "text-fancy", 0, 0, G_OPTION_ARG_NONE, &fancy,
+    { "text-fancy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &fancy,
       "Use more highly formatted output (requires --output-as=text)",
       NULL },
 
