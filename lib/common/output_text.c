@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <termios.h>
+
+#include "crmcommon_private.h"
 
 static gboolean fancy = FALSE;
 
@@ -33,6 +35,7 @@ typedef struct text_list_data_s {
 
 typedef struct private_data_s {
     GQueue *parent_q;
+    bool fancy;
 } private_data_t;
 
 static void
@@ -59,15 +62,14 @@ text_init(pcmk__output_t *out) {
     /* If text_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
         return true;
-    } else {
-        out->priv = calloc(1, sizeof(private_data_t));
-        if (out->priv == NULL) {
-            return false;
-        }
-
-        priv = out->priv;
     }
 
+    out->priv = calloc(1, sizeof(private_data_t));
+    if (out->priv == NULL) {
+        return false;
+    }
+
+    priv = out->priv;
     priv->parent_q = g_queue_new();
     return true;
 }
@@ -80,6 +82,9 @@ text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
 static void
 text_reset(pcmk__output_t *out) {
+    private_data_t *priv = NULL;
+    bool old_fancy = false;
+
     CRM_ASSERT(out != NULL);
 
     if (out->dest != stdout) {
@@ -88,8 +93,15 @@ text_reset(pcmk__output_t *out) {
 
     CRM_ASSERT(out->dest != NULL);
 
+    // Save priv->fancy before free/init sequence overwrites it
+    priv = out->priv;
+    old_fancy = priv->fancy;
+
     text_free_priv(out);
     text_init(out);
+
+    priv = out->priv;
+    priv->fancy = old_fancy;
 }
 
 static void
@@ -192,7 +204,7 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 
     va_start(ap, format);
 
-    if (fancy && format) {
+    if ((fancy || priv->fancy) && (format != NULL)) {
         pcmk__indented_vprintf(out, format, ap);
         fprintf(out->dest, ":\n");
     }
@@ -210,13 +222,15 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 G_GNUC_PRINTF(3, 4)
 static void
 text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
+    private_data_t *priv = NULL;
     va_list ap;
 
     CRM_ASSERT(out != NULL);
 
+    priv = out->priv;
     va_start(ap, format);
 
-    if (fancy) {
+    if (fancy || priv->fancy) {
         if (id != NULL) {
             /* Not really a good way to do this all in one call, so make it two.
              * The first handles the indentation and list styling.  The second
@@ -336,6 +350,52 @@ pcmk__mk_text_output(char **argv) {
     return retval;
 }
 
+/*!
+ * \internal
+ * \brief Check whether fancy output is enabled for a text output object
+ *
+ * This returns \c false if the output object is not of text format.
+ *
+ * \param[in] out  Output object
+ *
+ * \return \c true if \p out has fancy output enabled, or \c false otherwise
+ */
+bool
+pcmk__output_text_get_fancy(pcmk__output_t *out)
+{
+    CRM_ASSERT(out != NULL);
+
+    if (pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
+
+        CRM_ASSERT(priv != NULL);
+        return priv->fancy;
+    }
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Enable or disable fancy output for a text output object
+ *
+ * This does nothing if the output object is not of text format.
+ *
+ * \param[in,out] out      Output object
+ * \param[in]     enabled  Whether fancy output should be enabled for \p out
+ */
+void
+pcmk__output_text_set_fancy(pcmk__output_t *out, bool enabled)
+{
+    CRM_ASSERT(out != NULL);
+
+    if (pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
+
+        CRM_ASSERT(priv != NULL);
+        priv->fancy = enabled;
+    }
+}
+
 G_GNUC_PRINTF(2, 0)
 void
 pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
@@ -363,10 +423,14 @@ pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) {
 G_GNUC_PRINTF(2, 0)
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    private_data_t *priv = NULL;
+
     CRM_ASSERT(out != NULL);
     CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
 
-    if (fancy) {
+    priv = out->priv;
+
+    if (fancy || priv->fancy) {
         int level = 0;
         private_data_t *priv = out->priv;
 

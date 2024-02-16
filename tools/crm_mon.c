@@ -1318,12 +1318,7 @@ static void
 add_output_args(void) {
     GError *err = NULL;
 
-    if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &err, "%s --text-fancy", g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_cgi) {
+    if (output_format == mon_output_cgi) {
         if (!pcmk__force_args(context, &err, "%s --html-cgi", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
@@ -1594,6 +1589,10 @@ main(int argc, char **argv)
      * set by now.
      */
     CRM_ASSERT(output_format != mon_output_unset);
+
+    if (output_format == mon_output_plain) {
+        pcmk__output_text_set_fancy(out, true);
+    }
 
     if (options.exec_mode == mon_exec_daemonized) {
         if (!options.external_agent && (output_format == mon_output_none)) {

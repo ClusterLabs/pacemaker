@@ -1568,9 +1568,13 @@ main(int argc, char **argv)
         }
 
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
-        if ((options.rsc_cmd == cmd_colocations) ||
-            options.rsc_cmd == cmd_list_resources) {
-            pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
+        switch (options.rsc_cmd) {
+            case cmd_colocations:
+            case cmd_list_resources:
+                pcmk__output_text_set_fancy(out, true);
+                break;
+            default:
+                break;
         }
     }
 
