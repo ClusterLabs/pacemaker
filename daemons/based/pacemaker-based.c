@@ -132,7 +132,7 @@ based_metadata(pcmk__output_t *out)
                                  "Cluster Information Base manager options",
                                  "Cluster options used by Pacemaker's Cluster "
                                  "Information Base manager",
-                                 pcmk__opt_context_based);
+                                 pcmk__opt_based);
 }
 
 static GOptionEntry entries[] = {

@@ -108,21 +108,21 @@ add_option_metadata_default(pcmk__output_t *out,
  *       -# Fake resource agent name for the option list (ignored)
  *       -# Short description of option list
  *       -# Long description of option list
- *       -# Filter: If not \c pcmk__opt_context_none, include only those options
- *          whose \c context field is equal to this filter.
+ *       -# Filter: Group of <tt>enum pcmk__opt_flags</tt>; output an option
+ *          only if its \c flags member has all these flags set
  *       -# <tt>NULL</tt>-terminated list of options whose metadata to format
  */
 PCMK__OUTPUT_ARGS("option-list", "const char *", "const char *", "const char *",
-                  "enum pcmk__opt_context", "const pcmk__cluster_option_t *")
+                  "uint32_t", "const pcmk__cluster_option_t *")
 static int
 option_list_default(pcmk__output_t *out, va_list args)
 {
     const char *name G_GNUC_UNUSED = va_arg(args, const char *);
     const char *desc_short = va_arg(args, const char *);
     const char *desc_long = va_arg(args, const char *);
-    enum pcmk__opt_context filter = (enum pcmk__opt_context) va_arg(args, int);
+    const uint32_t filter = va_arg(args, uint32_t);
     const pcmk__cluster_option_t *option_list =
-        va_arg(args, const pcmk__cluster_option_t *);
+        va_arg(args, pcmk__cluster_option_t *);
 
     bool old_fancy = false;
 
@@ -140,7 +140,7 @@ option_list_default(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
-        if ((filter == pcmk__opt_context_none) || (filter == option->context)) {
+        if (pcmk_all_flags_set(option->flags, filter)) {
             out->spacer(out);
             add_option_metadata_default(out, option);
         }
@@ -275,21 +275,21 @@ add_option_metadata_xml(pcmk__output_t *out,
  *       -# Fake resource agent name for the option list
  *       -# Short description of option list
  *       -# Long description of option list
- *       -# Filter: If not \c pcmk__opt_context_none, include only those options
- *          whose \c context field is equal to this filter.
+ *       -# Filter: Group of <tt>enum pcmk__opt_flags</tt>; output an option
+ *          only if its \c flags member has all these flags set
  *       -# <tt>NULL</tt>-terminated list of options whose metadata to format
  */
 PCMK__OUTPUT_ARGS("option-list", "const char *", "const char *", "const char *",
-                  "enum pcmk__opt_context", "const pcmk__cluster_option_t *")
+                  "uint32_t", "const pcmk__cluster_option_t *")
 static int
 option_list_xml(pcmk__output_t *out, va_list args)
 {
     const char *name = va_arg(args, const char *);
     const char *desc_short = va_arg(args, const char *);
     const char *desc_long = va_arg(args, const char *);
-    enum pcmk__opt_context filter = (enum pcmk__opt_context) va_arg(args, int);
+    const uint32_t filter = va_arg(args, uint32_t);
     const pcmk__cluster_option_t *option_list =
-        va_arg(args, const pcmk__cluster_option_t *);
+        va_arg(args, pcmk__cluster_option_t *);
 
     CRM_ASSERT((out != NULL) && (name != NULL) && (desc_short != NULL)
                && (desc_long != NULL) && (option_list != NULL));
@@ -308,7 +308,7 @@ option_list_xml(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
-        if ((filter == pcmk__opt_context_none) || (filter == option->context)) {
+        if (pcmk_all_flags_set(option->flags, filter)) {
             add_option_metadata_xml(out, option);
         }
     }

@@ -489,14 +489,14 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
 static pcmk__cluster_option_t fencer_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
-     * context,
+     * flags,
      * short description,
      * long description
      */
     {
         PCMK_STONITH_HOST_ARGUMENT, NULL, "string", NULL,
         "port", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate parameter to supply instead of 'port'"),
         N_("Some devices do not support the standard 'port' parameter or may "
@@ -508,7 +508,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         PCMK_STONITH_HOST_MAP, NULL, "string", NULL,
         "", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("A mapping of node names to port numbers for devices that do not "
             "support node names."),
         N_("For example, \"node1:1;node2:2,3\" would tell the cluster to use "
@@ -517,7 +517,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         PCMK_STONITH_HOST_LIST, NULL, "string", NULL,
         "", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("A list of nodes that can be targeted by this device (optional "
             "unless pcmk_host_list=\"static-list\")"),
         N_("For example, \"node1,node2,node3\"."),
@@ -526,7 +526,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         PCMK_STONITH_HOST_CHECK, NULL, "select",
             "dynamic-list, static-list, status, none",
         "dynamic-list", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("How to determine which nodes can be targeted by the device"),
         N_("Use \"dynamic-list\" to query the device via the 'list' command; "
             "\"static-list\" to check the pcmk_host_list attribute; "
@@ -536,7 +536,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         PCMK_STONITH_DELAY_MAX, NULL, "time", NULL,
         "0s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("Enable a delay of no more than the time specified before executing "
             "fencing actions."),
         N_("Enable a delay of no more than the time specified before executing "
@@ -547,7 +547,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         PCMK_STONITH_DELAY_BASE, NULL, "string", NULL,
         "0s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("Enable a base delay for fencing actions and specify base delay "
             "value."),
         N_("This enables a static delay for fencing actions, which can help "
@@ -562,7 +562,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         PCMK_STONITH_ACTION_LIMIT, NULL, "integer", NULL,
         "1", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "
             "device"),
         N_("Cluster property concurrent-fencing=\"true\" needs to be "
@@ -574,7 +574,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_reboot_action", NULL, "string", NULL,
         PCMK_ACTION_REBOOT, NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate command to run instead of 'reboot'"),
         N_("Some devices do not support the standard commands or may provide "
@@ -584,7 +584,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_reboot_timeout", NULL, "time", NULL,
         "60s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "Specify an alternate timeout to use for 'reboot' actions instead "
             "of stonith-timeout"),
@@ -595,7 +595,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_reboot_retries", NULL, "integer", NULL,
         "2", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "The maximum number of times to try the 'reboot' command within "
             "the timeout period"),
@@ -608,7 +608,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_off_action", NULL, "string", NULL,
         PCMK_ACTION_OFF, NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate command to run instead of 'off'"),
         N_("Some devices do not support the standard commands or may provide "
@@ -618,7 +618,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_off_timeout", NULL, "time", NULL,
         "60s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "Specify an alternate timeout to use for 'off' actions instead of "
             "stonith-timeout"),
@@ -629,7 +629,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_off_retries", NULL, "integer", NULL,
         "2", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "The maximum number of times to try the 'off' command within the "
             "timeout period"),
@@ -642,7 +642,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_on_action", NULL, "string", NULL,
         PCMK_ACTION_ON, NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate command to run instead of 'on'"),
         N_("Some devices do not support the standard commands or may provide "
@@ -652,7 +652,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_on_timeout", NULL, "time", NULL,
         "60s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "Specify an alternate timeout to use for 'on' actions instead of "
             "stonith-timeout"),
@@ -663,7 +663,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_on_retries", NULL, "integer", NULL,
         "2", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "The maximum number of times to try the 'on' command within the "
             "timeout period"),
@@ -676,7 +676,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_list_action", NULL, "string", NULL,
         PCMK_ACTION_LIST, NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate command to run instead of 'list'"),
         N_("Some devices do not support the standard commands or may provide "
@@ -686,7 +686,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_list_timeout", NULL, "time", NULL,
         "60s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "Specify an alternate timeout to use for 'list' actions instead of "
             "stonith-timeout"),
@@ -697,7 +697,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_list_retries", NULL, "integer", NULL,
         "2", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "The maximum number of times to try the 'list' command within the "
             "timeout period"),
@@ -710,7 +710,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_monitor_action", NULL, "string", NULL,
         PCMK_ACTION_MONITOR, NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate command to run instead of 'monitor'"),
         N_("Some devices do not support the standard commands or may provide "
@@ -720,7 +720,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_monitor_timeout", NULL, "time", NULL,
         "60s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "Specify an alternate timeout to use for 'monitor' actions instead "
             "of stonith-timeout"),
@@ -731,7 +731,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_monitor_retries", NULL, "integer", NULL,
         "2", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "The maximum number of times to try the 'monitor' command within "
             "the timeout period"),
@@ -744,7 +744,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_status_action", NULL, "string", NULL,
         PCMK_ACTION_STATUS, NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "An alternate command to run instead of 'status'"),
         N_("Some devices do not support the standard commands or may provide "
@@ -754,7 +754,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_status_timeout", NULL, "time", NULL,
         "60s", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "Specify an alternate timeout to use for 'status' actions instead "
             "of stonith-timeout"),
@@ -765,7 +765,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         "pcmk_status_retries", NULL, "integer", NULL,
         "2", NULL,
-        pcmk__opt_context_none,
+        pcmk__opt_none,
         N_("*** Advanced Use Only *** "
             "The maximum number of times to try the 'status' command within "
             "the timeout period"),
@@ -802,7 +802,7 @@ fencer_metadata(void)
     }
 
     out->message(tmp_out, "option-list", name, desc_short, desc_long,
-                 pcmk__opt_context_none, fencer_options);
+                 (uint32_t) pcmk__opt_none, fencer_options);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);

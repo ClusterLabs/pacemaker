@@ -53,7 +53,7 @@ scheduler_metadata(pcmk__output_t *out)
                                  "Pacemaker scheduler options",
                                  "Cluster options used by Pacemaker's "
                                  "scheduler",
-                                 pcmk__opt_context_schedulerd);
+                                 pcmk__opt_schedulerd);
 }
 
 static GOptionContext *

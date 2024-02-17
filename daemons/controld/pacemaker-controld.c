@@ -53,7 +53,7 @@ controld_metadata(pcmk__output_t *out)
                                  "Pacemaker controller options",
                                  "Cluster options used by Pacemaker's "
                                  "controller",
-                                 pcmk__opt_context_controld);
+                                 pcmk__opt_controld);
 }
 
 static GOptionContext *

@@ -1088,7 +1088,7 @@ cib_metadata(void)
                           "Cluster Information Base manager options",
                           "Cluster options used by Pacemaker's Cluster "
                           "Information Base manager",
-                          pcmk__opt_context_based);
+                          pcmk__opt_based);
 
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);

@@ -38,7 +38,7 @@ pcmk__list_cluster_options(pcmk__output_t *out)
                 "subsection of the CIB configuration section.";
 
     return pcmk__output_cluster_options(out, name, desc_short, desc_long,
-                                        pcmk__opt_context_none);
+                                        pcmk__opt_none);
 }
 
 // Documented in header

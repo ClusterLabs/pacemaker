@@ -38,15 +38,14 @@ bool pcmk__env_option_enabled(const char *daemon, const char *option);
 
 /*!
  * \internal
- * \enum pcmk__opt_context
- * \brief Context flags for options
+ * \enum pcmk__opt_flags
+ * \brief Option flags
  */
-enum pcmk__opt_context {
-    // @COMPAT Used only for daemon metadata
-    pcmk__opt_context_none       = 0,           //!< No additional context
-    pcmk__opt_context_based      = (1 << 1),    //!< CIB manager metadata
-    pcmk__opt_context_controld   = (1 << 2),    //!< Controller metadata
-    pcmk__opt_context_schedulerd = (1 << 3),    //!< Scheduler metadata
+enum pcmk__opt_flags {
+    pcmk__opt_none       = 0U,          //!< No additional information
+    pcmk__opt_based      = (1U << 0),   //!< In CIB manager metadata
+    pcmk__opt_controld   = (1U << 1),   //!< In controller metadata
+    pcmk__opt_schedulerd = (1U << 2),   //!< In scheduler metadata
 };
 
 typedef struct pcmk__cluster_option_s {
@@ -58,8 +57,7 @@ typedef struct pcmk__cluster_option_s {
 
     bool (*is_valid)(const char *);
 
-    // @COMPAT context is used only for daemon meta-data
-    enum pcmk__opt_context context;
+    uint32_t flags;                 //!< Group of <tt>enum pcmk__opt_flags</tt>
 
     const char *description_short;
     const char *description_long;
@@ -70,11 +68,11 @@ const char *pcmk__cluster_option(GHashTable *options, const char *name);
 
 int pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
                                  const char *desc_short, const char *desc_long,
-                                 enum pcmk__opt_context filter);
+                                 uint32_t filter);
 
 int pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
                           const char *short_desc, const char *long_desc,
-                          enum pcmk__opt_context context);
+                          enum pcmk__opt_flags filter);
 
 void pcmk__validate_cluster_options(GHashTable *options);
 
