@@ -278,6 +278,7 @@ extern "C" {
 #define PCMK_XA_FOR                         "for"
 #define PCMK_XA_FORMAT                      "format"
 #define PCMK_XA_FUNCTION                    "function"
+#define PCMK_XA_GENERATED                   "generated"
 #define PCMK_XA_HASH                        "hash"
 #define PCMK_XA_HAVE_QUORUM                 "have-quorum"
 #define PCMK_XA_HEALTH                      "health"
