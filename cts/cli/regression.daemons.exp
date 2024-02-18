@@ -646,7 +646,7 @@
     <parameter name="remove-after-stop" advanced="0" generated="0">
       <deprecated/>
       <longdesc lang="en">
-        Values other than default are poorly tested and potentially dangerous. This option will be removed in a future release.
+        Values other than default are poorly tested and potentially dangerous.
       </longdesc>
       <shortdesc lang="en">
         Whether to remove stopped resources from the executor

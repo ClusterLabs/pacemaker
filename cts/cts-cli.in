@@ -812,12 +812,20 @@ function test_tools() {
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK
 
-    desc="List all available cluster options"
+    desc="List non-advanced cluster options"
     cmd="crm_attribute --list-options=cluster"
     test_assert $CRM_EX_OK 0
 
-    desc="List all available cluster options (XML)"
+    desc="List non-advanced cluster options (XML)"
     cmd="crm_attribute --list-options=cluster --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available cluster options"
+    cmd="crm_attribute --list-options=cluster --all"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available cluster options (XML)"
+    cmd="crm_attribute --list-options=cluster --all --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
     desc="List all available options (invalid value)"
