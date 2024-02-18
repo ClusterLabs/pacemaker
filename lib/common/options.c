@@ -53,7 +53,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_DC_VERSION, NULL, "string", NULL,
         PCMK_VALUE_NONE, NULL,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
             "(DC)"),
         N_("Includes a hash which identifies the exact revision the code was "
@@ -62,7 +62,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
         "corosync", NULL,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_generated,
         N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),
     },
@@ -115,7 +115,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
         "2min", pcmk__valid_interval_spec,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("*** Advanced Use Only ***"),
         N_("Declare an election failed if it is not decided within this much "
             "time. If you need to adjust this value, it probably indicates "
@@ -124,7 +124,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
         "20min", pcmk__valid_interval_spec,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("*** Advanced Use Only ***"),
         N_("Exit immediately if shutdown does not complete within this much "
             "time. If you need to adjust this value, it probably indicates "
@@ -134,7 +134,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
             NULL,
         "3min", pcmk__valid_interval_spec,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("*** Advanced Use Only ***"),
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug."),
@@ -143,7 +143,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
             "time", NULL,
         "30min", pcmk__valid_interval_spec,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("*** Advanced Use Only ***"),
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug."),
@@ -151,7 +151,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
         "0s", pcmk__valid_interval_spec,
-        pcmk__opt_controld,
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("*** Advanced Use Only *** "
             "Enabling this option will slow down cluster recovery under all "
             "conditions"),
@@ -238,7 +238,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STONITH_ENABLED, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("*** Advanced Use Only *** "
             "Whether nodes may be fenced as part of recovery"),
         N_("If false, unresponsive nodes are immediately assumed to be "
@@ -265,7 +265,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_generated,
         N_("Whether watchdog integration is enabled"),
         N_("This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
@@ -324,7 +324,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STARTUP_FENCING, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("*** Advanced Use Only *** "
             "Whether to fence unseen nodes at start-up"),
         N_("Setting this to false may lead to a \"split-brain\" situation, "
@@ -447,7 +447,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK__OPT_REMOVE_AFTER_STOP, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("*** Deprecated *** "
             "Whether to remove stopped resources from the executor"),
         N_("Values other than default are poorly tested and potentially "
