@@ -783,7 +783,7 @@ fencer_metadata(void)
     }
 
     out->message(tmp_out, "option-list", name, desc_short, desc_long,
-                 (uint32_t) pcmk__opt_none, fencer_options);
+                 pcmk__opt_none, fencer_options, true);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);

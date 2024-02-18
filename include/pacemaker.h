@@ -412,10 +412,12 @@ int pcmk_list_standards(xmlNodePtr *xml);
  * These are options that affect the entire cluster.
  *
  * \param[in,out] xml  The destination for the result, as an XML tree
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_list_cluster_options(xmlNode **xml);
+int pcmk_list_cluster_options(xmlNode **xml, bool all);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 

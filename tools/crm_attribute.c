@@ -413,7 +413,7 @@ static void
 command_list(pcmk__output_t *out)
 {
     if (pcmk__str_eq(options.opt_list, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
-        exit_code = pcmk_rc2exitc(pcmk__list_cluster_options(out));
+        exit_code = pcmk_rc2exitc(pcmk__list_cluster_options(out, true));
 
     } else {
         // @TODO Improve usage messages to reduce duplication

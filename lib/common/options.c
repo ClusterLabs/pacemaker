@@ -447,7 +447,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to remove stopped resources from the executor"),
         N_("Values other than default are poorly tested and potentially "
-            "dangerous. This option will be removed in a future release."),
+            "dangerous."),
     },
 
     // Storing inputs
@@ -939,16 +939,21 @@ pcmk__cluster_option(GHashTable *options, const char *name)
  * \param[in]     filter      Group of <tt>enum pcmk__opt_flags</tt>; output an
  *                            option only if its \c flags member has all these
  *                            flags set
+ * \param[in]     all         If \c true, output all options; otherwise, exclude
+ *                            advanced and deprecated options unless
+ *                            \c pcmk__opt_advanced and \c pcmk__opt_deprecated
+ *                            flags (respectively) are set in \p filter. This is
+ *                            always treated as true for XML output objects.
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
                              const char *desc_short, const char *desc_long,
-                             uint32_t filter)
+                             uint32_t filter, bool all)
 {
     return out->message(out, "option-list", name, desc_short, desc_long, filter,
-                        cluster_options);
+                        cluster_options, all);
 }
 
 /*!
@@ -981,7 +986,7 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
     }
 
     pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
-                                 (uint32_t) filter);
+                                 (uint32_t) filter, true);
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);

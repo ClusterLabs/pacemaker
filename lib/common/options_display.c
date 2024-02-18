@@ -118,9 +118,12 @@ add_option_metadata_default(pcmk__output_t *out,
  *       -# Filter: Group of <tt>enum pcmk__opt_flags</tt>; output an option
  *          only if its \c flags member has all these flags set
  *       -# <tt>NULL</tt>-terminated list of options whose metadata to format
+ *       -# All: If \c true, output all options; otherwise, exclude advanced and
+ *          deprecated options unless \c pcmk__opt_advanced and
+ *          \c pcmk__opt_deprecated flags (respectively) are set in the filter.
  */
 PCMK__OUTPUT_ARGS("option-list", "const char *", "const char *", "const char *",
-                  "uint32_t", "const pcmk__cluster_option_t *")
+                  "uint32_t", "const pcmk__cluster_option_t *", "bool")
 static int
 option_list_default(pcmk__output_t *out, va_list args)
 {
@@ -130,7 +133,11 @@ option_list_default(pcmk__output_t *out, va_list args)
     const uint32_t filter = va_arg(args, uint32_t);
     const pcmk__cluster_option_t *option_list =
         va_arg(args, pcmk__cluster_option_t *);
+    const bool all = (bool) va_arg(args, int);
 
+    const bool show_deprecated = all
+                                 || pcmk_is_set(filter, pcmk__opt_deprecated);
+    const bool show_advanced = all || pcmk_is_set(filter, pcmk__opt_advanced);
     bool old_fancy = false;
 
     GSList *deprecated = NULL;
@@ -150,12 +157,17 @@ option_list_default(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
+        // Store deprecated and advanced options to display later if appropriate
         if (pcmk_all_flags_set(option->flags, filter)) {
             if (pcmk_is_set(option->flags, pcmk__opt_deprecated)) {
-                deprecated = g_slist_prepend(deprecated, (gpointer) option);
+                if (show_deprecated) {
+                    deprecated = g_slist_prepend(deprecated, (gpointer) option);
+                }
 
             } else if (pcmk_is_set(option->flags, pcmk__opt_advanced)) {
-                advanced = g_slist_prepend(advanced, (gpointer) option);
+                if (show_advanced) {
+                    advanced = g_slist_prepend(advanced, (gpointer) option);
+                }
 
             } else {
                 out->spacer(out);
@@ -168,7 +180,7 @@ option_list_default(pcmk__output_t *out, va_list args)
         advanced = g_slist_reverse(advanced);
 
         out->spacer(out);
-        out->begin_list(out, NULL, NULL, "Advanced options");
+        out->begin_list(out, NULL, NULL, _("ADVANCED OPTIONS"));
         for (const GSList *iter = advanced; iter != NULL; iter = iter->next) {
             const pcmk__cluster_option_t *option = iter->data;
 
@@ -183,7 +195,9 @@ option_list_default(pcmk__output_t *out, va_list args)
         deprecated = g_slist_reverse(deprecated);
 
         out->spacer(out);
-        out->begin_list(out, NULL, NULL, "Deprecated options");
+        out->begin_list(out, NULL, NULL,
+                        _("DEPRECATED OPTIONS (will be removed in a future "
+                          "release)"));
         for (const GSList *iter = deprecated; iter != NULL; iter = iter->next) {
             const pcmk__cluster_option_t *option = iter->data;
 
@@ -336,9 +350,10 @@ add_option_metadata_xml(pcmk__output_t *out,
  *       -# Filter: Group of <tt>enum pcmk__opt_flags</tt>; output an option
  *          only if its \c flags member has all these flags set
  *       -# <tt>NULL</tt>-terminated list of options whose metadata to format
+ *       -# Whether to output all options (ignored, treated as \c true)
  */
 PCMK__OUTPUT_ARGS("option-list", "const char *", "const char *", "const char *",
-                  "uint32_t", "const pcmk__cluster_option_t *")
+                  "uint32_t", "const pcmk__cluster_option_t *", "bool")
 static int
 option_list_xml(pcmk__output_t *out, va_list args)
 {

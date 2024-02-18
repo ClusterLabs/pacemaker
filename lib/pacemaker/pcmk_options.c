@@ -21,11 +21,13 @@
  * These are options that affect the entire cluster.
  *
  * \param[in,out] out  Output object
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__list_cluster_options(pcmk__output_t *out)
+pcmk__list_cluster_options(pcmk__output_t *out, bool all)
 {
     const char *name = "cluster-options";
     const char *desc_short = "Pacemaker cluster options";
@@ -38,12 +40,12 @@ pcmk__list_cluster_options(pcmk__output_t *out)
                 "subsection of the CIB configuration section.";
 
     return pcmk__output_cluster_options(out, name, desc_short, desc_long,
-                                        pcmk__opt_none);
+                                        pcmk__opt_none, all);
 }
 
 // Documented in header
 int
-pcmk_list_cluster_options(xmlNode **xml)
+pcmk_list_cluster_options(xmlNode **xml, bool all)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -55,7 +57,7 @@ pcmk_list_cluster_options(xmlNode **xml)
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__list_cluster_options(out);
+    rc = pcmk__list_cluster_options(out, all);
 
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
