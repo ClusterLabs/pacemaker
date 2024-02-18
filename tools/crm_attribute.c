@@ -106,6 +106,7 @@ struct {
     char *set_type;
     gchar *type;
     char *opt_list;
+    gboolean all;
     gboolean promotion_score;
 } options = {
     .command = attr_cmd_query,
@@ -196,6 +197,13 @@ wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **
 }
 
 static GOptionEntry selecting_entries[] = {
+    { "all", 'a', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.all,
+      "With -L/--list-options, include advanced and deprecated options in the\n"
+      INDENT "output. This is always treated as true when --output-as=xml is\n"
+      INDENT "specified.",
+      NULL,
+    },
+
     { "id", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,
       "(Advanced) Operate on instance of specified attribute with this\n"
       INDENT "XML ID",
@@ -413,7 +421,7 @@ static void
 command_list(pcmk__output_t *out)
 {
     if (pcmk__str_eq(options.opt_list, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
-        exit_code = pcmk_rc2exitc(pcmk__list_cluster_options(out, true));
+        exit_code = pcmk_rc2exitc(pcmk__list_cluster_options(out, options.all));
 
     } else {
         // @TODO Improve usage messages to reduce duplication
