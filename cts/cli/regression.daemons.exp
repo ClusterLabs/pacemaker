@@ -51,7 +51,7 @@
       <shortdesc lang="en">
         Pacemaker version on cluster node elected Designated Controller (DC)
       </shortdesc>
-      <content type="string" default=""/>
+      <content type="string"/>
     </parameter>
     <parameter name="cluster-infrastructure" advanced="0" generated="1">
       <longdesc lang="en">
@@ -60,7 +60,7 @@
       <shortdesc lang="en">
         The messaging layer on which Pacemaker is currently running
       </shortdesc>
-      <content type="string" default=""/>
+      <content type="string"/>
     </parameter>
     <parameter name="cluster-name" advanced="0" generated="0">
       <longdesc lang="en">
@@ -214,7 +214,7 @@
       <shortdesc lang="en">
         A mapping of node names to port numbers for devices that do not support node names.
       </shortdesc>
-      <content type="string" default=""/>
+      <content type="string"/>
     </parameter>
     <parameter name="pcmk_host_list" advanced="0" generated="0">
       <longdesc lang="en">
@@ -223,16 +223,16 @@
       <shortdesc lang="en">
         A list of nodes that can be targeted by this device (optional unless pcmk_host_list="static-list")
       </shortdesc>
-      <content type="string" default=""/>
+      <content type="string"/>
     </parameter>
     <parameter name="pcmk_host_check" advanced="0" generated="0">
       <longdesc lang="en">
-        Use "dynamic-list" to query the device via the 'list' command; "static-list" to check the pcmk_host_list attribute; "status" to query the device via the 'status' command; or "none" to assume every device can fence every node.
+        Use "dynamic-list" to query the device via the 'list' command; "static-list" to check the pcmk_host_list attribute; "status" to query the device via the 'status' command; or "none" to assume every device can fence every node. The default value is "static-list" if pcmk_host_map or pcmk_host_list is set; otherwise "dynamic-list" if the device supports the list operation; otherwise "status" if the device supports the status operation; otherwise "none"
       </longdesc>
       <shortdesc lang="en">
         How to determine which nodes can be targeted by the device
       </shortdesc>
-      <content type="select" default="">
+      <content type="select">
         <option value="dynamic-list"/>
         <option value="static-list"/>
         <option value="status"/>
