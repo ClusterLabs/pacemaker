@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm_attribute"/>
+    </start>
+
+    <define name="element-crm_attribute">
+        <choice>
+            <zeroOrMore>
+                <ref name="element-attribute" />
+            </zeroOrMore>
+        </choice>
+    </define>
+
+    <define name="element-attribute">
+        <element name="attribute">
+            <optional>
+                <attribute name="scope"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="id"> <text /> </attribute>
+            </optional>
+            <attribute name="name"> <text /> </attribute>
+            <attribute name="value"> <text /> </attribute>
+            <optional>
+                <attribute name="host"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+</grammar>
