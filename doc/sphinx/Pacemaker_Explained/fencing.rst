@@ -232,9 +232,9 @@ for ``pacemaker-fenced``.
        pcmk_host_list
      - :ref:`text <text>`
      - 
-     - A list of machines controlled by this device. If ``pcmk_host_check`` is
-       explicitly set to ``static-list``, either this or ``pcmk_host_map`` must
-       be set.
+     - Comma-separated list of nodes that can be targeted by this device (for
+       example, ``node1,node2,node3``). If pcmk_host_check is ``static-list``,
+       either this or ``pcmk_host_map`` must be set.
    * - .. _pcmk_host_check:
 
        .. _index::

@@ -517,9 +517,10 @@ static pcmk__cluster_option_t fencer_options[] = {
         PCMK_STONITH_HOST_LIST, NULL, "string", NULL,
         NULL, NULL,
         pcmk__opt_none,
-        N_("A list of nodes that can be targeted by this device (optional "
-            "unless pcmk_host_list=\"static-list\")"),
-        N_("For example, \"node1,node2,node3\"."),
+        N_("Nodes targeted by this device"),
+        N_("Comma-separated list of nodes that can be targeted by this device "
+           "(for example, \"node1,node2,node3\"). If pcmk_host_check is "
+           "\"static-list\", either this or pcmk_host_map must be set."),
     },
     {
         PCMK_STONITH_HOST_CHECK, NULL, "select",
