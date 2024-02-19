@@ -12,7 +12,8 @@
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
-#include <crm/common/xml.h>     // crm_xml_add()
+
+#include <crm/common/nvpair.h>  // crm_xml_add()
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,31 +94,6 @@ xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
 //! \deprecated Do not use
 gboolean can_prune_leaf(xmlNode *xml_node);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *filename2xml(const char *filename);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *stdin2xml(void);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *string2xml(const char *input);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-                 gboolean compress);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-char *dump_xml_formatted(const xmlNode *xml);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-char *dump_xml_formatted_with_text(const xmlNode *xml);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-char *dump_xml_unformatted(const xmlNode *xml);
 
 #ifdef __cplusplus
 }

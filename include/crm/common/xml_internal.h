@@ -20,6 +20,7 @@
 
 #  include <crm/crm.h>  /* transitively imports qblog.h */
 #  include <crm/common/output_internal.h>
+#  include <crm/common/xml_io_internal.h>
 
 #  include <libxml/relaxng.h>
 
@@ -471,22 +472,6 @@ gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
 void pcmk__log_known_schemas(void);
 const char *pcmk__remote_schema_dir(void);
 void pcmk__sort_schemas(void);
-
-
-/*
- * I/O
- */
-
-xmlNode *pcmk__xml_read(const char *filename);
-xmlNode *pcmk__xml_parse(const char *input);
-
-int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
-                       bool compress, unsigned int *nbytes);
-int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
-                         bool compress, unsigned int *nbytes);
-
-gchar *pcmk__xml_dump(const xmlNode *xml, uint32_t flags);
-
 
 // @COMPAT Remove when v1 patchsets are removed
 xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
