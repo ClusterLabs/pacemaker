@@ -3,7 +3,7 @@
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
 
     <start>
-        <ref name="element-crm_attribute"/>
+        <ref name="element-crm_attribute" />
     </start>
 
     <define name="element-crm_attribute">
@@ -11,6 +11,7 @@
             <zeroOrMore>
                 <ref name="element-attribute" />
             </zeroOrMore>
+            <externalRef href="options-2.34.rng" />
         </choice>
     </define>
 
