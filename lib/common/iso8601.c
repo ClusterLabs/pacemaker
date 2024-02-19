@@ -18,9 +18,11 @@
 #include <time.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <limits.h>         // INT_MIN, INT_MAX
 #include <string.h>
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/iso8601_internal.h>
 
 /*
  * Andrew's code was originally written for OSes whose "struct tm" contains:
@@ -1373,6 +1375,23 @@ crm_time_set_timet(crm_time_t *target, const time_t *source)
     ha_set_tm_time(target, localtime(source));
 }
 
+/*!
+ * \internal
+ * \brief Set one time object to another if the other is earlier
+ *
+ * \param[in,out] target  Time object to set
+ * \param[in]     source  Time object to use if earlier
+ */
+void
+pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
+{
+    if ((target != NULL) && (source != NULL)
+        && (!crm_time_is_defined(target)
+            || (crm_time_compare(source, target) < 0))) {
+        crm_time_set(target, source);
+    }
+}
+
 crm_time_t *
 pcmk_copy_time(const crm_time_t *source)
 {
@@ -1429,6 +1448,86 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
 
 /*!
  * \internal
+ * \brief Return the XML attribute name corresponding to a time component
+ *
+ * \param[in] component  Component to check
+ *
+ * \return XML attribute name corresponding to \p component, or NULL if
+ *         \p component is invalid
+ */
+const char *
+pcmk__time_component_attr(enum pcmk__time_component component)
+{
+    switch (component) {
+        case pcmk__time_years:
+            return PCMK_XA_YEARS;
+
+        case pcmk__time_months:
+            return PCMK_XA_MONTHS;
+
+        case pcmk__time_weeks:
+            return PCMK_XA_WEEKS;
+
+        case pcmk__time_days:
+            return PCMK_XA_DAYS;
+
+        case pcmk__time_hours:
+            return PCMK_XA_HOURS;
+
+        case pcmk__time_minutes:
+            return PCMK_XA_MINUTES;
+
+        case pcmk__time_seconds:
+            return PCMK_XA_SECONDS;
+
+        default:
+            return NULL;
+    }
+}
+
+typedef void (*component_fn_t)(crm_time_t *, int);
+
+/*!
+ * \internal
+ * \brief Get the addition function corresponding to a time component
+ * \param[in] component  Component to check
+ *
+ * \return Addition function corresponding to \p component, or NULL if
+ *         \p component is invalid
+ */
+static component_fn_t
+component_fn(enum pcmk__time_component component)
+{
+    switch (component) {
+        case pcmk__time_years:
+            return crm_time_add_years;
+
+        case pcmk__time_months:
+            return crm_time_add_months;
+
+        case pcmk__time_weeks:
+            return crm_time_add_weeks;
+
+        case pcmk__time_days:
+            return crm_time_add_days;
+
+        case pcmk__time_hours:
+            return crm_time_add_hours;
+
+        case pcmk__time_minutes:
+            return crm_time_add_minutes;
+
+        case pcmk__time_seconds:
+            return crm_time_add_seconds;
+
+        default:
+            return NULL;
+    }
+
+}
+
+/*!
+ * \internal
  * \brief Add the value of an XML attribute to a time object
  *
  * \param[in,out] t          Time object to add to
@@ -1442,51 +1541,11 @@ pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
                         const xmlNode *xml)
 {
     long long value;
-    const char *attr = NULL;
-    void (*add)(crm_time_t *, int) = NULL;
+    const char *attr = pcmk__time_component_attr(component);
+    component_fn_t add = component_fn(component);
 
-    if (t == NULL) {
+    if ((t == NULL) || (attr == NULL) || (add == NULL)) {
         return EINVAL;
-    }
-
-    switch (component) {
-        case pcmk__time_years:
-            attr = PCMK_XA_YEARS;
-            add = crm_time_add_years;
-            break;
-
-        case pcmk__time_months:
-            attr = PCMK_XA_MONTHS;
-            add = crm_time_add_months;
-            break;
-
-        case pcmk__time_weeks:
-            attr = PCMK_XA_WEEKS;
-            add = crm_time_add_weeks;
-            break;
-
-        case pcmk__time_days:
-            attr = PCMK_XA_DAYS;
-            add = crm_time_add_days;
-            break;
-
-        case pcmk__time_hours:
-            attr = PCMK_XA_HOURS;
-            add = crm_time_add_hours;
-            break;
-
-        case pcmk__time_minutes:
-            attr = PCMK_XA_MINUTES;
-            add = crm_time_add_minutes;
-            break;
-
-        case pcmk__time_seconds:
-            attr = PCMK_XA_SECONDS;
-            add = crm_time_add_seconds;
-            break;
-
-        default:
-            return EINVAL;
     }
 
     if (xml == NULL) {

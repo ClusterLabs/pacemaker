@@ -31,6 +31,8 @@ extern "C" {
         }                                                               \
     } while (0)
 
+int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
+
 #ifdef __cplusplus
 }
 #endif

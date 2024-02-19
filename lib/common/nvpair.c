@@ -630,6 +630,37 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
 }
 
 /*!
+ * \internal
+ * \brief Get a date/time object from an XML attribute value
+ *
+ * \param[in]  xml   XML with attribute to parse (from CIB)
+ * \param[in]  attr  Name of attribute to parse
+ * \param[out] t     Where to create date/time object
+ *                   (\p *t must be NULL initially)
+ *
+ * \return Standard Pacemaker return code
+ * \note The caller is responsible for freeing \p *t using crm_time_free().
+ */
+int
+pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
+{
+    const char *value = NULL;
+
+    if ((t == NULL) || (*t != NULL) || (xml == NULL) || (attr == NULL)) {
+        return EINVAL;
+    }
+
+    value = crm_element_value(xml, attr);
+    if (value != NULL) {
+        *t = crm_time_new(value);
+        if (*t == NULL) {
+            return pcmk_rc_unpack_error;
+        }
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Retrieve a copy of the value of an XML attribute
  *
  * This is like \c crm_element_value() but allocating new memory for the result.

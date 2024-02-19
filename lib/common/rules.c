@@ -231,3 +231,61 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     // All specified ranges passed, or none were given (also considered a pass)
     return pcmk_rc_ok;
 }
+
+#define ADD_COMPONENT(component) do {                                       \
+        int sub_rc = pcmk__add_time_from_xml(*end, component, duration);    \
+        if (sub_rc != pcmk_rc_ok) {                                         \
+            /* @COMPAT return sub_rc when we can break compatibility */     \
+            pcmk__config_warn("Ignoring %s in " PCMK_XE_DURATION " %s "     \
+                              "because it is invalid",                      \
+                              pcmk__time_component_attr(component), id);    \
+            rc = sub_rc;                                                    \
+        }                                                                   \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Given a duration and a start time, calculate the end time
+ *
+ * \param[in]  duration  XML of PCMK_XE_DURATION element
+ * \param[in]  start     Start time
+ * \param[out] end       Where to store end time (\p *end must be NULL
+ *                       initially)
+ *
+ * \return Standard Pacemaker return code
+ * \note The caller is responsible for freeing \p *end using crm_time_free().
+ */
+int
+pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
+                      crm_time_t **end)
+{
+    int rc = pcmk_rc_ok;
+    const char *id = NULL;
+
+    if ((start == NULL) || (duration == NULL)
+        || (end == NULL) || (*end != NULL)) {
+        return EINVAL;
+    }
+
+    // Get duration ID (for logging)
+    id = pcmk__xe_id(duration);
+    if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_unpack_error instead
+         */
+        pcmk__config_warn(PCMK_XE_DURATION " element has no " PCMK_XA_ID);
+        id = "without ID";
+    }
+
+    *end = pcmk_copy_time(start);
+
+    ADD_COMPONENT(pcmk__time_years);
+    ADD_COMPONENT(pcmk__time_months);
+    ADD_COMPONENT(pcmk__time_weeks);
+    ADD_COMPONENT(pcmk__time_days);
+    ADD_COMPONENT(pcmk__time_hours);
+    ADD_COMPONENT(pcmk__time_minutes);
+    ADD_COMPONENT(pcmk__time_seconds);
+
+    return rc;
+}
