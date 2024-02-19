@@ -42,6 +42,7 @@ enum pcmk__time_component {
     pcmk__time_seconds,
 };
 
+const char *pcmk__time_component_attr(enum pcmk__time_component component);
 int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
                             const xmlNode *xml);
 
