@@ -135,7 +135,7 @@ xml_init(pcmk__output_t *out) {
         priv = out->priv;
     }
 
-    if (legacy_xml) {
+    if (legacy_xml || priv->legacy_xml) {
         priv->root = create_xml_node(NULL, PCMK_XE_CRM_MON);
         crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
@@ -180,7 +180,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         return;
     }
 
-    if (legacy_xml) {
+    if (legacy_xml || priv->legacy_xml) {
         GSList *node = priv->errors;
 
         if (exit_status != CRM_EX_OK) {
@@ -320,8 +320,10 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     char *name = NULL;
     char *buf = NULL;
     int len;
+    private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
@@ -339,7 +341,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         name = g_ascii_strdown(buf, -1);
     }
 
-    if (legacy_xml || simple_list) {
+    if (legacy_xml || priv->legacy_xml || simple_list) {
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
         pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
