@@ -80,6 +80,13 @@ of the following types:
 
        integer
      - 32-bit signed integer value (-2,147,483,648 to 2,147,483,647)
+   * - .. _iso8601:
+
+       .. index::
+          pair: type; iso8601
+
+       ISO 8601
+     - An `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_ date/time.
    * - .. _nonnegative_integer:
 
        .. index::

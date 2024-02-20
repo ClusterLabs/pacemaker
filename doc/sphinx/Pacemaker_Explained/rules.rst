@@ -229,66 +229,75 @@ in rule expressions.
 Date/Time Expressions
 #####################
 
-Date/time expressions are rule conditions based (as the name suggests) on the
-current date and time.
-
+Date/time expressions are rule conditions based on the current date and time.
 A ``date_expression`` element may optionally contain a ``date_spec`` or
-``duration`` element depending on the context.
+``duration`` element depending on the ``operation`` as described below.
 
-.. table:: **Attributes of a date_expression Element**
-   :widths: 1 4
+.. list-table:: **Attributes of a date_expression Element**
+   :class: longtable
+   :widths: 1 1 1 4
+   :header-rows: 1
 
-   +---------------+-----------------------------------------------------------+
-   | Attribute     | Description                                               |
-   +===============+===========================================================+
-   | id            | .. index::                                                |
-   |               |    pair: id; date_expression                              |
-   |               |                                                           |
-   |               | A unique name for this element (required)                 |
-   +---------------+-----------------------------------------------------------+
-   | start         | .. index::                                                |
-   |               |    pair: start; date_expression                           |
-   |               |                                                           |
-   |               | A date/time conforming to the                             |
-   |               | `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_       |
-   |               | specification. May be used when ``operation`` is          |
-   |               | ``in_range`` (in which case at least one of ``start`` or  |
-   |               | ``end`` must be specified) or ``gt`` (in which case       |
-   |               | ``start`` is required).                                   |
-   +---------------+-----------------------------------------------------------+
-   | end           | .. index::                                                |
-   |               |    pair: end; date_expression                             |
-   |               |                                                           |
-   |               | A date/time conforming to the                             |
-   |               | `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_       |
-   |               | specification. May be used when ``operation`` is          |
-   |               | ``in_range`` (in which case at least one of ``start`` or  |
-   |               | ``end`` must be specified) or ``lt`` (in which case       |
-   |               | ``end`` is required).                                     |
-   +---------------+-----------------------------------------------------------+
-   | operation     | .. index::                                                |
-   |               |    pair: operation; date_expression                       |
-   |               |                                                           |
-   |               | Compares the current date/time with the start and/or end  |
-   |               | date, depending on the context. Allowed values:           |
-   |               |                                                           |
-   |               | * ``gt:`` True if the current date/time is after ``start``|
-   |               | * ``lt:`` True if the current date/time is before ``end`` |
-   |               | * ``in_range:`` True if the current date/time is after    |
-   |               |   ``start`` (if specified) and before either ``end`` (if  |
-   |               |   specified) or ``start`` plus the value of the           |
-   |               |   ``duration`` element (if one is contained in the        |
-   |               |   ``date_expression``). If both ``end`` and ``duration``  |
-   |               |   are specified, ``duration`` is ignored.                 |
-   |               | * ``date_spec:`` True if the current date/time matches    |
-   |               |   the specification given in the contained ``date_spec``  |
-   |               |   element (described below)                               |
-   +---------------+-----------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _date_expression_id:
 
+       .. index::
+          pair: id; date_expression
 
-.. note:: There is no ``eq``, ``neq``, ``gte``, or ``lte`` operation, since
-          they would be valid only for a single second.
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique name for this element (required)
+   * - .. _date_expression_start:
 
+       .. index::
+          pair: start; date_expression
+
+       start
+     - :ref:`ISO 8601 <iso8601>`
+     - 
+     - The beginning of the desired time range. Meaningful with an
+       ``operation`` of ``in_range`` or ``gt``.
+   * - .. _date_expression_end:
+
+       .. index::
+          pair: end; date_expression
+
+       end
+     - :ref:`ISO 8601 <iso8601>`
+     - 
+     - The end of the desired time range. Meaningful with an ``operation`` of
+       ``in_range`` or ``lt``.
+   * - .. _date_expression_operation:
+
+       .. index::
+          pair: operation; date_expression
+
+       operation
+     - :ref:`enumeration <enumeration>`
+     - ``in_range``
+     - Specifies how to compare the current date/time against a desired time
+       range. Allowed values:
+
+       * ``gt:`` The expression passes if the current date/time is after
+         ``start`` (which is required)
+       * ``lt:`` The expression passes if the current date/time is before
+         ``end`` (which is required)
+       * ``in_range:`` The expression passes if the current date/time is
+         greater than or equal to ``start`` (if specified) and less than or
+         equal to either ``end`` (if specified) or ``start`` plus the value of
+         the :ref:`duration <duration_element>` element (if one is contained in
+         the ``date_expression``). At least one of ``start`` or ``end`` must be
+         specified. If both ``end`` and ``duration`` are specified,
+         ``duration`` is ignored.
+       * ``date_spec:`` The expression passes if the current date/time matches
+         the specification given in the contained
+         :ref:`date_spec <date_spec>` element (which is required)
+
+.. _date_spec:
 
 .. index::
    single: date specification
@@ -395,6 +404,8 @@ are not supported.
           further depend on factors such as any other actions the cluster may
           need to perform first, and the load of the machine.
 
+
+.. _duration_element:
 
 .. index::
    single: duration
@@ -539,8 +550,8 @@ A small sample of how time-based expressions can be used:
 
    .. note:: Because no time is specified with the above dates, 00:00:00 is
              implied. This means that the range includes all of 2005-03-01 but
-             none of 2005-04-01. You may wish to write ``end`` as
-             ``"2005-03-31T23:59:59"`` to avoid confusion.
+             only the first second of 2005-04-01. You may wish to write ``end``
+             as ``"2005-03-31T23:59:59"`` to avoid confusion.
 
 
 .. index::
