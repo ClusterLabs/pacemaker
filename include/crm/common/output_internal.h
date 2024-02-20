@@ -928,6 +928,16 @@ int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
 
 /*!
  * \internal
+ * \brief Enable the older style XML output used by `crm_mon -X`
+ *
+ * \note This function should not be used anywhere except in crm_mon.
+ *
+ * @COMPAT This can be removed when `crm_mon -X` is removed
+ */
+void pcmk__output_set_legacy_xml(pcmk__output_t *out);
+
+/*!
+ * \internal
  * \brief Select an updated return code for an operation on a \p pcmk__output_t
  *
  * This function helps to keep an up-to-date record of the most relevant return
