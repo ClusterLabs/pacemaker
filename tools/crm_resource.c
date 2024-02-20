@@ -1551,23 +1551,23 @@ main(int argc, char **argv)
     }
 
     if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
-        /* Kind of a hack to display XML lists using a real tag instead of <list>.  This just
-         * saves from having to write custom messages to build the lists around all these things
-         */
         switch (options.rsc_cmd) {
-            case cmd_execute_agent:
-            case cmd_list_resources:
-            case cmd_query_xml:
-            case cmd_query_raw_xml:
-            case cmd_list_active_ops:
-            case cmd_list_all_ops:
-            case cmd_colocations:
+            /* These are the only commands that have historically used the <list>
+             * elements in their XML schema.  For all others, use the simple list
+             * argument.
+             */
+            case cmd_get_param:
+            case cmd_get_property:
+            case cmd_list_instances:
+            case cmd_list_standards:
+                break;
+
+            default:
                 pcmk__force_args(context, &error, "%s --xml-simple-list",
                                  g_get_prgname());
                 break;
-            default:
-                break;
         }
+
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
         if ((options.rsc_cmd == cmd_colocations) ||
             options.rsc_cmd == cmd_list_resources) {
