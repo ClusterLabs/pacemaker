@@ -1334,13 +1334,6 @@ add_output_args(void) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
-    } else if (output_format == mon_output_legacy_xml) {
-        output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &err, "%s --xml-legacy",
-                              g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
     }
 }
 
@@ -1589,14 +1582,19 @@ main(int argc, char **argv)
     set_default_exec_mode(args);
     add_output_args();
 
-    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
-
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
+
+    if (output_format == mon_output_legacy_xml) {
+        output_format = mon_output_xml;
+        pcmk__output_set_legacy_xml(out);
+    }
+
+    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
 
     /* If we had a valid format for pcmk__output_new(), output_format should be
      * set by now.

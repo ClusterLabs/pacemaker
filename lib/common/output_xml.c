@@ -21,13 +21,9 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>    // pcmk__xml2fd
 
-static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
 
 GOptionEntry pcmk__xml_output_entries[] = {
-    { "xml-legacy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
-      NULL,
-      NULL },
     { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
       NULL,
       NULL },
@@ -123,7 +119,7 @@ add_root_node(pcmk__output_t *out)
 
     priv = out->priv;
 
-    if (legacy_xml || priv->legacy_xml) {
+    if (priv->legacy_xml) {
         priv->root = create_xml_node(NULL, PCMK_XE_CRM_MON);
         crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
@@ -177,12 +173,6 @@ xml_init(pcmk__output_t *out) {
 
     priv->errors = NULL;
 
-    /* Copy this from the file-level variable.  This means that it is only settable
-     * as a command line option, and that pcmk__output_new must be called after all
-     * command line processing is completed.
-     */
-    priv->legacy_xml = legacy_xml;
-
     return true;
 }
 
@@ -207,7 +197,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
     add_root_node(out);
 
-    if (legacy_xml || priv->legacy_xml) {
+    if (priv->legacy_xml) {
         GSList *node = priv->errors;
 
         if (exit_status != CRM_EX_OK) {
@@ -370,7 +360,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         name = g_ascii_strdown(buf, -1);
     }
 
-    if (legacy_xml || priv->legacy_xml || simple_list) {
+    if (priv->legacy_xml || simple_list) {
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
         pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
