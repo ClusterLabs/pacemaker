@@ -447,6 +447,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
         xmlNode *constraint_node = getXpathResult(xpathObj, i);
         xmlNode *date_expr_node = NULL;
         crm_time_t *end = NULL;
+        int rc = pcmk_rc_ok;
 
         if (buf == NULL) {
             buf = g_string_sized_new(1024);
@@ -469,7 +470,10 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
          *
          * @COMPAT Check for error once we are rejecting rules with invalid end
          */
-        pcmk__xe_get_datetime(date_expr_node, PCMK_XA_END, &end);
+        rc = pcmk__xe_get_datetime(date_expr_node, PCMK_XA_END, &end);
+        if (rc != pcmk_rc_ok) {
+            crm_trace("Invalid " PCMK_XA_END ": %s", pcmk_rc_str(rc));
+        }
 
         if (crm_time_compare(now, end) == 1) {
             xmlNode *fragment = NULL;
