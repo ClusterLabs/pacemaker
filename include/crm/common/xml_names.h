@@ -90,6 +90,7 @@ extern "C" {
 #define PCMK_XE_DATE_EXPRESSION             "date_expression"
 #define PCMK_XE_DATE_SPEC                   "date_spec"
 #define PCMK_XE_DC                          "dc"
+#define PCMK_XE_DEPRECATED                  "deprecated"
 #define PCMK_XE_DIFF                        "diff"
 #define PCMK_XE_DIGEST                      "digest"
 #define PCMK_XE_DIGESTS                     "digests"
