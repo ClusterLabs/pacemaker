@@ -938,6 +938,19 @@ void pcmk__output_set_legacy_xml(pcmk__output_t *out);
 
 /*!
  * \internal
+ * \brief Enable using the <list> element for lists
+ *
+ * \note This function is only used in limited places and should not be
+ * used anywhere new.  We are trying to discourage and ultimately remove
+ * uses of this style of list.
+ *
+ * @COMPAT This can be removed when the stonith_admin and crm_resource
+ * schemas can be changed
+ */
+void pcmk__output_enable_list_element(pcmk__output_t *out);
+
+/*!
+ * \internal
  * \brief Select an updated return code for an operation on a \p pcmk__output_t
  *
  * This function helps to keep an up-to-date record of the most relevant return

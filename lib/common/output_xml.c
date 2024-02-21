@@ -608,3 +608,20 @@ pcmk__output_set_legacy_xml(pcmk__output_t *out)
     priv = out->priv;
     priv->legacy_xml = true;
 }
+
+void
+pcmk__output_enable_list_element(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
+        return;
+    }
+
+    CRM_ASSERT(out->priv != NULL);
+
+    priv = out->priv;
+    priv->list_element = true;
+}
