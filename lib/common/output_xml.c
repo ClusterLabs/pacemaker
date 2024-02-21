@@ -94,6 +94,7 @@ typedef struct private_data_s {
     GSList *errors;
     /* End members that must match the HTML version */
     bool legacy_xml;
+    bool list_element;
 } private_data_t;
 
 static bool
@@ -360,7 +361,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         name = g_ascii_strdown(buf, -1);
     }
 
-    if (priv->legacy_xml || simple_list) {
+    if (priv->legacy_xml || simple_list || !priv->list_element) {
         pcmk__output_xml_create_parent(out, name, NULL);
     } else {
         pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
@@ -408,7 +409,7 @@ xml_end_list(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    if (priv->legacy_xml || simple_list) {
+    if (priv->legacy_xml || simple_list || !priv->list_element) {
         g_queue_pop_tail(priv->parent_q);
     } else {
         char *buf = NULL;
