@@ -807,11 +807,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname())) {
-        exit_code = CRM_EX_SOFTWARE;
-        goto done;
-    }
-
     if (args->version) {
         out->version(out, false);
         goto done;

@@ -1560,11 +1560,10 @@ main(int argc, char **argv)
             case cmd_get_property:
             case cmd_list_instances:
             case cmd_list_standards:
+                pcmk__output_enable_list_element(out);
                 break;
 
             default:
-                pcmk__force_args(context, &error, "%s --xml-simple-list",
-                                 g_get_prgname());
                 break;
         }
 

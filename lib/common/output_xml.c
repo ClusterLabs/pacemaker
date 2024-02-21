@@ -21,13 +21,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>    // pcmk__xml2fd
 
-static gboolean simple_list = FALSE;
-
 GOptionEntry pcmk__xml_output_entries[] = {
-    { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
-      NULL,
-      NULL },
-
     { NULL }
 };
 
@@ -361,12 +355,12 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         name = g_ascii_strdown(buf, -1);
     }
 
-    if (priv->legacy_xml || simple_list || !priv->list_element) {
-        pcmk__output_xml_create_parent(out, name, NULL);
-    } else {
+    if (priv->list_element) {
         pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
                                        PCMK_XA_NAME, name,
                                        NULL);
+    } else {
+        pcmk__output_xml_create_parent(out, name, NULL);
     }
 
     g_free(name);
@@ -409,9 +403,7 @@ xml_end_list(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    if (priv->legacy_xml || simple_list || !priv->list_element) {
-        g_queue_pop_tail(priv->parent_q);
-    } else {
+    if (priv->list_element) {
         char *buf = NULL;
         xmlNodePtr node;
 
@@ -419,6 +411,8 @@ xml_end_list(pcmk__output_t *out) {
         buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
         crm_xml_add(node, PCMK_XA_COUNT, buf);
         free(buf);
+    } else {
+        g_queue_pop_tail(priv->parent_q);
     }
 }
 

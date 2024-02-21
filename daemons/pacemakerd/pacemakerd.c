@@ -301,8 +301,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname());
-
     pcmk__register_messages(out, fmt_functions);
 
     if (options.features) {
