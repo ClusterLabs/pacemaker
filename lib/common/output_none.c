@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,10 +14,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
-
-GOptionEntry pcmk__none_output_entries[] = {
-    { NULL }
-};
 
 static void
 none_free_priv(pcmk__output_t *out) {

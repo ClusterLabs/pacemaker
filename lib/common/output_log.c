@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,10 +15,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-GOptionEntry pcmk__log_output_entries[] = {
-    { NULL }
-};
 
 typedef struct private_data_s {
     /* gathered in log_begin_list */

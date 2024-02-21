@@ -24,10 +24,6 @@
 
 #if CURSES_ENABLED
 
-GOptionEntry crm_mon_curses_output_entries[] = {
-    { NULL }
-};
-
 typedef struct curses_list_data_s {
     unsigned int len;
     char *singular_noun;

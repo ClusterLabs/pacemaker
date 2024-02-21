@@ -21,10 +21,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>    // pcmk__xml2fd
 
-GOptionEntry pcmk__xml_output_entries[] = {
-    { NULL }
-};
-
 typedef struct subst_s {
     const char *from;
     const char *to;
