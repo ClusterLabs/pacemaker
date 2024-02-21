@@ -497,8 +497,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         PCMK_STONITH_HOST_ARGUMENT, NULL, "string", NULL,
         "port", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate parameter to supply instead of 'port'"),
+        N_("An alternate parameter to supply instead of 'port'"),
         N_("Some devices do not support the standard 'port' parameter or may "
             "provide additional ones. Use this to specify an alternate, device-"
             "specific, parameter that should indicate the machine to be "
@@ -575,8 +574,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_reboot_action", NULL, "string", NULL,
         PCMK_ACTION_REBOOT, NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate command to run instead of 'reboot'"),
+        N_("An alternate command to run instead of 'reboot'"),
         N_("Some devices do not support the standard commands or may provide "
             "additional ones. Use this to specify an alternate, device-"
             "specific, command that implements the 'reboot' action."),
@@ -585,8 +583,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_reboot_timeout", NULL, "time", NULL,
         "60s", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "Specify an alternate timeout to use for 'reboot' actions instead "
+        N_("Specify an alternate timeout to use for 'reboot' actions instead "
             "of stonith-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
@@ -596,9 +593,8 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_reboot_retries", NULL, "integer", NULL,
         "2", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "The maximum number of times to try the 'reboot' command within "
-            "the timeout period"),
+        N_("The maximum number of times to try the 'reboot' command within the "
+            "timeout period"),
         N_("Some devices do not support multiple connections. Operations may "
             "\"fail\" if the device is busy with another task. In that case, "
             "Pacemaker will automatically retry the operation if there is time "
@@ -609,8 +605,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_off_action", NULL, "string", NULL,
         PCMK_ACTION_OFF, NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate command to run instead of 'off'"),
+        N_("An alternate command to run instead of 'off'"),
         N_("Some devices do not support the standard commands or may provide "
             "additional ones. Use this to specify an alternate, device-"
             "specific, command that implements the 'off' action."),
@@ -619,8 +614,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_off_timeout", NULL, "time", NULL,
         "60s", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "Specify an alternate timeout to use for 'off' actions instead of "
+        N_("Specify an alternate timeout to use for 'off' actions instead of "
             "stonith-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
@@ -630,8 +624,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_off_retries", NULL, "integer", NULL,
         "2", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "The maximum number of times to try the 'off' command within the "
+        N_("The maximum number of times to try the 'off' command within the "
             "timeout period"),
         N_("Some devices do not support multiple connections. Operations may "
             "\"fail\" if the device is busy with another task. In that case, "
@@ -643,8 +636,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_on_action", NULL, "string", NULL,
         PCMK_ACTION_ON, NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate command to run instead of 'on'"),
+        N_("An alternate command to run instead of 'on'"),
         N_("Some devices do not support the standard commands or may provide "
             "additional ones. Use this to specify an alternate, device-"
             "specific, command that implements the 'on' action."),
@@ -653,8 +645,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_on_timeout", NULL, "time", NULL,
         "60s", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "Specify an alternate timeout to use for 'on' actions instead of "
+        N_("Specify an alternate timeout to use for 'on' actions instead of "
             "stonith-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
@@ -664,8 +655,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_on_retries", NULL, "integer", NULL,
         "2", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "The maximum number of times to try the 'on' command within the "
+        N_("The maximum number of times to try the 'on' command within the "
             "timeout period"),
         N_("Some devices do not support multiple connections. Operations may "
             "\"fail\" if the device is busy with another task. In that case, "
@@ -677,8 +667,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_list_action", NULL, "string", NULL,
         PCMK_ACTION_LIST, NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate command to run instead of 'list'"),
+        N_("An alternate command to run instead of 'list'"),
         N_("Some devices do not support the standard commands or may provide "
             "additional ones. Use this to specify an alternate, device-"
             "specific, command that implements the 'list' action."),
@@ -687,8 +676,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_list_timeout", NULL, "time", NULL,
         "60s", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "Specify an alternate timeout to use for 'list' actions instead of "
+        N_("Specify an alternate timeout to use for 'list' actions instead of "
             "stonith-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
@@ -698,8 +686,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_list_retries", NULL, "integer", NULL,
         "2", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "The maximum number of times to try the 'list' command within the "
+        N_("The maximum number of times to try the 'list' command within the "
             "timeout period"),
         N_("Some devices do not support multiple connections. Operations may "
             "\"fail\" if the device is busy with another task. In that case, "
@@ -711,8 +698,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_monitor_action", NULL, "string", NULL,
         PCMK_ACTION_MONITOR, NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate command to run instead of 'monitor'"),
+        N_("An alternate command to run instead of 'monitor'"),
         N_("Some devices do not support the standard commands or may provide "
             "additional ones. Use this to specify an alternate, device-"
             "specific, command that implements the 'monitor' action."),
@@ -721,8 +707,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_monitor_timeout", NULL, "time", NULL,
         "60s", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "Specify an alternate timeout to use for 'monitor' actions instead "
+        N_("Specify an alternate timeout to use for 'monitor' actions instead "
             "of stonith-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
@@ -732,8 +717,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_monitor_retries", NULL, "integer", NULL,
         "2", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "The maximum number of times to try the 'monitor' command within "
+        N_("The maximum number of times to try the 'monitor' command within "
             "the timeout period"),
         N_("Some devices do not support multiple connections. Operations may "
             "\"fail\" if the device is busy with another task. In that case, "
@@ -745,8 +729,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_status_action", NULL, "string", NULL,
         PCMK_ACTION_STATUS, NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "An alternate command to run instead of 'status'"),
+        N_("An alternate command to run instead of 'status'"),
         N_("Some devices do not support the standard commands or may provide "
             "additional ones. Use this to specify an alternate, device-"
             "specific, command that implements the 'status' action."),
@@ -755,8 +738,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_status_timeout", NULL, "time", NULL,
         "60s", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "Specify an alternate timeout to use for 'status' actions instead "
+        N_("Specify an alternate timeout to use for 'status' actions instead "
             "of stonith-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
@@ -766,8 +748,7 @@ static pcmk__cluster_option_t fencer_options[] = {
         "pcmk_status_retries", NULL, "integer", NULL,
         "2", NULL,
         pcmk__opt_advanced,
-        N_("*** Advanced Use Only *** "
-            "The maximum number of times to try the 'status' command within "
+        N_("The maximum number of times to try the 'status' command within "
             "the timeout period"),
         N_("Some devices do not support multiple connections. Operations may "
             "\"fail\" if the device is busy with another task. In that case, "
