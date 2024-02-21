@@ -67,6 +67,29 @@ pcmk__expression_type(const xmlNode *expr)
 
 /*!
  * \internal
+ * \brief Get parent XML element's ID for logging purposes
+ *
+ * \param[in] xml  XML of a subelement
+ *
+ * \return ID of \p xml's parent for logging purposes (guaranteed non-NULL)
+ */
+static const char *
+loggable_parent_id(const xmlNode *xml)
+{
+    // Default if called without parent (likely for unit testing)
+    const char *parent_id = "implied";
+
+    if ((xml != NULL) && (xml->parent != NULL)) {
+        parent_id = pcmk__xe_id(xml->parent);
+        if (parent_id == NULL) { // Not possible with schema validation enabled
+            parent_id = "without ID";
+        }
+    }
+    return parent_id;
+}
+
+/*!
+ * \internal
  * \brief Get the moon phase corresponding to a given date/time
  *
  * \param[in] now  Date/time to get moon phase for
@@ -167,6 +190,7 @@ int
 pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
 {
     const char *id = NULL;
+    const char *parent_id = loggable_parent_id(date_spec);
 
     // Range attributes that can be specified for a PCMK_XE_DATE_SPEC element
     struct range {
@@ -196,7 +220,9 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
         /* @COMPAT When we can break behavioral backward compatibility,
          * fail the specification
          */
-        pcmk__config_warn(PCMK_XE_DATE_SPEC " element has no " PCMK_XA_ID);
+        pcmk__config_warn(PCMK_XE_DATE_SPEC " subelement of "
+                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
+                          parent_id);
         id = "without ID"; // for logging
     }
 
@@ -265,6 +291,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
 {
     int rc = pcmk_rc_ok;
     const char *id = NULL;
+    const char *parent_id = loggable_parent_id(duration);
 
     if ((start == NULL) || (duration == NULL)
         || (end == NULL) || (*end != NULL)) {
@@ -277,7 +304,9 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
         /* @COMPAT When we can break behavioral backward compatibility,
          * return pcmk_rc_unpack_error instead
          */
-        pcmk__config_warn(PCMK_XE_DURATION " element has no " PCMK_XA_ID);
+        pcmk__config_warn(PCMK_XE_DURATION " subelement of "
+                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
+                          parent_id);
         id = "without ID";
     }
 
