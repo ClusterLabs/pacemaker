@@ -52,7 +52,7 @@ static pcmk__cluster_option_t cluster_options[] = {
      */
     {
         PCMK_OPT_DC_VERSION, NULL, "string", NULL,
-        PCMK_VALUE_NONE, NULL,
+        NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
             "(DC)"),
@@ -61,7 +61,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
-        "corosync", NULL,
+        NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),

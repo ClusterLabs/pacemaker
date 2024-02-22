@@ -506,7 +506,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     },
     {
         PCMK_STONITH_HOST_MAP, NULL, "string", NULL,
-        "", NULL,
+        NULL, NULL,
         pcmk__opt_none,
         N_("A mapping of node names to port numbers for devices that do not "
             "support node names."),
@@ -515,7 +515,7 @@ static pcmk__cluster_option_t fencer_options[] = {
     },
     {
         PCMK_STONITH_HOST_LIST, NULL, "string", NULL,
-        "", NULL,
+        NULL, NULL,
         pcmk__opt_none,
         N_("A list of nodes that can be targeted by this device (optional "
             "unless pcmk_host_list=\"static-list\")"),
@@ -524,13 +524,17 @@ static pcmk__cluster_option_t fencer_options[] = {
     {
         PCMK_STONITH_HOST_CHECK, NULL, "select",
             "dynamic-list, static-list, status, none",
-        "dynamic-list", NULL,
+        NULL, NULL,
         pcmk__opt_none,
         N_("How to determine which nodes can be targeted by the device"),
         N_("Use \"dynamic-list\" to query the device via the 'list' command; "
             "\"static-list\" to check the pcmk_host_list attribute; "
             "\"status\" to query the device via the 'status' command; or "
-            "\"none\" to assume every device can fence every node."),
+            "\"none\" to assume every device can fence every node. "
+            "The default value is \"static-list\" if pcmk_host_map or "
+            "pcmk_host_list is set; otherwise \"dynamic-list\" if the device "
+            "supports the list operation; otherwise \"status\" if the device "
+            "supports the status operation; otherwise \"none\""),
     },
     {
         PCMK_STONITH_DELAY_MAX, NULL, "time", NULL,
