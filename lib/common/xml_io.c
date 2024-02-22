@@ -222,8 +222,6 @@ pcmk__xml_read(const char *filename)
     // @COMPAT At 3.0.0, free xml and return NULL if xml != NULL on error
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error != NULL) {
-        crm_err("Couldn't parse XML from %s", (use_stdin? "stdin": filename));
-
         if (xml != NULL) {
             crm_log_xml_info(xml, "Partial");
         }
@@ -272,8 +270,6 @@ pcmk__xml_parse(const char *input)
     // @COMPAT At 3.0.0, free xml and return NULL if xml != NULL; update doxygen
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error != NULL) {
-        crm_err("Couldn't parse XML from string: %s", input);
-
         if (xml != NULL) {
             crm_log_xml_info(xml, "Partial");
         }
