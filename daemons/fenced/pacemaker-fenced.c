@@ -537,8 +537,8 @@ static pcmk__cluster_option_t fencer_options[] = {
         PCMK_STONITH_DELAY_MAX, NULL, "time", NULL,
         "0s", NULL,
         pcmk__opt_context_none,
-        N_("Enable a base delay for fencing actions and specify base delay "
-            "value."),
+        N_("Enable a delay of no more than the time specified before executing "
+            "fencing actions."),
         N_("Enable a delay of no more than the time specified before executing "
             "fencing actions. Pacemaker derives the overall delay by taking "
             "the value of pcmk_delay_base and adding a random delay value such "
