@@ -13,5 +13,6 @@
 #include <crm/common/output_internal.h>
 
 int pcmk__list_cluster_options(pcmk__output_t *out, bool all);
+int pcmk__list_fencing_params(pcmk__output_t *out, bool all);
 
 #endif  // PCMK__PCMKI_PCMKI_OPTIONS__H
