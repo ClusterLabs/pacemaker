@@ -91,6 +91,7 @@ API_base		= $(API_request_base)	\
 			  node-history		\
 			  nodes			\
 			  ocf-ra		\
+			  options		\
 			  patchset		\
 			  resources		\
 			  status		\
