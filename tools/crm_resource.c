@@ -619,7 +619,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         options.attr_set_type = PCMK_XE_UTILIZATION;
-    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
         options.attr_set_type = ATTR_SET_ELEMENT;
     }
     return TRUE;
@@ -642,10 +642,10 @@ cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 {
     options.cmdline_config = true;
 
-    if (pcmk__str_eq(option_name, "--class", pcmk__str_casei)) {
+    if (pcmk__str_eq(option_name, "--class", pcmk__str_none)) {
         pcmk__str_update(&options.v_class, optarg);
 
-    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_none)) {
         pcmk__str_update(&options.v_provider, optarg);
 
     } else {    // --agent
@@ -670,18 +670,18 @@ gboolean
 agent_spec_cb(const gchar *option_name, const gchar *optarg, gpointer data,
               GError **error)
 {
-    if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_casei)) {
+    if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_agents;
 
     } else if (pcmk__str_eq(option_name, "--list-ocf-alternatives",
-                            pcmk__str_casei)) {
+                            pcmk__str_none)) {
         options.rsc_cmd = cmd_list_alternatives;
 
     } else if (pcmk__str_eq(option_name, "--list-ocf-providers",
-                            pcmk__str_casei)) {
+                            pcmk__str_none)) {
         options.rsc_cmd = cmd_list_providers;
 
-    } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_none)) {
         options.rsc_cmd = cmd_metadata;
     }
 
