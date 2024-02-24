@@ -74,7 +74,6 @@ struct {
 
     // Infrastructure that given command needs to work
     int cib_options;              // Options to use with CIB IPC calls
-    gboolean require_crmd;        // Whether command requires controller IPC
     gboolean require_scheduler;   // Whether command requires scheduler data
     int find_flags;               // Flags to use when searching for resource
 
@@ -630,8 +629,6 @@ static GOptionEntry addl_entries[] = {
 
 static void
 reset_options(void) {
-    options.require_crmd = FALSE;
-
     options.require_scheduler = TRUE;
 
     options.find_flags = 0;
@@ -677,9 +674,6 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         SET_COMMAND(cmd_refresh);
     }
 
-    if (getenv("CIB_file") == NULL) {
-        options.require_crmd = TRUE;
-    }
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
@@ -770,7 +764,6 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_fail);
-    options.require_crmd = TRUE;
     return TRUE;
 }
 
@@ -1409,6 +1402,28 @@ is_cib_required(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a controller IPC connection is required
+ *
+ * \return \c true if a controller connection is required, or \c false otherwise
+ */
+static bool
+is_controller_required(void)
+{
+    switch (options.rsc_cmd) {
+        case cmd_cleanup:
+        case cmd_refresh:
+            return getenv("CIB_file") == NULL;
+
+        case cmd_fail:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1732,7 +1747,7 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the controller if needed
-    if (options.require_crmd) {
+    if (is_controller_required()) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
