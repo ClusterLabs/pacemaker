@@ -78,7 +78,6 @@ struct {
     gboolean require_crmd;        // Whether command requires controller IPC
     gboolean require_scheduler;   // Whether command requires scheduler data
     gboolean require_resource;    // Whether command requires resource specified
-    gboolean require_node;        // Whether command requires node specified
     int find_flags;               // Flags to use when searching for resource
 
     // Command-line option values
@@ -636,7 +635,6 @@ static GOptionEntry addl_entries[] = {
 static void
 reset_options(void) {
     options.require_crmd = FALSE;
-    options.require_node = FALSE;
 
     options.require_cib = TRUE;
     options.require_scheduler = TRUE;
@@ -787,7 +785,6 @@ gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_fail);
     options.require_crmd = TRUE;
-    options.require_node = TRUE;
     return TRUE;
 }
 
@@ -940,7 +937,6 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
-    options.require_node = TRUE;
     options.require_scheduler = TRUE;
     return TRUE;
 }
@@ -1351,6 +1347,24 @@ validate_cmdline_config(void)
     options.require_cib = FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node argument is required
+ *
+ * \return \c true if a \c --node argument is required, or \c false otherwise
+ */
+static bool
+is_node_required(void)
+{
+    switch (options.rsc_cmd) {
+        case cmd_digests:
+        case cmd_fail:
+            return true;
+        default:
+            return false;
+    }
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1593,7 +1607,7 @@ main(int argc, char **argv)
                     _("Must supply a resource id with -r"));
         goto done;
     }
-    if (options.require_node && (options.host_uname == NULL)) {
+    if (is_node_required() && (options.host_uname == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     _("Must supply a node name with -N"));
