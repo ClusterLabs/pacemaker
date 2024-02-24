@@ -121,24 +121,12 @@ struct {
     .require_resource = TRUE,
 };
 
-#if 0
-// @COMPAT @TODO enable this at next backward compatibility break
-#define SET_COMMAND(cmd) do {                                               \
-        if (options.rsc_cmd != cmd_none) {                                  \
-            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,             \
-                        "Only one command option may be specified");        \
-            return FALSE;                                                   \
-        }                                                                   \
-        options.rsc_cmd = (cmd);                                            \
+#define SET_COMMAND(cmd) do {               \
+        if (options.rsc_cmd != cmd_none) {  \
+            reset_options();                \
+        }                                   \
+        options.rsc_cmd = (cmd);            \
     } while (0)
-#else
-#define SET_COMMAND(cmd) do {                                               \
-        if (options.rsc_cmd != cmd_none) {                                  \
-            reset_options();                                                \
-        }                                                                   \
-        options.rsc_cmd = (cmd);                                            \
-    } while (0)
-#endif
 
 gboolean agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
