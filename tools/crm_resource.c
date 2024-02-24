@@ -73,9 +73,6 @@ enum rsc_command {
 struct {
     enum rsc_command rsc_cmd;     // crm_resource command to perform
 
-    // Infrastructure that given command needs to work
-    int cib_options;              // Options to use with CIB IPC calls
-
     // Command-line option values
     gchar *rsc_id;                // Value of --resource
     gchar *rsc_type;              // Value of --resource-type
@@ -110,7 +107,6 @@ struct {
 } options = {
     .attr_set_type = PCMK_XE_INSTANCE_ATTRIBUTES,
     .check_level = -1,
-    .cib_options = cib_sync_call,
     .rsc_cmd = cmd_list_resources,  // List all resources if no command given
 };
 
@@ -831,8 +827,8 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     if (nactive == 1) {
         rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
-                              cib_conn, options.cib_options, options.promoted_role_only,
-                              PCMK__ROLE_PROMOTED);
+                              cib_conn, cib_sync_call,
+                              options.promoted_role_only, PCMK__ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int count = 0;
@@ -851,7 +847,8 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
 
         if(count == 1 && current) {
             rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
-                                  cib_conn, options.cib_options, options.promoted_role_only,
+                                  cib_conn, cib_sync_call,
+                                  options.promoted_role_only,
                                   PCMK__ROLE_PROMOTED);
 
         } else {
@@ -918,7 +915,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 
     if (options.clear_expired) {
         rc = cli_resource_clear_all_expired(scheduler->input, cib_conn,
-                                            options.cib_options, options.rsc_id,
+                                            cib_sync_call, options.rsc_id,
                                             options.host_uname,
                                             options.promoted_role_only);
 
@@ -932,11 +929,11 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             return rc;
         }
         rc = cli_resource_clear(options.rsc_id, dest->details->uname, NULL,
-                                cib_conn, options.cib_options, TRUE, options.force);
+                                cib_conn, cib_sync_call, true, options.force);
 
     } else {
         rc = cli_resource_clear(options.rsc_id, NULL, scheduler->nodes,
-                                cib_conn, options.cib_options, TRUE, options.force);
+                                cib_conn, cib_sync_call, true, options.force);
     }
 
     if (!out->is_quiet(out)) {
@@ -1102,7 +1099,7 @@ set_property(void)
     crm_xml_add(msg_data, options.prop_name, options.prop_value);
 
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
-                                options.cib_options);
+                                cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     free_xml(msg_data);
 
@@ -1762,7 +1759,7 @@ main(int argc, char **argv)
              */
             rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
                                       options.timeout_ms, cib_conn,
-                                      options.cib_options, options.promoted_role_only,
+                                      cib_sync_call, options.promoted_role_only,
                                       options.force);
             break;
 
@@ -1861,7 +1858,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
-                                       options.cib_options, scheduler,
+                                       cib_sync_call, scheduler,
                                        options.promoted_role_only,
                                        options.force);
             }
@@ -1881,8 +1878,7 @@ main(int argc, char **argv)
             } else {
                 rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
                                       options.move_lifetime, cib_conn,
-                                      options.cib_options,
-                                      options.promoted_role_only,
+                                      cib_sync_call, options.promoted_role_only,
                                       PCMK__ROLE_PROMOTED);
             }
 
@@ -1972,8 +1968,7 @@ main(int argc, char **argv)
                                                options.prop_name,
                                                options.prop_value,
                                                options.recursive, cib_conn,
-                                               options.cib_options,
-                                               options.force);
+                                               cib_sync_call, options.force);
             break;
 
         case cmd_delete_param:
@@ -1983,8 +1978,7 @@ main(int argc, char **argv)
                                                options.attr_set_type,
                                                options.prop_id,
                                                options.prop_name, cib_conn,
-                                               options.cib_options,
-                                               options.force);
+                                               cib_sync_call, options.force);
             break;
 
         case cmd_cleanup:
@@ -2018,7 +2012,7 @@ main(int argc, char **argv)
                 g_set_error(&error, PCMK__RC_ERROR, rc,
                             _("You need to specify a resource type with -t"));
             } else {
-                rc = pcmk__resource_delete(cib_conn, options.cib_options,
+                rc = pcmk__resource_delete(cib_conn, cib_sync_call,
                                            options.rsc_id, options.rsc_type);
 
                 if (rc != pcmk_rc_ok) {
