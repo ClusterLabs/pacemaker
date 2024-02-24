@@ -113,10 +113,6 @@ struct {
     .cib_options = cib_sync_call,
 };
 
-#define SET_COMMAND(cmd) do {               \
-        options.rsc_cmd = (cmd);            \
-    } while (0)
-
 gboolean agent_spec_cb(const gchar *option_name, const gchar *optarg,
                        gpointer data, GError **error);
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -632,9 +628,9 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 gboolean
 cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
-        SET_COMMAND(cmd_cleanup);
+        options.rsc_cmd = cmd_cleanup;
     } else {
-        SET_COMMAND(cmd_refresh);
+        options.rsc_cmd = cmd_refresh;
     }
 
     return TRUE;
@@ -660,7 +656,7 @@ cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    SET_COMMAND(cmd_delete);
+    options.rsc_cmd = cmd_delete;
     return TRUE;
 }
 
@@ -675,18 +671,18 @@ agent_spec_cb(const gchar *option_name, const gchar *optarg, gpointer data,
               GError **error)
 {
     if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_casei)) {
-        SET_COMMAND(cmd_list_agents);
+        options.rsc_cmd = cmd_list_agents;
 
     } else if (pcmk__str_eq(option_name, "--list-ocf-alternatives",
                             pcmk__str_casei)) {
-        SET_COMMAND(cmd_list_alternatives);
+        options.rsc_cmd = cmd_list_alternatives;
 
     } else if (pcmk__str_eq(option_name, "--list-ocf-providers",
                             pcmk__str_casei)) {
-        SET_COMMAND(cmd_list_providers);
+        options.rsc_cmd = cmd_list_providers;
 
     } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_casei)) {
-        SET_COMMAND(cmd_metadata);
+        options.rsc_cmd = cmd_metadata;
     }
 
     pcmk__str_update(&options.agent_spec, optarg);
@@ -697,7 +693,7 @@ gboolean
 list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
                   GError **error)
 {
-    SET_COMMAND(cmd_list_standards);
+    options.rsc_cmd = cmd_list_standards;
     return TRUE;
 }
 
@@ -720,28 +716,28 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    SET_COMMAND(cmd_fail);
+    options.rsc_cmd = cmd_fail;
     return TRUE;
 }
 
 gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
-        SET_COMMAND(cmd_clear);
+        options.rsc_cmd = cmd_clear;
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
-        SET_COMMAND(cmd_ban);
+        options.rsc_cmd = cmd_ban;
     } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
-        SET_COMMAND(cmd_move);
+        options.rsc_cmd = cmd_move;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
-        SET_COMMAND(cmd_query_xml);
+        options.rsc_cmd = cmd_query_xml;
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
-        SET_COMMAND(cmd_query_raw_xml);
+        options.rsc_cmd = cmd_query_raw_xml;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
-        SET_COMMAND(cmd_locate);
+        options.rsc_cmd = cmd_locate;
     } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
-        SET_COMMAND(cmd_colocations);
+        options.rsc_cmd = cmd_colocations;
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
-        SET_COMMAND(cmd_colocations);
+        options.rsc_cmd = cmd_colocations;
         options.recursive = TRUE;
     }
 
@@ -751,9 +747,9 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-g", "--get-parameter", NULL)) {
-        SET_COMMAND(cmd_get_param);
+        options.rsc_cmd = cmd_get_param;
     } else {
-        SET_COMMAND(cmd_get_property);
+        options.rsc_cmd = cmd_get_property;
     }
 
     pcmk__str_update(&options.prop_name, optarg);
@@ -763,15 +759,15 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 gboolean
 list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-c", "--list-cts", NULL)) {
-        SET_COMMAND(cmd_cts);
+        options.rsc_cmd = cmd_cts;
     } else if (pcmk__str_any_of(option_name, "-L", "--list", NULL)) {
-        SET_COMMAND(cmd_list_resources);
+        options.rsc_cmd = cmd_list_resources;
     } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
-        SET_COMMAND(cmd_list_instances);
+        options.rsc_cmd = cmd_list_instances;
     } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
-        SET_COMMAND(cmd_list_active_ops);
+        options.rsc_cmd = cmd_list_active_ops;
     } else {
-        SET_COMMAND(cmd_list_all_ops);
+        options.rsc_cmd = cmd_list_all_ops;
     }
     return TRUE;
 }
@@ -779,9 +775,9 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
-        SET_COMMAND(cmd_set_param);
+        options.rsc_cmd = cmd_set_param;
     } else {
-        SET_COMMAND(cmd_delete_param);
+        options.rsc_cmd = cmd_delete_param;
     }
 
     pcmk__str_update(&options.prop_name, optarg);
@@ -790,7 +786,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    SET_COMMAND(cmd_set_property);
+    options.rsc_cmd = cmd_set_property;
     pcmk__str_update(&options.prop_name, optarg);
     return TRUE;
 }
@@ -812,7 +808,7 @@ gboolean
 validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                      gpointer data, GError **error)
 {
-    SET_COMMAND(cmd_execute_agent);
+    options.rsc_cmd = cmd_execute_agent;
     if (options.operation) {
         g_free(options.operation);
     }
@@ -836,7 +832,7 @@ gboolean
 restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    SET_COMMAND(cmd_restart);
+    options.rsc_cmd = cmd_restart;
     return TRUE;
 }
 
@@ -844,7 +840,7 @@ gboolean
 digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    SET_COMMAND(cmd_digests);
+    options.rsc_cmd = cmd_digests;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -853,13 +849,13 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    SET_COMMAND(cmd_wait);
+    options.rsc_cmd = cmd_wait;
     return TRUE;
 }
 
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    SET_COMMAND(cmd_why);
+    options.rsc_cmd = cmd_why;
     return TRUE;
 }
 
