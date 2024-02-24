@@ -120,22 +120,16 @@ struct {
         options.rsc_cmd = (cmd);            \
     } while (0)
 
+gboolean agent_spec_cb(const gchar *option_name, const gchar *optarg,
+                       gpointer data, GError **error);
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
 gboolean delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean list_agents_cb(const gchar *option_name, const gchar *optarg,
-                        gpointer data, GError **error);
-gboolean list_providers_cb(const gchar *option_name, const gchar *optarg,
-                           gpointer data, GError **error);
 gboolean list_standards_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
-gboolean list_alternatives_cb(const gchar *option_name, const gchar *optarg,
-                              gpointer data, GError **error);
-gboolean metadata_cb(const gchar *option_name, const gchar *optarg,
-                     gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
 gboolean fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -345,19 +339,19 @@ static GOptionEntry query_entries[] = {
       "List supported standards",
       NULL },
     { "list-ocf-providers", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      list_providers_cb,
+          agent_spec_cb,
       "List all available OCF providers",
       NULL },
     { "list-agents", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-      list_agents_cb,
+          agent_spec_cb,
       "List all agents available for the named standard and/or provider",
       "STD:PROV" },
     { "list-ocf-alternatives", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-      list_alternatives_cb,
+          agent_spec_cb,
       "List all available providers for the named OCF agent",
       "AGENT" },
     { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-      metadata_cb,
+          agent_spec_cb,
       "Show the metadata for the named class:provider:agent",
       "SPEC" },
     { "query-xml", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
@@ -686,27 +680,26 @@ expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     return TRUE;
 }
 
-static void
-get_agent_spec(const gchar *optarg)
+gboolean
+agent_spec_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+              GError **error)
 {
+    if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_casei)) {
+        SET_COMMAND(cmd_list_agents);
+
+    } else if (pcmk__str_eq(option_name, "--list-ocf-alternatives",
+                            pcmk__str_casei)) {
+        SET_COMMAND(cmd_list_alternatives);
+
+    } else if (pcmk__str_eq(option_name, "--list-ocf-providers",
+                            pcmk__str_casei)) {
+        SET_COMMAND(cmd_list_providers);
+
+    } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_casei)) {
+        SET_COMMAND(cmd_metadata);
+    }
+
     pcmk__str_update(&options.agent_spec, optarg);
-}
-
-gboolean
-list_agents_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-               GError **error)
-{
-    SET_COMMAND(cmd_list_agents);
-    get_agent_spec(optarg);
-    return TRUE;
-}
-
-gboolean
-list_providers_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                  GError **error)
-{
-    SET_COMMAND(cmd_list_providers);
-    get_agent_spec(optarg);
     return TRUE;
 }
 
@@ -715,24 +708,6 @@ list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
                   GError **error)
 {
     SET_COMMAND(cmd_list_standards);
-    return TRUE;
-}
-
-gboolean
-list_alternatives_cb(const gchar *option_name, const gchar *optarg,
-                     gpointer data, GError **error)
-{
-    SET_COMMAND(cmd_list_alternatives);
-    get_agent_spec(optarg);
-    return TRUE;
-}
-
-gboolean
-metadata_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-            GError **error)
-{
-    SET_COMMAND(cmd_metadata);
-    get_agent_spec(optarg);
     return TRUE;
 }
 
