@@ -73,7 +73,6 @@ struct {
     enum rsc_command rsc_cmd;     // crm_resource command to perform
 
     // Infrastructure that given command needs to work
-    gboolean require_cib;         // Whether command requires CIB IPC
     int cib_options;              // Options to use with CIB IPC calls
     gboolean require_crmd;        // Whether command requires controller IPC
     gboolean require_scheduler;   // Whether command requires scheduler data
@@ -114,7 +113,6 @@ struct {
     .attr_set_type = PCMK_XE_INSTANCE_ATTRIBUTES,
     .check_level = -1,
     .cib_options = cib_sync_call,
-    .require_cib = TRUE,
     .require_scheduler = TRUE,
 };
 
@@ -634,7 +632,6 @@ static void
 reset_options(void) {
     options.require_crmd = FALSE;
 
-    options.require_cib = TRUE;
     options.require_scheduler = TRUE;
 
     options.find_flags = 0;
@@ -704,7 +701,6 @@ expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 static void
 get_agent_spec(const gchar *optarg)
 {
-    options.require_cib = FALSE;
     options.require_scheduler = FALSE;
     pcmk__str_update(&options.agent_spec, optarg);
 }
@@ -732,7 +728,6 @@ list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
                   GError **error)
 {
     SET_COMMAND(cmd_list_standards);
-    options.require_cib = FALSE;
     options.require_scheduler = FALSE;
     return TRUE;
 }
@@ -1330,7 +1325,6 @@ validate_cmdline_config(void)
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     options.require_scheduler = FALSE;
-    options.require_cib = FALSE;
 }
 
 /*!
@@ -1385,6 +1379,31 @@ is_resource_required(void)
         case cmd_why:
             return false;
 
+        default:
+            return true;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check whether a CIB connection is required
+ *
+ * \return \c true if a CIB connection is required, or \c false otherwise
+ */
+static bool
+is_cib_required(void)
+{
+    if (options.cmdline_config) {
+        return false;
+    }
+
+    switch (options.rsc_cmd) {
+        case cmd_list_agents:
+        case cmd_list_alternatives:
+        case cmd_list_providers:
+        case cmd_list_standards:
+        case cmd_metadata:
+            return false;
         default:
             return true;
     }
@@ -1647,7 +1666,7 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the CIB if needed
-    if (options.require_cib) {
+    if (is_cib_required()) {
         cib_conn = cib_new();
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
             exit_code = CRM_EX_DISCONNECT;
