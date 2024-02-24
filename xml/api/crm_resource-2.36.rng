@@ -15,6 +15,7 @@
             <element name="metadata"> <text/> </element>
             <ref name="locate-list" />
             <ref name="operations-list" />
+            <externalRef href="options-2.34.rng"/>
             <ref name="providers-list" />
             <ref name="reasons-list" />
             <ref name="resource-check" />
