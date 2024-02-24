@@ -77,7 +77,6 @@ struct {
     int cib_options;              // Options to use with CIB IPC calls
     gboolean require_crmd;        // Whether command requires controller IPC
     gboolean require_scheduler;   // Whether command requires scheduler data
-    gboolean require_resource;    // Whether command requires resource specified
     int find_flags;               // Flags to use when searching for resource
 
     // Command-line option values
@@ -117,7 +116,6 @@ struct {
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
     .require_scheduler = TRUE,
-    .require_resource = TRUE,
 };
 
 #define SET_COMMAND(cmd) do {               \
@@ -638,7 +636,6 @@ reset_options(void) {
 
     options.require_cib = TRUE;
     options.require_scheduler = TRUE;
-    options.require_resource = TRUE;
 
     options.find_flags = 0;
 }
@@ -646,7 +643,6 @@ reset_options(void) {
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.cmdline_config = TRUE;
-    options.require_resource = FALSE;
 
     if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
         pcmk__str_update(&options.v_provider, optarg);
@@ -673,7 +669,6 @@ gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     pcmk__str_update(&options.v_class, optarg);
     options.cmdline_config = TRUE;
-    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -685,7 +680,6 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         SET_COMMAND(cmd_refresh);
     }
 
-    options.require_resource = FALSE;
     if (getenv("CIB_file") == NULL) {
         options.require_crmd = TRUE;
     }
@@ -704,7 +698,6 @@ delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 gboolean
 expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.clear_expired = TRUE;
-    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -713,7 +706,6 @@ get_agent_spec(const gchar *optarg)
 {
     options.require_cib = FALSE;
     options.require_scheduler = FALSE;
-    options.require_resource = FALSE;
     pcmk__str_update(&options.agent_spec, optarg);
 }
 
@@ -742,7 +734,6 @@ list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     SET_COMMAND(cmd_list_standards);
     options.require_cib = FALSE;
     options.require_scheduler = FALSE;
-    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -854,8 +845,6 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
     } else {
         SET_COMMAND(cmd_list_all_ops);
     }
-
-    options.require_resource = FALSE;
     return TRUE;
 }
 
@@ -944,7 +933,6 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_wait);
-    options.require_resource = FALSE;
     options.require_scheduler = FALSE;
     return TRUE;
 }
@@ -952,7 +940,6 @@ wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_why);
-    options.require_resource = FALSE;
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
@@ -1342,7 +1329,6 @@ validate_cmdline_config(void)
     if (options.cmdline_params == NULL) {
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
-    options.require_resource = FALSE;
     options.require_scheduler = FALSE;
     options.require_cib = FALSE;
 }
@@ -1362,6 +1348,45 @@ is_node_required(void)
             return true;
         default:
             return false;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource argument is required
+ *
+ * \return \c true if a \c --resource argument is required, or \c false
+ *         otherwise
+ */
+static bool
+is_resource_required(void)
+{
+    if (options.cmdline_config) {
+        return false;
+    }
+
+    switch (options.rsc_cmd) {
+        case cmd_clear:
+            return !options.clear_expired;
+
+        case cmd_cleanup:
+        case cmd_cts:
+        case cmd_list_active_ops:
+        case cmd_list_agents:
+        case cmd_list_all_ops:
+        case cmd_list_alternatives:
+        case cmd_list_instances:
+        case cmd_list_providers:
+        case cmd_list_resources:
+        case cmd_list_standards:
+        case cmd_metadata:
+        case cmd_refresh:
+        case cmd_wait:
+        case cmd_why:
+            return false;
+
+        default:
+            return true;
     }
 }
 
@@ -1482,7 +1507,6 @@ main(int argc, char **argv)
     // If the user didn't explicitly specify a command, list resources
     if (options.rsc_cmd == cmd_none) {
         options.rsc_cmd = cmd_list_resources;
-        options.require_resource = FALSE;
     }
 
     // --expired without --clear/-U doesn't make sense
@@ -1601,7 +1625,7 @@ main(int argc, char **argv)
         options.cmdline_params = NULL;
     }
 
-    if (options.require_resource && (options.rsc_id == NULL)) {
+    if (is_resource_required() && (options.rsc_id == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     _("Must supply a resource id with -r"));
