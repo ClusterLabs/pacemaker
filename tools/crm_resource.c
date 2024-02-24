@@ -120,10 +120,10 @@ struct {
         options.rsc_cmd = (cmd);            \
     } while (0)
 
-gboolean agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
+                           gpointer data, GError **error);
 gboolean delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean list_agents_cb(const gchar *option_name, const gchar *optarg,
@@ -584,15 +584,16 @@ static GOptionEntry addl_entries[] = {
     { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
       "Interval of operation to clear (default 0) (with -C -r -n)",
       "N" },
-    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, class_cb,
+    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
       "The standard the resource agent conforms to (for example, ocf).\n"
       INDENT "Use with --agent, --provider, --option, and --validate.",
       "CLASS" },
-    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
+    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, cmdline_config_cb,
       "The agent to use (for example, IPaddr). Use with --class,\n"
       INDENT "--provider, --option, and --validate.",
       "AGENT" },
-    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
+    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+          cmdline_config_cb,
       "The vendor that supplies the resource agent (for example,\n"
       INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
       "PROVIDER" },
@@ -631,19 +632,6 @@ reset_options(void) {
 }
 
 gboolean
-agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.cmdline_config = true;
-
-    if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
-        pcmk__str_update(&options.v_provider, optarg);
-    } else {
-        pcmk__str_update(&options.v_agent, optarg);
-    }
-
-    return TRUE;
-}
-
-gboolean
 attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
         options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
@@ -656,13 +644,6 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 }
 
 gboolean
-class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    pcmk__str_update(&options.v_class, optarg);
-    options.cmdline_config = true;
-    return TRUE;
-}
-
-gboolean
 cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
         SET_COMMAND(cmd_cleanup);
@@ -671,6 +652,24 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     }
 
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
+    return TRUE;
+}
+
+gboolean
+cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                  GError **error)
+{
+    options.cmdline_config = true;
+
+    if (pcmk__str_eq(option_name, "--class", pcmk__str_casei)) {
+        pcmk__str_update(&options.v_class, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
+        pcmk__str_update(&options.v_provider, optarg);
+
+    } else {    // --agent
+        pcmk__str_update(&options.v_agent, optarg);
+    }
     return TRUE;
 }
 
