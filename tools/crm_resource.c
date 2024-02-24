@@ -98,7 +98,7 @@ struct {
     int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
-    gboolean cmdline_config;      // Resource configuration was via arguments
+    bool cmdline_config;          // Resource configuration was via arguments
     char *v_agent;                // Value of --agent
     char *v_class;                // Value of --class
     char *v_provider;             // Value of --provider
@@ -632,7 +632,7 @@ reset_options(void) {
 
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.cmdline_config = TRUE;
+    options.cmdline_config = true;
 
     if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
         pcmk__str_update(&options.v_provider, optarg);
@@ -658,7 +658,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     pcmk__str_update(&options.v_class, optarg);
-    options.cmdline_config = TRUE;
+    options.cmdline_config = true;
     return TRUE;
 }
 
@@ -1419,7 +1419,7 @@ static bool
 is_scheduler_required(void)
 {
     /* Order of first two checks doesn't matter: (rsc_id != NULL) and
-     * cmdline_config == TRUE are mutually exclusive.
+     * cmdline_config == true are mutually exclusive.
      */
     if (options.cmdline_config) {
         return false;
