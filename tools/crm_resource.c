@@ -121,8 +121,6 @@ gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
-                              gpointer data, GError **error);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
@@ -342,6 +340,28 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
             options.override_params = pcmk__strkey_table(free, free);
         }
 
+    } else if (pcmk__str_any_of(option_name,
+                                "--force-demote", "--force-promote",
+                                "--force-start", "--force-stop",
+                                "--force-check", "--validate", NULL)) {
+        options.rsc_cmd = cmd_execute_agent;
+
+        g_free(options.operation);
+        options.operation = g_strdup(option_name + 2);  // skip "--"
+
+        if (options.override_params == NULL) {
+            options.override_params = pcmk__strkey_table(free, free);
+        }
+
+        if (optarg != NULL) {
+            if (pcmk__scan_min_int(optarg, &options.check_level,
+                                   0) != pcmk_rc_ok) {
+                g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
+                            _("Invalid check level setting: %s"), optarg);
+                return FALSE;
+            }
+        }
+
     } else if (pcmk__str_any_of(option_name, "-F", "--fail", NULL)) {
         options.rsc_cmd = cmd_fail;
 
@@ -508,7 +528,7 @@ static GOptionEntry query_entries[] = {
 
 static GOptionEntry command_entries[] = {
     { "validate", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
-      validate_or_force_cb,
+          command_cb,
       "Validate resource configuration by calling agent's validate-all\n"
       INDENT "action. The configuration may be specified either by giving an\n"
       INDENT "existing resource name with -r, or by specifying --class,\n"
@@ -632,32 +652,30 @@ static GOptionEntry advanced_entries[] = {
       INDENT "changes).",
       NULL },
     { "force-demote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      validate_or_force_cb,
+          command_cb,
       "(Advanced) Bypass the cluster and demote a resource on the local\n"
       INDENT "node. Unless --force is specified, this will refuse to do so if\n"
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
-    { "force-stop", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      validate_or_force_cb,
+    { "force-stop", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Bypass the cluster and stop a resource on the local node",
       NULL },
-    { "force-start", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      validate_or_force_cb,
+    { "force-start", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Bypass the cluster and start a resource on the local\n"
       INDENT "node. Unless --force is specified, this will refuse to do so if\n"
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
     { "force-promote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      validate_or_force_cb,
+          command_cb,
       "(Advanced) Bypass the cluster and promote a resource on the local\n"
       INDENT "node. Unless --force is specified, this will refuse to do so if\n"
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
     { "force-check", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
-      validate_or_force_cb,
+          command_cb,
       "(Advanced) Bypass the cluster and check the state of a resource on\n"
       INDENT "the local node. An optional LEVEL argument can be given\n"
       INDENT "to control the level of checking performed.",
@@ -802,30 +820,6 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     } else {
         options.timeout_ms = QB_MIN(options.timeout_ms, INT_MAX);
     }
-    return TRUE;
-}
-
-gboolean
-validate_or_force_cb(const gchar *option_name, const gchar *optarg,
-                     gpointer data, GError **error)
-{
-    options.rsc_cmd = cmd_execute_agent;
-    if (options.operation) {
-        g_free(options.operation);
-    }
-    options.operation = g_strdup(option_name + 2); // skip "--"
-    if (options.override_params == NULL) {
-        options.override_params = pcmk__strkey_table(free, free);
-    }
-
-    if (optarg != NULL) {
-        if (pcmk__scan_min_int(optarg, &options.check_level, 0) != pcmk_rc_ok) {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
-                        _("Invalid check level setting: %s"), optarg);
-            return FALSE;
-        }
-    }
-
     return TRUE;
 }
 
