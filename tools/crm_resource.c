@@ -117,7 +117,6 @@ struct {
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
-gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -606,7 +605,8 @@ static GOptionEntry location_entries[] = {
       INDENT "node. If --expired is specified, only those constraints whose\n"
       INDENT "lifetimes have expired will be removed.",
       NULL },
-    { "expired", 'e', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, expired_cb,
+    { "expired", 'e', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+          &options.clear_expired,
       "Modifies the --clear argument to remove constraints with\n"
       INDENT "expired lifetimes.",
       NULL },
@@ -784,12 +784,6 @@ cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else {    // --agent
         pcmk__str_update(&options.v_agent, optarg);
     }
-    return TRUE;
-}
-
-gboolean
-expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.clear_expired = TRUE;
     return TRUE;
 }
 
