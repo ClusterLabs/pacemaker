@@ -74,7 +74,6 @@ struct {
 
     // Infrastructure that given command needs to work
     int cib_options;              // Options to use with CIB IPC calls
-    gboolean require_scheduler;   // Whether command requires scheduler data
     int find_flags;               // Flags to use when searching for resource
 
     // Command-line option values
@@ -112,7 +111,6 @@ struct {
     .attr_set_type = PCMK_XE_INSTANCE_ATTRIBUTES,
     .check_level = -1,
     .cib_options = cib_sync_call,
-    .require_scheduler = TRUE,
 };
 
 #define SET_COMMAND(cmd) do {               \
@@ -629,8 +627,6 @@ static GOptionEntry addl_entries[] = {
 
 static void
 reset_options(void) {
-    options.require_scheduler = TRUE;
-
     options.find_flags = 0;
 }
 
@@ -681,7 +677,6 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_delete);
-    options.require_scheduler = FALSE;
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
@@ -695,7 +690,6 @@ expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 static void
 get_agent_spec(const gchar *optarg)
 {
-    options.require_scheduler = FALSE;
     pcmk__str_update(&options.agent_spec, optarg);
 }
 
@@ -722,7 +716,6 @@ list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
                   GError **error)
 {
     SET_COMMAND(cmd_list_standards);
-    options.require_scheduler = FALSE;
     return TRUE;
 }
 
@@ -852,7 +845,6 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_set_property);
-    options.require_scheduler = FALSE;
     pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
@@ -914,14 +906,12 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
-    options.require_scheduler = TRUE;
     return TRUE;
 }
 
 gboolean
 wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_wait);
-    options.require_scheduler = FALSE;
     return TRUE;
 }
 
@@ -1310,14 +1300,9 @@ validate_cmdline_config(void)
                     options.v_agent ? options.v_agent : "");
     }
 
-    if (error != NULL) {
-        return;
-    }
-
-    if (options.cmdline_params == NULL) {
+    if ((error == NULL) && (options.cmdline_params == NULL)) {
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
-    options.require_scheduler = FALSE;
 }
 
 /*!
@@ -1421,6 +1406,40 @@ is_controller_required(void)
 
         default:
             return false;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check whether a scheduler IPC connection is required
+ *
+ * \return \c true if a scheduler connection is required, or \c false otherwise
+ */
+static bool
+is_scheduler_required(void)
+{
+    /* Order of first two checks doesn't matter: (rsc_id != NULL) and
+     * cmdline_config == TRUE are mutually exclusive.
+     */
+    if (options.cmdline_config) {
+        return false;
+    }
+
+    if ((options.find_flags != 0) && (options.rsc_id != NULL)) {
+        return true;
+    }
+
+    switch (options.rsc_cmd) {
+        case cmd_list_agents:
+        case cmd_list_alternatives:
+        case cmd_list_providers:
+        case cmd_list_standards:
+        case cmd_metadata:
+        case cmd_set_property:
+        case cmd_wait:
+            return false;
+        default:
+            return true;
     }
 }
 
@@ -1676,10 +1695,6 @@ main(int argc, char **argv)
      * Set up necessary connections
      */
 
-    if (options.find_flags && options.rsc_id) {
-        options.require_scheduler = TRUE;
-    }
-
     // Establish a connection to the CIB if needed
     if (is_cib_required()) {
         cib_conn = cib_new();
@@ -1700,7 +1715,7 @@ main(int argc, char **argv)
     }
 
     // Populate scheduler data from XML file if specified or CIB query otherwise
-    if (options.require_scheduler) {
+    if (is_scheduler_required()) {
         rc = initialize_scheduler_data(&cib_xml_copy);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
