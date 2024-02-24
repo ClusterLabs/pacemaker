@@ -18,6 +18,7 @@
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
+#include <stdint.h>         // uint32_t
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -74,7 +75,6 @@ struct {
 
     // Infrastructure that given command needs to work
     int cib_options;              // Options to use with CIB IPC calls
-    int find_flags;               // Flags to use when searching for resource
 
     // Command-line option values
     gchar *rsc_id;                // Value of --resource
@@ -114,9 +114,6 @@ struct {
 };
 
 #define SET_COMMAND(cmd) do {               \
-        if (options.rsc_cmd != cmd_none) {  \
-            reset_options();                \
-        }                                   \
         options.rsc_cmd = (cmd);            \
     } while (0)
 
@@ -620,11 +617,6 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
-static void
-reset_options(void) {
-    options.find_flags = 0;
-}
-
 gboolean
 attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
@@ -645,7 +637,6 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         SET_COMMAND(cmd_refresh);
     }
 
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -670,7 +661,6 @@ cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_delete);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -738,36 +728,20 @@ gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
         SET_COMMAND(cmd_clear);
-        options.find_flags = pcmk_rsc_match_history
-                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
         SET_COMMAND(cmd_ban);
-        options.find_flags = pcmk_rsc_match_history
-                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         SET_COMMAND(cmd_move);
-        options.find_flags = pcmk_rsc_match_history
-                             |pcmk_rsc_match_anon_basename;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         SET_COMMAND(cmd_query_xml);
-        options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         SET_COMMAND(cmd_query_raw_xml);
-        options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         SET_COMMAND(cmd_locate);
-        options.find_flags = pcmk_rsc_match_history
-                             |pcmk_rsc_match_anon_basename;
-
     } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
         SET_COMMAND(cmd_colocations);
-        options.find_flags = pcmk_rsc_match_history
-                             |pcmk_rsc_match_anon_basename;
-
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
         SET_COMMAND(cmd_colocations);
-        options.find_flags = pcmk_rsc_match_history
-                             |pcmk_rsc_match_anon_basename;
         options.recursive = TRUE;
     }
 
@@ -783,7 +757,6 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     }
 
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -812,7 +785,6 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
     }
 
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -820,7 +792,6 @@ gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_set_property);
     pcmk__str_update(&options.prop_name, optarg);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_basename;
     return TRUE;
 }
 
@@ -846,7 +817,6 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         g_free(options.operation);
     }
     options.operation = g_strdup(option_name + 2); // skip "--"
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -867,7 +837,6 @@ restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     SET_COMMAND(cmd_restart);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -876,7 +845,6 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     SET_COMMAND(cmd_digests);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
@@ -892,7 +860,6 @@ wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_why);
-    options.find_flags = pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
     return TRUE;
 }
 
@@ -1281,6 +1248,44 @@ validate_cmdline_config(void)
 
 /*!
  * \internal
+ * \brief Get the <tt>enum pe_find</tt> flags for a given command
+ *
+ * \return <tt>enum pe_find</tt> flag group appropriate for \c options.rsc_cmd.
+ */
+static uint32_t
+get_find_flags(void)
+{
+    switch (options.rsc_cmd) {
+        case cmd_ban:
+        case cmd_cleanup:
+        case cmd_clear:
+        case cmd_colocations:
+        case cmd_digests:
+        case cmd_execute_agent:
+        case cmd_locate:
+        case cmd_move:
+        case cmd_refresh:
+        case cmd_restart:
+        case cmd_why:
+            return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
+
+        case cmd_delete:
+        case cmd_delete_param:
+        case cmd_get_param:
+        case cmd_get_property:
+        case cmd_query_raw_xml:
+        case cmd_query_xml:
+        case cmd_set_param:
+        case cmd_set_property:
+            return pcmk_rsc_match_history|pcmk_rsc_match_basename;
+
+        default:
+            return 0;
+    }
+}
+
+/*!
+ * \internal
  * \brief Check whether a node argument is required
  *
  * \return \c true if a \c --node argument is required, or \c false otherwise
@@ -1399,7 +1404,7 @@ is_scheduler_required(void)
         return false;
     }
 
-    if ((options.find_flags != 0) && (options.rsc_id != NULL)) {
+    if ((get_find_flags() != 0) && (options.rsc_id != NULL)) {
         return true;
     }
 
@@ -1488,6 +1493,7 @@ main(int argc, char **argv)
     xmlNode *cib_xml_copy = NULL;
     pcmk_resource_t *rsc = NULL;
     pcmk_node_t *node = NULL;
+    uint32_t find_flags = 0;
     int rc = pcmk_rc_ok;
 
     GOptionGroup *output_group = NULL;
@@ -1697,10 +1703,12 @@ main(int argc, char **argv)
         }
     }
 
+    find_flags = get_find_flags();
+
     // If command requires that resource exist if specified, find it
-    if (options.find_flags && options.rsc_id) {
+    if ((find_flags != 0) && (options.rsc_id != NULL)) {
         rsc = pe_find_resource_with_flags(scheduler->resources, options.rsc_id,
-                                          options.find_flags);
+                                          find_flags);
         if (rsc == NULL) {
             exit_code = CRM_EX_NOSUCH;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
