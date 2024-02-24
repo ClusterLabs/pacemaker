@@ -1397,15 +1397,8 @@ is_controller_required(void)
 static bool
 is_scheduler_required(void)
 {
-    /* Order of first two checks doesn't matter: (rsc_id != NULL) and
-     * cmdline_config == true are mutually exclusive.
-     */
     if (options.cmdline_config) {
         return false;
-    }
-
-    if ((get_find_flags() != 0) && (options.rsc_id != NULL)) {
-        return true;
     }
 
     switch (options.rsc_cmd) {
@@ -1414,7 +1407,6 @@ is_scheduler_required(void)
         case cmd_list_providers:
         case cmd_list_standards:
         case cmd_metadata:
-        case cmd_set_property:
         case cmd_wait:
             return false;
         default:
