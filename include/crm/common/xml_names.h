@@ -268,6 +268,7 @@ extern "C" {
 #define PCMK_XA_EXITSTATUS                  "exitstatus"
 #define PCMK_XA_EXPECTED                    "expected"
 #define PCMK_XA_EXPECTED_UP                 "expected_up"
+#define PCMK_XA_EXPIRES                     "expires"
 #define PCMK_XA_EXTENDED_STATUS             "extended-status"
 #define PCMK_XA_FAIL_COUNT                  "fail-count"
 #define PCMK_XA_FAILED                      "failed"
