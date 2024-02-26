@@ -51,6 +51,7 @@ static void close_pipe(int fildes[]);
 struct sigchld_data_s {
     sigset_t mask;      // Signals to block now (including SIGCHLD)
     sigset_t old_mask;  // Previous set of blocked signals
+    bool ignored;       // If SIGCHLD for another child has been ignored
 };
 
 // Initialize SIGCHLD data and prepare for use
@@ -68,6 +69,9 @@ sigchld_setup(struct sigchld_data_s *data)
                  CRM_XS " source=sigprocmask", pcmk_rc_str(errno));
         return false;
     }
+
+    data->ignored = false;
+
     return true;
 }
 
@@ -98,7 +102,7 @@ sigchld_close(int fd)
 
 // Return true if SIGCHLD was received from polled fd
 static bool
-sigchld_received(int fd)
+sigchld_received(int fd, int pid, struct sigchld_data_s *data)
 {
     struct signalfd_siginfo fdsi;
     ssize_t s;
@@ -112,7 +116,18 @@ sigchld_received(int fd)
                  CRM_XS " source=read", pcmk_rc_str(errno));
 
     } else if (fdsi.ssi_signo == SIGCHLD) {
-        return true;
+        if (fdsi.ssi_pid == pid) {
+            return true;
+
+        } else {
+            /* This SIGCHLD is for another child. We have to ignore it here but
+             * will still need to resend it after this synchronous action has
+             * completed and SIGCHLD has been restored to be handled by the
+             * previous SIGCHLD handler, so that it will be handled.
+             */
+            data->ignored = true;
+            return false;
+        }
     }
     return false;
 }
@@ -127,6 +142,12 @@ sigchld_cleanup(struct sigchld_data_s *data)
         crm_warn("Could not clean up after child process completion: %s",
                  pcmk_rc_str(errno));
     }
+
+    // Resend any ignored SIGCHLD for other children so that they'll be handled.
+    if (data->ignored && kill(getpid(), SIGCHLD) != 0) {
+        crm_warn("Could not resend ignored SIGCHLD to ourselves: %s",
+                 pcmk_rc_str(errno));
+    }
 }
 
 #else // HAVE_SYS_SIGNALFD_H not defined
@@ -137,6 +158,7 @@ struct sigchld_data_s {
     int pipe_fd[2];             // Pipe file descriptors
     struct sigaction sa;        // Signal handling info (with SIGCHLD)
     struct sigaction old_sa;    // Previous signal handling info
+    bool ignored;               // If SIGCHLD for another child has been ignored
 };
 
 // We need a global to use in the signal handler
@@ -187,6 +209,8 @@ sigchld_setup(struct sigchld_data_s *data)
                  CRM_XS " source=sigaction", pcmk_rc_str(errno));
     }
 
+    data->ignored = false;
+
     // Remember data for use in signal handler
     last_sigchld_data = data;
     return true;
@@ -207,7 +231,7 @@ sigchld_close(int fd)
 }
 
 static bool
-sigchld_received(int fd)
+sigchld_received(int fd, int pid, struct sigchld_data_s *data)
 {
     char ch;
 
@@ -230,6 +254,12 @@ sigchld_cleanup(struct sigchld_data_s *data)
     }
 
     close_pipe(data->pipe_fd);
+
+    // Resend any ignored SIGCHLD for other children so that they'll be handled.
+    if (data->ignored && kill(getpid(), SIGCHLD) != 0) {
+        crm_warn("Could not resend ignored SIGCHLD to ourselves: %s",
+                 pcmk_rc_str(errno));
+    }
 }
 
 #endif
@@ -1054,7 +1084,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
                 svc_read_output(op->opaque->stderr_fd, op, TRUE);
             }
 
-            if ((fds[2].revents & POLLIN) && sigchld_received(fds[2].fd)) {
+            if ((fds[2].revents & POLLIN)
+                && sigchld_received(fds[2].fd, op->pid, data)) {
                 wait_rc = waitpid(op->pid, &status, WNOHANG);
 
                 if ((wait_rc > 0) || ((wait_rc < 0) && (errno == ECHILD))) {
@@ -1067,6 +1098,17 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
                              CRM_XS " source=waitpid",
                              op->id, op->pid, wait_reason);
                     wait_rc = 0; // Act as if process is still running
+
+#ifndef HAVE_SYS_SIGNALFD_H
+                } else {
+                   /* The child hasn't exited, so this SIGCHLD could be for
+                    * another child. We have to ignore it here but will still
+                    * need to resend it after this synchronous action has
+                    * completed and SIGCHLD has been restored to be handled by
+                    * the previous handler, so that it will be handled.
+                    */
+                    data->ignored = true;
+#endif
                 }
             }
 
