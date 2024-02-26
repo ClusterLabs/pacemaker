@@ -15,7 +15,7 @@
 
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
-#include <crm/common/rules_internal.h>
+#include "../../crmcommon_private.h"
 
 #define MONTHS_TO_SECONDS "months=\"2\" weeks=\"3\" days=\"-1\" "           \
                           "hours=\"1\" minutes=\"1\" seconds=\"1\" />"

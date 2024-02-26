@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -124,6 +124,33 @@ bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
+
+/*
+ * Date/times
+ */
+
+// For use with pcmk__add_time_from_xml()
+enum pcmk__time_component {
+    pcmk__time_unknown,
+    pcmk__time_years,
+    pcmk__time_months,
+    pcmk__time_weeks,
+    pcmk__time_days,
+    pcmk__time_hours,
+    pcmk__time_minutes,
+    pcmk__time_seconds,
+};
+
+G_GNUC_INTERNAL
+const char *pcmk__time_component_attr(enum pcmk__time_component component);
+
+G_GNUC_INTERNAL
+int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
+                            const xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
+
 
 /*
  * IPC
@@ -276,6 +303,16 @@ int pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 G_GNUC_INTERNAL
 void pcmk__register_patchset_messages(pcmk__output_t *out);
 
+/*
+ * Rules
+ */
+
+G_GNUC_INTERNAL
+int pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
+                          crm_time_t **end);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now);
 
 /*
  * Utils

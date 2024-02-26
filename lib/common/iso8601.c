@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
+#include "crmcommon_private.h"
 
 /*
  * Andrew's code was originally written for OSes whose "struct tm" contains:
