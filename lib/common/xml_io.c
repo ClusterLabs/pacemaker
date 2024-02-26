@@ -555,33 +555,32 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
                         unsigned int *bytes_out)
 {
     unsigned int bytes_in = 0;
-    int bzerror = BZ_OK;
     int rc = pcmk_rc_ok;
 
     // (5, 0, 0): (intermediate block size, silent, default workFactor)
-    BZFILE *bz_file = BZ2_bzWriteOpen(&bzerror, stream, 5, 0, 0);
+    BZFILE *bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 0);
 
-    if (bzerror != BZ_OK) {
-        rc = pcmk__bzlib2rc(bzerror);
+    rc = pcmk__bzlib2rc(rc);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not prepare file stream: %s "
                  CRM_XS " rc=%d",
                  filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
-    BZ2_bzWrite(&bzerror, bz_file, text, strlen(text));
-    if (bzerror != BZ_OK) {
-        rc = pcmk__bzlib2rc(bzerror);
+    BZ2_bzWrite(&rc, bz_file, text, strlen(text));
+    rc = pcmk__bzlib2rc(rc);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not compress data: %s "
                  CRM_XS " rc=%d errno=%d",
                  filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
 
-    BZ2_bzWriteClose(&bzerror, bz_file, 0, &bytes_in, bytes_out);
+    BZ2_bzWriteClose(&rc, bz_file, 0, &bytes_in, bytes_out);
     bz_file = NULL;
-    if (bzerror != BZ_OK) {
-        rc = pcmk__bzlib2rc(bzerror);
+    rc = pcmk__bzlib2rc(rc);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not write compressed data: %s "
                  CRM_XS " rc=%d errno=%d",
                  filename, pcmk_rc_str(rc), rc, errno);
@@ -593,7 +592,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
 
 done:
     if (bz_file != NULL) {
-        BZ2_bzWriteClose(&bzerror, bz_file, 0, NULL, NULL);
+        BZ2_bzWriteClose(&rc, bz_file, 0, NULL, NULL);
     }
     return rc;
 }
