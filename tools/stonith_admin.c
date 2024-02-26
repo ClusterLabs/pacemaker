@@ -415,6 +415,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__output_enable_list_element(out);
+
     stonith__register_messages(out);
 
     if (args->version) {

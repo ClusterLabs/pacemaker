@@ -782,8 +782,8 @@ add_resource_name(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     if (rsc->children == NULL) {
         /* Sometimes PCMK_XE_RESOURCE might act as a PCMK_XA_NAME instead of an
-         * XML element name, depending on whether the command line causes
-         * --xml-simple-list to be forced.
+         * XML element name, depending on whether pcmk__output_enable_list_element
+         * was called.
          */
         out->list_item(out, PCMK_XE_RESOURCE, "%s", rsc->id);
     } else {

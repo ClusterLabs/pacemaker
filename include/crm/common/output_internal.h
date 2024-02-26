@@ -143,10 +143,7 @@ typedef struct pcmk__supported_format_s {
  */
 
 extern GOptionEntry pcmk__html_output_entries[];
-extern GOptionEntry pcmk__log_output_entries[];
-extern GOptionEntry pcmk__none_output_entries[];
 extern GOptionEntry pcmk__text_output_entries[];
-extern GOptionEntry pcmk__xml_output_entries[];
 
 pcmk__output_t *pcmk__mk_html_output(char **argv);
 pcmk__output_t *pcmk__mk_log_output(char **argv);
@@ -155,11 +152,10 @@ pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
 
 #define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
-#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, pcmk__log_output_entries }
-#define PCMK__SUPPORTED_FORMAT_NONE { PCMK_VALUE_NONE, pcmk__mk_none_output,    \
-                                      pcmk__none_output_entries }
+#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, NULL }
+#define PCMK__SUPPORTED_FORMAT_NONE { PCMK_VALUE_NONE, pcmk__mk_none_output, NULL }
 #define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
-#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
+#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, NULL }
 
 /*!
  * \brief This structure contains everything that makes up a single output
@@ -925,6 +921,29 @@ int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, crm_exit_t exit_status, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
 int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
+
+/*!
+ * \internal
+ * \brief Enable the older style XML output used by `crm_mon -X`
+ *
+ * \note This function should not be used anywhere except in crm_mon.
+ *
+ * @COMPAT This can be removed when `crm_mon -X` is removed
+ */
+void pcmk__output_set_legacy_xml(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Enable using the <list> element for lists
+ *
+ * \note This function is only used in limited places and should not be
+ * used anywhere new.  We are trying to discourage and ultimately remove
+ * uses of this style of list.
+ *
+ * @COMPAT This can be removed when the stonith_admin and crm_resource
+ * schemas can be changed
+ */
+void pcmk__output_enable_list_element(pcmk__output_t *out);
 
 /*!
  * \internal

@@ -201,11 +201,6 @@ main(int argc, char **argv)
 
     out->quiet = args->quiet;
 
-    if (!pcmk__force_args(context, &error, "%s --xml-simple-list",
-                          g_get_prgname())) {
-        goto done;
-    }
-
     if (args->version) {
         out->version(out, false);
         goto done;
