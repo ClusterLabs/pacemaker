@@ -244,7 +244,7 @@
         Enable a delay of no more than the time specified before executing fencing actions. Pacemaker derives the overall delay by taking the value of pcmk_delay_base and adding a random delay value such that the sum is kept below this maximum.
       </longdesc>
       <shortdesc lang="en">
-        Enable a base delay for fencing actions and specify base delay value.
+        Enable a delay of no more than the time specified before executing fencing actions.
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
