@@ -47,10 +47,14 @@ lrmd__alternatives_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
 
+    int rc = pcmk_rc_ok;
+
     pcmk__output_xml_create_parent(out, PCMK_XE_PROVIDERS,
                                    PCMK_XA_FOR, agent_spec,
                                    NULL);
-    return xml_list(out, list, PCMK_XE_PROVIDER);
+    rc = xml_list(out, list, PCMK_XE_PROVIDER);
+    pcmk__output_xml_pop_parent(out);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("alternatives-list", "lrmd_list_t *", "const char *")
@@ -69,6 +73,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
     const char *agent_spec = va_arg(args, const char *);
     const char *provider = va_arg(args, const char *);
 
+    int rc = pcmk_rc_ok;
     xmlNodePtr node = NULL;
 
     node = pcmk__output_xml_create_parent(out, PCMK_XE_AGENTS,
@@ -79,7 +84,9 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, PCMK_XA_PROVIDER, provider);
     }
 
-    return xml_list(out, list, PCMK_XE_AGENT);
+    rc = xml_list(out, list, PCMK_XE_AGENT);
+    pcmk__output_xml_pop_parent(out);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("agents-list", "lrmd_list_t *", "const char *", "const char *")
@@ -103,6 +110,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
 
+    int rc = pcmk_rc_ok;
     xmlNodePtr node = pcmk__output_xml_create_parent(out, PCMK_XE_PROVIDERS,
                                                      PCMK_XA_STANDARD, "ocf",
                                                      NULL);
@@ -111,7 +119,9 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, PCMK_XA_AGENT, agent_spec);
     }
 
-    return xml_list(out, list, PCMK_XE_PROVIDER);
+    rc = xml_list(out, list, PCMK_XE_PROVIDER);
+    pcmk__output_xml_pop_parent(out);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("providers-list", "lrmd_list_t *", "const char *")
