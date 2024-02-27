@@ -583,26 +583,25 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                       uint32_t max_send_size, struct iovec **result,
                       ssize_t *bytes)
 {
-    static unsigned int biggest = 0;
     struct iovec *iov;
     unsigned int total = 0;
-    char *compressed = NULL;
-    char *buffer = NULL;
-    gchar *g_buffer = NULL;
+    GString *buffer = NULL;
     pcmk__ipc_header_t *header = NULL;
+    int rc = pcmk_rc_ok;
 
     if ((message == NULL) || (result == NULL)) {
-        return EINVAL;
+        rc = EINVAL;
+        goto done;
     }
 
     header = calloc(1, sizeof(pcmk__ipc_header_t));
     if (header == NULL) {
-       return ENOMEM; /* errno mightn't be set by allocator */
+       rc = ENOMEM;
+       goto done;
     }
 
-    g_buffer = pcmk__xml_dump(message, 0);
-    pcmk__str_update(&buffer, g_buffer);
-    g_free(g_buffer);
+    buffer = g_string_sized_new(1024);
+    pcmk__xml_string(message, 0, buffer, 0);
 
     if (max_send_size == 0) {
         max_send_size = crm_ipc_default_buffer_size();
@@ -615,17 +614,21 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size_uncompressed = 1 + strlen(buffer);
+    header->size_uncompressed = 1 + buffer->len;
     total = iov[0].iov_len + header->size_uncompressed;
 
     if (total < max_send_size) {
-        iov[1].iov_base = buffer;
+        pcmk__str_update((char **) &(iov[1].iov_base), buffer->str);
         iov[1].iov_len = header->size_uncompressed;
 
     } else {
+        static unsigned int biggest = 0;
+
+        char *compressed = NULL;
         unsigned int new_size = 0;
 
-        if (pcmk__compress(buffer, (unsigned int) header->size_uncompressed,
+        if (pcmk__compress(buffer->str,
+                           (unsigned int) header->size_uncompressed,
                            (unsigned int) max_send_size, &compressed,
                            &new_size) == pcmk_rc_ok) {
 
@@ -634,8 +637,6 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
 
             iov[1].iov_len = header->size_compressed;
             iov[1].iov_base = compressed;
-
-            free(buffer);
 
             biggest = QB_MAX(header->size_compressed, biggest);
 
@@ -649,9 +650,9 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                     header->size_uncompressed, max_send_size, 4 * biggest);
 
             free(compressed);
-            free(buffer);
             pcmk_free_ipc_event(iov);
-            return EMSGSIZE;
+            rc = EMSGSIZE;
+            goto done;
         }
     }
 
@@ -663,7 +664,12 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     if (bytes != NULL) {
         *bytes = header->qb.size;
     }
-    return pcmk_rc_ok;
+
+done:
+    if (buffer != NULL) {
+        g_string_free(buffer, TRUE);
+    }
+    return rc;
 }
 
 int

@@ -16,6 +16,7 @@
 
 #include <stdbool.h>        // bool
 
+#include <glib.h>           // GString
 #include <libxml/tree.h>    // xmlNode
 
 xmlNode *pcmk__xml_read(const char *filename);
@@ -29,7 +30,5 @@ int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd,
                        bool compress, unsigned int *nbytes);
 int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
                          bool compress, unsigned int *nbytes);
-
-gchar *pcmk__xml_dump(const xmlNode *xml, uint32_t flags);
 
 #endif  // PCMK__XML_IO_INTERNAL__H

@@ -224,27 +224,33 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 int
 stonith__rhcs_metadata(const char *agent, int timeout_sec, char **output)
 {
-    gchar *buffer = NULL;
+    GString *buffer = NULL;
     xmlNode *xml = NULL;
 
     int rc = stonith__rhcs_get_metadata(agent, timeout_sec, &xml);
 
     if (rc != pcmk_ok) {
-        free_xml(xml);
-        return rc;
+        goto done;
     }
 
-    buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
-    free_xml(xml);
-    if (buffer == NULL) {
-        return -pcmk_err_schema_validation;
+    buffer = g_string_sized_new(1024);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buffer, 0);
+
+    if (pcmk__str_empty(buffer->str)) {
+        rc = -pcmk_err_schema_validation;
+        goto done;
     }
 
     if (output != NULL) {
-        pcmk__str_update(output, buffer);
+        pcmk__str_update(output, buffer->str);
     }
-    g_free(buffer);
-    return pcmk_ok;
+
+done:
+    if (buffer != NULL) {
+        g_string_free(buffer, TRUE);
+    }
+    free_xml(xml);
+    return rc;
 }
 
 bool

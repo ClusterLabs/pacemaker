@@ -473,10 +473,16 @@ xml_element_type2str(xmlElementType type)
  * \internal
  * \brief Create a string representation of an XML object
  *
+ * libxml2's \c xmlNodeDumpOutput() doesn't allow filtering, doesn't escape
+ * special characters thoroughly, and doesn't allow a const argument.
+ *
  * \param[in]     data     XML to convert
  * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  * \param[in,out] buffer   Where to store the text (must not be \p NULL)
  * \param[in]     depth    Current indentation level
+ *
+ * \todo Create a wrapper that doesn't require \p depth. Only used with
+ *       recursive calls currently.
  */
 void
 pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
@@ -511,32 +517,6 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
                      xml_element_type2str(data->type), data->type);
             break;
     }
-}
-
-/*!
- * \internal
- * \brief Dump an XML tree to a string
- *
- * \param[in] xml    XML tree to dump
- * \param[in] flags  Group of <tt>enum pcmk__xml_fmt_options</tt> flags
- *
- * \return Newly allocated string representation of \p xml
- *
- * \note The caller is responsible for freeing the return value using
- *       \c g_free().
- */
-gchar *
-pcmk__xml_dump(const xmlNode *xml, uint32_t flags)
-{
-    /* libxml2's xmlNodeDumpOutput() doesn't allow filtering, doesn't escape
-     * special characters thoroughly, and doesn't allow a const argument.
-     *
-     * @COMPAT Can we start including text nodes unconditionally?
-     */
-    GString *g_buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, flags, g_buffer, 0);
-    return g_string_free(g_buffer, FALSE);
 }
 
 /*!
@@ -615,12 +595,12 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
                  bool compress, unsigned int *nbytes)
 {
     // @COMPAT Drop nbytes as arg when we drop write_xml_fd()/write_xml_file()
-    gchar *buffer = NULL;
+    GString *buffer = g_string_sized_new(1024);
     unsigned int bytes_out = 0;
     int rc = pcmk_rc_ok;
 
-    buffer = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
-    CRM_CHECK(!pcmk__str_empty(buffer),
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
+    CRM_CHECK(!pcmk__str_empty(buffer->str),
               crm_log_xml_info(xml, "dump-failed");
               rc = pcmk_rc_error;
               goto done);
@@ -628,12 +608,12 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
     crm_log_xml_trace(xml, "writing");
 
     if (compress
-        && (write_compressed_stream(buffer, filename, stream,
+        && (write_compressed_stream(buffer->str, filename, stream,
                                     &bytes_out) == pcmk_rc_ok)) {
         goto done;
     }
 
-    rc = fprintf(stream, "%s", buffer);
+    rc = fprintf(stream, "%s", buffer->str);
     if (rc < 0) {
         rc = EIO;
         crm_perror(LOG_ERR, "writing %s", filename);
@@ -660,7 +640,7 @@ done:
     if (nbytes != NULL) {
         *nbytes = bytes_out;
     }
-    g_free(buffer);
+    g_string_free(buffer, TRUE);
     return rc;
 }
 
@@ -796,10 +776,12 @@ char *
 dump_xml_formatted(const xmlNode *xml)
 {
     char *str = NULL;
-    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty);
+    GString *buffer = g_string_sized_new(1024);
 
-    pcmk__str_update(&str, g_str);
-    g_free(g_str);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
+
+    pcmk__str_update(&str, buffer->str);
+    g_string_free(buffer, TRUE);
     return str;
 }
 
@@ -807,10 +789,12 @@ char *
 dump_xml_formatted_with_text(const xmlNode *xml)
 {
     char *str = NULL;
-    gchar *g_str = pcmk__xml_dump(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
+    GString *buffer = g_string_sized_new(1024);
 
-    pcmk__str_update(&str, g_str);
-    g_free(g_str);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buffer, 0);
+
+    pcmk__str_update(&str, buffer->str);
+    g_string_free(buffer, TRUE);
     return str;
 }
 
@@ -818,10 +802,12 @@ char *
 dump_xml_unformatted(const xmlNode *xml)
 {
     char *str = NULL;
-    gchar *g_str = pcmk__xml_dump(xml, 0);
+    GString *buffer = g_string_sized_new(1024);
 
-    pcmk__str_update(&str, g_str);
-    g_free(g_str);
+    pcmk__xml_string(xml, 0, buffer, 0);
+
+    pcmk__str_update(&str, buffer->str);
+    g_string_free(buffer, TRUE);
     return str;
 }
 

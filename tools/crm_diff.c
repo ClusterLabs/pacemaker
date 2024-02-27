@@ -105,10 +105,12 @@ patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 static void
 print_patch(xmlNode *patch)
 {
-    gchar *buffer = pcmk__xml_dump(patch, pcmk__xml_fmt_pretty);
+    GString *buffer = g_string_sized_new(1024);
 
-    printf("%s", buffer);
-    g_free(buffer);
+    pcmk__xml_string(patch, pcmk__xml_fmt_pretty, buffer, 0);
+
+    printf("%s", buffer->str);
+    g_string_free(buffer, TRUE);
     fflush(stdout);
 }
 

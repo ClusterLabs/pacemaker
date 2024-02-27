@@ -169,15 +169,18 @@ shadow_default(pcmk__output_t *out, va_list args)
         rc = out->info(out, "Content:");
 
         if (content != NULL) {
-            gchar *buf = pcmk__xml_dump(content,
-                                        pcmk__xml_fmt_pretty
-                                        |pcmk__xml_fmt_text);
+            GString *buf = g_string_sized_new(1024);
+            gchar *str = NULL;
 
-            buf = pcmk__trim(buf);
-            if (!pcmk__str_empty(buf)) {
-                out->info(out, "%s", buf);
+            pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                             buf, 0);
+
+            str = g_string_free(buf, FALSE);
+            str = pcmk__trim(str);
+            if (!pcmk__str_empty(str)) {
+                out->info(out, "%s", str);
             }
-            g_free(buf);
+            g_free(str);
 
         } else {
             out->info(out, "<unknown>");
@@ -242,13 +245,16 @@ shadow_text(pcmk__output_t *out, va_list args)
             rc = out->info(out, "%s", filename);
         }
         if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
-            gchar *buf = pcmk__xml_dump(content,
-                                        pcmk__xml_fmt_pretty
-                                        |pcmk__xml_fmt_text);
+            GString *buf = g_string_sized_new(1024);
+            gchar *str = NULL;
 
-            buf = pcmk__trim(buf);
-            rc = out->info(out, "%s", buf);
-            g_free(buf);
+            pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                             buf, 0);
+
+            str = g_string_free(buf, FALSE);
+            str = pcmk__trim(str);
+            rc = out->info(out, "%s", str);
+            g_free(str);
         }
         if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
             rc = out->message(out, "xml-patchset", diff);
@@ -294,11 +300,13 @@ shadow_xml(pcmk__output_t *out, va_list args)
                                    NULL);
 
     if (content != NULL) {
-        gchar *buf = pcmk__xml_dump(content,
-                                    pcmk__xml_fmt_pretty|pcmk__xml_fmt_text);
+        GString *buf = g_string_sized_new(1024);
 
-        out->output_xml(out, PCMK_XE_CONTENT, buf);
-        g_free(buf);
+        pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buf,
+                         0);
+
+        out->output_xml(out, PCMK_XE_CONTENT, buf->str);
+        g_string_free(buf, TRUE);
     }
 
     if (diff != NULL) {

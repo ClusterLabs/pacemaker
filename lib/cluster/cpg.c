@@ -896,10 +896,12 @@ pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
                    enum crm_ais_msg_types dest)
 {
     bool rc = true;
-    gchar *data = pcmk__xml_dump(msg, 0);
+    GString *data = g_string_sized_new(1024);
 
-    rc = send_cluster_text(crm_class_cluster, data, FALSE, node, dest);
-    g_free(data);
+    pcmk__xml_string(msg, 0, data, 0);
+
+    rc = send_cluster_text(crm_class_cluster, data->str, FALSE, node, dest);
+    g_string_free(data, TRUE);
     return rc;
 }
 

@@ -91,12 +91,12 @@ static char *
 calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
-    gchar *buf = NULL;
+    GString *buf = g_string_sized_new(1024);
 
     crm_trace("Begin digest %s", do_filter?"filtered":"");
 
-    buf = pcmk__xml_dump(source, (do_filter? pcmk__xml_fmt_filtered : 0));
-    digest = crm_md5sum(buf);
+    pcmk__xml_string(source, (do_filter? pcmk__xml_fmt_filtered : 0), buf, 0);
+    digest = crm_md5sum(buf->str);
 
     pcmk__if_tracing(
         {
@@ -114,7 +114,7 @@ calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
         {}
     );
     crm_trace("End digest");
-    g_free(buf);
+    g_string_free(buf, TRUE);
     return digest;
 }
 
