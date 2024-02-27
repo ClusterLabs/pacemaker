@@ -101,7 +101,7 @@ msgstr ""
 
 #: daemons/fenced/pacemaker-fenced.c:551
 msgid "Enable a base delay for fencing actions and specify base delay value."
-msgstr "在执行 fence 操作前启用不超过指定时间的延迟. "
+msgstr "为 fence 操作启用一个指定的基础延迟. "
 
 #: daemons/fenced/pacemaker-fenced.c:553
 #, fuzzy
