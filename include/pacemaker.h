@@ -446,6 +446,17 @@ int pcmk_list_fencing_params(xmlNode **xml, bool all);
  */
 int pcmk_list_primitive_meta(xmlNode **xml, bool all);
 
+/*!
+ * \brief Return constraints that apply to the given ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find constraint for, or \c NULL for
+ *                              all ticket constraints
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

@@ -2344,6 +2344,142 @@ result_code_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket-constraints", "xmlNode *")
+static int
+ticket_constraints_default(pcmk__output_t *out, va_list args)
+{
+    xmlNode *constraint_xml = va_arg(args, xmlNode *);
+
+    /* constraint_xml can take two forms:
+     *
+     * <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" ... />
+     *
+     * for when there's only one ticket in the CIB, or when the user asked
+     * for a specific ticket (crm_ticket -c -t for instance)
+     *
+     * <xpath-query>
+     *   <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" ... />
+     *   <rsc_ticket id="rsc1-req-ticketB" rsc="rsc2" ticket="ticketB" ... />
+     * </xpath-query>
+     *
+     * for when there's multiple tickets in the and the user did not ask for
+     * a specific one.
+     *
+     * In both cases, we simply output a <rsc_ticket> element for each ticket
+     * in the results.
+     */
+    out->info(out, "Constraints XML:\n");
+
+    if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
+        xmlNode *child = pcmk__xe_first_child(constraint_xml, NULL, NULL, NULL);
+
+        do {
+            GString *buf = g_string_sized_new(1024);
+
+            pcmk__xml_string(child, pcmk__xml_fmt_pretty, buf, 0);
+            out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
+            g_string_free(buf, TRUE);
+
+            child = pcmk__xe_next(child);
+        } while (child != NULL);
+    } else {
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(constraint_xml, pcmk__xml_fmt_pretty, buf, 0);
+        out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
+        g_string_free(buf, TRUE);
+    }
+
+    return pcmk_rc_ok;
+}
+
+static int
+add_ticket_element_with_constraints(xmlNode *node, void *userdata)
+{
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    const char *ticket_id = crm_element_value(node, PCMK_XA_TICKET);
+
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
+                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
+    pcmk__output_xml_add_node_copy(out, node);
+
+    /* Pop two parents so now we are back under the <tickets> element */
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
+static int
+add_resource_element(xmlNode *node, void *userdata)
+{
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    const char *rsc = crm_element_value(node, PCMK_XA_RSC);
+
+    pcmk__output_create_xml_node(out, PCMK_XE_RESOURCE,
+                                 PCMK_XA_ID, rsc, NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-constraints", "xmlNode *")
+static int
+ticket_constraints_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNode *constraint_xml = va_arg(args, xmlNode *);
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="">
+     *     <constraints>
+     *       <rsc_ticket />
+     *     </constraints>
+     *   </ticket>
+     *   ...
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+
+    if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
+        /* Iterate through the list of children once to create all the
+         * ticket/constraint elements.
+         */
+        pcmk__xe_foreach_child(constraint_xml, NULL, add_ticket_element_with_constraints, out);
+
+        /* Put us back at the same level as where <tickets> was created. */
+        pcmk__output_xml_pop_parent(out);
+
+        /* Constraints can reference a resource ID that is defined in the XML
+         * schema as an IDREF.  This requires some other element to be present
+         * with an id= attribute that matches.
+         *
+         * Iterate through the list of children a second time to create the
+         * following:
+         *
+         * <resources>
+         *   <resource id="" />
+         *   ...
+         * </resources>
+         */
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        pcmk__xe_foreach_child(constraint_xml, NULL, add_resource_element, out);
+        pcmk__output_xml_pop_parent(out);
+
+    } else {
+        /* Creating the output for a single constraint is much easier.  All the
+         * comments in the above block apply here.
+         */
+        add_ticket_element_with_constraints(constraint_xml, out);
+        pcmk__output_xml_pop_parent(out);
+
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        add_resource_element(constraint_xml, out);
+        pcmk__output_xml_pop_parent(out);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "attribute", "default", attribute_default },
     { "attribute", "xml", attribute_xml },
@@ -2405,6 +2541,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "rscs-colocated-with-list", "xml", rscs_colocated_with_list_xml },
     { "rule-check", "default", rule_check_default },
     { "rule-check", "xml", rule_check_xml },
+    { "ticket-constraints", "default", ticket_constraints_default },
+    { "ticket-constraints", "xml", ticket_constraints_xml },
 
     { NULL, NULL, NULL }
 };
