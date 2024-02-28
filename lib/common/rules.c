@@ -707,3 +707,46 @@ pcmk__replace_submatches(const char *string, const char *match,
                               NULL);
     return result;
 }
+
+/*!
+ * \internal
+ * \brief Parse a comparison type from a string
+ *
+ * \param[in] op  String with comparison type (valid values are
+ *                \c PCMK_VALUE_DEFINED, \c PCMK_VALUE_NOT_DEFINED,
+ *                \c PCMK_VALUE_EQ, \c PCMK_VALUE_NE,
+ *                \c PCMK_VALUE_LT, \c PCMK_VALUE_LTE,
+ *                \c PCMK_VALUE_GT, or \c PCMK_VALUE_GTE)
+ *
+ * \return Comparison type corresponding to \p op
+ */
+enum pcmk__comparison
+pcmk__parse_comparison(const char *op)
+{
+    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
+        return pcmk__comparison_defined;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
+        return pcmk__comparison_undefined;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
+        return pcmk__comparison_eq;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)) {
+        return pcmk__comparison_ne;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
+        return pcmk__comparison_lt;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LTE, pcmk__str_casei)) {
+        return pcmk__comparison_lte;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
+        return pcmk__comparison_gt;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GTE, pcmk__str_casei)) {
+        return pcmk__comparison_gte;
+    }
+
+    return pcmk__comparison_unknown;
+}

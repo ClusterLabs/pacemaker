@@ -517,25 +517,28 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
  */
 static int
 compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
-                       const char *op)
+                       enum pcmk__comparison op)
 {
     int cmp = 0;
 
     if (l_val != NULL && r_val != NULL) {
         if (type == NULL) {
-            if (pcmk__strcase_any_of(op,
-                                     PCMK_VALUE_LT, PCMK_VALUE_LTE,
-                                     PCMK_VALUE_GT, PCMK_VALUE_GTE, NULL)) {
-                if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
-                    type = PCMK_VALUE_NUMBER;
-                } else {
-                    type = PCMK_VALUE_INTEGER;
-                }
+            switch (op) {
+                case pcmk__comparison_lt:
+                case pcmk__comparison_lte:
+                case pcmk__comparison_gt:
+                case pcmk__comparison_gte:
+                    if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
+                        type = PCMK_VALUE_NUMBER;
+                    } else {
+                        type = PCMK_VALUE_INTEGER;
+                    }
+                    break;
 
-            } else {
-                type = PCMK_VALUE_STRING;
+                default:
+                    type = PCMK_VALUE_STRING;
+                    break;
             }
-            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
         }
 
         if (pcmk__str_eq(type, PCMK_VALUE_STRING, pcmk__str_casei)) {
@@ -619,44 +622,55 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
  */
 static bool
 accept_attr_expr(const char *l_val, const char *r_val, const char *type,
-                 const char *op)
+                 enum pcmk__comparison op)
 {
     int cmp;
 
-    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
-        return (l_val != NULL);
+    switch (op) {
+        case pcmk__comparison_defined:
+            return (l_val != NULL);
 
-    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
-        return (l_val == NULL);
+        case pcmk__comparison_undefined:
+            return (l_val == NULL);
 
+        default:
+            break;
     }
 
     cmp = compare_attr_expr_vals(l_val, r_val, type, op);
 
-    if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
-        return (cmp == 0);
+    switch (op) {
+        case pcmk__comparison_eq:
+            return (cmp == 0);
 
-    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)) {
-        return (cmp != 0);
+        case pcmk__comparison_ne:
+            return (cmp != 0);
 
-    } else if (l_val == NULL || r_val == NULL) {
-        // The comparison is meaningless from this point on
-        return false;
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
-        return (cmp < 0);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_LTE, pcmk__str_casei)) {
-        return (cmp <= 0);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
-        return (cmp > 0);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_GTE, pcmk__str_casei)) {
-        return (cmp >= 0);
+        default:
+            break;
     }
 
-    return false;   // Should never reach this point
+    if ((l_val == NULL) || (r_val == NULL)) {
+        // The comparison is meaningless from this point on
+        return false;
+    }
+
+    switch (op) {
+        case pcmk__comparison_lt:
+            return (cmp < 0);
+
+        case pcmk__comparison_lte:
+            return (cmp <= 0);
+
+        case pcmk__comparison_gt:
+            return (cmp > 0);
+
+        case pcmk__comparison_gte:
+            return (cmp >= 0);
+
+        default: // Not possible with schema validation enabled
+            return false;
+    }
 }
 
 /*!
@@ -719,18 +733,33 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     const char *id = pcmk__xe_id(expr);
     const char *attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
-    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
+    const char *op = NULL;
     const char *type = crm_element_value(expr, PCMK_XA_TYPE);
     const char *value = crm_element_value(expr, PCMK_XA_VALUE);
     const char *value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
+
+    enum pcmk__comparison comparison = pcmk__comparison_unknown;
 
     if (attr == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
                          " not specified", pcmk__s(id, "without ID"));
         return FALSE;
-    } else if (op == NULL) {
-        pcmk__config_err("Expression %s invalid: " PCMK_XA_OPERATION
-                         " not specified", pcmk__s(id, "without ID"));
+    }
+
+    // Get and validate operation
+    op = crm_element_value(expr, PCMK_XA_OPERATION);
+    comparison = pcmk__parse_comparison(op);
+    if (comparison == pcmk__comparison_unknown) {
+        // Not possible with schema validation enabled
+        if (op == NULL) {
+            pcmk__config_err("Treating expression %s as not passing "
+                             "because it has no " PCMK_XA_OPERATION,
+                             pcmk__s(id, "without ID"));
+        } else {
+            pcmk__config_err("Treating expression %s as not passing "
+                             "because '%s' is not a valid " PCMK_XA_OPERATION,
+                             pcmk__s(id, "without ID"), op);
+        }
         return FALSE;
     }
 
@@ -764,7 +793,7 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         attr = NULL;
     }
 
-    return accept_attr_expr(h_val, value, type, op);
+    return accept_attr_expr(h_val, value, type, comparison);
 }
 
 gboolean

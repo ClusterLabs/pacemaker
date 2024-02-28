@@ -16,7 +16,21 @@
 #include <crm/common/rules.h>           // enum expression_type
 #include <crm/common/iso8601.h>         // crm_time_t
 
+// How node attribute values may be compared in rules
+enum pcmk__comparison {
+    pcmk__comparison_unknown,
+    pcmk__comparison_defined,
+    pcmk__comparison_undefined,
+    pcmk__comparison_eq,
+    pcmk__comparison_ne,
+    pcmk__comparison_lt,
+    pcmk__comparison_lte,
+    pcmk__comparison_gt,
+    pcmk__comparison_gte,
+};
+
 enum expression_type pcmk__expression_type(const xmlNode *expr);
+enum pcmk__comparison pcmk__parse_comparison(const char *op);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
 
