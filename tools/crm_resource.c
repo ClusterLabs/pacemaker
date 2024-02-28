@@ -120,7 +120,6 @@ gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
-gboolean get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -340,6 +339,14 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else if (pcmk__str_any_of(option_name, "-F", "--fail", NULL)) {
         options.rsc_cmd = cmd_fail;
 
+    } else if (pcmk__str_any_of(option_name, "-g", "--get-parameter", NULL)) {
+        options.rsc_cmd = cmd_get_param;
+        pcmk__str_update(&options.prop_name, optarg);
+
+    } else if (pcmk__str_any_of(option_name, "-G", "--get-property", NULL)) {
+        options.rsc_cmd = cmd_get_property;
+        pcmk__str_update(&options.prop_name, optarg);
+
     } else if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_agents;
         pcmk__str_update(&options.agent_spec, optarg);
@@ -427,11 +434,13 @@ static GOptionEntry query_entries[] = {
           command_cb,
       "Show XML configuration of resource (before any template expansion)",
       NULL },
-    { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
+    { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "Display named parameter for resource (use instance attribute\n"
       INDENT "unless --element, --meta, or --utilization is specified)",
       "PARAM" },
-    { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
+    { "get-property", 'G', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "Display named property of resource ('class', 'type', or 'provider') "
       "(requires --resource)",
       "PROPERTY" },
@@ -738,18 +747,6 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
-    return TRUE;
-}
-
-gboolean
-get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-g", "--get-parameter", NULL)) {
-        options.rsc_cmd = cmd_get_param;
-    } else {
-        options.rsc_cmd = cmd_get_property;
-    }
-
-    pcmk__str_update(&options.prop_name, optarg);
     return TRUE;
 }
 
