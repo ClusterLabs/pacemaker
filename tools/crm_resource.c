@@ -60,8 +60,8 @@ enum rsc_command {
     cmd_locate,
     cmd_metadata,
     cmd_move,
-    cmd_query_raw_xml,
     cmd_query_xml,
+    cmd_query_xml_raw,
     cmd_refresh,
     cmd_restart,
     cmd_set_param,
@@ -120,7 +120,6 @@ gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
-gboolean flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -319,8 +318,21 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
     // Sorted by enum rsc_command name
-    if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
+    if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
+        options.rsc_cmd = cmd_ban;
+
+    } else if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
         options.rsc_cmd = cmd_cleanup;
+
+    } else if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
+        options.rsc_cmd = cmd_clear;
+
+    } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
+        options.rsc_cmd = cmd_colocations;
+
+    } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
+        options.rsc_cmd = cmd_colocations;
+        options.recursive = TRUE;
 
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
         options.rsc_cmd = cmd_delete;
@@ -345,9 +357,21 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else if (pcmk__str_eq(option_name, "--list-standards", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_standards;
 
+    } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
+        options.rsc_cmd = cmd_locate;
+
     } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_none)) {
         options.rsc_cmd = cmd_metadata;
         pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
+        options.rsc_cmd = cmd_move;
+
+    } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
+        options.rsc_cmd = cmd_query_xml;
+
+    } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
+        options.rsc_cmd = cmd_query_xml_raw;
 
     } else if (pcmk__str_any_of(option_name, "-R", "--refresh", NULL)) {
         options.rsc_cmd = cmd_refresh;
@@ -396,10 +420,11 @@ static GOptionEntry query_entries[] = {
     { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
       "Show the metadata for the named class:provider:agent",
       "SPEC" },
-    { "query-xml", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "query-xml", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Show XML configuration of resource (after any template expansion)",
       NULL },
-    { "query-xml-raw", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "query-xml-raw", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "Show XML configuration of resource (before any template expansion)",
       NULL },
     { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
@@ -410,10 +435,11 @@ static GOptionEntry query_entries[] = {
       "Display named property of resource ('class', 'type', or 'provider') "
       "(requires --resource)",
       "PROPERTY" },
-    { "locate", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "locate", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Show node(s) currently running resource",
       NULL },
-    { "constraints", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "constraints", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "Display the location and colocation constraints that apply to a\n"
       INDENT "resource, and if --recursive is specified, to the resources\n"
       INDENT "directly or indirectly involved in those colocations.\n"
@@ -421,7 +447,7 @@ static GOptionEntry query_entries[] = {
       INDENT "bundle instance, constraints for the collective resource\n"
       INDENT "will be shown unless --force is given.",
       NULL },
-    { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Equivalent to --constraints --recursive",
       NULL },
     { "why", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, why_cb,
@@ -477,7 +503,7 @@ static GOptionEntry command_entries[] = {
 };
 
 static GOptionEntry location_entries[] = {
-    { "move", 'M', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "move", 'M', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Create a constraint to move resource. If --node is specified,\n"
       INDENT "the constraint will be to move to that node, otherwise it\n"
       INDENT "will be to ban the current node. Unless --force is specified\n"
@@ -488,7 +514,7 @@ static GOptionEntry location_entries[] = {
       INDENT "resource from running on its previous location until the\n"
       INDENT "implicit constraint expires or is removed with --clear.",
       NULL },
-    { "ban", 'B', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "ban", 'B', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Create a constraint to keep resource off a node.\n"
       INDENT "Optional: --node, --lifetime, --promoted.\n"
       INDENT "NOTE: This will prevent the resource from running on the\n"
@@ -499,7 +525,7 @@ static GOptionEntry location_entries[] = {
       INDENT PCMK_META_PROMOTED_MAX "=1 (all other situations result in an\n"
       INDENT "error as there is no sane default).",
       NULL },
-    { "clear", 'U', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
+    { "clear", 'U', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Remove all constraints created by the --ban and/or --move\n"
       INDENT "commands. Requires: --resource. Optional: --node, --promoted,\n"
       INDENT "--expired. If --node is not specified, all constraints created\n"
@@ -712,30 +738,6 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
-    return TRUE;
-}
-
-gboolean
-flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
-        options.rsc_cmd = cmd_clear;
-    } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
-        options.rsc_cmd = cmd_ban;
-    } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
-        options.rsc_cmd = cmd_move;
-    } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
-        options.rsc_cmd = cmd_query_xml;
-    } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
-        options.rsc_cmd = cmd_query_raw_xml;
-    } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
-        options.rsc_cmd = cmd_locate;
-    } else if (pcmk__str_any_of(option_name, "-a", "--constraints", NULL)) {
-        options.rsc_cmd = cmd_colocations;
-    } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
-        options.rsc_cmd = cmd_colocations;
-        options.recursive = TRUE;
-    }
-
     return TRUE;
 }
 
@@ -1264,7 +1266,7 @@ get_find_flags(void)
         case cmd_delete_param:
         case cmd_get_param:
         case cmd_get_property:
-        case cmd_query_raw_xml:
+        case cmd_query_xml_raw:
         case cmd_query_xml:
         case cmd_set_param:
         case cmd_set_property:
@@ -1875,7 +1877,7 @@ main(int argc, char **argv)
             rc = cli_resource_print(rsc, scheduler, true);
             break;
 
-        case cmd_query_raw_xml:
+        case cmd_query_xml_raw:
             rc = cli_resource_print(rsc, scheduler, false);
             break;
 
