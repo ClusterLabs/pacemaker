@@ -29,8 +29,19 @@ enum pcmk__comparison {
     pcmk__comparison_gte,
 };
 
+// How node attribute values may be parsed in rules
+enum pcmk__type {
+    pcmk__type_unknown,
+    pcmk__type_string,
+    pcmk__type_integer,
+    pcmk__type_number,
+    pcmk__type_version,
+};
+
 enum expression_type pcmk__expression_type(const xmlNode *expr);
 enum pcmk__comparison pcmk__parse_comparison(const char *op);
+enum pcmk__type pcmk__parse_type(const char *type, enum pcmk__comparison op,
+                                 const char *value1, const char *value2);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
 

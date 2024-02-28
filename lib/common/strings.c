@@ -1068,44 +1068,6 @@ pcmk__str_any_of(const char *s, ...)
 
 /*!
  * \internal
- * \brief Check whether a character is in any of a list of strings
- *
- * \param[in]   ch      Character (ASCII) to search for
- * \param[in]   ...     Strings to search. Final argument must be
- *                      \c NULL.
- *
- * \return  \c true if any of \p ... contain \p ch, \c false otherwise
- * \note    \p ... must contain at least one argument (\c NULL).
- */
-bool
-pcmk__char_in_any_str(int ch, ...)
-{
-    bool rc = false;
-    va_list ap;
-
-    /*
-     * Passing a char to va_start() can generate compiler warnings,
-     * so ch is declared as an int.
-     */
-    va_start(ap, ch);
-
-    while (1) {
-        const char *ele = va_arg(ap, const char *);
-
-        if (ele == NULL) {
-            break;
-        } else if (strchr(ele, ch) != NULL) {
-            rc = true;
-            break;
-        }
-    }
-
-    va_end(ap);
-    return rc;
-}
-
-/*!
- * \internal
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric

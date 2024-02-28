@@ -750,3 +750,51 @@ pcmk__parse_comparison(const char *op)
 
     return pcmk__comparison_unknown;
 }
+
+/*!
+ * \internal
+ * \brief Parse a value type from a string
+ *
+ * \param[in] type    String with value type (valid values are NULL,
+ *                    \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
+ *                    \c PCMK_VALUE_NUMBER, and \c PCMK_VALUE_VERSION)
+ * \param[in] op      Operation type (used only to select default)
+ * \param[in] value1  First value being compared (used only to select default)
+ * \param[in] value2  Second value being compared (used only to select default)
+ */
+enum pcmk__type
+pcmk__parse_type(const char *type, enum pcmk__comparison op,
+                 const char *value1, const char *value2)
+{
+    if (type == NULL) {
+        switch (op) {
+            case pcmk__comparison_lt:
+            case pcmk__comparison_lte:
+            case pcmk__comparison_gt:
+            case pcmk__comparison_gte:
+                if (((value1 != NULL) && (strchr(value1, '.') != NULL))
+                    || ((value2 != NULL) && (strchr(value2, '.') != NULL))) {
+                    return pcmk__type_number;
+                }
+                return pcmk__type_integer;
+
+            default:
+                return pcmk__type_string;
+        }
+    }
+
+    if (pcmk__str_eq(type, PCMK_VALUE_STRING, pcmk__str_casei)) {
+        return pcmk__type_string;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_INTEGER, pcmk__str_casei)) {
+        return pcmk__type_integer;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_NUMBER, pcmk__str_casei)) {
+        return pcmk__type_number;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_VERSION, pcmk__str_casei)) {
+        return pcmk__type_version;
+    }
+
+    return pcmk__type_unknown;
+}

@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 the Pacemaker project contributors
+# Copyright 2020-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,7 +16,6 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 crm_str_to_boolean_test 	\
 		 pcmk__add_word_test		\
 		 pcmk__btoa_test		\
-		 pcmk__char_in_any_str_test	\
 		 pcmk__compress_test		\
 		 pcmk__ends_with_test 		\
 		 pcmk__g_strcat_test		\

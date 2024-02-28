@@ -14,6 +14,7 @@ include $(top_srcdir)/mk/unittest.mk
 check_PROGRAMS = pcmk__evaluate_date_expression_test	\
 		 pcmk__evaluate_date_spec_test		\
 		 pcmk__parse_comparison_test		\
+		 pcmk__parse_type_test			\
 		 pcmk__replace_submatches_test		\
 		 pcmk__unpack_duration_test
 
