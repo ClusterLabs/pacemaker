@@ -123,8 +123,6 @@ gboolean option_cb(const gchar *option_name, const gchar *optarg,
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                               gpointer data, GError **error);
-gboolean digests_cb(const gchar *option_name, const gchar *optarg,
-                    gpointer data, GError **error);
 gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
@@ -338,6 +336,13 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
                                 NULL)) {
         options.rsc_cmd = cmd_delete_param;
         pcmk__str_update(&options.prop_name, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--digests", pcmk__str_none)) {
+        options.rsc_cmd = cmd_digests;
+
+        if (options.override_params == NULL) {
+            options.override_params = pcmk__strkey_table(free, free);
+        }
 
     } else if (pcmk__str_any_of(option_name, "-F", "--fail", NULL)) {
         options.rsc_cmd = cmd_fail;
@@ -614,7 +619,7 @@ static GOptionEntry advanced_entries[] = {
     { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, wait_cb,
       "(Advanced) Wait until the cluster settles into a stable state",
       NULL },
-    { "digests", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, digests_cb,
+    { "digests", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Show parameter hashes that Pacemaker uses to detect\n"
       INDENT "configuration changes (only accurate if there is resource\n"
       INDENT "history on the specified node). Required: --resource, --node.\n"
@@ -817,17 +822,6 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         }
     }
 
-    return TRUE;
-}
-
-gboolean
-digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-           GError **error)
-{
-    options.rsc_cmd = cmd_digests;
-    if (options.override_params == NULL) {
-        options.override_params = pcmk__strkey_table(free, free);
-    }
     return TRUE;
 }
 
