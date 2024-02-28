@@ -33,34 +33,12 @@ cib_not_connected(void **state)
 static int
 setup_test(void **state)
 {
-    char *in_path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
-    char *contents = NULL;
-    int fd;
+    cib_path = pcmk__cib_test_copy_cib("crm_mon.xml");
 
-    /* Copy the CIB over to a temp location so we can modify it. */
-    cib_path = crm_strdup_printf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
-
-    fd = mkstemp(cib_path);
-    if (fd < 0) {
-        free(cib_path);
+    if (cib_path == NULL) {
         return -1;
     }
 
-    if (pcmk__file_contents(in_path, &contents) != pcmk_rc_ok) {
-        free(cib_path);
-        close(fd);
-        return -1;
-    }
-
-    if (pcmk__write_sync(fd, contents) != pcmk_rc_ok) {
-        free(cib_path);
-        free(in_path);
-        free(contents);
-        close(fd);
-        return -1;
-    }
-
-    setenv("CIB_file", cib_path, 1);
     return 0;
 }
 
