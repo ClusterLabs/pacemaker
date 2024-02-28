@@ -117,7 +117,6 @@ struct {
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
-gboolean delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean list_standards_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
@@ -326,6 +325,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
         options.rsc_cmd = cmd_cleanup;
 
+    } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
+        options.rsc_cmd = cmd_delete;
+
     } else if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_agents;
         pcmk__str_update(&options.agent_spec, optarg);
@@ -528,7 +530,7 @@ static GOptionEntry location_entries[] = {
 };
 
 static GOptionEntry advanced_entries[] = {
-    { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, delete_cb,
+    { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Delete a resource from the CIB. Required: -t",
       NULL },
     { "fail", 'F', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, fail_cb,
@@ -684,12 +686,6 @@ cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else {    // --agent
         pcmk__str_update(&options.v_agent, optarg);
     }
-    return TRUE;
-}
-
-gboolean
-delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.rsc_cmd = cmd_delete;
     return TRUE;
 }
 
