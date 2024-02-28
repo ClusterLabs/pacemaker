@@ -120,7 +120,6 @@ gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
-gboolean list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -333,6 +332,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_colocations;
         options.recursive = TRUE;
 
+    } else if (pcmk__str_any_of(option_name, "-c", "--list-cts", NULL)) {
+        options.rsc_cmd = cmd_cts;
+
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
         options.rsc_cmd = cmd_delete;
 
@@ -347,19 +349,32 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_get_property;
         pcmk__str_update(&options.prop_name, optarg);
 
+    } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
+        options.rsc_cmd = cmd_list_active_ops;
+
     } else if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_agents;
         pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_any_of(option_name, "-o", "--list-all-operations",
+                                NULL)) {
+        options.rsc_cmd = cmd_list_all_ops;
 
     } else if (pcmk__str_eq(option_name, "--list-ocf-alternatives",
                             pcmk__str_none)) {
         options.rsc_cmd = cmd_list_alternatives;
         pcmk__str_update(&options.agent_spec, optarg);
 
+    } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
+        options.rsc_cmd = cmd_list_instances;
+
     } else if (pcmk__str_eq(option_name, "--list-ocf-providers",
                             pcmk__str_none)) {
         options.rsc_cmd = cmd_list_providers;
         pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_any_of(option_name, "-L", "--list", NULL)) {
+        options.rsc_cmd = cmd_list_resources;
 
     } else if (pcmk__str_eq(option_name, "--list-standards", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_standards;
@@ -390,21 +405,24 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 /* short option letters still available: eEJkKXyYZ */
 
 static GOptionEntry query_entries[] = {
-    { "list", 'L', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, list_cb,
+    { "list", 'L', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "List all cluster resources with status",
       NULL },
-    { "list-raw", 'l', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, list_cb,
+    { "list-raw", 'l', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "List IDs of all instantiated resources (individual members\n"
       INDENT "rather than groups etc.)",
       NULL },
-    { "list-cts", 'c', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, list_cb,
+    { "list-cts", 'c', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
+          G_OPTION_ARG_CALLBACK, command_cb,
       NULL,
       NULL },
-    { "list-operations", 'O', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, list_cb,
+    { "list-operations", 'O', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "List active resource operations, optionally filtered by\n"
       INDENT "--resource and/or --node",
       NULL },
-    { "list-all-operations", 'o', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, list_cb,
+    { "list-all-operations", 'o', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "List all resource operations, optionally filtered by\n"
       INDENT "--resource and/or --node",
       NULL },
@@ -747,22 +765,6 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
-    return TRUE;
-}
-
-gboolean
-list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-c", "--list-cts", NULL)) {
-        options.rsc_cmd = cmd_cts;
-    } else if (pcmk__str_any_of(option_name, "-L", "--list", NULL)) {
-        options.rsc_cmd = cmd_list_resources;
-    } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
-        options.rsc_cmd = cmd_list_instances;
-    } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
-        options.rsc_cmd = cmd_list_active_ops;
-    } else {
-        options.rsc_cmd = cmd_list_all_ops;
-    }
     return TRUE;
 }
 
