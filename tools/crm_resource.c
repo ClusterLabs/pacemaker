@@ -115,7 +115,6 @@ struct {
 };
 
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
 gboolean delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -323,7 +322,11 @@ static gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
+    // Sorted by enum rsc_command name
+    if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
+        options.rsc_cmd = cmd_cleanup;
+
+    } else if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_agents;
         pcmk__str_update(&options.agent_spec, optarg);
 
@@ -340,6 +343,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_none)) {
         options.rsc_cmd = cmd_metadata;
         pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_any_of(option_name, "-R", "--refresh", NULL)) {
+        options.rsc_cmd = cmd_refresh;
     }
 
     return TRUE;
@@ -431,7 +437,7 @@ static GOptionEntry command_entries[] = {
       INDENT "--option arguments. An optional LEVEL argument can be given\n"
       INDENT "to control the level of checking performed.",
       "LEVEL" },
-    { "cleanup", 'C', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, cleanup_refresh_cb,
+    { "cleanup", 'C', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "If resource has any past failures, clear its history and fail\n"
       INDENT "count. Optionally filtered by --resource, --node, --operation\n"
       INDENT "and --interval (otherwise all). --operation and --interval\n"
@@ -441,7 +447,7 @@ static GOptionEntry command_entries[] = {
       INDENT "resource, the clean-up applies to the whole collective resource\n"
       INDENT "unless --force is given.",
       NULL },
-    { "refresh", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, cleanup_refresh_cb,
+    { "refresh", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Delete resource's history (including failures) so its current state\n"
       INDENT "is rechecked. Optionally filtered by --resource and --node\n"
       INDENT "(otherwise all). If the named resource is part of a group, or one\n"
@@ -660,17 +666,6 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
     } else if (pcmk__str_eq(option_name, "--element", pcmk__str_none)) {
         options.attr_set_type = ATTR_SET_ELEMENT;
     }
-    return TRUE;
-}
-
-gboolean
-cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
-        options.rsc_cmd = cmd_cleanup;
-    } else {
-        options.rsc_cmd = cmd_refresh;
-    }
-
     return TRUE;
 }
 
