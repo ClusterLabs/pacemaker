@@ -16,16 +16,6 @@
 
 static char *cib_path = NULL;
 
-static int
-setup_group(void **state)
-{
-    /* This needs to be run before we attempt to read in a CIB or it will fail
-     * to validate.  There's no harm in doing this before all tests.
-     */
-    crm_xml_init();
-    return 0;
-}
-
 static void
 cib_not_connected(void **state)
 {
@@ -183,7 +173,7 @@ unknown_resource(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__cib_test_setup_group, NULL,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_input, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(incorrect_type, setup_test, teardown_test),
