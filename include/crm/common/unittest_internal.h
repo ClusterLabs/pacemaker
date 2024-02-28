@@ -83,6 +83,22 @@ char *pcmk__cib_test_copy_cib(const char *in_file);
 
 /*!
  * \internal
+ * \brief Clean up whatever was done by a previous call to
+ *        \c pcmk__cib_test_copy_cib.
+ *
+ * This function should be called as part of the process of tearing down
+ * any single unit test that accessed a CIB.  That is, it should be called
+ * from whatever function is the third argument to
+ * \c cmocka_unit_test_setup_teardown.
+ *
+ * \param[in]   out_path    The complete path to the temporary CIB location.
+ *                          This is the return value of
+ *                          \c pcmk__cib_test_copy_cib.
+ */
+void pcmk__cib_test_cleanup(char *out_path);
+
+/*!
+ * \internal
  * \brief Assert that a statement aborts through CRM_ASSERT().
  *
  * \param[in] stmt  Statement to execute; can be an expression.

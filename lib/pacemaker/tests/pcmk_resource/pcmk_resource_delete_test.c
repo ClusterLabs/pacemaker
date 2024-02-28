@@ -45,11 +45,8 @@ setup_test(void **state)
 static int
 teardown_test(void **state)
 {
-    unlink(cib_path);
-    free(cib_path);
+    pcmk__cib_test_cleanup(cib_path);
     cib_path = NULL;
-
-    unsetenv("CIB_file");
     return 0;
 }
 

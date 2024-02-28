@@ -112,3 +112,11 @@ pcmk__cib_test_copy_cib(const char *in_file)
     setenv("CIB_file", out_path, 1);
     return out_path;
 }
+
+void
+pcmk__cib_test_cleanup(char *out_path)
+{
+    unlink(out_path);
+    free(out_path);
+    unsetenv("CIB_file");
+}
