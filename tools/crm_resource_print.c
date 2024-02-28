@@ -593,6 +593,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
         }
     }
 
+    pcmk__output_xml_pop_parent(out);
     return pcmk_rc_ok;
 }
 
@@ -774,6 +775,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         g_list_free(hosts);
     }
 
+    pcmk__output_xml_pop_parent(out);
     return pcmk_rc_ok;
 }
 

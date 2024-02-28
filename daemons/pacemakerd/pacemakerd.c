@@ -77,6 +77,8 @@ pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
 
     out->end_list(out);
 
+    pcmk__output_xml_pop_parent(out);
+
     g_strfreev(feature_list);
     return pcmk_rc_ok;
 }
