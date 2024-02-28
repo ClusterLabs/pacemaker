@@ -114,8 +114,6 @@ struct {
     .rsc_cmd = cmd_list_resources,  // List all resources if no command given
 };
 
-gboolean agent_spec_cb(const gchar *option_name, const gchar *optarg,
-                       gpointer data, GError **error);
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
@@ -307,6 +305,46 @@ build_constraint_list(xmlNode *root)
     return retval;
 }
 
+/*!
+ * \internal
+ * \brief Process options that set the command
+ *
+ * Nothing else should set \c options.rsc_cmd.
+ *
+ * \param[in]  option_name  Name of the option being parsed
+ * \param[in]  optarg       Value to be parsed
+ * \param[in]  data         Ignored
+ * \param[out] error        Where to store recoverable error, if any
+ *
+ * \return \c TRUE if the option was successfully parsed, or \c FALSE if an
+ *         error occurred, in which case \p *error is set
+ */
+static gboolean
+command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
+        options.rsc_cmd = cmd_list_agents;
+        pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--list-ocf-alternatives",
+                            pcmk__str_none)) {
+        options.rsc_cmd = cmd_list_alternatives;
+        pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--list-ocf-providers",
+                            pcmk__str_none)) {
+        options.rsc_cmd = cmd_list_providers;
+        pcmk__str_update(&options.agent_spec, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_none)) {
+        options.rsc_cmd = cmd_metadata;
+        pcmk__str_update(&options.agent_spec, optarg);
+    }
+
+    return TRUE;
+}
+
 /* short option letters still available: eEJkKXyYZ */
 
 static GOptionEntry query_entries[] = {
@@ -333,19 +371,18 @@ static GOptionEntry query_entries[] = {
       "List supported standards",
       NULL },
     { "list-ocf-providers", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-          agent_spec_cb,
+          command_cb,
       "List all available OCF providers",
       NULL },
     { "list-agents", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-          agent_spec_cb,
+          command_cb,
       "List all agents available for the named standard and/or provider",
       "STD:PROV" },
     { "list-ocf-alternatives", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-          agent_spec_cb,
+          command_cb,
       "List all available providers for the named OCF agent",
       "AGENT" },
-    { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
-          agent_spec_cb,
+    { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
       "Show the metadata for the named class:provider:agent",
       "SPEC" },
     { "query-xml", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
@@ -664,29 +701,6 @@ delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 gboolean
 expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.clear_expired = TRUE;
-    return TRUE;
-}
-
-gboolean
-agent_spec_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-              GError **error)
-{
-    if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
-        options.rsc_cmd = cmd_list_agents;
-
-    } else if (pcmk__str_eq(option_name, "--list-ocf-alternatives",
-                            pcmk__str_none)) {
-        options.rsc_cmd = cmd_list_alternatives;
-
-    } else if (pcmk__str_eq(option_name, "--list-ocf-providers",
-                            pcmk__str_none)) {
-        options.rsc_cmd = cmd_list_providers;
-
-    } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_none)) {
-        options.rsc_cmd = cmd_metadata;
-    }
-
-    pcmk__str_update(&options.agent_spec, optarg);
     return TRUE;
 }
 
