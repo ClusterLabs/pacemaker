@@ -123,7 +123,6 @@ gboolean option_cb(const gchar *option_name, const gchar *optarg,
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                               gpointer data, GError **error);
-gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
@@ -416,6 +415,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     } else if (pcmk__str_eq(option_name, "--wait", pcmk__str_none)) {
         options.rsc_cmd = cmd_wait;
+
+    } else if (pcmk__str_any_of(option_name, "-Y", "--why", NULL)) {
+        options.rsc_cmd = cmd_why;
     }
 
     return TRUE;
@@ -496,7 +498,7 @@ static GOptionEntry query_entries[] = {
     { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Equivalent to --constraints --recursive",
       NULL },
-    { "why", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, why_cb,
+    { "why", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Show why resources are not running, optionally filtered by\n"
       INDENT "--resource and/or --node",
       NULL },
@@ -824,12 +826,6 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         }
     }
 
-    return TRUE;
-}
-
-gboolean
-why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.rsc_cmd = cmd_why;
     return TRUE;
 }
 
