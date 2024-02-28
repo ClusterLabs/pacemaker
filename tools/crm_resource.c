@@ -120,7 +120,6 @@ gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
-gboolean set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
@@ -338,6 +337,11 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
         options.rsc_cmd = cmd_delete;
 
+    } else if (pcmk__str_any_of(option_name, "-d", "--delete-parameter",
+                                NULL)) {
+        options.rsc_cmd = cmd_delete_param;
+        pcmk__str_update(&options.prop_name, optarg);
+
     } else if (pcmk__str_any_of(option_name, "-F", "--fail", NULL)) {
         options.rsc_cmd = cmd_fail;
 
@@ -397,6 +401,10 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     } else if (pcmk__str_any_of(option_name, "-R", "--refresh", NULL)) {
         options.rsc_cmd = cmd_refresh;
+
+    } else if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
+        options.rsc_cmd = cmd_set_param;
+        pcmk__str_update(&options.prop_name, optarg);
     }
 
     return TRUE;
@@ -512,12 +520,14 @@ static GOptionEntry command_entries[] = {
       INDENT "numbered instance of a clone or bundled resource, the refresh\n"
       INDENT "applies to the whole collective resource unless --force is given.",
       NULL },
-    { "set-parameter", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
+    { "set-parameter", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "Set named parameter for resource (requires -v). Use instance\n"
       INDENT "attribute unless --element, --meta, or --utilization is "
       "specified.",
       "PARAM" },
-    { "delete-parameter", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
+    { "delete-parameter", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+          command_cb,
       "Delete named parameter for resource. Use instance attribute\n"
       INDENT "unless --element, --meta or, --utilization is specified.",
       "PARAM" },
@@ -765,18 +775,6 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
-    return TRUE;
-}
-
-gboolean
-set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
-        options.rsc_cmd = cmd_set_param;
-    } else {
-        options.rsc_cmd = cmd_delete_param;
-    }
-
-    pcmk__str_update(&options.prop_name, optarg);
     return TRUE;
 }
 
