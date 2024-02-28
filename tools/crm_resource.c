@@ -118,8 +118,6 @@ gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointe
 gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
                            gpointer data, GError **error);
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean list_standards_cb(const gchar *option_name, const gchar *optarg,
-                           gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
 gboolean fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -342,6 +340,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_list_providers;
         pcmk__str_update(&options.agent_spec, optarg);
 
+    } else if (pcmk__str_eq(option_name, "--list-standards", pcmk__str_none)) {
+        options.rsc_cmd = cmd_list_standards;
+
     } else if (pcmk__str_eq(option_name, "--show-metadata", pcmk__str_none)) {
         options.rsc_cmd = cmd_metadata;
         pcmk__str_update(&options.agent_spec, optarg);
@@ -375,7 +376,7 @@ static GOptionEntry query_entries[] = {
       INDENT "--resource and/or --node",
       NULL },
     { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-      list_standards_cb,
+          command_cb,
       "List supported standards",
       NULL },
     { "list-ocf-providers", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -692,14 +693,6 @@ cmdline_config_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.clear_expired = TRUE;
-    return TRUE;
-}
-
-gboolean
-list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                  GError **error)
-{
-    options.rsc_cmd = cmd_list_standards;
     return TRUE;
 }
 
