@@ -349,34 +349,58 @@ pcmk__mk_log_output(char **argv) {
     return retval;
 }
 
+/*!
+ * \internal
+ * \brief Get the log level for a log output object
+ *
+ * This returns 0 if the output object is not of log format.
+ *
+ * \param[in] out  Output object
+ *
+ * \return Current log level for \p out
+ */
 uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out)
 {
-    private_data_t *priv = NULL;
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT((out != NULL) && (out->priv != NULL));
-    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return 0);
+    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
 
-    priv = out->priv;
-    return priv->log_level;
+        CRM_ASSERT(priv != NULL);
+        return priv->log_level;
+    }
+    return 0;
 }
 
+/*!
+ * \internal
+ * \brief Set the log level for a log output object
+ *
+ * This does nothing if the output object is not of log format.
+ *
+ * \param[in,out] out  Output object
+ */
 void
-pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level) {
-    private_data_t *priv = NULL;
+pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level)
+{
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
-    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
+    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
 
-    priv = out->priv;
-    priv->log_level = log_level;
+        CRM_ASSERT(priv != NULL);
+        priv->log_level = log_level;
+    }
 }
 
 /*!
  * \internal
  * \brief Set the file, function, line, and tags used to filter log output
  *
- * \param[in,out] out       Logger output object
+ * This does nothing if the output object is not of log format.
+ *
+ * \param[in,out] out       Output object
  * \param[in]     file      File name to filter with (or NULL for default)
  * \param[in]     function  Function name to filter with (or NULL for default)
  * \param[in]     line      Line number to filter with (or 0 for default)
@@ -390,14 +414,15 @@ void
 pcmk__output_set_log_filter(pcmk__output_t *out, const char *file,
                             const char *function, uint32_t line, uint32_t tags)
 {
-    private_data_t *priv = NULL;
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT((out != NULL) && (out->priv != NULL));
-    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
+    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
 
-    priv = out->priv;
-    priv->file = file;
-    priv->function = function;
-    priv->line = line;
-    priv->tags = tags;
+        CRM_ASSERT(priv != NULL);
+        priv->file = file;
+        priv->function = function;
+        priv->line = line;
+        priv->tags = tags;
+    }
 }

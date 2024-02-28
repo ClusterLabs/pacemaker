@@ -301,7 +301,8 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \return Standard Pacemaker return code
  *
- * \note \p args should contain only the XML patchset
+ * \note \p args should contain the following:
+ *       -# XML patchset
  */
 PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
@@ -340,7 +341,8 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
  *
  * \return Standard Pacemaker return code
  *
- * \note \p args should contain only the XML patchset
+ * \note \p args should contain the following:
+ *       -# XML patchset
  */
 PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
@@ -402,7 +404,8 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
  *
  * \return Standard Pacemaker return code
  *
- * \note \p args should contain only the XML patchset
+ * \note \p args should contain the following:
+ *       -# XML patchset
  */
 PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int

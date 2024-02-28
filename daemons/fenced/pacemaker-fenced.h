@@ -278,7 +278,6 @@ void set_fencing_completed(remote_fencing_op_t * op);
 
 int fenced_handle_manual_confirmation(const pcmk__client_t *client,
                                       xmlNode *msg);
-void fencer_metadata(void);
 
 const char *fenced_device_reboot_action(const char *device_id);
 bool fenced_device_supports_on(const char *device_id);

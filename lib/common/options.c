@@ -46,14 +46,14 @@ pcmk__cli_help(char cmd)
 static pcmk__cluster_option_t cluster_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
-     * context,
+     * flags,
      * short description,
      * long description
      */
     {
         PCMK_OPT_DC_VERSION, NULL, "string", NULL,
-        PCMK_VALUE_NONE, NULL,
-        pcmk__opt_context_controld,
+        NULL, NULL,
+        pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
             "(DC)"),
         N_("Includes a hash which identifies the exact revision the code was "
@@ -61,15 +61,15 @@ static pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
-        "corosync", NULL,
-        pcmk__opt_context_controld,
+        NULL, NULL,
+        pcmk__opt_controld|pcmk__opt_generated,
         N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),
     },
     {
         PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
         NULL, NULL,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("An arbitrary name for the cluster"),
         N_("This optional value is mostly for users' convenience as desired "
             "in administration, but may also be used in Pacemaker "
@@ -79,7 +79,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
         "20s", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("How long to wait for a response from other nodes during start-up"),
         N_("The optimal value will depend on the speed and load of your "
             "network and the type of switches used."),
@@ -87,7 +87,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time", NULL,
         "15min", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
             "with date specifications"),
         N_("Pacemaker is primarily event-driven, and looks ahead to know when "
@@ -103,7 +103,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         PCMK_OPT_FENCE_REACTION, NULL, "select",
             PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
         PCMK_VALUE_STOP, NULL,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("How a cluster node should react if notified of its own fencing"),
         N_("A cluster node may receive notification of a \"succeeded\" "
             "fencing that targeted it if fencing is misconfigured, or if "
@@ -115,45 +115,44 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
         "2min", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
-        N_("*** Advanced Use Only ***"),
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("Declare an election failed if it is not decided within this much "
             "time. If you need to adjust this value, it probably indicates "
             "the presence of a bug."),
+        NULL,
     },
     {
         PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
         "20min", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
-        N_("*** Advanced Use Only ***"),
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("Exit immediately if shutdown does not complete within this much "
             "time. If you need to adjust this value, it probably indicates "
             "the presence of a bug."),
+        NULL,
     },
     {
         PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
             NULL,
         "3min", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
-        N_("*** Advanced Use Only ***"),
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug."),
+        NULL,
     },
     {
         PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
             "time", NULL,
         "30min", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
-        N_("*** Advanced Use Only ***"),
+        pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
             "the presence of a bug."),
+        NULL,
     },
     {
         PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
         "0s", pcmk__valid_interval_spec,
-        pcmk__opt_context_controld,
-        N_("*** Advanced Use Only *** "
-            "Enabling this option will slow down cluster recovery under all "
+        pcmk__opt_controld|pcmk__opt_advanced,
+        N_("Enabling this option will slow down cluster recovery under all "
             "conditions"),
         N_("Delay cluster recovery for this much time to allow for additional "
             "events to occur. Useful if your configuration is sensitive to "
@@ -164,14 +163,14 @@ static pcmk__cluster_option_t cluster_options[] = {
             PCMK_VALUE_STOP ", " PCMK_VALUE_FREEZE ", " PCMK_VALUE_IGNORE
                 ", " PCMK_VALUE_DEMOTE ", " PCMK_VALUE_FENCE_LEGACY,
         PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("What to do when the cluster does not have quorum"),
         NULL,
     },
     {
         PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether to lock resources to a cleanly shut down node"),
         N_("When true, resources active on a node when it is cleanly shut down "
             "are kept \"locked\" to that node (not allowed to run elsewhere) "
@@ -185,7 +184,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Do not lock resources to a cleanly shut down node longer than "
            "this"),
         N_("If shutdown-lock is true and this is set to a nonzero time "
@@ -196,21 +195,21 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_based,
+        pcmk__opt_based,
         N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL,
     },
     {
         PCMK_OPT_SYMMETRIC_CLUSTER, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether resources can run on any node by default"),
         NULL,
     },
     {
         PCMK_OPT_MAINTENANCE_MODE, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether the cluster should refrain from monitoring, starting, and "
             "stopping resources"),
         NULL,
@@ -218,7 +217,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_START_FAILURE_IS_FATAL, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether a start failure should prevent a resource from being "
             "recovered on the same node"),
         N_("When true, the cluster will immediately ban a resource from a node "
@@ -228,7 +227,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether the cluster should check for active resources during "
             "start-up"),
         NULL,
@@ -238,9 +237,8 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STONITH_ENABLED, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
-        N_("*** Advanced Use Only *** "
-            "Whether nodes may be fenced as part of recovery"),
+        pcmk__opt_schedulerd|pcmk__opt_advanced,
+        N_("Whether nodes may be fenced as part of recovery"),
         N_("If false, unresponsive nodes are immediately assumed to be "
             "harmless, and resources that were active on them may be recovered "
             "elsewhere. This can result in a \"split-brain\" situation, "
@@ -249,7 +247,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STONITH_ACTION, NULL, "select", "reboot, off, poweroff",
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")"),
         NULL,
@@ -257,7 +255,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STONITH_TIMEOUT, NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
             "by default"),
         NULL,
@@ -265,7 +263,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_generated,
         N_("Whether watchdog integration is enabled"),
         N_("This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
@@ -287,7 +285,7 @@ static pcmk__cluster_option_t cluster_options[] = {
          */
         PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
         "0", NULL,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
         N_("If this is set to a positive value, lost nodes are assumed to "
@@ -309,7 +307,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
         "10", pcmk__valid_positive_int,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
             "immediately re-attempted on a target"),
         NULL,
@@ -317,23 +315,22 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_CONCURRENT_FENCING, NULL, "boolean", NULL,
         PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Allow performing fencing operations in parallel"),
         NULL,
     },
     {
         PCMK_OPT_STARTUP_FENCING, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
-        N_("*** Advanced Use Only *** "
-            "Whether to fence unseen nodes at start-up"),
+        pcmk__opt_schedulerd|pcmk__opt_advanced,
+        N_("Whether to fence unseen nodes at start-up"),
         N_("Setting this to false may lead to a \"split-brain\" situation, "
             "potentially leading to data loss and/or service unavailability."),
     },
     {
         PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Apply fencing delay targeting the lost nodes with the highest "
             "total resource priority"),
         N_("Apply specified delay for the fencings that are targeting the lost "
@@ -352,7 +349,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
         "0", pcmk__valid_interval_spec,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("How long to wait for a node that has joined the cluster to join "
            "the controller process group"),
         N_("Fence nodes that do not join the controller process group within "
@@ -364,7 +361,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_CLUSTER_DELAY, NULL, "time", NULL,
         "60s", pcmk__valid_interval_spec,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Maximum time for node-to-node communication"),
         N_("The node elected Designated Controller (DC) will consider an action "
             "failed if it does not get a response from the node executing the "
@@ -377,7 +374,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
         "80%", pcmk__valid_percentage,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("Maximum amount of system load that should be used by cluster "
             "nodes"),
         N_("The cluster will slow down its recovery process when the amount of "
@@ -386,7 +383,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
         "0", pcmk__valid_int,
-        pcmk__opt_context_controld,
+        pcmk__opt_controld,
         N_("Maximum number of jobs that can be scheduled per node (defaults to "
             "2x cores)"),
         NULL,
@@ -394,7 +391,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_BATCH_LIMIT, NULL, "integer", NULL,
         "0", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Maximum number of jobs that the cluster may execute in parallel "
             "across all nodes"),
         N_("The \"correct\" value will depend on the speed and load of your "
@@ -405,7 +402,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_MIGRATION_LIMIT, NULL, "integer", NULL,
         "-1", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The number of live migration actions that the cluster is allowed "
             "to execute in parallel on a node (-1 means no limit)"),
         NULL,
@@ -413,7 +410,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, "integer", NULL,
         "500", pcmk__valid_positive_int,
-        pcmk__opt_context_based,
+        pcmk__opt_based,
         N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
         N_("Raise this if log has \"Evicting client\" messages for cluster "
             "daemon PIDs (a good value is the number of resources in the "
@@ -424,14 +421,14 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STOP_ALL_RESOURCES, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether the cluster should stop all active resources"),
         NULL,
     },
     {
         PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether to stop resources that were removed from the "
             "configuration"),
         NULL,
@@ -439,7 +436,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, "boolean", NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Whether to cancel recurring actions removed from the "
             "configuration"),
         NULL,
@@ -447,32 +444,31 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK__OPT_REMOVE_AFTER_STOP, NULL, "boolean", NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
-        pcmk__opt_context_schedulerd,
-        N_("*** Deprecated *** "
-            "Whether to remove stopped resources from the executor"),
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
+        N_("Whether to remove stopped resources from the executor"),
         N_("Values other than default are poorly tested and potentially "
-            "dangerous. This option will be removed in a future release."),
+            "dangerous."),
     },
 
     // Storing inputs
     {
         PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, "integer", NULL,
         "-1", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in errors to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
         PCMK_OPT_PE_WARN_SERIES_MAX, NULL, "integer", NULL,
         "5000", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in warnings to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
         PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, "integer", NULL,
         "4000", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The number of scheduler inputs without errors or warnings to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
@@ -484,7 +480,7 @@ static pcmk__cluster_option_t cluster_options[] = {
                 PCMK_VALUE_ONLY_GREEN ", " PCMK_VALUE_PROGRESSIVE ", "
                 PCMK_VALUE_CUSTOM,
         PCMK_VALUE_NONE, pcmk__validate_health_strategy,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("How cluster should react to node health attributes"),
         N_("Requires external entities to create node attributes (named with "
             "the prefix \"#health\") with values \"red\", \"yellow\", or "
@@ -493,7 +489,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
         "0", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("Base health score assigned to a node"),
         N_("Only used when \"node-health-strategy\" is set to "
             "\"progressive\"."),
@@ -501,7 +497,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
         "0", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
             "\"green\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or "
@@ -510,7 +506,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
         "0", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
             "\"yellow\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or "
@@ -519,7 +515,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     {
         PCMK_OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
         "-INFINITY", pcmk__valid_int,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
             "\"red\""),
         N_("Only used when \"node-health-strategy\" is set to \"custom\" or "
@@ -532,10 +528,12 @@ static pcmk__cluster_option_t cluster_options[] = {
             PCMK_VALUE_DEFAULT ", " PCMK_VALUE_UTILIZATION ", "
                 PCMK_VALUE_MINIMAL ", " PCMK_VALUE_BALANCED,
         PCMK_VALUE_DEFAULT, pcmk__valid_placement_strategy,
-        pcmk__opt_context_schedulerd,
+        pcmk__opt_schedulerd,
         N_("How the cluster should allocate resources to nodes"),
         NULL,
     },
+
+    { NULL, },
 };
 
 
@@ -844,74 +842,65 @@ pcmk__valid_placement_strategy(const char *value)
  * \internal
  * \brief Check a table of configured options for a particular option
  *
- * \param[in,out] options    Name/value pairs for configured options
- * \param[in]     validate   If not NULL, validator function for option value
- * \param[in]     name       Option name to look for
- * \param[in]     old_name   Alternative option name to look for
- * \param[in]     def_value  Default to use if option not configured
+ * \param[in,out] table   Name/value pairs for configured options
+ * \param[in]     option  Option to look up
  *
  * \return Option value (from supplied options table or default value)
  */
 static const char *
-cluster_option_value(GHashTable *options, bool (*validate)(const char *),
-                     const char *name, const char *old_name,
-                     const char *def_value)
+cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
 {
     const char *value = NULL;
-    char *new_value = NULL;
 
-    CRM_ASSERT(name != NULL);
+    CRM_ASSERT((option != NULL) && (option->name != NULL));
 
-    if (options) {
-        value = g_hash_table_lookup(options, name);
+    if (table != NULL) {
+        value = g_hash_table_lookup(table, option->name);
 
-        if ((value == NULL) && old_name) {
-            value = g_hash_table_lookup(options, old_name);
+        if ((value == NULL) && (option->alt_name != NULL)) {
+            value = g_hash_table_lookup(table, option->alt_name);
             if (value != NULL) {
                 pcmk__config_warn("Support for legacy name '%s' for cluster "
                                   "option '%s' is deprecated and will be "
                                   "removed in a future release",
-                                  old_name, name);
+                                  option->alt_name, option->name);
 
                 // Inserting copy with current name ensures we only warn once
-                new_value = strdup(value);
-                g_hash_table_insert(options, strdup(name), new_value);
-                value = new_value;
+                pcmk__insert_dup(table, option->name, value);
             }
         }
 
-        if (value && validate && (validate(value) == FALSE)) {
+        if ((value != NULL) && (option->is_valid != NULL)
+            && !option->is_valid(value)) {
+
             pcmk__config_err("Using default value for cluster option '%s' "
-                             "because '%s' is invalid", name, value);
+                             "because '%s' is invalid", option->name, value);
             value = NULL;
         }
 
-        if (value) {
+        if (value != NULL) {
             return value;
         }
     }
 
     // No value found, use default
-    value = def_value;
+    value = option->default_value;
 
     if (value == NULL) {
         crm_trace("No value or default provided for cluster option '%s'",
-                  name);
+                  option->name);
         return NULL;
     }
 
-    if (validate) {
-        CRM_CHECK(validate(value) != FALSE,
-                  crm_err("Bug: default value for cluster option '%s' is invalid", name);
-                  return NULL);
-    }
+    CRM_CHECK((option->is_valid == NULL) || option->is_valid(value),
+              crm_err("Bug: default value for cluster option '%s' is invalid",
+                      option->name);
+              return NULL);
 
     crm_trace("Using default value '%s' for cluster option '%s'",
-              value, name);
-    if (options) {
-        new_value = strdup(value);
-        g_hash_table_insert(options, strdup(name), new_value);
-        value = new_value;
+              value, option->name);
+    if (table != NULL) {
+        pcmk__insert_dup(table, option->name, value);
     }
     return value;
 }
@@ -928,13 +917,11 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
 const char *
 pcmk__cluster_option(GHashTable *options, const char *name)
 {
-    for (int lpc = 0; lpc < PCMK__NELEM(cluster_options); lpc++) {
-        if (pcmk__str_eq(name, cluster_options[lpc].name, pcmk__str_casei)) {
-            return cluster_option_value(options,
-                                        cluster_options[lpc].is_valid,
-                                        cluster_options[lpc].name,
-                                        cluster_options[lpc].alt_name,
-                                        cluster_options[lpc].default_value);
+    for (const pcmk__cluster_option_t *option = cluster_options;
+         option->name != NULL; option++) {
+
+        if (pcmk__str_eq(name, option->name, pcmk__str_casei)) {
+            return cluster_option_value(options, option);
         }
     }
     CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
@@ -943,251 +930,82 @@ pcmk__cluster_option(GHashTable *options, const char *name)
 
 /*!
  * \internal
- * \brief Add a description element to an OCF-like metadata XML node
+ * \brief Output cluster option metadata as OCF-like XML
  *
- * Include a translation based on the current locale if \c ENABLE_NLS is
- * defined.
- *
- * \param[in,out] parent  Parent XML node
- * \param[in]     tag     Name of element to add (\c PCMK_XE_LONGDESC or
- *                        \c PCMK_XE_SHORTDESC)
- * \param[in]     desc    Textual description to add
+ * \param[in,out] out         Output object
+ * \param[in]     name        Fake resource agent name for the option list
+ * \param[in]     desc_short  Short description of the option list
+ * \param[in]     desc_long   Long description of the option list
+ * \param[in]     filter      Group of <tt>enum pcmk__opt_flags</tt>; output an
+ *                            option only if its \c flags member has all these
+ *                            flags set
+ * \param[in]     all         If \c true, output all options; otherwise, exclude
+ *                            advanced and deprecated options unless
+ *                            \c pcmk__opt_advanced and \c pcmk__opt_deprecated
+ *                            flags (respectively) are set in \p filter. This is
+ *                            always treated as true for XML output objects.
  *
  * \return Standard Pacemaker return code
  */
-static int
-add_desc(xmlNode *parent, const char *tag, const char *desc)
+int
+pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
+                             const char *desc_short, const char *desc_long,
+                             uint32_t filter, bool all)
 {
-    xmlNode *node = pcmk_create_xml_text_node(parent, tag, desc);
-
-    if (node == NULL) {
-        return ENOMEM;
-    }
-    crm_xml_add(node, PCMK_XA_LANG, PCMK__VALUE_EN);
-
-#ifdef ENABLE_NLS
-    {
-        static const char *locale = NULL;
-
-        if (strcmp(desc, _(desc)) == 0) {
-            return pcmk_rc_ok;
-        }
-
-        if (locale == NULL) {
-            locale = strtok(setlocale(LC_ALL, NULL), "_");
-        }
-
-        node = pcmk_create_xml_text_node(parent, tag, _(desc));
-        if (node == NULL) {
-            return ENOMEM;
-        }
-        crm_xml_add(node, PCMK_XA_LANG, locale);
-    }
-#endif
-    return pcmk_rc_ok;
+    return out->message(out, "option-list", name, desc_short, desc_long, filter,
+                        cluster_options, all);
 }
 
 /*!
  * \internal
- * \brief Add a \c PCMK_XE_OPTION element for each of an option's allowed values
+ * \brief Output a list of cluster options for a daemon
  *
- * \param[in,out] parent  Parent \c PCMK_XE_CONTENT node
- * \param[in]     option  Option whose allowed values to add
- *
- * \return Standard Pacemaker return code
- */
-static int
-add_allowed_values(xmlNode *parent, const pcmk__cluster_option_t *option)
-{
-    const char *delim = ", ";
-    char *str = NULL;
-    char *ptr = NULL;
-    int rc = pcmk_rc_ok;
-
-    pcmk__str_update(&str, option->values);
-    ptr = strtok(str, delim);
-
-    while (ptr != NULL) {
-        xmlNode *allowed_value = create_xml_node(parent, PCMK_XE_OPTION);
-
-        if (allowed_value == NULL) {
-            rc = ENOMEM;
-            goto done;
-        }
-        crm_xml_add(allowed_value, PCMK_XA_VALUE, ptr);
-        ptr = strtok(NULL, delim);
-    }
-
-done:
-    free(str);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
- *
- * \param[in,out] parent  Parent \c PCMK_XE_PARAMETERS node
- * \param[in]     option  Option to add as a \c PCMK_XE_PARAMETER element
+ * \brief[in,out] out         Output object
+ * \brief[in]     name        Daemon name
+ * \brief[in]     desc_short  Short description of the option list
+ * \brief[in]     desc_long   Long description of the option list
+ * \brief[in]     filter      <tt>enum pcmk__opt_flags</tt> flag corresponding
+ *                            to daemon
  *
  * \return Standard Pacemaker return code
  */
-static int
-add_option_metadata(xmlNode *parent, const pcmk__cluster_option_t *option)
+int
+pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
+                      const char *desc_short, const char *desc_long,
+                      enum pcmk__opt_flags filter)
 {
-    const char *desc_long = option->description_long;
-    const char *desc_short = option->description_short;
-    xmlNode *parameter = NULL;
-    xmlNode *content = NULL;
-    int rc = pcmk_rc_ok;
+    // @COMPAT Drop this function when we drop daemon metadata
+    pcmk__output_t *tmp_out = NULL;
+    xmlNode *top = NULL;
+    const xmlNode *metadata = NULL;
+    char *metadata_s = NULL;
 
-    // The standard requires long and short parameter descriptions
-    CRM_ASSERT((desc_long != NULL) || (desc_short != NULL));
-
-    if (desc_long == NULL) {
-        desc_long = desc_short;
-    } else if (desc_short == NULL) {
-        desc_short = desc_long;
-    }
-
-    // The standard requires a parameter type
-    CRM_ASSERT(option->type != NULL);
-
-    parameter = create_xml_node(parent, PCMK_XE_PARAMETER);
-    if (parameter == NULL) {
-        return ENOMEM;
-    }
-
-    crm_xml_add(parameter, PCMK_XA_NAME, option->name);
-
-    rc = add_desc(parameter, PCMK_XE_LONGDESC, desc_long);
+    int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
-    rc = add_desc(parameter, PCMK_XE_SHORTDESC, desc_short);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
+    pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
+                                 (uint32_t) filter, true);
 
-    content = create_xml_node(parameter, PCMK_XE_CONTENT);
-    if (content == NULL) {
-        return ENOMEM;
-    }
+    tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
+    metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
+    metadata_s = dump_xml_formatted_with_text(metadata);
 
-    crm_xml_add(content, PCMK_XA_TYPE, option->type);
-    crm_xml_add(content, PCMK_XA_DEFAULT, option->default_value);
+    out->output_xml(out, PCMK_XE_METADATA, metadata_s);
 
-    if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
-        return add_allowed_values(content, option);
-    }
-
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Format option metadata as an OCF-like XML string
- *
- * \param[in] name         Daemon name
- * \param[in] desc_short   Short description of the daemon
- * \param[in] desc_long    Long description of the daemon
- * \param[in] filter       If not \c pcmk__opt_context_none, include only
- *                         those options whose \c context field is equal to
- *                         \p filter
- * \param[in] option_list  Options whose metadata to format
- * \param[in] len          Number of items in \p option_list
- *
- * \return A string containing OCF-like option metadata XML
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-char *
-pcmk__format_option_metadata(const char *name, const char *desc_short,
-                             const char *desc_long,
-                             enum pcmk__opt_context filter,
-                             pcmk__cluster_option_t *option_list, int len)
-{
-    xmlNode *top = create_xml_node(NULL, PCMK_XE_RESOURCE_AGENT);
-    xmlNode *parameters = NULL;
-    char *result = NULL;
-
-    if (top == NULL) {
-        goto done;
-    }
-    crm_xml_add(top, PCMK_XA_NAME, name);
-    crm_xml_add(top, PCMK_XA_VERSION, PACEMAKER_VERSION);
-
-    if (pcmk_create_xml_text_node(top, PCMK_XE_VERSION,
-                                  PCMK_OCF_VERSION) == NULL) {
-        goto done;
-    }
-
-    if ((desc_long != NULL)
-        && (add_desc(top, PCMK_XE_LONGDESC, desc_long) != pcmk_rc_ok)) {
-        goto done;
-    }
-    if ((desc_short != NULL)
-        && (add_desc(top, PCMK_XE_SHORTDESC, desc_short) != pcmk_rc_ok)) {
-        goto done;
-    }
-
-    parameters = create_xml_node(top, PCMK_XE_PARAMETERS);
-    if (parameters == NULL) {
-        goto done;
-    }
-
-    for (int lpc = 0; lpc < len; lpc++) {
-        if ((filter != pcmk__opt_context_none)
-            && (filter != option_list[lpc].context)) {
-            continue;
-        }
-
-        if (add_option_metadata(parameters, &option_list[lpc]) != pcmk_rc_ok) {
-            goto done;
-        }
-    }
-
-    result = dump_xml_formatted_with_text(top);
-
-done:
+    pcmk__output_free(tmp_out);
     free_xml(top);
-    return result;
-}
-
-/*!
- * \internal
- * \brief Format cluster option metadata as an OCF-like XML string
- *
- * \param[in] name        Daemon name
- * \param[in] desc_short  Short description of the daemon
- * \param[in] desc_long   Long description of the daemon
- * \param[in] filter      If not \c pcmk__opt_context_none, include only
- *                        those options whose \c context field is equal to
- *                        \p filter
- *
- * \return A string containing OCF-like cluster option metadata XML
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-char *
-pcmk__cluster_option_metadata(const char *name, const char *desc_short,
-                              const char *desc_long,
-                              enum pcmk__opt_context filter)
-{
-    return pcmk__format_option_metadata(name, desc_short, desc_long, filter,
-                                        cluster_options,
-                                        PCMK__NELEM(cluster_options));
+    free(metadata_s);
+    return pcmk_rc_ok;
 }
 
 void
 pcmk__validate_cluster_options(GHashTable *options)
 {
-    for (int lpc = 0; lpc < PCMK__NELEM(cluster_options); lpc++) {
-        cluster_option_value(options,
-                             cluster_options[lpc].is_valid,
-                             cluster_options[lpc].name,
-                             cluster_options[lpc].alt_name,
-                             cluster_options[lpc].default_value);
+    for (const pcmk__cluster_option_t *option = cluster_options;
+         option->name != NULL; option++) {
+
+        cluster_option_value(options, option);
     }
 }

@@ -654,6 +654,8 @@ pcmk__register_messages(pcmk__output_t *out,
 
 /* Functions that are useful for implementing custom message formatters */
 
+void pcmk__output_text_set_fancy(pcmk__output_t *out, bool enabled);
+
 /*!
  * \internal
  * \brief A printf-like function.

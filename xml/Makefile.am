@@ -90,6 +90,8 @@ API_base		= $(API_request_base)	\
 			  node-attrs		\
 			  node-history		\
 			  nodes			\
+			  ocf-ra		\
+			  options		\
 			  patchset		\
 			  resources		\
 			  status		\

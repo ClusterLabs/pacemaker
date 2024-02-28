@@ -125,19 +125,17 @@ setup_stand_alone(GError **error)
     return pcmk_rc_ok;
 }
 
-static void
-based_metadata(void)
+/* @COMPAT Deprecated since 2.1.8; use pcmk_cluster_list_options() or
+ * crm_attribute --list-options instead of querying daemon metadata.
+ */
+static int
+based_metadata(pcmk__output_t *out)
 {
-    const char *name = "pacemaker-based";
-    const char *desc_short = "Cluster Information Base manager options";
-    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
-                            "Information Base manager";
-
-    char *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_based);
-
-    printf("%s", s);
-    free(s);
+    return pcmk__daemon_metadata(out, "pacemaker-based",
+                                 "Cluster Information Base manager options",
+                                 "Cluster options used by Pacemaker's Cluster "
+                                 "Information Base manager",
+                                 pcmk__opt_based);
 }
 
 static GOptionEntry entries[] = {
@@ -168,8 +166,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, "text (default), xml", group,
-                                      "[metadata]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -218,7 +215,13 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        based_metadata();
+
+        rc = based_metadata(out);
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Unable to display metadata: %s", pcmk_rc_str(rc));
+        }
         goto done;
     }
 

@@ -31,8 +31,8 @@ struct {
 } options;
 
 pcmk__output_t *logger_out = NULL;
-pcmk__output_t *out = NULL;
 
+static pcmk__output_t *out = NULL;
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
@@ -46,18 +46,17 @@ pcmk__supported_format_t formats[] = {
 
 void pengine_shutdown(int nsig);
 
-static void
+/* @COMPAT Deprecated since 2.1.8; use pcmk_cluster_list_options() or
+ * crm_attribute --list-options instead of querying daemon metadata.
+ */
+static int
 scheduler_metadata(pcmk__output_t *out)
 {
-    const char *name = "pacemaker-schedulerd";
-    const char *desc_short = "Pacemaker scheduler options";
-    const char *desc_long = "Cluster options used by Pacemaker's scheduler";
-
-    char *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_schedulerd);
-
-    out->output_xml(out, PCMK_XE_METADATA, s);
-    free(s);
+    return pcmk__daemon_metadata(out, "pacemaker-schedulerd",
+                                 "Pacemaker scheduler options",
+                                 "Cluster options used by Pacemaker's "
+                                 "scheduler",
+                                 pcmk__opt_schedulerd);
 }
 
 static GOptionContext *
@@ -72,8 +71,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, "text (default), xml", group,
-                                      "[metadata]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     return context;
 }
@@ -112,14 +110,20 @@ main(int argc, char **argv)
     if (options.remainder) {
         if (g_strv_length(options.remainder) == 1 &&
             pcmk__str_eq("metadata", options.remainder[0], pcmk__str_casei)) {
-            scheduler_metadata(out);
-            goto done;
+
+            rc = scheduler_metadata(out);
+            if (rc != pcmk_rc_ok) {
+                exit_code = CRM_EX_FATAL;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Unable to display metadata: %s", pcmk_rc_str(rc));
+            }
+
         } else {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Unsupported extra command line parameters");
-            goto done;
         }
+        goto done;
     }
 
     if (args->version) {

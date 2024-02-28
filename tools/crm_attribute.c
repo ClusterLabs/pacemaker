@@ -40,6 +40,14 @@
 
 #define SUMMARY "crm_attribute - query and update Pacemaker cluster options and node attributes"
 
+enum attr_cmd {
+    attr_cmd_none,
+    attr_cmd_delete,
+    attr_cmd_list,
+    attr_cmd_query,
+    attr_cmd_update,
+};
+
 GError *error = NULL;
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
@@ -84,7 +92,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 };
 
 struct {
-    char command;
+    enum attr_cmd command;
     gchar *attr_default;
     gchar *attr_id;
     gchar *attr_name;
@@ -97,17 +105,27 @@ struct {
     gchar *set_name;
     char *set_type;
     gchar *type;
+    char *opt_list;
+    gboolean all;
     gboolean promotion_score;
 } options = {
-    .command = 'G',
+    .command = attr_cmd_query,
     .promotion_score = FALSE
 };
 
 #define INDENT "                               "
 
 static gboolean
+list_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+        GError **error) {
+    options.command = attr_cmd_list;
+    pcmk__str_update(&options.opt_list, optarg);
+    return TRUE;
+}
+
+static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.command = 'D';
+    options.command = attr_cmd_delete;
     pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
 }
@@ -135,7 +153,7 @@ promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 update_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.command = 'u';
+    options.command = attr_cmd_update;
     pcmk__str_update(&options.attr_value, optarg);
     return TRUE;
 }
@@ -153,7 +171,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 
 static gboolean
 value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.command = 'G';
+    options.command = attr_cmd_query;
     pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
 }
@@ -179,6 +197,13 @@ wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **
 }
 
 static GOptionEntry selecting_entries[] = {
+    { "all", 'a', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.all,
+      "With -L/--list-options, include advanced and deprecated options in the\n"
+      INDENT "output. This is always treated as true when --output-as=xml is\n"
+      INDENT "specified.",
+      NULL,
+    },
+
     { "id", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,
       "(Advanced) Operate on instance of specified attribute with this\n"
       INDENT "XML ID",
@@ -216,6 +241,12 @@ static GOptionEntry selecting_entries[] = {
 };
 
 static GOptionEntry command_entries[] = {
+    { "list-options", 'L', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, list_cb,
+      "List all available options of the given type.\n"
+      INDENT "Allowed values: " PCMK__VALUE_CLUSTER,
+      "TYPE"
+    },
+
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, delete_cb,
       "Delete the attribute/option",
       NULL
@@ -326,22 +357,26 @@ get_node_name_from_local(void)
 }
 
 static int
-send_attrd_update(char command, const char *attr_node, const char *attr_name,
-                  const char *attr_value, const char *attr_set,
-                  const char *attr_dampen, uint32_t attr_options)
+send_attrd_update(enum attr_cmd command, const char *attr_node,
+                  const char *attr_name, const char *attr_value,
+                  const char *attr_set, const char *attr_dampen,
+                  uint32_t attr_options)
 {
     int rc = pcmk_rc_ok;
     uint32_t opts = attr_options;
 
     switch (command) {
-        case 'D':
+        case attr_cmd_delete:
             rc = pcmk__attrd_api_delete(NULL, attr_node, attr_name, opts);
             break;
 
-        case 'u':
+        case attr_cmd_update:
             rc = pcmk__attrd_api_update(NULL, attr_node, attr_name,
                                         attr_value, NULL, attr_set, NULL,
                                         opts | pcmk__node_attr_value);
+            break;
+
+        default:
             break;
     }
 
@@ -380,6 +415,22 @@ delete_attr_on_node(xmlNode *child, void *userdata)
     }
 
     return rc;
+}
+
+static void
+command_list(pcmk__output_t *out)
+{
+    if (pcmk__str_eq(options.opt_list, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        exit_code = pcmk_rc2exitc(pcmk__list_cluster_options(out, options.all));
+
+    } else {
+        // @TODO Improve usage messages to reduce duplication
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "Invalid --list-options value '%s'. Allowed values: "
+                    PCMK__VALUE_CLUSTER,
+                    pcmk__s(options.opt_list, "(BUG: none)"));
+    }
 }
 
 static int
@@ -620,7 +671,9 @@ use_attrd(void)
 static bool
 try_ipc_update(void)
 {
-    return use_attrd() && (options.command == 'D' || options.command == 'u');
+    return use_attrd()
+           && ((options.command == attr_cmd_delete)
+               || (options.command == attr_cmd_update));
 }
 
 static bool
@@ -629,13 +682,22 @@ pattern_used_correctly(void)
     /* --pattern can only be used with:
      * -G (query), -v (update), or -D (delete)
      */
-    return options.command == 'G' || options.command == 'u' || options.command == 'D';
+    switch (options.command) {
+        case attr_cmd_delete:
+        case attr_cmd_query:
+        case attr_cmd_update:
+            return true;
+        default:
+            return false;
+    }
 }
 
 static bool
 delete_used_correctly(void)
 {
-    return options.command != 'D' || options.attr_name != NULL || options.attr_pattern != NULL;
+    return (options.command != attr_cmd_delete)
+           || (options.attr_name != NULL)
+           || (options.attr_pattern != NULL);
 }
 
 static GOptionContext *
@@ -728,6 +790,11 @@ main(int argc, char **argv)
     }
 
     out->quiet = args->quiet;
+
+    if (options.command == attr_cmd_list) {
+        command_list(out);
+        goto done;
+    }
 
     if (options.promotion_score && options.attr_name == NULL) {
         exit_code = CRM_EX_USAGE;
@@ -849,13 +916,19 @@ main(int argc, char **argv)
     if (try_ipc_update() &&
         (send_attrd_update(options.command, options.dest_uname, options.attr_name,
                            options.attr_value, options.set_name, NULL, options.attr_options) == pcmk_rc_ok)) {
-        crm_info("Update %s=%s sent via pacemaker-attrd",
-                 options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
-    } else if (options.command == 'D') {
+        const char *update = options.attr_value;
+
+        if (options.command == attr_cmd_delete) {
+            update = "<none>";
+        }
+        crm_info("Update %s=%s sent via pacemaker-attrd",
+                 options.attr_name, update);
+
+    } else if (options.command == attr_cmd_delete) {
         rc = command_delete(out, the_cib);
 
-    } else if (options.command == 'u') {
+    } else if (options.command == attr_cmd_update) {
         rc = command_update(out, the_cib, is_remote_node);
 
     } else {

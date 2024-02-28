@@ -301,7 +301,13 @@ int pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
                           const char *filename, char **argv);
 
 G_GNUC_INTERNAL
+void pcmk__register_option_messages(pcmk__output_t *out);
+
+G_GNUC_INTERNAL
 void pcmk__register_patchset_messages(pcmk__output_t *out);
+
+G_GNUC_INTERNAL
+bool pcmk__output_text_get_fancy(pcmk__output_t *out);
 
 /*
  * Rules

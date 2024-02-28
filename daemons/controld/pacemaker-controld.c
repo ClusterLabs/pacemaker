@@ -46,25 +46,23 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-static void
-controld_metadata(void)
+/* @COMPAT Deprecated since 2.1.8; use pcmk_cluster_list_options() or
+ * crm_attribute --list-options instead of querying daemon metadata.
+ */
+static int
+controld_metadata(pcmk__output_t *out)
 {
-    const char *name = "pacemaker-controld";
-    const char *desc_short = "Pacemaker controller options";
-    const char *desc_long = "Cluster options used by Pacemaker's controller";
-
-    char *s = pcmk__cluster_option_metadata(name, desc_short, desc_long,
-                                            pcmk__opt_context_controld);
-
-    printf("%s", s);
-    free(s);
+    return pcmk__daemon_metadata(out, "pacemaker-controld",
+                                 "Pacemaker controller options",
+                                 "Cluster options used by Pacemaker's "
+                                 "controller",
+                                 pcmk__opt_controld);
 }
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    return pcmk__build_arg_context(args, "text (default), xml", group,
-                                   "[metadata]");
+    return pcmk__build_arg_context(args, "text (default), xml", group, NULL);
 }
 
 int
@@ -110,8 +108,14 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        controld_metadata();
+
         initialize = false;
+        rc = controld_metadata(out);
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Unable to display metadata: %s", pcmk_rc_str(rc));
+        }
         goto done;
     }
 

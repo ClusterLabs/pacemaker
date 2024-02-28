@@ -85,12 +85,12 @@ static struct {
  * \internal
  * \brief Display an instruction to the user
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instructional message
  */
 PCMK__OUTPUT_ARGS("instruction", "const char *")
@@ -109,12 +109,12 @@ instruction_default(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display an instruction to the user
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instructional message
  */
 PCMK__OUTPUT_ARGS("instruction", "const char *")
@@ -134,12 +134,12 @@ instruction_xml(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display information about a shadow CIB instance
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instance name (can be \p NULL)
  *       -# Shadow file name (can be \p NULL)
  *       -# Shadow file content (can be \p NULL)
@@ -197,12 +197,12 @@ shadow_default(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display information about a shadow CIB instance
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instance name (can be \p NULL)
  *       -# Shadow file name (can be \p NULL)
  *       -# Shadow file content (can be \p NULL)
@@ -257,12 +257,12 @@ shadow_text(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display information about a shadow CIB instance
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instance name (can be \p NULL)
  *       -# Shadow file name (can be \p NULL)
  *       -# Shadow file content (can be \p NULL)

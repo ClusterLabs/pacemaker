@@ -116,9 +116,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
     int rc = pcmk__bare_output_new(out, fmt_name, filename, argv);
 
     if (rc == pcmk_rc_ok) {
-        /* Register libcrmcommon messages (currently they exist only for
-         * patchset)
-         */
+        // Register libcrmcommon messages
+        pcmk__register_option_messages(*out);
         pcmk__register_patchset_messages(*out);
     }
     return rc;
