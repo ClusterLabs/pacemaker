@@ -111,6 +111,7 @@ struct {
     .attr_set_type = PCMK_XE_INSTANCE_ATTRIBUTES,
     .check_level = -1,
     .cib_options = cib_sync_call,
+    .rsc_cmd = cmd_list_resources,  // List all resources if no command given
 };
 
 gboolean agent_spec_cb(const gchar *option_name, const gchar *optarg,
@@ -1524,11 +1525,6 @@ main(int argc, char **argv)
     /*
      * Validate option combinations
      */
-
-    // If the user didn't explicitly specify a command, list resources
-    if (options.rsc_cmd == cmd_none) {
-        options.rsc_cmd = cmd_list_resources;
-    }
 
     // --expired without --clear/-U doesn't make sense
     if (options.clear_expired && (options.rsc_cmd != cmd_clear)) {
