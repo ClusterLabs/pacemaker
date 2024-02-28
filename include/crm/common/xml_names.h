@@ -14,15 +14,19 @@
 extern "C" {
 #endif
 
-/* This file defines constants for XML element and attribute names.
- *
- * For consistency, new constants should start with "PCMK_", followed by:
- * * "XE" for XML element names
- * * "XA" for XML attribute names
- * * "OPT" for cluster option (property) names
- * * "META" for meta-attribute names
- * * "VALUE" for enumerated values (such as for options or for XML attributes)
- * * "NODE_ATTR" for node attribute names
+/*!
+ * \file
+ * \brief Defined string constants for XML element and attribute names
+ * \ingroup core
+ */
+
+/* For consistency, new constants should start with "PCMK_", followed by:
+ * - "XE" for XML element names
+ * - "XA" for XML attribute names
+ * - "OPT" for cluster option (property) names
+ * - "META" for meta-attribute names
+ * - "VALUE" for enumerated values (such as for options or for XML attributes)
+ * - "NODE_ATTR" for node attribute names
  *
  * Old names that don't follow this policy should eventually be deprecated and
  * replaced with names that do.
