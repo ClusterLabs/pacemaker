@@ -123,7 +123,6 @@ gboolean option_cb(const gchar *option_name, const gchar *optarg,
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                               gpointer data, GError **error);
-gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
 static crm_exit_t exit_code = CRM_EX_OK;
@@ -414,6 +413,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else if (pcmk__str_any_of(option_name, "-S", "--set-property", NULL)) {
         options.rsc_cmd = cmd_set_property;
         pcmk__str_update(&options.prop_name, optarg);
+
+    } else if (pcmk__str_eq(option_name, "--wait", pcmk__str_none)) {
+        options.rsc_cmd = cmd_wait;
     }
 
     return TRUE;
@@ -616,7 +618,7 @@ static GOptionEntry advanced_entries[] = {
       "(Advanced) Tell the cluster to restart this resource and\n"
       INDENT "anything that depends on it",
       NULL },
-    { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, wait_cb,
+    { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Wait until the cluster settles into a stable state",
       NULL },
     { "digests", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
@@ -822,12 +824,6 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         }
     }
 
-    return TRUE;
-}
-
-gboolean
-wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.rsc_cmd = cmd_wait;
     return TRUE;
 }
 
