@@ -120,7 +120,6 @@ gboolean cmdline_config_cb(const gchar *option_name, const gchar *optarg,
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
-gboolean fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -325,6 +324,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
         options.rsc_cmd = cmd_delete;
+
+    } else if (pcmk__str_any_of(option_name, "-F", "--fail", NULL)) {
+        options.rsc_cmd = cmd_fail;
 
     } else if (pcmk__str_eq(option_name, "--list-agents", pcmk__str_none)) {
         options.rsc_cmd = cmd_list_agents;
@@ -534,7 +536,7 @@ static GOptionEntry advanced_entries[] = {
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Delete a resource from the CIB. Required: -t",
       NULL },
-    { "fail", 'F', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, fail_cb,
+    { "fail", 'F', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Tell the cluster this resource has failed",
       NULL },
     { "restart", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, restart_cb,
@@ -710,12 +712,6 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
-    return TRUE;
-}
-
-gboolean
-fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.rsc_cmd = cmd_fail;
     return TRUE;
 }
 
