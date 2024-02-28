@@ -206,6 +206,7 @@ extern "C" {
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_UTILIZATIONS                "utilizations"
 #define PCMK_XE_VALIDATE                    "validate"
+#define PCMK_XE_VERIFICATIONS               "verifications"
 #define PCMK_XE_VERSION                     "version"
 #define PCMK_XE_XML                         "xml"
 #define PCMK_XE_XML_PATCHSET                "xml-patchset"

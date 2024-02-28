@@ -2407,10 +2407,10 @@ cluster_verify(pcmk__output_t *out, va_list args) {
 
     if (verify_rc != pcmk_rc_schema_validation) {
         if (pcmk_is_set(section_opts, pcmk_section_verify)) {
-            out->list_item(out, "CIB is valid", NULL);
+            out->list_item(out, NULL, "CIB is valid");
         }
     } else {
-        out->list_item(out, "CIB has errors (for details, run crm_verify -LV)", NULL);
+        out->list_item(out, NULL, "CIB has errors (for details, run crm_verify -LV)");
     }
 
     return pcmk_rc_ok;
