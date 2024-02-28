@@ -123,8 +123,6 @@ gboolean option_cb(const gchar *option_name, const gchar *optarg,
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                               gpointer data, GError **error);
-gboolean restart_cb(const gchar *option_name, const gchar *optarg,
-                    gpointer data, GError **error);
 gboolean digests_cb(const gchar *option_name, const gchar *optarg,
                     gpointer data, GError **error);
 gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -401,6 +399,9 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     } else if (pcmk__str_any_of(option_name, "-R", "--refresh", NULL)) {
         options.rsc_cmd = cmd_refresh;
 
+    } else if (pcmk__str_eq(option_name, "--restart", pcmk__str_none)) {
+        options.rsc_cmd = cmd_restart;
+
     } else if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
         options.rsc_cmd = cmd_set_param;
         pcmk__str_update(&options.prop_name, optarg);
@@ -606,7 +607,7 @@ static GOptionEntry advanced_entries[] = {
     { "fail", 'F', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Tell the cluster this resource has failed",
       NULL },
-    { "restart", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, restart_cb,
+    { "restart", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Tell the cluster to restart this resource and\n"
       INDENT "anything that depends on it",
       NULL },
@@ -816,14 +817,6 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
         }
     }
 
-    return TRUE;
-}
-
-gboolean
-restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-           GError **error)
-{
-    options.rsc_cmd = cmd_restart;
     return TRUE;
 }
 
