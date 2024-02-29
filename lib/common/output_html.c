@@ -83,7 +83,7 @@ html_free_priv(pcmk__output_t *out) {
 
     xmlFreeNode(priv->root);
     g_queue_free(priv->parent_q);
-    g_slist_free(priv->errors);
+    g_slist_free_full(priv->errors, free);
     free(priv);
     out->priv = NULL;
 }
