@@ -324,7 +324,7 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
     if (data->children) {
         for (const xmlNode *child = data->children; child != NULL;
              child = child->next) {
-            pcmk__xml2text(child, options, buffer, depth + 1);
+            pcmk__xml_string(child, options, buffer, depth + 1);
         }
 
         for (int lpc = 0; lpc < spaces; lpc++) {
@@ -471,7 +471,7 @@ xml_element_type2str(xmlElementType type)
 
 /*!
  * \internal
- * \brief Create a text representation of an XML object
+ * \brief Create a string representation of an XML object
  *
  * \param[in]     data     XML to convert
  * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
@@ -479,8 +479,8 @@ xml_element_type2str(xmlElementType type)
  * \param[in]     depth    Current indentation level
  */
 void
-pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
-               int depth)
+pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
+                 int depth)
 {
     if (data == NULL) {
         crm_trace("Nothing to dump");
@@ -535,7 +535,7 @@ pcmk__xml_dump(const xmlNode *xml, uint32_t flags)
      */
     GString *g_buffer = g_string_sized_new(1024);
 
-    pcmk__xml2text(xml, flags, g_buffer, 0);
+    pcmk__xml_string(xml, flags, g_buffer, 0);
     return g_string_free(g_buffer, FALSE);
 }
 

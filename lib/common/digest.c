@@ -36,7 +36,7 @@ dump_xml_for_digest(xmlNodePtr xml)
 
     /* for compatibility with the old result which is used for v1 digests */
     g_string_append_c(buffer, ' ');
-    pcmk__xml2text(xml, 0, buffer, 0);
+    pcmk__xml_string(xml, 0, buffer, 0);
     g_string_append_c(buffer, '\n');
 
     return buffer;
