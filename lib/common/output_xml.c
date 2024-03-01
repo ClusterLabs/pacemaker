@@ -136,6 +136,10 @@ xml_free_priv(pcmk__output_t *out) {
 
     if (has_root_node(out)) {
         free_xml(priv->root);
+        /* The elements of parent_q are xmlNodes that are a part of the
+         * priv->root document, so the above line already frees them.  Don't
+         * call g_queue_free_full here.
+         */
         g_queue_free(priv->parent_q);
     }
 
@@ -403,11 +407,13 @@ xml_end_list(pcmk__output_t *out) {
         char *buf = NULL;
         xmlNodePtr node;
 
+        /* Do not free node here - it's still part of the document */
         node = g_queue_pop_tail(priv->parent_q);
         buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
         crm_xml_add(node, PCMK_XA_COUNT, buf);
         free(buf);
     } else {
+        /* Do not free this result - it's still part of the document */
         g_queue_pop_tail(priv->parent_q);
     }
 }
@@ -564,6 +570,7 @@ pcmk__output_xml_pop_parent(pcmk__output_t *out) {
     priv = out->priv;
 
     CRM_ASSERT(g_queue_get_length(priv->parent_q) > 0);
+    /* Do not free this result - it's still part of the document */
     g_queue_pop_tail(priv->parent_q);
 }
 
