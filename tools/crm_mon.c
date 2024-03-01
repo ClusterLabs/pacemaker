@@ -1920,90 +1920,94 @@ handle_op_for_node(xmlNode *xml, void *userdata)
     return pcmk_rc_ok;
 }
 
+static int
+crm_diff_update_element_v2(xmlNode *change, void *userdata)
+{
+    const char *name = NULL;
+    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+    xmlNode *match = NULL;
+    const char *node = NULL;
+
+    if (op == NULL) {
+        return pcmk_rc_ok;
+
+    } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
+        match = change->children;
+
+    } else if (pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
+                                NULL)) {
+        return pcmk_rc_ok;
+
+    } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
+        match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
+        if(match) {
+            match = match->children;
+        }
+    }
+
+    if(match) {
+        name = (const char *)match->name;
+    }
+
+    crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+    if(xpath == NULL) {
+        /* Version field, ignore */
+
+    } else if(name == NULL) {
+        crm_debug("No result for %s operation to %s", op, xpath);
+        CRM_ASSERT(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
+                                    NULL));
+
+    } else if (strcmp(name, PCMK_XE_CIB) == 0) {
+        pcmk__xe_foreach_child(first_named_child(match, PCMK_XE_STATUS),
+                               NULL, handle_op_for_node, NULL);
+
+    } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
+        pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
+
+    } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
+        node = crm_element_value(match, PCMK_XA_UNAME);
+        if (node == NULL) {
+            node = pcmk__xe_id(match);
+        }
+        handle_rsc_op(match, (void *) node);
+
+    } else if (strcmp(name, PCMK__XE_LRM) == 0) {
+        node = pcmk__xe_id(match);
+        handle_rsc_op(match, (void *) node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        handle_rsc_op(match, local_node);
+        free(local_node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        handle_rsc_op(match, local_node);
+        free(local_node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        handle_rsc_op(match, local_node);
+        free(local_node);
+
+    } else {
+        crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
-    xmlNode *change = NULL;
     xmlNode *diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
-    for (change = pcmk__xml_first_child(diff); change != NULL;
-         change = pcmk__xml_next(change)) {
-        const char *name = NULL;
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
-        xmlNode *match = NULL;
-        const char *node = NULL;
-
-        if (op == NULL) {
-            continue;
-
-        } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-            match = change->children;
-
-        } else if (pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
-                                    NULL)) {
-            continue;
-
-        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
-            if(match) {
-                match = match->children;
-            }
-        }
-
-        if(match) {
-            name = (const char *)match->name;
-        }
-
-        crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
-        if(xpath == NULL) {
-            /* Version field, ignore */
-
-        } else if(name == NULL) {
-            crm_debug("No result for %s operation to %s", op, xpath);
-            CRM_ASSERT(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
-                                        NULL));
-
-        } else if (strcmp(name, PCMK_XE_CIB) == 0) {
-            pcmk__xe_foreach_child(first_named_child(match, PCMK_XE_STATUS),
-                                   NULL, handle_op_for_node, NULL);
-
-        } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
-            pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
-
-        } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
-            node = crm_element_value(match, PCMK_XA_UNAME);
-            if (node == NULL) {
-                node = pcmk__xe_id(match);
-            }
-            handle_rsc_op(match, (void *) node);
-
-        } else if (strcmp(name, PCMK__XE_LRM) == 0) {
-            node = pcmk__xe_id(match);
-            handle_rsc_op(match, (void *) node);
-
-        } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-
-            handle_rsc_op(match, local_node);
-            free(local_node);
-
-        } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-
-            handle_rsc_op(match, local_node);
-            free(local_node);
-
-        } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-
-            handle_rsc_op(match, local_node);
-            free(local_node);
-
-        } else {
-            crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
-        }
-    }
+    pcmk__xe_foreach_child(diff, NULL, crm_diff_update_element_v2, NULL);
 }
 
 static void

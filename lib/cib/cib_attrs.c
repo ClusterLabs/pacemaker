@@ -150,18 +150,22 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 }
 
 static int
+output_attr_child(xmlNode *child, void *userdata)
+{
+    pcmk__output_t *out = userdata;
+
+    out->info(out, "  Value: %s \t(id=%s)",
+              crm_element_value(child, PCMK_XA_VALUE),
+              pcmk__s(pcmk__xe_id(child), "<none>"));
+    return pcmk_rc_ok;
+}
+
+static int
 handle_multiples(pcmk__output_t *out, xmlNode *search, const char *attr_name)
 {
     if ((search != NULL) && (search->children != NULL)) {
-        xmlNode *child = NULL;
-
         out->info(out, "Multiple attributes match name=%s", attr_name);
-        for (child = pcmk__xml_first_child(search); child != NULL;
-             child = pcmk__xml_next(child)) {
-            out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, PCMK_XA_VALUE),
-                      pcmk__xe_id(child));
-        }
+        pcmk__xe_foreach_child(search, NULL, output_attr_child, out);
         return ENOTUNIQ;
 
     } else {
