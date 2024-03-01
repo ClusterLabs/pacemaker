@@ -702,16 +702,18 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
 
-        if (pcmk__xe_is(a_child, PCMK_XE_NODE)) {
-            child_name = pcmk__xe_id(a_child);
-            if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
-                child_name = crm_element_value(a_child, PCMK_XA_UNAME);
-                if (child_name != NULL) {
-                    *uname = strdup(child_name);
-                    rc = pcmk_ok;
-                }
-                break;
+        if (!pcmk__xe_is(a_child, PCMK_XE_NODE)) {
+            continue;
+        }
+
+        child_name = pcmk__xe_id(a_child);
+        if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
+            child_name = crm_element_value(a_child, PCMK_XA_UNAME);
+            if (child_name != NULL) {
+                *uname = strdup(child_name);
+                rc = pcmk_ok;
             }
+            break;
         }
     }
 
