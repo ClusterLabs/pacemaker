@@ -38,12 +38,12 @@ typedef struct pcmk__deleted_xml_s {
 } pcmk__deleted_xml_t;
 
 typedef struct xml_node_private_s {
-        long check;
+        uint32_t check;
         uint32_t flags;
 } xml_node_private_t;
 
 typedef struct xml_doc_private_s {
-        long check;
+        uint32_t check;
         uint32_t flags;
         char *user;
         GList *acls;
