@@ -1558,7 +1558,7 @@ pcmk__xml_escape(const char *text, bool escape_quote)
             default:
                 if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
                     // Escape non-printing characters
-                    snprintf(buf, sizeof(buf), "&#%.2x;", copy[index]);
+                    snprintf(buf, sizeof(buf), "&#x%.2x;", copy[index]);
                     copy = replace_text(copy, &index, &length, buf);
                 }
                 break;
