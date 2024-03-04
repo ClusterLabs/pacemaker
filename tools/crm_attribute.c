@@ -248,7 +248,7 @@ static GOptionEntry command_entries[] = {
     },
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, delete_cb,
-      "Delete the attribute/option",
+      "Delete the attribute/option (with -n or -P)",
       NULL
     },
 
@@ -259,7 +259,7 @@ static GOptionEntry command_entries[] = {
     },
 
     { "update", 'v', 0, G_OPTION_ARG_CALLBACK, update_cb,
-      "Update the value of the attribute/option",
+      "Update the value of the attribute/option (with -n or -P)",
       "VALUE"
     },
 
@@ -511,10 +511,6 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
     xmlNode *result = NULL;
     bool use_pattern = options.attr_pattern != NULL;
 
-    CRM_LOG_ASSERT(options.type != NULL);
-    CRM_LOG_ASSERT(options.attr_name != NULL);
-    CRM_LOG_ASSERT(options.attr_value != NULL);
-
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {
         struct update_data_s ud = { out, cib, is_remote_node };
@@ -696,6 +692,14 @@ static bool
 delete_used_correctly(void)
 {
     return (options.command != attr_cmd_delete)
+           || (options.attr_name != NULL)
+           || (options.attr_pattern != NULL);
+}
+
+static bool
+update_used_correctly(void)
+{
+    return (options.command != attr_cmd_update)
            || (options.attr_name != NULL)
            || (options.attr_pattern != NULL);
 }
@@ -882,6 +886,13 @@ main(int argc, char **argv)
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error: must specify attribute name or pattern to delete");
+        goto done;
+    }
+
+    if (!update_used_correctly()) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error: must specify attribute name or pattern to update");
         goto done;
     }
 
