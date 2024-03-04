@@ -1372,6 +1372,28 @@ is_scheduler_required(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether the chosen command accepts clone instances
+ *
+ * \return \c true if \p options.rsc_cmd accepts clone instances, or \c false
+ *         otherwise
+ */
+static bool
+accept_clone_instance(void)
+{
+    // @COMPAT At 3.0.0, add cmd_delete; for now, don't throw error
+    switch (options.rsc_cmd) {
+        case cmd_ban:
+        case cmd_clear:
+        case cmd_move:
+        case cmd_restart:
+            return false;
+        default:
+            return true;
+    }
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -1665,10 +1687,8 @@ main(int argc, char **argv)
          * instances of clone resourcs.
          */
         if (pcmk__is_clone(rsc->parent) && (strchr(options.rsc_id, ':') != NULL)
-            && ((options.rsc_cmd == cmd_ban)
-                || (options.rsc_cmd == cmd_clear)
-                || (options.rsc_cmd == cmd_move)
-                || (options.rsc_cmd == cmd_restart))) {
+            && !accept_clone_instance()) {
+
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         _("Cannot operate on clone resource instance '%s'"), options.rsc_id);
