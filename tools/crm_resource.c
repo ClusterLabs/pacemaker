@@ -1220,6 +1220,7 @@ get_find_flags(void)
         case cmd_why:
             return pcmk_rsc_match_history|pcmk_rsc_match_anon_basename;
 
+        // @COMPAT See note in is_scheduler_required()
         case cmd_delete:
         case cmd_delete_param:
         case cmd_get_param:
@@ -1352,6 +1353,12 @@ is_scheduler_required(void)
         return false;
     }
 
+    /* @COMPAT cmd_delete does not actually need the scheduler and should not
+     * set find_flags. However, crm_resource --delete currently throws a
+     * "resource not found" error if the resource doesn't exist. This is
+     * incorrect behavior (deleting a nonexistent resource should be considered
+     * success); however, we shouldn't change it until 3.0.0.
+     */
     switch (options.rsc_cmd) {
         case cmd_list_agents:
         case cmd_list_alternatives:
