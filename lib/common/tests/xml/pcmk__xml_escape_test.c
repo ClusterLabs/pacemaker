@@ -121,7 +121,7 @@ static void
 escape_nonprinting(void **state)
 {
     const char *nonprinting = "\a\r\x7f\x1b";
-    const char *nonprinting_esc = "&#07;&#0d;&#7f;&#1b;";
+    const char *nonprinting_esc = "&#x07;&#x0d;&#x7f;&#x1b;";
     char *str = NULL;
 
     str = pcmk__xml_escape(nonprinting, false);
