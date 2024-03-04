@@ -218,10 +218,10 @@
     </parameter>
     <parameter name="pcmk_host_list" advanced="0" generated="0">
       <longdesc lang="en">
-        For example, "node1,node2,node3".
+        Comma-separated list of nodes that can be targeted by this device (for example, "node1,node2,node3"). If pcmk_host_check is "static-list", either this or pcmk_host_map must be set.
       </longdesc>
       <shortdesc lang="en">
-        A list of nodes that can be targeted by this device (optional unless pcmk_host_list="static-list")
+        Nodes targeted by this device
       </shortdesc>
       <content type="string"/>
     </parameter>

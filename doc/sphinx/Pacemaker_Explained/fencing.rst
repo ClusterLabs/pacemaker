@@ -190,319 +190,316 @@ for ``pacemaker-fenced``.
    |                      |         |                    | priority to lowest.                    |
    +----------------------+---------+--------------------+----------------------------------------+
 
-.. table:: **Additional Properties of Fencing Resources**
+.. list-table:: **Additional Properties of Fencing Resources**
    :class: longtable
    :widths: 2 1 2 4
+   :header-rows: 1
 
-   +----------------------+---------+--------------------+----------------------------------------+
-   | Field                | Type    | Default            | Description                            |
-   +======================+=========+====================+========================================+
-   | stonith-timeout      | time    |                    | .. index::                             |
-   |                      |         |                    |    single: stonith-timeout             |
-   |                      |         |                    |                                        |
-   |                      |         |                    | This is not used by Pacemaker (see the |
-   |                      |         |                    | ``pcmk_reboot_timeout``,               |
-   |                      |         |                    | ``pcmk_off_timeout``, etc. properties  |
-   |                      |         |                    | instead), but it may be used by        |
-   |                      |         |                    | Linux-HA fence agents.                 |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_host_map        | string  |                    | .. index::                             |
-   |                      |         |                    |    single: pcmk_host_map               |
-   |                      |         |                    |                                        |
-   |                      |         |                    | A mapping of node names to ports       |
-   |                      |         |                    | for devices that do not understand     |
-   |                      |         |                    | the node names.                        |
-   |                      |         |                    |                                        |
-   |                      |         |                    | Example: ``node1:1;node2:2,3`` tells   |
-   |                      |         |                    | the cluster to use port 1 for          |
-   |                      |         |                    | ``node1`` and ports 2 and 3 for        |
-   |                      |         |                    | ``node2``. If ``pcmk_host_check`` is   |
-   |                      |         |                    | explicitly set to ``static-list``,     |
-   |                      |         |                    | either this or ``pcmk_host_list`` must |
-   |                      |         |                    | be set. The port portion of the map    |
-   |                      |         |                    | may contain special characters such as |
-   |                      |         |                    | spaces if preceded by a backslash      |
-   |                      |         |                    | *(since 2.1.2)*.                       |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_host_list       | string  |                    | .. index::                             |
-   |                      |         |                    |    single: pcmk_host_list              |
-   |                      |         |                    |                                        |
-   |                      |         |                    | A list of machines controlled by this  |
-   |                      |         |                    | device. If ``pcmk_host_check`` is      |
-   |                      |         |                    | explicitly set to ``static-list``,     |
-   |                      |         |                    | either this or ``pcmk_host_map`` must  |
-   |                      |         |                    | be set.                                |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_host_check      | string  | Value appropriate  | .. index::                             |
-   |                      |         | to other           |    single: pcmk_host_check             |
-   |                      |         | parameters (see    |                                        |
-   |                      |         | "Default Check     | The method Pacemaker should use to     |
-   |                      |         | Type" below)       | determine which nodes can be targeted  |
-   |                      |         |                    | by this device. Allowed values:        |
-   |                      |         |                    |                                        |
-   |                      |         |                    | * ``static-list:`` targets are listed  |
-   |                      |         |                    |   in the ``pcmk_host_list`` or         |
-   |                      |         |                    |   ``pcmk_host_map`` attribute          |
-   |                      |         |                    | * ``dynamic-list:`` query the device   |
-   |                      |         |                    |   via the agent's ``list`` action      |
-   |                      |         |                    | * ``status:`` query the device via the |
-   |                      |         |                    |   agent's ``status`` action            |
-   |                      |         |                    | * ``none:`` assume the device can      |
-   |                      |         |                    |   fence any node                       |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_delay_max       | time    | 0s                 | .. index::                             |
-   |                      |         |                    |    single: pcmk_delay_max              |
-   |                      |         |                    |                                        |
-   |                      |         |                    | Enable a delay of no more than the     |
-   |                      |         |                    | time specified before executing        |
-   |                      |         |                    | fencing actions. Pacemaker derives the |
-   |                      |         |                    | overall delay by taking the value of   |
-   |                      |         |                    | pcmk_delay_base and adding a random    |
-   |                      |         |                    | delay value such that the sum is kept  |
-   |                      |         |                    | below this maximum. This is sometimes  |
-   |                      |         |                    | used in two-node clusters to ensure    |
-   |                      |         |                    | that the nodes don't fence each other  |
-   |                      |         |                    | at the same time.                      |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_delay_base      | time    | 0s                 | .. index::                             |
-   |                      |         |                    |    single: pcmk_delay_base             |
-   |                      |         |                    |                                        |
-   |                      |         |                    | Enable a static delay before executing |
-   |                      |         |                    | fencing actions. This can be used, for |
-   |                      |         |                    | example, in two-node clusters to       |
-   |                      |         |                    | ensure that the nodes don't fence each |
-   |                      |         |                    | other, by having separate fencing      |
-   |                      |         |                    | resources with different values. The   |
-   |                      |         |                    | node that is fenced with the shorter   |
-   |                      |         |                    | delay will lose a fencing race. The    |
-   |                      |         |                    | overall delay introduced by pacemaker  |
-   |                      |         |                    | is derived from this value plus a      |
-   |                      |         |                    | random delay such that the sum is kept |
-   |                      |         |                    | below the maximum delay. A single      |
-   |                      |         |                    | device can have different delays per   |
-   |                      |         |                    | node using a host map *(since 2.1.2)*, |
-   |                      |         |                    | for example ``node1:0s;node2:5s.``     |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_action_limit    | integer | 1                  | .. index::                             |
-   |                      |         |                    |    single: pcmk_action_limit           |
-   |                      |         |                    |                                        |
-   |                      |         |                    | The maximum number of actions that can |
-   |                      |         |                    | be performed in parallel on this       |
-   |                      |         |                    | device. A value of -1 means unlimited. |
-   |                      |         |                    | Node fencing actions initiated by the  |
-   |                      |         |                    | cluster (as opposed to an administrator|
-   |                      |         |                    | running the ``stonith_admin`` tool or  |
-   |                      |         |                    | the fencer running recurring device    |
-   |                      |         |                    | monitors and ``status`` and ``list``   |
-   |                      |         |                    | commands) are additionally subject to  |
-   |                      |         |                    | the ``concurrent-fencing`` cluster     |
-   |                      |         |                    | property.                              |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_host_argument   | string  | ``port`` otherwise | .. index::                             |
-   |                      |         | ``plug`` if        |    single: pcmk_host_argument          |
-   |                      |         | supported          |                                        |
-   |                      |         | according to the   | *Advanced use only.* Which parameter   |
-   |                      |         | metadata of the    | should be supplied to the fence agent  |
-   |                      |         | fence agent        | to identify the node to be fenced.     |
-   |                      |         |                    | Some devices support neither the       |
-   |                      |         |                    | standard ``plug`` nor the deprecated   |
-   |                      |         |                    | ``port`` parameter, or may provide     |
-   |                      |         |                    | additional ones. Use this to specify   |
-   |                      |         |                    | an alternate, device-specific          |
-   |                      |         |                    | parameter. A value of ``none`` tells   |
-   |                      |         |                    | the cluster not to supply any          |
-   |                      |         |                    | additional parameters.                 |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_reboot_action   | string  | reboot             | .. index::                             |
-   |                      |         |                    |    single: pcmk_reboot_action          |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The command to    |
-   |                      |         |                    | send to the resource agent in order to |
-   |                      |         |                    | reboot a node. Some devices do not     |
-   |                      |         |                    | support the standard commands or may   |
-   |                      |         |                    | provide additional ones. Use this to   |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | command.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_reboot_timeout  | time    | 60s                | .. index::                             |
-   |                      |         |                    |    single: pcmk_reboot_timeout         |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* Specify an        |
-   |                      |         |                    | alternate timeout to use for           |
-   |                      |         |                    | ``reboot`` actions instead of the      |
-   |                      |         |                    | value of ``stonith-timeout``. Some     |
-   |                      |         |                    | devices need much more or less time to |
-   |                      |         |                    | complete than normal. Use this to      |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | timeout.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_reboot_retries  | integer | 2                  | .. index::                             |
-   |                      |         |                    |    single: pcmk_reboot_retries         |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The maximum       |
-   |                      |         |                    | number of times to retry the           |
-   |                      |         |                    | ``reboot`` command within the timeout  |
-   |                      |         |                    | period. Some devices do not support    |
-   |                      |         |                    | multiple connections, and operations   |
-   |                      |         |                    | may fail if the device is busy with    |
-   |                      |         |                    | another task, so Pacemaker will        |
-   |                      |         |                    | automatically retry the operation, if  |
-   |                      |         |                    | there is time remaining. Use this      |
-   |                      |         |                    | option to alter the number of times    |
-   |                      |         |                    | Pacemaker retries before giving up.    |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_off_action      | string  | off                | .. index::                             |
-   |                      |         |                    |    single: pcmk_off_action             |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The command to    |
-   |                      |         |                    | send to the resource agent in order to |
-   |                      |         |                    | shut down a node. Some devices do not  |
-   |                      |         |                    | support the standard commands or may   |
-   |                      |         |                    | provide additional ones. Use this to   |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | command.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_off_timeout     | time    | 60s                | .. index::                             |
-   |                      |         |                    |    single: pcmk_off_timeout            |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* Specify an        |
-   |                      |         |                    | alternate timeout to use for           |
-   |                      |         |                    | ``off`` actions instead of the         |
-   |                      |         |                    | value of ``stonith-timeout``. Some     |
-   |                      |         |                    | devices need much more or less time to |
-   |                      |         |                    | complete than normal. Use this to      |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | timeout.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_off_retries     | integer | 2                  | .. index::                             |
-   |                      |         |                    |    single: pcmk_off_retries            |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The maximum       |
-   |                      |         |                    | number of times to retry the           |
-   |                      |         |                    | ``off`` command within the timeout     |
-   |                      |         |                    | period. Some devices do not support    |
-   |                      |         |                    | multiple connections, and operations   |
-   |                      |         |                    | may fail if the device is busy with    |
-   |                      |         |                    | another task, so Pacemaker will        |
-   |                      |         |                    | automatically retry the operation, if  |
-   |                      |         |                    | there is time remaining. Use this      |
-   |                      |         |                    | option to alter the number of times    |
-   |                      |         |                    | Pacemaker retries before giving up.    |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_list_action     | string  | list               | .. index::                             |
-   |                      |         |                    |    single: pcmk_list_action            |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The command to    |
-   |                      |         |                    | send to the resource agent in order to |
-   |                      |         |                    | list nodes. Some devices do not        |
-   |                      |         |                    | support the standard commands or may   |
-   |                      |         |                    | provide additional ones. Use this to   |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | command.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_list_timeout    | time    | 60s                | .. index::                             |
-   |                      |         |                    |    single: pcmk_list_timeout           |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* Specify an        |
-   |                      |         |                    | alternate timeout to use for           |
-   |                      |         |                    | ``list`` actions instead of the        |
-   |                      |         |                    | value of ``stonith-timeout``. Some     |
-   |                      |         |                    | devices need much more or less time to |
-   |                      |         |                    | complete than normal. Use this to      |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | timeout.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_list_retries    | integer | 2                  | .. index::                             |
-   |                      |         |                    |    single: pcmk_list_retries           |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The maximum       |
-   |                      |         |                    | number of times to retry the           |
-   |                      |         |                    | ``list`` command within the timeout    |
-   |                      |         |                    | period. Some devices do not support    |
-   |                      |         |                    | multiple connections, and operations   |
-   |                      |         |                    | may fail if the device is busy with    |
-   |                      |         |                    | another task, so Pacemaker will        |
-   |                      |         |                    | automatically retry the operation, if  |
-   |                      |         |                    | there is time remaining. Use this      |
-   |                      |         |                    | option to alter the number of times    |
-   |                      |         |                    | Pacemaker retries before giving up.    |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_monitor_action  | string  | monitor            | .. index::                             |
-   |                      |         |                    |    single: pcmk_monitor_action         |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The command to    |
-   |                      |         |                    | send to the resource agent in order to |
-   |                      |         |                    | report extended status. Some devices do|
-   |                      |         |                    | not support the standard commands or   |
-   |                      |         |                    | may provide additional ones. Use this  |
-   |                      |         |                    | to specify an alternate,               |
-   |                      |         |                    | device-specific command.               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_monitor_timeout | time    | 60s                | .. index::                             |
-   |                      |         |                    |    single: pcmk_monitor_timeout        |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* Specify an        |
-   |                      |         |                    | alternate timeout to use for           |
-   |                      |         |                    | ``monitor`` actions instead of the     |
-   |                      |         |                    | value of ``stonith-timeout``. Some     |
-   |                      |         |                    | devices need much more or less time to |
-   |                      |         |                    | complete than normal. Use this to      |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | timeout.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_monitor_retries | integer | 2                  | .. index::                             |
-   |                      |         |                    |    single: pcmk_monitor_retries        |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The maximum       |
-   |                      |         |                    | number of times to retry the           |
-   |                      |         |                    | ``monitor`` command within the timeout |
-   |                      |         |                    | period. Some devices do not support    |
-   |                      |         |                    | multiple connections, and operations   |
-   |                      |         |                    | may fail if the device is busy with    |
-   |                      |         |                    | another task, so Pacemaker will        |
-   |                      |         |                    | automatically retry the operation, if  |
-   |                      |         |                    | there is time remaining. Use this      |
-   |                      |         |                    | option to alter the number of times    |
-   |                      |         |                    | Pacemaker retries before giving up.    |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_status_action   | string  | status             | .. index::                             |
-   |                      |         |                    |    single: pcmk_status_action          |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The command to    |
-   |                      |         |                    | send to the resource agent in order to |
-   |                      |         |                    | report status. Some devices do         |
-   |                      |         |                    | not support the standard commands or   |
-   |                      |         |                    | may provide additional ones. Use this  |
-   |                      |         |                    | to specify an alternate,               |
-   |                      |         |                    | device-specific command.               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_status_timeout  | time    | 60s                | .. index::                             |
-   |                      |         |                    |    single: pcmk_status_timeout         |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* Specify an        |
-   |                      |         |                    | alternate timeout to use for           |
-   |                      |         |                    | ``status`` actions instead of the      |
-   |                      |         |                    | value of ``stonith-timeout``. Some     |
-   |                      |         |                    | devices need much more or less time to |
-   |                      |         |                    | complete than normal. Use this to      |
-   |                      |         |                    | specify an alternate, device-specific  |
-   |                      |         |                    | timeout.                               |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_status_retries  | integer | 2                  | .. index::                             |
-   |                      |         |                    |    single: pcmk_status_retries         |
-   |                      |         |                    |                                        |
-   |                      |         |                    | *Advanced use only.* The maximum       |
-   |                      |         |                    | number of times to retry the           |
-   |                      |         |                    | ``status`` command within the timeout  |
-   |                      |         |                    | period. Some devices do not support    |
-   |                      |         |                    | multiple connections, and operations   |
-   |                      |         |                    | may fail if the device is busy with    |
-   |                      |         |                    | another task, so Pacemaker will        |
-   |                      |         |                    | automatically retry the operation, if  |
-   |                      |         |                    | there is time remaining. Use this      |
-   |                      |         |                    | option to alter the number of times    |
-   |                      |         |                    | Pacemaker retries before giving up.    |
-   +----------------------+---------+--------------------+----------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _primitive_stonith_timeout:
+
+       .. index::
+          single: stonith-timeout (primitive instance attribute)
+
+       stonith-timeout
+     - :ref:`timeout <timeout>`
+     - 
+     - This is not used by Pacemaker (see the ``pcmk_reboot_timeout``,
+       ``pcmk_off_timeout``, etc., properties instead), but it may be used by
+       Linux-HA fence agents.
+   * - .. _pcmk_host_map:
+
+       .. _index::
+          single: pcmk_host_map
+
+       pcmk_host_map
+     - :ref:`text <text>`
+     - 
+     - A mapping of node names to ports for devices that do not understand the
+       node names. For example, ``node1:1;node2:2,3`` tells the cluster to use
+       port 1 for ``node1`` and ports 2 and 3 for ``node2``. If
+       ``pcmk_host_check`` is explicitly set to ``static-list``, either this or
+       ``pcmk_host_list`` must be set. The port portion of the map may contain
+       special characters such as spaces if preceded by a backslash *(since 2.1.2)*.
+   * - .. _pcmk_host_list:
+
+       .. _index::
+          single: pcmk_host_list
+
+       pcmk_host_list
+     - :ref:`text <text>`
+     - 
+     - Comma-separated list of nodes that can be targeted by this device (for
+       example, ``node1,node2,node3``). If pcmk_host_check is ``static-list``,
+       either this or ``pcmk_host_map`` must be set.
+   * - .. _pcmk_host_check:
+
+       .. _index::
+          single: pcmk_host_check
+
+       pcmk_host_check
+     - :ref:`text <text>`
+     - See :ref:`pcmk_host_check_default`
+     - The method Pacemaker should use to determine which nodes can be targeted
+       by this device. Allowed values:
+
+       * ``static-list:`` targets are listed in the ``pcmk_host_list`` or ``pcmk_host_map`` attribute
+       * ``dynamic-list:`` query the device via the agent's ``list`` action
+       * ``status:`` query the device via the agent's ``status`` action
+       * ``none:`` assume the device can fence any node
+   * - .. _pcmk_delay_max:
+
+       .. _index::
+          single: pcmk_delay_max
+
+       pcmk_delay_max
+     - :ref:`duration <duration>`
+     - 0s
+     - Enable a delay of no more than the time specified before executing
+       fencing actions. Pacemaker derives the overall delay by taking the value
+       of pcmk_delay_base and adding a random delay value such that the sum is
+       kept below this maximum. This is sometimes used in two-node clusters to
+       ensure that the nodes don't fence each other at the same time.
+   * - .. _pcmk_delay_base:
+
+       .. _index::
+          single: pcmk_delay_base
+
+       pcmk_delay_base
+     - :ref:`duration <duration>`
+     - 0s
+     - Enable a static delay before executing fencing actions. This can be
+       used, for example, in two-node clusters to ensure that the nodes don't
+       fence each other, by having separate fencing resources with different
+       values. The node that is fenced with the shorter delay will lose a
+       fencing race. The overall delay introduced by pacemaker is derived from
+       this value plus a random delay such that the sum is kept below the
+       maximum delay. A single device can have different delays per node using
+       a host map *(since 2.1.2)*, for example ``node1:0s;node2:5s.``
+   * - .. _pcmk_action_limit:
+
+       .. _index::
+          single: pcmk_action_limit
+
+       pcmk_action_limit
+     - :ref:`integer <integer>`
+     - 1
+     - The maximum number of actions that can be performed in parallel on this
+       device. A value of -1 means unlimited. Node fencing actions initiated by
+       the cluster (as opposed to an administrator running the
+       ``stonith_admin`` tool or the fencer running recurring device monitors
+       and ``status`` and ``list`` commands) are additionally subject to the
+       ``concurrent-fencing`` cluster property.
+   * - .. _pcmk_host_argument:
+
+       .. _index::
+          single: pcmk_host_argument
+
+       pcmk_host_argument
+     - :ref:`text <text>`
+     - ``port`` otherwise ``plug`` if supported according to the metadata of
+       the fence agent
+     - *Advanced use only.* Which parameter should be supplied to the fence
+       agent to identify the node to be fenced.  Some devices support neither
+       the standard ``plug`` nor the deprecated ``port`` parameter, or may
+       provide additional ones. Use this to specify an alternate,
+       device-specific parameter. A value of ``none`` tells the cluster not to
+       supply any additional parameters.
+   * - .. _pcmk_reboot_action:
+
+       .. _index::
+          single: pcmk_reboot_action
+
+       pcmk_reboot_action
+     - :ref:`text <text>`
+     - ``reboot``
+     - *Advanced use only.* The command to send to the resource agent in order
+       to reboot a node. Some devices do not support the standard commands or
+       may provide additional ones. Use this to specify an alternate,
+       device-specific command.
+   * - .. _pcmk_reboot_timeout:
+
+       .. _index::
+          single: pcmk_reboot_timeout
+
+       pcmk_reboot_timeout
+     - :ref:`integer <integer>`
+     - 60
+     - *Advanced use only.* Specify an alternate timeout (in seconds) to use
+       for ``reboot`` actions instead of the value of ``stonith-timeout``. Some
+       devices need much more or less time to complete than normal. Use this to
+       specify an alternate, device-specific timeout.
+   * - .. _pcmk_reboot_retries:
+
+       .. _index::
+          single: pcmk_reboot_retries
+
+       pcmk_reboot_retries
+     - :ref:`integer <integer>`
+     - 2
+     - *Advanced use only.* The maximum number of times to retry the ``reboot``
+       command within the timeout period. Some devices do not support multiple
+       connections, and operations may fail if the device is busy with another
+       task, so Pacemaker will automatically retry the operation, if there is
+       time remaining. Use this option to alter the number of times Pacemaker
+       retries before giving up.
+   * - .. _pcmk_off_action:
+
+       .. _index::
+          single: pcmk_off_action
+
+       pcmk_off_action
+     - :ref:`text <text>`
+     - ``off``
+     - *Advanced use only.* The command to send to the resource agent in order
+       to shut down a node. Some devices do not support the standard commands or
+       may provide additional ones. Use this to specify an alternate,
+       device-specific command.
+   * - .. _pcmk_off_timeout:
+
+       .. _index::
+          single: pcmk_off_timeout
+
+       pcmk_off_timeout
+     - :ref:`integer <integer>`
+     - 60
+     - *Advanced use only.* Specify an alternate timeout (in seconds) to use
+       for ``off`` actions instead of the value of ``stonith-timeout``. Some
+       devices need much more or less time to complete than normal. Use this to
+       specify an alternate, device-specific timeout.
+   * - .. _pcmk_off_retries:
+
+       .. _index::
+          single: pcmk_off_retries
+
+       pcmk_off_retries
+     - :ref:`integer <integer>`
+     - 2
+     - *Advanced use only.* The maximum number of times to retry the ``off``
+       command within the timeout period. Some devices do not support multiple
+       connections, and operations may fail if the device is busy with another
+       task, so Pacemaker will automatically retry the operation, if there is
+       time remaining. Use this option to alter the number of times Pacemaker
+       retries before giving up.
+   * - .. _pcmk_list_action:
+
+       .. _index::
+          single: pcmk_list_action
+
+       pcmk_list_action
+     - :ref:`text <text>`
+     - ``list``
+     - *Advanced use only.* The command to send to the resource agent in order
+       to list nodes. Some devices do not support the standard commands or may
+       provide additional ones. Use this to specify an alternate,
+       device-specific command.
+   * - .. _pcmk_list_timeout:
+
+       .. _index::
+          single: pcmk_list_timeout
+
+       pcmk_list_timeout
+     - :ref:`integer <integer>`
+     - 60
+     - *Advanced use only.* Specify an alternate timeout (in seconds) to use
+       for ``list`` actions instead of the value of ``stonith-timeout``. Some
+       devices need much more or less time to complete than normal. Use this to
+       specify an alternate, device-specific timeout.
+   * - .. _pcmk_list_retries:
+
+       .. _index::
+          single: pcmk_list_retries
+
+       pcmk_list_retries
+     - :ref:`integer <integer>`
+     - 2
+     - *Advanced use only.* The maximum number of times to retry the ``list``
+       command within the timeout period. Some devices do not support multiple
+       connections, and operations may fail if the device is busy with another
+       task, so Pacemaker will automatically retry the operation, if there is
+       time remaining. Use this option to alter the number of times Pacemaker
+       retries before giving up.
+   * - .. _pcmk_monitor_action:
+
+       .. _index::
+          single: pcmk_monitor_action
+
+       pcmk_monitor_action
+     - :ref:`text <text>`
+     - ``monitor``
+     - *Advanced use only.* The command to send to the resource agent in order
+       to report extended status. Some devices do not support the standard
+       commands or may provide additional ones. Use this to specify an
+       alternate, device-specific command.
+   * - .. _pcmk_monitor_timeout:
+
+       .. _index::
+          single: pcmk_monitor_timeout
+
+       pcmk_monitor_timeout
+     - :ref:`integer <integer>`
+     - 60
+     - *Advanced use only.* Specify an alternate timeout (in seconds) to use
+       for ``monitor`` actions instead of the value of ``stonith-timeout``. Some
+       devices need much more or less time to complete than normal. Use this to
+       specify an alternate, device-specific timeout.
+   * - .. _pcmk_monitor_retries:
+
+       .. _index::
+          single: pcmk_monitor_retries
+
+       pcmk_monitor_retries
+     - :ref:`integer <integer>`
+     - 2
+     - *Advanced use only.* The maximum number of times to retry the ``monitor``
+       command within the timeout period. Some devices do not support multiple
+       connections, and operations may fail if the device is busy with another
+       task, so Pacemaker will automatically retry the operation, if there is
+       time remaining. Use this option to alter the number of times Pacemaker
+       retries before giving up.
+   * - .. _pcmk_status_action:
+
+       .. _index::
+          single: pcmk_status_action
+
+       pcmk_status_action
+     - :ref:`text <text>`
+     - ``status``
+     - *Advanced use only.* The command to send to the resource agent in order
+       to report status. Some devices do not support the standard commands or
+       may provide additional ones. Use this to specify an alternate,
+       device-specific command.
+   * - .. _pcmk_status_timeout:
+
+       .. _index::
+          single: pcmk_status_timeout
+
+       pcmk_status_timeout
+     - :ref:`integer <integer>`
+     - 60
+     - *Advanced use only.* Specify an alternate timeout (in seconds) to use
+       for ``status`` actions instead of the value of ``stonith-timeout``. Some
+       devices need much more or less time to complete than normal. Use this to
+       specify an alternate, device-specific timeout.
+   * - .. _pcmk_status_retries:
+
+       .. _index::
+          single: pcmk_status_retries
+
+       pcmk_status_retries
+     - :ref:`integer <integer>`
+     - 2
+     - *Advanced use only.* The maximum number of times to retry the ``status``
+       command within the timeout period. Some devices do not support multiple
+       connections, and operations may fail if the device is busy with another
+       task, so Pacemaker will automatically retry the operation, if there is
+       time remaining. Use this option to alter the number of times Pacemaker
+       retries before giving up.
+
+.. _pcmk_host_check_default:
 
 Default Check Type
 ##################
