@@ -35,6 +35,14 @@ typedef struct private_data_s {
 } private_data_t;
 
 static void
+free_list_data(gpointer data) {
+    curses_list_data_t *list_data = data;
+
+    free(list_data->singular_noun);
+    free(list_data->plural_noun);
+}
+
+static void
 curses_free_priv(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
@@ -44,7 +52,7 @@ curses_free_priv(pcmk__output_t *out) {
 
     priv = out->priv;
 
-    g_queue_free(priv->parent_q);
+    g_queue_free_full(priv->parent_q, free_list_data);
     free(priv);
     out->priv = NULL;
 }
@@ -258,7 +266,7 @@ curses_end_list(pcmk__output_t *out) {
         }
     }
 
-    free(node);
+    free_list_data(node);
 }
 
 static bool

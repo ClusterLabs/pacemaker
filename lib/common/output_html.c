@@ -81,9 +81,13 @@ html_free_priv(pcmk__output_t *out) {
 
     priv = out->priv;
 
-    xmlFreeNode(priv->root);
+    free_xml(priv->root);
+    /* The elements of parent_q are xmlNodes that are a part of the
+     * priv->root document, so the above line already frees them.  Don't
+     * call g_queue_free_full here.
+     */
     g_queue_free(priv->parent_q);
-    g_slist_free(priv->errors);
+    g_slist_free_full(priv->errors, free);
     free(priv);
     out->priv = NULL;
 }
@@ -371,7 +375,9 @@ html_end_list(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    /* Remove the <ul> tag. */
+    /* Remove the <ul> tag, but do not free this result - it's still
+     * part of the document.
+     */
     g_queue_pop_tail(priv->parent_q);
     pcmk__output_xml_pop_parent(out);
 
