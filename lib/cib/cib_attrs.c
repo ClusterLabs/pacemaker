@@ -556,7 +556,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 
     /* If there are multiple results, the first is sufficient */
     if (pcmk__xe_is(result, PCMK__XE_XPATH_QUERY)) {
-        result = pcmk__xml_first_child(result);
+        result = pcmk__xe_first_child(result);
         CRM_CHECK(result != NULL, return rc);
     }
 
@@ -699,8 +699,8 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     rc = -ENXIO;
     *uname = NULL;
 
-    for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
+    for (a_child = pcmk__xe_first_child(xml_obj); a_child != NULL;
+         a_child = pcmk__xe_next(a_child)) {
 
         if (!pcmk__xe_is(a_child, PCMK_XE_NODE)) {
             continue;

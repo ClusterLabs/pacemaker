@@ -680,9 +680,9 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 
-    for (xmlNode *xml_op = pcmk__xml_first_child(scheduler->failed);
+    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->failed);
          xml_op != NULL;
-         xml_op = pcmk__xml_next(xml_op)) {
+         xml_op = pcmk__xe_next(xml_op)) {
 
         failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
         if (failed_id == NULL) {

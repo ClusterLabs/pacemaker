@@ -889,8 +889,8 @@ xml2list(const xmlNode *parent)
         pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
 
-    for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
-         child = pcmk__xml_next(child)) {
+    for (child = pcmk__xe_first_child(nvpair_list); child != NULL;
+         child = pcmk__xe_next(child)) {
 
         if (strcmp((const char *) child->name, PCMK__XE_PARAM) == 0) {
             const char *key = crm_element_value(child, PCMK_XA_NAME);

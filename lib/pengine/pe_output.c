@@ -1628,8 +1628,8 @@ failed_action_list(pcmk__output_t *out, va_list args) {
         return rc;
     }
 
-    for (xml_op = pcmk__xml_first_child(scheduler->failed); xml_op != NULL;
-         xml_op = pcmk__xml_next(xml_op)) {
+    for (xml_op = pcmk__xe_first_child(scheduler->failed); xml_op != NULL;
+         xml_op = pcmk__xe_next(xml_op)) {
         char *rsc = NULL;
 
         if (!pcmk__str_in_list(crm_element_value(xml_op, PCMK_XA_UNAME),
