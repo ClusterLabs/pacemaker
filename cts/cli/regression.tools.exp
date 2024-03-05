@@ -3229,16 +3229,13 @@ State XML:
 * Passed: crm_ticket     - Query ticket state
 =#=#=#= Begin test: Query ticket state, outputting as xml =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -t ticketA -q --output-as=xml">
+  <tickets>
+    <ticket id="ticketA" granted="false"/>
+  </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
-State XML:
-
-<ticket_state id="ticketA" granted="false"/>
-/tmp/cts-cli.ta_outfile:4: parser error : Extra content at the end of the document
-State XML:
-^
-=#=#=#= End test: Query ticket state, outputting as xml - Failed to validate (1) =#=#=#=
-* Failed (rc=001): crm_ticket     - Query ticket state, outputting as xml
+=#=#=#= End test: Query ticket state, outputting as xml - OK (0) =#=#=#=
+* Passed: crm_ticket     - Query ticket state, outputting as xml
 =#=#=#= Begin test: Query ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Query ticket granted state =#=#=#=
@@ -3853,16 +3850,20 @@ Constraints XML:
 * Passed: crm_ticket     - Query ticket constraints
 =#=#=#= Begin test: Query ticket constraints, outputting as xml =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -t ticketA -c --output-as=xml">
+  <tickets>
+    <ticket id="ticketA">
+      <constraints>
+        <rsc_ticket id="dummy-dep-ticketA" rsc="dummy" rsc-role="Started" ticket="ticketA" loss-policy="freeze"/>
+      </constraints>
+    </ticket>
+  </tickets>
+  <resources>
+    <resource id="dummy"/>
+  </resources>
   <status code="0" message="OK"/>
 </pacemaker-result>
-Constraints XML:
-
-<rsc_ticket id="dummy-dep-ticketA" rsc="dummy" rsc-role="Started" ticket="ticketA" loss-policy="freeze"/>
-/tmp/cts-cli.ta_outfile:4: parser error : Extra content at the end of the document
-Constraints XML:
-^
-=#=#=#= End test: Query ticket constraints, outputting as xml - Failed to validate (1) =#=#=#=
-* Failed (rc=001): crm_ticket     - Query ticket constraints, outputting as xml
+=#=#=#= End test: Query ticket constraints, outputting as xml - OK (0) =#=#=#=
+* Passed: crm_ticket     - Query ticket constraints, outputting as xml
 =#=#=#= Begin test: Delete ticket constraint =#=#=#=
 =#=#=#= Current cib after: Delete ticket constraint =#=#=#=
 <cib epoch="31" num_updates="0" admin_epoch="0">

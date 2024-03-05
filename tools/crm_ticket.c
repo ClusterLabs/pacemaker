@@ -427,53 +427,181 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("ticket-constraints", "gchar *", "xmlNode *")
 static int
-dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
+ticket_constraints_default(pcmk__output_t *out, va_list args)
 {
-    int rc = pcmk_rc_ok;
-    xmlNode *state_xml = NULL;
+    xmlNode *constraint_xml = va_arg(args, xmlNode *);
 
-    rc = find_ticket_state(the_cib, ticket_id, &state_xml);
+    /* constraint_xml can take two forms:
+     *
+     * <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" ... />
+     *
+     * for when there's only one ticket in the CIB, or when the user asked
+     * for a specific ticket (crm_ticket -c -t for instance)
+     *
+     * <xpath-query>
+     *   <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" ... />
+     *   <rsc_ticket id="rsc1-req-ticketB" rsc="rsc2" ticket="ticketB" ... />
+     * </xpath-query>
+     *
+     * for when there's multiple tickets in the and the user did not ask for
+     * a specific one.
+     *
+     * In both cases, we simply output a <rsc_ticket> element for each ticket
+     * in the results.
+     */
+    pcmk__formatted_printf(out, "Constraints XML:\n\n");
 
-    if (state_xml == NULL) {
-        return rc;
-    }
+    if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
+        xmlNode *child = pcmk__xe_first_child(constraint_xml);
 
-    fprintf(stdout, "State XML:\n");
-    if (state_xml) {
+        do {
+            GString *buf = g_string_sized_new(1024);
+
+            pcmk__xml_string(child, pcmk__xml_fmt_pretty, buf, 0);
+            out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
+            g_string_free(buf, TRUE);
+
+            child = pcmk__xe_next(child);
+        } while (child != NULL);
+    } else {
         GString *buf = g_string_sized_new(1024);
 
-        pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
-
-        fprintf(stdout, "\n%s", buf->str);
-        free_xml(state_xml);
+        pcmk__xml_string(constraint_xml, pcmk__xml_fmt_pretty, buf, 0);
+        out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
         g_string_free(buf, TRUE);
     }
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
 static int
-dump_constraints(cib_t * the_cib, gchar *ticket_id)
+add_ticket_element(xmlNode *node, void *userdata)
 {
-    int rc = pcmk_rc_ok;
-    xmlNode *cons_xml = NULL;
-    GString *buf = NULL;
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    const char *ticket_id = crm_element_value(node, PCMK_XA_TICKET);
 
-    rc = find_ticket_constraints(the_cib, ticket_id, &cons_xml);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
+                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
+    pcmk__output_xml_add_node_copy(out, node);
 
-    if (cons_xml == NULL) {
-        return rc;
+    /* Pop two parents so now we are back under the <tickets> element */
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
+static int
+add_resource_element(xmlNode *node, void *userdata)
+{
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    const char *rsc = crm_element_value(node, PCMK_XA_RSC);
+
+    pcmk__output_create_xml_node(out, PCMK_XE_RESOURCE,
+                                 PCMK_XA_ID, rsc, NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-constraints", "xmlNode *")
+static int
+ticket_constraints_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNode *constraint_xml = va_arg(args, xmlNode *);
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="">
+     *     <constraints>
+     *       <rsc_ticket />
+     *     </constraints>
+     *   </ticket>
+     *   ...
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+
+    if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
+        /* Iterate through the list of children once to create all the
+         * ticket/constraint elements.
+         */
+        pcmk__xe_foreach_child(constraint_xml, NULL, add_ticket_element, out);
+
+        /* Put us back at the same level as where <tickets> was created. */
+        pcmk__output_xml_pop_parent(out);
+
+        /* Constraints can reference a resource ID that is defined in the XML
+         * schema as an IDREF.  This requires some other element to be present
+         * with an id= attribute that matches.
+         *
+         * Iterate through the list of children a second time to create the
+         * following:
+         *
+         * <resources>
+         *   <resource id="" />
+         *   ...
+         * </resources>
+         */
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        pcmk__xe_foreach_child(constraint_xml, NULL, add_resource_element, out);
+        pcmk__output_xml_pop_parent(out);
+
+    } else {
+        /* Creating the output for a single constraint is much easier.  All the
+         * comments in the above block apply here.
+         */
+        add_ticket_element(constraint_xml, out);
+        pcmk__output_xml_pop_parent(out);
+
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        add_resource_element(constraint_xml, out);
+        pcmk__output_xml_pop_parent(out);
     }
 
-    buf = g_string_sized_new(1024);
-    pcmk__xml_string(cons_xml, pcmk__xml_fmt_pretty, buf, 0);
+    return pcmk_rc_ok;
+}
 
-    fprintf(stdout, "Constraints XML:\n\n%s", buf->str);
-    free_xml(cons_xml);
+PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
+static int
+ticket_state_default(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id G_GNUC_UNUSED = va_arg(args, gchar *);
+    xmlNode *state_xml = va_arg(args, xmlNode *);
+
+    GString *buf = g_string_sized_new(1024);
+
+    pcmk__formatted_printf(out, "State XML:\n\n");
+    pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
+    out->output_xml(out, PCMK__XE_TICKET_STATE, buf->str);
+
     g_string_free(buf, TRUE);
+    return pcmk_rc_ok;
+}
 
-    return rc;
+PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
+static int
+ticket_state_xml(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id = va_arg(args, gchar *);
+    xmlNode *state_xml = va_arg(args, xmlNode *);
+
+    xmlNode *ticket_node = NULL;
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="" ... />
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    ticket_node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
+                                               PCMK_XA_ID, ticket_id,
+                                               NULL);
+    copy_in_properties(ticket_node, state_xml);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
 }
 
 static int
@@ -727,6 +855,15 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+static pcmk__message_entry_t fmt_functions[] = {
+    { "ticket-constraints", "default", ticket_constraints_default },
+    { "ticket-constraints", "xml", ticket_constraints_xml },
+    { "ticket-state", "default", ticket_state_default },
+    { "ticket-state", "xml", ticket_state_xml },
+
+    { NULL, NULL, NULL }
+};
+
 int
 main(int argc, char **argv)
 {
@@ -765,6 +902,8 @@ main(int argc, char **argv)
                     pcmk_rc_str(rc));
         goto done;
     }
+
+    pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
         out->version(out, false);
@@ -857,7 +996,14 @@ main(int argc, char **argv)
         }
 
     } else if (options.ticket_cmd == 'q') {
-        rc = dump_ticket_xml(cib_conn, options.ticket_id);
+        xmlNode *state_xml = NULL;
+        rc = find_ticket_state(cib_conn, options.ticket_id, &state_xml);
+
+        if (state_xml != NULL) {
+            out->message(out, "ticket-state", options.ticket_id, state_xml);
+            free_xml(state_xml);
+        }
+
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {
@@ -866,7 +1012,14 @@ main(int argc, char **argv)
         }
 
     } else if (options.ticket_cmd == 'c') {
-        rc = dump_constraints(cib_conn, options.ticket_id);
+        xmlNode *cons_xml = NULL;
+        rc = find_ticket_constraints(cib_conn, options.ticket_id, &cons_xml);
+
+        if (cons_xml != NULL) {
+            out->message(out, "ticket-constraints", cons_xml);
+            free_xml(cons_xml);
+        }
+
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {

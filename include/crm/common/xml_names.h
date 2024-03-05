@@ -81,6 +81,7 @@ extern "C" {
 #define PCMK_XE_CLUSTER_STATUS              "cluster_status"
 #define PCMK_XE_COMMAND                     "command"
 #define PCMK_XE_CONFIGURATION               "configuration"
+#define PCMK_XE_CONSTRAINT                  "constraint"
 #define PCMK_XE_CONSTRAINTS                 "constraints"
 #define PCMK_XE_CONTENT                     "content"
 #define PCMK_XE_CRM_CONFIG                  "crm_config"
