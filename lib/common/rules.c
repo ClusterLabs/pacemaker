@@ -957,15 +957,15 @@ evaluate_attr_comparison(const char *actual, const char *reference,
 
 /*!
  * \internal
- * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
+ * \brief Get a reference value from a configured source
  *
- * \param[in] value       value given in rule expression
+ * \param[in] value       Value given in rule expression
  * \param[in] source      Reference value source
  * \param[in] rule_input  Values used to evaluate rule criteria
  */
 static const char *
-expand_value_source(const char *value, enum pcmk__reference_source source,
-                    const pcmk_rule_input_t *rule_input)
+value_from_source(const char *value, enum pcmk__reference_source source,
+                  const pcmk_rule_input_t *rule_input)
 {
     GHashTable *table = NULL;
 
@@ -1073,7 +1073,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expr,
                               pcmk__s(id, "without ID"), value_source);
             source = pcmk__source_literal;
         }
-        value = expand_value_source(value, source, rule_input);
+        value = value_from_source(value, source, rule_input);
 
         if (rule_input->node_attrs != NULL) {
             h_val = (const char *)g_hash_table_lookup(rule_input->node_attrs,
