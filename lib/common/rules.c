@@ -864,3 +864,29 @@ pcmk__cmp_by_type(const char *value1, const char *value2, enum pcmk__type type)
             return 0;
     }
 }
+
+/*!
+ * \internal
+ * \brief Parse a reference value source from a string
+ *
+ * \param[in] source  String indicating reference value source
+ *
+ * \return Reference value source corresponding to \p source
+ */
+enum pcmk__reference_source
+pcmk__parse_source(const char *source)
+{
+    if (pcmk__str_eq(source, PCMK_VALUE_LITERAL,
+                     pcmk__str_casei|pcmk__str_null_matches)) {
+        return pcmk__source_literal;
+
+    } else if (pcmk__str_eq(source, PCMK_VALUE_PARAM, pcmk__str_casei)) {
+        return pcmk__source_instance_attrs;
+
+    } else if (pcmk__str_eq(source, PCMK_VALUE_META, pcmk__str_casei)) {
+        return pcmk__source_meta_attrs;
+
+    } else {
+        return pcmk__source_unknown;
+    }
+}

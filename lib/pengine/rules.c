@@ -569,36 +569,39 @@ accept_attr_expr(const char *l_val, const char *r_val, enum pcmk__type type,
  * \internal
  * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
  *
- * \param[in] expr_id       Rule expression ID (for logging only)
- * \param[in] value         value given in rule expression
- * \param[in] value_source  \c PCMK_XA_VALUE_SOURCE given in rule expressions
- * \param[in] match_data    If not NULL, resource back-references and params
+ * \param[in] value       value given in rule expression
+ * \param[in] source      Reference value source
+ * \param[in] match_data  If not NULL, resource back-references and params
  */
 static const char *
-expand_value_source(const char *expr_id, const char *value,
-                    const char *value_source, const pe_match_data_t *match_data)
+expand_value_source(const char *value, enum pcmk__reference_source source,
+                    const pe_match_data_t *match_data)
 {
     GHashTable *table = NULL;
 
     if (pcmk__str_empty(value)) {
-        return NULL; // value_source is irrelevant
+        /* @COMPAT When we can break backward compatibility, drop this block so
+         * empty strings are treated as such (there should never be an empty
+         * string as an instance attribute or meta-attribute name, so those will
+         * get NULL anyway, but it could matter for literal comparisons)
+         */
+        return NULL;
+    }
 
-    } else if (pcmk__str_eq(value_source, PCMK_VALUE_PARAM, pcmk__str_casei)) {
-        table = match_data->params;
+    switch (source) {
+        case pcmk__source_literal:
+            return value;
 
-    } else if (pcmk__str_eq(value_source, PCMK_VALUE_META, pcmk__str_casei)) {
-        table = match_data->meta;
+        case pcmk__source_instance_attrs:
+            table = match_data->params;
+            break;
 
-    } else { // literal
-        if (!pcmk__str_eq(value_source, PCMK_VALUE_LITERAL,
-                          pcmk__str_null_matches|pcmk__str_casei)) {
+        case pcmk__source_meta_attrs:
+            table = match_data->meta;
+            break;
 
-            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
-                              " value '%s', using default "
-                              "('" PCMK_VALUE_LITERAL "')",
-                              pcmk__s(expr_id, "without ID"), value_source);
-        }
-        return value;
+        default:
+            return NULL; // Not possible
     }
 
     if (table == NULL) {
@@ -657,6 +660,8 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
     }
 
     if (rule_data->match_data != NULL) {
+        enum pcmk__reference_source source = pcmk__source_unknown;
+
         // Expand any regular expression submatches (%0-%9) in attribute name
         if (rule_data->match_data->re != NULL) {
             const char *match = rule_data->match_data->re->string;
@@ -673,8 +678,17 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         }
 
         // Get value appropriate to PCMK_XA_VALUE_SOURCE
-        value = expand_value_source(id, value, value_source,
-                                    rule_data->match_data);
+        source = pcmk__parse_source(value_source);
+        if (source == pcmk__source_unknown) {
+            // Not possible with schema validation enabled
+            // @COMPAT Fail expression once we can break backward compatibility
+            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
+                              " value '%s', using default "
+                              "('" PCMK_VALUE_LITERAL "')",
+                              pcmk__s(id, "without ID"), value_source);
+            source = pcmk__source_literal;
+        }
+        value = expand_value_source(value, source, rule_data->match_data);
     }
 
     if (rule_data->node_hash != NULL) {

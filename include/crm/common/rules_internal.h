@@ -38,10 +38,19 @@ enum pcmk__type {
     pcmk__type_version,
 };
 
+// Where to obtain reference value for a node attribute comparison
+enum pcmk__reference_source {
+    pcmk__source_unknown,
+    pcmk__source_literal,
+    pcmk__source_instance_attrs,
+    pcmk__source_meta_attrs,
+};
+
 enum expression_type pcmk__expression_type(const xmlNode *expr);
 enum pcmk__comparison pcmk__parse_comparison(const char *op);
 enum pcmk__type pcmk__parse_type(const char *type, enum pcmk__comparison op,
                                  const char *value1, const char *value2);
+enum pcmk__reference_source pcmk__parse_source(const char *source);
 int pcmk__cmp_by_type(const char *value1, const char *value2,
                       enum pcmk__type type);
 char *pcmk__replace_submatches(const char *string, const char *match,
