@@ -225,19 +225,15 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         node_xml = output;
 
     } else {
-        node_xml = pcmk__xe_first_child(output);
+        node_xml = first_named_child(output, PCMK_XE_NODE);
     }
 
-    for (; node_xml != NULL; node_xml = pcmk__xe_next(node_xml)) {
+    for (; node_xml != NULL; node_xml = crm_next_same_xml(node_xml)) {
         const char *node_uuid = NULL;
         const char *node_uname = NULL;
         GHashTableIter iter;
         crm_node_t *node = NULL;
         gboolean known = FALSE;
-
-        if (!pcmk__xe_is(node_xml, PCMK_XE_NODE)) {
-            continue;
-        }
 
         node_uuid = crm_element_value(node_xml, PCMK_XA_ID);
         node_uname = crm_element_value(node_xml, PCMK_XA_UNAME);
