@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm_ticket"/>
+    </start>
+
+    <define name="element-crm_ticket">
+        <ref name="tickets-list" />
+        <optional>
+            <ref name="resources-list" />
+        </optional>
+    </define>
+
+    <define name="resources-list">
+        <element name="resources">
+            <zeroOrMore>
+                <element name="resource">
+                    <attribute name="id"> <data type="ID" /> </attribute>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="tickets-list">
+        <element name="tickets">
+            <zeroOrMore>
+                <externalRef href="ticket-2.35.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+</grammar>

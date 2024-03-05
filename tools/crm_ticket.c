@@ -59,8 +59,16 @@ GList *attr_delete;
 GHashTable *attr_set;
 bool modified = false;
 int cib_options = cib_sync_call;
+static pcmk__output_t *out = NULL;
 
 #define INDENT "                               "
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 static gboolean
 attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
@@ -259,84 +267,6 @@ find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
     return g_hash_table_lookup(scheduler->tickets, ticket_id);
 }
 
-static void
-print_date(time_t time)
-{
-    int lpc = 0;
-    char date_str[26];
-
-    asctime_r(localtime(&time), date_str);
-    for (; lpc < 26; lpc++) {
-        if (date_str[lpc] == '\n') {
-            date_str[lpc] = 0;
-        }
-    }
-    fprintf(stdout, "'%s'", date_str);
-}
-
-static void
-print_ticket(pcmk_ticket_t *ticket, bool raw, bool details)
-{
-    if (raw) {
-        fprintf(stdout, "%s\n", ticket->id);
-        return;
-    }
-
-    fprintf(stdout, "%s\t%s %s",
-            ticket->id, ticket->granted ? "granted" : "revoked",
-            ticket->standby ? "[standby]" : "         ");
-
-    if (details && g_hash_table_size(ticket->state) > 0) {
-        GHashTableIter iter;
-        const char *name = NULL;
-        const char *value = NULL;
-        int lpc = 0;
-
-        fprintf(stdout, " (");
-
-        g_hash_table_iter_init(&iter, ticket->state);
-        while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {
-            if (lpc > 0) {
-                fprintf(stdout, ", ");
-            }
-            fprintf(stdout, "%s=", name);
-            if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, "expires", NULL)) {
-                long long time_ll;
-
-                pcmk__scan_ll(value, &time_ll, 0);
-                print_date((time_t) time_ll);
-            } else {
-                fprintf(stdout, "%s", value);
-            }
-            lpc++;
-        }
-
-        fprintf(stdout, ")\n");
-
-    } else {
-        if (ticket->last_granted > -1) {
-            fprintf(stdout, " " PCMK_XA_LAST_GRANTED "=");
-            print_date(ticket->last_granted);
-        }
-        fprintf(stdout, "\n");
-    }
-
-    return;
-}
-
-static void
-print_ticket_list(pcmk_scheduler_t *scheduler, bool raw, bool details)
-{
-    GHashTableIter iter;
-    pcmk_ticket_t *ticket = NULL;
-
-    g_hash_table_iter_init(&iter, scheduler->tickets);
-
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&ticket)) {
-        print_ticket(ticket, raw, details);
-    }
-}
-
 static int
 find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml)
 {
@@ -370,9 +300,8 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     crm_log_xml_debug(xml_search, "Match");
     if (xml_search->children != NULL) {
         if (ticket_id) {
-            fprintf(stdout,
-                    "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s\n",
-                    ticket_id);
+            out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                      ticket_id);
         }
         *ticket_state_xml = xml_search;
     } else {
@@ -394,10 +323,7 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     *ticket_cons_xml = NULL;
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_CONSTRAINTS);
-    if (xpath_base == NULL) {
-        crm_err(PCMK_XE_CONSTRAINTS " CIB element not known (bug?)");
-        return -ENOMSG;
-    }
+    CRM_ASSERT(xpath_base != NULL);
 
     xpath = g_string_sized_new(1024);
     pcmk__g_strcat(xpath, xpath_base, "/" PCMK_XE_RSC_TICKET, NULL);
@@ -422,53 +348,221 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("ticket-attribute", "gchar *", "const char *", "const char *")
 static int
-dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
+ticket_attribute_default(pcmk__output_t *out, va_list args)
 {
-    int rc = pcmk_rc_ok;
-    xmlNode *state_xml = NULL;
+    gchar *ticket_id G_GNUC_UNUSED = va_arg(args, gchar *);
+    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
 
-    rc = find_ticket_state(the_cib, ticket_id, &state_xml);
+    out->info(out, "%s", value);
+    return pcmk_rc_ok;
+}
 
-    if (state_xml == NULL) {
-        return rc;
-    }
+PCMK__OUTPUT_ARGS("ticket-attribute", "gchar *", "const char *", "const char *")
+static int
+ticket_attribute_xml(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id = va_arg(args, gchar *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
 
-    fprintf(stdout, "State XML:\n");
-    if (state_xml) {
+    /* Create:
+     * <tickets>
+     *   <ticket id="">
+     *     <attribute name="" value="" />
+     *   </ticket>
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
+                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_create_xml_node(out, PCMK_XA_ATTRIBUTE,
+                                 PCMK_XA_NAME, name,
+                                 PCMK_XA_VALUE, value,
+                                 NULL);
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-constraints", "gchar *", "xmlNode *")
+static int
+ticket_constraints_default(pcmk__output_t *out, va_list args)
+{
+    xmlNode *constraint_xml = va_arg(args, xmlNode *);
+
+    /* constraint_xml can take two forms:
+     *
+     * <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" ... />
+     *
+     * for when there's only one ticket in the CIB, or when the user asked
+     * for a specific ticket (crm_ticket -c -t for instance)
+     *
+     * <xpath-query>
+     *   <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" ticket="ticketA" ... />
+     *   <rsc_ticket id="rsc1-req-ticketB" rsc="rsc2" ticket="ticketB" ... />
+     * </xpath-query>
+     *
+     * for when there's multiple tickets in the and the user did not ask for
+     * a specific one.
+     *
+     * In both cases, we simply output a <rsc_ticket> element for each ticket
+     * in the results.
+     */
+    pcmk__formatted_printf(out, "Constraints XML:\n\n");
+
+    if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
+        xmlNode *child = pcmk__xe_first_child(constraint_xml);
+
+        do {
+            GString *buf = g_string_sized_new(1024);
+
+            pcmk__xml_string(child, pcmk__xml_fmt_pretty, buf, 0);
+            out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
+            g_string_free(buf, TRUE);
+
+            child = pcmk__xe_next(child);
+        } while (child != NULL);
+    } else {
         GString *buf = g_string_sized_new(1024);
 
-        pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
-
-        fprintf(stdout, "\n%s", buf->str);
-        free_xml(state_xml);
+        pcmk__xml_string(constraint_xml, pcmk__xml_fmt_pretty, buf, 0);
+        out->output_xml(out, PCMK_XE_CONSTRAINT, buf->str);
         g_string_free(buf, TRUE);
     }
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
 static int
-dump_constraints(cib_t * the_cib, gchar *ticket_id)
+add_ticket_element(xmlNode *node, void *userdata)
 {
-    int rc = pcmk_rc_ok;
-    xmlNode *cons_xml = NULL;
-    GString *buf = NULL;
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    const char *ticket_id = crm_element_value(node, PCMK_XA_TICKET);
 
-    rc = find_ticket_constraints(the_cib, ticket_id, &cons_xml);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
+                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
+    pcmk__output_xml_add_node_copy(out, node);
 
-    if (cons_xml == NULL) {
-        return rc;
+    /* Pop two parents so now we are back under the <tickets> element */
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
+static int
+add_resource_element(xmlNode *node, void *userdata)
+{
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    const char *rsc = crm_element_value(node, PCMK_XA_RSC);
+
+    pcmk__output_create_xml_node(out, PCMK_XE_RESOURCE,
+                                 PCMK_XA_ID, rsc, NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-constraints", "xmlNode *")
+static int
+ticket_constraints_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNode *constraint_xml = va_arg(args, xmlNode *);
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="">
+     *     <constraints>
+     *       <rsc_ticket />
+     *     </constraints>
+     *   </ticket>
+     *   ...
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+
+    if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
+        /* Iterate through the list of children once to create all the
+         * ticket/constraint elements.
+         */
+        pcmk__xe_foreach_child(constraint_xml, NULL, add_ticket_element, out);
+
+        /* Put us back at the same level as where <tickets> was created. */
+        pcmk__output_xml_pop_parent(out);
+
+        /* Constraints can reference a resource ID that is defined in the XML
+         * schema as an IDREF.  This requires some other element to be present
+         * with an id= attribute that matches.
+         *
+         * Iterate through the list of children a second time to create the
+         * following:
+         *
+         * <resources>
+         *   <resource id="" />
+         *   ...
+         * </resources>
+         */
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        pcmk__xe_foreach_child(constraint_xml, NULL, add_resource_element, out);
+        pcmk__output_xml_pop_parent(out);
+
+    } else {
+        /* Creating the output for a single constraint is much easier.  All the
+         * comments in the above block apply here.
+         */
+        add_ticket_element(constraint_xml, out);
+        pcmk__output_xml_pop_parent(out);
+
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        add_resource_element(constraint_xml, out);
+        pcmk__output_xml_pop_parent(out);
     }
 
-    buf = g_string_sized_new(1024);
-    pcmk__xml_string(cons_xml, pcmk__xml_fmt_pretty, buf, 0);
+    return pcmk_rc_ok;
+}
 
-    fprintf(stdout, "Constraints XML:\n\n%s", buf->str);
-    free_xml(cons_xml);
+PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
+static int
+ticket_state_default(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id G_GNUC_UNUSED = va_arg(args, gchar *);
+    xmlNode *state_xml = va_arg(args, xmlNode *);
+
+    GString *buf = g_string_sized_new(1024);
+
+    pcmk__formatted_printf(out, "State XML:\n\n");
+    pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
+    out->output_xml(out, PCMK__XE_TICKET_STATE, buf->str);
+
     g_string_free(buf, TRUE);
+    return pcmk_rc_ok;
+}
 
-    return rc;
+PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
+static int
+ticket_state_xml(pcmk__output_t *out, va_list args)
+{
+    gchar *ticket_id = va_arg(args, gchar *);
+    xmlNode *state_xml = va_arg(args, xmlNode *);
+
+    xmlNode *ticket_node = NULL;
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="" ... />
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    ticket_node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
+                                               PCMK_XA_ID, ticket_id,
+                                               NULL);
+    copy_in_properties(ticket_node, state_xml);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
 }
 
 static int
@@ -494,43 +588,31 @@ get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr
 }
 
 static void
-ticket_warning(gchar *ticket_id, const char *action)
+ticket_grant_warning(gchar *ticket_id)
 {
-    GString *warning = g_string_sized_new(1024);
-    const char *word = NULL;
+    out->err(out, "This command cannot help you verify whether '%s' has "
+                  "been already granted elsewhere.\n"
+                  "If you really want to grant '%s' to this site now, and "
+                  "you know what you are doing,\n"
+                  "please specify --force.",
+                  ticket_id, ticket_id);
+}
 
-    CRM_ASSERT(action != NULL);
-
-    if (strcmp(action, "grant") == 0) {
-        pcmk__g_strcat(warning,
-                       "This command cannot help you verify whether '",
-                       ticket_id,
-                       "' has been already granted elsewhere.\n", NULL);
-        word = "to";
-
-    } else {
-        pcmk__g_strcat(warning,
-                       "Revoking '", ticket_id, "' can trigger the specified "
-                       "'" PCMK_XA_LOSS_POLICY "'(s) "
-                       "relating to '", ticket_id, "'.\n\n"
-                       "You can check that with:\n"
-                       "crm_ticket --ticket ", ticket_id, " --constraints\n\n"
-                       "Otherwise before revoking '", ticket_id, "', "
-                       "you may want to make '", ticket_id, "' "
-                       "standby with:\n"
-                       "crm_ticket --ticket ", ticket_id, " --standby\n\n",
-                       NULL);
-        word = "from";
-    }
-
-    pcmk__g_strcat(warning,
-                   "If you really want to ", action, " '", ticket_id, "' ",
-                   word, " this site now, and you know what you are doing,\n"
-                   "please specify --force.", NULL);
-
-    fprintf(stdout, "%s\n", (const char *) warning->str);
-
-    g_string_free(warning, TRUE);
+static void
+ticket_revoke_warning(gchar *ticket_id)
+{
+    out->err(out, "Revoking '%s' can trigger the specified '" PCMK_XA_LOSS_POLICY
+              "'(s) relating to '%s'.\n\n"
+              "You can check that with:\n"
+              "crm_ticket --ticket %s --constraints\n\n"
+              "Otherwise before revoking '%s', you may want to make '%s'"
+              "standby with:\n"
+              "crm_ticket --ticket %s --standby\n\n"
+              "If you really want to revoke '%s' from this site now, and "
+              "you know what you are doing,\n"
+              "please specify --force.",
+              ticket_id, ticket_id, ticket_id, ticket_id, ticket_id,
+              ticket_id, ticket_id);
 }
 
 static bool
@@ -546,11 +628,11 @@ allow_modification(gchar *ticket_id)
     if (g_hash_table_lookup_extended(attr_set, PCMK__XA_GRANTED, NULL,
                                      (gpointer *) &value)) {
         if (crm_is_true(value)) {
-            ticket_warning(ticket_id, "grant");
+            ticket_grant_warning(ticket_id);
             return false;
 
         } else {
-            ticket_warning(ticket_id, "revoke");
+            ticket_revoke_warning(ticket_id);
             return false;
         }
     }
@@ -559,7 +641,7 @@ allow_modification(gchar *ticket_id)
         const char *key = (const char *)list_iter->data;
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)) {
-            ticket_warning(ticket_id, "revoke");
+            ticket_revoke_warning(ticket_id);
             return false;
         }
     }
@@ -664,7 +746,7 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
-        fprintf(stdout, "Cleaned up %s\n", ticket_id);
+        out->info(out, "Cleaned up %s", ticket_id);
     }
 
     free_xml(ticket_state_xml);
@@ -672,7 +754,8 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
     GOptionContext *context = NULL;
 
     const char *description = "Examples:\n\n"
@@ -704,7 +787,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "causing the cluster site to 'forget' the existing ticket state:\n\n"
                               "\tcrm_ticket --ticket ticketA --cleanup\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "queries", "Queries:",
@@ -721,6 +804,17 @@ build_arg_context(pcmk__common_args_t *args) {
     return context;
 }
 
+static pcmk__message_entry_t fmt_functions[] = {
+    { "ticket-attribute", "default", ticket_attribute_default },
+    { "ticket-attribute", "xml", ticket_attribute_xml },
+    { "ticket-constraints", "default", ticket_constraints_default },
+    { "ticket-constraints", "xml", ticket_constraints_xml },
+    { "ticket-state", "default", ticket_state_default },
+    { "ticket-state", "xml", ticket_state_xml },
+
+    { NULL, NULL, NULL }
+};
+
 int
 main(int argc, char **argv)
 {
@@ -731,6 +825,7 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = NULL;
     GOptionContext *context = NULL;
     gchar **processed_args = NULL;
@@ -739,9 +834,10 @@ main(int argc, char **argv)
     attr_delete = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
-    context = build_arg_context(args);
+    context = build_arg_context(args, &output_group);
     processed_args = pcmk__cmdline_preproc(argv, "dintvxCDGS");
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -749,11 +845,21 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_ticket", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    pe__register_messages(out);
+    pcmk__register_messages(out, fmt_functions);
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_ticket is converted to use formatted output, this can go. */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
 
     scheduler = pe_new_working_set();
@@ -827,6 +933,7 @@ main(int argc, char **argv)
         }
 
         if (options.ticket_id) {
+            GHashTable *tickets = NULL;
             pcmk_ticket_t *ticket = find_ticket(options.ticket_id, scheduler);
 
             if (ticket == NULL) {
@@ -835,14 +942,28 @@ main(int argc, char **argv)
                             "No such ticket '%s'", options.ticket_id);
                 goto done;
             }
-            print_ticket(ticket, raw, details);
+
+            /* The ticket-list message expects a GHashTable, so we'll construct
+             * one with just this single item.
+             */
+            tickets = pcmk__strkey_table(free, NULL);
+            g_hash_table_insert(tickets, strdup(ticket->id), ticket);
+            out->message(out, "ticket-list", tickets, false, raw, details);
+            g_hash_table_destroy(tickets);
 
         } else {
-            print_ticket_list(scheduler, raw, details);
+            out->message(out, "ticket-list", scheduler->tickets, false, raw, details);
         }
 
     } else if (options.ticket_cmd == 'q') {
-        rc = dump_ticket_xml(cib_conn, options.ticket_id);
+        xmlNode *state_xml = NULL;
+        rc = find_ticket_state(cib_conn, options.ticket_id, &state_xml);
+
+        if (state_xml != NULL) {
+            out->message(out, "ticket-state", options.ticket_id, state_xml);
+            free_xml(state_xml);
+        }
+
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {
@@ -851,7 +972,14 @@ main(int argc, char **argv)
         }
 
     } else if (options.ticket_cmd == 'c') {
-        rc = dump_constraints(cib_conn, options.ticket_id);
+        xmlNode *cons_xml = NULL;
+        rc = find_ticket_constraints(cib_conn, options.ticket_id, &cons_xml);
+
+        if (cons_xml != NULL) {
+            out->message(out, "ticket-constraints", cons_xml);
+            free_xml(cons_xml);
+        }
+
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {
@@ -872,9 +1000,13 @@ main(int argc, char **argv)
         rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name,
                                    &value, scheduler);
         if (rc == pcmk_rc_ok) {
-            fprintf(stdout, "%s\n", value);
+            out->message(out, "ticket-attribute", options.ticket_id,
+                         options.get_attr_name, value);
         } else if (rc == ENXIO && options.attr_default) {
-            fprintf(stdout, "%s\n", options.attr_default);
+            const char *def = options.attr_default;
+
+            out->message(out, "ticket-attribute", options.ticket_id,
+                         options.get_attr_name, def);
             rc = pcmk_rc_ok;
         }
         exit_code = pcmk_rc2exitc(rc);
@@ -899,7 +1031,7 @@ main(int argc, char **argv)
             }
 
             if (ticket->granted) {
-                ticket_warning(options.ticket_id, "revoke");
+                ticket_revoke_warning(options.ticket_id);
                 exit_code = CRM_EX_INSUFFICIENT_PRIV;
                 goto done;
             }
@@ -1011,7 +1143,13 @@ main(int argc, char **argv)
     g_free(options.ticket_id);
     g_free(options.xml_file);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
 
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }

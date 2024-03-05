@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -63,6 +63,7 @@ API_request_base	= command-output	\
 			  crm_rule 		\
 			  crm_shadow		\
 			  crm_simulate		\
+			  crm_ticket 		\
 			  crmadmin		\
 			  digests		\
 			  pacemakerd 		\
@@ -95,7 +96,8 @@ API_base		= $(API_request_base)	\
 			  patchset		\
 			  resources		\
 			  status		\
-			  subprocess-output
+			  subprocess-output 	\
+			  ticket
 
 CIB_base		= cib 			\
 			  $(CIB_cfg_base) 	\
