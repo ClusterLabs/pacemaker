@@ -922,13 +922,17 @@ setup_fencer_connection(void)
     if (rc == pcmk_ok) {
         crm_trace("Setting up stonith callbacks");
         if (options.watch_fencing) {
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+            st->cmds->register_notification(st,
+                                            PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_event);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                            mon_st_callback_event);
         } else {
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+            st->cmds->register_notification(st,
+                                            PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_display);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_HISTORY,
+                                            mon_st_callback_display);
         }
     } else {
         stonith_api_delete(st);

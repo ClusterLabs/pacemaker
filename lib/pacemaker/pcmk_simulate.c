@@ -338,7 +338,7 @@ profile_file(const char *xml_file, long long repeat,
 
     CRM_ASSERT(out != NULL);
 
-    cib_object = filename2xml(xml_file);
+    cib_object = pcmk__xml_read(xml_file);
     start = clock();
 
     if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
@@ -363,8 +363,11 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
-        xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
+        xmlNode *input = cib_object;
 
+        if (repeat > 1) {
+            input = pcmk__xml_copy(NULL, cib_object);
+        }
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
@@ -868,9 +871,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     if (input_file != NULL) {
-        rc = write_xml_file(input, input_file, FALSE);
-        if (rc < 0) {
-            rc = pcmk_legacy2rc(rc);
+        rc = pcmk__xml_write_file(input, input_file, false, NULL);
+        if (rc != pcmk_rc_ok) {
             goto simulate_done;
         }
     }
@@ -927,8 +929,9 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            rc = write_xml_file(scheduler->graph, graph_file, FALSE);
-            if (rc < 0) {
+            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false,
+                                      NULL);
+            if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_graph_error;
                 goto simulate_done;
             }

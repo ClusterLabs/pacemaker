@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -493,15 +493,17 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 {
     int rc = pcmk_rc_ok;
     static uint64_t id = 0;
-    char *xml_text = NULL;
+    GString *xml_text = NULL;
 
     struct iovec iov[2];
     struct remote_header_v0 *header;
 
     CRM_CHECK((remote != NULL) && (msg != NULL), return EINVAL);
 
-    xml_text = dump_xml_unformatted(msg);
-    CRM_CHECK(xml_text != NULL, return EINVAL);
+    xml_text = g_string_sized_new(1024);
+    pcmk__xml_string(msg, 0, xml_text, 0);
+    CRM_CHECK(xml_text->len > 0,
+              g_string_free(xml_text, TRUE); return EINVAL);
 
     header = calloc(1, sizeof(struct remote_header_v0));
     CRM_ASSERT(header != NULL);
@@ -509,8 +511,8 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
     iov[0].iov_base = header;
     iov[0].iov_len = sizeof(struct remote_header_v0);
 
-    iov[1].iov_base = xml_text;
-    iov[1].iov_len = 1 + strlen(xml_text);
+    iov[1].iov_len = 1 + xml_text->len;
+    iov[1].iov_base = g_string_free(xml_text, FALSE);
 
     id++;
     header->id = id;
@@ -527,7 +529,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
     }
 
     free(iov[0].iov_base);
-    free(iov[1].iov_base);
+    g_free((gchar *) iov[1].iov_base);
     return rc;
 }
 
@@ -592,7 +594,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 
     CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
 
-    xml = string2xml(remote->buffer + header->payload_offset);
+    xml = pcmk__xml_parse(remote->buffer + header->payload_offset);
     if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
         crm_warn("Couldn't parse v%d message, we only understand v%d",
                  header->version, REMOTE_MSG_VERSION);

@@ -9,41 +9,26 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <bzlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>                   // stat(), S_ISREG, etc.
+#include <sys/types.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <libxml/xmlIO.h>  /* xmlAllocOutputBuffer */
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
+#include <crm/common/xml_internal.h>    // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
 // Define this as 1 in development to get insanely verbose trace messages
 #ifndef XML_PARSER_DEBUG
 #define XML_PARSER_DEBUG 0
 #endif
-
-/* @TODO XML_PARSE_RECOVER allows some XML errors to be silently worked around
- * by libxml2, which is potentially ambiguous and dangerous. We should drop it
- * when we can break backward compatibility with configurations that might be
- * relying on it (i.e. pacemaker 3.0.0).
- *
- * It might be a good idea to have a transitional period where we first try
- * parsing without XML_PARSE_RECOVER, and if that fails, try parsing again with
- * it, logging a warning if it succeeds.
- */
-#define PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER    (XML_PARSE_NOBLANKS)
-#define PCMK__XML_PARSE_OPTS_WITH_RECOVER       (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
 
 bool
 pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
@@ -618,22 +603,6 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
 }
 
 xmlNode *
-add_node_copy(xmlNode * parent, xmlNode * src_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
-
-    child = xmlDocCopyNode(src_node, parent->doc, 1);
-    if (child == NULL) {
-        return NULL;
-    }
-    xmlAddChild(parent, child);
-    pcmk__mark_xml_created(child);
-    return child;
-}
-
-xmlNode *
 create_xml_node(xmlNode * parent, const char *name)
 {
     xmlDoc *doc = NULL;
@@ -645,7 +614,7 @@ create_xml_node(xmlNode * parent, const char *name)
     }
 
     if (parent == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        doc = xmlNewDoc(PCMK__XML_VERSION);
         if (doc == NULL) {
             return NULL;
         }
@@ -801,171 +770,48 @@ free_xml(xmlNode * child)
     free_xml_with_position(child, -1);
 }
 
+/*!
+ * \internal
+ * \brief Make a deep copy of an XML node under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the copy's parent (\c NULL
+ *                        to create a new XML document with the copy as root)
+ * \param[in]     src     XML node to copy
+ *
+ * \return Deep copy of \p src, or \c NULL if \p src is \c NULL
+ */
 xmlNode *
-copy_xml(xmlNode * src)
+pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 {
-    xmlDoc *doc = xmlNewDoc((pcmkXmlStr) "1.0");
-    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+    xmlNode *copy = NULL;
 
-    CRM_ASSERT(copy != NULL);
-    xmlDocSetRootElement(doc, copy);
+    if (src == NULL) {
+        return NULL;
+    }
+
+    if (parent == NULL) {
+        xmlDoc *doc = NULL;
+
+        // The copy will be the root element of a new document
+        CRM_ASSERT(src->type == XML_ELEMENT_NODE);
+
+        doc = xmlNewDoc(PCMK__XML_VERSION);
+        CRM_ASSERT(doc != NULL);
+
+        copy = xmlDocCopyNode(src, doc, 1);
+        CRM_ASSERT(copy != NULL);
+
+        xmlDocSetRootElement(doc, copy);
+
+    } else {
+        copy = xmlDocCopyNode(src, parent->doc, 1);
+        CRM_ASSERT(copy != NULL);
+
+        xmlAddChild(parent, copy);
+    }
+
+    pcmk__mark_xml_created(copy);
     return copy;
-}
-
-xmlNode *
-string2xml(const char *input)
-{
-    xmlNode *xml = NULL;
-    xmlDocPtr output = NULL;
-    xmlParserCtxtPtr ctxt = NULL;
-    const xmlError *last_error = NULL;
-
-    if (input == NULL) {
-        crm_err("Can't parse NULL input");
-        return NULL;
-    }
-
-    /* create a parser context */
-    ctxt = xmlNewParserCtxt();
-    CRM_CHECK(ctxt != NULL, return NULL);
-
-    xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
-    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                            PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-    if (output == NULL) {
-        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-        if (output) {
-            crm_warn("Successfully recovered from XML errors "
-                     "(note: a future release will treat this as a fatal failure)");
-        }
-    }
-
-    if (output) {
-        xml = xmlDocGetRootElement(output);
-    }
-    last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
-        /*
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
-         */
-        crm_warn("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                 last_error->domain, last_error->level, last_error->code, last_error->message);
-
-        if (last_error->code == XML_ERR_DOCUMENT_EMPTY) {
-            CRM_LOG_ASSERT("Cannot parse an empty string");
-
-        } else if (last_error->code != XML_ERR_DOCUMENT_END) {
-            crm_err("Couldn't%s parse %d chars: %s", xml ? " fully" : "", (int)strlen(input),
-                    input);
-            if (xml != NULL) {
-                crm_log_xml_err(xml, "Partial");
-            }
-
-        } else {
-            int len = strlen(input);
-            int lpc = 0;
-
-            while(lpc < len) {
-                crm_warn("Parse error[+%.3d]: %.80s", lpc, input+lpc);
-                lpc += 80;
-            }
-
-            CRM_LOG_ASSERT("String parsing error");
-        }
-    }
-
-    xmlFreeParserCtxt(ctxt);
-    return xml;
-}
-
-xmlNode *
-stdin2xml(void)
-{
-    size_t data_length = 0;
-    size_t read_chars = 0;
-
-    char *xml_buffer = NULL;
-    xmlNode *xml_obj = NULL;
-
-    do {
-        xml_buffer = pcmk__realloc(xml_buffer, data_length + PCMK__BUFFER_SIZE);
-        read_chars = fread(xml_buffer + data_length, 1, PCMK__BUFFER_SIZE,
-                           stdin);
-        data_length += read_chars;
-    } while (read_chars == PCMK__BUFFER_SIZE);
-
-    if (data_length == 0) {
-        crm_warn("No XML supplied on stdin");
-        free(xml_buffer);
-        return NULL;
-    }
-
-    xml_buffer[data_length] = '\0';
-    xml_obj = string2xml(xml_buffer);
-    free(xml_buffer);
-
-    crm_log_xml_trace(xml_obj, "Created fragment");
-    return xml_obj;
-}
-
-static char *
-decompress_file(const char *filename)
-{
-    char *buffer = NULL;
-    int rc = 0;
-    size_t length = 0, read_len = 0;
-    BZFILE *bz_file = NULL;
-    FILE *input = fopen(filename, "r");
-
-    if (input == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
-        return NULL;
-    }
-
-    bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-    rc = pcmk__bzlib2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not prepare to read compressed %s: %s "
-                CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
-        BZ2_bzReadClose(&rc, bz_file);
-        fclose(input);
-        return NULL;
-    }
-
-    rc = BZ_OK;
-    // cppcheck seems not to understand the abort-logic in pcmk__realloc
-    // cppcheck-suppress memleak
-    while (rc == BZ_OK) {
-        buffer = pcmk__realloc(buffer, PCMK__BUFFER_SIZE + length + 1);
-        read_len = BZ2_bzRead(&rc, bz_file, buffer + length, PCMK__BUFFER_SIZE);
-
-        crm_trace("Read %ld bytes from file: %d", (long)read_len, rc);
-
-        if (rc == BZ_OK || rc == BZ_STREAM_END) {
-            length += read_len;
-        }
-    }
-
-    buffer[length] = '\0';
-
-    rc = pcmk__bzlib2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not read compressed %s: %s " CRM_XS " rc=%d",
-                filename, pcmk_rc_str(rc), rc);
-        free(buffer);
-        buffer = NULL;
-    }
-
-    BZ2_bzReadClose(&rc, bz_file);
-    fclose(input);
-    return buffer;
 }
 
 /*!
@@ -1000,97 +846,6 @@ pcmk__strip_xml_text(xmlNode *xml)
 
         iter = next;
     }
-}
-
-xmlNode *
-filename2xml(const char *filename)
-{
-    xmlNode *xml = NULL;
-    xmlDocPtr output = NULL;
-    bool uncompressed = true;
-    xmlParserCtxtPtr ctxt = NULL;
-    const xmlError *last_error = NULL;
-
-    /* create a parser context */
-    ctxt = xmlNewParserCtxt();
-    CRM_CHECK(ctxt != NULL, return NULL);
-
-    xmlCtxtResetLastError(ctxt);
-    xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
-
-    if (filename) {
-        uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
-    }
-
-    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
-        /* STDIN_FILENO == fileno(stdin) */
-        output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
-                               PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
-                                   PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
-            }
-        }
-
-    } else if (uncompressed) {
-        output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                 PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadFile(ctxt, filename, NULL,
-                                     PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
-            }
-        }        
-
-    } else {
-        char *input = decompress_file(filename);
-
-        output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                PCMK__XML_PARSE_OPTS_WITHOUT_RECOVER);
-
-        if (output == NULL) {
-            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
-                                    PCMK__XML_PARSE_OPTS_WITH_RECOVER);
-            if (output) {
-                crm_warn("Successfully recovered from XML errors "
-                         "(note: a future release will treat this as a fatal failure)");
-            }
-        }        
-
-        free(input);
-    }
-
-    if (output && (xml = xmlDocGetRootElement(output))) {
-        pcmk__strip_xml_text(xml);
-    }
-
-    last_error = xmlCtxtGetLastError(ctxt);
-    if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
-        /*
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
-         * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
-         */
-        crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
-                last_error->domain, last_error->level, last_error->code, last_error->message);
-
-        if (last_error && last_error->code != XML_ERR_OK) {
-            crm_err("Couldn't%s parse %s", xml ? " fully" : "", filename);
-            if (xml != NULL) {
-                crm_log_xml_err(xml, "Partial");
-            }
-        }
-    }
-
-    xmlFreeParserCtxt(ctxt);
-    return xml;
 }
 
 /*!
@@ -1156,163 +911,6 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     crm_xml_sanitize_id(id);
     crm_xml_add(xml, PCMK_XA_ID, id);
     free(id);
-}
-
-/*!
- * \internal
- * \brief Write XML to a file stream
- *
- * \param[in]     xml       XML to write
- * \param[in]     filename  Name of file being written (for logging only)
- * \param[in,out] stream    Open file stream corresponding to filename
- * \param[in]     compress  Whether to compress XML before writing
- * \param[out]    nbytes    Number of bytes written
- *
- * \return Standard Pacemaker return code
- */
-static int
-write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
-                 bool compress, unsigned int *nbytes)
-{
-    int rc = pcmk_rc_ok;
-    char *buffer = NULL;
-
-    *nbytes = 0;
-    crm_log_xml_trace(xml, "writing");
-
-    buffer = dump_xml_formatted(xml);
-    CRM_CHECK(buffer && strlen(buffer),
-              crm_log_xml_warn(xml, "formatting failed");
-              rc = pcmk_rc_error;
-              goto bail);
-
-    if (compress) {
-        unsigned int in = 0;
-        BZFILE *bz_file = NULL;
-
-        rc = BZ_OK;
-        bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            crm_warn("Not compressing %s: could not prepare file stream: %s "
-                     CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
-        } else {
-            BZ2_bzWrite(&rc, bz_file, buffer, strlen(buffer));
-            rc = pcmk__bzlib2rc(rc);
-
-            if (rc != pcmk_rc_ok) {
-                crm_warn("Not compressing %s: could not compress data: %s "
-                         CRM_XS " rc=%d errno=%d",
-                         filename, pcmk_rc_str(rc), rc, errno);
-            }
-        }
-
-        if (rc == pcmk_rc_ok) {
-            BZ2_bzWriteClose(&rc, bz_file, 0, &in, nbytes);
-            rc = pcmk__bzlib2rc(rc);
-
-            if (rc != pcmk_rc_ok) {
-                crm_warn("Not compressing %s: could not write compressed data: %s "
-                         CRM_XS " rc=%d errno=%d",
-                         filename, pcmk_rc_str(rc), rc, errno);
-                *nbytes = 0; // retry without compression
-            } else {
-                crm_trace("Compressed XML for %s from %u bytes to %u",
-                          filename, in, *nbytes);
-            }
-        }
-        rc = pcmk_rc_ok; // Either true, or we'll retry without compression
-    }
-
-    if (*nbytes == 0) {
-        rc = fprintf(stream, "%s", buffer);
-        if (rc < 0) {
-            rc = errno;
-            crm_perror(LOG_ERR, "writing %s", filename);
-        } else {
-            *nbytes = (unsigned int) rc;
-            rc = pcmk_rc_ok;
-        }
-    }
-
-  bail:
-
-    if (fflush(stream) != 0) {
-        rc = errno;
-        crm_perror(LOG_ERR, "flushing %s", filename);
-    }
-
-    /* Don't report error if the file does not support synchronization */
-    if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
-        rc = errno;
-        crm_perror(LOG_ERR, "synchronizing %s", filename);
-    }
-
-    fclose(stream);
-
-    crm_trace("Saved %d bytes to %s as XML", *nbytes, filename);
-    free(buffer);
-
-    return rc;
-}
-
-/*!
- * \brief Write XML to a file descriptor
- *
- * \param[in] xml       XML to write
- * \param[in] filename  Name of file being written (for logging only)
- * \param[in] fd        Open file descriptor corresponding to filename
- * \param[in] compress  Whether to compress XML before writing
- *
- * \return Number of bytes written on success, -errno otherwise
- */
-int
-write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-             gboolean compress)
-{
-    FILE *stream = NULL;
-    unsigned int nbytes = 0;
-    int rc = pcmk_rc_ok;
-
-    CRM_CHECK((xml != NULL) && (fd > 0), return -EINVAL);
-    stream = fdopen(fd, "w");
-    if (stream == NULL) {
-        return -errno;
-    }
-    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
-}
-
-/*!
- * \brief Write XML to a file
- *
- * \param[in] xml       XML to write
- * \param[in] filename  Name of file to write
- * \param[in] compress  Whether to compress XML before writing
- *
- * \return Number of bytes written on success, -errno otherwise
- */
-int
-write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
-{
-    FILE *stream = NULL;
-    unsigned int nbytes = 0;
-    int rc = pcmk_rc_ok;
-
-    CRM_CHECK((xml != NULL) && (filename != NULL), return -EINVAL);
-    stream = fopen(filename, "w");
-    if (stream == NULL) {
-        return -errno;
-    }
-    rc = write_xml_stream(xml, filename, stream, compress, &nbytes);
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
 }
 
 /*!
@@ -1567,304 +1165,6 @@ pcmk__xml_escape(const char *text, bool escape_quote)
     return copy;
 }
 
-/*!
- * \internal
- * \brief Append a string representation of an XML element to a buffer
- *
- * \param[in]     data     XML whose representation to append
- * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-static void
-dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
-                 int depth)
-{
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    bool filtered = pcmk_is_set(options, pcmk__xml_fmt_filtered);
-    int spaces = pretty? (2 * depth) : 0;
-
-    for (int lpc = 0; lpc < spaces; lpc++) {
-        g_string_append_c(buffer, ' ');
-    }
-
-    pcmk__g_strcat(buffer, "<", data->name, NULL);
-
-    for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
-         attr = attr->next) {
-
-        if (!filtered || !pcmk__xa_filterable((const char *) (attr->name))) {
-            pcmk__dump_xml_attr(attr, buffer);
-        }
-    }
-
-    if (data->children == NULL) {
-        g_string_append(buffer, "/>");
-
-    } else {
-        g_string_append_c(buffer, '>');
-    }
-
-    if (pretty) {
-        g_string_append_c(buffer, '\n');
-    }
-
-    if (data->children) {
-        for (const xmlNode *child = data->children; child != NULL;
-             child = child->next) {
-            pcmk__xml2text(child, options, buffer, depth + 1);
-        }
-
-        for (int lpc = 0; lpc < spaces; lpc++) {
-            g_string_append_c(buffer, ' ');
-        }
-
-        pcmk__g_strcat(buffer, "</", data->name, ">", NULL);
-
-        if (pretty) {
-            g_string_append_c(buffer, '\n');
-        }
-    }
-}
-
-/*!
- * \internal
- * \brief Append XML text content to a buffer
- *
- * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-static void
-dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
-              int depth)
-{
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    int spaces = pretty? (2 * depth) : 0;
-    const char *content = (const char *) data->content;
-    char *content_esc = NULL;
-
-    if (pcmk__xml_needs_escape(content, false)) {
-        content_esc = pcmk__xml_escape(content, false);
-        content = content_esc;
-    }
-
-    for (int lpc = 0; lpc < spaces; lpc++) {
-        g_string_append_c(buffer, ' ');
-    }
-
-    g_string_append(buffer, content);
-
-    if (pretty) {
-        g_string_append_c(buffer, '\n');
-    }
-    free(content_esc);
-}
-
-/*!
- * \internal
- * \brief Append XML CDATA content to a buffer
- *
- * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-static void
-dump_xml_cdata(const xmlNode *data, uint32_t options, GString *buffer,
-               int depth)
-{
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    int spaces = pretty? (2 * depth) : 0;
-
-    for (int lpc = 0; lpc < spaces; lpc++) {
-        g_string_append_c(buffer, ' ');
-    }
-
-    pcmk__g_strcat(buffer, "<![CDATA[", (const char *) data->content, "]]>",
-                   NULL);
-
-    if (pretty) {
-        g_string_append_c(buffer, '\n');
-    }
-}
-
-/*!
- * \internal
- * \brief Append an XML comment to a buffer
- *
- * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-static void
-dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
-                 int depth)
-{
-    bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
-    int spaces = pretty? (2 * depth) : 0;
-
-    for (int lpc = 0; lpc < spaces; lpc++) {
-        g_string_append_c(buffer, ' ');
-    }
-
-    pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->", NULL);
-
-    if (pretty) {
-        g_string_append_c(buffer, '\n');
-    }
-}
-
-/*!
- * \internal
- * \brief Get a string representation of an XML element type
- *
- * \param[in] type  XML element type
- *
- * \return String representation of \p type
- */
-static const char *
-xml_element_type2str(xmlElementType type)
-{
-    static const char *const element_type_names[] = {
-        [XML_ELEMENT_NODE]       = "element",
-        [XML_ATTRIBUTE_NODE]     = "attribute",
-        [XML_TEXT_NODE]          = "text",
-        [XML_CDATA_SECTION_NODE] = "CDATA section",
-        [XML_ENTITY_REF_NODE]    = "entity reference",
-        [XML_ENTITY_NODE]        = "entity",
-        [XML_PI_NODE]            = "PI",
-        [XML_COMMENT_NODE]       = "comment",
-        [XML_DOCUMENT_NODE]      = "document",
-        [XML_DOCUMENT_TYPE_NODE] = "document type",
-        [XML_DOCUMENT_FRAG_NODE] = "document fragment",
-        [XML_NOTATION_NODE]      = "notation",
-        [XML_HTML_DOCUMENT_NODE] = "HTML document",
-        [XML_DTD_NODE]           = "DTD",
-        [XML_ELEMENT_DECL]       = "element declaration",
-        [XML_ATTRIBUTE_DECL]     = "attribute declaration",
-        [XML_ENTITY_DECL]        = "entity declaration",
-        [XML_NAMESPACE_DECL]     = "namespace declaration",
-        [XML_XINCLUDE_START]     = "XInclude start",
-        [XML_XINCLUDE_END]       = "XInclude end",
-    };
-
-    if ((type < 0) || (type >= PCMK__NELEM(element_type_names))) {
-        return "unrecognized type";
-    }
-    return element_type_names[type];
-}
-
-/*!
- * \internal
- * \brief Create a text representation of an XML object
- *
- * \param[in]     data     XML to convert
- * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
- * \param[in,out] buffer   Where to store the text (must not be \p NULL)
- * \param[in]     depth    Current indentation level
- */
-void
-pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
-               int depth)
-{
-    if (data == NULL) {
-        crm_trace("Nothing to dump");
-        return;
-    }
-
-    CRM_ASSERT(buffer != NULL);
-    CRM_CHECK(depth >= 0, depth = 0);
-
-    switch(data->type) {
-        case XML_ELEMENT_NODE:
-            /* Handle below */
-            dump_xml_element(data, options, buffer, depth);
-            break;
-        case XML_TEXT_NODE:
-            if (pcmk_is_set(options, pcmk__xml_fmt_text)) {
-                dump_xml_text(data, options, buffer, depth);
-            }
-            break;
-        case XML_COMMENT_NODE:
-            dump_xml_comment(data, options, buffer, depth);
-            break;
-        case XML_CDATA_SECTION_NODE:
-            dump_xml_cdata(data, options, buffer, depth);
-            break;
-        default:
-            crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
-                     xml_element_type2str(data->type), data->type);
-            break;
-    }
-}
-
-char *
-dump_xml_formatted_with_text(const xmlNode *xml)
-{
-    /* libxml's xmlNodeDumpOutput() would work here since we're not specifically
-     * filtering out any nodes. However, use pcmk__xml2text() for consistency,
-     * to escape attribute values, and to allow a const argument.
-     */
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
-
-    pcmk__xml2text(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
-}
-
-char *
-dump_xml_formatted(const xmlNode *xml)
-{
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
-
-    pcmk__xml2text(xml, pcmk__xml_fmt_pretty, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
-}
-
-char *
-dump_xml_unformatted(const xmlNode *xml)
-{
-    char *buffer = NULL;
-    GString *g_buffer = g_string_sized_new(1024);
-
-    pcmk__xml2text(xml, 0, g_buffer, 0);
-
-    pcmk__str_update(&buffer, g_buffer->str);
-    g_string_free(g_buffer, TRUE);
-    return buffer;
-}
-
-int
-pcmk__xml2fd(int fd, xmlNode *cur)
-{
-    bool success;
-
-    xmlOutputBuffer *fd_out = xmlOutputBufferCreateFd(fd, NULL);
-    CRM_ASSERT(fd_out != NULL);
-    xmlNodeDumpOutput(fd_out, cur->doc, cur, 0, pcmk__xml_fmt_pretty, NULL);
-
-    success = xmlOutputBufferWrite(fd_out, sizeof("\n") - 1, "\n") != -1;
-
-    success = xmlOutputBufferClose(fd_out) != -1 && success;
-
-    if (!success) {
-        return EIO;
-    }
-
-    fsync(fd);
-    return pcmk_rc_ok;
-}
-
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
@@ -1885,24 +1185,6 @@ xml_remove_prop(xmlNode * obj, const char *name)
     } else {
         xmlUnsetProp(obj, (pcmkXmlStr) name);
     }
-}
-
-void
-save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
-{
-    char *f = NULL;
-
-    if (filename == NULL) {
-        char *uuid = crm_generate_uuid();
-
-        f = crm_strdup_printf("%s/%s", pcmk__get_tmpdir(), uuid);
-        filename = f;
-        free(uuid);
-    }
-
-    crm_info("Saving %s to %s", desc, filename);
-    write_xml_file(xml, filename, FALSE);
-    free(f);
 }
 
 /*!
@@ -2128,7 +1410,7 @@ static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
 {
     // Re-create the child element so we can check ACLs
-    xmlNode *candidate = add_node_copy(new_parent, old_child);
+    xmlNode *candidate = pcmk__xml_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
     reset_xml_node_flags(candidate);
@@ -2253,47 +1535,6 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
     mark_xml_changes(old_xml, new_xml, FALSE);
 }
 
-gboolean
-can_prune_leaf(xmlNode * xml_node)
-{
-    xmlNode *cIter = NULL;
-    gboolean can_prune = TRUE;
-
-    CRM_CHECK(xml_node != NULL, return FALSE);
-
-    /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed for
-     * rolling upgrades)
-     */
-    if (pcmk__strcase_any_of((const char *) xml_node->name,
-                             PCMK_XE_RESOURCE_REF, PCMK_XE_OBJ_REF,
-                             PCMK_XE_ROLE, PCMK__XE_ROLE_REF,
-                             NULL)) {
-        return FALSE;
-    }
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-
-        if (strcmp(p_name, PCMK_XA_ID) == 0) {
-            continue;
-        }
-        can_prune = FALSE;
-    }
-
-    cIter = pcmk__xml_first_child(xml_node);
-    while (cIter) {
-        xmlNode *child = cIter;
-
-        cIter = pcmk__xml_next(cIter);
-        if (can_prune_leaf(child)) {
-            free_xml(child);
-        } else {
-            can_prune = FALSE;
-        }
-    }
-    return can_prune;
-}
-
 /*!
  * \internal
  * \brief Find a comment with matching content in specified XML
@@ -2362,7 +1603,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
     }
 
     if (target == NULL) {
-        add_node_copy(parent, update);
+        pcmk__xml_copy(parent, update);
 
     } else if (!pcmk__str_eq((const char *)target->content, (const char *)update->content, pcmk__str_casei)) {
         xmlFree(target->content);
@@ -2532,7 +1773,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
         if (*children == NULL) {
             *children = create_xml_node(NULL, __func__);
         }
-        add_node_copy(*children, root);
+        pcmk__xml_copy(*children, root);
         match_found = 1;
     }
 
@@ -2651,7 +1892,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
         if (recursive) {
             sorted_xml(child, result, recursive);
         } else {
-            add_node_copy(result, child);
+            pcmk__xml_copy(result, child);
         }
     }
 
@@ -2914,10 +2155,26 @@ getDocPtr(xmlNode *node)
 
     doc = node->doc;
     if (doc == NULL) {
-        doc = xmlNewDoc((pcmkXmlStr) "1.0");
+        doc = xmlNewDoc(PCMK__XML_VERSION);
         xmlDocSetRootElement(doc, node);
     }
     return doc;
+}
+
+xmlNode *
+add_node_copy(xmlNode *parent, xmlNode *src_node)
+{
+    xmlNode *child = NULL;
+
+    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
+
+    child = xmlDocCopyNode(src_node, parent->doc, 1);
+    if (child == NULL) {
+        return NULL;
+    }
+    xmlAddChild(parent, child);
+    pcmk__mark_xml_created(child);
+    return child;
 }
 
 int
@@ -2994,6 +2251,17 @@ crm_xml_escape(const char *text)
                 }
         }
     }
+    return copy;
+}
+
+xmlNode *
+copy_xml(xmlNode *src)
+{
+    xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+
+    CRM_ASSERT(copy != NULL);
+    xmlDocSetRootElement(doc, copy);
     return copy;
 }
 

@@ -111,9 +111,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
         if (output_data == NULL || (call_options & cib_discard_reply)) {
             crm_trace("Discarding reply");
-
-        } else if (tmp != NULL) {
-            *output_data = copy_xml(tmp);
+        } else {
+            *output_data = pcmk__xml_copy(NULL, tmp);
         }
 
     } else if (reply_id <= 0) {
@@ -188,7 +187,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
         return 0;
     }
 
-    msg = string2xml(buffer);
+    msg = pcmk__xml_parse(buffer);
 
     if (msg == NULL) {
         crm_warn("Received a NULL message from the CIB manager");

@@ -390,11 +390,11 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
         } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
-            *output = copy_xml(*output);
+            *output = pcmk__xml_copy(NULL, *output);
 
         } else if ((*output)->doc == (*current_cib)->doc) {
             /* Give them a copy they can free */
-            *output = copy_xml(*output);
+            *output = pcmk__xml_copy(NULL, *output);
         }
 
         free_xml(cib_filtered);
@@ -422,7 +422,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         *current_cib = scratch;
 
     } else {
-        scratch = copy_xml(*current_cib);
+        scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -539,7 +539,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
                 int format = 1;
-                xmlNode *cib_copy = copy_xml(patchset_cib);
+                xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
 
                 crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
@@ -758,7 +758,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
     }
 
     if (rc == pcmk_rc_ok) {
-        add_node_copy(cib->transaction, request);
+        pcmk__xml_copy(cib->transaction, request);
 
     } else {
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);

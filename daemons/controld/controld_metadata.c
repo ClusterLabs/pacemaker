@@ -139,7 +139,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         goto err;
     }
 
-    metadata = string2xml(metadata_str);
+    metadata = pcmk__xml_parse(metadata_str);
     if (!metadata) {
         reason = "Metadata is not valid XML";
         goto err;

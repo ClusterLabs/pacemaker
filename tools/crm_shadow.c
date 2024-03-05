@@ -169,12 +169,18 @@ shadow_default(pcmk__output_t *out, va_list args)
         rc = out->info(out, "Content:");
 
         if (content != NULL) {
-            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+            GString *buf = g_string_sized_new(1024);
+            gchar *str = NULL;
 
-            if (!pcmk__str_empty(buf)) {
-                out->info(out, "%s", buf);
+            pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                             buf, 0);
+
+            str = g_string_free(buf, FALSE);
+            str = pcmk__trim(str);
+            if (!pcmk__str_empty(str)) {
+                out->info(out, "%s", str);
             }
-            free(buf);
+            g_free(str);
 
         } else {
             out->info(out, "<unknown>");
@@ -239,10 +245,16 @@ shadow_text(pcmk__output_t *out, va_list args)
             rc = out->info(out, "%s", filename);
         }
         if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
-            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+            GString *buf = g_string_sized_new(1024);
+            gchar *str = NULL;
 
-            rc = out->info(out, "%s", pcmk__trim(buf));
-            free(buf);
+            pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                             buf, 0);
+
+            str = g_string_free(buf, FALSE);
+            str = pcmk__trim(str);
+            rc = out->info(out, "%s", str);
+            g_free(str);
         }
         if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
             rc = out->message(out, "xml-patchset", diff);
@@ -288,10 +300,13 @@ shadow_xml(pcmk__output_t *out, va_list args)
                                    NULL);
 
     if (content != NULL) {
-        char *buf = dump_xml_formatted_with_text(content);
+        GString *buf = g_string_sized_new(1024);
 
-        out->output_xml(out, PCMK_XE_CONTENT, buf);
-        free(buf);
+        pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buf,
+                         0);
+
+        out->output_xml(out, PCMK_XE_CONTENT, buf->str);
+        g_string_free(buf, TRUE);
     }
 
     if (diff != NULL) {
@@ -497,7 +512,7 @@ read_xml(const char *filename, xmlNode **output, GError **error)
 {
     int rc = pcmk_rc_ok;
 
-    *output = filename2xml(filename);
+    *output = pcmk__xml_read(filename);
     if (*output == NULL) {
         rc = pcmk_rc_no_input;
         exit_code = pcmk_rc2exitc(rc);
@@ -520,18 +535,16 @@ static int
 write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
                   GError **error)
 {
-    int rc = write_xml_file(xml, filename, FALSE);
+    int rc = pcmk__xml_write_file(xml, filename, false, NULL);
 
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not %s the shadow instance '%s': %s",
                     reset? "reset" : "create", options.instance,
                     pcmk_rc_str(rc));
-        return rc;
     }
-    return pcmk_rc_ok;
+    return rc;
 }
 
 /*!

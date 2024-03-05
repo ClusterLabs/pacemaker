@@ -377,7 +377,7 @@ undo_op_remap(remote_fencing_op_t *op)
 static xmlNode *
 fencing_result2xml(const remote_fencing_op_t *op)
 {
-    xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+    xmlNode *notify_data = create_xml_node(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
     crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
     crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
@@ -463,9 +463,10 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
 
     /* bcast to all local clients that the fencing operation happend */
     notify_data = fencing_result2xml(op);
-    fenced_send_notification(T_STONITH_NOTIFY_FENCE, &op->result, notify_data);
+    fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, &op->result,
+                             notify_data);
     free_xml(notify_data);
-    fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+    fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
 
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
@@ -1214,7 +1215,9 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     }
 
     op->target = crm_element_value_copy(dev, PCMK__XA_ST_TARGET);
-    op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
+
+    // @TODO Figure out how to avoid copying XML here
+    op->request = pcmk__xml_copy(NULL, request);
     crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     op->call_options = call_options;
 
@@ -1253,7 +1256,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     if (op->state != st_duplicate) {
         /* kick history readers */
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 
     /* safe to trim as long as that doesn't touch pending ops */

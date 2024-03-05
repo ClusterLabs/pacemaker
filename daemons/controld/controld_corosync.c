@@ -38,7 +38,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
     }
     if (kind == crm_class_cluster) {
         crm_node_t *peer = NULL;
-        xmlNode *xml = string2xml(data);
+        xmlNode *xml = pcmk__xml_parse(data);
 
         if (xml == NULL) {
             crm_err("Could not parse message content (%d): %.100s", kind, data);

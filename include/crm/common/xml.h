@@ -24,6 +24,7 @@
 
 #  include <crm/crm.h>
 #  include <crm/common/nvpair.h>
+#  include <crm/common/xml_io.h>
 #  include <crm/common/xml_names.h>
 
 #ifdef __cplusplus
@@ -35,18 +36,6 @@ extern "C" {
  * \brief Wrappers for and extensions to libxml2
  * \ingroup core
  */
-
-/* Define compression parameters for IPC messages
- *
- * Compression costs a LOT, so we don't want to do it unless we're hitting
- * message limits. Currently, we use 128KB as the threshold, because higher
- * values don't play well with the heartbeat stack. With an earlier limit of
- * 10KB, compressing 184 of 1071 messages accounted for 23% of the total CPU
- * used by the cib.
- */
-#  define CRM_BZ2_BLOCKS		4
-#  define CRM_BZ2_WORK		20
-#  define CRM_BZ2_THRESHOLD	128 * 1024
 
 typedef const xmlChar *pcmkXmlStr;
 
@@ -104,50 +93,6 @@ xmlNode *pcmk_create_xml_text_node(xmlNode * parent, const char *name, const cha
 xmlNode *pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
                                const char *class_name, const char *text);
 
-/*
- *
- */
-void purge_diff_markers(xmlNode * a_node);
-
-/*
- * Returns a deep copy of src_node
- *
- */
-xmlNode *copy_xml(xmlNode * src_node);
-
-/*
- * Add a copy of xml_node to new_parent
- */
-xmlNode *add_node_copy(xmlNode * new_parent, xmlNode * xml_node);
-
-/*
- * XML I/O Functions
- *
- * Whitespace between tags is discarded.
- */
-xmlNode *filename2xml(const char *filename);
-
-xmlNode *stdin2xml(void);
-
-xmlNode *string2xml(const char *input);
-
-int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-                 gboolean compress);
-int write_xml_file(const xmlNode *xml, const char *filename, gboolean compress);
-
-char *dump_xml_formatted(const xmlNode *xml);
-char *dump_xml_formatted_with_text(const xmlNode *xml);
-char *dump_xml_unformatted(const xmlNode *xml);
-
-/*
- * Diff related Functions
- */
-xmlNode *diff_xml_object(xmlNode * left, xmlNode * right, gboolean suppress);
-
-xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
-                             gboolean full, gboolean * changed, const char *marker);
-
-gboolean can_prune_leaf(xmlNode * xml_node);
 
 /*
  * Searching & Modifying
@@ -281,9 +226,6 @@ xmlNode *xml_create_patchset(
 int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
-
-void save_xml_to_file(const xmlNode *xml, const char *desc,
-                      const char *filename);
 
 void crm_xml_sanitize_id(char *id);
 void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);

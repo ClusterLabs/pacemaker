@@ -92,9 +92,12 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        char *buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", buffer);
-        free(buffer);
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buf, 0);
+
+        fprintf(stdout, "%s", buf->str);
+        g_string_free(buf, TRUE);
     }
 }
 
@@ -565,13 +568,14 @@ main(int argc, char **argv)
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
-        char *buf = NULL;
+        GString *buf = g_string_sized_new(1024);
 
         output = createEmptyCib(1);
         crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
-        buf = dump_xml_formatted(output);
-        fprintf(stdout, "%s", buf);
-        free(buf);
+
+        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+        fprintf(stdout, "%s", buf->str);
+        g_string_free(buf, TRUE);
         goto done;
     }
 
@@ -656,16 +660,16 @@ main(int argc, char **argv)
     }
 
     if (options.input_file != NULL) {
-        input = filename2xml(options.input_file);
+        input = pcmk__xml_read(options.input_file);
         source = options.input_file;
 
     } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+        input = pcmk__xml_parse(options.input_xml);
         source = "input string";
 
     } else if (options.input_stdin) {
+        input = pcmk__xml_read(NULL);
         source = "STDIN";
-        input = stdin2xml();
 
     } else if (options.acl_render_mode != pcmk__acl_render_none) {
         char *username = pcmk__uid2username(geteuid());

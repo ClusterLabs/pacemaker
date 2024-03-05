@@ -77,7 +77,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                             const char *only_node, const char *only_rsc,
                             const char *neg_location_prefix, bool simple_output)
 {
-    xmlNode *cib_copy = copy_xml(current_cib);
+    xmlNode *cib_copy = pcmk__xml_copy(NULL, current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = 0;
     pcmk_scheduler_t *scheduler = NULL;

@@ -165,7 +165,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -ENODATA;
     }
 
-    xml = string2xml(result->action_stdout);
+    xml = pcmk__xml_parse(result->action_stdout);
     stonith__destroy_action(action);
 
     if (xml == NULL) {
@@ -224,27 +224,33 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 int
 stonith__rhcs_metadata(const char *agent, int timeout_sec, char **output)
 {
-    char *buffer = NULL;
+    GString *buffer = NULL;
     xmlNode *xml = NULL;
 
     int rc = stonith__rhcs_get_metadata(agent, timeout_sec, &xml);
 
     if (rc != pcmk_ok) {
-        free_xml(xml);
-        return rc;
+        goto done;
     }
 
-    buffer = dump_xml_formatted_with_text(xml);
+    buffer = g_string_sized_new(1024);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buffer, 0);
+
+    if (pcmk__str_empty(buffer->str)) {
+        rc = -pcmk_err_schema_validation;
+        goto done;
+    }
+
+    if (output != NULL) {
+        pcmk__str_update(output, buffer->str);
+    }
+
+done:
+    if (buffer != NULL) {
+        g_string_free(buffer, TRUE);
+    }
     free_xml(xml);
-    if (buffer == NULL) {
-        return -pcmk_err_schema_validation;
-    }
-    if (output) {
-        *output = buffer;
-    } else {
-        free(buffer);
-    }
-    return pcmk_ok;
+    return rc;
 }
 
 bool

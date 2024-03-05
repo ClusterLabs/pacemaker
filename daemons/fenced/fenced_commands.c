@@ -893,7 +893,7 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
         g_hash_table_replace(metadata_cache, strdup(agent), buffer);
     }
 
-    *metadata = string2xml(buffer);
+    *metadata = pcmk__xml_parse(buffer);
     return pcmk_rc_ok;
 }
 
@@ -2679,7 +2679,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     if (stand_alone) {
         /* Do notification with a clean data object */
-        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        xmlNode *notify_data = create_xml_node(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
         crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
@@ -2689,8 +2689,9 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
         crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
 
-        fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
+                                 notify_data);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 

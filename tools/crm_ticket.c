@@ -436,12 +436,13 @@ dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
 
     fprintf(stdout, "State XML:\n");
     if (state_xml) {
-        char *state_xml_str = NULL;
+        GString *buf = g_string_sized_new(1024);
 
-        state_xml_str = dump_xml_formatted(state_xml);
-        fprintf(stdout, "\n%s", state_xml_str);
+        pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
+
+        fprintf(stdout, "\n%s", buf->str);
         free_xml(state_xml);
-        free(state_xml_str);
+        g_string_free(buf, TRUE);
     }
 
     return rc;
@@ -452,7 +453,7 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
 {
     int rc = pcmk_rc_ok;
     xmlNode *cons_xml = NULL;
-    char *cons_xml_str = NULL;
+    GString *buf = NULL;
 
     rc = find_ticket_constraints(the_cib, ticket_id, &cons_xml);
 
@@ -460,10 +461,12 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
         return rc;
     }
 
-    cons_xml_str = dump_xml_formatted(cons_xml);
-    fprintf(stdout, "Constraints XML:\n\n%s", cons_xml_str);
+    buf = g_string_sized_new(1024);
+    pcmk__xml_string(cons_xml, pcmk__xml_fmt_pretty, buf, 0);
+
+    fprintf(stdout, "Constraints XML:\n\n%s", buf->str);
     free_xml(cons_xml);
-    free(cons_xml_str);
+    g_string_free(buf, TRUE);
 
     return rc;
 }
@@ -782,7 +785,7 @@ main(int argc, char **argv)
     }
 
     if (options.xml_file != NULL) {
-        cib_xml_copy = filename2xml(options.xml_file);
+        cib_xml_copy = pcmk__xml_read(options.xml_file);
 
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);

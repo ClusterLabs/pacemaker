@@ -79,7 +79,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
                                             CRM_FEATURE_SET);
-    converted = copy_xml(xml_data);
+    converted = pcmk__xml_copy(NULL, xml_data);
     if (!cli_config_update(&converted, NULL, TRUE)) {
         scheduler->graph = create_xml_node(NULL, PCMK__XE_TRANSITION_GRAPH);
         crm_xml_add_int(scheduler->graph, "transition_id", 0);
@@ -165,7 +165,7 @@ handle_pecalc_request(pcmk__request_t *request)
         unlink(filename);
         crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
                        (long long) execution_date);
-        write_xml_file(xml_data, filename, TRUE);
+        pcmk__xml_write_file(xml_data, filename, true, NULL);
         pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
                                     ++seq, series_wrap);
     }

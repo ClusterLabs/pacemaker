@@ -742,7 +742,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
-    write_xml_fd(xml_blob, filename, fd, FALSE);
+    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
 
     dump_file(filename);
 
@@ -1243,7 +1243,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
 
-        converted = copy_xml(*xml);
+        converted = pcmk__xml_copy(NULL, *xml);
         update_validation(&converted, &version, 0, TRUE, to_logs);
 
         value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);
@@ -1416,7 +1416,7 @@ external_refs_in_schema(GList **list, const char *contents)
      * the XML file.  Otherwise, the xpath query will always return nothing.
      */
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
-    xmlNode *xml = string2xml(contents);
+    xmlNode *xml = pcmk__xml_parse(contents);
 
     crm_foreach_xpath_result(xml, search, append_href, list);
     free_xml(xml);

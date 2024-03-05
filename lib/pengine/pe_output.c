@@ -384,13 +384,13 @@ is_mixed_version(pcmk_scheduler_t *scheduler)
     return false;
 }
 
-static char *
-formatted_xml_buf(const pcmk_resource_t *rsc, bool raw)
+static void
+formatted_xml_buf(const pcmk_resource_t *rsc, GString *xml_buf, bool raw)
 {
-    if (raw) {
-        return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
+    if (raw && (rsc->orig_xml != NULL)) {
+        pcmk__xml_string(rsc->orig_xml, pcmk__xml_fmt_pretty, xml_buf, 0);
     } else {
-        return dump_xml_formatted(rsc->xml);
+        pcmk__xml_string(rsc->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
     }
 }
 
@@ -2819,29 +2819,22 @@ PCMK__OUTPUT_ARGS("resource-config", "const pcmk_resource_t *", "bool")
 static int
 resource_config(pcmk__output_t *out, va_list args) {
     const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
+    GString *xml_buf = g_string_sized_new(1024);
     bool raw = va_arg(args, int);
 
-    char *rsc_xml = formatted_xml_buf(rsc, raw);
+    formatted_xml_buf(rsc, xml_buf, raw);
 
-    out->output_xml(out, PCMK_XE_XML, rsc_xml);
+    out->output_xml(out, PCMK_XE_XML, xml_buf->str);
 
-    free(rsc_xml);
+    g_string_free(xml_buf, TRUE);
     return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("resource-config", "const pcmk_resource_t *", "bool")
 static int
 resource_config_text(pcmk__output_t *out, va_list args) {
-    const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
-    bool raw = va_arg(args, int);
-
-    char *rsc_xml = formatted_xml_buf(rsc, raw);
-
     pcmk__formatted_printf(out, "Resource XML:\n");
-    out->output_xml(out, PCMK_XE_XML, rsc_xml);
-
-    free(rsc_xml);
-    return pcmk_rc_ok;
+    return resource_config(out, args);
 }
 
 PCMK__OUTPUT_ARGS("resource-history", "pcmk_resource_t *", "const char *",

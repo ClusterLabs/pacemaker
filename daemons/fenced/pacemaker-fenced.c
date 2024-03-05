@@ -199,7 +199,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
         return;
     }
     if (kind == crm_class_cluster) {
-        xml = string2xml(data);
+        xml = pcmk__xml_parse(data);
         if (xml == NULL) {
             crm_err("Invalid XML: '%.120s'", data);
             free(data);
@@ -252,7 +252,7 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
 uint64_t
 get_stonith_flag(const char *name)
 {
-    if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
         return st_callback_notify_fence;
 
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
@@ -261,10 +261,12 @@ get_stonith_flag(const char *name)
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
         return st_callback_device_del;
 
-    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY,
+                            pcmk__str_none)) {
         return st_callback_notify_history;
 
-    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
+                            pcmk__str_none)) {
         return st_callback_notify_history_synced;
 
     }
@@ -780,7 +782,7 @@ fencer_metadata(void)
     pcmk__output_t *tmp_out = NULL;
     xmlNode *top = NULL;
     const xmlNode *metadata = NULL;
-    char *metadata_s = NULL;
+    GString *metadata_s = NULL;
 
     int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
     if (rc != pcmk_rc_ok) {
@@ -792,13 +794,16 @@ fencer_metadata(void)
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = first_named_child(top, PCMK_XE_RESOURCE_AGENT);
-    metadata_s = dump_xml_formatted_with_text(metadata);
 
-    out->output_xml(out, PCMK_XE_METADATA, metadata_s);
+    metadata_s = g_string_sized_new(16384);
+    pcmk__xml_string(metadata, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                     metadata_s, 0);
+
+    out->output_xml(out, PCMK_XE_METADATA, metadata_s->str);
 
     pcmk__output_free(tmp_out);
     free_xml(top);
-    free(metadata_s);
+    g_string_free(metadata_s, TRUE);
     return pcmk_rc_ok;
 }
 

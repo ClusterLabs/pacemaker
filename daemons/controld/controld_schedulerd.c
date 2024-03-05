@@ -64,7 +64,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == pcmk_ok) {
         char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        if (write_xml_file(output, filename, TRUE) < 0) {
+        if (pcmk__xml_write_file(output, filename, true, NULL) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
                     filename);
         } else {
@@ -149,7 +149,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
                     reply->data.graph.input);
 
         crm_data_node = create_xml_node(fsa_input.msg, PCMK__XE_CRM_XML);
-        add_node_copy(crm_data_node, reply->data.graph.tgraph);
+        pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         free_xml(fsa_input.msg);

@@ -399,7 +399,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
-    *expanded_xml = copy_xml(xml_obj);
+    *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
     /* Convert any template or tag reference in "rsc" into ticket
      * PCMK_XE_RESOURCE_SET

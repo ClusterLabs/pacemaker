@@ -456,7 +456,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     }
 
     crm_trace("Filtering XML copy using user '%s' ACLs", user);
-    target = copy_xml(xml);
+    target = pcmk__xml_copy(NULL, xml);
     if (target == NULL) {
         return true;
     }

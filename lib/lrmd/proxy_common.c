@@ -124,7 +124,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     uint32_t flags = 0;
     remote_proxy_t *proxy = userdata;
 
-    xml = string2xml(buffer);
+    xml = pcmk__xml_parse(buffer);
     if (xml == NULL) {
         crm_warn("Received a NULL msg from IPC service.");
         return 1;

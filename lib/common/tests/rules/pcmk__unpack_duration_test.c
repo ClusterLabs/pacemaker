@@ -30,7 +30,7 @@
 static void
 null_invalid(void **state)
 {
-    xmlNode *duration = string2xml(ALL_VALID);
+    xmlNode *duration = pcmk__xml_parse(ALL_VALID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = NULL;
 
@@ -49,7 +49,7 @@ null_invalid(void **state)
 static void
 nonnull_end_invalid(void **state)
 {
-    xmlNode *duration = string2xml(ALL_VALID);
+    xmlNode *duration = pcmk__xml_parse(ALL_VALID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = crm_time_new("2024-01-01 15:00:01");
 
@@ -63,7 +63,7 @@ nonnull_end_invalid(void **state)
 static void
 no_id(void **state)
 {
-    xmlNode *duration = string2xml(NO_ID);
+    xmlNode *duration = pcmk__xml_parse(NO_ID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = NULL;
     crm_time_t *reference = crm_time_new("2025-03-21 16:01:01");
@@ -80,7 +80,7 @@ no_id(void **state)
 static void
 years_invalid(void **state)
 {
-    xmlNode *duration = string2xml(YEARS_INVALID);
+    xmlNode *duration = pcmk__xml_parse(YEARS_INVALID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = NULL;
     crm_time_t *reference = crm_time_new("2024-03-21 16:01:01");
@@ -98,7 +98,7 @@ years_invalid(void **state)
 static void
 all_valid(void **state)
 {
-    xmlNode *duration = string2xml(ALL_VALID);
+    xmlNode *duration = pcmk__xml_parse(ALL_VALID);
     crm_time_t *start = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *end = NULL;
     crm_time_t *reference = crm_time_new("2025-03-21 16:01:01");

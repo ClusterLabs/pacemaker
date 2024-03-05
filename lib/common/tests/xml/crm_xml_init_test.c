@@ -49,7 +49,7 @@ buffer_scheme_test(void **state) {
 static void
 create_document_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
 
     /* Double check things */
     assert_non_null(doc);
@@ -69,7 +69,7 @@ static void
 create_element_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlNodePtr node = xmlNewDocNode(doc, NULL, (pcmkXmlStr) "test", NULL);
 
     /* Adding a node to the document marks it as dirty */
@@ -95,7 +95,7 @@ static void
 create_attr_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlNodePtr node = xmlNewDocNode(doc, NULL, (pcmkXmlStr) "test", NULL);
     xmlAttrPtr attr = xmlNewProp(node, (pcmkXmlStr) PCMK_XA_NAME,
                                  (pcmkXmlStr) "dummy-value");
@@ -123,7 +123,7 @@ static void
 create_comment_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlNodePtr node = xmlNewDocComment(doc, (pcmkXmlStr) "blahblah");
 
     /* Adding a node to the document marks it as dirty */
@@ -149,7 +149,7 @@ static void
 create_text_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlNodePtr node = xmlNewDocText(doc, (pcmkXmlStr) "blahblah");
 
     /* Adding a node to the document marks it as dirty */
@@ -173,7 +173,7 @@ static void
 create_dtd_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlDtdPtr dtd = xmlNewDtd(doc, (pcmkXmlStr) PCMK_XA_NAME,
                               (pcmkXmlStr) "externalId",
                               (pcmkXmlStr) "systemId");
@@ -199,7 +199,7 @@ static void
 create_cdata_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
-    xmlDocPtr doc = xmlNewDoc((pcmkXmlStr) "1.0");
+    xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
     xmlNodePtr node = xmlNewCDataBlock(doc, (pcmkXmlStr) "blahblah", 8);
 
     /* Adding a node to the document marks it as dirty */

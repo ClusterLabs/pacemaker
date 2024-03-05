@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,8 @@
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
-#include <crm/common/xml.h>     // crm_xml_add()
+
+#include <crm/common/nvpair.h>  // crm_xml_add()
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,6 +74,26 @@ crm_element_name(const xmlNode *xml)
 
 //! \deprecated Do not use
 char *crm_xml_escape(const char *text);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *copy_xml(xmlNode *src_node);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
+
+//! \deprecated Do not use
+void purge_diff_markers(xmlNode *a_node);
+
+//! \deprecated Do not use
+xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
+
+//! \deprecated Do not use
+xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
+                             gboolean full, gboolean *changed,
+                             const char *marker);
+
+//! \deprecated Do not use
+gboolean can_prune_leaf(xmlNode *xml_node);
 
 #ifdef __cplusplus
 }

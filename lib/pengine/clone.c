@@ -266,7 +266,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     inc_num = pcmk__itoa(clone_data->total_clones);
     inc_max = pcmk__itoa(clone_data->clone_max);
 
-    child_copy = copy_xml(clone_data->xml_obj_child);
+    child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
 
     crm_xml_add(child_copy, PCMK__META_CLONE, inc_num);
 

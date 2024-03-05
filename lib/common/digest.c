@@ -36,7 +36,7 @@ dump_xml_for_digest(xmlNodePtr xml)
 
     /* for compatibility with the old result which is used for v1 digests */
     g_string_append_c(buffer, ' ');
-    pcmk__xml2text(xml, 0, buffer, 0);
+    pcmk__xml_string(xml, 0, buffer, 0);
     g_string_append_c(buffer, '\n');
 
     return buffer;
@@ -91,13 +91,12 @@ static char *
 calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
-    GString *buffer = g_string_sized_new(1024);
+    GString *buf = g_string_sized_new(1024);
 
     crm_trace("Begin digest %s", do_filter?"filtered":"");
-    pcmk__xml2text(source, (do_filter? pcmk__xml_fmt_filtered : 0), buffer, 0);
 
-    CRM_ASSERT(buffer != NULL);
-    digest = crm_md5sum((const char *) buffer->str);
+    pcmk__xml_string(source, (do_filter? pcmk__xml_fmt_filtered : 0), buf, 0);
+    digest = crm_md5sum(buf->str);
 
     pcmk__if_tracing(
         {
@@ -114,8 +113,8 @@ calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
         },
         {}
     );
-    g_string_free(buffer, TRUE);
     crm_trace("End digest");
+    g_string_free(buf, TRUE);
     return digest;
 }
 

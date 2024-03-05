@@ -1367,7 +1367,7 @@ new_metadata_cb_data(lrmd_rsc_info_t *rsc, xmlNode *input_xml)
 
     data = calloc(1, sizeof(struct metadata_cb_data));
     CRM_ASSERT(data != NULL);
-    data->input_xml = copy_xml(input_xml);
+    data->input_xml = pcmk__xml_copy(NULL, input_xml);
     data->rsc = lrmd_copy_rsc_info(rsc);
     return data;
 }

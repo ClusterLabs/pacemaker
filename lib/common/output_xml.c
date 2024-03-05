@@ -225,7 +225,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     }
 
     if (copy_dest != NULL) {
-        *copy_dest = copy_xml(priv->root);
+        *copy_dest = pcmk__xml_copy(NULL, priv->root);
     }
 }
 
@@ -507,7 +507,7 @@ pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node) {
     // Shouldn't happen unless the caller popped priv->root
     CRM_CHECK(parent != NULL, return);
 
-    add_node_copy(parent, node);
+    pcmk__xml_copy(parent, node);
 }
 
 xmlNodePtr

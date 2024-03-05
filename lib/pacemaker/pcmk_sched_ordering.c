@@ -954,7 +954,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     action_first = crm_element_value(xml_obj, PCMK_XA_FIRST_ACTION);
     action_then = crm_element_value(xml_obj, PCMK_XA_THEN_ACTION);
 
-    *expanded_xml = copy_xml(xml_obj);
+    *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
     /* Convert template/tag reference in PCMK_XA_FIRST into constraint
      * PCMK_XE_RESOURCE_SET

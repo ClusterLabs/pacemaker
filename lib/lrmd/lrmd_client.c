@@ -286,6 +286,9 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     } else if (pcmk__str_eq(type, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         event.type = lrmd_event_unregister;
     } else if (pcmk__str_eq(type, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
+        int rc = 0;
+        int exec_time = 0;
+        int queue_time = 0;
         time_t epoch = 0;
 
         crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
@@ -293,7 +296,10 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
                              &event.interval_ms);
         crm_element_value_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
                               &event.start_delay);
-        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, (int *) &event.rc);
+
+        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, &rc);
+        event.rc = (enum ocf_exitcode) rc;
+
         crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS,
                               &event.op_status);
         crm_element_value_int(msg, PCMK__XA_LRMD_RSC_DELETED,
@@ -305,10 +311,13 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         crm_element_value_epoch(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &epoch);
         event.t_rcchange = (unsigned int) epoch;
 
-        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME,
-                              (int *) &event.exec_time);
-        crm_element_value_int(msg, PCMK__XA_LRMD_QUEUE_TIME,
-                              (int *) &event.queue_time);
+        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
+        CRM_LOG_ASSERT(exec_time >= 0);
+        event.exec_time = QB_MAX(0, exec_time);
+
+        crm_element_value_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
+        CRM_LOG_ASSERT(queue_time >= 0);
+        event.queue_time = QB_MAX(0, queue_time);
 
         event.op_type = crm_element_value(msg, PCMK__XA_LRMD_RSC_ACTION);
         event.user_data = crm_element_value(msg,
@@ -346,7 +355,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->callback != NULL) {
-        xmlNode *msg = string2xml(buffer);
+        xmlNode *msg = pcmk__xml_parse(buffer);
 
         lrmd_dispatch_internal(lrmd, msg);
         free_xml(msg);

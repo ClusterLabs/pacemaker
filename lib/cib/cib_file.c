@@ -338,7 +338,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if ((output_data != NULL) && (output != NULL)) {
         if (output->doc == private->cib_xml->doc) {
-            *output_data = copy_xml(output);
+            *output_data = pcmk__xml_copy(NULL, output);
         } else {
             *output_data = output;
         }
@@ -382,7 +382,7 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Parse XML from file */
-    root = filename2xml(filename);
+    root = pcmk__xml_read(filename);
     if (root == NULL) {
         return -pcmk_err_schema_validation;
     }
@@ -546,10 +546,10 @@ cib_file_signoff(cib_t *cib)
 
         /* Otherwise, it's a simple write */
         } else {
-            gboolean do_bzip = pcmk__ends_with_ext(private->filename, ".bz2");
+            bool compress = pcmk__ends_with_ext(private->filename, ".bz2");
 
-            if (write_xml_file(private->cib_xml, private->filename,
-                               do_bzip) <= 0) {
+            if (pcmk__xml_write_file(private->cib_xml, private->filename,
+                                     compress, NULL) != pcmk_rc_ok) {
                 rc = pcmk_err_generic;
             }
         }
@@ -763,7 +763,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Parse XML */
-    local_root = filename2xml(filename);
+    local_root = pcmk__xml_read(filename);
     if (local_root == NULL) {
         crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
         return -pcmk_err_cib_corrupt;
@@ -980,7 +980,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     }
 
     /* Write out the CIB */
-    if (write_xml_fd(cib_root, tmp_cib, fd, FALSE) <= 0) {
+    if (pcmk__xml_write_fd(cib_root, tmp_cib, fd, false, NULL) != pcmk_rc_ok) {
         crm_err("Changes couldn't be written to %s", tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
@@ -1121,7 +1121,7 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
      * * cib_perform_op() will infer changes for the commit request at the end.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
-              *result_cib = copy_xml(private->cib_xml));
+              *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
 
     crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
               "working CIB",

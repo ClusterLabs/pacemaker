@@ -683,7 +683,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 {
     crm_info("Updating device list from CIB");
     have_cib_devices = TRUE;
-    local_cib = copy_xml(output);
+    local_cib = pcmk__xml_copy(NULL, output);
 
     pcmk__refresh_node_caches_from_cib(local_cib);
     update_stonith_watchdog_timeout_ms(local_cib);

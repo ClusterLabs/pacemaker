@@ -283,7 +283,7 @@ stonith_connection_destroy(gpointer user_data)
     free(native->token); native->token = NULL;
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
-    crm_xml_add(blob.xml, PCMK__XA_SUBT, T_STONITH_NOTIFY_DISCONNECT);
+    crm_xml_add(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
 
     foreach_notify_entry(native, stonith_send_notification, &blob);
     free_xml(blob.xml);
@@ -1054,7 +1054,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     private = st->st_private;
 
     blob.stonith = st;
-    blob.xml = string2xml(buffer);
+    blob.xml = pcmk__xml_parse(buffer);
     if (blob.xml == NULL) {
         crm_warn("Received malformed message from fencer: %s", buffer);
         return 0;
@@ -1433,7 +1433,7 @@ xml_to_event(xmlNode *msg)
 
     // Some notification subtypes have additional information
 
-    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
+    if (pcmk__str_eq(event->operation, PCMK__VALUE_ST_NOTIFY_FENCE,
                      pcmk__str_none)) {
         xmlNode *data = get_event_data_xml(msg, event->operation);
 
@@ -2671,7 +2671,7 @@ stonith__event_description(const stonith_event_t *event)
         status = crm_exit_str(CRM_EX_OK);
     }
 
-    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_HISTORY,
+    if (pcmk__str_eq(event->operation, PCMK__VALUE_ST_NOTIFY_HISTORY,
                      pcmk__str_none)) {
         return crm_strdup_printf("Fencing history may have changed");
 
@@ -2694,7 +2694,7 @@ stonith__event_description(const stonith_event_t *event)
                                  device);
     }
 
-    // event->operation should be T_STONITH_NOTIFY_FENCE at this point
+    // event->operation should be PCMK__VALUE_ST_NOTIFY_FENCE at this point
 
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
                              action, target, executioner, origin, origin_node,

@@ -20,6 +20,7 @@
 
 #  include <crm/crm.h>  /* transitively imports qblog.h */
 #  include <crm/common/output_internal.h>
+#  include <crm/common/xml_io_internal.h>
 
 #  include <libxml/relaxng.h>
 
@@ -145,6 +146,7 @@ enum pcmk__xml_fmt_options {
     //! Include the closing tag of an XML element
     pcmk__xml_fmt_close      = (1 << 5),
 
+    // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
 
@@ -349,6 +351,8 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+
 void pcmk__xe_set_content(xmlNode *node, const char *content);
 
 /*!
@@ -468,5 +472,8 @@ gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
 void pcmk__log_known_schemas(void);
 const char *pcmk__remote_schema_dir(void);
 void pcmk__sort_schemas(void);
+
+// @COMPAT Remove when v1 patchsets are removed
+xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
 
 #endif // PCMK__XML_INTERNAL__H
