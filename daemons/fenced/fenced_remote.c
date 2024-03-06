@@ -1365,6 +1365,16 @@ enum find_best_peer_options {
     FIND_PEER_VERIFIED_ONLY = 0x0004,
 };
 
+static bool
+is_watchdog_fencing(const remote_fencing_op_t *op, const char *device)
+{
+    return (stonith_watchdog_timeout_ms > 0
+            // Only an explicit mismatch is considered not a watchdog fencing.
+            && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_null_matches)
+            && pcmk__is_fencing_action(op->action)
+            && node_does_watchdog_fencing(op->target));
+}
+
 static peer_device_info_t *
 find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer_options options)
 {
@@ -1578,11 +1588,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 /* in case of watchdog-device we add the timeout to the budget
                    regardless of if we got a reply or not
                  */
-                if ((stonith_watchdog_timeout_ms > 0)
-                    && pcmk__is_fencing_action(op->action)
-                    && pcmk__str_eq(device_list->data, STONITH_WATCHDOG_ID,
-                                    pcmk__str_none)
-                    && node_does_watchdog_fencing(op->target)) {
+                if (is_watchdog_fencing(op, device_list->data)) {
                     total_timeout += stonith_watchdog_timeout_ms / 1000;
                     continue;
                 }
