@@ -339,6 +339,30 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
     return retval;
 }
 
+static int
+output_attr_child(xmlNode *child, void *userdata)
+{
+    pcmk__output_t *out = userdata;
+
+    out->info(out, "  Value: %s \t(id=%s)",
+              crm_element_value(child, PCMK_XA_VALUE),
+              pcmk__s(pcmk__xe_id(child), "<none>"));
+    return pcmk_rc_ok;
+}
+
+void
+pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
+                                 const char *name)
+{
+    if (out == NULL || name == NULL || search == NULL ||
+        search->children == NULL) {
+        return;
+    }
+
+    out->info(out, "Multiple attributes match name=%s", name);
+    pcmk__xe_foreach_child(search, NULL, output_attr_child, out);
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 

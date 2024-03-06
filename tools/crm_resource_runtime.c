@@ -73,17 +73,6 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     return retval;
 }
 
-static int
-output_attr_child(xmlNode *child, void *userdata)
-{
-    pcmk__output_t *out = userdata;
-
-    out->info(out, "  Value: %s \t(id=%s)",
-              crm_element_value(child, PCMK_XA_VALUE),
-              pcmk__xe_id(child));
-    return pcmk_rc_ok;
-}
-
 // \return Standard Pacemaker return code
 static int
 find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
@@ -146,11 +135,8 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     crm_log_xml_debug(xml_search, "Match");
     if (xml_search->children != NULL) {
         rc = ENOTUNIQ;
-
-        out->info(out, "Multiple attributes match name=%s", attr_name);
-        pcmk__xe_foreach_child(xml_search, NULL, output_attr_child, out);
+        pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
         out->spacer(out);
-
     } else if(value) {
         pcmk__str_update(value, crm_element_value(xml_search, attr));
     }
