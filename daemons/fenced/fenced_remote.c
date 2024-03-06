@@ -1982,6 +1982,12 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
         if (is_watchdog_fencing(op, device)
             && check_watchdog_fencing_and_wait(op)) {
+            /* Consider a watchdog fencing targeting an offline node executing
+             * once it starts waiting for the target to self-fence. So that when
+             * the query timer pops, remote_op_query_timeout() considers the
+             * fencing already in progress.
+             */
+            op->state = st_exec;
             return;
         }
 
