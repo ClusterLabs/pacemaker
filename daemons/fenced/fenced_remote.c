@@ -1908,9 +1908,10 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
-                       CRM_XS " for client %s (%ds, %lds)",
+                       CRM_XS " for client %s (%ds, %s)",
                        peer->host, op->action, op->target, op->client_name,
-                       timeout_one, stonith_watchdog_timeout_ms);
+                       timeout_one,
+                       pcmk__readable_interval(stonith_watchdog_timeout_ms));
         }
 
         op->state = st_exec;
