@@ -134,20 +134,9 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
     crm_log_xml_debug(xml_search, "Match");
     if (xml_search->children != NULL) {
-        xmlNode *child = NULL;
-
         rc = ENOTUNIQ;
-        out->info(out, "Multiple attributes match name=%s", attr_name);
-
-        for (child = pcmk__xml_first_child(xml_search); child != NULL;
-             child = pcmk__xml_next(child)) {
-            out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, PCMK_XA_VALUE),
-                      pcmk__xe_id(child));
-        }
-
+        pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
         out->spacer(out);
-
     } else if(value) {
         pcmk__str_update(value, crm_element_value(xml_search, attr));
     }
@@ -677,9 +666,9 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 
-    for (xmlNode *xml_op = pcmk__xml_first_child(scheduler->failed);
+    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->failed);
          xml_op != NULL;
-         xml_op = pcmk__xml_next(xml_op)) {
+         xml_op = pcmk__xe_next(xml_op)) {
 
         failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
         if (failed_id == NULL) {

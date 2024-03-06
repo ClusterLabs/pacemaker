@@ -153,17 +153,8 @@ static int
 handle_multiples(pcmk__output_t *out, xmlNode *search, const char *attr_name)
 {
     if ((search != NULL) && (search->children != NULL)) {
-        xmlNode *child = NULL;
-
-        out->info(out, "Multiple attributes match name=%s", attr_name);
-        for (child = pcmk__xml_first_child(search); child != NULL;
-             child = pcmk__xml_next(child)) {
-            out->info(out, "  Value: %s \t(id=%s)",
-                      crm_element_value(child, PCMK_XA_VALUE),
-                      pcmk__xe_id(child));
-        }
+        pcmk__warn_multiple_name_matches(out, search, attr_name);
         return ENOTUNIQ;
-
     } else {
         return pcmk_rc_ok;
     }
@@ -552,7 +543,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 
     /* If there are multiple results, the first is sufficient */
     if (pcmk__xe_is(result, PCMK__XE_XPATH_QUERY)) {
-        result = pcmk__xml_first_child(result);
+        result = pcmk__xe_first_child(result);
         CRM_CHECK(result != NULL, return rc);
     }
 
@@ -695,19 +686,17 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     rc = -ENXIO;
     *uname = NULL;
 
-    for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
+    for (a_child = first_named_child(xml_obj, PCMK_XE_NODE); a_child != NULL;
+         a_child = crm_next_same_xml(a_child)) {
+        child_name = pcmk__xe_id(a_child);
 
-        if (pcmk__xe_is(a_child, PCMK_XE_NODE)) {
-            child_name = pcmk__xe_id(a_child);
-            if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
-                child_name = crm_element_value(a_child, PCMK_XA_UNAME);
-                if (child_name != NULL) {
-                    *uname = strdup(child_name);
-                    rc = pcmk_ok;
-                }
-                break;
+        if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
+            child_name = crm_element_value(a_child, PCMK_XA_UNAME);
+            if (child_name != NULL) {
+                *uname = strdup(child_name);
+                rc = pcmk_ok;
             }
+            break;
         }
     }
 

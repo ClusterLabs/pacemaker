@@ -406,6 +406,20 @@ pcmk__xe_first_attr(const xmlNode *xe)
 char *
 pcmk__xpath_node_id(const char *xpath, const char *node);
 
+/*!
+ * \internal
+ * \brief Print an informational message if an xpath query returned multiple
+ *        items with the same ID.
+ *
+ * \param[in,out] out       The output object
+ * \param[in]     search    The xpath search result, most typically the result of
+ *                          calling cib->cmds->query().
+ * \param[in]     name      The name searched for
+ */
+void
+pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
+                                 const char *name);
+
 /* internal XML-related utilities */
 
 enum xml_private_flags {

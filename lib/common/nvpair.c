@@ -889,17 +889,14 @@ xml2list(const xmlNode *parent)
         pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
 
-    for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
-         child = pcmk__xml_next(child)) {
+    for (child = first_named_child(nvpair_list, PCMK__XE_PARAM); child != NULL;
+         child = crm_next_same_xml(child)) {
+        const char *key = crm_element_value(child, PCMK_XA_NAME);
+        const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
-        if (strcmp((const char *) child->name, PCMK__XE_PARAM) == 0) {
-            const char *key = crm_element_value(child, PCMK_XA_NAME);
-            const char *value = crm_element_value(child, PCMK_XA_VALUE);
-
-            crm_trace("Added %s=%s", key, value);
-            if (key != NULL && value != NULL) {
-                pcmk__insert_dup(nvpair_hash, key, value);
-            }
+        crm_trace("Added %s=%s", key, value);
+        if (key != NULL && value != NULL) {
+            pcmk__insert_dup(nvpair_hash, key, value);
         }
     }
 

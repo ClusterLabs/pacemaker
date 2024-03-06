@@ -212,8 +212,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 static void
 process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
 {
-    for (xmlNode *rsc_op = pcmk__xml_first_child(lrm_resource); rsc_op != NULL;
-         rsc_op = pcmk__xml_next(rsc_op)) {
+    for (xmlNode *rsc_op = pcmk__xe_first_child(lrm_resource); rsc_op != NULL;
+         rsc_op = pcmk__xe_next(rsc_op)) {
         process_graph_event(rsc_op, node);
     }
     if (shutdown_lock_cleared(lrm_resource)) {
@@ -261,8 +261,8 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    for (rsc = pcmk__xml_first_child(xml); rsc != NULL;
-         rsc = pcmk__xml_next(rsc)) {
+    for (rsc = pcmk__xe_first_child(xml); rsc != NULL;
+         rsc = pcmk__xe_next(rsc)) {
         crm_trace("Processing %s", pcmk__xe_id(rsc));
         process_lrm_resource_diff(rsc, node);
     }
@@ -386,8 +386,8 @@ static void
 process_status_diff(xmlNode *status, xmlNode *change, const char *op,
                     const char *xpath)
 {
-    for (xmlNode *state = pcmk__xml_first_child(status); state != NULL;
-         state = pcmk__xml_next(state)) {
+    for (xmlNode *state = pcmk__xe_first_child(status); state != NULL;
+         state = pcmk__xe_next(state)) {
         process_node_state_diff(state, change, op, xpath);
     }
 }
@@ -408,130 +408,133 @@ process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
     }
 }
 
+static int
+te_update_diff_element_v2(xmlNode *change, void *userdata)
+{
+    xmlNode *match = NULL;
+    const char *name = NULL;
+    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+
+    // Possible ops: create, modify, delete, move
+    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+
+    // Ignore uninteresting updates
+    if (op == NULL) {
+        return pcmk_rc_ok;
+
+    } else if (xpath == NULL) {
+        crm_trace("Ignoring %s change for version field", op);
+        return pcmk_rc_ok;
+
+    } else if ((strcmp(op, PCMK_VALUE_MOVE) == 0)
+               && (strstr(xpath,
+                          "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+                          "/" PCMK_XE_RESOURCES) == NULL)) {
+        /* We still need to consider moves within the resources section,
+         * since they affect placement order.
+         */
+        crm_trace("Ignoring move change at %s", xpath);
+        return pcmk_rc_ok;
+    }
+
+    // Find the result of create/modify ops
+    if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
+        match = change->children;
+
+    } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
+        match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
+        if(match) {
+            match = match->children;
+        }
+
+    } else if (!pcmk__str_any_of(op,
+                                 PCMK_VALUE_DELETE, PCMK_VALUE_MOVE,
+                                 NULL)) {
+        crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
+                 op, xpath);
+        return pcmk_rc_ok;
+    }
+
+    if (match) {
+        if (match->type == XML_COMMENT_NODE) {
+            crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+            return pcmk_rc_ok;
+        }
+        name = (const char *)match->name;
+    }
+
+    crm_trace("Handling %s operation for %s%s%s",
+              op, (xpath? xpath : "CIB"),
+              (name? " matched by " : ""), (name? name : ""));
+
+    if (strstr(xpath, "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION)) {
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Configuration change", change);
+        return pcmk_rc_cib_modified; // Won't be packaged with operation results we may be waiting for
+
+    } else if (strstr(xpath, "/" PCMK_XE_TICKETS)
+               || pcmk__str_eq(name, PCMK_XE_TICKETS, pcmk__str_none)) {
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Ticket attribute change", change);
+        return pcmk_rc_cib_modified; // Won't be packaged with operation results we may be waiting for
+
+    } else if (strstr(xpath, "/" PCMK__XE_TRANSIENT_ATTRIBUTES "[")
+               || pcmk__str_eq(name, PCMK__XE_TRANSIENT_ATTRIBUTES,
+                               pcmk__str_none)) {
+        abort_unless_down(xpath, op, change, "Transient attribute change");
+        return pcmk_rc_cib_modified; // Won't be packaged with operation results we may be waiting for
+
+    } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
+        process_delete_diff(xpath, op, change);
+
+    } else if (name == NULL) {
+        crm_warn("Ignoring malformed CIB update (%s at %s has no result)",
+                 op, xpath);
+
+    } else if (strcmp(name, PCMK_XE_CIB) == 0) {
+        process_cib_diff(match, change, op, xpath);
+
+    } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
+        process_status_diff(match, change, op, xpath);
+
+    } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
+        process_node_state_diff(match, change, op, xpath);
+
+    } else if (strcmp(name, PCMK__XE_LRM) == 0) {
+        process_resource_updates(pcmk__xe_id(match), match, change, op,
+                                 xpath);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        process_resource_updates(local_node, match, change, op, xpath);
+        free(local_node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        process_lrm_resource_diff(match, local_node);
+        free(local_node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        process_graph_event(match, local_node);
+        free(local_node);
+
+    } else {
+        crm_warn("Ignoring malformed CIB update (%s at %s has unrecognized result %s)",
+                 op, xpath, name);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 te_update_diff_v2(xmlNode *diff)
 {
     crm_log_xml_trace(diff, "Patch:Raw");
-
-    for (xmlNode *change = pcmk__xml_first_child(diff); change != NULL;
-         change = pcmk__xml_next(change)) {
-
-        xmlNode *match = NULL;
-        const char *name = NULL;
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
-
-        // Possible ops: create, modify, delete, move
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-
-        // Ignore uninteresting updates
-        if (op == NULL) {
-            continue;
-
-        } else if (xpath == NULL) {
-            crm_trace("Ignoring %s change for version field", op);
-            continue;
-
-        } else if ((strcmp(op, PCMK_VALUE_MOVE) == 0)
-                   && (strstr(xpath,
-                              "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                              "/" PCMK_XE_RESOURCES) == NULL)) {
-            /* We still need to consider moves within the resources section,
-             * since they affect placement order.
-             */
-            crm_trace("Ignoring move change at %s", xpath);
-            continue;
-        }
-
-        // Find the result of create/modify ops
-        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-            match = change->children;
-
-        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            match = first_named_child(change, PCMK_XE_CHANGE_RESULT);
-            if(match) {
-                match = match->children;
-            }
-
-        } else if (!pcmk__str_any_of(op,
-                                     PCMK_VALUE_DELETE, PCMK_VALUE_MOVE,
-                                     NULL)) {
-            crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
-                     op, xpath);
-            continue;
-        }
-
-        if (match) {
-            if (match->type == XML_COMMENT_NODE) {
-                crm_trace("Ignoring %s operation for comment at %s", op, xpath);
-                continue;
-            }
-            name = (const char *)match->name;
-        }
-
-        crm_trace("Handling %s operation for %s%s%s",
-                  op, (xpath? xpath : "CIB"),
-                  (name? " matched by " : ""), (name? name : ""));
-
-        if (strstr(xpath, "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION)) {
-            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
-                             "Configuration change", change);
-            break; // Won't be packaged with operation results we may be waiting for
-
-        } else if (strstr(xpath, "/" PCMK_XE_TICKETS)
-                   || pcmk__str_eq(name, PCMK_XE_TICKETS, pcmk__str_none)) {
-            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
-                             "Ticket attribute change", change);
-            break; // Won't be packaged with operation results we may be waiting for
-
-        } else if (strstr(xpath, "/" PCMK__XE_TRANSIENT_ATTRIBUTES "[")
-                   || pcmk__str_eq(name, PCMK__XE_TRANSIENT_ATTRIBUTES,
-                                   pcmk__str_none)) {
-            abort_unless_down(xpath, op, change, "Transient attribute change");
-            break; // Won't be packaged with operation results we may be waiting for
-
-        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-            process_delete_diff(xpath, op, change);
-
-        } else if (name == NULL) {
-            crm_warn("Ignoring malformed CIB update (%s at %s has no result)",
-                     op, xpath);
-
-        } else if (strcmp(name, PCMK_XE_CIB) == 0) {
-            process_cib_diff(match, change, op, xpath);
-
-        } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
-            process_status_diff(match, change, op, xpath);
-
-        } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
-            process_node_state_diff(match, change, op, xpath);
-
-        } else if (strcmp(name, PCMK__XE_LRM) == 0) {
-            process_resource_updates(pcmk__xe_id(match), match, change, op,
-                                     xpath);
-
-        } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-
-            process_resource_updates(local_node, match, change, op, xpath);
-            free(local_node);
-
-        } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-
-            process_lrm_resource_diff(match, local_node);
-            free(local_node);
-
-        } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-
-            process_graph_event(match, local_node);
-            free(local_node);
-
-        } else {
-            crm_warn("Ignoring malformed CIB update (%s at %s has unrecognized result %s)",
-                     op, xpath, name);
-        }
-    }
+    pcmk__xe_foreach_child(diff, NULL, te_update_diff_element_v2, NULL);
 }
 
 void

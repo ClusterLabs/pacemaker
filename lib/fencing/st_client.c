@@ -727,8 +727,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         xmlNode *reply = get_xpath_object("//" PCMK__XE_ST_HISTORY, output,
                                           LOG_NEVER);
 
-        for (op = pcmk__xml_first_child(reply); op != NULL;
-             op = pcmk__xml_next(op)) {
+        for (op = pcmk__xe_first_child(reply); op != NULL;
+             op = pcmk__xe_next(op)) {
             stonith_history_t *kvp;
             long long completed;
             long long completed_nsec = 0L;
