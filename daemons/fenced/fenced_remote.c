@@ -1470,10 +1470,10 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && pcmk_is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
-    if ((stonith_watchdog_timeout_ms > 0)
-        && pcmk__is_fencing_action(op->action)
-        && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
-        && node_does_watchdog_fencing(op->target)) {
+    /* With a simple watchdog fencing configuration without a topology,
+     * "device" is NULL here. Consider it should be done with watchdog fencing.
+     */
+    if (is_watchdog_fencing(op, device)) {
         crm_info("Couldn't contact watchdog-fencing target-node (%s)",
                  op->target);
         /* check_watchdog_fencing_and_wait will log additional info */
