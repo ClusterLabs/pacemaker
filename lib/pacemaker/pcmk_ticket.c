@@ -71,3 +71,56 @@ done:
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
+
+int
+pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                      const char *ticket_id, const char *attr_name,
+                      const char *attr_default)
+{
+    int rc = pcmk_rc_ok;
+    const char *attr_value = NULL;
+    pcmk_ticket_t *ticket = NULL;
+
+    CRM_ASSERT(out != NULL && scheduler != NULL);
+
+    if (ticket_id == NULL || attr_name == NULL) {
+        return EINVAL;
+    }
+
+    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+
+    if (ticket != NULL) {
+        attr_value = g_hash_table_lookup(ticket->state, attr_name);
+    }
+
+    if (attr_value != NULL) {
+        out->message(out, "ticket-attribute", ticket_id, attr_name, attr_value);
+    } else if (attr_default != NULL) {
+        out->message(out, "ticket-attribute", ticket_id, attr_name, attr_default);
+    } else {
+        rc = ENXIO;
+    }
+
+    return rc;
+}
+
+int
+pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+                     const char *attr_name, const char *attr_default)
+{
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__setup_output_cib_sched(&out, NULL, &scheduler, xml);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__ticket_get_attr(out, scheduler, ticket_id, attr_name, attr_default);
+
+done:
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    pe_free_working_set(scheduler);
+    return rc;
+}
