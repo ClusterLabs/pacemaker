@@ -27,4 +27,20 @@
  */
 int pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id);
 
+/*!
+ * \internal
+ * \brief Return the value of a ticket's attribute
+ *
+ * \param[in,out]   out             Output object
+ * \param[in,out]   scheduler       Scheduler data
+ * \param[in]       ticket_id       Ticket to find attribute value for
+ * \param[in]       attr_name       Attribute's name to find value for
+ * \param[in]       attr_default    If either the ticket or the attribute do not
+ *                                  exist, use this as the value in the output
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                          const char *ticket_id, const char *attr_name,
+                          const char *attr_default);
 #endif

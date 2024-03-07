@@ -457,6 +457,20 @@ int pcmk_list_primitive_meta(xmlNode **xml, bool all);
  */
 int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
 
+/*!
+ * \brief Return the value of a ticket's attribute
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find attribute value for
+ * \param[in]     attr_name     Attribute's name to find value for
+ * \param[in]     attr_default  If either the ticket or the attribute do not
+ *                              exist, use this as the value in \p xml
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+                         const char *attr_name, const char *attr_default);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

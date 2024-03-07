@@ -2344,6 +2344,46 @@ result_code_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket-attribute", "const char *", "const char *", "const char *")
+static int
+ticket_attribute_default(pcmk__output_t *out, va_list args)
+{
+    const char *ticket_id G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    out->info(out, "%s", value);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-attribute", "const char *", "const char *", "const char *")
+static int
+ticket_attribute_xml(pcmk__output_t *out, va_list args)
+{
+    const char *ticket_id = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    /* Create:
+     * <tickets>
+     *   <ticket id="">
+     *     <attribute name="" value="" />
+     *   </ticket>
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
+                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_create_xml_node(out, PCMK_XA_ATTRIBUTE,
+                                 PCMK_XA_NAME, name,
+                                 PCMK_XA_VALUE, value,
+                                 NULL);
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("ticket-constraints", "xmlNode *")
 static int
 ticket_constraints_default(pcmk__output_t *out, va_list args)
@@ -2541,6 +2581,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "rscs-colocated-with-list", "xml", rscs_colocated_with_list_xml },
     { "rule-check", "default", rule_check_default },
     { "rule-check", "xml", rule_check_xml },
+    { "ticket-attribute", "default", ticket_attribute_default },
+    { "ticket-attribute", "xml", ticket_attribute_xml },
     { "ticket-constraints", "default", ticket_constraints_default },
     { "ticket-constraints", "xml", ticket_constraints_xml },
 

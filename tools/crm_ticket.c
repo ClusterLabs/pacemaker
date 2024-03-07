@@ -310,46 +310,6 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("ticket-attribute", "gchar *", "const char *", "const char *")
-static int
-ticket_attribute_default(pcmk__output_t *out, va_list args)
-{
-    gchar *ticket_id G_GNUC_UNUSED = va_arg(args, gchar *);
-    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
-    const char *value = va_arg(args, const char *);
-
-    out->info(out, "%s", value);
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("ticket-attribute", "gchar *", "const char *", "const char *")
-static int
-ticket_attribute_xml(pcmk__output_t *out, va_list args)
-{
-    gchar *ticket_id = va_arg(args, gchar *);
-    const char *name = va_arg(args, const char *);
-    const char *value = va_arg(args, const char *);
-
-    /* Create:
-     * <tickets>
-     *   <ticket id="">
-     *     <attribute name="" value="" />
-     *   </ticket>
-     * </tickets>
-     */
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
-                                   PCMK_XA_ID, ticket_id, NULL);
-    pcmk__output_create_xml_node(out, PCMK_XA_ATTRIBUTE,
-                                 PCMK_XA_NAME, name,
-                                 PCMK_XA_VALUE, value,
-                                 NULL);
-    pcmk__output_xml_pop_parent(out);
-    pcmk__output_xml_pop_parent(out);
-
-    return pcmk_rc_ok;
-}
-
 PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
 static int
 ticket_state_default(pcmk__output_t *out, va_list args)
@@ -387,28 +347,6 @@ ticket_state_xml(pcmk__output_t *out, va_list args)
                                                NULL);
     copy_in_properties(ticket_node, state_xml);
     pcmk__output_xml_pop_parent(out);
-
-    return pcmk_rc_ok;
-}
-
-static int
-get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr_value,
-                      pcmk_scheduler_t *scheduler)
-{
-    pcmk_ticket_t *ticket = NULL;
-
-    CRM_ASSERT(attr_value != NULL);
-    *attr_value = NULL;
-
-    ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
-    if (ticket == NULL) {
-        return ENXIO;
-    }
-
-    *attr_value = g_hash_table_lookup(ticket->state, attr_name);
-    if (*attr_value == NULL) {
-        return ENXIO;
-    }
 
     return pcmk_rc_ok;
 }
@@ -631,8 +569,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "ticket-attribute", "default", ticket_attribute_default },
-    { "ticket-attribute", "xml", ticket_attribute_xml },
     { "ticket-state", "default", ticket_state_default },
     { "ticket-state", "xml", ticket_state_xml },
 
@@ -806,8 +742,6 @@ main(int argc, char **argv)
         }
 
     } else if (options.ticket_cmd == 'G') {
-        const char *value = NULL;
-
         if (options.ticket_id == NULL) {
             exit_code = CRM_EX_NOSUCH;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -815,18 +749,8 @@ main(int argc, char **argv)
             goto done;
         }
 
-        rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name,
-                                   &value, scheduler);
-        if (rc == pcmk_rc_ok) {
-            out->message(out, "ticket-attribute", options.ticket_id,
-                         options.get_attr_name, value);
-        } else if (rc == ENXIO && options.attr_default) {
-            const char *def = options.attr_default;
-
-            out->message(out, "ticket-attribute", options.ticket_id,
-                         options.get_attr_name, def);
-            rc = pcmk_rc_ok;
-        }
+        rc = pcmk__ticket_get_attr(out, scheduler, options.ticket_id,
+                                   options.get_attr_name, options.attr_default);
         exit_code = pcmk_rc2exitc(rc);
 
     } else if (options.ticket_cmd == 'C') {
