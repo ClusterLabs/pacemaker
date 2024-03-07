@@ -1536,7 +1536,8 @@ get_device_timeout(const remote_fencing_op_t *op,
     }
 
     if (props->custom_action_timeout[op->phase]) {
-        timeout = props->custom_action_timeout[op->phase];
+        timeout = valid_fencing_timeout(props->custom_action_timeout[op->phase],
+                                        true, op, device);
     }
 
     // op->client_delay < 0 means disable any static/random fencing delays
