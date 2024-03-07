@@ -11,6 +11,7 @@
 
 #include <stdio.h>                          // NULL, size_t
 #include <stdlib.h>                         // calloc()
+#include <stdbool.h>                        // bool
 #include <ctype.h>                          // isdigit()
 #include <regex.h>                          // regmatch_t
 #include <stdint.h>                         // uint32_t
@@ -597,6 +598,78 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
 
 /*!
  * \internal
+ * \brief Go through submatches in a string, either counting how many bytes
+ *        would be needed for the expansion, or performing the expansion,
+ *        as requested
+ *
+ * \param[in]  string      String possibly containing submatch variables
+ * \param[in]  match       String that matched the regular expression
+ * \param[in]  submatches  Regular expression submatches (as set by regexec())
+ * \param[in]  nmatches    Number of entries in \p submatches[]
+ * \param[out] expansion   If not NULL, expand string here (must be
+ *                         pre-allocated to appropriate size)
+ * \param[out] nbytes      If not NULL, set to size needed for expansion
+ *
+ * \return true if any expansion is needed, otherwise false
+ */
+static bool
+process_submatches(const char *string, const char *match,
+                   const regmatch_t submatches[], int nmatches,
+                   char *expansion, size_t *nbytes)
+{
+    bool expanded = false;
+    const char *src = string;
+
+    if (nbytes != NULL) {
+        *nbytes = 1; // Include space for terminator
+    }
+
+    while (*src != '\0') {
+        int submatch = 0;
+        size_t match_len = 0;
+
+        if ((src[0] != '%') || !isdigit(src[1])) {
+            /* src does not point to the first character of a %N sequence,
+             * so expand this character as-is
+             */
+            if (expansion != NULL) {
+                *expansion++ = *src;
+            }
+            if (nbytes != NULL) {
+                ++(*nbytes);
+            }
+            ++src;
+            continue;
+        }
+
+        submatch = src[1] - '0';
+        src += 2; // Skip over %N sequence in source string
+        expanded = true; // Expansion will be different from source
+
+        // Omit sequence from expansion unless it has a non-empty match
+        if ((nmatches <= submatch)                // Not enough submatches
+            || (submatches[submatch].rm_so < 0)   // Pattern did not match
+            || (submatches[submatch].rm_eo
+                <= submatches[submatch].rm_so)) { // Match was empty
+            continue;
+        }
+
+        match_len = submatches[submatch].rm_eo - submatches[submatch].rm_so;
+        if (nbytes != NULL) {
+            *nbytes += match_len;
+        }
+        if (expansion != NULL) {
+            memcpy(expansion, match + submatches[submatch].rm_so,
+                   match_len);
+            expansion += match_len;
+        }
+    }
+
+    return expanded;
+}
+
+/*!
+ * \internal
  * \brief Expand any regular expression submatches (%0-%9) in a string
  *
  * \param[in] string      String possibly containing submatch variables
@@ -605,64 +678,32 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
  * \param[in] nmatches    Number of entries in \p submatches[]
  *
  * \return Newly allocated string identical to \p string with submatches
- *         expanded, or NULL if there were no matches
+ *         expanded on success, or NULL if no expansions were needed
+ * \note The caller is responsible for freeing the result with free()
  */
 char *
 pcmk__replace_submatches(const char *string, const char *match,
                          const regmatch_t submatches[], int nmatches)
 {
-    size_t len = 0;
-    int i;
-    const char *p, *last_match_index;
-    char *p_dst, *result = NULL;
+    size_t nbytes = 0;
+    char *result = NULL;
 
     if (pcmk__str_empty(string)) {
-        return NULL;
+        return NULL; // Nothing to expand
     }
 
-    p = last_match_index = string;
-
-    while (*p) {
-        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
-            i = *(p + 1) - '0';
-            if ((nmatches >= i) && (submatches[i].rm_so != -1)
-                && (submatches[i].rm_eo > submatches[i].rm_so)) {
-                len += p - last_match_index
-                       + (submatches[i].rm_eo - submatches[i].rm_so);
-                last_match_index = p + 2;
-            }
-            p++;
-        }
-        p++;
-    }
-    len += p - last_match_index + 1;
-
-    /* FIXME: Excessive? */
-    if (len - 1 <= 0) {
-        return NULL;
+    // Calculate how much space will be needed for expanded string
+    if (!process_submatches(string, match, submatches, nmatches, NULL,
+                            &nbytes)) {
+        return NULL; // No expansions needed
     }
 
-    p_dst = result = calloc(1, len);
-    p = string;
+    // Allocate enough space for expanded string
+    result = calloc(nbytes, sizeof(char));
+    CRM_ASSERT(result != NULL);
 
-    while (*p) {
-        if (*p == '%' && *(p + 1) && isdigit(*(p + 1))) {
-            i = *(p + 1) - '0';
-            if ((nmatches >= i) && (submatches[i].rm_so != -1)
-                && (submatches[i].rm_eo > submatches[i].rm_so)) {
-                // rm_eo can be equal to rm_so, but then there is nothing to do
-                int match_len = submatches[i].rm_eo - submatches[i].rm_so;
-
-                memcpy(p_dst, match + submatches[i].rm_so, match_len);
-                p_dst += match_len;
-            }
-            p++;
-        } else {
-            *(p_dst) = *(p);
-            p_dst++;
-        }
-        p++;
-    }
-
+    // Expand submatches
+    (void) process_submatches(string, match, submatches, nmatches, result,
+                              NULL);
     return result;
 }

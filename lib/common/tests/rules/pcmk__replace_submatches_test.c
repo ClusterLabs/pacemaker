@@ -49,10 +49,12 @@ no_source(void **state)
 static void
 source_has_no_variables(void **state)
 {
-    assert_submatch("this has no submatch variables",
-                    "this has no submatch variables");
-    assert_submatch("this ends in a %", "this ends in a %");
-    assert_submatch("%this starts with one", "%this starts with one");
+    assert_null(pcmk__replace_submatches("this has no submatch variables",
+                                         match, submatches, nmatches));
+    assert_null(pcmk__replace_submatches("this ends in a %",
+                                         match, submatches, nmatches));
+    assert_null(pcmk__replace_submatches("%this starts with one",
+                                         match, submatches, nmatches));
 }
 
 static void
