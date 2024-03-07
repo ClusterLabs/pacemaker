@@ -1678,11 +1678,11 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
     // Standby mode
     if (node->details->standby_onfail && (node->details->running_rsc != NULL)) {
         pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL, PCMK_VALUE_STANDBY,
-                              " (in standby due to on-fail,"
+                              " (in standby due to " PCMK_META_ON_FAIL ","
                               " with active resources)");
     } else if (node->details->standby_onfail) {
         pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL, PCMK_VALUE_STANDBY,
-                              " (in standby due to on-fail)");
+                              " (in standby due to " PCMK_META_ON_FAIL ")");
     } else if (node->details->standby && (node->details->running_rsc != NULL)) {
         pcmk_create_html_node(parent, PCMK__XE_SPAN, NULL, PCMK_VALUE_STANDBY,
                               " (in standby, with active resources)");
@@ -1818,7 +1818,7 @@ node_text_status(const pcmk_node_t *node)
         return "pending";
 
     } else if (node->details->standby_onfail && node->details->online) {
-        return "standby (on-fail)";
+        return "standby (" PCMK_META_ON_FAIL ")";
 
     } else if (node->details->standby) {
         if (node->details->online) {

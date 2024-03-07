@@ -518,8 +518,8 @@ native_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-            status_print("%s    <node name=\"%s\" " PCMK_XA_ID "=\"%s\" "
-                         "cached=\"%s\"/>\n",
+            status_print("%s    <node " PCMK_XA_NAME "=\"%s\" "
+                         PCMK_XA_ID "=\"%s\" cached=\"%s\"/>\n",
                          pre_text, pcmk__s(node->details->uname, ""),
                          node->details->id, pcmk__btoa(!node->details->online));
         }

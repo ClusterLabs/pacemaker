@@ -1204,7 +1204,8 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
 
     this_node = pe_find_node_any(scheduler->nodes, id, uname);
     if (this_node == NULL) {
-        pcmk__config_warn("Ignoring recorded node state for id=\"%s\" (%s) "
+        pcmk__config_warn("Ignoring recorded node state for "
+                          PCMK_XA_ID "=\"%s\" (%s) "
                           "because it is no longer in the configuration",
                           id, pcmk__s(uname, "uname unknown"));
         return;
@@ -3768,7 +3769,7 @@ unpack_rsc_op_failure(struct action_history *history,
         if (config_on_fail == pcmk_on_fail_block) {
             history->rsc->role = pcmk_role_promoted;
             pe__set_next_role(history->rsc, pcmk_role_stopped,
-                              "demote with on-fail=block");
+                              "demote with " PCMK_META_ON_FAIL "=block");
 
         } else if (history->exit_status == PCMK_OCF_NOT_RUNNING) {
             history->rsc->role = pcmk_role_stopped;

@@ -147,8 +147,6 @@ These limitations could be revisited if there is sufficient user demand.
 .. index::
    single: fencing; special instance attributes
 
-.. _fencing-attributes:
-
 Special Meta-Attributes for Fencing Resources
 #############################################
 
@@ -170,6 +168,8 @@ fencing resource.
    |                      |         |                    | capability is meaningful:              |
    |                      |         |                    | :ref:`unfencing <unfencing>`.          |
    +----------------------+---------+--------------------+----------------------------------------+
+
+.. _fencing-attributes:
 
 Special Instance Attributes for Fencing Resources
 #################################################

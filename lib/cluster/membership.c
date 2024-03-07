@@ -354,7 +354,8 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
-        crm_info("Removing node with name %s and id %u from membership cache",
+        crm_info("Removing node with name %s and " PCMK_XA_ID
+                 " %u from membership cache",
                  (node->uname? node->uname : "unknown"), node->id);
         return TRUE;
     }
@@ -387,13 +388,15 @@ reap_crm_member(uint32_t id, const char *name)
     pcmk__str_update(&search.uname, name);
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
-        crm_notice("Purged %d peer%s with id=%u%s%s from the membership cache",
+        crm_notice("Purged %d peer%s with " PCMK_XA_ID
+                   "=%u%s%s from the membership cache",
                    matches, pcmk__plural_s(matches), search.id,
                    (search.uname? " and/or uname=" : ""),
                    (search.uname? search.uname : ""));
 
     } else {
-        crm_info("No peers with id=%u%s%s to purge from the membership cache",
+        crm_info("No peers with " PCMK_XA_ID
+                 "=%u%s%s to purge from the membership cache",
                  search.id, (search.uname? " and/or uname=" : ""),
                  (search.uname? search.uname : ""));
     }
@@ -1149,7 +1152,9 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
              * crm_remote_peer_cache_refresh().
              */
             if(iter) {
-                crm_notice("Purged 1 peer with id=%u and/or uname=%s from the membership cache", node->id, node->uname);
+                crm_notice("Purged 1 peer with " PCMK_XA_ID
+                           "=%u and/or uname=%s from the membership cache",
+                           node->id, node->uname);
                 g_hash_table_iter_remove(iter);
 
             } else {

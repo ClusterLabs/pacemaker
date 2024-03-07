@@ -484,7 +484,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     const char *value = pcmk__xe_id(xml_action);
 
     if (value == NULL) {
-        crm_err("Ignoring transition graph action without id (bug?)");
+        crm_err("Ignoring transition graph action without " PCMK_XA_ID
+                " (bug?)");
         crm_log_xml_trace(xml_action, "invalid");
         return NULL;
     }

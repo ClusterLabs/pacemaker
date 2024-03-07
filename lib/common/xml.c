@@ -1434,7 +1434,8 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
 {
     xml_node_private_t *nodepriv = new_child->_private;
 
-    crm_trace("Child element %s with id='%s' moved from position %d to %d under %s",
+    crm_trace("Child element %s with "
+              PCMK_XA_ID "='%s' moved from position %d to %d under %s",
               new_child->name, pcmk__s(pcmk__xe_id(new_child), "<no id>"),
               p_old, p_new, new_parent->name);
     pcmk__mark_xml_node_dirty(new_parent);

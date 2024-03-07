@@ -1147,6 +1147,11 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
     update_action_optional(action, optional);
 
     if (rsc != NULL) {
+        /* An action can be initially created with a NULL node, and later have
+         * the node added via find_existing_action() (above) -> find_actions().
+         * That is why the extra parameters are unpacked here rather than in
+         * new_action().
+         */
         if ((action->node != NULL) && (action->op_entry != NULL)
             && !pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)) {
 
