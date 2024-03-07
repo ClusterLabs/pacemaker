@@ -1485,32 +1485,68 @@ stonith_choose_peer(remote_fencing_op_t * op)
 }
 
 static int
+valid_fencing_timeout(int specified_timeout, bool action_specific,
+                      const remote_fencing_op_t *op, const char *device)
+{
+    int timeout = specified_timeout;
+
+    if (!is_watchdog_fencing(op, device)) {
+        return timeout;
+    }
+
+    timeout = (int) QB_MIN(QB_MAX(specified_timeout,
+                                  stonith_watchdog_timeout_ms / 1000), INT_MAX);
+
+    if (timeout > specified_timeout) {
+        if (action_specific) {
+            crm_warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
+                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     "instead",
+                     op->action, specified_timeout, device? device : "watchdog",
+                     timeout, timeout);
+
+        } else {
+            crm_warn("Fencing timeout %ds is too short (must be >= "
+                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     "instead",
+                     specified_timeout, timeout, timeout);
+        }
+    }
+
+    return timeout;
+}
+
+static int
 get_device_timeout(const remote_fencing_op_t *op,
                    const peer_device_info_t *peer, const char *device,
                    bool with_delay)
 {
+    int timeout = op->base_timeout;
     device_properties_t *props;
-    int delay = 0;
+
+    timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
 
     if (!peer || !device) {
-        return op->base_timeout;
+        return timeout;
     }
 
     props = g_hash_table_lookup(peer->devices, device);
     if (!props) {
-        return op->base_timeout;
+        return timeout;
+    }
+
+    if (props->custom_action_timeout[op->phase]) {
+        timeout = props->custom_action_timeout[op->phase];
     }
 
     // op->client_delay < 0 means disable any static/random fencing delays
     if (with_delay && (op->client_delay >= 0)) {
         // delay_base is eventually limited by delay_max
-        delay = (props->delay_max[op->phase] > 0 ?
-                 props->delay_max[op->phase] : props->delay_base[op->phase]);
+        timeout += (props->delay_max[op->phase] > 0 ?
+                    props->delay_max[op->phase] : props->delay_base[op->phase]);
     }
 
-    return (props->custom_action_timeout[op->phase]?
-            props->custom_action_timeout[op->phase] : op->base_timeout)
-           + delay;
+    return timeout;
 }
 
 struct timeout_data {
