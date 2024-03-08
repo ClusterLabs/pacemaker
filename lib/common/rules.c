@@ -9,7 +9,11 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>                          // NULL
+#include <stdio.h>                          // NULL, size_t
+#include <stdlib.h>                         // calloc()
+#include <stdbool.h>                        // bool
+#include <ctype.h>                          // isdigit()
+#include <regex.h>                          // regmatch_t
 #include <stdint.h>                         // uint32_t
 #include <inttypes.h>                       // PRIu32
 #include <glib.h>                           // gboolean, FALSE
@@ -63,6 +67,29 @@ pcmk__expression_type(const xmlNode *expr)
     }
 
     return pcmk__subexpr_attribute;
+}
+
+/*!
+ * \internal
+ * \brief Get parent XML element's ID for logging purposes
+ *
+ * \param[in] xml  XML of a subelement
+ *
+ * \return ID of \p xml's parent for logging purposes (guaranteed non-NULL)
+ */
+static const char *
+loggable_parent_id(const xmlNode *xml)
+{
+    // Default if called without parent (likely for unit testing)
+    const char *parent_id = "implied";
+
+    if ((xml != NULL) && (xml->parent != NULL)) {
+        parent_id = pcmk__xe_id(xml->parent);
+        if (parent_id == NULL) { // Not possible with schema validation enabled
+            parent_id = "without ID";
+        }
+    }
+    return parent_id;
 }
 
 /*!
@@ -167,6 +194,7 @@ int
 pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
 {
     const char *id = NULL;
+    const char *parent_id = loggable_parent_id(date_spec);
 
     // Range attributes that can be specified for a PCMK_XE_DATE_SPEC element
     struct range {
@@ -196,7 +224,9 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
         /* @COMPAT When we can break behavioral backward compatibility,
          * fail the specification
          */
-        pcmk__config_warn(PCMK_XE_DATE_SPEC " element has no " PCMK_XA_ID);
+        pcmk__config_warn(PCMK_XE_DATE_SPEC " subelement of "
+                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
+                          parent_id);
         id = "without ID"; // for logging
     }
 
@@ -265,6 +295,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
 {
     int rc = pcmk_rc_ok;
     const char *id = NULL;
+    const char *parent_id = loggable_parent_id(duration);
 
     if ((start == NULL) || (duration == NULL)
         || (end == NULL) || (*end != NULL)) {
@@ -277,7 +308,9 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
         /* @COMPAT When we can break behavioral backward compatibility,
          * return pcmk_rc_unpack_error instead
          */
-        pcmk__config_warn(PCMK_XE_DURATION " element has no " PCMK_XA_ID);
+        pcmk__config_warn(PCMK_XE_DURATION " subelement of "
+                          PCMK_XE_DATE_EXPRESSION " %s has no " PCMK_XA_ID,
+                          parent_id);
         id = "without ID";
     }
 
@@ -561,4 +594,116 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
     crm_trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)",
               id, op, pcmk_rc_str(rc), rc);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Go through submatches in a string, either counting how many bytes
+ *        would be needed for the expansion, or performing the expansion,
+ *        as requested
+ *
+ * \param[in]  string      String possibly containing submatch variables
+ * \param[in]  match       String that matched the regular expression
+ * \param[in]  submatches  Regular expression submatches (as set by regexec())
+ * \param[in]  nmatches    Number of entries in \p submatches[]
+ * \param[out] expansion   If not NULL, expand string here (must be
+ *                         pre-allocated to appropriate size)
+ * \param[out] nbytes      If not NULL, set to size needed for expansion
+ *
+ * \return true if any expansion is needed, otherwise false
+ */
+static bool
+process_submatches(const char *string, const char *match,
+                   const regmatch_t submatches[], int nmatches,
+                   char *expansion, size_t *nbytes)
+{
+    bool expanded = false;
+    const char *src = string;
+
+    if (nbytes != NULL) {
+        *nbytes = 1; // Include space for terminator
+    }
+
+    while (*src != '\0') {
+        int submatch = 0;
+        size_t match_len = 0;
+
+        if ((src[0] != '%') || !isdigit(src[1])) {
+            /* src does not point to the first character of a %N sequence,
+             * so expand this character as-is
+             */
+            if (expansion != NULL) {
+                *expansion++ = *src;
+            }
+            if (nbytes != NULL) {
+                ++(*nbytes);
+            }
+            ++src;
+            continue;
+        }
+
+        submatch = src[1] - '0';
+        src += 2; // Skip over %N sequence in source string
+        expanded = true; // Expansion will be different from source
+
+        // Omit sequence from expansion unless it has a non-empty match
+        if ((nmatches <= submatch)                // Not enough submatches
+            || (submatches[submatch].rm_so < 0)   // Pattern did not match
+            || (submatches[submatch].rm_eo
+                <= submatches[submatch].rm_so)) { // Match was empty
+            continue;
+        }
+
+        match_len = submatches[submatch].rm_eo - submatches[submatch].rm_so;
+        if (nbytes != NULL) {
+            *nbytes += match_len;
+        }
+        if (expansion != NULL) {
+            memcpy(expansion, match + submatches[submatch].rm_so,
+                   match_len);
+            expansion += match_len;
+        }
+    }
+
+    return expanded;
+}
+
+/*!
+ * \internal
+ * \brief Expand any regular expression submatches (%0-%9) in a string
+ *
+ * \param[in] string      String possibly containing submatch variables
+ * \param[in] match       String that matched the regular expression
+ * \param[in] submatches  Regular expression submatches (as set by regexec())
+ * \param[in] nmatches    Number of entries in \p submatches[]
+ *
+ * \return Newly allocated string identical to \p string with submatches
+ *         expanded on success, or NULL if no expansions were needed
+ * \note The caller is responsible for freeing the result with free()
+ */
+char *
+pcmk__replace_submatches(const char *string, const char *match,
+                         const regmatch_t submatches[], int nmatches)
+{
+    size_t nbytes = 0;
+    char *result = NULL;
+
+    if (pcmk__str_empty(string)) {
+        return NULL; // Nothing to expand
+    }
+
+    // Calculate how much space will be needed for expanded string
+    if (!process_submatches(string, match, submatches, nmatches, NULL,
+                            &nbytes)) {
+        return NULL; // No expansions needed
+    }
+
+    // Allocate enough space for expanded string
+    result = calloc(nbytes, sizeof(char));
+    CRM_ASSERT(result != NULL);
+
+    // Expand submatches
+    (void) process_submatches(string, match, submatches, nmatches, result,
+                              NULL);
+    return result;
 }

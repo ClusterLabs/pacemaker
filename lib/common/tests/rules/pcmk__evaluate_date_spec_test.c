@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>
 #include <glib.h>
 
 #include <crm/common/xml.h>
@@ -17,7 +18,8 @@
 #include "crmcommon_private.h"
 
 static void
-run_one_test(const char *t, const char *x, int expected) {
+run_one_test(const char *t, const char *x, int expected)
+{
     crm_time_t *tm = crm_time_new(t);
     xmlNodePtr xml = pcmk__xml_parse(x);
 
@@ -28,7 +30,8 @@ run_one_test(const char *t, const char *x, int expected) {
 }
 
 static void
-null_invalid(void **state) {
+null_invalid(void **state)
+{
     xmlNodePtr xml = pcmk__xml_parse("<" PCMK_XE_DATE_SPEC " "
                                      PCMK_XA_ID "='spec' "
                                      PCMK_XA_YEARS "='2019'/>");
@@ -43,14 +46,31 @@ null_invalid(void **state) {
 }
 
 static void
-time_satisfies_year_spec(void **state) {
+spec_id_missing(void **state)
+{
+    // Currently acceptable
+    run_one_test("2020-01-01", "<date_spec years='2020'/>", pcmk_rc_ok);
+}
+
+static void
+invalid_range(void **state)
+{
+    // Currently acceptable
+    run_one_test("2020-01-01", "<date_spec years='not-a-year' months='1'/>",
+                 pcmk_rc_ok);
+}
+
+static void
+time_satisfies_year_spec(void **state)
+{
     run_one_test("2020-01-01",
                  "<date_spec " PCMK_XA_ID "='spec' years='2020'/>",
                  pcmk_rc_ok);
 }
 
 static void
-time_after_year_spec(void **state) {
+time_after_year_spec(void **state)
+{
     run_one_test("2020-01-01",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -59,7 +79,8 @@ time_after_year_spec(void **state) {
 }
 
 static void
-time_satisfies_year_range(void **state) {
+time_satisfies_year_range(void **state)
+{
     run_one_test("2020-01-01",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -68,7 +89,8 @@ time_satisfies_year_range(void **state) {
 }
 
 static void
-time_before_year_range(void **state) {
+time_before_year_range(void **state)
+{
     run_one_test("2000-01-01",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -77,7 +99,8 @@ time_before_year_range(void **state) {
 }
 
 static void
-time_after_year_range(void **state) {
+time_after_year_range(void **state)
+{
     run_one_test("2020-01-01",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -86,7 +109,8 @@ time_after_year_range(void **state) {
 }
 
 static void
-range_without_start_year_passes(void **state) {
+range_without_start_year_passes(void **state)
+{
     run_one_test("2010-01-01",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -95,7 +119,8 @@ range_without_start_year_passes(void **state) {
 }
 
 static void
-range_without_end_year_passes(void **state) {
+range_without_end_year_passes(void **state)
+{
     run_one_test("2010-01-01",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -109,7 +134,8 @@ range_without_end_year_passes(void **state) {
 }
 
 static void
-yeardays_satisfies(void **state) {
+yeardays_satisfies(void **state)
+{
     run_one_test("2020-01-30",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -118,7 +144,8 @@ yeardays_satisfies(void **state) {
 }
 
 static void
-time_after_yeardays_spec(void **state) {
+time_after_yeardays_spec(void **state)
+{
     run_one_test("2020-02-15",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -127,7 +154,8 @@ time_after_yeardays_spec(void **state) {
 }
 
 static void
-yeardays_feb_29_satisfies(void **state) {
+yeardays_feb_29_satisfies(void **state)
+{
     run_one_test("2016-02-29",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -136,7 +164,8 @@ yeardays_feb_29_satisfies(void **state) {
 }
 
 static void
-exact_ymd_satisfies(void **state) {
+exact_ymd_satisfies(void **state)
+{
     run_one_test("2001-12-31",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -147,7 +176,8 @@ exact_ymd_satisfies(void **state) {
 }
 
 static void
-range_in_month_satisfies(void **state) {
+range_in_month_satisfies(void **state)
+{
     run_one_test("2001-06-10",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -158,7 +188,8 @@ range_in_month_satisfies(void **state) {
 }
 
 static void
-exact_ymd_after_range(void **state) {
+exact_ymd_after_range(void **state)
+{
     run_one_test("2001-12-31",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -169,7 +200,8 @@ exact_ymd_after_range(void **state) {
 }
 
 static void
-time_after_monthdays_range(void **state) {
+time_after_monthdays_range(void **state)
+{
     run_one_test("2001-06-10",
                  "<" PCMK_XE_DATE_SPEC " "
                      PCMK_XA_ID "='spec' "
@@ -181,6 +213,8 @@ time_after_monthdays_range(void **state) {
 
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(null_invalid),
+                cmocka_unit_test(spec_id_missing),
+                cmocka_unit_test(invalid_range),
                 cmocka_unit_test(time_satisfies_year_spec),
                 cmocka_unit_test(time_after_year_spec),
                 cmocka_unit_test(time_satisfies_year_range),

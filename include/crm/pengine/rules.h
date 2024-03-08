@@ -43,9 +43,6 @@ void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
                        gboolean overwrite, crm_time_t *now,
                        crm_time_t *next_change);
 
-char *pe_expand_re_matches(const char *string,
-                           const pe_re_match_data_t *match_data);
-
 gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
                        crm_time_t *next_change);
 gboolean pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
