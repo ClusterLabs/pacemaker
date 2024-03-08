@@ -179,7 +179,9 @@ static void
 add_dump_node(gpointer key, gpointer value, gpointer user_data)
 {
     xmlNodePtr node = user_data;
-    pcmk_create_xml_text_node(node, (const char *) key, (const char *) value);
+
+    node = pcmk__xe_create(node, (const char *) key);
+    pcmk__xe_set_content(node, (const char *) value);
 }
 
 static void
