@@ -1920,11 +1920,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = 0;
         }
 
-        if (!((stonith_watchdog_timeout_ms > 0)
-              && (pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
-                  || (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
-                      && pcmk__is_fencing_action(op->action)))
-              && check_watchdog_fencing_and_wait(op))) {
+        if (!is_watchdog_fencing(op, device)
+            || !check_watchdog_fencing_and_wait(op)) {
 
             /* Some thoughts about self-fencing cases reaching this point:
                - Actually check in check_watchdog_fencing_and_wait
