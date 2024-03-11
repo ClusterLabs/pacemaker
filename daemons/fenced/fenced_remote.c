@@ -1622,13 +1622,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 continue;
             }
             for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
-                /* in case of watchdog-device we add the timeout to the budget
-                   regardless of if we got a reply or not
-                 */
-                if (is_watchdog_fencing(op, device_list->data)) {
-                    total_timeout += stonith_watchdog_timeout_ms / 1000;
-                    continue;
-                }
+                bool found = false;
 
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
@@ -1646,9 +1640,17 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data,
                                                             true);
+                        found = true;
                         break;
                     }
                 }               /* End Loop3: match device with peer that owns device, find device's timeout period */
+
+                /* in case of watchdog-device we add the timeout to the budget
+                   if didn't get a reply
+                 */
+                if (!found && is_watchdog_fencing(op, device_list->data)) {
+                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                }
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */
 
