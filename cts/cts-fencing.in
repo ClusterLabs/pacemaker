@@ -149,7 +149,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v false2")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4000 = 4006
-        test.add_log_pattern("Total timeout set to 6006s")
+        test.add_log_pattern("Total timeout set to 4807s")
 
     def build_fence_merge_tests(self):
         """ Register tests to verify when fence operations should be merged """
