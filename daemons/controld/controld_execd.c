@@ -1753,6 +1753,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
+        // op->rsc_id is a (const char *) but lrmd_free_event() frees it
         CRM_ASSERT(rsc_id != NULL);
         op->rsc_id = strdup(rsc_id);
     }
