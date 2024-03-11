@@ -141,15 +141,15 @@ class FenceTests(Tests):
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node1 node2 node3"')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1"')
+                     '--output-as=xml -R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1000ms"')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4000"')
+                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4000s"')
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v false2")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4000 = 4006
-        test.add_log_pattern("Total timeout set to 4807s")
+        test.add_log_pattern("Total timeout set to 6006s")
 
     def build_fence_merge_tests(self):
         """ Register tests to verify when fence operations should be merged """
