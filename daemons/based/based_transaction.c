@@ -38,10 +38,9 @@ based_transaction_source_str(const pcmk__client_t *client, const char *origin)
                                    pcmk__s(origin, ""));
 
     } else {
-        source = strdup((origin != NULL)? origin : "unknown source");
+        pcmk__str_update(&source, pcmk__s(origin, "unknown source"));
     }
 
-    CRM_ASSERT(source != NULL);
     return source;
 }
 

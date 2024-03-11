@@ -700,7 +700,7 @@ pcmk__replace_submatches(const char *string, const char *match,
 
     // Allocate enough space for expanded string
     result = calloc(nbytes, sizeof(char));
-    CRM_ASSERT(result != NULL);
+    pcmk__mem_assert(result);
 
     // Expand submatches
     (void) process_submatches(string, match, submatches, nmatches, result,

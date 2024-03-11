@@ -170,10 +170,10 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
 {
     pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
 
-    CRM_ASSERT(action != NULL);
+    pcmk__mem_assert(action);
 
     action->rsc = rsc;
-    action->task = strdup(task); CRM_ASSERT(action->task != NULL);
+    pcmk__str_update(&(action->task), task);
     action->uuid = key;
 
     if (node) {
@@ -457,8 +457,6 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const char *role = NULL;
     const char *interval_spec = NULL;
     const char *value = g_hash_table_lookup(meta, PCMK_META_ON_FAIL);
-    char *key = NULL;
-    char *new_value = NULL;
     guint interval_ms = 0U;
 
     // Stop actions can only use certain on-fail values
@@ -524,20 +522,15 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // Use value from first applicable promote action found
-            key = strdup(PCMK_META_ON_FAIL);
-            new_value = strdup(promote_on_fail);
-            CRM_ASSERT((key != NULL) && (new_value != NULL));
-            g_hash_table_insert(meta, key, new_value);
+            pcmk__insert_dup(meta, PCMK_META_ON_FAIL, promote_on_fail);
         }
         return;
     }
 
     if (pcmk__str_eq(action_name, PCMK_ACTION_LRM_DELETE, pcmk__str_none)
         && !pcmk__str_eq(value, PCMK_VALUE_IGNORE, pcmk__str_casei)) {
-        key = strdup(PCMK_META_ON_FAIL);
-        new_value = strdup(PCMK_VALUE_IGNORE);
-        CRM_ASSERT((key != NULL) && (new_value != NULL));
-        g_hash_table_insert(meta, key, new_value);
+
+        pcmk__insert_dup(meta, PCMK_META_ON_FAIL, PCMK_VALUE_IGNORE);
         return;
     }
 
@@ -1313,9 +1306,6 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
             GList *matches = find_unfencing_devices(scheduler->resources, NULL);
 
-            char *key = NULL;
-            char *value = NULL;
-
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
@@ -1345,16 +1335,12 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                                match->id, ":", agent, ":",
                                data->digest_secure_calc, ",", NULL);
             }
-            key = strdup(PCMK__META_DIGESTS_ALL);
-            value = strdup((const char *) digests_all->str);
-            CRM_ASSERT((key != NULL) && (value != NULL));
-            g_hash_table_insert(stonith_op->meta, key, value);
+            pcmk__insert_dup(stonith_op->meta, PCMK__META_DIGESTS_ALL,
+                             digests_all->str);
             g_string_free(digests_all, TRUE);
 
-            key = strdup(PCMK__META_DIGESTS_SECURE);
-            value = strdup((const char *) digests_secure->str);
-            CRM_ASSERT((key != NULL) && (value != NULL));
-            g_hash_table_insert(stonith_op->meta, key, value);
+            pcmk__insert_dup(stonith_op->meta, PCMK__META_DIGESTS_SECURE,
+                             digests_secure->str);
             g_string_free(digests_secure, TRUE);
         }
 
@@ -1889,8 +1875,7 @@ pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 
     CRM_ASSERT((action != NULL) && (action->meta != NULL));
 
-    name = strdup(PCMK__META_OP_TARGET_RC);
-    CRM_ASSERT (name != NULL);
+    pcmk__str_update(&name, PCMK__META_OP_TARGET_RC);
 
     g_hash_table_insert(action->meta, name, pcmk__itoa(expected_result));
 }

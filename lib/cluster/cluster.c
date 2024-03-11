@@ -128,7 +128,7 @@ pcmk_cluster_new(void)
 {
     crm_cluster_t *cluster = calloc(1, sizeof(crm_cluster_t));
 
-    CRM_ASSERT(cluster != NULL);
+    pcmk__mem_assert(cluster);
     return cluster;
 }
 

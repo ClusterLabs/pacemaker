@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -785,7 +785,7 @@ set_identity(const char *entity, int argc, char *const *argv)
     }
 
     if (entity != NULL) {
-        crm_system_name = strdup(entity);
+        pcmk__str_update(&crm_system_name, entity);
 
     } else if ((argc > 0) && (argv != NULL)) {
         char *mutable = strdup(argv[0]);
@@ -794,14 +794,12 @@ set_identity(const char *entity, int argc, char *const *argv)
         if (strstr(modified, "lt-") == modified) {
             modified += 3;
         }
-        crm_system_name = strdup(modified);
+        pcmk__str_update(&crm_system_name, modified);
         free(mutable);
 
     } else {
-        crm_system_name = strdup("Unknown");
+        pcmk__str_update(&crm_system_name, "Unknown");
     }
-
-    CRM_ASSERT(crm_system_name != NULL);
 
     // Used by fencing.py.py (in fence-agents)
     pcmk__set_env_option(PCMK__ENV_SERVICE, crm_system_name, false);

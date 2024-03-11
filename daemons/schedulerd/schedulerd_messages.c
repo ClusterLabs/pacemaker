@@ -27,7 +27,7 @@ init_working_set(void)
 {
     pcmk_scheduler_t *scheduler = pe_new_working_set();
 
-    CRM_ASSERT(scheduler != NULL);
+    pcmk__mem_assert(scheduler);
 
     crm_config_error = FALSE;
     crm_config_warning = FALSE;

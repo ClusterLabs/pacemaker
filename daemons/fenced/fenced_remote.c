@@ -1162,7 +1162,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     }
 
     op = calloc(1, sizeof(remote_fencing_op_t));
-    CRM_ASSERT(op != NULL);
+    pcmk__mem_assert(op);
 
     crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
@@ -2169,7 +2169,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
 
     /* Add a new entry to this peer's devices list */
-    CRM_ASSERT(props != NULL);
+    pcmk__mem_assert(props);
     g_hash_table_insert(peer->devices, strdup(device), props);
 
     /* Peers with verified (monitored) access will be preferred */

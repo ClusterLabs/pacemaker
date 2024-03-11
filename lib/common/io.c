@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -638,8 +638,7 @@ pcmk__full_path(const char *filename, const char *dirname)
     CRM_ASSERT(filename != NULL);
 
     if (filename[0] == '/') {
-        path = strdup(filename);
-        CRM_ASSERT(path != NULL);
+        pcmk__str_update(&path, filename);
 
     } else {
         CRM_ASSERT(dirname != NULL);

@@ -603,8 +603,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
         /* node_name could be a pointer into the cache entry being purged,
          * so reassign it to a copy before the original gets freed
          */
-        node_name_copy = strdup(node_name);
-        CRM_ASSERT(node_name_copy != NULL);
+        pcmk__str_update(&node_name_copy, node_name);
         node_name = node_name_copy;
 
         crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
@@ -1317,13 +1316,10 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         char *uniqueid = crm_generate_uuid();
 
         node = calloc(1, sizeof(crm_node_t));
-        CRM_ASSERT(node != NULL);
+        pcmk__mem_assert(node);
 
-        node->uname = strdup(uname);
-        CRM_ASSERT(node->uname != NULL);
-
-        node->uuid = strdup(id);
-        CRM_ASSERT(node->uuid != NULL);
+        pcmk__str_update(&(node->uname), uname);
+        pcmk__str_update(&(node->uuid), id);
 
         g_hash_table_replace(known_node_cache, uniqueid, node);
 

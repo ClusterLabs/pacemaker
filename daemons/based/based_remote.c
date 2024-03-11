@@ -552,7 +552,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
     CRM_CHECK(num_msg == 1, return PAM_CONV_ERR);       /* We only want to handle one message */
 
     reply = calloc(1, sizeof(struct pam_response));
-    CRM_ASSERT(reply != NULL);
+    pcmk__mem_assert(reply);
 
     for (count = 0; count < num_msg; ++count) {
         switch (msg[count]->msg_style) {

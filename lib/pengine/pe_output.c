@@ -590,7 +590,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Allocate and populate display name */
     node_name = malloc(name_len);
-    CRM_ASSERT(node_name != NULL);
+    pcmk__mem_assert(node_name);
     strcpy(node_name, node->details->uname);
     if (node_host) {
         strcat(node_name, "@");
@@ -1373,8 +1373,9 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
 
     if (pcmk__str_empty(op_key)
         || !parse_op_key(op_key, &rsc_id, &task, &interval_ms)) {
-        rsc_id = strdup("unknown resource");
-        task = strdup("unknown action");
+
+        pcmk__str_update(&rsc_id, "unknown resource");
+        pcmk__str_update(&task, "unknown action");
         interval_ms = 0;
     }
     CRM_ASSERT((rsc_id != NULL) && (task != NULL));

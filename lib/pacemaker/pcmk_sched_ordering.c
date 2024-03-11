@@ -548,7 +548,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
     }
 
     order = calloc(1, sizeof(pcmk__action_relation_t));
-    CRM_ASSERT(order != NULL);
+    pcmk__mem_assert(order);
 
     order->id = sched->order_id++;
     order->flags = flags;

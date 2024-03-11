@@ -130,7 +130,7 @@ crm_time_new_undefined(void)
 {
     crm_time_t *result = calloc(1, sizeof(crm_time_t));
 
-    CRM_ASSERT(result != NULL);
+    pcmk__mem_assert(result);
     return result;
 }
 
@@ -1218,7 +1218,7 @@ crm_time_parse_period(const char *period_str)
 
     tzset();
     period = calloc(1, sizeof(crm_time_period_t));
-    CRM_ASSERT(period != NULL);
+    pcmk__mem_assert(period);
 
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
@@ -1835,7 +1835,7 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
 
     if (dt) {
         hr_dt = target?target:calloc(1, sizeof(pcmk__time_hr_t));
-        CRM_ASSERT(hr_dt != NULL);
+        pcmk__mem_assert(hr_dt);
         *hr_dt = (pcmk__time_hr_t) {
             .years = dt->years,
             .months = dt->months,
@@ -2008,8 +2008,7 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
         const char *buf = pcmk__trim(ctime(&epoch_time));
 
         if (buf != NULL) {
-            result = strdup(buf);
-            CRM_ASSERT(result != NULL);
+            pcmk__str_update(&result, buf);
         }
     } else {
         crm_time_t dt;

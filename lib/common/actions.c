@@ -320,12 +320,12 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     // Set output variables
     if (rsc_id != NULL) {
         *rsc_id = strndup(key, action_underbar);
-        CRM_ASSERT(*rsc_id != NULL);
+        pcmk__mem_assert(*rsc_id);
     }
     if (op_type != NULL) {
         *op_type = strndup(key + action_underbar + 1,
                            interval_underbar - action_underbar - 1);
-        CRM_ASSERT(*op_type != NULL);
+        pcmk__mem_assert(*op_type);
     }
     if (interval_ms != NULL) {
         *interval_ms = local_interval_ms;

@@ -468,7 +468,7 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 {
     attribute_value_t *a_v = NULL;
     a_v = calloc(1, sizeof(attribute_value_t));
-    CRM_ASSERT(a_v != NULL);
+    pcmk__mem_assert(a_v);
 
     a_v->nodeid = v->nodeid;
     a_v->nodename = strdup(v->nodename);

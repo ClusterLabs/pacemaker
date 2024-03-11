@@ -357,7 +357,7 @@ services_action_create_generic(const char *exec, const char *args[])
 {
     svc_action_t *op = new_action();
 
-    CRM_ASSERT(op != NULL);
+    pcmk__mem_assert(op);
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
@@ -415,9 +415,8 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    action->id = strdup(id);
-    action->standard = strdup(PCMK_RESOURCE_CLASS_ALERT);
-    CRM_ASSERT((action->id != NULL) && (action->standard != NULL));
+    pcmk__str_update(&(action->id), id);
+    pcmk__str_update(&(action->standard), PCMK_RESOURCE_CLASS_ALERT);
 
     action->timeout = timeout;
     action->params = params;

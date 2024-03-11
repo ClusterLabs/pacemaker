@@ -196,7 +196,7 @@ lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
 {
     lrmd_event_data_t *event = calloc(1, sizeof(lrmd_event_data_t));
 
-    CRM_ASSERT(event != NULL);
+    pcmk__mem_assert(event);
     pcmk__str_update((char **) &event->rsc_id, rsc_id);
     pcmk__str_update((char **) &event->op_type, task);
     event->interval_ms = interval_ms;
@@ -1106,7 +1106,7 @@ copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
     CRM_ASSERT((dest != NULL) && (source != NULL) && (source->data != NULL));
 
     dest->data = gnutls_malloc(source->size);
-    CRM_ASSERT(dest->data);
+    pcmk__mem_assert(dest->data);
 
     memcpy(dest->data, source->data, source->size);
     dest->size = source->size;

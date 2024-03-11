@@ -261,7 +261,7 @@ pcmk__new_ipc_event(void)
 {
     struct iovec *iov = calloc(2, sizeof(struct iovec));
 
-    CRM_ASSERT(iov != NULL);
+    pcmk__mem_assert(iov);
     return iov;
 }
 

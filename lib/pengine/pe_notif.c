@@ -97,7 +97,7 @@ dup_notify_entry(const notify_entry_t *entry)
 {
     notify_entry_t *dup = calloc(1, sizeof(notify_entry_t));
 
-    CRM_ASSERT(dup != NULL);
+    pcmk__mem_assert(dup);
     dup->rsc = entry->rsc;
     dup->node = entry->node;
     return dup;
@@ -440,7 +440,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
     }
 
     n_data = calloc(1, sizeof(notify_data_t));
-    CRM_ASSERT(n_data != NULL);
+    pcmk__mem_assert(n_data);
 
     n_data->action = task;
 
@@ -522,7 +522,7 @@ new_notify_entry(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
 
-    CRM_ASSERT(entry != NULL);
+    pcmk__mem_assert(entry);
     entry->rsc = rsc;
     entry->node = node;
     return entry;

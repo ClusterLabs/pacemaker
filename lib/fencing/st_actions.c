@@ -267,7 +267,7 @@ stonith__action_create(const char *agent, const char *action_name,
 {
     stonith_action_t *action = calloc(1, sizeof(stonith_action_t));
 
-    CRM_ASSERT(action != NULL);
+    pcmk__mem_assert(action);
 
     action->args = make_args(agent, action_name, target, target_nodeid,
                              device_args, port_map, host_arg);

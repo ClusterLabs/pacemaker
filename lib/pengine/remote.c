@@ -195,7 +195,7 @@ pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
     CRM_CHECK(scheduler && rsc_op && rsc && node, return);
 
     check_op = calloc(1, sizeof(struct check_op));
-    CRM_ASSERT(check_op != NULL);
+    pcmk__mem_assert(check_op);
 
     crm_trace("Deferring checks of %s until after allocation",
               pcmk__xe_id(rsc_op));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -191,7 +191,6 @@ mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
 
     CRM_ASSERT(sizeof(crm_trigger_t) > sizeof(GSource));
     source = g_source_new(&crm_trigger_funcs, sizeof(crm_trigger_t));
-    CRM_ASSERT(source != NULL);
 
     return mainloop_setup_trigger(source, priority, dispatch, userdata);
 }

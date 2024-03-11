@@ -241,7 +241,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     int last = g_list_length(known_schemas);
 
     schema = calloc(1, sizeof(pcmk__schema_t));
-    CRM_ASSERT(schema != NULL);
+    pcmk__mem_assert(schema);
 
     schema->validator = validator;
     schema->version.v[0] = version->v[0];
@@ -251,18 +251,15 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     if (version->v[0] || version->v[1]) {
         schema->name = schema_strdup_printf("pacemaker-", *version, "");
     } else {
-        schema->name = strdup(name);
-        CRM_ASSERT(schema->name != NULL);
+        pcmk__str_update(&(schema->name), name);
     }
 
     if (transform) {
-        schema->transform = strdup(transform);
-        CRM_ASSERT(schema->transform != NULL);
+        pcmk__str_update(&(schema->transform), transform);
     }
 
     if (transform_enter) {
-        schema->transform_enter = strdup(transform_enter);
-        CRM_ASSERT(schema->transform_enter != NULL);
+        pcmk__str_update(&(schema->transform_enter), transform_enter);
     }
 
     known_schemas = g_list_append(known_schemas, schema);
@@ -1404,8 +1401,7 @@ append_href(xmlNode *xml, void *user_data)
         return;
     }
 
-    s = strdup(href);
-    CRM_ASSERT(s != NULL);
+    pcmk__str_update(&s, href);
     *list = g_list_prepend(*list, s);
 }
 
@@ -1460,8 +1456,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
         path = crm_strdup_printf("%s.rng", file);
     } else {
-        path = strdup(file);
-        CRM_ASSERT(path != NULL);
+        pcmk__str_update(&path, file);
     }
 
     rc = read_file_contents(path, &contents);

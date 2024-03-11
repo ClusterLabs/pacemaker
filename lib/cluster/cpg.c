@@ -698,8 +698,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
     uint32_t local_nodeid = get_local_nodeid(handle);
     const struct cpg_address **sorted;
 
-    sorted = malloc(member_list_entries * sizeof(const struct cpg_address *));
-    CRM_ASSERT(sorted != NULL);
+    sorted = calloc(member_list_entries, sizeof(const struct cpg_address *));
+    pcmk__mem_assert(sorted);
 
     for (size_t iter = 0; iter < member_list_entries; iter++) {
         sorted[iter] = member_list + iter;

@@ -433,7 +433,7 @@ crm_generate_uuid(void)
     unsigned char uuid[16];
     char *buffer = malloc(37);  /* Including NUL byte */
 
-    CRM_ASSERT(buffer != NULL);
+    pcmk__mem_assert(buffer);
     uuid_generate(uuid);
     uuid_unparse(uuid, buffer);
     return buffer;

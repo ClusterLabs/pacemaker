@@ -1416,10 +1416,10 @@ xml_to_event(xmlNode *msg)
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     struct event_private *event_private = NULL;
 
-    CRM_ASSERT(event != NULL);
+    pcmk__mem_assert(event);
 
     event->opaque = calloc(1, sizeof(struct event_private));
-    CRM_ASSERT(event->opaque != NULL);
+    pcmk__mem_assert(event->opaque);
     event_private = (struct event_private *) event->opaque;
 
     crm_log_xml_trace(msg, "stonith_notify");
@@ -2163,7 +2163,7 @@ parse_list_line(const char *line, int len, GList **output)
             }
 
             entry = calloc(i - entry_start + 1, sizeof(char));
-            CRM_ASSERT(entry != NULL);
+            pcmk__mem_assert(entry);
 
             /* Read entry, stopping at first separator
              *

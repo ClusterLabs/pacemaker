@@ -243,8 +243,7 @@ task_from_action_or_key(const pcmk_action_t *action, const char *key)
     char *res = NULL;
 
     if (action != NULL) {
-        res = strdup(action->task);
-        CRM_ASSERT(res != NULL);
+        pcmk__str_update(&res, action->task);
     } else if (key != NULL) {
         parse_op_key(key, NULL, &res, NULL);
     }

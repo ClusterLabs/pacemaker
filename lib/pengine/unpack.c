@@ -3517,15 +3517,13 @@ last_change_str(const xmlNode *xml_op)
 
         // Skip day of week to make message shorter
         if ((p != NULL) && (*(++p) != '\0')) {
-            result = strdup(p);
-            CRM_ASSERT(result != NULL);
+            pcmk__str_update(&result, p);
         }
         free(when_s);
     }
 
     if (result == NULL) {
-        result = strdup("unknown time");
-        CRM_ASSERT(result != NULL);
+        pcmk__str_update(&result, "unknown time");
     }
 
     return result;

@@ -155,8 +155,7 @@ action_uuid_for_ordering(const char *first_uuid,
 
 done:
     if (uuid == NULL) {
-        uuid = strdup(first_uuid);
-        CRM_ASSERT(uuid != NULL);
+        pcmk__str_update(&uuid, first_uuid);
     }
     free(first_task_str);
     free(rid);

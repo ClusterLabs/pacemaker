@@ -1041,16 +1041,16 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
      */
 
     remainder = calloc(key_len, sizeof(char));
-    CRM_ASSERT(remainder != NULL);
+    pcmk__mem_assert(remainder);
 
     section = calloc(key_len, sizeof(char));
-    CRM_ASSERT(section != NULL);
+    pcmk__mem_assert(section);
 
     id = calloc(key_len, sizeof(char));
-    CRM_ASSERT(id != NULL);
+    pcmk__mem_assert(id);
 
     tag = calloc(key_len, sizeof(char));
-    CRM_ASSERT(tag != NULL);
+    pcmk__mem_assert(tag);
 
     do {
         // Look for /NEXT_COMPONENT/REMAINING_COMPONENTS
@@ -1182,7 +1182,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             // Delay the adding of a PCMK_VALUE_CREATE object
             xml_change_obj_t *change_obj = calloc(1, sizeof(xml_change_obj_t));
 
-            CRM_ASSERT(change_obj != NULL);
+            pcmk__mem_assert(change_obj);
 
             change_obj->change = change;
             change_obj->match = match;

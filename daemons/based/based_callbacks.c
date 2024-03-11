@@ -160,7 +160,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 {
     xmlNode *reply = create_xml_node(NULL, PCMK__XE_CIB_REPLY);
 
-    CRM_ASSERT(reply != NULL);
+    pcmk__mem_assert(reply);
 
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(reply, PCMK__XA_CIB_OP, op);

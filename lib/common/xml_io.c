@@ -715,7 +715,7 @@ pcmk__xml2fd(int fd, xmlNode *cur)
     bool success;
 
     xmlOutputBuffer *fd_out = xmlOutputBufferCreateFd(fd, NULL);
-    CRM_ASSERT(fd_out != NULL);
+    pcmk__mem_assert(fd_out);
     xmlNodeDumpOutput(fd_out, cur->doc, cur, 0, pcmk__xml_fmt_pretty, NULL);
 
     success = xmlOutputBufferWrite(fd_out, sizeof("\n") - 1, "\n") != -1;

@@ -229,15 +229,14 @@ init_node_pending_timer(const crm_node_t *node, guint timeout)
                controld_globals.node_pending_timeout);
 
     node_pending_timer = calloc(1, sizeof(struct abort_timer_s));
-    CRM_ASSERT(node_pending_timer != NULL);
+    pcmk__mem_assert(node_pending_timer);
 
     node_pending_timer->aborted = FALSE;
     node_pending_timer->priority = PCMK_SCORE_INFINITY;
     node_pending_timer->action = pcmk__graph_restart;
     node_pending_timer->text = "Node pending timed out";
 
-    key = strdup(node->uuid);
-    CRM_ASSERT(key != NULL);
+    pcmk__str_update(&key, node->uuid);
 
     g_hash_table_replace(node_pending_timers, key, node_pending_timer);
 

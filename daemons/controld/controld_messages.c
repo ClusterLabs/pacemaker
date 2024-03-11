@@ -190,7 +190,7 @@ copy_ha_msg_input(ha_msg_input_t * orig)
 {
     ha_msg_input_t *copy = calloc(1, sizeof(ha_msg_input_t));
 
-    CRM_ASSERT(copy != NULL);
+    pcmk__mem_assert(copy);
     copy->msg = (orig != NULL)? pcmk__xml_copy(NULL, orig->msg) : NULL;
     copy->xml = get_message_xml(copy->msg, PCMK__XE_CRM_XML);
     return copy;

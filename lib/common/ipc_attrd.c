@@ -34,7 +34,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
          node != NULL; node = crm_next_same_xml(node)) {
         pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
 
-        CRM_ASSERT(pair != NULL);
+        pcmk__mem_assert(pair);
 
         pair->node = crm_element_value(node, PCMK__XA_ATTR_HOST);
         pair->name = name;

@@ -48,7 +48,7 @@ attrd_create_attribute(xmlNode *xml)
     }
 
     a = calloc(1, sizeof(attribute_t));
-    CRM_ASSERT(a != NULL);
+    pcmk__mem_assert(a);
 
     if (is_private) {
         attrd_set_attr_flags(a, attrd_attr_is_private);

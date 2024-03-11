@@ -146,12 +146,9 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     }
 
     wl = calloc(sizeof(struct waitlist_node), 1);
+    pcmk__mem_assert(wl);
 
-    CRM_ASSERT(wl != NULL);
-
-    wl->client_id = strdup(request->ipc_client->id);
-
-    CRM_ASSERT(wl->client_id);
+    pcmk__str_update(&(wl->client_id), request->ipc_client->id);
 
     if (pcmk__str_eq(sync_point, PCMK__VALUE_LOCAL, pcmk__str_none)) {
         wl->sync_point = attrd_sync_point_local;
@@ -502,22 +499,21 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     g_hash_table_iter_init(&iter, peer_protocol_vers);
     while (g_hash_table_iter_next(&iter, &host, &ver)) {
         if (ATTRD_SUPPORTS_CONFIRMATION(GPOINTER_TO_INT(ver))) {
-            char *s = strdup((char *) host);
+            char *s = NULL;
 
-            CRM_ASSERT(s != NULL);
+            pcmk__str_update(&s, (char *) host);
             respondents = g_list_prepend(respondents, s);
         }
     }
 
     action = calloc(1, sizeof(struct confirmation_action));
-    CRM_ASSERT(action != NULL);
+    pcmk__mem_assert(action);
 
     action->respondents = respondents;
     action->fn = fn;
     action->xml = pcmk__xml_copy(NULL, request->xml);
 
-    action->client_id = strdup(request->ipc_client->id);
-    CRM_ASSERT(action->client_id != NULL);
+    pcmk__str_update(&(action->client_id), request->ipc_client->id);
 
     action->ipc_id = request->ipc_id;
     action->flags = request->flags;

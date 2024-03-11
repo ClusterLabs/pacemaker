@@ -506,7 +506,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
               g_string_free(xml_text, TRUE); return EINVAL);
 
     header = calloc(1, sizeof(struct remote_header_v0));
-    CRM_ASSERT(header != NULL);
+    pcmk__mem_assert(header);
 
     iov[0].iov_base = header;
     iov[0].iov_len = sizeof(struct remote_header_v0);

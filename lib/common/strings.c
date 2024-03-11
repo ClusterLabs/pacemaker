@@ -1299,7 +1299,7 @@ pcmk__str_update(char **str, const char *value)
             *str = NULL;
         } else {
             *str = strdup(value);
-            CRM_ASSERT(*str != NULL);
+            pcmk__mem_assert(*str);
         }
     }
 }

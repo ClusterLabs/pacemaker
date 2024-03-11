@@ -329,7 +329,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     parser_ctxt = xmlNewParserCtxt();
 
     CRM_ASSERT(sfile != NULL);
-    CRM_ASSERT(parser_ctxt != NULL);
+    pcmk__mem_assert(parser_ctxt);
 
     xslt_doc = xmlCtxtReadFile(parser_ctxt, sfile, NULL, XML_PARSE_NONET);
 
@@ -343,7 +343,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xmlFreeParserCtxt(parser_ctxt);
 
     xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
-    CRM_ASSERT(xslt_ctxt != NULL);
+    pcmk__mem_assert(xslt_ctxt);
 
     switch (how) {
         case pcmk__acl_render_namespace:

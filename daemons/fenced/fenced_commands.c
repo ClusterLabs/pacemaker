@@ -157,10 +157,10 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
     hash_value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
 
     if (hash_value) {
-        char *value = strdup(hash_value);
+        char *value = NULL;
         char *valptr = value;
 
-        CRM_ASSERT(value != NULL);
+        pcmk__str_update(&value, hash_value);
 
         if (target != NULL) {
             for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
@@ -352,7 +352,7 @@ create_async_command(xmlNode *msg)
     }
 
     cmd = calloc(1, sizeof(async_command_t));
-    CRM_ASSERT(cmd != NULL);
+    pcmk__mem_assert(cmd);
 
     // All messages must include these
     cmd->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
@@ -3262,7 +3262,7 @@ handle_query_request(pcmk__request_t *request)
     crm_log_xml_trace(request->xml, "Query");
 
     query = calloc(1, sizeof(struct st_query_data));
-    CRM_ASSERT(query != NULL);
+    pcmk__mem_assert(query);
 
     query->reply = fenced_construct_reply(request->xml, NULL, &request->result);
     pcmk__str_update(&query->remote_peer, request->peer);
