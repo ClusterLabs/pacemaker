@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/cib/internal.h>
+#include <crm/pengine/internal.h>
 
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
@@ -118,6 +119,63 @@ pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
     }
 
     rc = pcmk__ticket_get_attr(out, scheduler, ticket_id, attr_name, attr_default);
+
+done:
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    pe_free_working_set(scheduler);
+    return rc;
+}
+
+int
+pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                  const char *ticket_id, bool details, bool raw)
+{
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT(out != NULL && scheduler != NULL);
+
+    if (ticket_id != NULL) {
+        GHashTable *tickets = NULL;
+        pcmk_ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+
+        if (ticket == NULL) {
+            return ENXIO;
+        }
+
+        /* The ticket-list message expects a GHashTable, so we'll construct
+         * one with just this single item.
+         */
+        tickets = pcmk__strkey_table(free, NULL);
+        g_hash_table_insert(tickets, strdup(ticket->id), ticket);
+        out->message(out, "ticket-list", tickets, false, raw, details);
+        g_hash_table_destroy(tickets);
+
+    } else {
+        out->message(out, "ticket-list", scheduler->tickets, false, raw, details);
+    }
+
+    return rc;
+}
+
+int
+pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id)
+{
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__setup_output_cib_sched(&out, NULL, &scheduler, xml);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    pe__register_messages(out);
+
+    /* XML output (which is the only format supported by public API functions
+     * due to the use of pcmk__xml_output_new above) always prints all details,
+     * so just pass false for the last two arguments.
+     */
+    rc = pcmk__ticket_info(out, scheduler, ticket_id, false, false);
 
 done:
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);

@@ -471,6 +471,17 @@ int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
 int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
                          const char *attr_name, const char *attr_default);
 
+/*!
+ * \brief Return information about the given ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find info value for, or \c NULL for
+ *                              all tickets
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

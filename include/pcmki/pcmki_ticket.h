@@ -43,4 +43,26 @@ int pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket
 int pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
                           const char *ticket_id, const char *attr_name,
                           const char *attr_default);
+
+/*!
+ * \brief Return information about the given ticket
+ *
+ * \param[in,out] out           Output object
+ * \param[in,out] scheduler     Scheduler data
+ * \param[in]     ticket_id     Ticket to display info for, or \c NULL for
+ *                              all tickets
+ * \param[in]     details       If true (and \p out is not an XML format
+ *                              object), output any additional attributes
+ *                              set on a ticket beyond the basics
+ * \param[in]     raw           If true (and \p out is not an XML format
+ *                              object), simply list the IDs of all tickets.
+ *                              This does not make a lot of sense if
+ *                              \p ticket_id is not NULL, but that will not
+ *                              raise an error.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
+                      const char *ticket_id, bool details, bool raw);
+
 #endif

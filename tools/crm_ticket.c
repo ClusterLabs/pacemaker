@@ -693,27 +693,15 @@ main(int argc, char **argv)
             raw = true;
         }
 
-        if (options.ticket_id) {
-            GHashTable *tickets = NULL;
-            pcmk_ticket_t *ticket = find_ticket(options.ticket_id, scheduler);
+        rc = pcmk__ticket_info(out, scheduler, options.ticket_id, details, raw);
+        exit_code = pcmk_rc2exitc(rc);
 
-            if (ticket == NULL) {
-                exit_code = CRM_EX_NOSUCH;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "No such ticket '%s'", options.ticket_id);
-                goto done;
-            }
-
-            /* The ticket-list message expects a GHashTable, so we'll construct
-             * one with just this single item.
-             */
-            tickets = pcmk__strkey_table(free, NULL);
-            g_hash_table_insert(tickets, strdup(ticket->id), ticket);
-            out->message(out, "ticket-list", tickets, false, raw, details);
-            g_hash_table_destroy(tickets);
-
-        } else {
-            out->message(out, "ticket-list", scheduler->tickets, false, raw, details);
+        if (rc == ENXIO) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "No such ticket '%s'", options.ticket_id);
+        } else if (rc != pcmk_rc_ok) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not get ticket info: %s", pcmk_rc_str(rc));
         }
 
     } else if (options.ticket_cmd == 'q') {
