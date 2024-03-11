@@ -1044,7 +1044,7 @@ merge_duplicates(remote_fencing_op_t *op)
         }
         if ((other->total_timeout > 0)
             && (now > (other->total_timeout + other->created))) {
-            crm_trace("%.8s not duplicate of %.8s: old (%ld vs. %ld + %d)",
+            crm_trace("%.8s not duplicate of %.8s: old (%ld vs. %ld + %ds)",
                       op->id, other->id, now, other->created,
                       other->total_timeout);
             continue;
@@ -1057,7 +1057,7 @@ merge_duplicates(remote_fencing_op_t *op)
         if (other->total_timeout == 0) {
             other->total_timeout = op->total_timeout =
                 TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, NULL);
-            crm_trace("Best guess as to timeout used for %.8s: %d",
+            crm_trace("Best guess as to timeout used for %.8s: %ds",
                       other->id, other->total_timeout);
         }
         crm_notice("Merging fencing action '%s' targeting %s originating from "
@@ -1224,7 +1224,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     crm_element_value_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
 
     crm_trace("%s new fencing op %s ('%s' targeting %s for client %s, "
-              "base timeout %d, %u %s expected)",
+              "base timeout %ds, %u %s expected)",
               (peer && dev)? "Recorded" : "Generated", op->id, op->action,
               op->target, op->client_name, op->base_timeout,
               op->replies_expected,
@@ -1322,7 +1322,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
 
         default:
             crm_notice("Requesting peer fencing (%s) targeting %s "
-                       CRM_XS " id=%.8s state=%s base_timeout=%d",
+                       CRM_XS " id=%.8s state=%s base_timeout=%ds",
                        op->action, op->target, op->id,
                        stonith_op_state_str(op->state), op->base_timeout);
     }
@@ -1892,7 +1892,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, peer);
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
-        crm_info("Total timeout set to %d for peer's fencing targeting %s for %s"
+        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s"
                  CRM_XS "id=%.8s",
                  op->total_timeout, op->target, op->client_name, op->id);
     }
@@ -2158,14 +2158,14 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     crm_element_value_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
                           &props->custom_action_timeout[phase]);
     if (props->custom_action_timeout[phase]) {
-        crm_trace("Peer %s with device %s returned %s action timeout %d",
+        crm_trace("Peer %s with device %s returned %s action timeout %ds",
                   peer, device, action, props->custom_action_timeout[phase]);
     }
 
     props->delay_max[phase] = 0;
     crm_element_value_int(xml, PCMK__XA_ST_DELAY_MAX, &props->delay_max[phase]);
     if (props->delay_max[phase]) {
-        crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
+        crm_trace("Peer %s with device %s returned maximum of random delay %ds for %s",
                   peer, device, props->delay_max[phase], action);
     }
 
@@ -2173,7 +2173,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     crm_element_value_int(xml, PCMK__XA_ST_DELAY_BASE,
                           &props->delay_base[phase]);
     if (props->delay_base[phase]) {
-        crm_trace("Peer %s with device %s returned base delay %d for %s",
+        crm_trace("Peer %s with device %s returned base delay %ds for %s",
                   peer, device, props->delay_base[phase], action);
     }
 
