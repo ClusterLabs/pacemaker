@@ -1980,11 +1980,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
 
-        if(stonith_watchdog_timeout_ms > 0 && pcmk__str_eq(device,
-           STONITH_WATCHDOG_ID, pcmk__str_null_matches)) {
-            if (check_watchdog_fencing_and_wait(op)) {
-                return;
-            }
+        if (is_watchdog_fencing(op, device)
+            && check_watchdog_fencing_and_wait(op)) {
+            return;
         }
 
         if (op->state == st_query) {
