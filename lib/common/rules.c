@@ -892,6 +892,29 @@ pcmk__parse_source(const char *source)
 
 /*!
  * \internal
+ * \brief Parse a boolean operator from a string
+ *
+ * \param[in] combine  String indicating boolean operator
+ *
+ * \return Enumeration value corresponding to \p combine
+ */
+enum pcmk__combine
+pcmk__parse_combine(const char *combine)
+{
+    if (pcmk__str_eq(combine, PCMK_VALUE_AND,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        return pcmk__combine_and;
+
+    } else if (pcmk__str_eq(combine, PCMK_VALUE_OR, pcmk__str_casei)) {
+        return pcmk__combine_or;
+
+    } else {
+        return pcmk__combine_unknown;
+    }
+}
+
+/*!
+ * \internal
  * \brief Get the result of a node attribute comparison for rule evaluation
  *
  * \param[in] actual      Actual node attribute value
@@ -1366,8 +1389,8 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     gboolean test = TRUE;
     gboolean empty = TRUE;
     gboolean passed = TRUE;
-    gboolean do_and = TRUE;
     const char *value = NULL;
+    enum pcmk__combine combine = pcmk__combine_unknown;
 
     rule = expand_idref(rule, NULL);
     if (rule == NULL) { // Not possible with schema validation enabled
@@ -1375,15 +1398,26 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     }
 
     value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
-    if (pcmk__str_eq(value, PCMK_VALUE_OR, pcmk__str_casei)) {
-        do_and = FALSE;
-        passed = FALSE;
+    combine = pcmk__parse_combine(value);
+    switch (combine) {
+        case pcmk__combine_and:
+            // For "and", passed defaults to TRUE (reset on failure below)
+            break;
 
-    } else if (!pcmk__str_eq(value, PCMK_VALUE_AND,
-                             pcmk__str_null_matches|pcmk__str_casei)) {
-        pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
-                          " value '%s', using default ('" PCMK_VALUE_AND "')",
-                          pcmk__xe_id(rule), value);
+        case pcmk__combine_or:
+            // For "or", passed defaults to FALSE (reset on success below)
+            passed = FALSE;
+            break;
+
+        default:
+            /* @COMPAT When we can break behavioral backward compatibility,
+             * return pcmk_rc_unpack_error
+             */
+            pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
+                              " value '%s', using default '" PCMK_VALUE_AND "'",
+                              pcmk__xe_id(rule), value);
+            combine = pcmk__combine_and;
+            break;
     }
 
     crm_trace("Testing rule %s", pcmk__xe_id(rule));
@@ -1394,12 +1428,12 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
                                          next_change) == pcmk_rc_ok);
         empty = FALSE;
 
-        if (test && do_and == FALSE) {
+        if (test && (combine == pcmk__combine_or)) {
             crm_trace("Expression %s/%s passed",
                       pcmk__xe_id(rule), pcmk__xe_id(expr));
             return pcmk_rc_ok;
 
-        } else if (test == FALSE && do_and) {
+        } else if (!test && (combine == pcmk__combine_and)) {
             crm_trace("Expression %s/%s failed",
                       pcmk__xe_id(rule), pcmk__xe_id(expr));
             return pcmk_rc_op_unsatisfied;

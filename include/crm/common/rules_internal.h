@@ -16,9 +16,16 @@
 #include <crm/common/rules.h>           // enum expression_type, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
 
+enum pcmk__combine {
+    pcmk__combine_unknown,
+    pcmk__combine_and,
+    pcmk__combine_or,
+};
+
 enum expression_type pcmk__expression_type(const xmlNode *expr);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
+enum pcmk__combine pcmk__parse_combine(const char *combine);
 
 int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    const crm_time_t *now,

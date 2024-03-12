@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/rules_internal.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
@@ -117,12 +118,12 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     GList *iter = NULL;
     GList *nodes = NULL;
 
-    bool do_and = true;
     bool raw_score = true;
     bool score_allocated = false;
 
     pcmk__location_t *location_rule = NULL;
     enum rsc_role_e role = pcmk_role_unknown;
+    enum pcmk__combine combine = pcmk__combine_unknown;
 
     rule_xml = expand_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
@@ -151,15 +152,22 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    if (pcmk__str_eq(boolean, PCMK_VALUE_OR, pcmk__str_casei)) {
-        do_and = false;
+    combine = pcmk__parse_combine(boolean);
+    switch (combine) {
+        case pcmk__combine_and:
+        case pcmk__combine_or:
+            break;
 
-    } else if (!pcmk__str_eq(boolean, PCMK_VALUE_AND,
-                             pcmk__str_null_matches|pcmk__str_casei)) {
-        pcmk__config_warn("Location constraint rule %s has invalid "
-                          PCMK_XA_BOOLEAN_OP " value '%s', using default "
-                          "('" PCMK_VALUE_AND "')",
-                          rule_id, boolean);
+        default:
+            /* @COMPAT When we can break behavioral backward compatibility,
+             * return NULL
+             */
+            pcmk__config_warn("Location constraint rule %s has invalid "
+                              PCMK_XA_BOOLEAN_OP " value '%s', using default "
+                              "'" PCMK_VALUE_AND "'",
+                              rule_id, boolean);
+            combine = pcmk__combine_and;
+            break;
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
@@ -181,7 +189,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    if (do_and) {
+    if (combine == pcmk__combine_and) {
         nodes = pcmk__copy_node_list(rsc->cluster->nodes, true);
         for (iter = nodes; iter != NULL; iter = iter->next) {
             pcmk_node_t *node = iter->data;
@@ -219,7 +227,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         if (rc == pcmk_rc_ok) {
             pcmk_node_t *local = pe_find_node_id(nodes, node->details->id);
 
-            if ((local == NULL) && do_and) {
+            if ((local == NULL) && (combine == pcmk__combine_and)) {
                 continue;
 
             } else if (local == NULL) {
@@ -227,13 +235,13 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                 nodes = g_list_append(nodes, local);
             }
 
-            if (!do_and) {
+            if (combine == pcmk__combine_or) {
                 local->weight = pcmk__add_scores(local->weight, score_f);
             }
             crm_trace("%s has score %s after %s", pcmk__node_name(node),
                       pcmk_readable_score(local->weight), rule_id);
 
-        } else if (do_and) {
+        } else if (combine == pcmk__combine_and) {
             // Remove it
             pcmk_node_t *delete = pe_find_node_id(nodes, node->details->id);
 

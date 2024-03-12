@@ -18,6 +18,7 @@ check_PROGRAMS = pcmk__cmp_by_type_test			\
 		 pcmk__evaluate_condition_test		\
 		 pcmk__evaluate_op_expression_test	\
 		 pcmk__evaluate_rsc_expression_test	\
+		 pcmk__parse_combine_test		\
 		 pcmk__parse_comparison_test		\
 		 pcmk__parse_source_test		\
 		 pcmk__parse_type_test			\
