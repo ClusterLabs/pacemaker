@@ -469,8 +469,8 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
     attribute_value_t *a_v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
     a_v->nodeid = v->nodeid;
-    a_v->nodename = strdup(v->nodename);
-    pcmk__str_update(&a_v->current, v->current);
+    a_v->nodename = pcmk__str_copy(v->nodename);
+    a_v->current = pcmk__str_copy(v->current);
 
     g_hash_table_replace(t, a_v->nodename, a_v);
 }
@@ -614,7 +614,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                  a->id, pcmk__s(a->set_id, "unspecified"));
     }
     if (cib_updates > 0) {
-        char *id = NULL;
+        char *id = pcmk__str_copy(a->id);
 
         // Commit transaction
         a->update = the_cib->cmds->end_transaction(the_cib, true, cib_none);
@@ -623,7 +623,6 @@ write_attribute(attribute_t *a, bool ignore_delay)
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
                  a->id, pcmk__s(a->set_id, "unspecified"));
 
-        pcmk__str_update(&id, a->id);
         if (the_cib->cmds->register_callback_full(the_cib, a->update,
                                                   CIB_OP_TIMEOUT_S, FALSE, id,
                                                   "attrd_cib_callback",

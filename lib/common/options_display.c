@@ -35,10 +35,8 @@ add_possible_values_default(pcmk__output_t *out,
 
     if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
         const char *delim = ", ";
-        char *str = NULL;
         bool found_default = (option->default_value == NULL);
-
-        pcmk__str_update(&str, option->values);
+        char *str = pcmk__str_copy(option->values);
 
         for (const char *value = strtok(str, delim); value != NULL;
              value = strtok(NULL, delim)) {
@@ -265,11 +263,8 @@ add_possible_values_xml(pcmk__output_t *out,
 {
     if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
         const char *delim = ", ";
-        char *str = NULL;
-        char *ptr = NULL;
-
-        pcmk__str_update(&str, option->values);
-        ptr = strtok(str, delim);
+        char *str = pcmk__str_copy(option->values);
+        const char *ptr = strtok(str, delim);
 
         while (ptr != NULL) {
             pcmk__output_create_xml_node(out, PCMK_XE_OPTION,

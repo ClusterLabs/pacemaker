@@ -157,10 +157,8 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
     hash_value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
 
     if (hash_value) {
-        char *value = NULL;
+        char *value = pcmk__str_copy(hash_value);
         char *valptr = value;
-
-        pcmk__str_update(&value, hash_value);
 
         if (target != NULL) {
             for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
@@ -1173,7 +1171,7 @@ schedule_internal_command(const char *origin,
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
     cmd->action = strdup(action);
-    pcmk__str_update(&cmd->target, target);
+    cmd->target = pcmk__str_copy(target);
     cmd->device = strdup(device->id);
     cmd->origin = strdup(origin);
     cmd->client = strdup(crm_system_name);
@@ -2257,8 +2255,8 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
 
     search = pcmk__assert_alloc(1, sizeof(struct device_search_s));
 
-    pcmk__str_update(&search->host, host);
-    pcmk__str_update(&search->action, action);
+    search->host = pcmk__str_copy(host);
+    search->action = pcmk__str_copy(action);
     search->per_device_timeout = timeout;
     search->allow_suicide = suicide;
     search->callback = callback;
@@ -3253,10 +3251,10 @@ handle_query_request(pcmk__request_t *request)
     query = pcmk__assert_alloc(1, sizeof(struct st_query_data));
 
     query->reply = fenced_construct_reply(request->xml, NULL, &request->result);
-    pcmk__str_update(&query->remote_peer, request->peer);
-    pcmk__str_update(&query->client_id, client_id);
-    pcmk__str_update(&query->target, target);
-    pcmk__str_update(&query->action, action);
+    query->remote_peer = pcmk__str_copy(request->peer);
+    query->client_id = pcmk__str_copy(client_id);
+    query->target = pcmk__str_copy(target);
+    query->action = pcmk__str_copy(action);
     query->call_options = request->call_options;
 
     crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);

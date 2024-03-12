@@ -766,15 +766,13 @@ pcmk_acl_required(const char *user)
 char *
 pcmk__uid2username(uid_t uid)
 {
-    char *result = NULL;
     struct passwd *pwent = getpwuid(uid);
 
     if (pwent == NULL) {
         crm_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
         return NULL;
     }
-    pcmk__str_update(&result, pwent->pw_name);
-    return result;
+    return pcmk__str_copy(pwent->pw_name);
 }
 
 /*!

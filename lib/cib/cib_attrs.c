@@ -187,8 +187,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             free_xml(xml_search);
             return ENOTUNIQ;
         } else {
-            pcmk__str_update(&local_attr_id,
-                             crm_element_value(xml_search, PCMK_XA_ID));
+            local_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
             attr_id = local_attr_id;
             free_xml(xml_search);
             goto do_modify;
@@ -384,8 +383,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
             free_xml(xml_search);
             return rc;
         } else {
-            pcmk__str_update(&local_attr_id,
-                             crm_element_value(xml_search, PCMK_XA_ID));
+            local_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
             attr_id = local_attr_id;
             free_xml(xml_search);
         }

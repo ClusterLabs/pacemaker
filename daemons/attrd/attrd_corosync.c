@@ -241,7 +241,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     if (v == NULL) {
         v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
-        pcmk__str_update(&v->nodename, host);
+        v->nodename = pcmk__str_copy(host);
         g_hash_table_replace(a->values, v->nodename, v);
     }
 

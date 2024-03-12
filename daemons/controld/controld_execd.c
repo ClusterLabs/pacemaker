@@ -181,7 +181,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         entry->rsc.id = entry->id;
         entry->rsc.type = strdup(rsc->type);
         entry->rsc.standard = strdup(rsc->standard);
-        pcmk__str_update(&entry->rsc.provider, rsc->provider);
+        entry->rsc.provider = pcmk__str_copy(rsc->provider);
 
     } else if (entry == NULL) {
         crm_info("Resource %s no longer exists, not updating cache", op->rsc_id);
@@ -2031,7 +2031,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
-        pcmk__str_update(&pending->user_data, op->user_data);
+        pending->user_data = pcmk__str_copy(op->user_data);
         if (crm_element_value_epoch(msg, PCMK_OPT_SHUTDOWN_LOCK,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;

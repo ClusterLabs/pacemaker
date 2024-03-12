@@ -224,7 +224,7 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
         int_value = atoi(old_value);
         new_value = pcmk__itoa(++int_value);
     } else {
-        pcmk__str_update(&new_value, "1");
+        new_value = pcmk__str_copy("1");
     }
 
     crm_trace("Update %s from %s to %s",

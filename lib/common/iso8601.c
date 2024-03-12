@@ -694,12 +694,9 @@ char *
 crm_time_as_string(const crm_time_t *dt, int flags)
 {
     char result[DATE_MAX] = { '\0', };
-    char *result_copy = NULL;
 
     time_as_string_common(dt, 0, flags, result);
-
-    pcmk__str_update(&result_copy, result);
-    return result_copy;
+    return pcmk__str_copy(result);
 }
 
 /*!
@@ -2001,21 +1998,15 @@ char *
 pcmk__epoch2str(const time_t *source, uint32_t flags)
 {
     time_t epoch_time = (source == NULL)? time(NULL) : *source;
-    char *result = NULL;
 
     if (flags == 0) {
-        const char *buf = pcmk__trim(ctime(&epoch_time));
-
-        if (buf != NULL) {
-            pcmk__str_update(&result, buf);
-        }
+        return pcmk__str_copy(pcmk__trim(ctime(&epoch_time)));
     } else {
         crm_time_t dt;
 
         crm_time_set_timet(&dt, &epoch_time);
-        result = crm_time_as_string(&dt, flags);
+        return crm_time_as_string(&dt, flags);
     }
-    return result;
 }
 
 /*!
@@ -2041,7 +2032,6 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
     struct timespec tmp_ts;
     crm_time_t dt;
     char result[DATE_MAX] = { 0 };
-    char *result_copy = NULL;
 
     if (ts == NULL) {
         qb_util_timespec_from_epoch_get(&tmp_ts);
@@ -2049,8 +2039,7 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
     }
     crm_time_set_timet(&dt, &ts->tv_sec);
     time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags, result);
-    pcmk__str_update(&result_copy, result);
-    return result_copy;
+    return pcmk__str_copy(result);
 }
 
 /*!

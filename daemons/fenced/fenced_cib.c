@@ -326,7 +326,6 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
     char *reason = NULL;
-    bool needs_update = FALSE;
     xmlNode *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     for (change = pcmk__xe_first_child(patchset); change != NULL;
@@ -348,12 +347,12 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 
             if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
                 || (strstr(xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
-                needs_update = TRUE;
-                pcmk__str_update(&reason,
-                                 "(meta) attribute deleted from resource");
+
+                reason = pcmk__str_copy("(meta) attribute deleted from "
+                                        "resource");
                 break;
             }
-            pcmk__str_update(&mutable, xpath);
+            mutable = pcmk__str_copy(xpath);
             rsc_id = strstr(mutable, PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
             if (rsc_id != NULL) {
                 rsc_id += strlen(PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
@@ -374,18 +373,17 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
                    || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
-            needs_update = TRUE;
             break;
         }
     }
 
-    if(needs_update) {
+    if (reason != NULL) {
         crm_info("Updating device list from CIB: %s", reason);
         cib_devices_update();
+        free(reason);
     } else {
         crm_trace("No updates for device list found in CIB");
     }
-    free(reason);
 }
 
 static void

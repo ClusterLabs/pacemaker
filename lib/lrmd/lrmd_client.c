@@ -196,8 +196,9 @@ lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
 {
     lrmd_event_data_t *event = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
-    pcmk__str_update((char **) &event->rsc_id, rsc_id);
-    pcmk__str_update((char **) &event->op_type, task);
+    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
+    event->rsc_id = pcmk__str_copy(rsc_id);
+    event->op_type = pcmk__str_copy(task);
     event->interval_ms = interval_ms;
     return event;
 }
@@ -210,9 +211,15 @@ lrmd_copy_event(lrmd_event_data_t * event)
     copy = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
     copy->type = event->type;
-    pcmk__str_update((char **) &copy->rsc_id, event->rsc_id);
-    pcmk__str_update((char **) &copy->op_type, event->op_type);
-    pcmk__str_update((char **) &copy->user_data, event->user_data);
+
+    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
+    copy->rsc_id = pcmk__str_copy(event->rsc_id);
+    copy->op_type = pcmk__str_copy(event->op_type);
+    copy->user_data = pcmk__str_copy(event->user_data);
+    copy->output = pcmk__str_copy(event->output);
+    copy->remote_nodename = pcmk__str_copy(event->remote_nodename);
+    copy->exit_reason = pcmk__str_copy(event->exit_reason);
+
     copy->call_id = event->call_id;
     copy->timeout = event->timeout;
     copy->interval_ms = event->interval_ms;
@@ -220,15 +227,12 @@ lrmd_copy_event(lrmd_event_data_t * event)
     copy->rsc_deleted = event->rsc_deleted;
     copy->rc = event->rc;
     copy->op_status = event->op_status;
-    pcmk__str_update((char **) &copy->output, event->output);
     copy->t_run = event->t_run;
     copy->t_rcchange = event->t_rcchange;
     copy->exec_time = event->exec_time;
     copy->queue_time = event->queue_time;
     copy->connection_rc = event->connection_rc;
     copy->params = pcmk__str_table_dup(event->params);
-    pcmk__str_update((char **) &copy->remote_nodename, event->remote_nodename);
-    pcmk__str_update((char **) &copy->exit_reason, event->exit_reason);
 
     return copy;
 }
@@ -1774,10 +1778,10 @@ lrmd_new_rsc_info(const char *rsc_id, const char *standard,
 {
     lrmd_rsc_info_t *rsc_info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
-    pcmk__str_update(&rsc_info->id, rsc_id);
-    pcmk__str_update(&rsc_info->standard, standard);
-    pcmk__str_update(&rsc_info->provider, provider);
-    pcmk__str_update(&rsc_info->type, type);
+    rsc_info->id = pcmk__str_copy(rsc_id);
+    rsc_info->standard = pcmk__str_copy(standard);
+    rsc_info->provider = pcmk__str_copy(provider);
+    rsc_info->type = pcmk__str_copy(type);
     return rsc_info;
 }
 
@@ -2529,6 +2533,8 @@ lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
 
     event->rc = rc;
     event->op_status = op_status;
+
+    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
     pcmk__str_update((char **) &event->exit_reason, exit_reason);
 }
 

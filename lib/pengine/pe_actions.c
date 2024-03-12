@@ -171,7 +171,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     pcmk_action_t *action = pcmk__assert_alloc(1, sizeof(pcmk_action_t));
 
     action->rsc = rsc;
-    pcmk__str_update(&(action->task), task);
+    action->task = pcmk__str_copy(task);
     action->uuid = key;
 
     if (node) {
@@ -699,7 +699,6 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
                          const xmlNode *action_config)
 {
     GHashTable *meta = NULL;
-    char *name = NULL;
     const char *timeout_spec = NULL;
     const char *str = NULL;
 
@@ -770,9 +769,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Normalize interval to milliseconds
     if (interval_ms > 0) {
-        name = strdup(PCMK_META_INTERVAL);
-        CRM_ASSERT(name != NULL);
-        g_hash_table_insert(meta, name, crm_strdup_printf("%u", interval_ms));
+        g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_INTERVAL),
+                            crm_strdup_printf("%u", interval_ms));
     } else {
         g_hash_table_remove(meta, PCMK_META_INTERVAL);
     }
@@ -806,10 +804,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // Normalize timeout to positive milliseconds
-    name = strdup(PCMK_META_TIMEOUT);
-    CRM_ASSERT(name != NULL);
     timeout_spec = g_hash_table_lookup(meta, PCMK_META_TIMEOUT);
-    g_hash_table_insert(meta, name, pcmk__itoa(unpack_timeout(timeout_spec)));
+    g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_TIMEOUT),
+                        pcmk__itoa(unpack_timeout(timeout_spec)));
 
     // Ensure on-fail has a valid value
     validate_on_fail(rsc, action_name, action_config, meta);
@@ -824,9 +821,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
                                    rsc->cluster->now, &start_delay)) {
-            name = strdup(PCMK_META_START_DELAY);
-            CRM_ASSERT(name != NULL);
-            g_hash_table_insert(meta, name,
+            g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_START_DELAY),
                                 crm_strdup_printf("%lld", start_delay));
         }
     }
@@ -1869,11 +1864,8 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
 void
 pe__add_action_expected_result(pcmk_action_t *action, int expected_result)
 {
-    char *name = NULL;
-
     CRM_ASSERT((action != NULL) && (action->meta != NULL));
 
-    pcmk__str_update(&name, PCMK__META_OP_TARGET_RC);
-
-    g_hash_table_insert(action->meta, name, pcmk__itoa(expected_result));
+    g_hash_table_insert(action->meta, pcmk__str_copy(PCMK__META_OP_TARGET_RC),
+                        pcmk__itoa(expected_result));
 }

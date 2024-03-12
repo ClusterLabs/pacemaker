@@ -656,8 +656,8 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
     cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE,
                               rsc->cluster);
 
-    pcmk__str_update(&cancel_op->task, PCMK_ACTION_CANCEL);
-    pcmk__str_update(&cancel_op->cancel_task, task);
+    cancel_op->task = pcmk__str_copy(PCMK_ACTION_CANCEL);
+    cancel_op->cancel_task = pcmk__str_copy(task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);
     pcmk__insert_meta(cancel_op, PCMK_XA_OPERATION, task);

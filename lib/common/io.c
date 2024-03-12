@@ -633,19 +633,13 @@ pcmk__close_fds_in_child(bool all)
 char *
 pcmk__full_path(const char *filename, const char *dirname)
 {
-    char *path = NULL;
-
     CRM_ASSERT(filename != NULL);
 
     if (filename[0] == '/') {
-        pcmk__str_update(&path, filename);
-
-    } else {
-        CRM_ASSERT(dirname != NULL);
-        path = crm_strdup_printf("%s/%s", dirname, filename);
+        return pcmk__str_copy(filename);
     }
-
-    return path;
+    CRM_ASSERT(dirname != NULL);
+    return crm_strdup_printf("%s/%s", dirname, filename);
 }
 
 // Deprecated functions kept only for backward API compatibility

@@ -387,9 +387,7 @@ xml_get_path(const xmlNode *xml)
     if (g_path == NULL) {
         return NULL;
     }
-
-    pcmk__str_update(&path, g_path->str);
-
+    path = pcmk__str_copy(g_path->str);
     g_string_free(g_path, TRUE);
     return path;
 }

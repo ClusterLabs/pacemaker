@@ -785,7 +785,7 @@ set_identity(const char *entity, int argc, char *const *argv)
     }
 
     if (entity != NULL) {
-        pcmk__str_update(&crm_system_name, entity);
+        crm_system_name = pcmk__str_copy(entity);
 
     } else if ((argc > 0) && (argv != NULL)) {
         char *mutable = strdup(argv[0]);
@@ -794,11 +794,11 @@ set_identity(const char *entity, int argc, char *const *argv)
         if (strstr(modified, "lt-") == modified) {
             modified += 3;
         }
-        pcmk__str_update(&crm_system_name, modified);
+        crm_system_name = pcmk__str_copy(modified);
         free(mutable);
 
     } else {
-        pcmk__str_update(&crm_system_name, "Unknown");
+        crm_system_name = pcmk__str_copy("Unknown");
     }
 
     // Used by fencing.py.py (in fence-agents)

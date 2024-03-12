@@ -223,8 +223,8 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 
     new_list = pcmk__assert_alloc(1, sizeof(text_list_data_t));
     new_list->len = 0;
-    pcmk__str_update(&new_list->singular_noun, singular_noun);
-    pcmk__str_update(&new_list->plural_noun, plural_noun);
+    new_list->singular_noun = pcmk__str_copy(singular_noun);
+    new_list->plural_noun = pcmk__str_copy(plural_noun);
 
     g_queue_push_tail(priv->parent_q, new_list);
 }

@@ -700,16 +700,9 @@ pcmk__strkey_table(GDestroyNotify key_destroy_func,
 void
 pcmk__insert_dup(GHashTable *table, const char *name, const char *value)
 {
-    char *name_copy = NULL;
-    char *value_copy = NULL;
-
     CRM_ASSERT((table != NULL) && (name != NULL));
 
-    pcmk__str_update(&name_copy, name);
-    if (value != NULL) {
-        pcmk__str_update(&value_copy, value);
-    }
-    g_hash_table_insert(table, name_copy, value_copy);
+    g_hash_table_insert(table, pcmk__str_copy(name), pcmk__str_copy(value));
 }
 
 /* used with hash tables where case does not matter */
@@ -1294,12 +1287,7 @@ pcmk__str_update(char **str, const char *value)
 {
     if ((str != NULL) && !pcmk__str_eq(*str, value, pcmk__str_none)) {
         free(*str);
-        if (value == NULL) {
-            *str = NULL;
-        } else {
-            *str = strdup(value);
-            pcmk__mem_assert(*str);
-        }
+        *str = pcmk__str_copy(value);
     }
 }
 

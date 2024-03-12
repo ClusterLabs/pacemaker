@@ -52,8 +52,8 @@ pcmk__new_nvpair(const char *name, const char *value)
 
     nvpair = pcmk__assert_alloc(1, sizeof(pcmk_nvpair_t));
 
-    pcmk__str_update(&nvpair->name, name);
-    pcmk__str_update(&nvpair->value, value);
+    nvpair->name = pcmk__str_copy(name);
+    nvpair->value = pcmk__str_copy(value);
     return nvpair;
 }
 
@@ -673,10 +673,7 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 char *
 crm_element_value_copy(const xmlNode *data, const char *name)
 {
-    char *value_copy = NULL;
-
-    pcmk__str_update(&value_copy, crm_element_value(data, name));
-    return value_copy;
+    return pcmk__str_copy(crm_element_value(data, name));
 }
 
 /*!

@@ -780,7 +780,7 @@ dump_xml_formatted(const xmlNode *xml)
 
     pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
 
-    pcmk__str_update(&str, buffer->str);
+    str = pcmk__str_copy(buffer->str);
     g_string_free(buffer, TRUE);
     return str;
 }
@@ -793,7 +793,7 @@ dump_xml_formatted_with_text(const xmlNode *xml)
 
     pcmk__xml_string(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buffer, 0);
 
-    pcmk__str_update(&str, buffer->str);
+    str = pcmk__str_copy(buffer->str);
     g_string_free(buffer, TRUE);
     return str;
 }
@@ -806,7 +806,7 @@ dump_xml_unformatted(const xmlNode *xml)
 
     pcmk__xml_string(xml, 0, buffer, 0);
 
-    pcmk__str_update(&str, buffer->str);
+    str = pcmk__str_copy(buffer->str);
     g_string_free(buffer, TRUE);
     return str;
 }

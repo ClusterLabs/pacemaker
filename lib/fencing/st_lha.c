@@ -211,22 +211,23 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         stonith_obj = (*st_new_fn) (agent);
         if (stonith_obj) {
             (*st_log_fn) (stonith_obj, (PILLogFun) & stonith_plugin);
-            pcmk__str_update(&meta_longdesc,
-                             (*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
+
+            meta_longdesc = pcmk__str_copy((*st_info_fn)(stonith_obj,
+                                                         ST_DEVICEDESCR));
             if (meta_longdesc == NULL) {
                 crm_warn("no long description in %s's metadata.", agent);
                 meta_longdesc = strdup(no_parameter_info);
             }
 
-            pcmk__str_update(&meta_shortdesc,
-                             (*st_info_fn) (stonith_obj, ST_DEVICEID));
+            meta_shortdesc = pcmk__str_copy((*st_info_fn)(stonith_obj,
+                                                          ST_DEVICEID));
             if (meta_shortdesc == NULL) {
                 crm_warn("no short description in %s's metadata.", agent);
                 meta_shortdesc = strdup(no_parameter_info);
             }
 
-            pcmk__str_update(&meta_param,
-                             (*st_info_fn) (stonith_obj, ST_CONF_XML));
+            meta_param = pcmk__str_copy((*st_info_fn)(stonith_obj,
+                                                      ST_CONF_XML));
             if (meta_param == NULL) {
                 crm_warn("no list of parameters in %s's metadata.", agent);
                 meta_param = strdup(no_parameter_info);

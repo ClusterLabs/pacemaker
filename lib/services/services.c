@@ -415,9 +415,8 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    pcmk__str_update(&(action->id), id);
-    pcmk__str_update(&(action->standard), PCMK_RESOURCE_CLASS_ALERT);
-
+    action->id = pcmk__str_copy(id);
+    action->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_ALERT);
     action->timeout = timeout;
     action->params = params;
     action->sequence = sequence;

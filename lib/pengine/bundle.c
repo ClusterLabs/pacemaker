@@ -867,9 +867,9 @@ mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
     pe__bundle_mount_t *mount = pcmk__assert_alloc(1,
                                                    sizeof(pe__bundle_mount_t));
 
-    pcmk__str_update(&mount->source, source);
-    pcmk__str_update(&mount->target, target);
-    pcmk__str_update(&mount->options, options);
+    mount->source = pcmk__str_copy(source);
+    mount->target = pcmk__str_copy(target);
+    mount->options = pcmk__str_copy(options);
     mount->flags = flags;
     bundle_data->mounts = g_list_append(bundle_data->mounts, mount);
 }

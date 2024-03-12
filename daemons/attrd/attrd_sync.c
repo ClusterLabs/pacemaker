@@ -147,8 +147,6 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
 
     wl = pcmk__assert_alloc(1, sizeof(struct waitlist_node));
 
-    pcmk__str_update(&(wl->client_id), request->ipc_client->id);
-
     if (pcmk__str_eq(sync_point, PCMK__VALUE_LOCAL, pcmk__str_none)) {
         wl->sync_point = attrd_sync_point_local;
     } else if (pcmk__str_eq(sync_point, PCMK__VALUE_CLUSTER, pcmk__str_none)) {
@@ -158,6 +156,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
         return;
     }
 
+    wl->client_id = pcmk__str_copy(request->ipc_client->id);
     wl->ipc_id = request->ipc_id;
     wl->flags = request->flags;
 
@@ -498,10 +497,8 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     g_hash_table_iter_init(&iter, peer_protocol_vers);
     while (g_hash_table_iter_next(&iter, &host, &ver)) {
         if (ATTRD_SUPPORTS_CONFIRMATION(GPOINTER_TO_INT(ver))) {
-            char *s = NULL;
-
-            pcmk__str_update(&s, (char *) host);
-            respondents = g_list_prepend(respondents, s);
+            respondents = g_list_prepend(respondents,
+                                         pcmk__str_copy((char *) host));
         }
     }
 
@@ -510,9 +507,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     action->respondents = respondents;
     action->fn = fn;
     action->xml = pcmk__xml_copy(NULL, request->xml);
-
-    pcmk__str_update(&(action->client_id), request->ipc_client->id);
-
+    action->client_id = pcmk__str_copy(request->ipc_client->id);
     action->ipc_id = request->ipc_id;
     action->flags = request->flags;
 

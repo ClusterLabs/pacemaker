@@ -3516,13 +3516,13 @@ last_change_str(const xmlNode *xml_op)
 
         // Skip day of week to make message shorter
         if ((p != NULL) && (*(++p) != '\0')) {
-            pcmk__str_update(&result, p);
+            result = pcmk__str_copy(p);
         }
         free(when_s);
     }
 
     if (result == NULL) {
-        pcmk__str_update(&result, "unknown time");
+        result = pcmk__str_copy("unknown_time");
     }
 
     return result;

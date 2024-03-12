@@ -615,7 +615,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     total = iov[0].iov_len + header->size_uncompressed;
 
     if (total < max_send_size) {
-        pcmk__str_update((char **) &(iov[1].iov_base), buffer->str);
+        iov[1].iov_base = pcmk__str_copy(buffer->str);
         iov[1].iov_len = header->size_uncompressed;
 
     } else {

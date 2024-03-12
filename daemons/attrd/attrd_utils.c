@@ -288,11 +288,9 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
     pcmk__scan_min_int(value, &ver, 0);
 
     if (ver > 0) {
-        char *host_name = NULL;
-
         /* Record the peer attrd's protocol version. */
-        pcmk__str_update(&host_name, host);
-        g_hash_table_insert(peer_protocol_vers, host_name, GINT_TO_POINTER(ver));
+        g_hash_table_insert(peer_protocol_vers, pcmk__str_copy(host),
+                            GINT_TO_POINTER(ver));
 
         /* If the protocol version is a new minimum, record it as such. */
         if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {

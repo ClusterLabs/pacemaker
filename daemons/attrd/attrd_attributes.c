@@ -49,17 +49,15 @@ attrd_create_attribute(xmlNode *xml)
 
     a = pcmk__assert_alloc(1, sizeof(attribute_t));
 
+    a->id = pcmk__str_copy(name);
+    a->set_type = pcmk__str_copy(set_type);
+    a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
+    a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
+    a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
+
     if (is_private) {
         attrd_set_attr_flags(a, attrd_attr_is_private);
     }
-
-    pcmk__str_update(&a->id, name);
-    pcmk__str_update(&a->set_type, set_type);
-
-    a->set_id = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
-
-    a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
 
     if (dampen_s != NULL) {
         dampen = crm_get_msec(dampen_s);
@@ -245,7 +243,7 @@ attrd_set_id(const attribute_t *attr, const char *node_state_id)
          * attribute, which would break backward compatibility, pose design
          * challenges, and potentially cause problems in rolling upgrades.
          */
-        pcmk__str_update(&set_id, attr->set_id);
+        set_id = pcmk__str_copy(attr->set_id);
     }
     crm_xml_sanitize_id(set_id);
     return set_id;

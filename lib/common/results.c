@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1091,9 +1091,9 @@ pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
     CRM_CHECK((src != NULL) && (dst != NULL), return);
     dst->exit_status = src->exit_status;
     dst->execution_status = src->execution_status;
-    pcmk__str_update(&dst->exit_reason, src->exit_reason);
-    pcmk__str_update(&dst->action_stdout, src->action_stdout);
-    pcmk__str_update(&dst->action_stderr, src->action_stderr);
+    dst->exit_reason = pcmk__str_copy(src->exit_reason);
+    dst->action_stdout = pcmk__str_copy(src->action_stdout);
+    dst->action_stderr = pcmk__str_copy(src->action_stderr);
 }
 
 // Deprecated functions kept only for backward API compatibility

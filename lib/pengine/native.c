@@ -329,7 +329,6 @@ char *
 native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                  const char *name, pcmk_scheduler_t *scheduler)
 {
-    char *value_copy = NULL;
     const char *value = NULL;
     GHashTable *params = NULL;
 
@@ -343,8 +342,7 @@ native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
         /* try meta attributes instead */
         value = g_hash_table_lookup(rsc->meta, name);
     }
-    pcmk__str_update(&value_copy, value);
-    return value_copy;
+    return pcmk__str_copy(value);
 }
 
 gboolean

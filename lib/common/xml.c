@@ -738,7 +738,7 @@ free_xml_with_position(xmlNode * child, int position)
                     deleted_obj =
                         pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
 
-                    pcmk__str_update(&(deleted_obj->path), xpath->str);
+                    deleted_obj->path = pcmk__str_copy(xpath->str);
                     g_string_free(xpath, TRUE);
 
                     deleted_obj->position = -1;
@@ -1124,7 +1124,7 @@ pcmk__xml_escape(const char *text, bool escape_quote)
         return NULL;
     }
     length = strlen(text);
-    pcmk__str_update(&copy, text);
+    copy = pcmk__str_copy(text);
 
     for (size_t index = 0; index < length; index++) {
         // Don't escape any non-ASCII characters
@@ -2206,7 +2206,7 @@ crm_xml_escape(const char *text)
     }
 
     length = strlen(text);
-    pcmk__str_update(&copy, text);
+    copy = pcmk__str_copy(text);
     for (size_t index = 0; index <= length; index++) {
         if(copy[index] & 0x80 && copy[index+1] & 0x80){
             index++;
