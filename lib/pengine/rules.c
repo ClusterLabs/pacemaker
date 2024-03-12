@@ -87,45 +87,6 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
     return pe_eval_rules(ruleset, &rule_data, next_change);
 }
 
-/*!
- * \brief Evaluate one rule subelement (pass/fail)
- *
- * A rule element may contain another rule, a node attribute expression, or a
- * date expression. Given any one of those, evaluate it and return whether it
- * passed.
- *
- * \param[in,out] expr         Rule subelement XML
- * \param[in]     node_hash    Node attributes to use when evaluating expression
- * \param[in]     role         Ignored (deprecated)
- * \param[in]     now          Time to use when evaluating expression
- * \param[out]    next_change  If not NULL, set to when evaluation will change
- * \param[in]     match_data   If not NULL, resource back-references and params
- *
- * \return TRUE if expression is in effect under given conditions, else FALSE
- */
-gboolean
-pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
-                   crm_time_t *now, crm_time_t *next_change,
-                   pe_match_data_t *match_data)
-{
-    pcmk_rule_input_t rule_input = {
-        .now = now,
-        .node_attrs = node_hash,
-    };
-
-    if (match_data != NULL) {
-        rule_input.rsc_params = match_data->params;
-        rule_input.rsc_meta = match_data->meta;
-        if (match_data->re != NULL) {
-            rule_input.rsc_id = match_data->re->string;
-            rule_input.rsc_id_submatches = match_data->re->pmatch;
-            rule_input.rsc_id_nmatches = match_data->re->nregs;
-        }
-    }
-    return pcmk__evaluate_condition(expr, &rule_input,
-                                    next_change) == pcmk_rc_ok;
-}
-
 // Information about a block of nvpair elements
 typedef struct sorted_set_s {
     int score;                  // This block's score for sorting
@@ -530,6 +491,29 @@ pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                   crm_time_t *now, pe_match_data_t *match_data)
 {
     return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
+}
+
+gboolean
+pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
+                   crm_time_t *now, crm_time_t *next_change,
+                   pe_match_data_t *match_data)
+{
+    pcmk_rule_input_t rule_input = {
+        .now = now,
+        .node_attrs = node_hash,
+    };
+
+    if (match_data != NULL) {
+        rule_input.rsc_params = match_data->params;
+        rule_input.rsc_meta = match_data->meta;
+        if (match_data->re != NULL) {
+            rule_input.rsc_id = match_data->re->string;
+            rule_input.rsc_id_submatches = match_data->re->pmatch;
+            rule_input.rsc_id_nmatches = match_data->re->nregs;
+        }
+    }
+    return pcmk__evaluate_condition(expr, &rule_input,
+                                    next_change) == pcmk_rc_ok;
 }
 
 gboolean

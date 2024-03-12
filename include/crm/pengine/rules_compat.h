@@ -50,16 +50,22 @@ gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
                            enum rsc_role_e role, crm_time_t *now,
                            pe_match_data_t *match_data);
 
-//! \deprecated Use pe_test_expression() instead
+//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
+gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
+                            enum rsc_role_e role, crm_time_t *now,
+                            crm_time_t *next_change,
+                            pe_match_data_t *match_data);
+
+//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
 gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
                          enum rsc_role_e role, crm_time_t *now);
 
-//! \deprecated Use pe_test_expression() instead
+//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
 gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
                          enum rsc_role_e role, crm_time_t *now,
                          pe_re_match_data_t *re_match_data);
 
-//! \deprecated Use pe_test_expression() instead
+//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
 gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
                                  enum rsc_role_e role,
                                  crm_time_t *now, pe_match_data_t *match_data);
