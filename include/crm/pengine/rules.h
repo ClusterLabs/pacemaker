@@ -23,10 +23,6 @@ extern "C" {
 gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
                            crm_time_t *now, crm_time_t *next_change);
 
-gboolean pe_test_rule(xmlNode *rule, GHashTable *node_hash,
-                      enum rsc_role_e role, crm_time_t *now,
-                      crm_time_t *next_change, pe_match_data_t *match_data);
-
 gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             enum rsc_role_e role, crm_time_t *now,
                             crm_time_t *next_change,
