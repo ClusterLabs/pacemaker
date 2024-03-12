@@ -416,7 +416,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     if (client->name == NULL) {
-        client->name = strdup(client->id);
+        client->name = pcmk__str_copy(client->id);
     }
 
     /* unset dangerous options */
@@ -511,7 +511,7 @@ cib_remote_msg(gpointer data)
 
         user = crm_element_value(command, PCMK_XA_USER);
         if (user) {
-            client->user = strdup(user);
+            client->user = pcmk__str_copy(user);
         }
 
         /* send ACK */
@@ -625,7 +625,7 @@ authenticate_user(const char *user, const char *passwd)
     }
 
     p_conv.conv = construct_pam_passwd;
-    p_conv.appdata_ptr = strdup(passwd);
+    p_conv.appdata_ptr = pcmk__str_copy(passwd);
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {

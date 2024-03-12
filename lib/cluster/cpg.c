@@ -973,7 +973,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
 
     if (node) {
         if (node->uname) {
-            target = strdup(node->uname);
+            target = pcmk__str_copy(node->uname);
             msg->host.size = strlen(node->uname);
             memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->uname, msg->host.size);
@@ -982,7 +982,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         }
         msg->host.id = node->id;
     } else {
-        target = strdup("all");
+        target = pcmk__str_copy("all");
     }
 
     msg->sender.id = 0;
@@ -1004,10 +1004,9 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     } else {
         char *compressed = NULL;
         unsigned int new_size = 0;
-        char *uncompressed = strdup(data);
 
-        if (pcmk__compress(uncompressed, (unsigned int) msg->size, 0,
-                           &compressed, &new_size) == pcmk_rc_ok) {
+        if (pcmk__compress(data, (unsigned int) msg->size, 0, &compressed,
+                           &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(pcmk__cpg_msg_t) + new_size;
             msg = pcmk__realloc(msg, msg->header.size);
@@ -1023,7 +1022,6 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
             memcpy(msg->data, data, msg->size);
         }
 
-        free(uncompressed);
         free(compressed);
     }
 

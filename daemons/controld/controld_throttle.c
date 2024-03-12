@@ -517,7 +517,7 @@ throttle_get_job_limit(const char *node)
     r = g_hash_table_lookup(throttle_records, node);
     if(r == NULL) {
         r = pcmk__assert_alloc(1, sizeof(struct throttle_record_s));
-        r->node = strdup(node);
+        r->node = pcmk__str_copy(node);
         r->mode = throttle_low;
         r->max = throttle_job_max;
         crm_trace("Defaulting to local values for unknown node %s", node);
@@ -561,7 +561,7 @@ throttle_update(xmlNode *xml)
 
     if(r == NULL) {
         r = pcmk__assert_alloc(1, sizeof(struct throttle_record_s));
-        r->node = strdup(from);
+        r->node = pcmk__str_copy(from);
         g_hash_table_insert(throttle_records, r->node, r);
     }
 

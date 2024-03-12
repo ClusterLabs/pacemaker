@@ -649,7 +649,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         cmd->target_nodeid = node->id;
     }
 
-    cmd->device = strdup(device->id);
+    cmd->device = pcmk__str_copy(device->id);
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
@@ -813,7 +813,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     crm_debug("Adding alias '%s'='%s'", name, value);
                     g_hash_table_replace(aliases, name, value);
                     if (targets) {
-                        *targets = g_list_append(*targets, strdup(value));
+                        *targets = g_list_append(*targets, pcmk__str_copy(value));
                     }
                     value = NULL;
                     name = NULL;
@@ -887,7 +887,7 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
             crm_err("Could not retrieve metadata for fencing agent %s", agent);
             return EAGAIN;
         }
-        g_hash_table_replace(metadata_cache, strdup(agent), buffer);
+        g_hash_table_replace(metadata_cache, pcmk__str_copy(agent), buffer);
     }
 
     *metadata = pcmk__xml_parse(buffer);
@@ -1000,7 +1000,7 @@ map_action(GHashTable *params, const char *action, const char *value)
     } else {
         crm_warn("Mapping %s='%s' to %s='%s'",
                  STONITH_ATTR_ACTION_OP, value, key, value);
-        g_hash_table_insert(params, key, strdup(value));
+        g_hash_table_insert(params, key, pcmk__str_copy(value));
     }
 }
 
@@ -1170,12 +1170,12 @@ schedule_internal_command(const char *origin,
     cmd->id = -1;
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
-    cmd->action = strdup(action);
+    cmd->action = pcmk__str_copy(action);
     cmd->target = pcmk__str_copy(target);
-    cmd->device = strdup(device->id);
-    cmd->origin = strdup(origin);
-    cmd->client = strdup(crm_system_name);
-    cmd->client_name = strdup(crm_system_name);
+    cmd->device = pcmk__str_copy(device->id);
+    cmd->origin = pcmk__str_copy(origin);
+    cmd->client = pcmk__str_copy(crm_system_name);
+    cmd->client_name = pcmk__str_copy(crm_system_name);
 
     cmd->internal_user_data = internal_user_data;
     cmd->done_cb = done_cb; /* cmd, not internal_user_data, is passed to 'done_cb' as the userdata */
@@ -1806,7 +1806,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         const char *device = dIter->value;
 
         crm_trace("Adding device '%s' for %s[%d]", device, tp->target, id);
-        tp->levels[id] = g_list_append(tp->levels[id], strdup(device));
+        tp->levels[id] = g_list_append(tp->levels[id], pcmk__str_copy(device));
     }
     stonith_key_value_freeall(devices, 1, 1);
 
@@ -2026,7 +2026,8 @@ search_devices_record_result(struct device_search_s *search, const char *device,
                 return;
             }
         }
-        search->capable = g_list_append(search->capable, strdup(device));
+        search->capable = g_list_append(search->capable,
+                                        pcmk__str_copy(device));
     }
 
     if (search->replies_needed == search->replies_received) {

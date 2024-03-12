@@ -804,8 +804,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     if (effective_user == NULL) {
         effective_user = pcmk__uid2username(geteuid());
         if (effective_user == NULL) {
-            effective_user = strdup("#unprivileged");
-            CRM_CHECK(effective_user != NULL, return NULL);
+            effective_user = pcmk__str_copy("#unprivileged");
             crm_err("Unable to determine effective user, assuming unprivileged for ACLs");
         }
     }

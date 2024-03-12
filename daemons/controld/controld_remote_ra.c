@@ -1049,10 +1049,10 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
     if ((lrm_state_find(rsc_id))) {
         info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
-        info->id = strdup(rsc_id);
-        info->type = strdup(REMOTE_LRMD_RA);
-        info->standard = strdup(PCMK_RESOURCE_CLASS_OCF);
-        info->provider = strdup("pacemaker");
+        info->id = pcmk__str_copy(rsc_id);
+        info->type = pcmk__str_copy(REMOTE_LRMD_RA);
+        info->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_OCF);
+        info->provider = pcmk__str_copy("pacemaker");
     }
 
     return info;
@@ -1208,7 +1208,7 @@ handle_dup:
     /* update the userdata */
     if (userdata) {
        free(cmd->userdata);
-       cmd->userdata = strdup(userdata);
+       cmd->userdata = pcmk__str_copy(userdata);
     }
 
     /* if we've already reported success, generate a new call id */
@@ -1287,17 +1287,11 @@ controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
     }
 
     cmd = pcmk__assert_alloc(1, sizeof(remote_ra_cmd_t));
-    cmd->owner = strdup(lrm_state->node_name);
-    cmd->rsc_id = strdup(rsc_id);
-    cmd->action = strdup(action);
-    cmd->userdata = strdup(userdata);
-    if ((cmd->owner == NULL) || (cmd->rsc_id == NULL) || (cmd->action == NULL)
-        || (cmd->userdata == NULL)) {
-        free_cmd(cmd);
-        lrmd_key_value_freeall(params);
-        return ENOMEM;
-    }
 
+    cmd->owner = pcmk__str_copy(lrm_state->node_name);
+    cmd->rsc_id = pcmk__str_copy(rsc_id);
+    cmd->action = pcmk__str_copy(action);
+    cmd->userdata = pcmk__str_copy(userdata);
     cmd->interval_ms = interval_ms;
     cmd->timeout = timeout_ms;
     cmd->start_delay = start_delay_ms;

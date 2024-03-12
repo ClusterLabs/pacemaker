@@ -149,7 +149,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         if (value == NULL) {
             client->name = pcmk__itoa(pcmk__client_pid(c));
         } else {
-            client->name = strdup(value);
+            client->name = pcmk__str_copy(value);
         }
     }
 

@@ -174,7 +174,10 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = strdup("#unprivileged");
-            CRM_CHECK(client->user != NULL, free(client); return NULL);
+            if (client->user == NULL) {
+                free(client);
+                return NULL;
+            }
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
         }

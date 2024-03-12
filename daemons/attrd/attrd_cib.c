@@ -196,10 +196,10 @@ attrd_cib_erase_transient_attrs(const char *node)
     call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
     free(xpath);
 
-    // strdup() is just for logging here, so ignore failure
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE,
-                                          strdup(node), "attrd_erase_cb",
-                                          attrd_erase_cb, free);
+                                          pcmk__str_copy(node),
+                                          "attrd_erase_cb", attrd_erase_cb,
+                                          free);
 }
 
 /*!

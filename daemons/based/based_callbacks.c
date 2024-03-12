@@ -360,7 +360,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         if (value == NULL) {
             cib_client->name = pcmk__itoa(cib_client->pid);
         } else {
-            cib_client->name = strdup(value);
+            cib_client->name = pcmk__str_copy(value);
             if (crm_is_daemon_name(value)) {
                 pcmk__set_client_flags(cib_client, cib_is_daemon);
             }
@@ -534,7 +534,7 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
                                                     sizeof(cib_local_notify_t));
 
     notify->notify_src = notify_src;
-    notify->client_id = strdup(client_id);
+    notify->client_id = pcmk__str_copy(client_id);
     notify->sync_reply = sync_reply;
     notify->from_peer = from_peer;
 

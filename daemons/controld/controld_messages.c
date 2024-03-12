@@ -576,7 +576,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     crm_trace("Validated IPC hello from client %s", client_name);
     crm_log_xml_trace(client_msg, "hello");
     if (curr_client) {
-        curr_client->userdata = strdup(client_name);
+        curr_client->userdata = pcmk__str_copy(client_name);
     }
     controld_trigger_fsa();
     return false;
@@ -737,7 +737,7 @@ handle_lrm_delete(xmlNode *stored_msg)
                      ((rc == pcmk_rc_ok)? "" : " not"));
             op = lrmd_new_event(rsc_id, PCMK_ACTION_DELETE, 0);
             op->type = lrmd_event_exec_complete;
-            op->user_data = strdup(transition? transition : FAKE_TE_ID);
+            op->user_data = pcmk__str_copy(pcmk__s(transition, FAKE_TE_ID));
             op->params = pcmk__strkey_table(free, free);
             pcmk__insert_dup(op->params, PCMK_XA_CRM_FEATURE_SET,
                              CRM_FEATURE_SET);

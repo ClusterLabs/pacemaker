@@ -492,19 +492,20 @@ start_child(pcmk_child_t * child)
         (void)setsid();
 
         /* Setup the two alternate arg arrays */
-        opts_vgrind[0] = strdup(VALGRIND_BIN);
+        opts_vgrind[0] = pcmk__str_copy(VALGRIND_BIN);
         if (use_callgrind) {
-            opts_vgrind[1] = strdup("--tool=callgrind");
-            opts_vgrind[2] = strdup("--callgrind-out-file=" CRM_STATE_DIR "/callgrind.out.%p");
-            opts_vgrind[3] = strdup(child->command);
+            opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
+            opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
+                                            CRM_STATE_DIR "/callgrind.out.%p");
+            opts_vgrind[3] = pcmk__str_copy(child->command);
             opts_vgrind[4] = NULL;
         } else {
-            opts_vgrind[1] = strdup(child->command);
+            opts_vgrind[1] = pcmk__str_copy(child->command);
             opts_vgrind[2] = NULL;
             opts_vgrind[3] = NULL;
             opts_vgrind[4] = NULL;
         }
-        opts_default[0] = strdup(child->command);
+        opts_default[0] = pcmk__str_copy(child->command);
 
         if(gid) {
             // Drop root group access if not needed

@@ -205,7 +205,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     /* Create a pattern that matches desired attributes */
 
     if (rsc == NULL) {
-        pattern = strdup(ATTRD_RE_CLEAR_ALL);
+        pattern = pcmk__str_copy(ATTRD_RE_CLEAR_ALL);
     } else if (op == NULL) {
         pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {

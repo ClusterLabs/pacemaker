@@ -270,7 +270,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
 static char *extract_node_uuid(const char *xpath) 
 {
-    char *mutable_path = strdup(xpath);
+    char *mutable_path = pcmk__str_copy(xpath);
     char *node_uuid = NULL;
     char *search = NULL;
     char *match = NULL;
@@ -289,7 +289,7 @@ static char *extract_node_uuid(const char *xpath)
     }
     search[0] = 0;
 
-    node_uuid = strdup(match);
+    node_uuid = pcmk__str_copy(match);
     free(mutable_path);
     return node_uuid;
 }
@@ -329,7 +329,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
 static void
 process_op_deletion(const char *xpath, xmlNode *change)
 {
-    char *mutable_key = strdup(xpath);
+    char *mutable_key = pcmk__str_copy(xpath);
     char *key;
     char *node_uuid;
 

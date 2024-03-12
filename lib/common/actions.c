@@ -455,8 +455,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
         crm_warn("Invalid UUID '%s' in transition key '%s'", local_uuid, key);
     }
     if (uuid) {
-        *uuid = strdup(local_uuid);
-        CRM_ASSERT(*uuid);
+        *uuid = pcmk__str_copy(local_uuid);
     }
     if (transition_id) {
         *transition_id = local_transition_id;

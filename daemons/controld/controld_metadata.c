@@ -75,11 +75,7 @@ ra_param_from_xml(xmlNode *param_xml)
 
     p = pcmk__assert_alloc(1, sizeof(struct ra_param_s));
 
-    p->rap_name = strdup(param_name);
-    if (p->rap_name == NULL) {
-        free(p);
-        return NULL;
-    }
+    p->rap_name = pcmk__str_copy(param_name);
 
     if (pcmk__xe_attr_is_true(param_xml, PCMK_XA_RELOADABLE)) {
         controld_set_ra_param_flags(p, ra_param_reloadable);

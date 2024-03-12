@@ -97,8 +97,8 @@ pcmk__alert_new(const char *id, const char *path)
     pcmk__alert_t *entry = pcmk__assert_alloc(1, sizeof(pcmk__alert_t));
 
     CRM_ASSERT((id != NULL) && (path != NULL));
-    entry->id = strdup(id);
-    entry->path = strdup(path);
+    entry->id = pcmk__str_copy(id);
+    entry->path = pcmk__str_copy(path);
     entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
     entry->flags = pcmk__alert_default;
     return entry;
@@ -165,6 +165,6 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
 {
     for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = %d", *key, value);
-        g_hash_table_insert(table, strdup(*key), pcmk__itoa(value));
+        g_hash_table_insert(table, pcmk__str_copy(*key), pcmk__itoa(value));
     }
 }

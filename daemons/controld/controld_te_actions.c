@@ -508,7 +508,7 @@ te_update_job_count_on(const char *target, int offset, bool migrate)
     r = g_hash_table_lookup(te_targets, target);
     if(r == NULL) {
         r = pcmk__assert_alloc(1, sizeof(struct te_peer_s));
-        r->name = strdup(target);
+        r->name = pcmk__str_copy(target);
         g_hash_table_insert(te_targets, r->name, r);
     }
 
@@ -587,7 +587,7 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
 
     if(r == NULL) {
         r = pcmk__assert_alloc(1, sizeof(struct te_peer_s));
-        r->name = strdup(target);
+        r->name = pcmk__str_copy(target);
         g_hash_table_insert(te_targets, r->name, r);
     }
 
