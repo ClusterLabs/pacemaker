@@ -28,7 +28,11 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Use pe_evaluate_rules() instead
+//! \deprecated Use pcmk_evaluate_rule() on each rule instead
+gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
+                           crm_time_t *now, crm_time_t *next_change);
+
+//! \deprecated Use pcmk_evaluate_rule() on each rule instead
 gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
 
 //! \deprecated Use pcmk_evaluate_rule() instead

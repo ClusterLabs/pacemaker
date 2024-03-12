@@ -62,28 +62,6 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-/*!
- * \brief Evaluate any rules contained by given XML element
- *
- * \param[in,out] xml          XML element to check for rules
- * \param[in]     node_hash    Node attributes to use to evaluate expressions
- * \param[in]     now          Time to use when evaluating expressions
- * \param[out]    next_change  If not NULL, set to when evaluation will change
- *
- * \return TRUE if no rules, or any of rules present is in effect, else FALSE
- */
-gboolean
-pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
-                  crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = {
-        .node_attrs = node_hash,
-        .now = now,
-    };
-
-    return pcmk__evaluate_rules(ruleset, &rule_input, next_change);
-}
-
 // Information about a block of nvpair elements
 typedef struct sorted_set_s {
     int score;                  // This block's score for sorting
@@ -346,6 +324,18 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 // LCOV_EXCL_START
 
 #include <crm/pengine/rules_compat.h>
+
+gboolean
+pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
+                  crm_time_t *next_change)
+{
+    pcmk_rule_input_t rule_input = {
+        .node_attrs = node_hash,
+        .now = now,
+    };
+
+    return pcmk__evaluate_rules(ruleset, &rule_input, next_change);
+}
 
 gboolean
 pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
