@@ -620,7 +620,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  * \param[in]     discover_mode  Resource discovery option for constraint
  * \param[in]     node           Node in constraint (or NULL if rule-based)
  *
- * \return Newly allocated location constraint
+ * \return Newly allocated location constraint on success, otherwise NULL
  * \note The result will be added to the cluster (via \p rsc) and should not be
  *       freed separately.
  */
@@ -630,54 +630,52 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
 {
     pcmk__location_t *new_con = NULL;
 
+    CRM_CHECK((node != NULL) || (node_score == 0), return NULL);
+
     if (id == NULL) {
         pcmk__config_err("Invalid constraint: no ID specified");
         return NULL;
+    }
 
-    } else if (rsc == NULL) {
+    if (rsc == NULL) {
         pcmk__config_err("Invalid constraint %s: no resource specified", id);
         return NULL;
-
-    } else if (node == NULL) {
-        CRM_CHECK(node_score == 0, return NULL);
     }
 
-    new_con = calloc(1, sizeof(pcmk__location_t));
-    if (new_con != NULL) {
-        new_con->id = strdup(id);
-        new_con->rsc = rsc;
-        new_con->nodes = NULL;
-        new_con->role_filter = pcmk_role_unknown;
+    new_con = pcmk__assert_alloc(1, sizeof(pcmk__location_t));
+    new_con->id = pcmk__str_copy(id);
+    new_con->rsc = rsc;
+    new_con->nodes = NULL;
+    new_con->role_filter = pcmk_role_unknown;
 
-        if (pcmk__str_eq(discover_mode, PCMK_VALUE_ALWAYS,
-                         pcmk__str_null_matches|pcmk__str_casei)) {
-            new_con->discover_mode = pcmk_probe_always;
+    if (pcmk__str_eq(discover_mode, PCMK_VALUE_ALWAYS,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        new_con->discover_mode = pcmk_probe_always;
 
-        } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
-                                pcmk__str_casei)) {
-            new_con->discover_mode = pcmk_probe_never;
+    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
+                            pcmk__str_casei)) {
+        new_con->discover_mode = pcmk_probe_never;
 
-        } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
-                                pcmk__str_casei)) {
-            new_con->discover_mode = pcmk_probe_exclusive;
-            rsc->exclusive_discover = TRUE;
+    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
+                            pcmk__str_casei)) {
+        new_con->discover_mode = pcmk_probe_exclusive;
+        rsc->exclusive_discover = TRUE;
 
-        } else {
-            pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
-                             "in location constraint", discover_mode);
-        }
-
-        if (node != NULL) {
-            pcmk_node_t *copy = pe__copy_node(node);
-
-            copy->weight = node_score;
-            new_con->nodes = g_list_prepend(NULL, copy);
-        }
-
-        rsc->cluster->placement_constraints = g_list_prepend(
-            rsc->cluster->placement_constraints, new_con);
-        rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
+    } else {
+        pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
+                         "in location constraint", discover_mode);
     }
+
+    if (node != NULL) {
+        pcmk_node_t *copy = pe__copy_node(node);
+
+        copy->weight = node_score;
+        new_con->nodes = g_list_prepend(NULL, copy);
+    }
+
+    rsc->cluster->placement_constraints = g_list_prepend(
+        rsc->cluster->placement_constraints, new_con);
+    rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
 
     return new_con;
 }
