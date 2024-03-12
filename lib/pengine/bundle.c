@@ -864,9 +864,9 @@ static void
 mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
           const char *target, const char *options, uint32_t flags)
 {
-    pe__bundle_mount_t *mount = calloc(1, sizeof(pe__bundle_mount_t));
+    pe__bundle_mount_t *mount = pcmk__assert_alloc(1,
+                                                   sizeof(pe__bundle_mount_t));
 
-    pcmk__mem_assert(mount);
     pcmk__str_update(&mount->source, source);
     pcmk__str_update(&mount->target, target);
     pcmk__str_update(&mount->options, options);
@@ -995,7 +995,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     CRM_ASSERT(rsc != NULL);
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
-    bundle_data = calloc(1, sizeof(pe__bundle_variant_data_t));
+    bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
@@ -1075,7 +1075,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         for (xml_child = first_named_child(xml_obj, PCMK_XE_PORT_MAPPING);
              xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
 
-            pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
+            pe__bundle_port_t *port =
+                pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
+
             port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
@@ -1216,7 +1218,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                       pe__bundle_mount_subdir);
         }
 
-        port = calloc(1, sizeof(pe__bundle_port_t));
+        port = pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
         if(bundle_data->control_port) {
             port->source = strdup(bundle_data->control_port);
         } else {
@@ -1240,7 +1242,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
             pcmk__bundle_replica_t *replica = NULL;
 
-            replica = calloc(1, sizeof(pcmk__bundle_replica_t));
+            replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
             replica->child = childIter->data;
             replica->child->exclusive_discover = TRUE;
             replica->offset = lpc++;
@@ -1274,7 +1276,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         for (int lpc = 0; lpc < bundle_data->nreplicas; lpc++) {
             pcmk__bundle_replica_t *replica = NULL;
 
-            replica = calloc(1, sizeof(pcmk__bundle_replica_t));
+            replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
             replica->offset = lpc;
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,

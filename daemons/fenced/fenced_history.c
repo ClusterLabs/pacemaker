@@ -243,7 +243,7 @@ stonith_xml_history_to_list(const xmlNode *history)
 
         crm_trace("Attaching op %s to hashtable", id);
 
-        op = calloc(1, sizeof(remote_fencing_op_t));
+        op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
         op->id = id;
         op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);

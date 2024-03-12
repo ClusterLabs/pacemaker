@@ -354,7 +354,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     value = crm_element_value(xml_obj, PCMK_XA_RSC_PATTERN);
     if (value) {
-        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        regex_t *r_patt = pcmk__assert_alloc(1, sizeof(regex_t));
         bool invert = false;
 
         if (value[0] == '!') {
@@ -383,7 +383,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             } else {
                 nregs = 1;
             }
-            pmatch = calloc(nregs, sizeof(regmatch_t));
+            pmatch = pcmk__assert_alloc(nregs, sizeof(regmatch_t));
 
             status = regexec(r_patt, r->id, nregs, pmatch, 0);
 

@@ -92,8 +92,7 @@ pe__copy_node(const pcmk_node_t *this_node)
 
     CRM_ASSERT(this_node != NULL);
 
-    new_node = calloc(1, sizeof(pcmk_node_t));
-    pcmk__mem_assert(new_node);
+    new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
@@ -478,14 +477,14 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
         }
     }
 
-    wrapper = calloc(1, sizeof(pcmk__related_action_t));
+    wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = rh_action;
     wrapper->type = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
-    wrapper = calloc(1, sizeof(pcmk__related_action_t));
+    wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = lh_action;
     wrapper->type = flags;
     list = rh_action->actions_before;

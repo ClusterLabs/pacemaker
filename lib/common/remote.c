@@ -505,8 +505,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
     CRM_CHECK(xml_text->len > 0,
               g_string_free(xml_text, TRUE); return EINVAL);
 
-    header = calloc(1, sizeof(struct remote_header_v0));
-    pcmk__mem_assert(header);
+    header = pcmk__assert_alloc(1, sizeof(struct remote_header_v0));
 
     iov[0].iov_base = header;
     iov[0].iov_len = sizeof(struct remote_header_v0);
@@ -556,7 +555,8 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     if (header->payload_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->payload_uncompressed;
-        char *uncompressed = calloc(1, header->payload_offset + size_u);
+        char *uncompressed =
+            pcmk__assert_alloc(1, header->payload_offset + size_u);
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->payload_compressed, size_u);
@@ -980,7 +980,7 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
         return rc;
     }
 
-    cb_data = calloc(1, sizeof(struct tcp_async_cb_data));
+    cb_data = pcmk__assert_alloc(1, sizeof(struct tcp_async_cb_data));
     cb_data->userdata = userdata;
     cb_data->callback = callback;
     cb_data->sock = sock;

@@ -132,11 +132,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     pcmk__add_alert_key_int(params, PCMK__alert_key_node_sequence,
                             ++alert_sequence_no);
 
-    cb_data = calloc(1, sizeof(struct alert_cb_s));
-    if (cb_data == NULL) {
-        rc = -errno;
-        goto err;
-    }
+    cb_data = pcmk__assert_alloc(1, sizeof(struct alert_cb_s));
 
     /* coverity[deref_ptr] False Positive */
     cb_data->client_id = strdup(client->id);

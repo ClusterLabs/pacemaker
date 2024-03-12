@@ -316,7 +316,7 @@ cib_remote_listen(gpointer data)
     num_clients++;
 
     new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -551,8 +551,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
     CRM_CHECK(data, return PAM_CONV_ERR);
     CRM_CHECK(num_msg == 1, return PAM_CONV_ERR);       /* We only want to handle one message */
 
-    reply = calloc(1, sizeof(struct pam_response));
-    pcmk__mem_assert(reply);
+    reply = pcmk__assert_alloc(1, sizeof(struct pam_response));
 
     for (count = 0; count < num_msg; ++count) {
         switch (msg[count]->msg_style) {

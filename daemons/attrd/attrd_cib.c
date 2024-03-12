@@ -466,9 +466,7 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
 static void
 set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 {
-    attribute_value_t *a_v = NULL;
-    a_v = calloc(1, sizeof(attribute_value_t));
-    pcmk__mem_assert(a_v);
+    attribute_value_t *a_v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
     a_v->nodeid = v->nodeid;
     a_v->nodename = strdup(v->nodename);

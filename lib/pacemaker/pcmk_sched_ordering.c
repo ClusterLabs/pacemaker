@@ -547,8 +547,7 @@ pcmk__new_ordering(pcmk_resource_t *first_rsc, char *first_action_task,
         then_rsc = then_action->rsc;
     }
 
-    order = calloc(1, sizeof(pcmk__action_relation_t));
-    pcmk__mem_assert(order);
+    order = pcmk__assert_alloc(1, sizeof(pcmk__action_relation_t));
 
     order->id = sched->order_id++;
     order->flags = flags;

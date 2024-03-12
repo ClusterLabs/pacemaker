@@ -504,7 +504,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         }
 
         crm_trace("Decompressing message data");
-        uncompressed = calloc(1, new_size);
+        uncompressed = pcmk__assert_alloc(1, new_size);
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
 
         rc = pcmk__bzlib2rc(rc);
@@ -698,8 +698,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
     uint32_t local_nodeid = get_local_nodeid(handle);
     const struct cpg_address **sorted;
 
-    sorted = calloc(member_list_entries, sizeof(const struct cpg_address *));
-    pcmk__mem_assert(sorted);
+    sorted = pcmk__assert_alloc(member_list_entries,
+                                sizeof(const struct cpg_address *));
 
     for (size_t iter = 0; iter < member_list_entries; iter++) {
         sorted[iter] = member_list + iter;
@@ -961,7 +961,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         sender = local_pid;
     }
 
-    msg = calloc(1, sizeof(pcmk__cpg_msg_t));
+    msg = pcmk__assert_alloc(1, sizeof(pcmk__cpg_msg_t));
 
     msg_id++;
     msg->id = msg_id;
@@ -1027,7 +1027,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         free(compressed);
     }
 
-    iov = calloc(1, sizeof(struct iovec));
+    iov = pcmk__assert_alloc(1, sizeof(struct iovec));
     iov->iov_base = msg;
     iov->iov_len = msg->header.size;
 

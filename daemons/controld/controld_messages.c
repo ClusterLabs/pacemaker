@@ -99,7 +99,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
               fsa_input2string(input), fsa_cause2string(cause),
               (data? "with" : "without"));
 
-    fsa_data = calloc(1, sizeof(fsa_data_t));
+    fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;
     fsa_data->fsa_input = input;
     fsa_data->fsa_cause = cause;
@@ -188,9 +188,8 @@ fsa_dump_queue(int log_level)
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {
-    ha_msg_input_t *copy = calloc(1, sizeof(ha_msg_input_t));
+    ha_msg_input_t *copy = pcmk__assert_alloc(1, sizeof(ha_msg_input_t));
 
-    pcmk__mem_assert(copy);
     copy->msg = (orig != NULL)? pcmk__xml_copy(NULL, orig->msg) : NULL;
     copy->xml = get_message_xml(copy->msg, PCMK__XE_CRM_XML);
     return copy;

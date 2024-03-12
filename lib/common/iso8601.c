@@ -128,10 +128,7 @@ crm_time_new(const char *date_time)
 crm_time_t *
 crm_time_new_undefined(void)
 {
-    crm_time_t *result = calloc(1, sizeof(crm_time_t));
-
-    pcmk__mem_assert(result);
-    return result;
+    return (crm_time_t *) pcmk__assert_alloc(1, sizeof(crm_time_t));
 }
 
 /*!
@@ -1217,8 +1214,7 @@ crm_time_parse_period(const char *period_str)
     }
 
     tzset();
-    period = calloc(1, sizeof(crm_time_period_t));
-    pcmk__mem_assert(period);
+    period = pcmk__assert_alloc(1, sizeof(crm_time_period_t));
 
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
@@ -1834,8 +1830,11 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
     pcmk__time_hr_t *hr_dt = NULL;
 
     if (dt) {
-        hr_dt = target?target:calloc(1, sizeof(pcmk__time_hr_t));
-        pcmk__mem_assert(hr_dt);
+        hr_dt = target;
+        if (hr_dt == NULL) {
+            hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
+        }
+
         *hr_dt = (pcmk__time_hr_t) {
             .years = dt->years,
             .months = dt->months,

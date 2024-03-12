@@ -205,9 +205,9 @@ new_private_data(xmlNode *node)
 {
     switch (node->type) {
         case XML_DOCUMENT_NODE: {
-            xml_doc_private_t *docpriv = NULL;
-            docpriv = calloc(1, sizeof(xml_doc_private_t));
-            pcmk__mem_assert(docpriv);
+            xml_doc_private_t *docpriv =
+                pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
+
             docpriv->check = XML_DOC_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
@@ -217,9 +217,9 @@ new_private_data(xmlNode *node)
         case XML_ELEMENT_NODE:
         case XML_ATTRIBUTE_NODE:
         case XML_COMMENT_NODE: {
-            xml_node_private_t *nodepriv = NULL;
-            nodepriv = calloc(1, sizeof(xml_node_private_t));
-            pcmk__mem_assert(nodepriv);
+            xml_node_private_t *nodepriv =
+                pcmk__assert_alloc(1, sizeof(xml_node_private_t));
+
             nodepriv->check = XML_NODE_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
@@ -735,8 +735,8 @@ free_xml_with_position(xmlNode * child, int position)
                     crm_trace("Deleting %s %p from %p",
                               (const char *) xpath->str, child, doc);
 
-                    deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
-                    pcmk__mem_assert(deleted_obj);
+                    deleted_obj =
+                        pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
 
                     pcmk__str_update(&(deleted_obj->path), xpath->str);
                     g_string_free(xpath, TRUE);

@@ -259,10 +259,7 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 static struct iovec *
 pcmk__new_ipc_event(void)
 {
-    struct iovec *iov = calloc(2, sizeof(struct iovec));
-
-    pcmk__mem_assert(iov);
-    return iov;
+    return (struct iovec *) pcmk__assert_alloc(2, sizeof(struct iovec));
 }
 
 /*!
@@ -413,7 +410,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
     if (header->size_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
-        uncompressed = calloc(1, size_u);
+        uncompressed = pcmk__assert_alloc(1, size_u);
 
         crm_trace("Decompressing message data %u bytes into %u bytes",
                   header->size_compressed, size_u);

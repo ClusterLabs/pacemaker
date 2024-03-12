@@ -175,7 +175,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
         return NULL;
     }
 
-    proxy = calloc(1, sizeof(remote_proxy_t));
+    proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));
 
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);

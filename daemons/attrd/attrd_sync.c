@@ -145,8 +145,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
         waitlist = pcmk__intkey_table(free_waitlist_node);
     }
 
-    wl = calloc(sizeof(struct waitlist_node), 1);
-    pcmk__mem_assert(wl);
+    wl = pcmk__assert_alloc(1, sizeof(struct waitlist_node));
 
     pcmk__str_update(&(wl->client_id), request->ipc_client->id);
 
@@ -506,8 +505,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
         }
     }
 
-    action = calloc(1, sizeof(struct confirmation_action));
-    pcmk__mem_assert(action);
+    action = pcmk__assert_alloc(1, sizeof(struct confirmation_action));
 
     action->respondents = respondents;
     action->fn = fn;

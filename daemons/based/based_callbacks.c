@@ -530,7 +530,8 @@ static void
 queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                    gboolean from_peer)
 {
-    cib_local_notify_t *notify = calloc(1, sizeof(cib_local_notify_t));
+    cib_local_notify_t *notify = pcmk__assert_alloc(1,
+                                                    sizeof(cib_local_notify_t));
 
     notify->notify_src = notify_src;
     notify->client_id = strdup(client_id);

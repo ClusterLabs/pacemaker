@@ -221,7 +221,7 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 
     va_end(ap);
 
-    new_list = calloc(1, sizeof(text_list_data_t));
+    new_list = pcmk__assert_alloc(1, sizeof(text_list_data_t));
     new_list->len = 0;
     pcmk__str_update(&new_list->singular_noun, singular_noun);
     pcmk__str_update(&new_list->plural_noun, plural_noun);
@@ -502,7 +502,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
 #if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
 #else
-        *dest = calloc(1, 1024);
+        *dest = pcmk__assert_alloc(1, 1024);
         rc = scanf("%1023s", *dest);
 #endif
         fprintf(stderr, "\n");

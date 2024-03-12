@@ -174,7 +174,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
     entry = g_hash_table_lookup(lrm_state->resource_history, op->rsc_id);
     if (entry == NULL && rsc) {
-        entry = calloc(1, sizeof(rsc_history_t));
+        entry = pcmk__assert_alloc(1, sizeof(rsc_history_t));
         entry->id = strdup(op->rsc_id);
         g_hash_table_insert(lrm_state->resource_history, entry->id, entry);
 
@@ -983,7 +983,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
             struct pending_deletion_op_s *op = NULL;
             char *ref = crm_element_value_copy(request->msg, PCMK_XA_REFERENCE);
 
-            op = calloc(1, sizeof(struct pending_deletion_op_s));
+            op = pcmk__assert_alloc(1, sizeof(struct pending_deletion_op_s));
             op->rsc = strdup(rsc->id);
             op->input = copy_ha_msg_input(request);
             g_hash_table_insert(lrm_state->deletion_ops, ref, op);
@@ -1365,8 +1365,7 @@ new_metadata_cb_data(lrmd_rsc_info_t *rsc, xmlNode *input_xml)
 {
     struct metadata_cb_data *data = NULL;
 
-    data = calloc(1, sizeof(struct metadata_cb_data));
-    pcmk__mem_assert(data);
+    data = pcmk__assert_alloc(1, sizeof(struct metadata_cb_data));
     data->input_xml = pcmk__xml_copy(NULL, input_xml);
     data->rsc = lrmd_copy_rsc_info(rsc);
     return data;
@@ -2023,7 +2022,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         char *call_id_s = make_stop_id(rsc->id, call_id);
         active_op_t *pending = NULL;
 
-        pending = calloc(1, sizeof(active_op_t));
+        pending = pcmk__assert_alloc(1, sizeof(active_op_t));
         crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;

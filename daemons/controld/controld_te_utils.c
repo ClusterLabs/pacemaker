@@ -228,8 +228,7 @@ init_node_pending_timer(const crm_node_t *node, guint timeout)
                node->uname ? node->uname : "node", node->uuid,
                controld_globals.node_pending_timeout);
 
-    node_pending_timer = calloc(1, sizeof(struct abort_timer_s));
-    pcmk__mem_assert(node_pending_timer);
+    node_pending_timer = pcmk__assert_alloc(1, sizeof(struct abort_timer_s));
 
     node_pending_timer->aborted = FALSE;
     node_pending_timer->priority = PCMK_SCORE_INFINITY;

@@ -186,7 +186,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
-    group_data = calloc(1, sizeof(group_variant_data_t));
+    group_data = pcmk__assert_alloc(1, sizeof(group_variant_data_t));
     group_data->last_child = NULL;
     rsc->variant_opaque = group_data;
 

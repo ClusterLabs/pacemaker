@@ -1161,8 +1161,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         }
     }
 
-    op = calloc(1, sizeof(remote_fencing_op_t));
-    pcmk__mem_assert(op);
+    op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
     crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
@@ -2165,11 +2164,11 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
 {
     xmlNode *child;
     int verified = 0;
-    device_properties_t *props = calloc(1, sizeof(device_properties_t));
+    device_properties_t *props =
+        pcmk__assert_alloc(1, sizeof(device_properties_t));
     int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
 
     /* Add a new entry to this peer's devices list */
-    pcmk__mem_assert(props);
     g_hash_table_insert(peer->devices, strdup(device), props);
 
     /* Peers with verified (monitored) access will be preferred */
@@ -2219,12 +2218,10 @@ static peer_device_info_t *
 add_result(remote_fencing_op_t *op, const char *host, int ndevices,
            const xmlNode *xml)
 {
-    peer_device_info_t *peer = calloc(1, sizeof(peer_device_info_t));
+    peer_device_info_t *peer = pcmk__assert_alloc(1,
+                                                  sizeof(peer_device_info_t));
     xmlNode *child;
 
-    // cppcheck seems not to understand the abort logic in CRM_CHECK
-    // cppcheck-suppress memleak
-    CRM_CHECK(peer != NULL, return NULL);
     peer->host = strdup(host);
     peer->devices = pcmk__strkey_table(free, free);
 

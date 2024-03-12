@@ -1222,7 +1222,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
         if (rsc_table) {
             rsc_counter = g_hash_table_lookup(rsc_table, buffer);
             if (rsc_counter == NULL) {
-                rsc_counter = calloc(1, sizeof(int));
+                rsc_counter = pcmk__assert_alloc(1, sizeof(int));
                 *rsc_counter = 0;
                 g_hash_table_insert(rsc_table, strdup(buffer), rsc_counter);
             }
@@ -1249,7 +1249,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 
                 active_counter = g_hash_table_lookup(node_table, buffer);
                 if (active_counter == NULL) {
-                    active_counter = calloc(1, sizeof(int));
+                    active_counter = pcmk__assert_alloc(1, sizeof(int));
                     *active_counter = 0;
                     g_hash_table_insert(node_table, strdup(buffer), active_counter);
                 }

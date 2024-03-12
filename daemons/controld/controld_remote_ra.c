@@ -1001,7 +1001,7 @@ remote_ra_data_init(lrm_state_t * lrm_state)
         return;
     }
 
-    ra_data = calloc(1, sizeof(remote_ra_data_t));
+    ra_data = pcmk__assert_alloc(1, sizeof(remote_ra_data_t));
     ra_data->work = mainloop_add_trigger(G_PRIORITY_HIGH, handle_remote_ra_exec, lrm_state);
     lrm_state->remote_ra_data = ra_data;
 }
@@ -1047,7 +1047,7 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
     lrmd_rsc_info_t *info = NULL;
 
     if ((lrm_state_find(rsc_id))) {
-        info = calloc(1, sizeof(lrmd_rsc_info_t));
+        info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
         info->id = strdup(rsc_id);
         info->type = strdup(REMOTE_LRMD_RA);
@@ -1286,12 +1286,7 @@ controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
         return pcmk_rc_ok;
     }
 
-    cmd = calloc(1, sizeof(remote_ra_cmd_t));
-    if (cmd == NULL) {
-        lrmd_key_value_freeall(params);
-        return ENOMEM;
-    }
-
+    cmd = pcmk__assert_alloc(1, sizeof(remote_ra_cmd_t));
     cmd->owner = strdup(lrm_state->node_name);
     cmd->rsc_id = strdup(rsc_id);
     cmd->action = strdup(action);

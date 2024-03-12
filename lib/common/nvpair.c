@@ -50,8 +50,7 @@ pcmk__new_nvpair(const char *name, const char *value)
 
     CRM_ASSERT(name);
 
-    nvpair = calloc(1, sizeof(pcmk_nvpair_t));
-    CRM_ASSERT(nvpair);
+    nvpair = pcmk__assert_alloc(1, sizeof(pcmk_nvpair_t));
 
     pcmk__str_update(&nvpair->name, name);
     pcmk__str_update(&nvpair->value, value);

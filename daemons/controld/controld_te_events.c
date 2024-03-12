@@ -245,8 +245,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            fail_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
-            pcmk__mem_assert(fail_pair);
+            fail_pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
             fail_name = pcmk__failcount_name(rsc_id, task, interval_ms);
             fail_pair->name = fail_name;
@@ -259,8 +258,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        last_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
-        pcmk__mem_assert(last_pair);
+        last_pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
         last_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
         last_pair->name = last_name;

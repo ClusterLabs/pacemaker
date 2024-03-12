@@ -823,8 +823,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
 
-        node = calloc(1, sizeof(crm_node_t));
-        CRM_ASSERT(node);
+        node = pcmk__assert_alloc(1, sizeof(crm_node_t));
 
         crm_info("Created entry %s/%p for node %s/%u (%d total)",
                  uniqueid, node, uname, id, 1 + g_hash_table_size(crm_peer_cache));
@@ -1315,8 +1314,7 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
 
-        node = calloc(1, sizeof(crm_node_t));
-        pcmk__mem_assert(node);
+        node = pcmk__assert_alloc(1, sizeof(crm_node_t));
 
         pcmk__str_update(&(node->uname), uname);
         pcmk__str_update(&(node->uuid), id);

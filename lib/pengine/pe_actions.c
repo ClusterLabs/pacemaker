@@ -168,9 +168,7 @@ static pcmk_action_t *
 new_action(char *key, const char *task, pcmk_resource_t *rsc,
            const pcmk_node_t *node, bool optional, pcmk_scheduler_t *scheduler)
 {
-    pcmk_action_t *action = calloc(1, sizeof(pcmk_action_t));
-
-    pcmk__mem_assert(action);
+    pcmk_action_t *action = pcmk__assert_alloc(1, sizeof(pcmk_action_t));
 
     action->rsc = rsc;
     pcmk__str_update(&(action->task), task);

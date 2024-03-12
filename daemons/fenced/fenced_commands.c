@@ -351,8 +351,7 @@ create_async_command(xmlNode *msg)
         return NULL;
     }
 
-    cmd = calloc(1, sizeof(async_command_t));
-    pcmk__mem_assert(cmd);
+    cmd = pcmk__assert_alloc(1, sizeof(async_command_t));
 
     // All messages must include these
     cmd->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
@@ -787,7 +786,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
             case ':':
                 if (lpc > last) {
                     free(name);
-                    name = calloc(1, 1 + lpc - last);
+                    name = pcmk__assert_alloc(1, 1 + lpc - last);
                     memcpy(name, hostmap + last, lpc - last);
                 }
                 last = lpc + 1;
@@ -803,7 +802,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     char *value = NULL;
                     int k = 0;
 
-                    value = calloc(1, 1 + lpc - last);
+                    value = pcmk__assert_alloc(1, 1 + lpc - last);
                     memcpy(value, hostmap + last, lpc - last);
 
                     for (int i = 0; value[i] != '\0'; i++) {
@@ -1085,9 +1084,7 @@ build_device_from_xml(xmlNode *dev)
 
     CRM_CHECK(agent != NULL, return device);
 
-    device = calloc(1, sizeof(stonith_device_t));
-
-    CRM_CHECK(device != NULL, {free(agent); return device;});
+    device = pcmk__assert_alloc(1, sizeof(stonith_device_t));
 
     device->id = crm_element_value_copy(dev, PCMK_XA_ID);
     device->agent = agent;
@@ -1170,7 +1167,7 @@ schedule_internal_command(const char *origin,
 {
     async_command_t *cmd = NULL;
 
-    cmd = calloc(1, sizeof(async_command_t));
+    cmd = pcmk__assert_alloc(1, sizeof(async_command_t));
 
     cmd->id = -1;
     cmd->default_timeout = timeout ? timeout : 60;
@@ -1784,13 +1781,8 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     /* Find or create topology table entry */
     tp = g_hash_table_lookup(topology, target);
     if (tp == NULL) {
-        tp = calloc(1, sizeof(stonith_topology_t));
-        if (tp == NULL) {
-            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                             strerror(ENOMEM));
-            free(target);
-            return;
-        }
+        tp = pcmk__assert_alloc(1, sizeof(stonith_topology_t));
+
         tp->kind = mode;
         tp->target = target;
         tp->target_value = crm_element_value_copy(level, PCMK_XA_TARGET_VALUE);
@@ -1915,26 +1907,29 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
     char *rv;
     GList *gIter;
 
+    char *pos = NULL;
+    const char *lead_delim = "";
+
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         const char *value = (const char *) gIter->data;
 
         alloc_size += strlen(value);
     }
-    rv = calloc(alloc_size, sizeof(char));
-    if (rv) {
-        char *pos = rv;
-        const char *lead_delim = "";
 
-        for (gIter = list; gIter != NULL; gIter = gIter->next) {
-            const char *value = (const char *) gIter->data;
+    rv = pcmk__assert_alloc(alloc_size, sizeof(char));
+    pos = rv;
 
-            pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
-            lead_delim = delim;
-        }
-        if (max && terminate_with_delim) {
-            sprintf(pos, "%s", delim);
-        }
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        const char *value = (const char *) gIter->data;
+
+        pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
+        lead_delim = delim;
     }
+
+    if (max && terminate_with_delim) {
+        sprintf(pos, "%s", delim);
+    }
+
     return rv;
 }
 
@@ -2260,13 +2255,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
         return;
     }
 
-    search = calloc(1, sizeof(struct device_search_s));
-    if (!search) {
-        crm_crit("Cannot search for capable fence devices: %s",
-                 strerror(ENOMEM));
-        callback(NULL, user_data);
-        return;
-    }
+    search = pcmk__assert_alloc(1, sizeof(struct device_search_s));
 
     pcmk__str_update(&search->host, host);
     pcmk__str_update(&search->action, action);
@@ -3261,8 +3250,7 @@ handle_query_request(pcmk__request_t *request)
 
     crm_log_xml_trace(request->xml, "Query");
 
-    query = calloc(1, sizeof(struct st_query_data));
-    pcmk__mem_assert(query);
+    query = pcmk__assert_alloc(1, sizeof(struct st_query_data));
 
     query->reply = fenced_construct_reply(request->xml, NULL, &request->result);
     pcmk__str_update(&query->remote_peer, request->peer);

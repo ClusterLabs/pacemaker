@@ -160,7 +160,7 @@ throttle_cib_load(float *load)
     }
 
     if(fgets(buffer, sizeof(buffer), stream)) {
-        char *comm = calloc(1, 256);
+        char *comm = pcmk__assert_alloc(1, 256);
         char state = 0;
         int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
         unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;
@@ -516,7 +516,7 @@ throttle_get_job_limit(const char *node)
 
     r = g_hash_table_lookup(throttle_records, node);
     if(r == NULL) {
-        r = calloc(1, sizeof(struct throttle_record_s));
+        r = pcmk__assert_alloc(1, sizeof(struct throttle_record_s));
         r->node = strdup(node);
         r->mode = throttle_low;
         r->max = throttle_job_max;
@@ -560,7 +560,7 @@ throttle_update(xmlNode *xml)
     r = g_hash_table_lookup(throttle_records, from);
 
     if(r == NULL) {
-        r = calloc(1, sizeof(struct throttle_record_s));
+        r = pcmk__assert_alloc(1, sizeof(struct throttle_record_s));
         r->node = strdup(from);
         g_hash_table_insert(throttle_records, r->node, r);
     }

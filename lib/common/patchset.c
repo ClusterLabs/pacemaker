@@ -1040,17 +1040,10 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
      * than key_len - 1 characters plus a null terminator.
      */
 
-    remainder = calloc(key_len, sizeof(char));
-    pcmk__mem_assert(remainder);
-
-    section = calloc(key_len, sizeof(char));
-    pcmk__mem_assert(section);
-
-    id = calloc(key_len, sizeof(char));
-    pcmk__mem_assert(id);
-
-    tag = calloc(key_len, sizeof(char));
-    pcmk__mem_assert(tag);
+    remainder = pcmk__assert_alloc(key_len, sizeof(char));
+    section = pcmk__assert_alloc(key_len, sizeof(char));
+    id = pcmk__assert_alloc(key_len, sizeof(char));
+    tag = pcmk__assert_alloc(key_len, sizeof(char));
 
     do {
         // Look for /NEXT_COMPONENT/REMAINING_COMPONENTS
@@ -1180,9 +1173,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         } else if (pcmk__str_any_of(op,
                                     PCMK_VALUE_CREATE, PCMK_VALUE_MOVE, NULL)) {
             // Delay the adding of a PCMK_VALUE_CREATE object
-            xml_change_obj_t *change_obj = calloc(1, sizeof(xml_change_obj_t));
-
-            pcmk__mem_assert(change_obj);
+            xml_change_obj_t *change_obj =
+                pcmk__assert_alloc(1, sizeof(xml_change_obj_t));
 
             change_obj->change = change;
             change_obj->match = match;

@@ -1255,7 +1255,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
                    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
 {
     static bool need_init = TRUE;
-    mainloop_child_t *child = calloc(1, sizeof(mainloop_child_t));
+    mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
 
     child->pid = pid;
     child->timerid = 0;
@@ -1367,7 +1367,7 @@ mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
 mainloop_timer_t *
 mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata)
 {
-    mainloop_timer_t *t = calloc(1, sizeof(mainloop_timer_t));
+    mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
     if(t) {
         if(name) {

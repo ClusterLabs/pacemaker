@@ -334,7 +334,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
-    clone_data = calloc(1, sizeof(clone_variant_data_t));
+    clone_data = pcmk__assert_alloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
@@ -350,9 +350,6 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             unpack_meta_int(rsc, PCMK_META_PROMOTED_NODE_MAX,
                             PCMK__META_PROMOTED_NODE_MAX_LEGACY, 1);
     }
-
-    // Implied by calloc()
-    /* clone_data->xml_obj_child = NULL; */
 
     // Use 1 as default but 0 for minimum and invalid
     clone_data->clone_node_max = unpack_meta_int(rsc, PCMK_META_CLONE_NODE_MAX,

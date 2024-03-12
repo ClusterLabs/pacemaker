@@ -20,7 +20,8 @@
 static void
 check_defaults(void **state) {
     uint32_t flags;
-    pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
+    pcmk_scheduler_t *scheduler = pcmk__assert_alloc(1,
+                                                     sizeof(pcmk_scheduler_t));
 
     set_working_set_defaults(scheduler);
 

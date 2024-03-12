@@ -733,7 +733,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             long long completed;
             long long completed_nsec = 0L;
 
-            kvp = calloc(1, sizeof(stonith_history_t));
+            kvp = pcmk__assert_alloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
             kvp->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
             kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
@@ -1009,7 +1009,7 @@ set_callback_timeout(stonith_callback_client_t * callback, stonith_t * stonith, 
     }
 
     if (!async_timer) {
-        async_timer = calloc(1, sizeof(struct timer_rec_s));
+        async_timer = pcmk__assert_alloc(1, sizeof(struct timer_rec_s));
         callback->timer = async_timer;
     }
 
@@ -1229,7 +1229,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     private = stonith->st_private;
     crm_trace("Adding callback for %s events (%d)", event, g_list_length(private->notify_list));
 
-    new_client = calloc(1, sizeof(stonith_notify_client_t));
+    new_client = pcmk__assert_alloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = callback;
 
@@ -1278,7 +1278,7 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
 
     crm_debug("Removing callback for %s events", event);
 
-    new_client = calloc(1, sizeof(stonith_notify_client_t));
+    new_client = pcmk__assert_alloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
 
@@ -1336,7 +1336,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
         return FALSE;
     }
 
-    blob = calloc(1, sizeof(stonith_callback_client_t));
+    blob = pcmk__assert_alloc(1, sizeof(stonith_callback_client_t));
     blob->id = callback_name;
     blob->only_success = (options & st_opt_report_only_success) ? TRUE : FALSE;
     blob->user_data = user_data;
@@ -1413,13 +1413,10 @@ get_event_data_xml(xmlNode *msg, const char *ntype)
 static stonith_event_t *
 xml_to_event(xmlNode *msg)
 {
-    stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
+    stonith_event_t *event = pcmk__assert_alloc(1, sizeof(stonith_event_t));
     struct event_private *event_private = NULL;
 
-    pcmk__mem_assert(event);
-
-    event->opaque = calloc(1, sizeof(struct event_private));
-    pcmk__mem_assert(event->opaque);
+    event->opaque = pcmk__assert_alloc(1, sizeof(struct event_private));
     event_private = (struct event_private *) event->opaque;
 
     crm_log_xml_trace(msg, "stonith_notify");
@@ -1933,7 +1930,7 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
 {
     stonith_key_value_t *p, *end;
 
-    p = calloc(1, sizeof(stonith_key_value_t));
+    p = pcmk__assert_alloc(1, sizeof(stonith_key_value_t));
     pcmk__str_update(&p->key, key);
     pcmk__str_update(&p->value, value);
 
@@ -2162,8 +2159,7 @@ parse_list_line(const char *line, int len, GList **output)
                 continue;
             }
 
-            entry = calloc(i - entry_start + 1, sizeof(char));
-            pcmk__mem_assert(entry);
+            entry = pcmk__assert_alloc(i - entry_start + 1, sizeof(char));
 
             /* Read entry, stopping at first separator
              *

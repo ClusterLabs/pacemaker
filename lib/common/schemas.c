@@ -240,8 +240,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     pcmk__schema_t *schema = NULL;
     int last = g_list_length(known_schemas);
 
-    schema = calloc(1, sizeof(pcmk__schema_t));
-    pcmk__mem_assert(schema);
+    schema = pcmk__assert_alloc(1, sizeof(pcmk__schema_t));
 
     schema->validator = validator;
     schema->version.v[0] = version->v[0];
@@ -528,7 +527,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
 
     } else {
         crm_debug("Creating RNG parser context");
-        ctx = calloc(1, sizeof(relaxng_ctx_cache_t));
+        ctx = pcmk__assert_alloc(1, sizeof(relaxng_ctx_cache_t));
 
         ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
         CRM_CHECK(ctx->parser != NULL, goto cleanup);

@@ -860,8 +860,7 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     clock_gettime(CLOCK_MONOTONIC, &before_t);
 #endif
 
-    compressed = calloc((size_t) max, sizeof(char));
-    CRM_ASSERT(compressed);
+    compressed = pcmk__assert_alloc((size_t) max, sizeof(char));
 
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,

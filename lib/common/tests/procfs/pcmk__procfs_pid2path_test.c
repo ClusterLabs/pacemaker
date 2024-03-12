@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,7 +21,7 @@ static void
 no_exe_file(void **state)
 {
     size_t len = PATH_MAX;
-    char *path = calloc(len, sizeof(char));
+    char *path = pcmk__assert_alloc(len, sizeof(char));
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
@@ -43,7 +43,7 @@ static void
 contents_too_long(void **state)
 {
     size_t len = 10;
-    char *path = calloc(len, sizeof(char));
+    char *path = pcmk__assert_alloc(len, sizeof(char));
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
@@ -66,7 +66,7 @@ static void
 contents_ok(void **state)
 {
     size_t len = PATH_MAX;
-    char *path = calloc(len, sizeof(char));
+    char *path = pcmk__assert_alloc(len, sizeof(char));
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;

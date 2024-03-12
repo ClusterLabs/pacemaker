@@ -119,17 +119,14 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
 /*!
  * \brief Allocate a new \p crm_cluster_t object
  *
- * \return A newly allocated \p crm_cluster_t object (guaranteed not \p NULL)
+ * \return A newly allocated \p crm_cluster_t object (guaranteed not \c NULL)
  * \note The caller is responsible for freeing the return value using
  *       \p pcmk_cluster_free().
  */
 crm_cluster_t *
 pcmk_cluster_new(void)
 {
-    crm_cluster_t *cluster = calloc(1, sizeof(crm_cluster_t));
-
-    pcmk__mem_assert(cluster);
-    return cluster;
+    return (crm_cluster_t *) pcmk__assert_alloc(1, sizeof(crm_cluster_t));
 }
 
 /*!

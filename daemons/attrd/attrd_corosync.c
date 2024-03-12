@@ -239,8 +239,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
     if (v == NULL) {
-        v = calloc(1, sizeof(attribute_value_t));
-        pcmk__mem_assert(v);
+        v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
         pcmk__str_update(&v->nodename, host);
         g_hash_table_replace(a->values, v->nodename, v);

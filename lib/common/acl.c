@@ -71,8 +71,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
         return NULL;
     }
 
-    acl = calloc(1, sizeof (xml_acl_t));
-    pcmk__mem_assert(acl);
+    acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
 
     acl->mode = mode;
     if (xpath) {

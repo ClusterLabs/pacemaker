@@ -110,7 +110,7 @@ lrmd_list_add(lrmd_list_t * head, const char *value)
 {
     lrmd_list_t *p, *end;
 
-    p = calloc(1, sizeof(lrmd_list_t));
+    p = pcmk__assert_alloc(1, sizeof(lrmd_list_t));
     p->val = strdup(value);
 
     end = head;
@@ -147,7 +147,7 @@ lrmd_key_value_add(lrmd_key_value_t * head, const char *key, const char *value)
 {
     lrmd_key_value_t *p, *end;
 
-    p = calloc(1, sizeof(lrmd_key_value_t));
+    p = pcmk__assert_alloc(1, sizeof(lrmd_key_value_t));
     p->key = strdup(key);
     p->value = strdup(value);
 
@@ -194,9 +194,8 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
 lrmd_event_data_t *
 lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
 {
-    lrmd_event_data_t *event = calloc(1, sizeof(lrmd_event_data_t));
+    lrmd_event_data_t *event = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
-    pcmk__mem_assert(event);
     pcmk__str_update((char **) &event->rsc_id, rsc_id);
     pcmk__str_update((char **) &event->op_type, task);
     event->interval_ms = interval_ms;
@@ -208,7 +207,7 @@ lrmd_copy_event(lrmd_event_data_t * event)
 {
     lrmd_event_data_t *copy = NULL;
 
-    copy = calloc(1, sizeof(lrmd_event_data_t));
+    copy = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
     copy->type = event->type;
     pcmk__str_update((char **) &copy->rsc_id, event->rsc_id);
@@ -1773,9 +1772,8 @@ lrmd_rsc_info_t *
 lrmd_new_rsc_info(const char *rsc_id, const char *standard,
                   const char *provider, const char *type)
 {
-    lrmd_rsc_info_t *rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
+    lrmd_rsc_info_t *rsc_info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
-    CRM_ASSERT(rsc_info);
     pcmk__str_update(&rsc_info->id, rsc_id);
     pcmk__str_update(&rsc_info->standard, standard);
     pcmk__str_update(&rsc_info->provider, provider);

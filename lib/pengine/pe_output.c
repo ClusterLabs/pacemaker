@@ -589,8 +589,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     }
 
     /* Allocate and populate display name */
-    node_name = malloc(name_len);
-    pcmk__mem_assert(node_name);
+    node_name = pcmk__assert_alloc(name_len, sizeof(char));
     strcpy(node_name, node->details->uname);
     if (node_host) {
         strcat(node_name, "@");

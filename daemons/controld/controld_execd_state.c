@@ -116,10 +116,7 @@ lrm_state_create(const char *node_name)
         return NULL;
     }
 
-    state = calloc(1, sizeof(lrm_state_t));
-    if (!state) {
-        return NULL;
-    }
+    state = pcmk__assert_alloc(1, sizeof(lrm_state_t));
 
     state->node_name = strdup(node_name);
     state->rsc_info_cache = pcmk__strkey_table(NULL, free_rsc_info);

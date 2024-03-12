@@ -205,7 +205,7 @@ curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *pl
         va_end(ap);
     }
 
-    new_list = calloc(1, sizeof(curses_list_data_t));
+    new_list = pcmk__assert_alloc(1, sizeof(curses_list_data_t));
     new_list->len = 0;
     pcmk__str_update(&new_list->singular_noun, singular_noun);
     pcmk__str_update(&new_list->plural_noun, plural_noun);
@@ -314,7 +314,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
             free(*dest);
         }
 
-        *dest = calloc(1, 1024);
+        *dest = pcmk__assert_alloc(1, 1024);
         /* On older systems, scanw is defined as taking a char * for its first argument,
          * while newer systems rightly want a const char *.  Accomodate both here due
          * to building with -Werror.

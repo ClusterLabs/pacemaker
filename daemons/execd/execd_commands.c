@@ -277,7 +277,7 @@ build_rsc_from_xml(xmlNode * msg)
     xmlNode *rsc_xml = get_xpath_object("//" PCMK__XE_LRMD_RSC, msg, LOG_ERR);
     lrmd_rsc_t *rsc = NULL;
 
-    rsc = calloc(1, sizeof(lrmd_rsc_t));
+    rsc = pcmk__assert_alloc(1, sizeof(lrmd_rsc_t));
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
@@ -301,7 +301,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     xmlNode *rsc_xml = get_xpath_object("//" PCMK__XE_LRMD_RSC, msg, LOG_ERR);
     lrmd_cmd_t *cmd = NULL;
 
-    cmd = calloc(1, sizeof(lrmd_cmd_t));
+    cmd = pcmk__assert_alloc(1, sizeof(lrmd_cmd_t));
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
     cmd->call_opts = call_options;

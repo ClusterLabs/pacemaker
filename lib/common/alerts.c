@@ -94,9 +94,9 @@ const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3] =
 pcmk__alert_t *
 pcmk__alert_new(const char *id, const char *path)
 {
-    pcmk__alert_t *entry = calloc(1, sizeof(pcmk__alert_t));
+    pcmk__alert_t *entry = pcmk__assert_alloc(1, sizeof(pcmk__alert_t));
 
-    CRM_ASSERT(entry && id && path);
+    CRM_ASSERT((id != NULL) && (path != NULL));
     entry->id = strdup(id);
     entry->path = strdup(path);
     entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;

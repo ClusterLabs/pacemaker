@@ -265,9 +265,7 @@ stonith__action_create(const char *agent, const char *action_name,
                        int timeout_sec, GHashTable *device_args,
                        GHashTable *port_map, const char *host_arg)
 {
-    stonith_action_t *action = calloc(1, sizeof(stonith_action_t));
-
-    pcmk__mem_assert(action);
+    stonith_action_t *action = pcmk__assert_alloc(1, sizeof(stonith_action_t));
 
     action->args = make_args(agent, action_name, target, target_nodeid,
                              device_args, port_map, host_arg);

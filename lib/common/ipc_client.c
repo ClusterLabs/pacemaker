@@ -1123,7 +1123,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         unsigned int size_u = 1 + header->size_uncompressed;
         /* never let buf size fall below our max size required for ipc reads. */
         unsigned int new_buf_size = QB_MAX((sizeof(pcmk__ipc_header_t) + size_u), client->max_buf_size);
-        char *uncompressed = calloc(1, new_buf_size);
+        char *uncompressed = pcmk__assert_alloc(1, new_buf_size);
 
         crm_trace("Decompressing message data %u bytes into %u bytes",
                  header->size_compressed, size_u);

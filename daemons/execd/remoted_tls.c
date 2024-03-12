@@ -228,7 +228,7 @@ lrmd_remote_listen(gpointer data)
     }
 
     new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
     pcmk__set_client_flags(new_client, pcmk__client_tls);
     new_client->remote->tls_session = session;
 
