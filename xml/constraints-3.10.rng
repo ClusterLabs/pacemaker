@@ -42,6 +42,10 @@
           <externalRef href="score.rng"/>
           <attribute name="node"><text/></attribute>
         </group>
+        <!--
+         @COMPAT: When we can break backward compatibility, limit this to a
+         single rule
+         -->
         <oneOrMore>
           <grammar>
             <include href="rule-3.10.rng">
@@ -52,9 +56,12 @@
           </grammar>
         </oneOrMore>
       </choice>
+
+      <!-- @COMPAT: The lifetime element is deprecated -->
       <optional>
         <ref name="element-lifetime"/>
       </optional>
+
       <optional>
         <attribute name="resource-discovery">
           <ref name="attribute-discovery"/>
@@ -120,9 +127,12 @@
       <optional>
         <attribute name="influence"><text/></attribute>
       </optional>
+
+      <!-- @COMPAT: The lifetime element is deprecated -->
       <optional>
         <ref name="element-lifetime"/>
       </optional>
+
       <choice>
         <oneOrMore>
           <ref name="element-resource-set"/>
@@ -151,9 +161,12 @@
   <define name="element-order">
     <element name="rsc_order">
       <attribute name="id"><data type="ID"/></attribute>
+
+      <!-- @COMPAT: The lifetime element is deprecated -->
       <optional>
         <ref name="element-lifetime"/>
       </optional>
+
       <optional>
         <attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
@@ -256,6 +269,7 @@
     </choice>
   </define>
 
+  <!-- @COMPAT: The lifetime element is deprecated -->
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>

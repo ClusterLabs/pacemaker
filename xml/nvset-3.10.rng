@@ -41,22 +41,22 @@
       <optional>
         <ref name="element-nvset.rule"/>
       </optional>
-        <zeroOrMore>
-          <element name="nvpair">
-            <choice>
-              <group>
-                <attribute name="id-ref"><data type="IDREF"/></attribute>
-                <optional>
-                  <attribute name="name"><text/></attribute>
-                </optional>
-              </group>
-              <group>
-                <attribute name="id"><data type="ID"/></attribute>
-                <ref name="element-nvset.name-value"/>
-              </group>
-            </choice>
-          </element>
-        </zeroOrMore>
+      <zeroOrMore>
+        <element name="nvpair">
+          <choice>
+            <group>
+              <attribute name="id-ref"><data type="IDREF"/></attribute>
+              <optional>
+                <attribute name="name"><text/></attribute>
+              </optional>
+            </group>
+            <group>
+              <attribute name="id"><data type="ID"/></attribute>
+              <ref name="element-nvset.name-value"/>
+            </group>
+          </choice>
+        </element>
+      </zeroOrMore>
       <optional>
         <externalRef href="score.rng"/>
       </optional>

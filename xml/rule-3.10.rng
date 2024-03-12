@@ -7,48 +7,25 @@
   </start>
 
   <!--
+   Rule elements allow different syntax depending on their context, each of
+   which gets their own rule definition below:
+
+   1. rsc_location
+   2. meta_attributes within rsc_defaults
+   3. meta_attributes within op_defaults
+   4. all other contexts that allow node attribute expressions
+      (instance_attributes elements within bundle, clone, group, op, primitive,
+      and template elements; and meta_attributes elements within op elements)
+   5. all other contexts (cluster_property_set elements; instance_attributes
+      within alert, node, and recipient elements; meta_attributes within alert,
+      bundle, clone, group, primitive, recipient, and template elements; and
+      utilization elements within node, primitive, and template elements)
+
    The COMPAT comments below mark items that are invalid in their given context
    and should be removed at a compatibility break.
    -->
 
-  <!--
-   A rule element that doesn't match any of the special cases defined below
-   -->
-  <define name="element-rule">
-    <element name="rule">
-      <choice>
-        <attribute name="id-ref"><data type="IDREF"/></attribute>
-        <group>
-          <ref name="rule-common"/>
-          <oneOrMore>
-            <choice>
-              <ref name="expression"/>
-              <ref name="date_expression"/>
-              <ref name="element-rule"/>
-
-              <!--
-               @COMPAT: The below expression types are invalid for element-rule
-               -->
-              <ref name="rsc_expression"/>
-              <ref name="op_expression"/>
-            </choice>
-          </oneOrMore>
-
-          <!--
-           @COMPAT: The below score attributes are invalid for element-rule
-           -->
-          <optional>
-            <choice>
-              <externalRef href="score.rng"/>
-              <attribute name="score-attribute"><text/></attribute>
-            </choice>
-          </optional>
-        </group>
-      </choice>
-    </element>
-  </define>
-
-  <!-- A rule element in a location constraint -->
+  <!-- 1. rule element within rsc_location -->
   <define name="element-rule-location">
     <element name="rule">
       <choice>
@@ -61,10 +38,7 @@
               <ref name="date_expression"/>
               <ref name="element-rule-location"/>
 
-              <!--
-               @COMPAT: The below expression types are invalid for
-               element-rule-location
-               -->
+              <!-- @COMPAT: The below expression types are invalid here -->
               <ref name="rsc_expression"/>
               <ref name="op_expression"/>
             </choice>
@@ -80,7 +54,7 @@
     </element>
   </define>
 
-  <!-- A rule element in a rsc_defaults element -->
+  <!-- 2. rule element within rsc_defaults -->
   <define name="element-rule-rsc_defaults">
     <element name="rule">
       <choice>
@@ -89,23 +63,19 @@
           <ref name="rule-common"/>
           <oneOrMore>
             <choice>
-              <ref name="expression"/>
               <ref name="date_expression"/>
               <ref name="rsc_expression"/>
               <ref name="element-rule-rsc_defaults"/>
 
-              <!--
-               @COMPAT: The below expression type is invalid for
-               element-rule-rsc_defaults
-               -->
+              <!-- @COMPAT: The below expression type is deprecated here -->
+              <ref name="expression"/>
+
+              <!-- @COMPAT: The below expression type is invalid here -->
               <ref name="op_expression"/>
             </choice>
           </oneOrMore>
 
-          <!--
-           @COMPAT: The below score attributes are invalid for
-           element-rule-rsc_defaults
-           -->
+          <!-- @COMPAT: The below score attributes are invalid here -->
           <optional>
             <choice>
               <externalRef href="score.rng"/>
@@ -117,8 +87,40 @@
     </element>
   </define>
 
-  <!-- A rule element in an op_defaults element -->
+  <!-- 3. rule element within op_defaults -->
   <define name="element-rule-op_defaults">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="date_expression"/>
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+              <ref name="element-rule-op_defaults"/>
+
+              <!-- @COMPAT: The below expression type is deprecated here -->
+              <ref name="expression"/>
+            </choice>
+          </oneOrMore>
+
+          <!-- @COMPAT: The below score attributes are invalid here -->
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+   
+  <!-- 4. rule element in other contexts allowing node attribute expressions -->
+  <define name="element-rule-node-allowed">
     <element name="rule">
       <choice>
         <attribute name="id-ref"><data type="IDREF"/></attribute>
@@ -128,16 +130,46 @@
             <choice>
               <ref name="expression"/>
               <ref name="date_expression"/>
+              <ref name="element-rule-node-allowed"/>
+
+              <!-- @COMPAT: The below expression types are invalid here -->
               <ref name="rsc_expression"/>
               <ref name="op_expression"/>
-              <ref name="element-rule-op_defaults"/>
             </choice>
           </oneOrMore>
 
-          <!--
-           @COMPAT: The below score attributes are invalid for
-           element-rule-op_defaults
-           -->
+          <!-- @COMPAT: The below score attributes are invalid here -->
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+  <!-- 5. rule element within all other contexts -->
+  <define name="element-rule">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="date_expression"/>
+              <ref name="element-rule"/>
+
+              <!-- @COMPAT: The below expression types are invalid here -->
+              <ref name="expression"/>
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+
+          <!-- @COMPAT: The below score attributes are invalid here -->
           <optional>
             <choice>
               <externalRef href="score.rng"/>
@@ -160,6 +192,12 @@
         </choice>
       </attribute>
     </optional>
+
+    <!--
+     @COMPAT Role applies only to rules within location constraints. When we can
+     break behavioral backward compatibility, move this to
+     rule-element-location.
+     -->
     <optional>
       <attribute name="role"><text/></attribute>
     </optional>
@@ -170,13 +208,11 @@
     <element name="expression">
       <ref name="expression-common"/>
 
-      <!--
-       @COMPAT: The value-source attribute is invalid for expression
-       -->
       <optional>
         <attribute name="value-source" ann:defaultValue="literal">
           <choice>
             <value>literal</value>
+            <!-- @COMPAT: These value-source choices are invalid here -->
             <value>param</value>
             <value>meta</value>
           </choice>
@@ -205,21 +241,36 @@
   <define name="expression-common">
     <attribute name="id"><data type="ID"/></attribute>
     <attribute name="attribute"><text/></attribute>
-    <attribute name="operation">
-      <choice>
-        <value>lt</value>
-        <value>gt</value>
-        <value>lte</value>
-        <value>gte</value>
-        <value>eq</value>
-        <value>ne</value>
-        <value>defined</value>
-        <value>not_defined</value>
-      </choice>
-    </attribute>
-    <optional>
-      <attribute name="value"><text/></attribute>
-    </optional>
+    <choice>
+      <group>
+        <attribute name="operation">
+          <choice>
+            <value>defined</value>
+            <value>not_defined</value>
+          </choice>
+        </attribute>
+        <!-- @COMPAT value attribute should be prohibited here -->
+        <optional>
+          <attribute name="value"><text/></attribute>
+        </optional>
+      </group>
+      <group>
+        <attribute name="operation">
+          <choice>
+            <value>lt</value>
+            <value>gt</value>
+            <value>lte</value>
+            <value>gte</value>
+            <value>eq</value>
+            <value>ne</value>
+          </choice>
+        </attribute>
+        <!-- @COMPAT value attribute should be required here -->
+        <optional>
+          <attribute name="value"><text/></attribute>
+        </optional>
+      </group>
+    </choice>
     <optional>
       <attribute name="type" ann:defaultValue="string">
         <choice>
@@ -316,7 +367,7 @@
         <attribute name="seconds"><text/></attribute>
       </optional>
 
-      <!-- @COMPAT: The below attributes are invalid for duration -->
+      <!-- @COMPAT: The below attributes are invalid here -->
       <optional>
         <attribute name="monthdays"><text/></attribute>
       </optional>
@@ -372,7 +423,7 @@
         <attribute name="moon"><text/></attribute>
       </optional>
 
-      <!-- @COMPAT: The below attributes are invalid for date_spec -->
+      <!-- @COMPAT: The below attributes are invalid here -->
       <optional>
         <attribute name="yearsdays"><text/></attribute>
       </optional>
