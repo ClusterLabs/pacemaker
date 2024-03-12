@@ -131,6 +131,12 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     }
 
     rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
+    if (rule_id == NULL) {
+        pcmk__config_err("Ignoring " PCMK_XE_RULE " without " PCMK_XA_ID
+                         " in location constraint");
+        return NULL;
+    }
+
     boolean = crm_element_value(rule_xml, PCMK_XA_BOOLEAN_OP);
     role_spec = crm_element_value(rule_xml, PCMK_XA_ROLE);
 
@@ -171,9 +177,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
-    if (location_rule == NULL) {
-        return NULL; // Error already logged
-    }
+    CRM_CHECK(location_rule != NULL, return NULL);
+
     location_rule->role_filter = role;
 
     if ((re_match_data != NULL) && (re_match_data->nregs > 0)
