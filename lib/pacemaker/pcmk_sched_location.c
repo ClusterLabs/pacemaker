@@ -103,9 +103,9 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  * \param[out]    next_change    Where to set when rule evaluation will change
  * \param[in]     re_match_data  Regular expression submatches
  *
- * \return New location constraint if rule is valid, otherwise NULL
+ * \return true if rule is valid, otherwise false
  */
-static pcmk__location_t *
+static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
                        pe_re_match_data_t *re_match_data)
@@ -127,14 +127,14 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     rule_xml = expand_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
-        return NULL; // Error already logged
+        return false; // Error already logged
     }
 
     rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
     if (rule_id == NULL) {
         pcmk__config_err("Ignoring " PCMK_XE_RULE " without " PCMK_XA_ID
                          " in location constraint");
-        return NULL;
+        return false;
     }
 
     boolean = crm_element_value(rule_xml, PCMK_XA_BOOLEAN_OP);
@@ -145,7 +145,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     } else {
         pcmk__config_err("Ignoring rule %s: Invalid " PCMK_XA_ROLE " '%s'",
                          rule_id, role_spec);
-        return NULL;
+        return false;
     }
 
     crm_trace("Processing location constraint rule %s", rule_id);
@@ -166,7 +166,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
         default:
             /* @COMPAT When we can break behavioral backward compatibility,
-             * return NULL
+             * return false
              */
             pcmk__config_warn("Location constraint rule %s has invalid "
                               PCMK_XA_BOOLEAN_OP " value '%s', using default "
@@ -265,12 +265,11 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     location_rule->nodes = nodes;
     if (location_rule->nodes == NULL) {
         crm_trace("No matching nodes for location constraint rule %s", rule_id);
-        return NULL;
     } else {
         crm_trace("Location constraint rule %s matched %d nodes",
                   rule_id, g_list_length(location_rule->nodes));
     }
-    return location_rule;
+    return true;
 }
 
 static void
@@ -345,9 +344,12 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                                                       NULL, NULL);
              rule_xml != NULL; rule_xml = pcmk__xe_next_same(rule_xml)) {
 
-            if (empty) {
-                empty = false;
-            } else {
+            if (generate_location_rule(rsc, rule_xml, discovery, next_change,
+                                       re_match_data)) {
+                if (empty) {
+                    empty = false;
+                    continue;
+                }
                 pcmk__warn_once(pcmk__wo_location_rules,
                                 "Support for multiple " PCMK_XE_RULE
                                 " elements in a location constraint is "
@@ -356,13 +358,11 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                                 "previous rules with " PCMK_XA_BOOLEAN_OP
                                 " set to '" PCMK_VALUE_OR "' instead)");
             }
-            generate_location_rule(rsc, rule_xml, discovery, next_change,
-                                   re_match_data);
         }
 
         if (empty) {
             pcmk__config_err("Ignoring constraint '%s' because it contains "
-                             "no rules", id);
+                             "no valid rules", id);
         }
 
         /* If there is a point in the future when the evaluation of a rule will
