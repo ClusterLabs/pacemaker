@@ -1164,4 +1164,11 @@ void pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 G_GNUC_INTERNAL
 void pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler);
 
+
+// Functions related to the scheduler (pcmk_scheduler.c)
+
+G_GNUC_INTERNAL
+int pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
+                         pcmk_scheduler_t **scheduler);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
