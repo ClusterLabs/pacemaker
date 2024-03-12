@@ -229,7 +229,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 static void
 unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
                     const char *role_spec, const char *score,
-                    pe_re_match_data_t *re_match_data)
+                    char *rsc_id_match, int rsc_id_nmatches,
+                    regmatch_t *rsc_id_submatches)
 {
     const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
@@ -287,13 +288,10 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         pcmk_rule_input_t rule_input = {
             .now = rsc->cluster->now,
             .rsc_meta = rsc->meta,
+            .rsc_id = rsc_id_match,
+            .rsc_id_submatches = rsc_id_submatches,
+            .rsc_id_nmatches = rsc_id_nmatches,
         };
-
-        if (re_match_data != NULL) {
-            rule_input.rsc_id = re_match_data->string;
-            rule_input.rsc_id_submatches = re_match_data->pmatch;
-            rule_input.rsc_id_nmatches = re_match_data->nregs;
-        }
 
         /* This loop is logically parallel to pe_evaluate_rules(), except
          * instead of checking whether any rule is active, we set up location
@@ -352,7 +350,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc;
 
         rsc = pcmk__find_constraint_resource(scheduler->resources, value);
-        unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
+        unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL, 0, NULL);
     }
 
     value = crm_element_value(xml_obj, PCMK_XA_RSC_PATTERN);
@@ -391,19 +389,14 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             status = regexec(r_patt, r->id, nregs, pmatch, 0);
 
             if (!invert && (status == 0)) {
-                pe_re_match_data_t re_match_data = {
-                                                .string = r->id,
-                                                .nregs = nregs,
-                                                .pmatch = pmatch
-                                               };
-
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
-                unpack_rsc_location(xml_obj, r, NULL, NULL, &re_match_data);
+                unpack_rsc_location(xml_obj, r, NULL, NULL, r->id, nregs,
+                                    pmatch);
 
             } else if (invert && (status != 0)) {
                 crm_debug("'%s' is an inverted match of '%s' for %s",
                           r->id, value, id);
-                unpack_rsc_location(xml_obj, r, NULL, NULL, NULL);
+                unpack_rsc_location(xml_obj, r, NULL, NULL, NULL, 0, NULL);
 
             } else {
                 crm_trace("'%s' does not match '%s' for %s", r->id, value, id);
@@ -530,7 +523,8 @@ unpack_location_set(xmlNode *location, xmlNode *set,
             return pcmk_rc_unpack_error;
         }
 
-        unpack_rsc_location(location, resource, role, local_score, NULL);
+        unpack_rsc_location(location, resource, role, local_score, NULL, 0,
+                            NULL);
     }
 
     return pcmk_rc_ok;
