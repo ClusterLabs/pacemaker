@@ -101,14 +101,16 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  * \param[in]     discovery      Value of \c PCMK_XA_RESOURCE_DISCOVERY for
  *                               constraint
  * \param[out]    next_change    Where to set when rule evaluation will change
- * \param[in]     re_match_data  Regular expression submatches
+ * \param[in,out] rule_input     Values used to evaluate rule criteria
+ *                               (node-specific values will be overwritten by
+ *                               this function)
  *
  * \return true if rule is valid, otherwise false
  */
 static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pe_re_match_data_t *re_match_data)
+                       pcmk_rule_input_t *rule_input)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -181,12 +183,12 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
     location_rule->role_filter = role;
 
-    if ((re_match_data != NULL) && (re_match_data->nregs > 0)
-        && (re_match_data->pmatch[0].rm_so != -1) && !raw_score) {
+    if ((rule_input->rsc_id != NULL) && (rule_input->rsc_id_nmatches > 0)
+        && !raw_score) {
 
-        char *result = pcmk__replace_submatches(score, re_match_data->string,
-                                                re_match_data->pmatch,
-                                                re_match_data->nregs);
+        char *result = pcmk__replace_submatches(score, rule_input->rsc_id,
+                                                rule_input->rsc_id_submatches,
+                                                rule_input->rsc_id_nmatches);
 
         if (result != NULL) {
             score = result;
@@ -207,20 +209,11 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         int rc = pcmk_rc_ok;
         int score_f = 0;
         pcmk_node_t *node = iter->data;
-        pcmk_rule_input_t rule_input = {
-            .now = rsc->cluster->now,
-            .node_attrs = node->details->attrs,
-            .rsc_params = pe_rsc_params(rsc, node, rsc->cluster),
-            .rsc_meta = rsc->meta,
-        };
 
-        if (re_match_data != NULL) {
-            rule_input.rsc_id = re_match_data->string;
-            rule_input.rsc_id_submatches = re_match_data->pmatch;
-            rule_input.rsc_id_nmatches = re_match_data->nregs;
-        }
+        rule_input->node_attrs = node->details->attrs;
+        rule_input->rsc_params = pe_rsc_params(rsc, node, rsc->cluster);
 
-        rc = pcmk_evaluate_rule(rule_xml, &rule_input, next_change);
+        rc = pcmk_evaluate_rule(rule_xml, rule_input, next_change);
 
         crm_trace("Rule %s %s on %s",
                   pcmk__xe_id(rule_xml),
@@ -330,6 +323,16 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
     } else {
         bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
+        pcmk_rule_input_t rule_input = {
+            .now = rsc->cluster->now,
+            .rsc_meta = rsc->meta,
+        };
+
+        if (re_match_data != NULL) {
+            rule_input.rsc_id = re_match_data->string;
+            rule_input.rsc_id_submatches = re_match_data->pmatch;
+            rule_input.rsc_id_nmatches = re_match_data->nregs;
+        }
 
         /* This loop is logically parallel to pe_evaluate_rules(), except
          * instead of checking whether any rule is active, we set up location
@@ -345,7 +348,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
              rule_xml != NULL; rule_xml = pcmk__xe_next_same(rule_xml)) {
 
             if (generate_location_rule(rsc, rule_xml, discovery, next_change,
-                                       re_match_data)) {
+                                       &rule_input)) {
                 if (empty) {
                     empty = false;
                     continue;
