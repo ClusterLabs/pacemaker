@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    @COMPAT: The constraints-next schema is deprecated since 2.1.5 and will be
-    removed in a future release.
--->
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
@@ -147,12 +143,6 @@
               <ref name="attribute-roles"/>
             </attribute>
           </optional>
-          <optional>
-            <attribute name="rsc-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="with-rsc-instance"><data type="integer"/></attribute>
-          </optional>
         </group>
       </choice>
     </element>
@@ -194,12 +184,6 @@
             <attribute name="then-action">
               <ref name="attribute-actions"/>
             </attribute>
-          </optional>
-          <optional>
-            <attribute name="first-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="then-instance"><data type="integer"/></attribute>
           </optional>
         </group>
       </choice>
