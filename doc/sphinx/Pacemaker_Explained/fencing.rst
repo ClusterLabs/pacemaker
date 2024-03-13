@@ -212,7 +212,7 @@ for ``pacemaker-fenced``.
        Linux-HA fence agents.
    * - .. _pcmk_host_map:
 
-       .. _index::
+       .. index::
           single: pcmk_host_map
 
        pcmk_host_map
@@ -226,7 +226,7 @@ for ``pacemaker-fenced``.
        special characters such as spaces if preceded by a backslash *(since 2.1.2)*.
    * - .. _pcmk_host_list:
 
-       .. _index::
+       .. index::
           single: pcmk_host_list
 
        pcmk_host_list
@@ -237,7 +237,7 @@ for ``pacemaker-fenced``.
        either this or ``pcmk_host_map`` must be set.
    * - .. _pcmk_host_check:
 
-       .. _index::
+       .. index::
           single: pcmk_host_check
 
        pcmk_host_check
@@ -252,7 +252,7 @@ for ``pacemaker-fenced``.
        * ``none:`` assume the device can fence any node
    * - .. _pcmk_delay_max:
 
-       .. _index::
+       .. index::
           single: pcmk_delay_max
 
        pcmk_delay_max
@@ -265,7 +265,7 @@ for ``pacemaker-fenced``.
        ensure that the nodes don't fence each other at the same time.
    * - .. _pcmk_delay_base:
 
-       .. _index::
+       .. index::
           single: pcmk_delay_base
 
        pcmk_delay_base
@@ -281,7 +281,7 @@ for ``pacemaker-fenced``.
        a host map *(since 2.1.2)*, for example ``node1:0s;node2:5s.``
    * - .. _pcmk_action_limit:
 
-       .. _index::
+       .. index::
           single: pcmk_action_limit
 
        pcmk_action_limit
@@ -295,7 +295,7 @@ for ``pacemaker-fenced``.
        ``concurrent-fencing`` cluster property.
    * - .. _pcmk_host_argument:
 
-       .. _index::
+       .. index::
           single: pcmk_host_argument
 
        pcmk_host_argument
@@ -310,7 +310,7 @@ for ``pacemaker-fenced``.
        supply any additional parameters.
    * - .. _pcmk_reboot_action:
 
-       .. _index::
+       .. index::
           single: pcmk_reboot_action
 
        pcmk_reboot_action
@@ -322,7 +322,7 @@ for ``pacemaker-fenced``.
        device-specific command.
    * - .. _pcmk_reboot_timeout:
 
-       .. _index::
+       .. index::
           single: pcmk_reboot_timeout
 
        pcmk_reboot_timeout
@@ -334,7 +334,7 @@ for ``pacemaker-fenced``.
        specify an alternate, device-specific timeout.
    * - .. _pcmk_reboot_retries:
 
-       .. _index::
+       .. index::
           single: pcmk_reboot_retries
 
        pcmk_reboot_retries
@@ -348,7 +348,7 @@ for ``pacemaker-fenced``.
        retries before giving up.
    * - .. _pcmk_off_action:
 
-       .. _index::
+       .. index::
           single: pcmk_off_action
 
        pcmk_off_action
@@ -360,7 +360,7 @@ for ``pacemaker-fenced``.
        device-specific command.
    * - .. _pcmk_off_timeout:
 
-       .. _index::
+       .. index::
           single: pcmk_off_timeout
 
        pcmk_off_timeout
@@ -372,7 +372,7 @@ for ``pacemaker-fenced``.
        specify an alternate, device-specific timeout.
    * - .. _pcmk_off_retries:
 
-       .. _index::
+       .. index::
           single: pcmk_off_retries
 
        pcmk_off_retries
@@ -386,7 +386,7 @@ for ``pacemaker-fenced``.
        retries before giving up.
    * - .. _pcmk_list_action:
 
-       .. _index::
+       .. index::
           single: pcmk_list_action
 
        pcmk_list_action
@@ -398,7 +398,7 @@ for ``pacemaker-fenced``.
        device-specific command.
    * - .. _pcmk_list_timeout:
 
-       .. _index::
+       .. index::
           single: pcmk_list_timeout
 
        pcmk_list_timeout
@@ -410,7 +410,7 @@ for ``pacemaker-fenced``.
        specify an alternate, device-specific timeout.
    * - .. _pcmk_list_retries:
 
-       .. _index::
+       .. index::
           single: pcmk_list_retries
 
        pcmk_list_retries
@@ -424,7 +424,7 @@ for ``pacemaker-fenced``.
        retries before giving up.
    * - .. _pcmk_monitor_action:
 
-       .. _index::
+       .. index::
           single: pcmk_monitor_action
 
        pcmk_monitor_action
@@ -436,7 +436,7 @@ for ``pacemaker-fenced``.
        alternate, device-specific command.
    * - .. _pcmk_monitor_timeout:
 
-       .. _index::
+       .. index::
           single: pcmk_monitor_timeout
 
        pcmk_monitor_timeout
@@ -448,7 +448,7 @@ for ``pacemaker-fenced``.
        specify an alternate, device-specific timeout.
    * - .. _pcmk_monitor_retries:
 
-       .. _index::
+       .. index::
           single: pcmk_monitor_retries
 
        pcmk_monitor_retries
@@ -462,7 +462,7 @@ for ``pacemaker-fenced``.
        retries before giving up.
    * - .. _pcmk_status_action:
 
-       .. _index::
+       .. index::
           single: pcmk_status_action
 
        pcmk_status_action
@@ -474,7 +474,7 @@ for ``pacemaker-fenced``.
        device-specific command.
    * - .. _pcmk_status_timeout:
 
-       .. _index::
+       .. index::
           single: pcmk_status_timeout
 
        pcmk_status_timeout
@@ -486,7 +486,7 @@ for ``pacemaker-fenced``.
        specify an alternate, device-specific timeout.
    * - .. _pcmk_status_retries:
 
-       .. _index::
+       .. index::
           single: pcmk_status_retries
 
        pcmk_status_retries
