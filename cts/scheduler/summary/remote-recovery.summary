@@ -1,5 +1,11 @@
 Using the original execution date of: 2017-05-03 13:33:24Z
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400bbf613 on controller-0 changed: 0:0;124:17:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400bbf613 on controller-0 changed: 0:0;129:18:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400b4f6bd on controller-0 changed: 0:0;126:17:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400b4f6bd on controller-0 changed: 0:0;132:18:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
+
   * Node List:
     * Node controller-1: UNCLEAN (offline)
     * Online: [ controller-0 controller-2 ]
@@ -14,15 +20,14 @@ Current cluster status:
     * galera-2	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
     * Clone Set: rabbitmq-clone [rabbitmq]:
       * Started: [ messaging-0 messaging-1 messaging-2 ]
-      * Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
+      * Stopped: [ controller-1 ]
     * Clone Set: galera-master [galera] (promotable):
       * Promoted: [ galera-0 galera-1 galera-2 ]
-      * Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
+      * Stopped: [ controller-1 ]
     * Clone Set: redis-master [redis] (promotable):
       * redis	(ocf:heartbeat:redis):	 Unpromoted controller-1 (UNCLEAN)
       * Promoted: [ controller-0 ]
       * Unpromoted: [ controller-2 ]
-      * Stopped: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
     * ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * ip-10.0.0.102	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
@@ -32,7 +37,6 @@ Current cluster status:
     * Clone Set: haproxy-clone [haproxy]:
       * haproxy	(systemd:haproxy):	 Started controller-1 (UNCLEAN)
       * Started: [ controller-0 controller-2 ]
-      * Stopped: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
     * openstack-cinder-volume	(systemd:openstack-cinder-volume):	 Started controller-0
     * stonith-fence_ipmilan-525400bbf613	(stonith:fence_ipmilan):	 Started controller-0
     * stonith-fence_ipmilan-525400b4f6bd	(stonith:fence_ipmilan):	 Started controller-0
@@ -49,84 +53,47 @@ Transition Summary:
   * Move       ip-172.17.4.11                         ( controller-1 -> controller-2 )
   * Stop       haproxy:0                              (                 controller-1 )  due to node availability
   * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   messaging-1_stop_0
-  * Pseudo action:   galera-0_stop_0
-  * Pseudo action:   galera-2_stop_0
-  * Pseudo action:   redis-master_pre_notify_stop_0
-  * Pseudo action:   stonith-fence_ipmilan-5254005bdbb5_stop_0
-  * Fencing controller-1 (reboot)
-  * Resource action: messaging-1     start on controller-2
-  * Resource action: galera-0        start on controller-2
-  * Resource action: galera-2        start on controller-2
-  * Resource action: rabbitmq        monitor=10000 on messaging-1
-  * Resource action: galera          monitor=10000 on galera-2
-  * Resource action: galera          monitor=10000 on galera-0
-  * Pseudo action:   redis_post_notify_stop_0
-  * Resource action: redis           notify on controller-0
-  * Resource action: redis           notify on controller-2
-  * Pseudo action:   redis-master_confirmed-pre_notify_stop_0
-  * Pseudo action:   redis-master_stop_0
-  * Pseudo action:   haproxy-clone_stop_0
-  * Resource action: stonith-fence_ipmilan-5254005bdbb5 start on controller-2
-  * Resource action: messaging-1     monitor=20000 on controller-2
-  * Resource action: galera-0        monitor=20000 on controller-2
-  * Resource action: galera-2        monitor=20000 on controller-2
-  * Pseudo action:   redis_stop_0
-  * Pseudo action:   redis-master_stopped_0
-  * Pseudo action:   haproxy_stop_0
-  * Pseudo action:   haproxy-clone_stopped_0
-  * Resource action: stonith-fence_ipmilan-5254005bdbb5 monitor=60000 on controller-2
-  * Pseudo action:   redis-master_post_notify_stopped_0
-  * Pseudo action:   ip-172.17.1.14_stop_0
-  * Pseudo action:   ip-172.17.1.17_stop_0
-  * Pseudo action:   ip-172.17.4.11_stop_0
-  * Resource action: redis           notify on controller-0
-  * Resource action: redis           notify on controller-2
-  * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
-  * Resource action: ip-172.17.1.14  start on controller-2
-  * Resource action: ip-172.17.1.17  start on controller-2
-  * Resource action: ip-172.17.4.11  start on controller-2
-  * Pseudo action:   redis_notified_0
-  * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
-  * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
-  * Resource action: ip-172.17.4.11  monitor=10000 on controller-2
 Using the original execution date of: 2017-05-03 13:33:24Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * Node controller-1: UNCLEAN (offline)
     * Online: [ controller-0 controller-2 ]
-    * OFFLINE: [ controller-1 ]
     * RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
 
   * Full List of Resources:
     * messaging-0	(ocf:pacemaker:remote):	 Started controller-0
-    * messaging-1	(ocf:pacemaker:remote):	 Started controller-2
+    * messaging-1	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
     * messaging-2	(ocf:pacemaker:remote):	 Started controller-0
-    * galera-0	(ocf:pacemaker:remote):	 Started controller-2
+    * galera-0	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
     * galera-1	(ocf:pacemaker:remote):	 Started controller-0
-    * galera-2	(ocf:pacemaker:remote):	 Started controller-2
+    * galera-2	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
     * Clone Set: rabbitmq-clone [rabbitmq]:
       * Started: [ messaging-0 messaging-1 messaging-2 ]
-      * Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
+      * Stopped: [ controller-1 ]
     * Clone Set: galera-master [galera] (promotable):
       * Promoted: [ galera-0 galera-1 galera-2 ]
-      * Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
+      * Stopped: [ controller-1 ]
     * Clone Set: redis-master [redis] (promotable):
+      * redis	(ocf:heartbeat:redis):	 Unpromoted controller-1 (UNCLEAN)
       * Promoted: [ controller-0 ]
       * Unpromoted: [ controller-2 ]
-      * Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
     * ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * ip-10.0.0.102	(ocf:heartbeat:IPaddr2):	 Started controller-0
-    * ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-2
-    * ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
+    * ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
     * ip-172.17.3.15	(ocf:heartbeat:IPaddr2):	 Started controller-0
-    * ip-172.17.4.11	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-172.17.4.11	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
     * Clone Set: haproxy-clone [haproxy]:
+      * haproxy	(systemd:haproxy):	 Started controller-1 (UNCLEAN)
       * Started: [ controller-0 controller-2 ]
-      * Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
     * openstack-cinder-volume	(systemd:openstack-cinder-volume):	 Started controller-0
     * stonith-fence_ipmilan-525400bbf613	(stonith:fence_ipmilan):	 Started controller-0
     * stonith-fence_ipmilan-525400b4f6bd	(stonith:fence_ipmilan):	 Started controller-0
-    * stonith-fence_ipmilan-5254005bdbb5	(stonith:fence_ipmilan):	 Started controller-2
+    * stonith-fence_ipmilan-5254005bdbb5	(stonith:fence_ipmilan):	 Started controller-1 (UNCLEAN)

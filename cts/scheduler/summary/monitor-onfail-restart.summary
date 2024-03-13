@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
@@ -10,14 +12,13 @@ Transition Summary:
   * Recover    A       ( fc16-builder )
 
 Executing Cluster Transition:
-  * Resource action: A               stop on fc16-builder
-  * Resource action: A               start on fc16-builder
-  * Resource action: A               monitor=20000 on fc16-builder
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
 
   * Full List of Resources:
-    * A	(ocf:pacemaker:Dummy):	 Started fc16-builder
+    * A	(ocf:pacemaker:Dummy):	 FAILED fc16-builder

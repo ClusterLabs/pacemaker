@@ -1,8 +1,11 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node kiff-01: UNCLEAN (offline)
     * Online: [ kiff-02 ]
-    * GuestOnline: [ lxc-01_kiff-02 lxc-02_kiff-02 ]
+    * GuestOnline: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
 
   * Full List of Resources:
     * fence-kiff-01	(stonith:fence_ipmilan):	 Started kiff-02
@@ -38,67 +41,37 @@ Transition Summary:
   * Recover    vm-fs                (     lxc-01_kiff-01 )
   * Move       lxc-01_kiff-01       ( kiff-01 -> kiff-02 )
   * Move       lxc-02_kiff-01       ( kiff-01 -> kiff-02 )
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   fence-kiff-02_stop_0
-  * Resource action: dlm             monitor on lxc-02_kiff-02
-  * Resource action: dlm             monitor on lxc-01_kiff-02
-  * Resource action: clvmd           monitor on lxc-02_kiff-02
-  * Resource action: clvmd           monitor on lxc-01_kiff-02
-  * Resource action: shared0         monitor on lxc-02_kiff-02
-  * Resource action: shared0         monitor on lxc-01_kiff-02
-  * Resource action: vm-fs           monitor on lxc-02_kiff-02
-  * Resource action: vm-fs           monitor on lxc-01_kiff-02
-  * Pseudo action:   lxc-01_kiff-01_stop_0
-  * Pseudo action:   lxc-02_kiff-01_stop_0
-  * Fencing kiff-01 (reboot)
-  * Pseudo action:   R-lxc-01_kiff-01_stop_0
-  * Pseudo action:   R-lxc-02_kiff-01_stop_0
-  * Pseudo action:   stonith-lxc-02_kiff-01-reboot on lxc-02_kiff-01
-  * Pseudo action:   stonith-lxc-01_kiff-01-reboot on lxc-01_kiff-01
-  * Resource action: fence-kiff-02   start on kiff-02
-  * Pseudo action:   shared0-clone_stop_0
-  * Resource action: R-lxc-01_kiff-01 start on kiff-02
-  * Resource action: R-lxc-02_kiff-01 start on kiff-02
-  * Pseudo action:   vm-fs_stop_0
-  * Resource action: lxc-01_kiff-01  start on kiff-02
-  * Resource action: lxc-02_kiff-01  start on kiff-02
-  * Resource action: fence-kiff-02   monitor=60000 on kiff-02
-  * Pseudo action:   shared0_stop_0
-  * Pseudo action:   shared0-clone_stopped_0
-  * Resource action: R-lxc-01_kiff-01 monitor=10000 on kiff-02
-  * Resource action: R-lxc-02_kiff-01 monitor=10000 on kiff-02
-  * Resource action: vm-fs           start on lxc-01_kiff-01
-  * Resource action: lxc-01_kiff-01  monitor=30000 on kiff-02
-  * Resource action: lxc-02_kiff-01  monitor=30000 on kiff-02
-  * Pseudo action:   clvmd-clone_stop_0
-  * Resource action: vm-fs           monitor=20000 on lxc-01_kiff-01
-  * Pseudo action:   clvmd_stop_0
-  * Pseudo action:   clvmd-clone_stopped_0
-  * Pseudo action:   dlm-clone_stop_0
-  * Pseudo action:   dlm_stop_0
-  * Pseudo action:   dlm-clone_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
+    * Node kiff-01: UNCLEAN (offline)
     * Online: [ kiff-02 ]
-    * OFFLINE: [ kiff-01 ]
     * GuestOnline: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
 
   * Full List of Resources:
     * fence-kiff-01	(stonith:fence_ipmilan):	 Started kiff-02
-    * fence-kiff-02	(stonith:fence_ipmilan):	 Started kiff-02
+    * fence-kiff-02	(stonith:fence_ipmilan):	 Started kiff-01 (UNCLEAN)
     * Clone Set: dlm-clone [dlm]:
+      * dlm	(ocf:pacemaker:controld):	 Started kiff-01 (UNCLEAN)
       * Started: [ kiff-02 ]
-      * Stopped: [ kiff-01 lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+      * Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
     * Clone Set: clvmd-clone [clvmd]:
+      * clvmd	(ocf:heartbeat:clvm):	 Started kiff-01 (UNCLEAN)
       * Started: [ kiff-02 ]
-      * Stopped: [ kiff-01 lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+      * Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
     * Clone Set: shared0-clone [shared0]:
+      * shared0	(ocf:heartbeat:Filesystem):	 Started kiff-01 (UNCLEAN)
       * Started: [ kiff-02 ]
-      * Stopped: [ kiff-01 lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
-    * R-lxc-01_kiff-01	(ocf:heartbeat:VirtualDomain):	 Started kiff-02
-    * R-lxc-02_kiff-01	(ocf:heartbeat:VirtualDomain):	 Started kiff-02
+      * Stopped: [ lxc-01_kiff-01 lxc-01_kiff-02 lxc-02_kiff-01 lxc-02_kiff-02 ]
+    * R-lxc-01_kiff-01	(ocf:heartbeat:VirtualDomain):	 FAILED kiff-01 (UNCLEAN)
+    * R-lxc-02_kiff-01	(ocf:heartbeat:VirtualDomain):	 Started kiff-01 (UNCLEAN)
     * R-lxc-01_kiff-02	(ocf:heartbeat:VirtualDomain):	 Started kiff-02
     * R-lxc-02_kiff-02	(ocf:heartbeat:VirtualDomain):	 Started kiff-02
-    * vm-fs	(ocf:heartbeat:Filesystem):	 Started lxc-01_kiff-01
+    * vm-fs	(ocf:heartbeat:Filesystem):	 FAILED lxc-01_kiff-01

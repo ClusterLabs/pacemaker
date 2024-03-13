@@ -1,6 +1,8 @@
 0 of 10 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ DEM-1 DEM-2 ]
 
@@ -25,33 +27,19 @@ Transition Summary:
   * Move       ip_trf_tas              ( DEM-1 -> DEM-2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   svc_stop_0
-  * Resource action: ip_trf_tas      stop on DEM-1
-  * Resource action: ip_mgmt         stop on DEM-1
-  * Resource action: d_bird_subnet_state stop on DEM-1
-  * Resource action: ipv6_dem_tas_dns stop on DEM-1
-  * Pseudo action:   svc_stopped_0
-  * Pseudo action:   svc_start_0
-  * Resource action: ipv6_dem_tas_dns start on DEM-2
-  * Resource action: d_bird_subnet_state start on DEM-2
-  * Resource action: ip_mgmt         start on DEM-2
-  * Resource action: ip_trf_tas      start on DEM-2
-  * Pseudo action:   svc_running_0
-  * Resource action: ipv6_dem_tas_dns monitor=10000 on DEM-2
-  * Resource action: d_bird_subnet_state monitor=10000 on DEM-2
-  * Resource action: ip_mgmt         monitor=10000 on DEM-2
-  * Resource action: ip_trf_tas      monitor=10000 on DEM-2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ DEM-1 DEM-2 ]
 
   * Full List of Resources:
     * Resource Group: svc:
-      * ipv6_dem_tas_dns	(ocf:heartbeat:IPv6addr):	 Started DEM-2
-      * d_bird_subnet_state	(lsb:bird_subnet_state):	 Started DEM-2
-      * ip_mgmt	(ocf:heartbeat:IPaddr2):	 Started DEM-2
-      * ip_trf_tas	(ocf:heartbeat:IPaddr2):	 Started DEM-2
+      * ipv6_dem_tas_dns	(ocf:heartbeat:IPv6addr):	 Started DEM-1
+      * d_bird_subnet_state	(lsb:bird_subnet_state):	 Started DEM-1
+      * ip_mgmt	(ocf:heartbeat:IPaddr2):	 Started DEM-1
+      * ip_trf_tas	(ocf:heartbeat:IPaddr2):	 Started DEM-1
     * Clone Set: cl_bird [d_bird]:
       * Started: [ DEM-1 DEM-2 ]
     * Clone Set: cl_bird6 [d_bird6]:

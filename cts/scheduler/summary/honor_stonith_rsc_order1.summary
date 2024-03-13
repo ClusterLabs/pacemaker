@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
 
@@ -15,24 +17,16 @@ Transition Summary:
   * Start      A       ( fc16-builder )
 
 Executing Cluster Transition:
-  * Resource action: S_A:0           monitor on fc16-builder
-  * Pseudo action:   S_GROUP_start_0
-  * Resource action: S_B             monitor on fc16-builder
-  * Resource action: A               monitor on fc16-builder
-  * Resource action: S_B             start on fc16-builder
-  * Resource action: A               start on fc16-builder
-  * Pseudo action:   S_GROUP_running_0
-  * Pseudo action:   S_CLONE_start_0
-  * Resource action: S_A:0           start on fc16-builder
-  * Pseudo action:   S_CLONE_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
 
   * Full List of Resources:
     * Clone Set: S_CLONE [S_A]:
-      * Started: [ fc16-builder ]
+      * Stopped: [ fc16-builder ]
     * Resource Group: S_GROUP:
-      * S_B	(stonith:fence_xvm):	 Started fc16-builder
-    * A	(ocf:pacemaker:Dummy):	 Started fc16-builder
+      * S_B	(stonith:fence_xvm):	 Stopped
+    * A	(ocf:pacemaker:Dummy):	 Stopped

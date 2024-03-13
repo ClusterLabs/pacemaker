@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node2: standby
     * Online: [ node1 ]
@@ -11,9 +13,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: MS_RSC_NATIVE:0 monitor=5000 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node node2: standby
     * Online: [ node1 ]

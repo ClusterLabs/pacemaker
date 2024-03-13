@@ -1,6 +1,9 @@
 0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ bl460g6a bl460g6b ]
 
@@ -13,14 +16,16 @@ Transition Summary:
   * Stop       dummy02     ( bl460g6a )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   dummy-g_stop_0
-  * Resource action: dummy02         stop on bl460g6a
+  * Pseudo action:   dummy-g_start_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ bl460g6a bl460g6b ]
 
   * Full List of Resources:
     * Resource Group: dummy-g:
       * dummy01	(ocf:heartbeat:Dummy):	 FAILED bl460g6a (blocked)
-      * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 Stopped
+      * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 Started bl460g6a

@@ -1,6 +1,9 @@
 9 of 87 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ s01-0 s01-1 ]
 
@@ -103,13 +106,11 @@ Transition Summary:
   * Migrate    mgmt-vm     ( s01-0 -> s01-1 )
 
 Executing Cluster Transition:
-  * Resource action: mgmt-vm         migrate_to on s01-0
-  * Resource action: mgmt-vm         migrate_from on s01-1
-  * Resource action: mgmt-vm         stop on s01-0
-  * Pseudo action:   mgmt-vm_start_0
-  * Resource action: mgmt-vm         monitor=10000 on s01-1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ s01-0 s01-1 ]
 
@@ -200,7 +201,7 @@ Revised Cluster Status:
       * Started: [ s01-0 s01-1 ]
     * Clone Set: cl-vg-s01-vm-data [vg-s01-vm-data]:
       * Started: [ s01-0 s01-1 ]
-    * mgmt-vm	(ocf:vds-ok:VirtualDomain):	 Started s01-1
+    * mgmt-vm	(ocf:vds-ok:VirtualDomain):	 Started s01-0
     * Clone Set: cl-drbdlinks-s01-service [drbdlinks-s01-service]:
       * Started: [ s01-0 s01-1 ]
     * Clone Set: cl-libvirtd [libvirtd]:

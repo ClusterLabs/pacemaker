@@ -1,6 +1,8 @@
 0 of 4 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node TCS-1: OFFLINE (standby)
     * Online: [ TCS-2 ]
@@ -18,20 +20,18 @@ Transition Summary:
   * Stop       ip_mgmt    ( TCS-2 )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   svc_stop_0
-  * Resource action: ip_mgmt         stop on TCS-2
-  * Resource action: ip_trf          stop on TCS-2
-  * Pseudo action:   svc_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node TCS-1: OFFLINE (standby)
     * Online: [ TCS-2 ]
 
   * Full List of Resources:
     * Resource Group: svc:
-      * ip_trf	(ocf:heartbeat:IPaddr2):	 Stopped
-      * ip_mgmt	(ocf:heartbeat:IPaddr2):	 Stopped
+      * ip_trf	(ocf:heartbeat:IPaddr2):	 Started TCS-2
+      * ip_mgmt	(ocf:heartbeat:IPaddr2):	 Started TCS-2
     * Clone Set: cl_tomcat_nms [d_tomcat_nms]:
       * d_tomcat_nms	(ocf:ntc:tomcat):	 FAILED TCS-2 (blocked)
       * Stopped: [ TCS-1 ]

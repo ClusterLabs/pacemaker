@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node rhel7-auto4: standby
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
@@ -20,25 +23,11 @@ Transition Summary:
   * Start      C:2     ( rhel7-auto3 )
 
 Executing Cluster Transition:
-  * Pseudo action:   A-clone_start_0
-  * Resource action: A               start on rhel7-auto3
-  * Pseudo action:   A-clone_running_0
-  * Pseudo action:   B-clone_start_0
-  * Resource action: A               monitor=10000 on rhel7-auto3
-  * Resource action: B               start on rhel7-auto3
-  * Pseudo action:   B-clone_running_0
-  * Pseudo action:   clone-one-or-more:order-B-clone-C-clone-mandatory
-  * Resource action: B               monitor=10000 on rhel7-auto3
-  * Pseudo action:   C-clone_start_0
-  * Resource action: C               start on rhel7-auto2
-  * Resource action: C               start on rhel7-auto1
-  * Resource action: C               start on rhel7-auto3
-  * Pseudo action:   C-clone_running_0
-  * Resource action: C               monitor=10000 on rhel7-auto2
-  * Resource action: C               monitor=10000 on rhel7-auto1
-  * Resource action: C               monitor=10000 on rhel7-auto3
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node rhel7-auto4: standby
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
@@ -46,11 +35,8 @@ Revised Cluster Status:
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
     * Clone Set: A-clone [A]:
-      * Started: [ rhel7-auto3 ]
-      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto4 ]
+      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
     * Clone Set: B-clone [B]:
-      * Started: [ rhel7-auto3 ]
-      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto4 ]
+      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
     * Clone Set: C-clone [C]:
-      * Started: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
-      * Stopped: [ rhel7-auto4 ]
+      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]

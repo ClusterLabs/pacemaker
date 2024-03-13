@@ -1,5 +1,7 @@
 Using the original execution date of: 2018-04-09 07:55:35Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * RemoteNode overcloud-novacompute-1: UNCLEAN (offline)
     * Online: [ controller-0 controller-1 controller-2 ]
@@ -35,7 +37,7 @@ Current cluster status:
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
       * compute-unfence-trigger	(ocf:pacemaker:Dummy):	 Started overcloud-novacompute-1 (UNCLEAN)
       * Started: [ overcloud-novacompute-0 ]
-      * Stopped: [ controller-0 controller-1 controller-2 ]
+      * Stopped: [ controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
     * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started controller-0
     * stonith-fence_ipmilan-5254008be2cc	(stonith:fence_ipmilan):	 Started controller-1
     * stonith-fence_ipmilan-525400803f9e	(stonith:fence_ipmilan):	 Started controller-0
@@ -51,22 +53,15 @@ Transition Summary:
   * Start      ip-10.0.0.110                        (            controller-1 )
   * Recover    stonith-fence_compute-fence-nova     (            controller-2 )
   * Stop       compute-unfence-trigger:1            ( overcloud-novacompute-1 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: overcloud-novacompute-1 stop on controller-1
-  * Resource action: stonith-fence_compute-fence-nova stop on controller-2
-  * Fencing overcloud-novacompute-1 (reboot)
-  * Cluster action:  clear_failcount for overcloud-novacompute-1 on controller-1
-  * Resource action: ip-10.0.0.110   start on controller-1
-  * Resource action: stonith-fence_compute-fence-nova start on controller-2
-  * Resource action: stonith-fence_compute-fence-nova monitor=60000 on controller-2
-  * Pseudo action:   compute-unfence-trigger-clone_stop_0
-  * Resource action: ip-10.0.0.110   monitor=10000 on controller-1
-  * Pseudo action:   compute-unfence-trigger_stop_0
-  * Pseudo action:   compute-unfence-trigger-clone_stopped_0
 Using the original execution date of: 2018-04-09 07:55:35Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * RemoteNode overcloud-novacompute-1: UNCLEAN (offline)
     * Online: [ controller-0 controller-1 controller-2 ]
@@ -75,7 +70,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * overcloud-novacompute-0	(ocf:pacemaker:remote):	 Started controller-0
-    * overcloud-novacompute-1	(ocf:pacemaker:remote):	 FAILED
+    * overcloud-novacompute-1	(ocf:pacemaker:remote):	 FAILED controller-1
     * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
@@ -89,7 +84,7 @@ Revised Cluster Status:
       * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
       * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
     * ip-192.168.24.11	(ocf:heartbeat:IPaddr2):	 Started controller-2
-    * ip-10.0.0.110	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * ip-10.0.0.110	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-2
     * ip-172.17.3.11	(ocf:heartbeat:IPaddr2):	 Started controller-0
@@ -98,10 +93,11 @@ Revised Cluster Status:
       * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started controller-2
       * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started controller-0
       * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-1
-    * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started controller-2
+    * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 FAILED controller-2
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
+      * compute-unfence-trigger	(ocf:pacemaker:Dummy):	 Started overcloud-novacompute-1 (UNCLEAN)
       * Started: [ overcloud-novacompute-0 ]
-      * Stopped: [ controller-0 controller-1 controller-2 overcloud-novacompute-1 ]
+      * Stopped: [ controller-0 controller-1 controller-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
     * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started controller-0
     * stonith-fence_ipmilan-5254008be2cc	(stonith:fence_ipmilan):	 Started controller-1
     * stonith-fence_ipmilan-525400803f9e	(stonith:fence_ipmilan):	 Started controller-0

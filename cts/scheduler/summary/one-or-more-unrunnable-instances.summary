@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
@@ -9,7 +12,6 @@ Current cluster status:
     * fence3	(stonith:fence_xvm):	 Started rdo7-node3
     * Clone Set: lb-haproxy-clone [lb-haproxy]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * vip-db	(ocf:heartbeat:IPaddr2):	 Started rdo7-node3
     * vip-rabbitmq	(ocf:heartbeat:IPaddr2):	 Started rdo7-node1
     * vip-keystone	(ocf:heartbeat:IPaddr2):	 Started rdo7-node2
@@ -25,108 +27,100 @@ Current cluster status:
     * vip-node	(ocf:heartbeat:IPaddr2):	 Started rdo7-node1
     * Clone Set: galera-master [galera] (promotable):
       * Promoted: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: rabbitmq-server-clone [rabbitmq-server]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: memcached-clone [memcached]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: mongodb-clone [mongodb]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: keystone-clone [keystone]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: glance-fs-clone [glance-fs]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: glance-registry-clone [glance-registry]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: glance-api-clone [glance-api]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: cinder-api-clone [cinder-api]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: cinder-scheduler-clone [cinder-scheduler]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * cinder-volume	(systemd:openstack-cinder-volume):	 Stopped
     * Clone Set: swift-fs-clone [swift-fs]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: swift-account-clone [swift-account]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: swift-container-clone [swift-container]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: swift-object-clone [swift-object]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: swift-proxy-clone [swift-proxy]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * swift-object-expirer	(systemd:openstack-swift-object-expirer):	 Stopped
     * Clone Set: neutron-server-clone [neutron-server]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-scale-clone [neutron-scale] (unique):
       * neutron-scale:0	(ocf:neutron:NeutronScale):	 Stopped
       * neutron-scale:1	(ocf:neutron:NeutronScale):	 Stopped
       * neutron-scale:2	(ocf:neutron:NeutronScale):	 Stopped
     * Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-netns-cleanup-clone [neutron-netns-cleanup]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-openvswitch-agent-clone [neutron-openvswitch-agent]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-dhcp-agent-clone [neutron-dhcp-agent]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-l3-agent-clone [neutron-l3-agent]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-metadata-agent-clone [neutron-metadata-agent]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-consoleauth-clone [nova-consoleauth]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-novncproxy-clone [nova-novncproxy]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-api-clone [nova-api]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-scheduler-clone [nova-scheduler]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-conductor-clone [nova-conductor]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: redis-master [redis] (promotable):
       * Promoted: [ rdo7-node1 ]
       * Unpromoted: [ rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * vip-redis	(ocf:heartbeat:IPaddr2):	 Started rdo7-node1
     * Clone Set: ceilometer-central-clone [ceilometer-central]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-collector-clone [ceilometer-collector]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-api-clone [ceilometer-api]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-delay-clone [ceilometer-delay]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-alarm-evaluator-clone [ceilometer-alarm-evaluator]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-alarm-notifier-clone [ceilometer-alarm-notifier]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-notification-clone [ceilometer-notification]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-api-clone [heat-api]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-api-cfn-clone [heat-api-cfn]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-api-cloudwatch-clone [heat-api-cloudwatch]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-engine-clone [heat-engine]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: horizon-clone [horizon]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: neutron-openvswitch-agent-compute-clone [neutron-openvswitch-agent-compute]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: libvirtd-compute-clone [libvirtd-compute]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: ceilometer-compute-clone [ceilometer-compute]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: nova-compute-clone [nova-compute]:
-      * Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * fence-nova	(stonith:fence_compute):	 Stopped
     * fence-compute	(stonith:fence_apc_snmp):	 Started rdo7-node3
     * mrg-07	(ocf:pacemaker:remote):	 Started rdo7-node1
@@ -250,321 +244,11 @@ Transition Summary:
   * Start      fence-nova                              ( rdo7-node2 )
 
 Executing Cluster Transition:
-  * Resource action: galera          monitor=10000 on rdo7-node2
-  * Pseudo action:   keystone-clone_start_0
-  * Pseudo action:   nova-compute-clone_pre_notify_start_0
-  * Resource action: keystone        start on rdo7-node2
-  * Resource action: keystone        start on rdo7-node3
-  * Resource action: keystone        start on rdo7-node1
-  * Pseudo action:   keystone-clone_running_0
-  * Pseudo action:   glance-registry-clone_start_0
-  * Pseudo action:   cinder-api-clone_start_0
-  * Pseudo action:   swift-account-clone_start_0
-  * Pseudo action:   neutron-server-clone_start_0
-  * Pseudo action:   nova-consoleauth-clone_start_0
-  * Pseudo action:   ceilometer-central-clone_start_0
-  * Pseudo action:   nova-compute-clone_confirmed-pre_notify_start_0
-  * Resource action: keystone        monitor=60000 on rdo7-node2
-  * Resource action: keystone        monitor=60000 on rdo7-node3
-  * Resource action: keystone        monitor=60000 on rdo7-node1
-  * Resource action: glance-registry start on rdo7-node2
-  * Resource action: glance-registry start on rdo7-node3
-  * Resource action: glance-registry start on rdo7-node1
-  * Pseudo action:   glance-registry-clone_running_0
-  * Pseudo action:   glance-api-clone_start_0
-  * Resource action: cinder-api      start on rdo7-node2
-  * Resource action: cinder-api      start on rdo7-node3
-  * Resource action: cinder-api      start on rdo7-node1
-  * Pseudo action:   cinder-api-clone_running_0
-  * Pseudo action:   cinder-scheduler-clone_start_0
-  * Resource action: swift-account   start on rdo7-node3
-  * Resource action: swift-account   start on rdo7-node1
-  * Resource action: swift-account   start on rdo7-node2
-  * Pseudo action:   swift-account-clone_running_0
-  * Pseudo action:   swift-container-clone_start_0
-  * Pseudo action:   swift-proxy-clone_start_0
-  * Resource action: neutron-server  start on rdo7-node1
-  * Resource action: neutron-server  start on rdo7-node2
-  * Resource action: neutron-server  start on rdo7-node3
-  * Pseudo action:   neutron-server-clone_running_0
-  * Pseudo action:   neutron-scale-clone_start_0
-  * Resource action: nova-consoleauth start on rdo7-node1
-  * Resource action: nova-consoleauth start on rdo7-node2
-  * Resource action: nova-consoleauth start on rdo7-node3
-  * Pseudo action:   nova-consoleauth-clone_running_0
-  * Pseudo action:   nova-novncproxy-clone_start_0
-  * Resource action: ceilometer-central start on rdo7-node2
-  * Resource action: ceilometer-central start on rdo7-node3
-  * Resource action: ceilometer-central start on rdo7-node1
-  * Pseudo action:   ceilometer-central-clone_running_0
-  * Pseudo action:   ceilometer-collector-clone_start_0
-  * Pseudo action:   clone-one-or-more:order-neutron-server-clone-neutron-openvswitch-agent-compute-clone-mandatory
-  * Resource action: glance-registry monitor=60000 on rdo7-node2
-  * Resource action: glance-registry monitor=60000 on rdo7-node3
-  * Resource action: glance-registry monitor=60000 on rdo7-node1
-  * Resource action: glance-api      start on rdo7-node2
-  * Resource action: glance-api      start on rdo7-node3
-  * Resource action: glance-api      start on rdo7-node1
-  * Pseudo action:   glance-api-clone_running_0
-  * Resource action: cinder-api      monitor=60000 on rdo7-node2
-  * Resource action: cinder-api      monitor=60000 on rdo7-node3
-  * Resource action: cinder-api      monitor=60000 on rdo7-node1
-  * Resource action: cinder-scheduler start on rdo7-node2
-  * Resource action: cinder-scheduler start on rdo7-node3
-  * Resource action: cinder-scheduler start on rdo7-node1
-  * Pseudo action:   cinder-scheduler-clone_running_0
-  * Resource action: cinder-volume   start on rdo7-node2
-  * Resource action: swift-account   monitor=60000 on rdo7-node3
-  * Resource action: swift-account   monitor=60000 on rdo7-node1
-  * Resource action: swift-account   monitor=60000 on rdo7-node2
-  * Resource action: swift-container start on rdo7-node3
-  * Resource action: swift-container start on rdo7-node1
-  * Resource action: swift-container start on rdo7-node2
-  * Pseudo action:   swift-container-clone_running_0
-  * Pseudo action:   swift-object-clone_start_0
-  * Resource action: swift-proxy     start on rdo7-node3
-  * Resource action: swift-proxy     start on rdo7-node1
-  * Resource action: swift-proxy     start on rdo7-node2
-  * Pseudo action:   swift-proxy-clone_running_0
-  * Resource action: swift-object-expirer start on rdo7-node3
-  * Resource action: neutron-server  monitor=60000 on rdo7-node1
-  * Resource action: neutron-server  monitor=60000 on rdo7-node2
-  * Resource action: neutron-server  monitor=60000 on rdo7-node3
-  * Resource action: neutron-scale:0 start on rdo7-node1
-  * Resource action: neutron-scale:1 start on rdo7-node2
-  * Resource action: neutron-scale:2 start on rdo7-node3
-  * Pseudo action:   neutron-scale-clone_running_0
-  * Pseudo action:   neutron-ovs-cleanup-clone_start_0
-  * Resource action: nova-consoleauth monitor=60000 on rdo7-node1
-  * Resource action: nova-consoleauth monitor=60000 on rdo7-node2
-  * Resource action: nova-consoleauth monitor=60000 on rdo7-node3
-  * Resource action: nova-novncproxy start on rdo7-node1
-  * Resource action: nova-novncproxy start on rdo7-node2
-  * Resource action: nova-novncproxy start on rdo7-node3
-  * Pseudo action:   nova-novncproxy-clone_running_0
-  * Pseudo action:   nova-api-clone_start_0
-  * Resource action: ceilometer-central monitor=60000 on rdo7-node2
-  * Resource action: ceilometer-central monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-central monitor=60000 on rdo7-node1
-  * Resource action: ceilometer-collector start on rdo7-node2
-  * Resource action: ceilometer-collector start on rdo7-node3
-  * Resource action: ceilometer-collector start on rdo7-node1
-  * Pseudo action:   ceilometer-collector-clone_running_0
-  * Pseudo action:   ceilometer-api-clone_start_0
-  * Pseudo action:   neutron-openvswitch-agent-compute-clone_start_0
-  * Resource action: glance-api      monitor=60000 on rdo7-node2
-  * Resource action: glance-api      monitor=60000 on rdo7-node3
-  * Resource action: glance-api      monitor=60000 on rdo7-node1
-  * Resource action: cinder-scheduler monitor=60000 on rdo7-node2
-  * Resource action: cinder-scheduler monitor=60000 on rdo7-node3
-  * Resource action: cinder-scheduler monitor=60000 on rdo7-node1
-  * Resource action: cinder-volume   monitor=60000 on rdo7-node2
-  * Resource action: swift-container monitor=60000 on rdo7-node3
-  * Resource action: swift-container monitor=60000 on rdo7-node1
-  * Resource action: swift-container monitor=60000 on rdo7-node2
-  * Resource action: swift-object    start on rdo7-node3
-  * Resource action: swift-object    start on rdo7-node1
-  * Resource action: swift-object    start on rdo7-node2
-  * Pseudo action:   swift-object-clone_running_0
-  * Resource action: swift-proxy     monitor=60000 on rdo7-node3
-  * Resource action: swift-proxy     monitor=60000 on rdo7-node1
-  * Resource action: swift-proxy     monitor=60000 on rdo7-node2
-  * Resource action: swift-object-expirer monitor=60000 on rdo7-node3
-  * Resource action: neutron-scale:0 monitor=10000 on rdo7-node1
-  * Resource action: neutron-scale:1 monitor=10000 on rdo7-node2
-  * Resource action: neutron-scale:2 monitor=10000 on rdo7-node3
-  * Resource action: neutron-ovs-cleanup start on rdo7-node1
-  * Resource action: neutron-ovs-cleanup start on rdo7-node2
-  * Resource action: neutron-ovs-cleanup start on rdo7-node3
-  * Pseudo action:   neutron-ovs-cleanup-clone_running_0
-  * Pseudo action:   neutron-netns-cleanup-clone_start_0
-  * Resource action: nova-novncproxy monitor=60000 on rdo7-node1
-  * Resource action: nova-novncproxy monitor=60000 on rdo7-node2
-  * Resource action: nova-novncproxy monitor=60000 on rdo7-node3
-  * Resource action: nova-api        start on rdo7-node1
-  * Resource action: nova-api        start on rdo7-node2
-  * Resource action: nova-api        start on rdo7-node3
-  * Pseudo action:   nova-api-clone_running_0
-  * Pseudo action:   nova-scheduler-clone_start_0
-  * Resource action: ceilometer-collector monitor=60000 on rdo7-node2
-  * Resource action: ceilometer-collector monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-collector monitor=60000 on rdo7-node1
-  * Resource action: ceilometer-api  start on rdo7-node2
-  * Resource action: ceilometer-api  start on rdo7-node3
-  * Resource action: ceilometer-api  start on rdo7-node1
-  * Pseudo action:   ceilometer-api-clone_running_0
-  * Pseudo action:   ceilometer-delay-clone_start_0
-  * Resource action: neutron-openvswitch-agent-compute start on mrg-07
-  * Resource action: neutron-openvswitch-agent-compute start on mrg-08
-  * Resource action: neutron-openvswitch-agent-compute start on mrg-09
-  * Pseudo action:   neutron-openvswitch-agent-compute-clone_running_0
-  * Pseudo action:   libvirtd-compute-clone_start_0
-  * Resource action: swift-object    monitor=60000 on rdo7-node3
-  * Resource action: swift-object    monitor=60000 on rdo7-node1
-  * Resource action: swift-object    monitor=60000 on rdo7-node2
-  * Resource action: neutron-ovs-cleanup monitor=10000 on rdo7-node1
-  * Resource action: neutron-ovs-cleanup monitor=10000 on rdo7-node2
-  * Resource action: neutron-ovs-cleanup monitor=10000 on rdo7-node3
-  * Resource action: neutron-netns-cleanup start on rdo7-node1
-  * Resource action: neutron-netns-cleanup start on rdo7-node2
-  * Resource action: neutron-netns-cleanup start on rdo7-node3
-  * Pseudo action:   neutron-netns-cleanup-clone_running_0
-  * Pseudo action:   neutron-openvswitch-agent-clone_start_0
-  * Resource action: nova-api        monitor=60000 on rdo7-node1
-  * Resource action: nova-api        monitor=60000 on rdo7-node2
-  * Resource action: nova-api        monitor=60000 on rdo7-node3
-  * Resource action: nova-scheduler  start on rdo7-node1
-  * Resource action: nova-scheduler  start on rdo7-node2
-  * Resource action: nova-scheduler  start on rdo7-node3
-  * Pseudo action:   nova-scheduler-clone_running_0
-  * Pseudo action:   nova-conductor-clone_start_0
-  * Resource action: ceilometer-api  monitor=60000 on rdo7-node2
-  * Resource action: ceilometer-api  monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-api  monitor=60000 on rdo7-node1
-  * Resource action: ceilometer-delay start on rdo7-node2
-  * Resource action: ceilometer-delay start on rdo7-node3
-  * Resource action: ceilometer-delay start on rdo7-node1
-  * Pseudo action:   ceilometer-delay-clone_running_0
-  * Pseudo action:   ceilometer-alarm-evaluator-clone_start_0
-  * Resource action: neutron-openvswitch-agent-compute monitor=60000 on mrg-07
-  * Resource action: neutron-openvswitch-agent-compute monitor=60000 on mrg-08
-  * Resource action: neutron-openvswitch-agent-compute monitor=60000 on mrg-09
-  * Resource action: libvirtd-compute start on mrg-07
-  * Resource action: libvirtd-compute start on mrg-08
-  * Resource action: libvirtd-compute start on mrg-09
-  * Pseudo action:   libvirtd-compute-clone_running_0
-  * Resource action: neutron-netns-cleanup monitor=10000 on rdo7-node1
-  * Resource action: neutron-netns-cleanup monitor=10000 on rdo7-node2
-  * Resource action: neutron-netns-cleanup monitor=10000 on rdo7-node3
-  * Resource action: neutron-openvswitch-agent start on rdo7-node1
-  * Resource action: neutron-openvswitch-agent start on rdo7-node2
-  * Resource action: neutron-openvswitch-agent start on rdo7-node3
-  * Pseudo action:   neutron-openvswitch-agent-clone_running_0
-  * Pseudo action:   neutron-dhcp-agent-clone_start_0
-  * Resource action: nova-scheduler  monitor=60000 on rdo7-node1
-  * Resource action: nova-scheduler  monitor=60000 on rdo7-node2
-  * Resource action: nova-scheduler  monitor=60000 on rdo7-node3
-  * Resource action: nova-conductor  start on rdo7-node1
-  * Resource action: nova-conductor  start on rdo7-node2
-  * Resource action: nova-conductor  start on rdo7-node3
-  * Pseudo action:   nova-conductor-clone_running_0
-  * Resource action: ceilometer-delay monitor=10000 on rdo7-node2
-  * Resource action: ceilometer-delay monitor=10000 on rdo7-node3
-  * Resource action: ceilometer-delay monitor=10000 on rdo7-node1
-  * Resource action: ceilometer-alarm-evaluator start on rdo7-node2
-  * Resource action: ceilometer-alarm-evaluator start on rdo7-node3
-  * Resource action: ceilometer-alarm-evaluator start on rdo7-node1
-  * Pseudo action:   ceilometer-alarm-evaluator-clone_running_0
-  * Pseudo action:   ceilometer-alarm-notifier-clone_start_0
-  * Resource action: libvirtd-compute monitor=60000 on mrg-07
-  * Resource action: libvirtd-compute monitor=60000 on mrg-08
-  * Resource action: libvirtd-compute monitor=60000 on mrg-09
-  * Resource action: fence-nova      start on rdo7-node2
-  * Pseudo action:   clone-one-or-more:order-nova-conductor-clone-nova-compute-clone-mandatory
-  * Resource action: neutron-openvswitch-agent monitor=60000 on rdo7-node1
-  * Resource action: neutron-openvswitch-agent monitor=60000 on rdo7-node2
-  * Resource action: neutron-openvswitch-agent monitor=60000 on rdo7-node3
-  * Resource action: neutron-dhcp-agent start on rdo7-node1
-  * Resource action: neutron-dhcp-agent start on rdo7-node2
-  * Resource action: neutron-dhcp-agent start on rdo7-node3
-  * Pseudo action:   neutron-dhcp-agent-clone_running_0
-  * Pseudo action:   neutron-l3-agent-clone_start_0
-  * Resource action: nova-conductor  monitor=60000 on rdo7-node1
-  * Resource action: nova-conductor  monitor=60000 on rdo7-node2
-  * Resource action: nova-conductor  monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-alarm-evaluator monitor=60000 on rdo7-node2
-  * Resource action: ceilometer-alarm-evaluator monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-alarm-evaluator monitor=60000 on rdo7-node1
-  * Resource action: ceilometer-alarm-notifier start on rdo7-node2
-  * Resource action: ceilometer-alarm-notifier start on rdo7-node3
-  * Resource action: ceilometer-alarm-notifier start on rdo7-node1
-  * Pseudo action:   ceilometer-alarm-notifier-clone_running_0
-  * Pseudo action:   ceilometer-notification-clone_start_0
-  * Resource action: fence-nova      monitor=60000 on rdo7-node2
-  * Resource action: neutron-dhcp-agent monitor=60000 on rdo7-node1
-  * Resource action: neutron-dhcp-agent monitor=60000 on rdo7-node2
-  * Resource action: neutron-dhcp-agent monitor=60000 on rdo7-node3
-  * Resource action: neutron-l3-agent start on rdo7-node1
-  * Resource action: neutron-l3-agent start on rdo7-node2
-  * Resource action: neutron-l3-agent start on rdo7-node3
-  * Pseudo action:   neutron-l3-agent-clone_running_0
-  * Pseudo action:   neutron-metadata-agent-clone_start_0
-  * Resource action: ceilometer-alarm-notifier monitor=60000 on rdo7-node2
-  * Resource action: ceilometer-alarm-notifier monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-alarm-notifier monitor=60000 on rdo7-node1
-  * Resource action: ceilometer-notification start on rdo7-node2
-  * Resource action: ceilometer-notification start on rdo7-node3
-  * Resource action: ceilometer-notification start on rdo7-node1
-  * Pseudo action:   ceilometer-notification-clone_running_0
-  * Pseudo action:   heat-api-clone_start_0
-  * Pseudo action:   clone-one-or-more:order-ceilometer-notification-clone-ceilometer-compute-clone-mandatory
-  * Resource action: neutron-l3-agent monitor=60000 on rdo7-node1
-  * Resource action: neutron-l3-agent monitor=60000 on rdo7-node2
-  * Resource action: neutron-l3-agent monitor=60000 on rdo7-node3
-  * Resource action: neutron-metadata-agent start on rdo7-node1
-  * Resource action: neutron-metadata-agent start on rdo7-node2
-  * Resource action: neutron-metadata-agent start on rdo7-node3
-  * Pseudo action:   neutron-metadata-agent-clone_running_0
-  * Resource action: ceilometer-notification monitor=60000 on rdo7-node2
-  * Resource action: ceilometer-notification monitor=60000 on rdo7-node3
-  * Resource action: ceilometer-notification monitor=60000 on rdo7-node1
-  * Resource action: heat-api        start on rdo7-node2
-  * Resource action: heat-api        start on rdo7-node3
-  * Resource action: heat-api        start on rdo7-node1
-  * Pseudo action:   heat-api-clone_running_0
-  * Pseudo action:   heat-api-cfn-clone_start_0
-  * Pseudo action:   ceilometer-compute-clone_start_0
-  * Resource action: neutron-metadata-agent monitor=60000 on rdo7-node1
-  * Resource action: neutron-metadata-agent monitor=60000 on rdo7-node2
-  * Resource action: neutron-metadata-agent monitor=60000 on rdo7-node3
-  * Resource action: heat-api        monitor=60000 on rdo7-node2
-  * Resource action: heat-api        monitor=60000 on rdo7-node3
-  * Resource action: heat-api        monitor=60000 on rdo7-node1
-  * Resource action: heat-api-cfn    start on rdo7-node2
-  * Resource action: heat-api-cfn    start on rdo7-node3
-  * Resource action: heat-api-cfn    start on rdo7-node1
-  * Pseudo action:   heat-api-cfn-clone_running_0
-  * Pseudo action:   heat-api-cloudwatch-clone_start_0
-  * Resource action: ceilometer-compute start on mrg-07
-  * Resource action: ceilometer-compute start on mrg-08
-  * Resource action: ceilometer-compute start on mrg-09
-  * Pseudo action:   ceilometer-compute-clone_running_0
-  * Pseudo action:   nova-compute-clone_start_0
-  * Resource action: heat-api-cfn    monitor=60000 on rdo7-node2
-  * Resource action: heat-api-cfn    monitor=60000 on rdo7-node3
-  * Resource action: heat-api-cfn    monitor=60000 on rdo7-node1
-  * Resource action: heat-api-cloudwatch start on rdo7-node2
-  * Resource action: heat-api-cloudwatch start on rdo7-node3
-  * Resource action: heat-api-cloudwatch start on rdo7-node1
-  * Pseudo action:   heat-api-cloudwatch-clone_running_0
-  * Pseudo action:   heat-engine-clone_start_0
-  * Resource action: ceilometer-compute monitor=60000 on mrg-07
-  * Resource action: ceilometer-compute monitor=60000 on mrg-08
-  * Resource action: ceilometer-compute monitor=60000 on mrg-09
-  * Resource action: nova-compute    start on mrg-07
-  * Resource action: nova-compute    start on mrg-08
-  * Resource action: nova-compute    start on mrg-09
-  * Pseudo action:   nova-compute-clone_running_0
-  * Resource action: heat-api-cloudwatch monitor=60000 on rdo7-node2
-  * Resource action: heat-api-cloudwatch monitor=60000 on rdo7-node3
-  * Resource action: heat-api-cloudwatch monitor=60000 on rdo7-node1
-  * Resource action: heat-engine     start on rdo7-node2
-  * Resource action: heat-engine     start on rdo7-node3
-  * Resource action: heat-engine     start on rdo7-node1
-  * Pseudo action:   heat-engine-clone_running_0
-  * Pseudo action:   nova-compute-clone_post_notify_running_0
-  * Resource action: heat-engine     monitor=60000 on rdo7-node2
-  * Resource action: heat-engine     monitor=60000 on rdo7-node3
-  * Resource action: heat-engine     monitor=60000 on rdo7-node1
-  * Resource action: nova-compute    notify on mrg-07
-  * Resource action: nova-compute    notify on mrg-08
-  * Resource action: nova-compute    notify on mrg-09
-  * Pseudo action:   nova-compute-clone_confirmed-post_notify_running_0
-  * Resource action: nova-compute    monitor=10000 on mrg-07
-  * Resource action: nova-compute    monitor=10000 on mrg-08
-  * Resource action: nova-compute    monitor=10000 on mrg-09
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
@@ -575,7 +259,6 @@ Revised Cluster Status:
     * fence3	(stonith:fence_xvm):	 Started rdo7-node3
     * Clone Set: lb-haproxy-clone [lb-haproxy]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * vip-db	(ocf:heartbeat:IPaddr2):	 Started rdo7-node3
     * vip-rabbitmq	(ocf:heartbeat:IPaddr2):	 Started rdo7-node1
     * vip-keystone	(ocf:heartbeat:IPaddr2):	 Started rdo7-node2
@@ -591,145 +274,101 @@ Revised Cluster Status:
     * vip-node	(ocf:heartbeat:IPaddr2):	 Started rdo7-node1
     * Clone Set: galera-master [galera] (promotable):
       * Promoted: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: rabbitmq-server-clone [rabbitmq-server]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: memcached-clone [memcached]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: mongodb-clone [mongodb]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: keystone-clone [keystone]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: glance-fs-clone [glance-fs]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: glance-registry-clone [glance-registry]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: glance-api-clone [glance-api]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: cinder-api-clone [cinder-api]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: cinder-scheduler-clone [cinder-scheduler]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
-    * cinder-volume	(systemd:openstack-cinder-volume):	 Started rdo7-node2
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
+    * cinder-volume	(systemd:openstack-cinder-volume):	 Stopped
     * Clone Set: swift-fs-clone [swift-fs]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: swift-account-clone [swift-account]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: swift-container-clone [swift-container]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: swift-object-clone [swift-object]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: swift-proxy-clone [swift-proxy]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
-    * swift-object-expirer	(systemd:openstack-swift-object-expirer):	 Started rdo7-node3
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
+    * swift-object-expirer	(systemd:openstack-swift-object-expirer):	 Stopped
     * Clone Set: neutron-server-clone [neutron-server]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-scale-clone [neutron-scale] (unique):
-      * neutron-scale:0	(ocf:neutron:NeutronScale):	 Started rdo7-node1
-      * neutron-scale:1	(ocf:neutron:NeutronScale):	 Started rdo7-node2
-      * neutron-scale:2	(ocf:neutron:NeutronScale):	 Started rdo7-node3
+      * neutron-scale:0	(ocf:neutron:NeutronScale):	 Stopped
+      * neutron-scale:1	(ocf:neutron:NeutronScale):	 Stopped
+      * neutron-scale:2	(ocf:neutron:NeutronScale):	 Stopped
     * Clone Set: neutron-ovs-cleanup-clone [neutron-ovs-cleanup]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-netns-cleanup-clone [neutron-netns-cleanup]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-openvswitch-agent-clone [neutron-openvswitch-agent]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-dhcp-agent-clone [neutron-dhcp-agent]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-l3-agent-clone [neutron-l3-agent]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: neutron-metadata-agent-clone [neutron-metadata-agent]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-consoleauth-clone [nova-consoleauth]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-novncproxy-clone [nova-novncproxy]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-api-clone [nova-api]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-scheduler-clone [nova-scheduler]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: nova-conductor-clone [nova-conductor]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: redis-master [redis] (promotable):
       * Promoted: [ rdo7-node1 ]
       * Unpromoted: [ rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * vip-redis	(ocf:heartbeat:IPaddr2):	 Started rdo7-node1
     * Clone Set: ceilometer-central-clone [ceilometer-central]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-collector-clone [ceilometer-collector]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-api-clone [ceilometer-api]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-delay-clone [ceilometer-delay]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-alarm-evaluator-clone [ceilometer-alarm-evaluator]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-alarm-notifier-clone [ceilometer-alarm-notifier]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: ceilometer-notification-clone [ceilometer-notification]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-api-clone [heat-api]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-api-cfn-clone [heat-api-cfn]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-api-cloudwatch-clone [heat-api-cloudwatch]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: heat-engine-clone [heat-engine]:
-      * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
     * Clone Set: horizon-clone [horizon]:
       * Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: neutron-openvswitch-agent-compute-clone [neutron-openvswitch-agent-compute]:
-      * Started: [ mrg-07 mrg-08 mrg-09 ]
-      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: libvirtd-compute-clone [libvirtd-compute]:
-      * Started: [ mrg-07 mrg-08 mrg-09 ]
-      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: ceilometer-compute-clone [ceilometer-compute]:
-      * Started: [ mrg-07 mrg-08 mrg-09 ]
-      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
     * Clone Set: nova-compute-clone [nova-compute]:
-      * Started: [ mrg-07 mrg-08 mrg-09 ]
-      * Stopped: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
-    * fence-nova	(stonith:fence_compute):	 Started rdo7-node2
+      * Stopped: [ mrg-07 mrg-08 mrg-09 ]
+    * fence-nova	(stonith:fence_compute):	 Stopped
     * fence-compute	(stonith:fence_apc_snmp):	 Started rdo7-node3
     * mrg-07	(ocf:pacemaker:remote):	 Started rdo7-node1
     * mrg-08	(ocf:pacemaker:remote):	 Started rdo7-node2

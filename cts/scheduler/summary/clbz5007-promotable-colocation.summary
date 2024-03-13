@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder fc16-builder2 ]
 
@@ -14,12 +16,10 @@ Transition Summary:
   * Move       PROMOTED_IP       ( fc16-builder2 -> fc16-builder )
 
 Executing Cluster Transition:
-  * Resource action: UNPROMOTED_IP   stop on fc16-builder
-  * Resource action: PROMOTED_IP     stop on fc16-builder2
-  * Resource action: UNPROMOTED_IP   start on fc16-builder2
-  * Resource action: PROMOTED_IP     start on fc16-builder
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder fc16-builder2 ]
 
@@ -27,5 +27,5 @@ Revised Cluster Status:
     * Clone Set: MS_DUMMY [DUMMY] (promotable):
       * Promoted: [ fc16-builder ]
       * Unpromoted: [ fc16-builder2 ]
-    * UNPROMOTED_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder2
-    * PROMOTED_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder
+    * UNPROMOTED_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder
+    * PROMOTED_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder2

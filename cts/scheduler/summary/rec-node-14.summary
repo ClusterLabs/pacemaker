@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node1: UNCLEAN (offline)
     * Node node2: UNCLEAN (offline)
@@ -14,13 +16,14 @@ Transition Summary:
   * Fence (reboot) node1 'peer is no longer part of the cluster'
 
 Executing Cluster Transition:
-  * Fencing node1 (reboot)
-  * Fencing node3 (reboot)
-  * Fencing node2 (reboot)
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * OFFLINE: [ node1 node2 node3 ]
+    * Node node1: UNCLEAN (offline)
+    * Node node2: UNCLEAN (offline)
+    * Node node3: UNCLEAN (offline)
 
   * Full List of Resources:
     * stonith-1	(stonith:dummy):	 Stopped

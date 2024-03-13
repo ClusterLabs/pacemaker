@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -10,14 +12,13 @@ Transition Summary:
   * Move       A       ( node1 -> node2 )
 
 Executing Cluster Transition:
-  * Resource action: A               stop on node1
-  * Resource action: A               start on node2
-  * Resource action: A               monitor=10000 on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * A	(ocf:pacemaker:Dummy):	 Started node2
+    * A	(ocf:pacemaker:Dummy):	 Started node1
     * B	(ocf:pacemaker:Dummy):	 Started node2

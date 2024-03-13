@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ host1 host2 ]
 
@@ -11,19 +13,13 @@ Transition Summary:
   * Start      rsc2    ( host1 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            monitor on host2
-  * Resource action: rsc1            monitor on host1
-  * Resource action: rsc2            monitor on host2
-  * Resource action: rsc2            monitor on host1
-  * Pseudo action:   load_stopped_host2
-  * Pseudo action:   load_stopped_host1
-  * Resource action: rsc1            start on host2
-  * Resource action: rsc2            start on host1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ host1 host2 ]
 
   * Full List of Resources:
-    * rsc1	(ocf:pacemaker:Dummy):	 Started host2
-    * rsc2	(ocf:pacemaker:Dummy):	 Started host1
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc2	(ocf:pacemaker:Dummy):	 Stopped

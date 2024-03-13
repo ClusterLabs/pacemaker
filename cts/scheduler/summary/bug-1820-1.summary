@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ star world ]
 
@@ -14,31 +16,15 @@ Transition Summary:
   * Migrate    test2   ( star -> world )
 
 Executing Cluster Transition:
-  * Resource action: p1              monitor on world
-  * Resource action: p1              monitor on star
-  * Pseudo action:   gr1_stop_0
-  * Resource action: test1           migrate_to on star
-  * Resource action: p1              start on world
-  * Resource action: test1           migrate_from on world
-  * Resource action: test2           migrate_to on star
-  * Resource action: test2           migrate_from on world
-  * Resource action: test2           stop on star
-  * Resource action: test1           stop on star
-  * Cluster action:  do_shutdown on star
-  * Pseudo action:   gr1_stopped_0
-  * Pseudo action:   gr1_start_0
-  * Pseudo action:   test1_start_0
-  * Pseudo action:   test2_start_0
-  * Pseudo action:   gr1_running_0
-  * Resource action: test1           monitor=10000 on world
-  * Resource action: test2           monitor=10000 on world
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ star world ]
 
   * Full List of Resources:
-    * p1	(ocf:heartbeat:Xen):	 Started world
+    * p1	(ocf:heartbeat:Xen):	 Stopped
     * Resource Group: gr1:
-      * test1	(ocf:heartbeat:Xen):	 Started world
-      * test2	(ocf:heartbeat:Xen):	 Started world
+      * test1	(ocf:heartbeat:Xen):	 Started star
+      * test2	(ocf:heartbeat:Xen):	 Started star

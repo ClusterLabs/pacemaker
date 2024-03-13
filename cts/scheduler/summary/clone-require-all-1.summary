@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
@@ -15,14 +18,11 @@ Transition Summary:
   * Start      B:1     ( rhel7-auto4 )
 
 Executing Cluster Transition:
-  * Pseudo action:   B-clone_start_0
-  * Resource action: B               start on rhel7-auto3
-  * Resource action: B               start on rhel7-auto4
-  * Pseudo action:   B-clone_running_0
-  * Resource action: B               monitor=10000 on rhel7-auto3
-  * Resource action: B               monitor=10000 on rhel7-auto4
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
@@ -32,5 +32,4 @@ Revised Cluster Status:
       * Started: [ rhel7-auto1 rhel7-auto2 ]
       * Stopped: [ rhel7-auto3 rhel7-auto4 ]
     * Clone Set: B-clone [B]:
-      * Started: [ rhel7-auto3 rhel7-auto4 ]
-      * Stopped: [ rhel7-auto1 rhel7-auto2 ]
+      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]

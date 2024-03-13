@@ -1,5 +1,7 @@
 Using the original execution date of: 2022-12-02 17:04:52Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node-2: pending
     * Online: [ node-1 node-3 ]
@@ -14,11 +16,11 @@ Transition Summary:
   * Start      stateful-1:1     ( node-1 )  due to unrunnable stateful-1:0 monitor (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   promotable-1_start_0
-  * Pseudo action:   promotable-1_running_0
 Using the original execution date of: 2022-12-02 17:04:52Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node node-2: pending
     * Online: [ node-1 node-3 ]

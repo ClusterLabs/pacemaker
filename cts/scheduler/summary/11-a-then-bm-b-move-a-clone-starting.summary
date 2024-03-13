@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node f20node1: standby (with active resources)
     * Online: [ f20node2 ]
@@ -14,23 +16,16 @@ Transition Summary:
   * Move       vm            ( f20node1 -> f20node2 )  due to unmigrateable myclone-clone stop
 
 Executing Cluster Transition:
-  * Resource action: myclone         monitor on f20node2
-  * Resource action: vm              stop on f20node1
-  * Pseudo action:   myclone-clone_stop_0
-  * Resource action: myclone         stop on f20node1
-  * Pseudo action:   myclone-clone_stopped_0
-  * Pseudo action:   myclone-clone_start_0
-  * Resource action: myclone         start on f20node2
-  * Pseudo action:   myclone-clone_running_0
-  * Resource action: vm              start on f20node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node f20node1: standby
+    * Node f20node1: standby (with active resources)
     * Online: [ f20node2 ]
 
   * Full List of Resources:
     * Clone Set: myclone-clone [myclone]:
-      * Started: [ f20node2 ]
-      * Stopped: [ f20node1 ]
-    * vm	(ocf:heartbeat:Dummy):	 Started f20node2
+      * Started: [ f20node1 ]
+      * Stopped: [ f20node2 ]
+    * vm	(ocf:heartbeat:Dummy):	 Started f20node1

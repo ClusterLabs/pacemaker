@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
     * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
@@ -16,25 +18,21 @@ Transition Summary:
   * Stop       base:1                   ( Unpromoted base-bundle-1 )  due to unrunnable base-bundle-podman-1 start
 
 Executing Cluster Transition:
-  * Pseudo action:   base-bundle_stop_0
-  * Pseudo action:   base-bundle-clone_stop_0
-  * Resource action: base            stop on base-bundle-1
-  * Pseudo action:   base-bundle-clone_stopped_0
-  * Pseudo action:   base-bundle-clone_start_0
-  * Resource action: base-bundle-1   stop on node2
-  * Pseudo action:   base-bundle-clone_running_0
-  * Resource action: base-bundle-podman-1 stop on node2
-  * Pseudo action:   base-bundle_stopped_0
-  * Pseudo action:   base-bundle_running_0
+  * Pseudo action:   base-bundle-clone_promoted_0
+  * Pseudo action:   base-bundle_promoted_0
+Transition failed: terminated
+An invalid transition was produced
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
-    * GuestOnline: [ base-bundle-0 base-bundle-2 ]
+    * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started node2
     * Container bundle set: base-bundle [localhost/pcmktest]:
       * base-bundle-0	(ocf:pacemaker:Stateful):	 Promoted node3
-      * base-bundle-1	(ocf:pacemaker:Stateful):	 Stopped
+      * base-bundle-1	(ocf:pacemaker:Stateful):	 Unpromoted node2
       * base-bundle-2	(ocf:pacemaker:Stateful):	 Unpromoted node1

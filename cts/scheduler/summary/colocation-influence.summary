@@ -1,7 +1,10 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ bundle10-0 bundle10-1 bundle11-0 ]
+    * GuestOnline: [ bundle10-0 bundle10-1 bundle11-0 bundle11-1 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-1
@@ -72,86 +75,51 @@ Transition Summary:
   * Start      bundle11a:1    (         bundle11-1 )  due to unrunnable bundle11-docker-1 start (blocked)
   * Stop       rsc13a         (            rhel7-3 )  due to node availability
   * Stop       rsc14a:1       (   Promoted rhel7-4 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: rsc1a           stop on rhel7-2
-  * Resource action: rsc1b           stop on rhel7-2
-  * Resource action: rsc2a           stop on rhel7-4
-  * Resource action: rsc3a           start on rhel7-2
-  * Resource action: rsc3b           start on rhel7-2
-  * Resource action: rsc4a           stop on rhel7-3
-  * Resource action: rsc5a           stop on rhel7-1
-  * Pseudo action:   group6a_stop_0
-  * Resource action: rsc6a2          stop on rhel7-2
-  * Pseudo action:   group7a_stop_0
-  * Resource action: rsc7a2          stop on rhel7-3
-  * Pseudo action:   rsc8a-clone_stop_0
-  * Resource action: rsc9c           stop on rhel7-4
-  * Resource action: rsc10a          stop on rhel7-2
-  * Resource action: rsc12b          stop on rhel7-1
-  * Resource action: rsc13a          stop on rhel7-3
-  * Pseudo action:   rsc14a-clone_demote_0
-  * Pseudo action:   bundle11_start_0
-  * Resource action: rsc1a           start on rhel7-3
-  * Resource action: rsc1b           start on rhel7-3
-  * Resource action: rsc3a           monitor=10000 on rhel7-2
-  * Resource action: rsc3b           monitor=10000 on rhel7-2
-  * Resource action: rsc6a1          stop on rhel7-2
-  * Pseudo action:   group7a_stopped_0
-  * Resource action: rsc8a           stop on rhel7-4
-  * Pseudo action:   rsc8a-clone_stopped_0
-  * Resource action: rsc10a          start on rhel7-3
-  * Pseudo action:   bundle11-clone_start_0
-  * Resource action: rsc14a          demote on rhel7-4
-  * Pseudo action:   rsc14a-clone_demoted_0
-  * Pseudo action:   rsc14a-clone_stop_0
-  * Resource action: rsc1a           monitor=10000 on rhel7-3
-  * Resource action: rsc1b           monitor=10000 on rhel7-3
-  * Pseudo action:   group6a_stopped_0
-  * Resource action: rsc10a          monitor=10000 on rhel7-3
-  * Pseudo action:   bundle11-clone_running_0
-  * Resource action: rsc14a          stop on rhel7-4
-  * Pseudo action:   rsc14a-clone_stopped_0
-  * Pseudo action:   bundle11_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ bundle10-0 bundle10-1 bundle11-0 ]
+    * GuestOnline: [ bundle10-0 bundle10-1 bundle11-0 bundle11-1 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-1
-    * rsc1a	(ocf:pacemaker:Dummy):	 Started rhel7-3
-    * rsc1b	(ocf:pacemaker:Dummy):	 Started rhel7-3
-    * rsc2a	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc1a	(ocf:pacemaker:Dummy):	 Started rhel7-2
+    * rsc1b	(ocf:pacemaker:Dummy):	 Started rhel7-2
+    * rsc2a	(ocf:pacemaker:Dummy):	 Started rhel7-4
     * rsc2b	(ocf:pacemaker:Dummy):	 Started rhel7-4
-    * rsc3a	(ocf:pacemaker:Dummy):	 Started rhel7-2
-    * rsc3b	(ocf:pacemaker:Dummy):	 Started rhel7-2
-    * rsc4a	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc3a	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc3b	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc4a	(ocf:pacemaker:Dummy):	 Started rhel7-3
     * rsc4b	(ocf:pacemaker:Dummy):	 Started rhel7-3
-    * rsc5a	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc5a	(ocf:pacemaker:Dummy):	 Started rhel7-1
     * Resource Group: group5a:
       * rsc5a1	(ocf:pacemaker:Dummy):	 Started rhel7-1
       * rsc5a2	(ocf:pacemaker:Dummy):	 Started rhel7-1
     * Resource Group: group6a:
-      * rsc6a1	(ocf:pacemaker:Dummy):	 Stopped
-      * rsc6a2	(ocf:pacemaker:Dummy):	 Stopped
+      * rsc6a1	(ocf:pacemaker:Dummy):	 Started rhel7-2
+      * rsc6a2	(ocf:pacemaker:Dummy):	 Started rhel7-2
     * rsc6a	(ocf:pacemaker:Dummy):	 Started rhel7-2
     * Resource Group: group7a:
       * rsc7a1	(ocf:pacemaker:Dummy):	 Started rhel7-3
-      * rsc7a2	(ocf:pacemaker:Dummy):	 Stopped
+      * rsc7a2	(ocf:pacemaker:Dummy):	 Started rhel7-3
     * Clone Set: rsc8a-clone [rsc8a]:
-      * Started: [ rhel7-1 rhel7-3 ]
-      * Stopped: [ rhel7-2 rhel7-4 rhel7-5 ]
+      * Started: [ rhel7-1 rhel7-3 rhel7-4 ]
     * Clone Set: rsc8b-clone [rsc8b]:
       * Started: [ rhel7-1 rhel7-3 rhel7-4 ]
     * rsc9a	(ocf:pacemaker:Dummy):	 Started rhel7-4
     * rsc9b	(ocf:pacemaker:Dummy):	 Started rhel7-4
-    * rsc9c	(ocf:pacemaker:Dummy):	 Stopped
-    * rsc10a	(ocf:pacemaker:Dummy):	 Started rhel7-3
+    * rsc9c	(ocf:pacemaker:Dummy):	 Started rhel7-4
+    * rsc10a	(ocf:pacemaker:Dummy):	 Started rhel7-2
     * rsc11a	(ocf:pacemaker:Dummy):	 Started rhel7-1
     * rsc12a	(ocf:pacemaker:Dummy):	 Started rhel7-1
-    * rsc12b	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc12b	(ocf:pacemaker:Dummy):	 Started rhel7-1
     * rsc12c	(ocf:pacemaker:Dummy):	 Started rhel7-1
     * Container bundle set: bundle10 [pcmktest:http]:
       * bundle10-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started rhel7-2
@@ -159,12 +127,13 @@ Revised Cluster Status:
     * Container bundle set: bundle11 [pcmktest:http]:
       * bundle11-0 (192.168.122.134)	(ocf:pacemaker:Dummy):	 Started rhel7-1
       * bundle11-1 (192.168.122.135)	(ocf:pacemaker:Dummy):	 Stopped
-    * rsc13a	(ocf:pacemaker:Dummy):	 Stopped
+    * rsc13a	(ocf:pacemaker:Dummy):	 Started rhel7-3
     * Clone Set: rsc13b-clone [rsc13b] (promotable):
       * Promoted: [ rhel7-3 ]
       * Unpromoted: [ rhel7-1 rhel7-2 rhel7-4 ]
       * Stopped: [ rhel7-5 ]
     * rsc14b	(ocf:pacemaker:Dummy):	 Started rhel7-4
     * Clone Set: rsc14a-clone [rsc14a] (promotable):
+      * Promoted: [ rhel7-4 ]
       * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 ]
-      * Stopped: [ rhel7-4 rhel7-5 ]
+      * Stopped: [ rhel7-5 ]

@@ -1,5 +1,7 @@
 Using the original execution date of: 2020-01-06 22:11:40Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node3 node4 node5 ]
     * OFFLINE: [ node1 node2 ]
@@ -14,15 +16,11 @@ Transition Summary:
   * Start      rsc2        ( node4 )
 
 Executing Cluster Transition:
-  * Resource action: Fencing         stop on node3
-  * Resource action: Fencing         start on node3
-  * Resource action: Fencing         monitor=120000 on node3
-  * Resource action: rsc2            start on node4
-  * Cluster action:  lrm_delete for rsc2 on node2
-  * Resource action: rsc2            monitor=10000 on node4
 Using the original execution date of: 2020-01-06 22:11:40Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node3 node4 node5 ]
     * OFFLINE: [ node1 node2 ]
@@ -30,4 +28,4 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started node3
     * rsc1	(ocf:pacemaker:Dummy):	 Stopped node1 (LOCKED)
-    * rsc2	(ocf:pacemaker:Dummy):	 Started node4
+    * rsc2	(ocf:pacemaker:Dummy):	 Stopped

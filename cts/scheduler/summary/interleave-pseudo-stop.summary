@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node1: UNCLEAN (offline)
     * Online: [ node2 ]
@@ -23,61 +25,28 @@ Transition Summary:
   * Stop       evmsclone:1           ( node1 )  due to node availability
   * Stop       imagestoreclone:1     ( node1 )  due to node availability
   * Stop       configstoreclone:1    ( node1 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   stonithcloneset_stop_0
-  * Pseudo action:   evmscloneset_pre_notify_stop_0
-  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
-  * Pseudo action:   configstorecloneset_pre_notify_stop_0
-  * Fencing node1 (reboot)
-  * Pseudo action:   stonithclone:0_stop_0
-  * Pseudo action:   stonithcloneset_stopped_0
-  * Resource action: evmsclone:1     notify on node2
-  * Pseudo action:   evmsclone:0_post_notify_stop_0
-  * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
-  * Resource action: imagestoreclone:1 notify on node2
-  * Pseudo action:   imagestoreclone:0_post_notify_stop_0
-  * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
-  * Pseudo action:   imagestorecloneset_stop_0
-  * Resource action: configstoreclone:1 notify on node2
-  * Pseudo action:   configstoreclone:0_post_notify_stop_0
-  * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
-  * Pseudo action:   configstorecloneset_stop_0
-  * Pseudo action:   imagestoreclone:0_stop_0
-  * Pseudo action:   imagestorecloneset_stopped_0
-  * Pseudo action:   configstoreclone:0_stop_0
-  * Pseudo action:   configstorecloneset_stopped_0
-  * Pseudo action:   imagestorecloneset_post_notify_stopped_0
-  * Pseudo action:   configstorecloneset_post_notify_stopped_0
-  * Resource action: imagestoreclone:1 notify on node2
-  * Pseudo action:   imagestoreclone:0_notified_0
-  * Pseudo action:   imagestorecloneset_confirmed-post_notify_stopped_0
-  * Resource action: configstoreclone:1 notify on node2
-  * Pseudo action:   configstoreclone:0_notified_0
-  * Pseudo action:   configstorecloneset_confirmed-post_notify_stopped_0
-  * Pseudo action:   evmscloneset_stop_0
-  * Pseudo action:   evmsclone:0_stop_0
-  * Pseudo action:   evmscloneset_stopped_0
-  * Pseudo action:   evmscloneset_post_notify_stopped_0
-  * Resource action: evmsclone:1     notify on node2
-  * Pseudo action:   evmsclone:0_notified_0
-  * Pseudo action:   evmscloneset_confirmed-post_notify_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * Node node1: UNCLEAN (offline)
     * Online: [ node2 ]
-    * OFFLINE: [ node1 ]
 
   * Full List of Resources:
     * Clone Set: stonithcloneset [stonithclone]:
+      * stonithclone	(stonith:external/ssh):	 Started node1 (UNCLEAN)
       * Started: [ node2 ]
-      * Stopped: [ node1 ]
     * Clone Set: evmscloneset [evmsclone]:
+      * evmsclone	(ocf:heartbeat:EvmsSCC):	 Started node1 (UNCLEAN)
       * Started: [ node2 ]
-      * Stopped: [ node1 ]
     * Clone Set: imagestorecloneset [imagestoreclone] (disabled):
+      * imagestoreclone	(ocf:heartbeat:Filesystem):	 Started node1 (UNCLEAN)
       * Started: [ node2 ]
-      * Stopped (disabled): [ node1 ]
     * Clone Set: configstorecloneset [configstoreclone]:
+      * configstoreclone	(ocf:heartbeat:Filesystem):	 Started node1 (UNCLEAN)
       * Started: [ node2 ]
-      * Stopped: [ node1 ]

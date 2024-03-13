@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
@@ -10,12 +12,13 @@ Transition Summary:
   * Stop       A       ( fc16-builder )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: A               stop on fc16-builder
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
 
   * Full List of Resources:
-    * A	(ocf:pacemaker:Dummy):	 Stopped
+    * A	(ocf:pacemaker:Dummy):	 FAILED fc16-builder

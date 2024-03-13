@@ -1,23 +1,27 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Resource Group: group1:
-      * rsc1	(ocf:pacemaker:Dummy):	 Started node2
-      * rsc2	(ocf:pacemaker:Dummy):	 Started node2
+      * rsc1	(ocf:pacemaker:Dummy):	 Started node2 (blocked)
+      * rsc2	(ocf:pacemaker:Dummy):	 Started node2 (blocked)
 
 Transition Summary:
 
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Resource Group: group1:
-      * rsc1	(ocf:pacemaker:Dummy):	 Started node2
-      * rsc2	(ocf:pacemaker:Dummy):	 Started node2
+      * rsc1	(ocf:pacemaker:Dummy):	 Started node2 (blocked)
+      * rsc2	(ocf:pacemaker:Dummy):	 Started node2 (blocked)

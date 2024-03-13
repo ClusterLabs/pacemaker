@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
@@ -14,21 +16,15 @@ Current cluster status:
 Transition Summary:
   * Restart    dummy         ( pcmk-1 )  due to required clone-3 running
   * Stop       child-2:0     ( pcmk-1 )  due to node availability
-  * Stop       child-3:0     ( pcmk-1 )
+  * Stop       child-3:0     ( pcmk-1 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: dummy           stop on pcmk-1
-  * Pseudo action:   clone-3_stop_0
-  * Resource action: child-3:2       stop on pcmk-1
-  * Pseudo action:   clone-3_stopped_0
-  * Pseudo action:   clone-3_start_0
-  * Pseudo action:   clone-2_stop_0
-  * Pseudo action:   clone-3_running_0
-  * Resource action: dummy           start on pcmk-1
-  * Resource action: child-2:2       stop on pcmk-1
-  * Pseudo action:   clone-2_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
@@ -37,8 +33,6 @@ Revised Cluster Status:
     * Clone Set: clone-1 [child-1]:
       * Started: [ pcmk-1 pcmk-2 pcmk-3 ]
     * Clone Set: clone-2 [child-2]:
-      * Started: [ pcmk-2 pcmk-3 ]
-      * Stopped: [ pcmk-1 ]
+      * Started: [ pcmk-1 pcmk-2 pcmk-3 ]
     * Clone Set: clone-3 [child-3]:
-      * Started: [ pcmk-2 pcmk-3 ]
-      * Stopped: [ pcmk-1 ]
+      * Started: [ pcmk-1 pcmk-2 pcmk-3 ]

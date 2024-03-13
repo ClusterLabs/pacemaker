@@ -1,6 +1,8 @@
 16 of 33 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ virt-009.cluster-qe.lab.eng.brq.redhat.com virt-010.cluster-qe.lab.eng.brq.redhat.com virt-012.cluster-qe.lab.eng.brq.redhat.com virt-013.cluster-qe.lab.eng.brq.redhat.com virt-014.cluster-qe.lab.eng.brq.redhat.com virt-015.cluster-qe.lab.eng.brq.redhat.com virt-016.cluster-qe.lab.eng.brq.redhat.com virt-020.cluster-qe.lab.eng.brq.redhat.com virt-027.cluster-qe.lab.eng.brq.redhat.com virt-028.cluster-qe.lab.eng.brq.redhat.com virt-029.cluster-qe.lab.eng.brq.redhat.com virt-030.cluster-qe.lab.eng.brq.redhat.com virt-031.cluster-qe.lab.eng.brq.redhat.com virt-032.cluster-qe.lab.eng.brq.redhat.com virt-033.cluster-qe.lab.eng.brq.redhat.com virt-034.cluster-qe.lab.eng.brq.redhat.com ]
 
@@ -29,44 +31,17 @@ Transition Summary:
   * Start      dlm:15     ( virt-034.cluster-qe.lab.eng.brq.redhat.com )
 
 Executing Cluster Transition:
-  * Pseudo action:   dlm-clone_start_0
-  * Resource action: dlm             start on virt-009.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-013.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-014.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-015.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-016.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-020.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-027.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-028.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-029.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-030.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-031.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-032.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-033.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             start on virt-034.cluster-qe.lab.eng.brq.redhat.com
-  * Pseudo action:   dlm-clone_running_0
-  * Resource action: dlm             monitor=30000 on virt-009.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-013.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-014.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-015.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-016.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-020.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-027.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-028.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-029.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-030.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-031.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-032.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-033.cluster-qe.lab.eng.brq.redhat.com
-  * Resource action: dlm             monitor=30000 on virt-034.cluster-qe.lab.eng.brq.redhat.com
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ virt-009.cluster-qe.lab.eng.brq.redhat.com virt-010.cluster-qe.lab.eng.brq.redhat.com virt-012.cluster-qe.lab.eng.brq.redhat.com virt-013.cluster-qe.lab.eng.brq.redhat.com virt-014.cluster-qe.lab.eng.brq.redhat.com virt-015.cluster-qe.lab.eng.brq.redhat.com virt-016.cluster-qe.lab.eng.brq.redhat.com virt-020.cluster-qe.lab.eng.brq.redhat.com virt-027.cluster-qe.lab.eng.brq.redhat.com virt-028.cluster-qe.lab.eng.brq.redhat.com virt-029.cluster-qe.lab.eng.brq.redhat.com virt-030.cluster-qe.lab.eng.brq.redhat.com virt-031.cluster-qe.lab.eng.brq.redhat.com virt-032.cluster-qe.lab.eng.brq.redhat.com virt-033.cluster-qe.lab.eng.brq.redhat.com virt-034.cluster-qe.lab.eng.brq.redhat.com ]
 
   * Full List of Resources:
     * virt-fencing	(stonith:fence_xvm):	 Started virt-010.cluster-qe.lab.eng.brq.redhat.com
     * Clone Set: dlm-clone [dlm]:
-      * Started: [ virt-009.cluster-qe.lab.eng.brq.redhat.com virt-010.cluster-qe.lab.eng.brq.redhat.com virt-012.cluster-qe.lab.eng.brq.redhat.com virt-013.cluster-qe.lab.eng.brq.redhat.com virt-014.cluster-qe.lab.eng.brq.redhat.com virt-015.cluster-qe.lab.eng.brq.redhat.com virt-016.cluster-qe.lab.eng.brq.redhat.com virt-020.cluster-qe.lab.eng.brq.redhat.com virt-027.cluster-qe.lab.eng.brq.redhat.com virt-028.cluster-qe.lab.eng.brq.redhat.com virt-029.cluster-qe.lab.eng.brq.redhat.com virt-030.cluster-qe.lab.eng.brq.redhat.com virt-031.cluster-qe.lab.eng.brq.redhat.com virt-032.cluster-qe.lab.eng.brq.redhat.com virt-033.cluster-qe.lab.eng.brq.redhat.com virt-034.cluster-qe.lab.eng.brq.redhat.com ]
+      * Started: [ virt-010.cluster-qe.lab.eng.brq.redhat.com virt-012.cluster-qe.lab.eng.brq.redhat.com ]
+      * Stopped: [ virt-009.cluster-qe.lab.eng.brq.redhat.com virt-013.cluster-qe.lab.eng.brq.redhat.com virt-014.cluster-qe.lab.eng.brq.redhat.com virt-015.cluster-qe.lab.eng.brq.redhat.com virt-016.cluster-qe.lab.eng.brq.redhat.com virt-020.cluster-qe.lab.eng.brq.redhat.com virt-027.cluster-qe.lab.eng.brq.redhat.com virt-028.cluster-qe.lab.eng.brq.redhat.com virt-029.cluster-qe.lab.eng.brq.redhat.com virt-030.cluster-qe.lab.eng.brq.redhat.com virt-031.cluster-qe.lab.eng.brq.redhat.com virt-032.cluster-qe.lab.eng.brq.redhat.com virt-033.cluster-qe.lab.eng.brq.redhat.com virt-034.cluster-qe.lab.eng.brq.redhat.com ]
     * Clone Set: clvmd-clone [clvmd] (disabled):
       * Stopped (disabled): [ virt-009.cluster-qe.lab.eng.brq.redhat.com virt-010.cluster-qe.lab.eng.brq.redhat.com virt-012.cluster-qe.lab.eng.brq.redhat.com virt-013.cluster-qe.lab.eng.brq.redhat.com virt-014.cluster-qe.lab.eng.brq.redhat.com virt-015.cluster-qe.lab.eng.brq.redhat.com virt-016.cluster-qe.lab.eng.brq.redhat.com virt-020.cluster-qe.lab.eng.brq.redhat.com virt-027.cluster-qe.lab.eng.brq.redhat.com virt-028.cluster-qe.lab.eng.brq.redhat.com virt-029.cluster-qe.lab.eng.brq.redhat.com virt-030.cluster-qe.lab.eng.brq.redhat.com virt-031.cluster-qe.lab.eng.brq.redhat.com virt-032.cluster-qe.lab.eng.brq.redhat.com virt-033.cluster-qe.lab.eng.brq.redhat.com virt-034.cluster-qe.lab.eng.brq.redhat.com ]

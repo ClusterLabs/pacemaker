@@ -1,4 +1,11 @@
+element primitive: Relax-NG validity error : Type ID doesn't allow value '18builder'
+element primitive: Relax-NG validity error : Invalid sequence in interleave
+element primitive: Relax-NG validity error : Element primitive failed to validate content
+Entity: line 16: element primitive: Relax-NG validity error : Element resources has extra content: primitive
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ dvossel-laptop2 ]
 
@@ -35,8 +42,15 @@ Executing Cluster Transition:
   * Resource action: FAKE            start on 18builder
   * Resource action: W               monitor=10000 on 18builder
   * Resource action: X               monitor=10000 on 18builder
+element primitive: Relax-NG validity error : Type ID doesn't allow value '18builder'
+element primitive: Relax-NG validity error : Invalid sequence in interleave
+element primitive: Relax-NG validity error : Element primitive failed to validate content
+Entity: line 16: element primitive: Relax-NG validity error : Element resources has extra content: primitive
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ dvossel-laptop2 ]
     * GuestOnline: [ 18builder ]

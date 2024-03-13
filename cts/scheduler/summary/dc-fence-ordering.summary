@@ -1,5 +1,8 @@
 Using the original execution date of: 2018-11-28 18:37:16Z
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node rhel7-1: UNCLEAN (online)
     * Online: [ rhel7-2 rhel7-4 rhel7-5 ]
@@ -37,29 +40,16 @@ Transition Summary:
   * Stop       petulant             (            rhel7-1 )  due to node availability
 
 Executing Cluster Transition:
-  * Fencing rhel7-1 (reboot)
-  * Pseudo action:   group-1_stop_0
-  * Pseudo action:   petulant_stop_0
-  * Pseudo action:   r192.168.122.207_stop_0
-  * Pseudo action:   group-1_stopped_0
-  * Pseudo action:   promotable-1_demote_0
-  * Pseudo action:   stateful-1_demote_0
-  * Pseudo action:   promotable-1_demoted_0
-  * Pseudo action:   promotable-1_stop_0
-  * Resource action: stateful-1      stop on rhel7-5
-  * Pseudo action:   stateful-1_stop_0
-  * Resource action: stateful-1      stop on rhel7-2
-  * Resource action: stateful-1      stop on rhel7-4
-  * Pseudo action:   promotable-1_stopped_0
-  * Cluster action:  do_shutdown on rhel7-5
-  * Cluster action:  do_shutdown on rhel7-4
-  * Cluster action:  do_shutdown on rhel7-2
 Using the original execution date of: 2018-11-28 18:37:16Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
+    * Node rhel7-1: UNCLEAN (online)
     * Online: [ rhel7-2 rhel7-4 rhel7-5 ]
-    * OFFLINE: [ rhel7-1 rhel7-3 ]
+    * OFFLINE: [ rhel7-3 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Stopped
@@ -74,9 +64,11 @@ Revised Cluster Status:
     * Clone Set: Connectivity [ping-1]:
       * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
     * Clone Set: promotable-1 [stateful-1] (promotable):
-      * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+      * Promoted: [ rhel7-1 ]
+      * Unpromoted: [ rhel7-2 rhel7-4 rhel7-5 ]
+      * Stopped: [ rhel7-3 ]
     * Resource Group: group-1:
-      * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Stopped
-      * petulant	(service:pacemaker-cts-dummyd@10):	 Stopped
+      * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-1
+      * petulant	(service:pacemaker-cts-dummyd@10):	 FAILED rhel7-1
       * r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Stopped
     * lsb-dummy	(lsb:LSBDummy):	 Stopped

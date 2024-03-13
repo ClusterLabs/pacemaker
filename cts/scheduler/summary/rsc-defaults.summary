@@ -1,6 +1,8 @@
 2 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
 
@@ -16,26 +18,16 @@ Transition Summary:
   * Start      ping-rsc-ping     ( cluster02 )
 
 Executing Cluster Transition:
-  * Resource action: fencing         monitor on cluster02
-  * Resource action: fencing         monitor on cluster01
-  * Resource action: ip-rsc          monitor on cluster02
-  * Resource action: ip-rsc          monitor on cluster01
-  * Resource action: ip-rsc2         monitor on cluster02
-  * Resource action: ip-rsc2         monitor on cluster01
-  * Resource action: dummy-rsc       monitor on cluster02
-  * Resource action: dummy-rsc       monitor on cluster01
-  * Resource action: ping-rsc-ping   monitor on cluster02
-  * Resource action: ping-rsc-ping   monitor on cluster01
-  * Resource action: fencing         start on cluster01
-  * Resource action: ping-rsc-ping   start on cluster02
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
 
   * Full List of Resources:
-    * fencing	(stonith:fence_xvm):	 Started cluster01
+    * fencing	(stonith:fence_xvm):	 Stopped
     * ip-rsc	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
     * ip-rsc2	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
     * dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
-    * ping-rsc-ping	(ocf:pacemaker:ping):	 Started cluster02
+    * ping-rsc-ping	(ocf:pacemaker:ping):	 Stopped

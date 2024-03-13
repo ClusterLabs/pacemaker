@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-13 hex-14 ]
 
@@ -14,25 +16,16 @@ Transition Summary:
   * Move       dummy3     ( hex-13 -> hex-14 )
 
 Executing Cluster Transition:
-  * Resource action: dummy1          stop on hex-13
-  * Resource action: dummy3          stop on hex-13
-  * Resource action: d0:0            delete on hex-13
-  * Resource action: o2cb:0          delete on hex-13
-  * Resource action: dummy4          delete on hex-13
-  * Resource action: dlm:0           delete on hex-13
-  * Resource action: ocfs2-3:0       delete on hex-13
-  * Resource action: dummy1          start on hex-14
-  * Resource action: dummy3          start on hex-14
-  * Resource action: dummy1          monitor=15000 on hex-14
-  * Resource action: dummy3          monitor=15000 on hex-14
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-13 hex-14 ]
 
   * Full List of Resources:
     * fencing-sbd	(stonith:external/sbd):	 Started hex-13
     * dummy0	(ocf:heartbeat:Dummy):	 Started hex-14
-    * dummy1	(ocf:heartbeat:Dummy):	 Started hex-14
+    * dummy1	(ocf:heartbeat:Dummy):	 Started hex-13
     * dummy2	(ocf:heartbeat:Dummy):	 Started hex-14
-    * dummy3	(ocf:heartbeat:Dummy):	 Started hex-14
+    * dummy3	(ocf:heartbeat:Dummy):	 Started hex-13

@@ -1,6 +1,8 @@
 3 of 6 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
@@ -19,21 +21,16 @@ Transition Summary:
   * Stop       central        ( rhel7-auto3 )  due to unrunnable keystone-clone running
 
 Executing Cluster Transition:
-  * Resource action: engine          stop on rhel7-auto3
-  * Resource action: central         stop on rhel7-auto3
-  * Pseudo action:   keystone-clone_stop_0
-  * Resource action: keystone        stop on rhel7-auto2
-  * Resource action: keystone        stop on rhel7-auto3
-  * Resource action: keystone        stop on rhel7-auto1
-  * Pseudo action:   keystone-clone_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto2
-    * engine	(ocf:heartbeat:Dummy):	 Stopped
+    * engine	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
     * Clone Set: keystone-clone [keystone] (disabled):
-      * Stopped (disabled): [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
-    * central	(ocf:heartbeat:Dummy):	 Stopped
+      * Started: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+    * central	(ocf:heartbeat:Dummy):	 Started rhel7-auto3

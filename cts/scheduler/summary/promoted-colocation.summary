@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ box1 box2 ]
 
@@ -14,20 +16,16 @@ Transition Summary:
   * Promote    conntrackd-stateful:1     ( Unpromoted -> Promoted box2 )
 
 Executing Cluster Transition:
-  * Resource action: conntrackd-stateful:0 monitor=29000 on box1
-  * Pseudo action:   ms-conntrackd_promote_0
-  * Resource action: conntrackd-stateful:1 promote on box2
-  * Pseudo action:   ms-conntrackd_promoted_0
-  * Resource action: conntrackd-stateful:1 monitor=30000 on box2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ box1 box2 ]
 
   * Full List of Resources:
     * Clone Set: ms-conntrackd [conntrackd-stateful] (promotable):
-      * Promoted: [ box2 ]
-      * Unpromoted: [ box1 ]
+      * Unpromoted: [ box1 box2 ]
     * Resource Group: virtualips:
       * externalip	(ocf:heartbeat:IPaddr2):	 Started box2
       * internalip	(ocf:heartbeat:IPaddr2):	 Started box2

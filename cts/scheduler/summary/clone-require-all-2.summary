@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node rhel7-auto1: standby (with active resources)
     * Node rhel7-auto2: standby (with active resources)
@@ -20,23 +23,20 @@ Transition Summary:
   * Start      B:1         (                rhel7-auto3 )  due to unrunnable clone-one-or-more:order-A-clone-B-clone-mandatory (blocked)
 
 Executing Cluster Transition:
-  * Resource action: shooter         stop on rhel7-auto1
-  * Pseudo action:   A-clone_stop_0
-  * Resource action: shooter         start on rhel7-auto3
-  * Resource action: A               stop on rhel7-auto1
-  * Resource action: A               stop on rhel7-auto2
-  * Pseudo action:   A-clone_stopped_0
-  * Resource action: shooter         monitor=60000 on rhel7-auto3
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
-    * Node rhel7-auto1: standby
-    * Node rhel7-auto2: standby
+    * Node rhel7-auto1: standby (with active resources)
+    * Node rhel7-auto2: standby (with active resources)
     * Online: [ rhel7-auto3 rhel7-auto4 ]
 
   * Full List of Resources:
-    * shooter	(stonith:fence_xvm):	 Started rhel7-auto3
+    * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
     * Clone Set: A-clone [A]:
-      * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
+      * Started: [ rhel7-auto1 rhel7-auto2 ]
+      * Stopped: [ rhel7-auto3 rhel7-auto4 ]
     * Clone Set: B-clone [B]:
       * Stopped: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]

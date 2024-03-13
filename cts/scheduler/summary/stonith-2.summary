@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node sles-5: UNCLEAN (offline)
     * Online: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
@@ -38,14 +40,13 @@ Transition Summary:
   * Start      rsc_sles-5     ( sles-6 )
 
 Executing Cluster Transition:
-  * Fencing sles-5 (reboot)
-  * Resource action: rsc_sles-5      start on sles-6
-  * Resource action: rsc_sles-5      monitor=5000 on sles-6
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * Node sles-5: UNCLEAN (offline)
     * Online: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
-    * OFFLINE: [ sles-5 ]
 
   * Full List of Resources:
     * Resource Group: group-1:
@@ -58,7 +59,7 @@ Revised Cluster Status:
     * rsc_sles-2	(ocf:heartbeat:IPaddr):	 Started sles-2
     * rsc_sles-3	(ocf:heartbeat:IPaddr):	 Started sles-3
     * rsc_sles-4	(ocf:heartbeat:IPaddr):	 Started sles-4
-    * rsc_sles-5	(ocf:heartbeat:IPaddr):	 Started sles-6
+    * rsc_sles-5	(ocf:heartbeat:IPaddr):	 Stopped
     * rsc_sles-6	(ocf:heartbeat:IPaddr):	 Started sles-6
     * Clone Set: DoFencing [child_DoFencing]:
       * Started: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]

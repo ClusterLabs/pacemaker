@@ -1,5 +1,7 @@
 Using the original execution date of: 2020-06-16 19:23:21Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * RemoteOnline: [ remote-rhel7-2 ]
@@ -32,37 +34,11 @@ Transition Summary:
   * Re-promote   bundled:0     ( Promoted stateful-bundle-0 )
 
 Executing Cluster Transition:
-  * Pseudo action:   rsc1-clone_demote_0
-  * Pseudo action:   rsc2-master_demote_0
-  * Pseudo action:   lxc-ms-master_demote_0
-  * Pseudo action:   stateful-bundle_demote_0
-  * Resource action: rsc1            demote on rhel7-4
-  * Pseudo action:   rsc1-clone_demoted_0
-  * Pseudo action:   rsc1-clone_promote_0
-  * Resource action: rsc2            demote on remote-rhel7-2
-  * Pseudo action:   rsc2-master_demoted_0
-  * Pseudo action:   rsc2-master_promote_0
-  * Resource action: lxc-ms          demote on lxc2
-  * Pseudo action:   lxc-ms-master_demoted_0
-  * Pseudo action:   lxc-ms-master_promote_0
-  * Pseudo action:   stateful-bundle-master_demote_0
-  * Resource action: rsc1            promote on rhel7-4
-  * Pseudo action:   rsc1-clone_promoted_0
-  * Resource action: rsc2            promote on remote-rhel7-2
-  * Pseudo action:   rsc2-master_promoted_0
-  * Resource action: lxc-ms          promote on lxc2
-  * Pseudo action:   lxc-ms-master_promoted_0
-  * Resource action: bundled         demote on stateful-bundle-0
-  * Pseudo action:   stateful-bundle-master_demoted_0
-  * Pseudo action:   stateful-bundle_demoted_0
-  * Pseudo action:   stateful-bundle_promote_0
-  * Pseudo action:   stateful-bundle-master_promote_0
-  * Resource action: bundled         promote on stateful-bundle-0
-  * Pseudo action:   stateful-bundle-master_promoted_0
-  * Pseudo action:   stateful-bundle_promoted_0
 Using the original execution date of: 2020-06-16 19:23:21Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * RemoteOnline: [ remote-rhel7-2 ]
@@ -71,18 +47,19 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-4
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * Promoted: [ rhel7-4 ]
+      * rsc1	(ocf:pacemaker:Stateful):	 FAILED Promoted rhel7-4
       * Unpromoted: [ lxc1 lxc2 remote-rhel7-2 rhel7-1 rhel7-3 rhel7-5 ]
     * Clone Set: rsc2-master [rsc2] (promotable):
-      * Promoted: [ remote-rhel7-2 ]
+      * rsc2	(ocf:pacemaker:Stateful):	 FAILED Promoted remote-rhel7-2
       * Unpromoted: [ lxc1 lxc2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * remote-rhel7-2	(ocf:pacemaker:remote):	 Started rhel7-1
     * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Promoted: [ lxc2 ]
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc2
       * Unpromoted: [ lxc1 ]
+      * Stopped: [ remote-rhel7-2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * Container bundle set: stateful-bundle [pcmktest:http]:
-      * stateful-bundle-0 (192.168.122.131)	(ocf:pacemaker:Stateful):	 Promoted rhel7-5
+      * stateful-bundle-0 (192.168.122.131)	(ocf:pacemaker:Stateful):	 FAILED Promoted rhel7-5
       * stateful-bundle-1 (192.168.122.132)	(ocf:pacemaker:Stateful):	 Unpromoted rhel7-1
       * stateful-bundle-2 (192.168.122.133)	(ocf:pacemaker:Stateful):	 Unpromoted rhel7-4

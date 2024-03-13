@@ -1,5 +1,7 @@
 Using the original execution date of: 2018-11-22 20:36:07Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ ra1 ra2 ra3 ]
     * GuestOnline: [ redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
@@ -17,48 +19,17 @@ Transition Summary:
   * Start      redis:1                   (                        redis-bundle-1 )  due to unrunnable redis-bundle-docker-1 start (blocked)
 
 Executing Cluster Transition:
-  * Resource action: redis           cancel=45000 on redis-bundle-0
-  * Resource action: redis           cancel=60000 on redis-bundle-0
-  * Pseudo action:   redis-bundle-master_pre_notify_start_0
-  * Resource action: redis-bundle-0  monitor=30000 on ra1
-  * Resource action: redis-bundle-0  cancel=60000 on ra1
-  * Resource action: redis-bundle-1  stop on ra2
-  * Resource action: redis-bundle-1  cancel=60000 on ra2
-  * Resource action: redis-bundle-2  monitor=30000 on ra3
-  * Resource action: redis-bundle-2  cancel=60000 on ra3
-  * Pseudo action:   redis-bundle_stop_0
-  * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
-  * Resource action: redis-bundle-docker-1 stop on ra2
-  * Pseudo action:   redis-bundle_stopped_0
-  * Pseudo action:   redis-bundle_start_0
-  * Pseudo action:   redis-bundle-master_start_0
-  * Pseudo action:   redis-bundle-master_running_0
-  * Pseudo action:   redis-bundle-master_post_notify_running_0
-  * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
-  * Pseudo action:   redis-bundle_running_0
-  * Pseudo action:   redis-bundle-master_pre_notify_promote_0
-  * Pseudo action:   redis-bundle_promote_0
-  * Resource action: redis           notify on redis-bundle-0
-  * Resource action: redis           notify on redis-bundle-2
-  * Pseudo action:   redis-bundle-master_confirmed-pre_notify_promote_0
-  * Pseudo action:   redis-bundle-master_promote_0
-  * Resource action: redis           promote on redis-bundle-0
-  * Pseudo action:   redis-bundle-master_promoted_0
-  * Pseudo action:   redis-bundle-master_post_notify_promoted_0
-  * Resource action: redis           notify on redis-bundle-0
-  * Resource action: redis           notify on redis-bundle-2
-  * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
-  * Pseudo action:   redis-bundle_promoted_0
-  * Resource action: redis           monitor=20000 on redis-bundle-0
 Using the original execution date of: 2018-11-22 20:36:07Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ ra1 ra2 ra3 ]
-    * GuestOnline: [ redis-bundle-0 redis-bundle-2 ]
+    * GuestOnline: [ redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted ra1
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Stopped
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Unpromoted ra1
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Stopped ra2
       * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted ra3

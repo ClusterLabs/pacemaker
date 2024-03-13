@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ yingying.site ]
 
@@ -10,16 +12,13 @@ Transition Summary:
   * Start      rsc1_child:0     ( yingying.site )
 
 Executing Cluster Transition:
-  * Resource action: rsc1_child:0    monitor on yingying.site
-  * Pseudo action:   rsc1_start_0
-  * Resource action: rsc1            delete on yingying.site
-  * Resource action: rsc1_child:0    start on yingying.site
-  * Pseudo action:   rsc1_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ yingying.site ]
 
   * Full List of Resources:
     * Clone Set: rsc1 [rsc1_child]:
-      * Started: [ yingying.site ]
+      * Stopped: [ yingying.site ]

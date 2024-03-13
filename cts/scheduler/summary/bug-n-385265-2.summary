@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ ih01 ih02 ]
 
@@ -12,22 +14,14 @@ Transition Summary:
   * Move       resource_idvscommon    ( ih02 -> ih01 )
 
 Executing Cluster Transition:
-  * Pseudo action:   group_common_stop_0
-  * Resource action: resource_idvscommon stop on ih02
-  * Resource action: resource_ip_common stop on ih02
-  * Pseudo action:   group_common_stopped_0
-  * Pseudo action:   group_common_start_0
-  * Resource action: resource_ip_common start on ih01
-  * Resource action: resource_idvscommon start on ih01
-  * Pseudo action:   group_common_running_0
-  * Resource action: resource_ip_common monitor=30000 on ih01
-  * Resource action: resource_idvscommon monitor=30000 on ih01
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ ih01 ih02 ]
 
   * Full List of Resources:
     * Resource Group: group_common:
-      * resource_ip_common	(ocf:heartbeat:IPaddr2):	 Started ih01
-      * resource_idvscommon	(ocf:dfs:idvs):	 Started ih01
+      * resource_ip_common	(ocf:heartbeat:IPaddr2):	 FAILED ih02
+      * resource_idvscommon	(ocf:dfs:idvs):	 Started ih02

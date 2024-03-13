@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node gluster03.h: standby
     * Online: [ gluster01.h gluster02.h ]
@@ -22,48 +24,10 @@ Transition Summary:
   * Start      p_stateful2:1     (                        gluster02.h )
 
 Executing Cluster Transition:
-  * Pseudo action:   ms_stateful_pre_notify_start_0
-  * Resource action: iptest          delete on gluster02.h
-  * Resource action: ipsrc2          delete on gluster02.h
-  * Resource action: p_stateful1:0   notify on gluster01.h
-  * Resource action: p_stateful1:1   notify on gluster02.h
-  * Pseudo action:   ms_stateful_confirmed-pre_notify_start_0
-  * Pseudo action:   ms_stateful_start_0
-  * Pseudo action:   g_stateful:0_start_0
-  * Resource action: p_stateful2:0   start on gluster01.h
-  * Pseudo action:   g_stateful:1_start_0
-  * Resource action: p_stateful2:1   start on gluster02.h
-  * Pseudo action:   g_stateful:0_running_0
-  * Pseudo action:   g_stateful:1_running_0
-  * Pseudo action:   ms_stateful_running_0
-  * Pseudo action:   ms_stateful_post_notify_running_0
-  * Resource action: p_stateful1:0   notify on gluster01.h
-  * Resource action: p_stateful2:0   notify on gluster01.h
-  * Resource action: p_stateful1:1   notify on gluster02.h
-  * Resource action: p_stateful2:1   notify on gluster02.h
-  * Pseudo action:   ms_stateful_confirmed-post_notify_running_0
-  * Pseudo action:   ms_stateful_pre_notify_promote_0
-  * Resource action: p_stateful1:0   notify on gluster01.h
-  * Resource action: p_stateful2:0   notify on gluster01.h
-  * Resource action: p_stateful1:1   notify on gluster02.h
-  * Resource action: p_stateful2:1   notify on gluster02.h
-  * Pseudo action:   ms_stateful_confirmed-pre_notify_promote_0
-  * Pseudo action:   ms_stateful_promote_0
-  * Pseudo action:   g_stateful:0_promote_0
-  * Resource action: p_stateful1:0   promote on gluster01.h
-  * Resource action: p_stateful2:0   promote on gluster01.h
-  * Pseudo action:   g_stateful:0_promoted_0
-  * Pseudo action:   ms_stateful_promoted_0
-  * Pseudo action:   ms_stateful_post_notify_promoted_0
-  * Resource action: p_stateful1:0   notify on gluster01.h
-  * Resource action: p_stateful2:0   notify on gluster01.h
-  * Resource action: p_stateful1:1   notify on gluster02.h
-  * Resource action: p_stateful2:1   notify on gluster02.h
-  * Pseudo action:   ms_stateful_confirmed-post_notify_promoted_0
-  * Resource action: p_stateful1:1   monitor=10000 on gluster02.h
-  * Resource action: p_stateful2:1   monitor=10000 on gluster02.h
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node gluster03.h: standby
     * Online: [ gluster01.h gluster02.h ]
@@ -71,7 +35,12 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_stateful [g_stateful] (promotable):
-      * Promoted: [ gluster01.h ]
-      * Unpromoted: [ gluster02.h ]
+      * Resource Group: g_stateful:0:
+        * p_stateful1	(ocf:pacemaker:Stateful):	 Unpromoted gluster01.h
+        * p_stateful2	(ocf:pacemaker:Stateful):	 Stopped
+      * Resource Group: g_stateful:1:
+        * p_stateful1	(ocf:pacemaker:Stateful):	 Unpromoted gluster02.h
+        * p_stateful2	(ocf:pacemaker:Stateful):	 Stopped
+      * Stopped: [ gluster03.h gluster04.h ]
     * Clone Set: c_dummy [p_dummy1]:
       * Started: [ gluster01.h gluster02.h ]

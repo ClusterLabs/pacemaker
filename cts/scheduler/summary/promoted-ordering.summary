@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ webcluster01 ]
     * OFFLINE: [ webcluster02 ]
@@ -31,66 +34,30 @@ Transition Summary:
   * Start      drbd_mysql:0       ( webcluster01 )
 
 Executing Cluster Transition:
-  * Resource action: mysql-server    monitor on webcluster01
-  * Resource action: extip_1         monitor on webcluster01
-  * Resource action: extip_2         monitor on webcluster01
-  * Resource action: intip_0_main    monitor on webcluster01
-  * Resource action: intip_1_active  monitor on webcluster01
-  * Resource action: intip_2_passive monitor on webcluster01
-  * Resource action: drbd_www:0      monitor on webcluster01
-  * Pseudo action:   ms_drbd_www_pre_notify_start_0
-  * Resource action: ocfs2_www:0     monitor on webcluster01
-  * Resource action: ocfs2_www:1     monitor on webcluster01
-  * Resource action: apache2:0       monitor on webcluster01
-  * Resource action: mysql-proxy:0   monitor on webcluster01
-  * Resource action: drbd_mysql:0    monitor on webcluster01
-  * Pseudo action:   ms_drbd_mysql_pre_notify_start_0
-  * Resource action: fs_mysql        monitor on webcluster01
-  * Resource action: extip_1         start on webcluster01
-  * Resource action: extip_2         start on webcluster01
-  * Resource action: intip_1_active  start on webcluster01
-  * Resource action: intip_2_passive start on webcluster01
-  * Pseudo action:   ms_drbd_www_confirmed-pre_notify_start_0
-  * Pseudo action:   ms_drbd_www_start_0
-  * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_start_0
-  * Pseudo action:   ms_drbd_mysql_start_0
-  * Resource action: extip_1         monitor=30000 on webcluster01
-  * Resource action: extip_2         monitor=30000 on webcluster01
-  * Resource action: intip_1_active  monitor=30000 on webcluster01
-  * Resource action: intip_2_passive monitor=30000 on webcluster01
-  * Resource action: drbd_www:0      start on webcluster01
-  * Pseudo action:   ms_drbd_www_running_0
-  * Resource action: drbd_mysql:0    start on webcluster01
-  * Pseudo action:   ms_drbd_mysql_running_0
-  * Pseudo action:   ms_drbd_www_post_notify_running_0
-  * Pseudo action:   ms_drbd_mysql_post_notify_running_0
-  * Resource action: drbd_www:0      notify on webcluster01
-  * Pseudo action:   ms_drbd_www_confirmed-post_notify_running_0
-  * Resource action: drbd_mysql:0    notify on webcluster01
-  * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ webcluster01 ]
     * OFFLINE: [ webcluster02 ]
 
   * Full List of Resources:
     * mysql-server	(ocf:heartbeat:mysql):	 Stopped
-    * extip_1	(ocf:heartbeat:IPaddr2):	 Started webcluster01
-    * extip_2	(ocf:heartbeat:IPaddr2):	 Started webcluster01
+    * extip_1	(ocf:heartbeat:IPaddr2):	 Stopped
+    * extip_2	(ocf:heartbeat:IPaddr2):	 Stopped
     * Resource Group: group_main:
       * intip_0_main	(ocf:heartbeat:IPaddr2):	 Stopped
-    * intip_1_active	(ocf:heartbeat:IPaddr2):	 Started webcluster01
-    * intip_2_passive	(ocf:heartbeat:IPaddr2):	 Started webcluster01
+    * intip_1_active	(ocf:heartbeat:IPaddr2):	 Stopped
+    * intip_2_passive	(ocf:heartbeat:IPaddr2):	 Stopped
     * Clone Set: ms_drbd_www [drbd_www] (promotable):
-      * Unpromoted: [ webcluster01 ]
-      * Stopped: [ webcluster02 ]
+      * Stopped: [ webcluster01 webcluster02 ]
     * Clone Set: clone_ocfs2_www [ocfs2_www] (unique):
       * ocfs2_www:0	(ocf:heartbeat:Filesystem):	 Stopped
       * ocfs2_www:1	(ocf:heartbeat:Filesystem):	 Stopped
     * Clone Set: clone_webservice [group_webservice]:
       * Stopped: [ webcluster01 webcluster02 ]
     * Clone Set: ms_drbd_mysql [drbd_mysql] (promotable):
-      * Unpromoted: [ webcluster01 ]
-      * Stopped: [ webcluster02 ]
+      * Stopped: [ webcluster01 webcluster02 ]
     * fs_mysql	(ocf:heartbeat:Filesystem):	 Stopped

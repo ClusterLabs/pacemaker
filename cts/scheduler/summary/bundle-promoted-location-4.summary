@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
     * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]
@@ -15,6 +17,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
     * GuestOnline: [ base-bundle-0 base-bundle-1 base-bundle-2 ]

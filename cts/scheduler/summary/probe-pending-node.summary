@@ -4,6 +4,8 @@ Using the original execution date of: 2021-06-11 13:55:24Z
   The cluster will not attempt to start, stop or recover services
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node gcdoubwap02: pending
     * Online: [ gcdoubwap01 ]
@@ -32,6 +34,8 @@ Executing Cluster Transition:
 Using the original execution date of: 2021-06-11 13:55:24Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node gcdoubwap02: pending
     * Online: [ gcdoubwap01 ]

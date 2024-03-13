@@ -1,6 +1,9 @@
 2 of 4 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -17,21 +20,18 @@ Transition Summary:
   * Stop       rsc1:1     ( Unpromoted node2 )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   ms1_demote_0
-  * Resource action: rsc1:0          demote on node1
-  * Pseudo action:   ms1_demoted_0
-  * Pseudo action:   ms1_stop_0
-  * Resource action: rsc1:0          stop on node1
-  * Resource action: rsc1:1          stop on node2
-  * Pseudo action:   ms1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * Clone Set: ms1 [rsc1] (promotable, disabled):
-      * Stopped (disabled): [ node1 node2 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]
     * Clone Set: ms2 [rsc2] (promotable):
       * Promoted: [ node2 ]
       * Unpromoted: [ node1 ]

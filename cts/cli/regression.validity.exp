@@ -363,7 +363,7 @@ update_validation 	info: Transformed the configuration from pacemaker-1.2 to pac
 pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
   * Cluster Summary:
-    * CIB has errors (for details, run crm_verify -LV)
+    * CIB syntax has errors (for details, run crm_verify -LV)
 
   * Full List of Resources:
     * No resources
@@ -374,7 +374,7 @@ Executing Cluster Transition:
 
 Revised Cluster Status:
   * Cluster Summary:
-    * CIB has errors (for details, run crm_verify -LV)
+    * CIB syntax has errors (for details, run crm_verify -LV)
 
   * Full List of Resources:
     * No resources
@@ -412,7 +412,7 @@ Schema validation of configuration is disabled (enabling is encouraged and preve
 pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
   * Cluster Summary:
-    * CIB has errors (for details, run crm_verify -LV)
+    * CIB syntax has errors (for details, run crm_verify -LV)
 
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
@@ -424,7 +424,7 @@ Executing Cluster Transition:
 
 Revised Cluster Status:
   * Cluster Summary:
-    * CIB has errors (for details, run crm_verify -LV)
+    * CIB syntax has errors (for details, run crm_verify -LV)
 
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
@@ -567,7 +567,7 @@ Schema validation of configuration is disabled (enabling is encouraged and preve
 pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
   * Cluster Summary:
-    * CIB has errors (for details, run crm_verify -LV)
+    * CIB syntax has errors (for details, run crm_verify -LV)
 
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
@@ -579,7 +579,7 @@ Executing Cluster Transition:
 
 Revised Cluster Status:
   * Cluster Summary:
-    * CIB has errors (for details, run crm_verify -LV)
+    * CIB syntax has errors (for details, run crm_verify -LV)
 
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)

@@ -1,6 +1,9 @@
 3 of 19 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ lama2 lama3 ]
     * GuestOnline: [ RNVM1 ]
@@ -28,12 +31,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: dlm             monitor on RNVM1
-  * Resource action: clvmd           monitor on RNVM1
-  * Resource action: gfs2-lv_1_1     monitor on RNVM1
-  * Resource action: gfs2-lv_1_2     monitor on RNVM1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ lama2 lama3 ]
     * GuestOnline: [ RNVM1 ]

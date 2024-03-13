@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node srv02: UNCLEAN (offline)
     * Online: [ srv01 srv03 srv04 ]
@@ -46,67 +48,46 @@ Transition Summary:
   * Start      prmStonith3-3:1     (          srv01 )
   * Stop       prmStonith4-1:1     (          srv02 )  due to node availability
   * Stop       prmStonith4-3:1     (          srv02 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   Group01_start_0
-  * Pseudo action:   clnStonith1_stop_0
-  * Resource action: prmStonith3-1:1 monitor=3600000 on srv01
-  * Pseudo action:   clnStonith3_stop_0
-  * Pseudo action:   clnStonith4_stop_0
-  * Fencing srv02 (reboot)
-  * Resource action: Dummy01         start on srv01
-  * Pseudo action:   Group02_stop_0
-  * Pseudo action:   Dummy02_stop_0
-  * Pseudo action:   grpStonith1:1_stop_0
-  * Pseudo action:   prmStonith1-3:1_stop_0
-  * Pseudo action:   grpStonith3:0_stop_0
-  * Pseudo action:   prmStonith3-3:1_stop_0
-  * Pseudo action:   grpStonith4:1_stop_0
-  * Pseudo action:   prmStonith4-3:1_stop_0
-  * Pseudo action:   Group01_running_0
-  * Resource action: Dummy01         monitor=10000 on srv01
-  * Pseudo action:   Group02_stopped_0
-  * Pseudo action:   Group02_start_0
-  * Resource action: Dummy02         start on srv04
-  * Pseudo action:   prmStonith1-1:1_stop_0
-  * Pseudo action:   prmStonith3-1:1_stop_0
-  * Pseudo action:   prmStonith4-1:1_stop_0
-  * Pseudo action:   Group02_running_0
-  * Resource action: Dummy02         monitor=10000 on srv04
-  * Pseudo action:   grpStonith1:1_stopped_0
-  * Pseudo action:   clnStonith1_stopped_0
-  * Pseudo action:   grpStonith3:0_stopped_0
-  * Pseudo action:   clnStonith3_stopped_0
-  * Pseudo action:   clnStonith3_start_0
-  * Pseudo action:   grpStonith4:1_stopped_0
-  * Pseudo action:   clnStonith4_stopped_0
-  * Pseudo action:   grpStonith3:1_start_0
-  * Resource action: prmStonith3-3:1 start on srv01
-  * Pseudo action:   grpStonith3:1_running_0
-  * Resource action: prmStonith3-3:1 monitor=3600000 on srv01
-  * Pseudo action:   clnStonith3_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * Node srv02: UNCLEAN (offline)
     * Online: [ srv01 srv03 srv04 ]
-    * OFFLINE: [ srv02 ]
 
   * Full List of Resources:
     * Resource Group: Group01:
-      * Dummy01	(ocf:heartbeat:Dummy):	 Started srv01
+      * Dummy01	(ocf:heartbeat:Dummy):	 Stopped
     * Resource Group: Group02:
-      * Dummy02	(ocf:heartbeat:Dummy):	 Started srv04
+      * Dummy02	(ocf:heartbeat:Dummy):	 Started srv02 (UNCLEAN)
     * Resource Group: Group03:
       * Dummy03	(ocf:heartbeat:Dummy):	 Started srv03
     * Clone Set: clnStonith1 [grpStonith1]:
+      * Resource Group: grpStonith1:1:
+        * prmStonith1-1	(stonith:external/stonith-helper):	 Started srv02 (UNCLEAN)
+        * prmStonith1-3	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
       * Started: [ srv03 srv04 ]
-      * Stopped: [ srv01 srv02 ]
+      * Stopped: [ srv01 ]
     * Clone Set: clnStonith2 [grpStonith2]:
       * Started: [ srv01 srv03 srv04 ]
       * Stopped: [ srv02 ]
     * Clone Set: clnStonith3 [grpStonith3]:
-      * Started: [ srv01 srv04 ]
-      * Stopped: [ srv02 srv03 ]
+      * Resource Group: grpStonith3:0:
+        * prmStonith3-1	(stonith:external/stonith-helper):	 Started srv02 (UNCLEAN)
+        * prmStonith3-3	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
+      * Resource Group: grpStonith3:1:
+        * prmStonith3-1	(stonith:external/stonith-helper):	 Started srv01
+        * prmStonith3-3	(stonith:external/ssh):	 Stopped
+      * Started: [ srv04 ]
+      * Stopped: [ srv03 ]
     * Clone Set: clnStonith4 [grpStonith4]:
+      * Resource Group: grpStonith4:1:
+        * prmStonith4-1	(stonith:external/stonith-helper):	 Started srv02 (UNCLEAN)
+        * prmStonith4-3	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
       * Started: [ srv01 srv03 ]
-      * Stopped: [ srv02 srv04 ]
+      * Stopped: [ srv04 ]

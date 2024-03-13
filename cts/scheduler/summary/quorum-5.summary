@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node hadev1: UNCLEAN (offline)
     * Node hadev3: UNCLEAN (offline)
@@ -14,16 +17,11 @@ Transition Summary:
   * Start      child_DoFencing_2     ( hadev2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   group1_start_0
-  * Resource action: child_DoFencing_1 monitor on hadev2
-  * Resource action: child_DoFencing_2 monitor on hadev2
-  * Resource action: child_DoFencing_1 start on hadev2
-  * Resource action: child_DoFencing_2 start on hadev2
-  * Pseudo action:   group1_running_0
-  * Resource action: child_DoFencing_1 monitor=5000 on hadev2
-  * Resource action: child_DoFencing_2 monitor=5000 on hadev2
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node hadev1: UNCLEAN (offline)
     * Node hadev3: UNCLEAN (offline)
@@ -31,5 +29,5 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Resource Group: group1:
-      * child_DoFencing_1	(stonith:ssh):	 Started hadev2
-      * child_DoFencing_2	(stonith:ssh):	 Started hadev2
+      * child_DoFencing_1	(stonith:ssh):	 Stopped
+      * child_DoFencing_2	(stonith:ssh):	 Stopped

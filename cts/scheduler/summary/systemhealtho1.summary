@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node hs21c: UNCLEAN (offline)
     * Node hs21d: UNCLEAN (offline)
@@ -13,12 +15,13 @@ Transition Summary:
   * Fence (reboot) hs21c 'node is unclean'
 
 Executing Cluster Transition:
-  * Fencing hs21d (reboot)
-  * Fencing hs21c (reboot)
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * OFFLINE: [ hs21c hs21d ]
+    * Node hs21c: UNCLEAN (offline)
+    * Node hs21d: UNCLEAN (offline)
 
   * Full List of Resources:
     * stonith-1	(stonith:dummy):	 Stopped

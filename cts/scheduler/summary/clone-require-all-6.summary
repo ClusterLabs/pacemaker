@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
@@ -16,22 +19,19 @@ Transition Summary:
   * Stop       A:2     ( rhel7-auto3 )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   A-clone_stop_0
-  * Resource action: A               stop on rhel7-auto1
-  * Resource action: A               stop on rhel7-auto3
-  * Pseudo action:   A-clone_stopped_0
-  * Pseudo action:   A-clone_start_0
-  * Pseudo action:   A-clone_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 rhel7-auto4 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
     * Clone Set: A-clone [A]:
-      * Started: [ rhel7-auto2 ]
-      * Stopped: [ rhel7-auto1 rhel7-auto3 rhel7-auto4 ]
+      * Started: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+      * Stopped: [ rhel7-auto4 ]
     * Clone Set: B-clone [B]:
       * Started: [ rhel7-auto1 rhel7-auto3 rhel7-auto4 ]
       * Stopped: [ rhel7-auto2 ]

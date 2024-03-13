@@ -1,10 +1,39 @@
 Using the original execution date of: 2021-02-15 01:40:51Z
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-52540078fb07 on database-0 changed: 0:0;294:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-52540078fb07 on database-0 changed: 0:0;296:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400e018b6 on database-0 changed: 0:0;311:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400e018b6 on database-0 changed: 0:0;312:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_compute-fence-nova on database-1 changed: 0:0;273:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_compute-fence-nova on database-1 changed: 0:0;275:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400ea59b0 on database-1 changed: 0:0;298:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400ea59b0 on database-1 changed: 0:0;299:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400e1534e on database-1 changed: 0:0;301:39:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400e1534e on database-1 changed: 0:0;302:39:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for nova-evacuate on database-2 changed: 0:0;279:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 10s-interval monitor for nova-evacuate on database-2 changed: 0:0;280:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400066e50 on database-2 changed: 0:0;304:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400066e50 on database-2 changed: 0:0;305:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-52540060dbba on database-2 changed: 0:0;306:51:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-52540060dbba on database-2 changed: 0:0;307:51:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400aa1373 on messaging-0 changed: 0:0;282:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400aa1373 on messaging-0 changed: 0:0;284:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400addd38 on messaging-0 changed: 0:0;295:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400addd38 on messaging-0 changed: 0:0;297:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400c87cdb on messaging-0 changed: 0:0;310:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400c87cdb on messaging-0 changed: 0:0;311:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400dc23e0 on messaging-2 changed: 0:0;286:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400dc23e0 on messaging-2 changed: 0:0;288:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-52540040bb56 on messaging-2 changed: 0:0;293:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-52540040bb56 on messaging-2 changed: 0:0;295:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-2 ]
     * OFFLINE: [ messaging-1 ]
     * RemoteOnline: [ compute-0 compute-1 ]
-    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * compute-0	(ocf:pacemaker:remote):	 Started controller-1
@@ -39,7 +68,7 @@ Current cluster status:
     * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-1
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
       * Started: [ compute-0 compute-1 ]
-      * Stopped: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+      * Stopped: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
     * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started database-2
     * stonith-fence_ipmilan-525400aa1373	(stonith:fence_ipmilan):	 Started messaging-0
     * stonith-fence_ipmilan-525400dc23e0	(stonith:fence_ipmilan):	 Started messaging-2
@@ -67,77 +96,19 @@ Transition Summary:
   * Move       stonith-fence_ipmilan-525400e1534e     (               database-1 -> messaging-2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
-  * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_start_0
-  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-0
-  * Cluster action:  clear_failcount for nova-evacuate on messaging-0
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400aa1373 on database-0
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400dc23e0 on database-2
-  * Resource action: stonith-fence_ipmilan-52540040bb56 stop on messaging-2
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-52540078fb07 on messaging-2
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400ea59b0 on database-0
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400066e50 on messaging-2
-  * Resource action: stonith-fence_ipmilan-525400e1534e stop on database-1
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400e1534e on database-2
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-52540060dbba on messaging-0
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400e018b6 on database-0
-  * Cluster action:  clear_failcount for stonith-fence_ipmilan-525400c87cdb on database-2
-  * Pseudo action:   ovn-dbs-bundle_start_0
-  * Pseudo action:   rabbitmq-bundle_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_start_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_start_0
-  * Pseudo action:   ovn-dbs-bundle-master_start_0
-  * Resource action: ovn-dbs-bundle-podman-0 start on controller-0
-  * Resource action: ovn-dbs-bundle-0 start on controller-0
-  * Resource action: stonith-fence_ipmilan-52540040bb56 start on database-0
-  * Resource action: stonith-fence_ipmilan-525400e1534e start on messaging-2
-  * Pseudo action:   rabbitmq-bundle-clone_running_0
-  * Resource action: ovndb_servers   start on ovn-dbs-bundle-0
-  * Pseudo action:   ovn-dbs-bundle-master_running_0
-  * Resource action: ovn-dbs-bundle-podman-0 monitor=60000 on controller-0
-  * Resource action: ovn-dbs-bundle-0 monitor=30000 on controller-0
-  * Resource action: stonith-fence_ipmilan-52540040bb56 monitor=60000 on database-0
-  * Resource action: stonith-fence_ipmilan-525400e1534e monitor=60000 on messaging-2
-  * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_running_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_running_0
-  * Pseudo action:   ovn-dbs-bundle_running_0
-  * Pseudo action:   rabbitmq-bundle_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_promote_0
-  * Pseudo action:   ovn-dbs-bundle_promote_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_promote_0
-  * Pseudo action:   ovn-dbs-bundle-master_promote_0
-  * Resource action: ip-172.17.1.87  start on controller-1
-  * Resource action: ovndb_servers   promote on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_promoted_0
-  * Resource action: ip-172.17.1.87  monitor=10000 on controller-1
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_promoted_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_promoted_0
-  * Pseudo action:   ovn-dbs-bundle_promoted_0
-  * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-2
-  * Resource action: ovndb_servers   monitor=30000 on ovn-dbs-bundle-0
+  * Resource action: rabbitmq        notify on rabbitmq-bundle-0
+  * Resource action: rabbitmq        notify on rabbitmq-bundle-2
 Using the original execution date of: 2021-02-15 01:40:51Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-2 ]
     * OFFLINE: [ messaging-1 ]
     * RemoteOnline: [ compute-0 compute-1 ]
-    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * compute-0	(ocf:pacemaker:remote):	 Started controller-1
@@ -165,23 +136,23 @@ Revised Cluster Status:
       * haproxy-bundle-podman-1	(ocf:heartbeat:podman):	 Started controller-0
       * haproxy-bundle-podman-2	(ocf:heartbeat:podman):	 Started controller-1
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
-      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Unpromoted controller-0
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Stopped
       * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
-      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Promoted controller-1
-    * ip-172.17.1.87	(ocf:heartbeat:IPaddr2):	 Started controller-1
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
+    * ip-172.17.1.87	(ocf:heartbeat:IPaddr2):	 Stopped
     * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-1
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
       * Started: [ compute-0 compute-1 ]
-      * Stopped: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+      * Stopped: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 galera-bundle-0 galera-bundle-1 galera-bundle-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
     * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started database-2
     * stonith-fence_ipmilan-525400aa1373	(stonith:fence_ipmilan):	 Started messaging-0
     * stonith-fence_ipmilan-525400dc23e0	(stonith:fence_ipmilan):	 Started messaging-2
-    * stonith-fence_ipmilan-52540040bb56	(stonith:fence_ipmilan):	 Started database-0
+    * stonith-fence_ipmilan-52540040bb56	(stonith:fence_ipmilan):	 Started messaging-2
     * stonith-fence_ipmilan-525400addd38	(stonith:fence_ipmilan):	 Started messaging-0
     * stonith-fence_ipmilan-52540078fb07	(stonith:fence_ipmilan):	 Started database-0
     * stonith-fence_ipmilan-525400ea59b0	(stonith:fence_ipmilan):	 Started database-1
     * stonith-fence_ipmilan-525400066e50	(stonith:fence_ipmilan):	 Started database-2
-    * stonith-fence_ipmilan-525400e1534e	(stonith:fence_ipmilan):	 Started messaging-2
+    * stonith-fence_ipmilan-525400e1534e	(stonith:fence_ipmilan):	 Started database-1
     * stonith-fence_ipmilan-52540060dbba	(stonith:fence_ipmilan):	 Started database-2
     * stonith-fence_ipmilan-525400e018b6	(stonith:fence_ipmilan):	 Started database-0
     * stonith-fence_ipmilan-525400c87cdb	(stonith:fence_ipmilan):	 Started messaging-0

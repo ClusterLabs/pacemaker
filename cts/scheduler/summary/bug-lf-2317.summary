@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ ibm1.isg.si ibm2.isg.si ]
 
@@ -12,25 +14,15 @@ Transition Summary:
   * Promote    drbd_r0:1     ( Unpromoted -> Promoted ibm1.isg.si )
 
 Executing Cluster Transition:
-  * Resource action: drbd_r0:0       cancel=30000 on ibm1.isg.si
-  * Pseudo action:   ms_drbd_r0_pre_notify_promote_0
-  * Resource action: drbd_r0:1       notify on ibm2.isg.si
-  * Resource action: drbd_r0:0       notify on ibm1.isg.si
-  * Pseudo action:   ms_drbd_r0_confirmed-pre_notify_promote_0
-  * Pseudo action:   ms_drbd_r0_promote_0
-  * Resource action: drbd_r0:0       promote on ibm1.isg.si
-  * Pseudo action:   ms_drbd_r0_promoted_0
-  * Pseudo action:   ms_drbd_r0_post_notify_promoted_0
-  * Resource action: drbd_r0:1       notify on ibm2.isg.si
-  * Resource action: drbd_r0:0       notify on ibm1.isg.si
-  * Pseudo action:   ms_drbd_r0_confirmed-post_notify_promoted_0
-  * Resource action: drbd_r0:0       monitor=15000 on ibm1.isg.si
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ ibm1.isg.si ibm2.isg.si ]
 
   * Full List of Resources:
     * HostingIsg	(ocf:heartbeat:Xen):	 Started ibm2.isg.si
     * Clone Set: ms_drbd_r0 [drbd_r0] (promotable):
-      * Promoted: [ ibm1.isg.si ibm2.isg.si ]
+      * Promoted: [ ibm2.isg.si ]
+      * Unpromoted: [ ibm1.isg.si ]

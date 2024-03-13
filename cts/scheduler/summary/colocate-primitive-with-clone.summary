@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ srv01 srv02 srv03 srv04 ]
 
@@ -60,27 +63,20 @@ Transition Summary:
   * Start      UmDummy02      ( srv04 )
 
 Executing Cluster Transition:
-  * Pseudo action:   UMgroup01_start_0
-  * Resource action: UmVIPcheck      start on srv04
-  * Resource action: UmIPaddr        start on srv04
-  * Resource action: UmDummy01       start on srv04
-  * Resource action: UmDummy02       start on srv04
-  * Cluster action:  do_shutdown on srv01
-  * Pseudo action:   UMgroup01_running_0
-  * Resource action: UmIPaddr        monitor=10000 on srv04
-  * Resource action: UmDummy01       monitor=10000 on srv04
-  * Resource action: UmDummy02       monitor=10000 on srv04
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ srv01 srv02 srv03 srv04 ]
 
   * Full List of Resources:
     * Resource Group: UMgroup01:
-      * UmVIPcheck	(ocf:heartbeat:Dummy):	 Started srv04
-      * UmIPaddr	(ocf:heartbeat:Dummy):	 Started srv04
-      * UmDummy01	(ocf:heartbeat:Dummy):	 Started srv04
-      * UmDummy02	(ocf:heartbeat:Dummy):	 Started srv04
+      * UmVIPcheck	(ocf:heartbeat:Dummy):	 Stopped
+      * UmIPaddr	(ocf:heartbeat:Dummy):	 Stopped
+      * UmDummy01	(ocf:heartbeat:Dummy):	 Stopped
+      * UmDummy02	(ocf:heartbeat:Dummy):	 Stopped
     * Resource Group: OVDBgroup02-1:
       * prmExPostgreSQLDB1	(ocf:heartbeat:Dummy):	 Started srv04
       * prmFsPostgreSQLDB1-1	(ocf:heartbeat:Dummy):	 Started srv04

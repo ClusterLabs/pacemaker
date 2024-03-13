@@ -1,5 +1,13 @@
 Using the original execution date of: 2020-05-14 10:49:31Z
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254005e097a on controller-0 changed: 0:0;217:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254005e097a on controller-0 changed: 0:0;218:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400985679 on controller-1 changed: 0:0;223:64:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400985679 on controller-1 changed: 0:0;224:64:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400afe30e on controller-2 changed: 0:0;219:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400afe30e on controller-2 changed: 0:0;220:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
     * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
@@ -32,52 +40,18 @@ Transition Summary:
   * Stop       ovn-dbs-bundle-0            (                            controller-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
   * Stop       ovndb_servers:0             (             Unpromoted ovn-dbs-bundle-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
   * Promote    ovndb_servers:1             ( Unpromoted -> Promoted ovn-dbs-bundle-1 )
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_stop_0
-  * Pseudo action:   ovn-dbs-bundle_stop_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_stop_0
-  * Pseudo action:   ovn-dbs-bundle-master_stop_0
-  * Resource action: ovndb_servers   stop on ovn-dbs-bundle-0
-  * Pseudo action:   ovn-dbs-bundle-master_stopped_0
-  * Resource action: ovn-dbs-bundle-0 stop on controller-0
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_stopped_0
-  * Resource action: ovn-dbs-bundle-podman-0 stop on controller-0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_stopped_0
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_start_0
-  * Pseudo action:   ovn-dbs-bundle_stopped_0
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_start_0
-  * Pseudo action:   ovn-dbs-bundle-master_start_0
-  * Pseudo action:   ovn-dbs-bundle-master_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_running_0
-  * Pseudo action:   ovn-dbs-bundle_running_0
-  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_promote_0
-  * Pseudo action:   ovn-dbs-bundle_promote_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_promote_0
-  * Pseudo action:   ovn-dbs-bundle-master_promote_0
-  * Resource action: ovndb_servers   promote on ovn-dbs-bundle-1
-  * Pseudo action:   ovn-dbs-bundle-master_promoted_0
-  * Pseudo action:   ovn-dbs-bundle-master_post_notify_promoted_0
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
-  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
-  * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_promoted_0
-  * Pseudo action:   ovn-dbs-bundle_promoted_0
-  * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-1
 Using the original execution date of: 2020-05-14 10:49:31Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
-    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:
@@ -93,8 +67,8 @@ Revised Cluster Status:
       * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-1
       * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-2
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
-      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Stopped
-      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Promoted controller-1
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Unpromoted controller-0
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
       * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
     * stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
     * stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2

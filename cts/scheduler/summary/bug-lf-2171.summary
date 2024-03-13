@@ -1,6 +1,9 @@
 2 of 4 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ xenserver1 xenserver2 ]
 
@@ -18,22 +21,17 @@ Transition Summary:
   * Stop       res_Dummy3       ( xenserver1 )  due to unrunnable cl_res_Dummy1 running
 
 Executing Cluster Transition:
-  * Pseudo action:   gr_Dummy_stop_0
-  * Resource action: res_Dummy2      stop on xenserver1
-  * Resource action: res_Dummy3      stop on xenserver1
-  * Pseudo action:   gr_Dummy_stopped_0
-  * Pseudo action:   cl_res_Dummy1_stop_0
-  * Resource action: res_Dummy1:1    stop on xenserver1
-  * Resource action: res_Dummy1:0    stop on xenserver2
-  * Pseudo action:   cl_res_Dummy1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ xenserver1 xenserver2 ]
 
   * Full List of Resources:
     * Clone Set: cl_res_Dummy1 [res_Dummy1] (disabled):
-      * Stopped (disabled): [ xenserver1 xenserver2 ]
+      * Started: [ xenserver1 xenserver2 ]
     * Resource Group: gr_Dummy (disabled):
-      * res_Dummy2	(ocf:heartbeat:Dummy):	 Stopped
-      * res_Dummy3	(ocf:heartbeat:Dummy):	 Stopped
+      * res_Dummy2	(ocf:heartbeat:Dummy):	 Started xenserver1
+      * res_Dummy3	(ocf:heartbeat:Dummy):	 Started xenserver1

@@ -1,6 +1,8 @@
 4 of 27 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
 
@@ -27,38 +29,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: ping:0          monitor on cluster02
-  * Resource action: ping:0          monitor on cluster01
-  * Resource action: Fencing         monitor on cluster02
-  * Resource action: Fencing         monitor on cluster01
-  * Resource action: dummy           monitor on cluster02
-  * Resource action: dummy           monitor on cluster01
-  * Resource action: inactive-dhcpd:0 monitor on cluster02
-  * Resource action: inactive-dhcpd:0 monitor on cluster01
-  * Resource action: inactive-dummy-1 monitor on cluster02
-  * Resource action: inactive-dummy-1 monitor on cluster01
-  * Resource action: inactive-dummy-2 monitor on cluster02
-  * Resource action: inactive-dummy-2 monitor on cluster01
-  * Resource action: httpd-bundle-ip-192.168.122.131 monitor on cluster02
-  * Resource action: httpd-bundle-ip-192.168.122.131 monitor on cluster01
-  * Resource action: httpd-bundle-docker-0 monitor on cluster02
-  * Resource action: httpd-bundle-docker-0 monitor on cluster01
-  * Resource action: httpd-bundle-ip-192.168.122.132 monitor on cluster02
-  * Resource action: httpd-bundle-ip-192.168.122.132 monitor on cluster01
-  * Resource action: httpd-bundle-docker-1 monitor on cluster02
-  * Resource action: httpd-bundle-docker-1 monitor on cluster01
-  * Resource action: httpd-bundle-ip-192.168.122.133 monitor on cluster02
-  * Resource action: httpd-bundle-ip-192.168.122.133 monitor on cluster01
-  * Resource action: httpd-bundle-docker-2 monitor on cluster02
-  * Resource action: httpd-bundle-docker-2 monitor on cluster01
-  * Resource action: Public-IP       monitor on cluster02
-  * Resource action: Public-IP       monitor on cluster01
-  * Resource action: Email           monitor on cluster02
-  * Resource action: Email           monitor on cluster01
-  * Resource action: mysql-proxy:0   monitor on cluster02
-  * Resource action: mysql-proxy:0   monitor on cluster01
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
 

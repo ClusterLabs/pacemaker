@@ -1,7 +1,9 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
-    * RemoteOFFLINE: [ rhel7-auto4 ]
+    * RemoteOnline: [ rhel7-auto4 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
@@ -11,15 +13,14 @@ Transition Summary:
   * Recover    rhel7-auto4     ( rhel7-auto2 -> rhel7-auto3 )
 
 Executing Cluster Transition:
-  * Resource action: rhel7-auto4     stop on rhel7-auto2
-  * Resource action: rhel7-auto4     start on rhel7-auto3
-  * Resource action: rhel7-auto4     monitor=60000 on rhel7-auto3
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
     * RemoteOnline: [ rhel7-auto4 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
-    * rhel7-auto4	(ocf:pacemaker:remote):	 Started rhel7-auto3
+    * rhel7-auto4	(ocf:pacemaker:remote):	 FAILED rhel7-auto2

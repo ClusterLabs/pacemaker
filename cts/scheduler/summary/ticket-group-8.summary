@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -13,19 +15,15 @@ Transition Summary:
   * Start      rsc2    ( node2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   group1_start_0
-  * Resource action: rsc1            start on node2
-  * Resource action: rsc2            start on node2
-  * Pseudo action:   group1_running_0
-  * Resource action: rsc1            monitor=5000 on node2
-  * Resource action: rsc2            monitor=5000 on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Resource Group: group1:
-      * rsc1	(ocf:pacemaker:Dummy):	 Started node2
-      * rsc2	(ocf:pacemaker:Dummy):	 Started node2
+      * rsc1	(ocf:pacemaker:Dummy):	 Stopped
+      * rsc2	(ocf:pacemaker:Dummy):	 Stopped

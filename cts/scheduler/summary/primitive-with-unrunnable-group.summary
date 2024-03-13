@@ -1,6 +1,8 @@
 1 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 node4 node5 ]
 
@@ -18,13 +20,10 @@ Transition Summary:
   * Start      group1b     ( node2 )  due to unrunnable rsc2 start (blocked)
 
 Executing Cluster Transition:
-  * Resource action: rsc2            monitor on node5
-  * Resource action: rsc2            monitor on node4
-  * Resource action: rsc2            monitor on node3
-  * Resource action: rsc2            monitor on node2
-  * Resource action: rsc2            monitor on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 node4 node5 ]
 

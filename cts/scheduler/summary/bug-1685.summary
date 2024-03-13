@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ redun1 redun2 ]
 
@@ -12,27 +14,14 @@ Transition Summary:
   * Start      shared_filesystem         (                        redun2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   shared_storage_pre_notify_promote_0
-  * Resource action: prim_shared_storage:0 notify on redun2
-  * Resource action: prim_shared_storage:1 notify on redun1
-  * Pseudo action:   shared_storage_confirmed-pre_notify_promote_0
-  * Pseudo action:   shared_storage_promote_0
-  * Resource action: prim_shared_storage:0 promote on redun2
-  * Pseudo action:   shared_storage_promoted_0
-  * Pseudo action:   shared_storage_post_notify_promoted_0
-  * Resource action: prim_shared_storage:0 notify on redun2
-  * Resource action: prim_shared_storage:1 notify on redun1
-  * Pseudo action:   shared_storage_confirmed-post_notify_promoted_0
-  * Resource action: shared_filesystem start on redun2
-  * Resource action: prim_shared_storage:1 monitor=120000 on redun1
-  * Resource action: shared_filesystem monitor=120000 on redun2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ redun1 redun2 ]
 
   * Full List of Resources:
     * Clone Set: shared_storage [prim_shared_storage] (promotable):
-      * Promoted: [ redun2 ]
-      * Unpromoted: [ redun1 ]
-    * shared_filesystem	(ocf:heartbeat:Filesystem):	 Started redun2
+      * Unpromoted: [ redun1 redun2 ]
+    * shared_filesystem	(ocf:heartbeat:Filesystem):	 Stopped

@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node node1: UNCLEAN (offline)
     * Online: [ node2 ]
@@ -14,11 +17,11 @@ Transition Summary:
   * Stop       rsc2          ( node1 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
-  * Resource action: stonith-1       monitor on node2
-  * Resource action: rsc1            monitor on node2
-  * Resource action: rsc2            monitor on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node node1: UNCLEAN (offline)
     * Online: [ node2 ]

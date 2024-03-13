@@ -1,6 +1,8 @@
 0 of 5 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fastvm-rhel-7-5-73 fastvm-rhel-7-5-74 ]
 
@@ -17,6 +19,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fastvm-rhel-7-5-73 fastvm-rhel-7-5-74 ]
 

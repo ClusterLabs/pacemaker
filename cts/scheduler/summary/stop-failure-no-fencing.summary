@@ -1,6 +1,9 @@
 0 of 9 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node pcmk-3: UNCLEAN (offline)
     * Node pcmk-4: UNCLEAN (offline)
@@ -9,13 +12,16 @@ Current cluster status:
   * Full List of Resources:
     * Clone Set: dlm-clone [dlm]:
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
-    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
+    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
 
 Transition Summary:
 
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node pcmk-3: UNCLEAN (offline)
     * Node pcmk-4: UNCLEAN (offline)
@@ -24,4 +30,4 @@ Revised Cluster Status:
   * Full List of Resources:
     * Clone Set: dlm-clone [dlm]:
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
-    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
+    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)

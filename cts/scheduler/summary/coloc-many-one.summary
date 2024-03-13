@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
@@ -14,25 +16,15 @@ Transition Summary:
   * Start      rsc4    ( node2 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            monitor on node3
-  * Resource action: rsc1            monitor on node2
-  * Resource action: rsc1            monitor on node1
-  * Resource action: rsc2            monitor on node2
-  * Resource action: rsc3            monitor on node3
-  * Resource action: rsc3            monitor on node1
-  * Resource action: rsc4            monitor on node3
-  * Resource action: rsc4            monitor on node2
-  * Resource action: rsc4            monitor on node1
-  * Resource action: rsc1            start on node2
-  * Resource action: rsc2            start on node2
-  * Resource action: rsc4            start on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
   * Full List of Resources:
-    * rsc1	(ocf:heartbeat:apache):	 Started node2
-    * rsc2	(ocf:heartbeat:apache):	 Started node2
+    * rsc1	(ocf:heartbeat:apache):	 Stopped
+    * rsc2	(ocf:heartbeat:apache):	 Stopped
     * rsc3	(ocf:heartbeat:apache):	 Stopped
-    * rsc4	(ocf:heartbeat:apache):	 Started node2
+    * rsc4	(ocf:heartbeat:apache):	 Stopped

@@ -1,6 +1,8 @@
 1 of 2 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
@@ -15,22 +17,15 @@ Transition Summary:
   * Stop       NATIVE_RSC_B       (            fc16-builder )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   PROMOTABLE_RSC_A_pre_notify_stop_0
-  * Resource action: NATIVE_RSC_B    stop on fc16-builder
-  * Resource action: NATIVE_RSC_A:0  notify on fc16-builder
-  * Pseudo action:   PROMOTABLE_RSC_A_confirmed-pre_notify_stop_0
-  * Pseudo action:   PROMOTABLE_RSC_A_stop_0
-  * Resource action: NATIVE_RSC_A:0  stop on fc16-builder
-  * Pseudo action:   PROMOTABLE_RSC_A_stopped_0
-  * Pseudo action:   PROMOTABLE_RSC_A_post_notify_stopped_0
-  * Pseudo action:   PROMOTABLE_RSC_A_confirmed-post_notify_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
 
   * Full List of Resources:
     * Clone Set: PROMOTABLE_RSC_A [NATIVE_RSC_A] (promotable):
-      * Stopped: [ fc16-builder fc16-builder2 ]
-    * NATIVE_RSC_B	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * Unpromoted: [ fc16-builder ]
+    * NATIVE_RSC_B	(ocf:pacemaker:Dummy):	 Started fc16-builder (disabled)

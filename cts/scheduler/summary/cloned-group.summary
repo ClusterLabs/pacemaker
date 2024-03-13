@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ webcluster01 ]
     * OFFLINE: [ webcluster02 ]
@@ -16,33 +19,23 @@ Transition Summary:
   * Restart    mysql-proxy:0     ( webcluster01 )  due to required apache2:0 start
   * Stop       apache2:2         ( webcluster01 )  due to node availability
   * Stop       mysql-proxy:2     ( webcluster01 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   apache2_clone_stop_0
-  * Pseudo action:   grrr:0_stop_0
-  * Resource action: mysql-proxy:1   stop on webcluster01
-  * Pseudo action:   grrr:2_stop_0
-  * Resource action: mysql-proxy:0   stop on webcluster01
-  * Resource action: apache2:1       stop on webcluster01
-  * Resource action: apache2:0       stop on webcluster01
-  * Pseudo action:   grrr:0_stopped_0
-  * Pseudo action:   grrr:2_stopped_0
-  * Pseudo action:   apache2_clone_stopped_0
-  * Pseudo action:   apache2_clone_start_0
-  * Pseudo action:   grrr:0_start_0
-  * Resource action: apache2:1       start on webcluster01
-  * Resource action: apache2:1       monitor=10000 on webcluster01
-  * Resource action: mysql-proxy:1   start on webcluster01
-  * Resource action: mysql-proxy:1   monitor=10000 on webcluster01
-  * Pseudo action:   grrr:0_running_0
-  * Pseudo action:   apache2_clone_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ webcluster01 ]
     * OFFLINE: [ webcluster02 ]
 
   * Full List of Resources:
     * Clone Set: apache2_clone [grrr]:
+      * Resource Group: grrr:2:
+        * apache2	(ocf:heartbeat:apache):	 ORPHANED Started webcluster01
+        * mysql-proxy	(lsb:mysql-proxy):	 ORPHANED Started webcluster01
       * Started: [ webcluster01 ]
       * Stopped: [ webcluster02 ]

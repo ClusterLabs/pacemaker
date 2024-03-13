@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
@@ -55,45 +57,26 @@ Transition Summary:
   * Start      drbd-mgs:1            (                  lustre02-left )
 
 Executing Cluster Transition:
-  * Resource action: drbd-stacked    start on lustre02-left
-  * Resource action: drbd-testfs-local start on lustre03-left
-  * Resource action: lustre          migrate_to on lustre03-left
-  * Resource action: testfs          stop on lustre02-left
-  * Resource action: testfs          stop on lustre01-left
-  * Pseudo action:   ms-drbd-mgs_pre_notify_start_0
-  * Resource action: lustre          migrate_from on lustre04-left
-  * Resource action: lustre          stop on lustre03-left
-  * Resource action: testfs          start on lustre03-left
-  * Pseudo action:   ms-drbd-mgs_confirmed-pre_notify_start_0
-  * Pseudo action:   ms-drbd-mgs_start_0
-  * Pseudo action:   lustre_start_0
-  * Resource action: drbd-mgs:0      start on lustre01-left
-  * Resource action: drbd-mgs:1      start on lustre02-left
-  * Pseudo action:   ms-drbd-mgs_running_0
-  * Pseudo action:   ms-drbd-mgs_post_notify_running_0
-  * Resource action: drbd-mgs:0      notify on lustre01-left
-  * Resource action: drbd-mgs:1      notify on lustre02-left
-  * Pseudo action:   ms-drbd-mgs_confirmed-post_notify_running_0
-  * Resource action: drbd-mgs:0      monitor=30000 on lustre01-left
-  * Resource action: drbd-mgs:1      monitor=30000 on lustre02-left
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
   * Full List of Resources:
     * drbd-local	(ocf:vds-ok:Ticketer):	 Started lustre01-left
-    * drbd-stacked	(ocf:vds-ok:Ticketer):	 Started lustre02-left
-    * drbd-testfs-local	(ocf:vds-ok:Ticketer):	 Started lustre03-left
+    * drbd-stacked	(ocf:vds-ok:Ticketer):	 Stopped
+    * drbd-testfs-local	(ocf:vds-ok:Ticketer):	 Stopped
     * drbd-testfs-stacked	(ocf:vds-ok:Ticketer):	 Stopped
     * ip-testfs-mdt0000-left	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-testfs-ost0000-left	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-testfs-ost0001-left	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-testfs-ost0002-left	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-testfs-ost0003-left	(ocf:heartbeat:IPaddr2):	 Stopped
-    * lustre	(ocf:vds-ok:Ticketer):	 Started lustre04-left
+    * lustre	(ocf:vds-ok:Ticketer):	 Started lustre03-left
     * mgs	(ocf:vds-ok:lustre-server):	 Stopped
-    * testfs	(ocf:vds-ok:Ticketer):	 Started lustre03-left
+    * testfs	(ocf:vds-ok:Ticketer):	 Started lustre02-left
     * testfs-mdt0000	(ocf:vds-ok:lustre-server):	 Stopped
     * testfs-ost0000	(ocf:vds-ok:lustre-server):	 Stopped
     * testfs-ost0001	(ocf:vds-ok:lustre-server):	 Stopped
@@ -103,7 +86,7 @@ Revised Cluster Status:
       * ip-booth	(ocf:heartbeat:IPaddr2):	 Started lustre02-left
       * boothd	(ocf:pacemaker:booth-site):	 Started lustre02-left
     * Clone Set: ms-drbd-mgs [drbd-mgs] (promotable):
-      * Unpromoted: [ lustre01-left lustre02-left ]
+      * Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
     * Clone Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000] (promotable):
       * Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
     * Clone Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left] (promotable):

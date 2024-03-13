@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node2 ]
     * OFFLINE: [ node1 ]
@@ -12,10 +14,10 @@ Transition Summary:
   * Start      rsc2    ( node2 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
-  * Resource action: rsc1            monitor on node2
-  * Resource action: rsc2            monitor on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node2 ]
     * OFFLINE: [ node1 ]

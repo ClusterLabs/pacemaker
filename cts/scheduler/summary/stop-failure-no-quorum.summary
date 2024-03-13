@@ -1,6 +1,9 @@
 0 of 10 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node pcmk-2: UNCLEAN (online)
     * Node pcmk-3: UNCLEAN (offline)
@@ -26,20 +29,23 @@ Transition Summary:
   * Start      Fencing       ( pcmk-1 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
-  * Fencing pcmk-2 (reboot)
-  * Pseudo action:   clvm-clone_stop_0
-  * Pseudo action:   clvm_stop_0
-  * Pseudo action:   clvm-clone_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
+    * Node pcmk-2: UNCLEAN (online)
     * Node pcmk-3: UNCLEAN (offline)
     * Node pcmk-4: UNCLEAN (offline)
     * Online: [ pcmk-1 ]
-    * OFFLINE: [ pcmk-2 ]
 
   * Full List of Resources:
     * Clone Set: dlm-clone [dlm]:
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+    * Clone Set: clvm-clone [clvm]:
+      * clvm	(lsb:clvmd):	 FAILED pcmk-2
+      * clvm	(lsb:clvmd):	 FAILED pcmk-3 (UNCLEAN, blocked)
+      * Stopped: [ pcmk-1 pcmk-3 pcmk-4 ]
     * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
     * Fencing	(stonith:fence_xvm):	 Stopped

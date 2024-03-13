@@ -1,5 +1,7 @@
 Using the original execution date of: 2016-10-05 07:32:34Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node rh72-01: standby (with active resources)
     * Online: [ rh72-02 ]
@@ -14,24 +16,16 @@ Transition Summary:
   * Start      prmDummy2     (            rh72-02 )
 
 Executing Cluster Transition:
-  * Pseudo action:   grpDummy_stop_0
-  * Resource action: prmDummy2       monitor on rh72-01
-  * Resource action: prmDummy1       stop on rh72-01
-  * Pseudo action:   grpDummy_stopped_0
-  * Pseudo action:   grpDummy_start_0
-  * Resource action: prmDummy1       start on rh72-02
-  * Resource action: prmDummy2       start on rh72-02
-  * Pseudo action:   grpDummy_running_0
-  * Resource action: prmDummy1       monitor=10000 on rh72-02
-  * Resource action: prmDummy2       monitor=10000 on rh72-02
 Using the original execution date of: 2016-10-05 07:32:34Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node rh72-01: standby
+    * Node rh72-01: standby (with active resources)
     * Online: [ rh72-02 ]
 
   * Full List of Resources:
     * Resource Group: grpDummy:
-      * prmDummy1	(ocf:pacemaker:Dummy1):	 Started rh72-02
-      * prmDummy2	(ocf:pacemaker:Dummy2):	 Started rh72-02
+      * prmDummy1	(ocf:pacemaker:Dummy1):	 Started rh72-01
+      * prmDummy2	(ocf:pacemaker:Dummy2):	 Stopped

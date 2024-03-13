@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hb1 hb2 ]
     * OFFLINE: [ hb3 ]
@@ -10,18 +12,19 @@ Current cluster status:
 
 Transition Summary:
   * Stop       ima_rscid:0     (   hb1 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   ima_cloneid_stop_0
-  * Resource action: ima_rscid:0     stop on hb1
-  * Pseudo action:   ima_cloneid_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hb1 hb2 ]
     * OFFLINE: [ hb3 ]
 
   * Full List of Resources:
     * Clone Set: ima_cloneid [ima_rscid] (unique):
-      * ima_rscid:0	(ocf:heartbeat:Dummy):	 Stopped
+      * ima_rscid:0	(ocf:heartbeat:Dummy):	 Started hb1
       * ima_rscid:1	(ocf:heartbeat:Dummy):	 Started hb2

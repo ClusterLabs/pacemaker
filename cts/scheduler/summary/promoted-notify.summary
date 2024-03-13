@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
@@ -11,26 +14,15 @@ Transition Summary:
   * Promote    fake:0     ( Unpromoted -> Promoted rhel7-auto1 )
 
 Executing Cluster Transition:
-  * Pseudo action:   fake-master_pre_notify_promote_0
-  * Resource action: fake            notify on rhel7-auto1
-  * Resource action: fake            notify on rhel7-auto3
-  * Resource action: fake            notify on rhel7-auto2
-  * Pseudo action:   fake-master_confirmed-pre_notify_promote_0
-  * Pseudo action:   fake-master_promote_0
-  * Resource action: fake            promote on rhel7-auto1
-  * Pseudo action:   fake-master_promoted_0
-  * Pseudo action:   fake-master_post_notify_promoted_0
-  * Resource action: fake            notify on rhel7-auto1
-  * Resource action: fake            notify on rhel7-auto3
-  * Resource action: fake            notify on rhel7-auto2
-  * Pseudo action:   fake-master_confirmed-post_notify_promoted_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1
     * Clone Set: fake-master [fake] (promotable):
-      * Promoted: [ rhel7-auto1 ]
-      * Unpromoted: [ rhel7-auto2 rhel7-auto3 ]
+      * Unpromoted: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]

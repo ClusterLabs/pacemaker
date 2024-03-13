@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node bl460g1n7: UNCLEAN (offline)
     * Online: [ bl460g1n6 bl460g1n8 ]
@@ -34,43 +37,22 @@ Transition Summary:
   * Stop       prmDiskd1:0       (              bl460g1n7 )  due to node availability
   * Stop       prmDiskd2:0       (              bl460g1n7 )  due to node availability
   * Stop       prmPing:0         (              bl460g1n7 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: prmVM2          stop on bl460g1n6
-  * Pseudo action:   grpStonith8_stop_0
-  * Pseudo action:   prmStonith8-2_stop_0
-  * Fencing bl460g1n7 (reboot)
-  * Pseudo action:   prmDummy_stop_0
-  * Pseudo action:   prmVM2_stop_0
-  * Pseudo action:   prmStonith8-1_stop_0
-  * Pseudo action:   clnDiskd1_stop_0
-  * Pseudo action:   clnDiskd2_stop_0
-  * Pseudo action:   clnPing_stop_0
-  * Resource action: prmDummy        start on bl460g1n6
-  * Resource action: prmVM2          start on bl460g1n8
-  * Pseudo action:   grpStonith8_stopped_0
-  * Pseudo action:   grpStonith8_start_0
-  * Resource action: prmStonith8-1   start on bl460g1n6
-  * Resource action: prmStonith8-2   start on bl460g1n6
-  * Pseudo action:   prmDiskd1_stop_0
-  * Pseudo action:   clnDiskd1_stopped_0
-  * Pseudo action:   prmDiskd2_stop_0
-  * Pseudo action:   clnDiskd2_stopped_0
-  * Pseudo action:   prmPing_stop_0
-  * Pseudo action:   clnPing_stopped_0
-  * Resource action: prmVM2          monitor=10000 on bl460g1n8
-  * Pseudo action:   grpStonith8_running_0
-  * Resource action: prmStonith8-1   monitor=10000 on bl460g1n6
-  * Resource action: prmStonith8-2   monitor=3600000 on bl460g1n6
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
+    * Node bl460g1n7: UNCLEAN (offline)
     * Online: [ bl460g1n6 bl460g1n8 ]
-    * OFFLINE: [ bl460g1n7 ]
 
   * Full List of Resources:
-    * prmDummy	(ocf:pacemaker:Dummy):	 Started bl460g1n6
-    * prmVM2	(ocf:heartbeat:VirtualDomain):	 Started bl460g1n8
+    * prmDummy	(ocf:pacemaker:Dummy):	 Started bl460g1n7 (UNCLEAN)
+    * prmVM2	(ocf:heartbeat:VirtualDomain):	 Started bl460g1n7 (UNCLEAN)
     * Resource Group: grpStonith6:
       * prmStonith6-1	(stonith:external/stonith-helper):	 Started bl460g1n8
       * prmStonith6-2	(stonith:external/ipmi):	 Started bl460g1n8
@@ -78,14 +60,14 @@ Revised Cluster Status:
       * prmStonith7-1	(stonith:external/stonith-helper):	 Started bl460g1n6
       * prmStonith7-2	(stonith:external/ipmi):	 Started bl460g1n6
     * Resource Group: grpStonith8:
-      * prmStonith8-1	(stonith:external/stonith-helper):	 Started bl460g1n6
-      * prmStonith8-2	(stonith:external/ipmi):	 Started bl460g1n6
+      * prmStonith8-1	(stonith:external/stonith-helper):	 Started bl460g1n7 (UNCLEAN)
+      * prmStonith8-2	(stonith:external/ipmi):	 Started bl460g1n7 (UNCLEAN)
     * Clone Set: clnDiskd1 [prmDiskd1]:
+      * prmDiskd1	(ocf:pacemaker:diskd):	 Started bl460g1n7 (UNCLEAN)
       * Started: [ bl460g1n6 bl460g1n8 ]
-      * Stopped: [ bl460g1n7 ]
     * Clone Set: clnDiskd2 [prmDiskd2]:
+      * prmDiskd2	(ocf:pacemaker:diskd):	 Started bl460g1n7 (UNCLEAN)
       * Started: [ bl460g1n6 bl460g1n8 ]
-      * Stopped: [ bl460g1n7 ]
     * Clone Set: clnPing [prmPing]:
+      * prmPing	(ocf:pacemaker:ping):	 Started bl460g1n7 (UNCLEAN)
       * Started: [ bl460g1n6 bl460g1n8 ]
-      * Stopped: [ bl460g1n7 ]

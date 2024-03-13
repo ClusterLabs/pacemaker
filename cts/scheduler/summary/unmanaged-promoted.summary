@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pcmk-1 pcmk-2 ]
     * OFFLINE: [ pcmk-3 pcmk-4 ]
@@ -36,10 +38,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Cluster action:  do_shutdown on pcmk-2
-  * Cluster action:  do_shutdown on pcmk-1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pcmk-1 pcmk-2 ]
     * OFFLINE: [ pcmk-3 pcmk-4 ]

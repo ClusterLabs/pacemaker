@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -19,70 +21,10 @@ Transition Summary:
   * Restart    configstoreclone:1    ( node1 )  due to required evmsclone:1 start
 
 Executing Cluster Transition:
-  * Pseudo action:   evmscloneset_pre_notify_stop_0
-  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
-  * Pseudo action:   configstorecloneset_pre_notify_stop_0
-  * Resource action: evmsclone:1     notify on node2
-  * Resource action: evmsclone:0     notify on node1
-  * Pseudo action:   evmscloneset_confirmed-pre_notify_stop_0
-  * Resource action: imagestoreclone:1 notify on node2
-  * Resource action: imagestoreclone:0 notify on node1
-  * Pseudo action:   imagestorecloneset_confirmed-pre_notify_stop_0
-  * Pseudo action:   imagestorecloneset_stop_0
-  * Resource action: configstoreclone:1 notify on node2
-  * Resource action: configstoreclone:0 notify on node1
-  * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
-  * Pseudo action:   configstorecloneset_stop_0
-  * Resource action: imagestoreclone:0 stop on node1
-  * Pseudo action:   imagestorecloneset_stopped_0
-  * Resource action: configstoreclone:0 stop on node1
-  * Pseudo action:   configstorecloneset_stopped_0
-  * Pseudo action:   imagestorecloneset_post_notify_stopped_0
-  * Pseudo action:   configstorecloneset_post_notify_stopped_0
-  * Resource action: imagestoreclone:1 notify on node2
-  * Pseudo action:   imagestorecloneset_confirmed-post_notify_stopped_0
-  * Pseudo action:   imagestorecloneset_pre_notify_start_0
-  * Resource action: configstoreclone:1 notify on node2
-  * Pseudo action:   configstorecloneset_confirmed-post_notify_stopped_0
-  * Pseudo action:   configstorecloneset_pre_notify_start_0
-  * Pseudo action:   evmscloneset_stop_0
-  * Resource action: imagestoreclone:1 notify on node2
-  * Pseudo action:   imagestorecloneset_confirmed-pre_notify_start_0
-  * Resource action: configstoreclone:1 notify on node2
-  * Pseudo action:   configstorecloneset_confirmed-pre_notify_start_0
-  * Resource action: evmsclone:0     stop on node1
-  * Pseudo action:   evmscloneset_stopped_0
-  * Pseudo action:   evmscloneset_post_notify_stopped_0
-  * Resource action: evmsclone:1     notify on node2
-  * Pseudo action:   evmscloneset_confirmed-post_notify_stopped_0
-  * Pseudo action:   evmscloneset_pre_notify_start_0
-  * Resource action: evmsclone:1     notify on node2
-  * Pseudo action:   evmscloneset_confirmed-pre_notify_start_0
-  * Pseudo action:   evmscloneset_start_0
-  * Resource action: evmsclone:0     start on node1
-  * Pseudo action:   evmscloneset_running_0
-  * Pseudo action:   evmscloneset_post_notify_running_0
-  * Resource action: evmsclone:1     notify on node2
-  * Resource action: evmsclone:0     notify on node1
-  * Pseudo action:   evmscloneset_confirmed-post_notify_running_0
-  * Pseudo action:   imagestorecloneset_start_0
-  * Pseudo action:   configstorecloneset_start_0
-  * Resource action: imagestoreclone:0 start on node1
-  * Pseudo action:   imagestorecloneset_running_0
-  * Resource action: configstoreclone:0 start on node1
-  * Pseudo action:   configstorecloneset_running_0
-  * Pseudo action:   imagestorecloneset_post_notify_running_0
-  * Pseudo action:   configstorecloneset_post_notify_running_0
-  * Resource action: imagestoreclone:1 notify on node2
-  * Resource action: imagestoreclone:0 notify on node1
-  * Pseudo action:   imagestorecloneset_confirmed-post_notify_running_0
-  * Resource action: configstoreclone:1 notify on node2
-  * Resource action: configstoreclone:0 notify on node1
-  * Pseudo action:   configstorecloneset_confirmed-post_notify_running_0
-  * Resource action: imagestoreclone:0 monitor=20000 on node1
-  * Resource action: configstoreclone:0 monitor=20000 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -90,7 +32,8 @@ Revised Cluster Status:
     * Clone Set: stonithcloneset [stonithclone]:
       * Started: [ node1 node2 ]
     * Clone Set: evmscloneset [evmsclone]:
-      * Started: [ node1 node2 ]
+      * evmsclone	(ocf:heartbeat:EvmsSCC):	 FAILED node1
+      * Started: [ node2 ]
     * Clone Set: imagestorecloneset [imagestoreclone] (disabled):
       * Started: [ node1 node2 ]
     * Clone Set: configstorecloneset [configstoreclone]:

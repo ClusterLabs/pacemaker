@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node1: standby (with active resources)
     * Online: [ node2 ]
@@ -10,16 +12,13 @@ Transition Summary:
   * Move       rsc1    ( node1 -> node2 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            stop on node1
-  * Resource action: rsc1            cancel=20000 on node2
-  * Resource action: rsc1            monitor=20000 on node1
-  * Resource action: rsc1            start on node2
-  * Resource action: rsc1            monitor=10000 on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node node1: standby
+    * Node node1: standby (with active resources)
     * Online: [ node2 ]
 
   * Full List of Resources:
-    * rsc1	(ocf:pacemaker:Dummy):	 Started node2
+    * rsc1	(ocf:pacemaker:Dummy):	 Started node1

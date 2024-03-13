@@ -1,6 +1,8 @@
 1 of 2 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -12,19 +14,13 @@ Transition Summary:
   * Start      rsc2    ( node1 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            monitor on node2
-  * Resource action: rsc1            monitor on node1
-  * Resource action: rsc2            monitor on node2
-  * Resource action: rsc2            monitor on node1
-  * Pseudo action:   load_stopped_node2
-  * Pseudo action:   load_stopped_node1
-  * Resource action: rsc2            start on node1
-  * Resource action: rsc2            monitor=10000 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * rsc1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
-    * rsc2	(ocf:pacemaker:Dummy):	 Started node1
+    * rsc2	(ocf:pacemaker:Dummy):	 Stopped

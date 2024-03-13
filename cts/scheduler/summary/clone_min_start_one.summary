@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node c7auto1: standby (with active resources)
     * Node c7auto2: standby
@@ -16,23 +18,17 @@ Transition Summary:
   * Start      FAKE            (            c7auto4 )  due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKE-mandatory (blocked)
 
 Executing Cluster Transition:
-  * Resource action: shooter         stop on c7auto1
-  * Pseudo action:   FAKECLONE-clone_start_0
-  * Resource action: shooter         start on c7auto3
-  * Resource action: FAKECLONE       start on c7auto3
-  * Pseudo action:   FAKECLONE-clone_running_0
-  * Resource action: shooter         monitor=60000 on c7auto3
-  * Resource action: FAKECLONE       monitor=10000 on c7auto3
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node c7auto1: standby
+    * Node c7auto1: standby (with active resources)
     * Node c7auto2: standby
     * Online: [ c7auto3 c7auto4 ]
 
   * Full List of Resources:
-    * shooter	(stonith:fence_phd_kvm):	 Started c7auto3
+    * shooter	(stonith:fence_phd_kvm):	 Started c7auto1
     * Clone Set: FAKECLONE-clone [FAKECLONE]:
-      * Started: [ c7auto3 ]
-      * Stopped: [ c7auto1 c7auto2 c7auto4 ]
+      * Stopped: [ c7auto1 c7auto2 c7auto3 c7auto4 ]
     * FAKE	(ocf:heartbeat:Dummy):	 Stopped

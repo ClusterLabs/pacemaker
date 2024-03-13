@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -24,35 +26,10 @@ Transition Summary:
   * Move       child_rsc2:4     ( node2 -> node1 )
 
 Executing Cluster Transition:
-  * Resource action: child_rsc1:0    monitor on node2
-  * Resource action: child_rsc1:1    monitor on node2
-  * Resource action: child_rsc1:2    monitor on node2
-  * Resource action: child_rsc1:3    monitor on node2
-  * Resource action: child_rsc1:4    monitor on node2
-  * Resource action: child_rsc2:0    monitor on node1
-  * Resource action: child_rsc2:1    monitor on node1
-  * Resource action: child_rsc2:2    monitor on node1
-  * Resource action: child_rsc2:3    monitor on node1
-  * Resource action: child_rsc2:4    monitor on node1
-  * Pseudo action:   rsc2_stop_0
-  * Resource action: child_rsc2:3    stop on node2
-  * Resource action: child_rsc2:4    stop on node2
-  * Pseudo action:   rsc2_stopped_0
-  * Pseudo action:   rsc1_stop_0
-  * Resource action: child_rsc1:2    stop on node1
-  * Resource action: child_rsc1:3    stop on node1
-  * Resource action: child_rsc1:4    stop on node1
-  * Pseudo action:   rsc1_stopped_0
-  * Pseudo action:   rsc1_start_0
-  * Resource action: child_rsc1:2    start on node2
-  * Resource action: child_rsc1:3    start on node2
-  * Pseudo action:   rsc1_running_0
-  * Pseudo action:   rsc2_start_0
-  * Resource action: child_rsc2:3    start on node1
-  * Resource action: child_rsc2:4    start on node1
-  * Pseudo action:   rsc2_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -60,12 +37,12 @@ Revised Cluster Status:
     * Clone Set: rsc1 [child_rsc1] (unique):
       * child_rsc1:0	(ocf:heartbeat:apache):	 Started node1
       * child_rsc1:1	(ocf:heartbeat:apache):	 Started node1
-      * child_rsc1:2	(ocf:heartbeat:apache):	 Started node2
-      * child_rsc1:3	(ocf:heartbeat:apache):	 Started node2
-      * child_rsc1:4	(ocf:heartbeat:apache):	 Stopped
+      * child_rsc1:2	(ocf:heartbeat:apache):	 Started node1
+      * child_rsc1:3	(ocf:heartbeat:apache):	 Started node1
+      * child_rsc1:4	(ocf:heartbeat:apache):	 Started node1
     * Clone Set: rsc2 [child_rsc2] (unique):
       * child_rsc2:0	(ocf:heartbeat:apache):	 Started node2
       * child_rsc2:1	(ocf:heartbeat:apache):	 Started node2
       * child_rsc2:2	(ocf:heartbeat:apache):	 Started node2
-      * child_rsc2:3	(ocf:heartbeat:apache):	 Started node1
-      * child_rsc2:4	(ocf:heartbeat:apache):	 Started node1
+      * child_rsc2:3	(ocf:heartbeat:apache):	 Started node2
+      * child_rsc2:4	(ocf:heartbeat:apache):	 Started node2

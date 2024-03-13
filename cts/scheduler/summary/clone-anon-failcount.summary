@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ srv01 srv02 srv03 srv04 ]
 
@@ -46,52 +49,24 @@ Transition Summary:
   * Restart    clnUMdummy02:0     (          srv04 )  due to required clnUMdummy01:0 start
   * Stop       clnUMdummy01:1     (          srv01 )  due to node availability
   * Stop       clnUMdummy02:1     (          srv01 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   UMgroup01_stop_0
-  * Resource action: UmDummy02       stop on srv01
-  * Resource action: UmDummy01       stop on srv01
-  * Resource action: UmIPaddr        stop on srv01
-  * Resource action: UmVIPcheck      stop on srv01
-  * Pseudo action:   UMgroup01_stopped_0
-  * Pseudo action:   clnUMgroup01_stop_0
-  * Pseudo action:   clnUmResource:0_stop_0
-  * Resource action: clnUMdummy02:1  stop on srv04
-  * Pseudo action:   clnUmResource:1_stop_0
-  * Resource action: clnUMdummy02:0  stop on srv01
-  * Resource action: clnUMdummy01:1  stop on srv04
-  * Resource action: clnUMdummy01:0  stop on srv01
-  * Pseudo action:   clnUmResource:0_stopped_0
-  * Pseudo action:   clnUmResource:1_stopped_0
-  * Pseudo action:   clnUMgroup01_stopped_0
-  * Pseudo action:   clnUMgroup01_start_0
-  * Pseudo action:   clnUmResource:0_start_0
-  * Resource action: clnUMdummy01:1  start on srv04
-  * Resource action: clnUMdummy01:1  monitor=10000 on srv04
-  * Resource action: clnUMdummy02:1  start on srv04
-  * Resource action: clnUMdummy02:1  monitor=10000 on srv04
-  * Pseudo action:   clnUmResource:0_running_0
-  * Pseudo action:   clnUMgroup01_running_0
-  * Pseudo action:   UMgroup01_start_0
-  * Resource action: UmVIPcheck      start on srv04
-  * Resource action: UmIPaddr        start on srv04
-  * Resource action: UmDummy01       start on srv04
-  * Resource action: UmDummy02       start on srv04
-  * Pseudo action:   UMgroup01_running_0
-  * Resource action: UmIPaddr        monitor=10000 on srv04
-  * Resource action: UmDummy01       monitor=10000 on srv04
-  * Resource action: UmDummy02       monitor=10000 on srv04
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ srv01 srv02 srv03 srv04 ]
 
   * Full List of Resources:
     * Resource Group: UMgroup01:
-      * UmVIPcheck	(ocf:pacemaker:Dummy):	 Started srv04
-      * UmIPaddr	(ocf:pacemaker:Dummy):	 Started srv04
-      * UmDummy01	(ocf:pacemaker:Dummy):	 Started srv04
-      * UmDummy02	(ocf:pacemaker:Dummy):	 Started srv04
+      * UmVIPcheck	(ocf:pacemaker:Dummy):	 Started srv01
+      * UmIPaddr	(ocf:pacemaker:Dummy):	 Started srv01
+      * UmDummy01	(ocf:pacemaker:Dummy):	 Started srv01
+      * UmDummy02	(ocf:pacemaker:Dummy):	 Started srv01
     * Resource Group: OVDBgroup02-1:
       * prmExPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started srv01
     * Resource Group: OVDBgroup02-2:
@@ -107,8 +82,11 @@ Revised Cluster Status:
     * Resource Group: grpStonith4:
       * prmStonithN4	(stonith:external/ssh):	 Started srv03
     * Clone Set: clnUMgroup01 [clnUmResource]:
-      * Started: [ srv04 ]
-      * Stopped: [ srv01 srv02 srv03 ]
+      * Resource Group: clnUmResource:0:
+        * clnUMdummy01	(ocf:pacemaker:Dummy):	 FAILED srv04
+        * clnUMdummy02	(ocf:pacemaker:Dummy):	 Started srv04
+      * Started: [ srv01 ]
+      * Stopped: [ srv02 srv03 ]
     * Clone Set: clnPingd [clnPrmPingd]:
       * Started: [ srv01 srv02 srv03 srv04 ]
     * Clone Set: clnDiskd1 [clnPrmDiskd1]:

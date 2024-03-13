@@ -1,10 +1,13 @@
 Using the original execution date of: 2019-08-26 04:52:42Z
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node node2: UNCLEAN (offline)
     * Node node3: UNCLEAN (offline)
     * Online: [ node1 ]
-    * GuestOnline: [ galera-bundle-0 rabbitmq-bundle-0 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
@@ -43,47 +46,25 @@ Transition Summary:
   * Stop       stonith-fence_ipmilan-node2     (                    node3 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0
-  * Pseudo action:   galera-bundle_demote_0
-  * Pseudo action:   rabbitmq-bundle_stop_0
-  * Resource action: rabbitmq        notify on rabbitmq-bundle-0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_stop_0
-  * Pseudo action:   rabbitmq-bundle-clone_stop_0
-  * Pseudo action:   galera-bundle-master_demote_0
-  * Resource action: rabbitmq        stop on rabbitmq-bundle-0
-  * Pseudo action:   rabbitmq-bundle-clone_stopped_0
-  * Resource action: rabbitmq-bundle-0 stop on node1
-  * Resource action: rabbitmq-bundle-0 cancel=60000 on node1
-  * Resource action: galera          demote on galera-bundle-0
-  * Pseudo action:   galera-bundle-master_demoted_0
-  * Pseudo action:   galera-bundle_demoted_0
-  * Pseudo action:   galera-bundle_stop_0
-  * Pseudo action:   rabbitmq-bundle-clone_post_notify_stopped_0
-  * Resource action: rabbitmq-bundle-docker-0 stop on node1
-  * Pseudo action:   galera-bundle-master_stop_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_stopped_0
-  * Resource action: galera          stop on galera-bundle-0
-  * Pseudo action:   galera-bundle-master_stopped_0
-  * Resource action: galera-bundle-0 stop on node1
-  * Resource action: galera-bundle-0 cancel=60000 on node1
-  * Pseudo action:   rabbitmq-bundle_stopped_0
-  * Resource action: galera-bundle-docker-0 stop on node1
-  * Pseudo action:   galera-bundle_stopped_0
 Using the original execution date of: 2019-08-26 04:52:42Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node node2: UNCLEAN (offline)
     * Node node3: UNCLEAN (offline)
     * Online: [ node1 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
-      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Stopped
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started node1
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node2 (UNCLEAN)
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
     * Container bundle set: galera-bundle [192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
+      * galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Promoted node1
       * galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Promoted node2 (UNCLEAN)
       * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Promoted node3 (UNCLEAN)
     * stonith-fence_ipmilan-node1	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)

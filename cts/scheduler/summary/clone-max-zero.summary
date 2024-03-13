@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ c001n11 c001n12 ]
 
@@ -23,29 +26,22 @@ Transition Summary:
   * Stop       ocfs2-1:1     ( c001n11 )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   c-ocfs2-1_stop_0
-  * Resource action: ocfs2-1:1       stop on c001n12
-  * Resource action: ocfs2-1:0       stop on c001n11
-  * Pseudo action:   c-ocfs2-1_stopped_0
-  * Pseudo action:   o2cb-clone_stop_0
-  * Resource action: o2cb:1          stop on c001n12
-  * Resource action: o2cb:0          stop on c001n11
-  * Pseudo action:   o2cb-clone_stopped_0
-  * Pseudo action:   dlm-clone_stop_0
-  * Resource action: dlm:1           stop on c001n12
-  * Resource action: dlm:0           stop on c001n11
-  * Pseudo action:   dlm-clone_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ c001n11 c001n12 ]
 
   * Full List of Resources:
     * fencing	(stonith:external/ssh):	 Started c001n11
     * Clone Set: dlm-clone [dlm]:
+      * dlm	(ocf:pacemaker:controld):	 ORPHANED Started c001n12
+      * dlm	(ocf:pacemaker:controld):	 ORPHANED Started c001n11
     * Clone Set: o2cb-clone [o2cb]:
-      * Stopped: [ c001n11 c001n12 ]
+      * Started: [ c001n11 c001n12 ]
     * Clone Set: clone-drbd0 [drbd0]:
       * Started: [ c001n11 c001n12 ]
     * Clone Set: c-ocfs2-1 [ocfs2-1]:
-      * Stopped: [ c001n11 c001n12 ]
+      * Started: [ c001n11 c001n12 ]

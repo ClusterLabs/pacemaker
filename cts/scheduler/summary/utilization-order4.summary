@@ -1,6 +1,8 @@
 2 of 13 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node deglxen002: standby (with active resources)
     * Online: [ deglxen001 ]
@@ -23,41 +25,25 @@ Transition Summary:
   * Stop       nfs-xen_swapfiles:1     (               deglxen002 )  due to node availability
   * Stop       nfs-xen_images:1        (               deglxen002 )  due to node availability
   * Stop       prim-ping:1             (               deglxen002 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: degllx61-vm     stop on deglxen001
-  * Pseudo action:   load_stopped_deglxen001
-  * Resource action: degllx62-vm     migrate_to on deglxen002
-  * Resource action: degllx62-vm     migrate_from on deglxen001
-  * Resource action: degllx62-vm     stop on deglxen002
-  * Pseudo action:   clone-nfs_stop_0
-  * Pseudo action:   load_stopped_deglxen002
-  * Pseudo action:   degllx62-vm_start_0
-  * Pseudo action:   grp-nfs:1_stop_0
-  * Resource action: nfs-xen_images:1 stop on deglxen002
-  * Resource action: degllx62-vm     monitor=30000 on deglxen001
-  * Resource action: nfs-xen_swapfiles:1 stop on deglxen002
-  * Resource action: nfs-xen_config:1 stop on deglxen002
-  * Pseudo action:   grp-nfs:1_stopped_0
-  * Pseudo action:   clone-nfs_stopped_0
-  * Pseudo action:   clone-ping_stop_0
-  * Resource action: prim-ping:0     stop on deglxen002
-  * Pseudo action:   clone-ping_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node deglxen002: standby
+    * Node deglxen002: standby (with active resources)
     * Online: [ deglxen001 ]
 
   * Full List of Resources:
-    * degllx62-vm	(ocf:heartbeat:Xen):	 Started deglxen001
+    * degllx62-vm	(ocf:heartbeat:Xen):	 Started deglxen002
     * degllx63-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
-    * degllx61-vm	(ocf:heartbeat:Xen):	 Stopped
+    * degllx61-vm	(ocf:heartbeat:Xen):	 Started deglxen001
     * degllx64-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
     * stonith_sbd	(stonith:external/sbd):	 Started deglxen001
     * Clone Set: clone-nfs [grp-nfs]:
-      * Started: [ deglxen001 ]
-      * Stopped: [ deglxen002 ]
+      * Started: [ deglxen001 deglxen002 ]
     * Clone Set: clone-ping [prim-ping]:
-      * Started: [ deglxen001 ]
-      * Stopped: [ deglxen002 ]
+      * Started: [ deglxen001 deglxen002 ]

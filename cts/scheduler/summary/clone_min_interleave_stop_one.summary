@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ c7auto1 c7auto2 c7auto3 ]
 
@@ -15,21 +17,17 @@ Transition Summary:
   * Stop       FAKE1:0     ( c7auto3 )  due to node availability
 
 Executing Cluster Transition:
-  * Pseudo action:   FAKE1-clone_stop_0
-  * Resource action: FAKE1           stop on c7auto3
-  * Pseudo action:   FAKE1-clone_stopped_0
-  * Pseudo action:   FAKE1-clone_start_0
-  * Pseudo action:   FAKE1-clone_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ c7auto1 c7auto2 c7auto3 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_phd_kvm):	 Started c7auto1
     * Clone Set: FAKE1-clone [FAKE1]:
-      * Started: [ c7auto1 c7auto2 ]
-      * Stopped: [ c7auto3 ]
+      * Started: [ c7auto1 c7auto2 c7auto3 ]
     * Clone Set: FAKE2-clone [FAKE2]:
       * Started: [ c7auto1 c7auto2 c7auto3 ]
     * Clone Set: FAKE3-clone [FAKE3]:

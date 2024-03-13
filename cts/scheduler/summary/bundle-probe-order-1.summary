@@ -1,5 +1,7 @@
 Using the original execution date of: 2017-10-12 07:31:56Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ centos1 centos2 centos3 ]
 
@@ -12,18 +14,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: galera-bundle-docker-0 monitor on centos3
-  * Resource action: galera-bundle-docker-0 monitor on centos2
-  * Resource action: galera-bundle-docker-0 monitor on centos1
-  * Resource action: galera-bundle-docker-1 monitor on centos3
-  * Resource action: galera-bundle-docker-1 monitor on centos2
-  * Resource action: galera-bundle-docker-1 monitor on centos1
-  * Resource action: galera-bundle-docker-2 monitor on centos3
-  * Resource action: galera-bundle-docker-2 monitor on centos2
-  * Resource action: galera-bundle-docker-2 monitor on centos1
 Using the original execution date of: 2017-10-12 07:31:56Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ centos1 centos2 centos3 ]
 

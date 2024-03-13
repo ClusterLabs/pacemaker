@@ -1,5 +1,7 @@
 Using the original execution date of: 2020-02-26 05:50:16Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rh80-test01 rh80-test02 ]
 
@@ -14,11 +16,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: prmDummy1       monitor=10000 on rh80-test01
-  * Resource action: prmDummy3       monitor on rh80-test01
 Using the original execution date of: 2020-02-26 05:50:16Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rh80-test01 rh80-test02 ]
 

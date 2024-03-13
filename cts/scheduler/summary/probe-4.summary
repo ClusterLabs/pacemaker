@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node pcmk-4: pending
     * Online: [ pcmk-1 pcmk-2 pcmk-3 ]
@@ -31,6 +33,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node pcmk-4: pending
     * Online: [ pcmk-1 pcmk-2 pcmk-3 ]

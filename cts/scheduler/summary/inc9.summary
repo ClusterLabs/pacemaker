@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -13,18 +16,21 @@ Transition Summary:
   * Stop       child_rsc1:5     ( node1 )  due to node availability
   * Stop       child_rsc1:6     ( node1 )  due to node availability
   * Stop       child_rsc1:7     ( node2 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   rsc1_stop_0
-  * Resource action: child_rsc1:1    stop on node1
-  * Resource action: child_rsc1:2    stop on node1
-  * Resource action: child_rsc1:1    stop on node2
-  * Pseudo action:   rsc1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * Clone Set: rsc1 [child_rsc1]:
+      * child_rsc1	(ocf:heartbeat:apache):	 ORPHANED Started node1
+      * child_rsc1	(ocf:heartbeat:apache):	 ORPHANED Started node1
+      * child_rsc1	(ocf:heartbeat:apache):	 ORPHANED Started node2
       * Started: [ node1 node2 ]

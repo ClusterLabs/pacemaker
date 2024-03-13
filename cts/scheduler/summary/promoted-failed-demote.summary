@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ dl380g5a dl380g5b ]
 
@@ -15,50 +18,23 @@ Transition Summary:
   * Stop       stateful-1:0     (             Unpromoted dl380g5b )  due to node availability
   * Promote    stateful-1:1     ( Unpromoted -> Promoted dl380g5a )
   * Promote    stateful-2:1     ( Unpromoted -> Promoted dl380g5a )
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: stateful-1:1    cancel=20000 on dl380g5a
-  * Resource action: stateful-2:1    cancel=20000 on dl380g5a
-  * Pseudo action:   ms-sf_pre_notify_stop_0
-  * Resource action: stateful-1:0    notify on dl380g5b
-  * Resource action: stateful-1:1    notify on dl380g5a
-  * Resource action: stateful-2:1    notify on dl380g5a
-  * Pseudo action:   ms-sf_confirmed-pre_notify_stop_0
-  * Pseudo action:   ms-sf_stop_0
-  * Pseudo action:   group:0_stop_0
-  * Resource action: stateful-1:0    stop on dl380g5b
-  * Pseudo action:   group:0_stopped_0
-  * Pseudo action:   ms-sf_stopped_0
-  * Pseudo action:   ms-sf_post_notify_stopped_0
-  * Resource action: stateful-1:1    notify on dl380g5a
-  * Resource action: stateful-2:1    notify on dl380g5a
-  * Pseudo action:   ms-sf_confirmed-post_notify_stopped_0
-  * Pseudo action:   ms-sf_pre_notify_promote_0
-  * Resource action: stateful-1:1    notify on dl380g5a
-  * Resource action: stateful-2:1    notify on dl380g5a
-  * Pseudo action:   ms-sf_confirmed-pre_notify_promote_0
-  * Pseudo action:   ms-sf_promote_0
-  * Pseudo action:   group:1_promote_0
-  * Resource action: stateful-1:1    promote on dl380g5a
-  * Resource action: stateful-2:1    promote on dl380g5a
-  * Pseudo action:   group:1_promoted_0
-  * Pseudo action:   ms-sf_promoted_0
-  * Pseudo action:   ms-sf_post_notify_promoted_0
-  * Resource action: stateful-1:1    notify on dl380g5a
-  * Resource action: stateful-2:1    notify on dl380g5a
-  * Pseudo action:   ms-sf_confirmed-post_notify_promoted_0
-  * Resource action: stateful-1:1    monitor=10000 on dl380g5a
-  * Resource action: stateful-2:1    monitor=10000 on dl380g5a
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ dl380g5a dl380g5b ]
 
   * Full List of Resources:
     * Clone Set: ms-sf [group] (promotable, unique):
       * Resource Group: group:0:
-        * stateful-1:0	(ocf:heartbeat:Stateful):	 Stopped
+        * stateful-1:0	(ocf:heartbeat:Stateful):	 FAILED dl380g5b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
       * Resource Group: group:1:
-        * stateful-1:1	(ocf:heartbeat:Stateful):	 Promoted dl380g5a
-        * stateful-2:1	(ocf:heartbeat:Stateful):	 Promoted dl380g5a
+        * stateful-1:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
+        * stateful-2:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a

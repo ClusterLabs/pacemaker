@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ lenny-a lenny-b ]
 
@@ -11,11 +13,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: res_Dummy_1     cancel=10000 on lenny-b
-  * Resource action: res_Dummy_2     cancel=10000 on lenny-b
-  * Resource action: res_Dummy_3     cancel=10000 on lenny-a
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ lenny-a lenny-b ]
 

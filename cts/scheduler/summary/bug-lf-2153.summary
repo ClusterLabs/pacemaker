@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node bob: standby (with active resources)
     * Online: [ alice ]
@@ -21,34 +23,24 @@ Current cluster status:
 Transition Summary:
   * Stop       res_drbd_iscsivg01:0     ( Unpromoted bob )  due to node availability
   * Stop       res_tgtd:0               (            bob )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   ms_drbd_iscsivg01_pre_notify_stop_0
-  * Pseudo action:   cl_tgtd_stop_0
-  * Resource action: res_drbd_iscsivg01:0 notify on bob
-  * Resource action: res_drbd_iscsivg01:1 notify on alice
-  * Pseudo action:   ms_drbd_iscsivg01_confirmed-pre_notify_stop_0
-  * Pseudo action:   ms_drbd_iscsivg01_stop_0
-  * Resource action: res_tgtd:0      stop on bob
-  * Pseudo action:   cl_tgtd_stopped_0
-  * Resource action: res_drbd_iscsivg01:0 stop on bob
-  * Pseudo action:   ms_drbd_iscsivg01_stopped_0
-  * Pseudo action:   ms_drbd_iscsivg01_post_notify_stopped_0
-  * Resource action: res_drbd_iscsivg01:1 notify on alice
-  * Pseudo action:   ms_drbd_iscsivg01_confirmed-post_notify_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node bob: standby
+    * Node bob: standby (with active resources)
     * Online: [ alice ]
 
   * Full List of Resources:
     * Clone Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01] (promotable):
       * Promoted: [ alice ]
-      * Stopped: [ bob ]
+      * Unpromoted: [ bob ]
     * Clone Set: cl_tgtd [res_tgtd]:
-      * Started: [ alice ]
-      * Stopped: [ bob ]
+      * Started: [ alice bob ]
     * Resource Group: rg_iscsivg01:
       * res_portblock_iscsivg01_block	(ocf:heartbeat:portblock):	 Started alice
       * res_lvm_iscsivg01	(ocf:heartbeat:LVM):	 Started alice

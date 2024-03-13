@@ -1,6 +1,8 @@
 3 of 3 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ yingying.site ]
 
@@ -14,9 +16,11 @@ Transition Summary:
   * Stop       rsc1    ( yingying.site )  due to node availability (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   group1_stop_0
+  * Pseudo action:   group1_start_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ yingying.site ]
 

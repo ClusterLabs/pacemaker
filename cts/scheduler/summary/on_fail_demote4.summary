@@ -1,25 +1,29 @@
 Using the original execution date of: 2020-06-16 19:23:21Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
-    * RemoteNode remote-rhel7-2: UNCLEAN (offline)
+    * RemoteNode remote-rhel7-2: UNCLEAN (online)
     * Node rhel7-4: UNCLEAN (offline)
     * Online: [ rhel7-1 rhel7-3 rhel7-5 ]
-    * GuestOnline: [ lxc1 stateful-bundle-1 ]
+    * GuestOnline: [ lxc1 lxc2 stateful-bundle-0 stateful-bundle-1 stateful-bundle-2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-4 (UNCLEAN)
     * Clone Set: rsc1-clone [rsc1] (promotable):
       * rsc1	(ocf:pacemaker:Stateful):	 Promoted rhel7-4 (UNCLEAN)
-      * rsc1	(ocf:pacemaker:Stateful):	 Unpromoted remote-rhel7-2 (UNCLEAN)
-      * Unpromoted: [ lxc1 rhel7-1 rhel7-3 rhel7-5 ]
+      * rsc1	(ocf:pacemaker:Stateful):	 FAILED lxc2
+      * Unpromoted: [ lxc1 remote-rhel7-2 rhel7-1 rhel7-3 rhel7-5 ]
     * Clone Set: rsc2-master [rsc2] (promotable):
       * rsc2	(ocf:pacemaker:Stateful):	 Unpromoted rhel7-4 (UNCLEAN)
-      * rsc2	(ocf:pacemaker:Stateful):	 Promoted remote-rhel7-2 (UNCLEAN)
+      * rsc2	(ocf:pacemaker:Stateful):	 FAILED lxc2
+      * Promoted: [ remote-rhel7-2 ]
       * Unpromoted: [ lxc1 rhel7-1 rhel7-3 rhel7-5 ]
     * remote-rhel7-2	(ocf:pacemaker:remote):	 FAILED rhel7-1
     * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
     * container2	(ocf:heartbeat:VirtualDomain):	 FAILED rhel7-3
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc2
       * Unpromoted: [ lxc1 ]
       * Stopped: [ remote-rhel7-2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * Container bundle set: stateful-bundle [pcmktest:http]:
@@ -55,135 +59,36 @@ Transition Summary:
   * Restart    lxc2                                   (                        rhel7-3 )  due to required container2 start
 
 Executing Cluster Transition:
-  * Pseudo action:   Fencing_stop_0
-  * Resource action: rsc1            cancel=11000 on rhel7-3
-  * Pseudo action:   rsc1-clone_demote_0
-  * Resource action: rsc2            cancel=11000 on rhel7-3
-  * Pseudo action:   rsc2-master_demote_0
-  * Pseudo action:   lxc-ms-master_demote_0
-  * Resource action: stateful-bundle-0 stop on rhel7-5
-  * Pseudo action:   stateful-bundle-2_stop_0
-  * Resource action: lxc2            stop on rhel7-3
-  * Pseudo action:   stateful-bundle_demote_0
-  * Fencing remote-rhel7-2 (reboot)
-  * Fencing rhel7-4 (reboot)
-  * Pseudo action:   rsc1_demote_0
-  * Pseudo action:   rsc1-clone_demoted_0
-  * Pseudo action:   rsc2_demote_0
-  * Pseudo action:   rsc2-master_demoted_0
-  * Resource action: container2      stop on rhel7-3
-  * Pseudo action:   stateful-bundle-master_demote_0
-  * Pseudo action:   stonith-stateful-bundle-2-reboot on stateful-bundle-2
-  * Pseudo action:   stonith-lxc2-reboot on lxc2
-  * Resource action: Fencing         start on rhel7-5
-  * Pseudo action:   rsc1-clone_stop_0
-  * Pseudo action:   rsc2-master_stop_0
-  * Pseudo action:   lxc-ms_demote_0
-  * Pseudo action:   lxc-ms-master_demoted_0
-  * Pseudo action:   lxc-ms-master_stop_0
-  * Pseudo action:   bundled_demote_0
-  * Pseudo action:   stateful-bundle-master_demoted_0
-  * Pseudo action:   stateful-bundle_demoted_0
-  * Pseudo action:   stateful-bundle_stop_0
-  * Resource action: Fencing         monitor=120000 on rhel7-5
-  * Pseudo action:   rsc1_stop_0
-  * Pseudo action:   rsc1_stop_0
-  * Pseudo action:   rsc1_stop_0
-  * Pseudo action:   rsc1-clone_stopped_0
-  * Pseudo action:   rsc1-clone_start_0
-  * Pseudo action:   rsc2_stop_0
-  * Pseudo action:   rsc2_stop_0
-  * Pseudo action:   rsc2_stop_0
-  * Pseudo action:   rsc2-master_stopped_0
-  * Pseudo action:   rsc2-master_start_0
-  * Resource action: remote-rhel7-2  stop on rhel7-1
-  * Pseudo action:   lxc-ms_stop_0
-  * Pseudo action:   lxc-ms-master_stopped_0
-  * Pseudo action:   lxc-ms-master_start_0
-  * Resource action: stateful-bundle-docker-0 stop on rhel7-5
-  * Pseudo action:   stateful-bundle-docker-2_stop_0
-  * Pseudo action:   stonith-stateful-bundle-0-reboot on stateful-bundle-0
-  * Resource action: remote-rhel7-2  start on rhel7-1
-  * Resource action: remote-rhel7-2  monitor=60000 on rhel7-1
-  * Resource action: container2      start on rhel7-3
-  * Resource action: container2      monitor=20000 on rhel7-3
-  * Pseudo action:   stateful-bundle-master_stop_0
-  * Pseudo action:   stateful-bundle-ip-192.168.122.133_stop_0
-  * Resource action: lxc2            start on rhel7-3
-  * Resource action: lxc2            monitor=30000 on rhel7-3
-  * Resource action: rsc1            start on lxc2
-  * Pseudo action:   rsc1-clone_running_0
-  * Resource action: rsc2            start on lxc2
-  * Pseudo action:   rsc2-master_running_0
-  * Resource action: lxc-ms          start on lxc2
-  * Pseudo action:   lxc-ms-master_running_0
-  * Pseudo action:   bundled_stop_0
-  * Resource action: stateful-bundle-ip-192.168.122.133 start on rhel7-3
-  * Resource action: rsc1            monitor=11000 on lxc2
-  * Pseudo action:   rsc1-clone_promote_0
-  * Resource action: rsc2            monitor=11000 on lxc2
-  * Pseudo action:   rsc2-master_promote_0
-  * Pseudo action:   lxc-ms-master_promote_0
-  * Pseudo action:   bundled_stop_0
-  * Pseudo action:   stateful-bundle-master_stopped_0
-  * Resource action: stateful-bundle-ip-192.168.122.133 monitor=60000 on rhel7-3
-  * Pseudo action:   stateful-bundle_stopped_0
-  * Pseudo action:   stateful-bundle_start_0
-  * Resource action: rsc1            promote on rhel7-3
-  * Pseudo action:   rsc1-clone_promoted_0
-  * Resource action: rsc2            promote on rhel7-3
-  * Pseudo action:   rsc2-master_promoted_0
-  * Resource action: lxc-ms          promote on lxc2
-  * Pseudo action:   lxc-ms-master_promoted_0
-  * Pseudo action:   stateful-bundle-master_start_0
-  * Resource action: stateful-bundle-docker-0 start on rhel7-5
-  * Resource action: stateful-bundle-docker-0 monitor=60000 on rhel7-5
-  * Resource action: stateful-bundle-0 start on rhel7-5
-  * Resource action: stateful-bundle-0 monitor=30000 on rhel7-5
-  * Resource action: stateful-bundle-docker-2 start on rhel7-3
-  * Resource action: stateful-bundle-2 start on rhel7-3
-  * Resource action: rsc1            monitor=10000 on rhel7-3
-  * Resource action: rsc2            monitor=10000 on rhel7-3
-  * Resource action: lxc-ms          monitor=10000 on lxc2
-  * Resource action: bundled         start on stateful-bundle-0
-  * Resource action: bundled         start on stateful-bundle-2
-  * Pseudo action:   stateful-bundle-master_running_0
-  * Resource action: stateful-bundle-docker-2 monitor=60000 on rhel7-3
-  * Resource action: stateful-bundle-2 monitor=30000 on rhel7-3
-  * Pseudo action:   stateful-bundle_running_0
-  * Resource action: bundled         monitor=11000 on stateful-bundle-2
-  * Pseudo action:   stateful-bundle_promote_0
-  * Pseudo action:   stateful-bundle-master_promote_0
-  * Resource action: bundled         promote on stateful-bundle-0
-  * Pseudo action:   stateful-bundle-master_promoted_0
-  * Pseudo action:   stateful-bundle_promoted_0
-  * Resource action: bundled         monitor=10000 on stateful-bundle-0
 Using the original execution date of: 2020-06-16 19:23:21Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * RemoteNode remote-rhel7-2: UNCLEAN (online)
+    * Node rhel7-4: UNCLEAN (offline)
     * Online: [ rhel7-1 rhel7-3 rhel7-5 ]
-    * OFFLINE: [ rhel7-4 ]
-    * RemoteOnline: [ remote-rhel7-2 ]
     * GuestOnline: [ lxc1 lxc2 stateful-bundle-0 stateful-bundle-1 stateful-bundle-2 ]
 
   * Full List of Resources:
-    * Fencing	(stonith:fence_xvm):	 Started rhel7-5
+    * Fencing	(stonith:fence_xvm):	 Started rhel7-4 (UNCLEAN)
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * Promoted: [ rhel7-3 ]
-      * Unpromoted: [ lxc1 lxc2 rhel7-1 rhel7-5 ]
-      * Stopped: [ remote-rhel7-2 rhel7-4 ]
+      * rsc1	(ocf:pacemaker:Stateful):	 Promoted rhel7-4 (UNCLEAN)
+      * rsc1	(ocf:pacemaker:Stateful):	 FAILED lxc2
+      * Unpromoted: [ lxc1 remote-rhel7-2 rhel7-1 rhel7-3 rhel7-5 ]
     * Clone Set: rsc2-master [rsc2] (promotable):
-      * Promoted: [ rhel7-3 ]
-      * Unpromoted: [ lxc1 lxc2 rhel7-1 rhel7-5 ]
-      * Stopped: [ remote-rhel7-2 rhel7-4 ]
-    * remote-rhel7-2	(ocf:pacemaker:remote):	 Started rhel7-1
+      * rsc2	(ocf:pacemaker:Stateful):	 Unpromoted rhel7-4 (UNCLEAN)
+      * rsc2	(ocf:pacemaker:Stateful):	 FAILED lxc2
+      * Promoted: [ remote-rhel7-2 ]
+      * Unpromoted: [ lxc1 rhel7-1 rhel7-3 rhel7-5 ]
+    * remote-rhel7-2	(ocf:pacemaker:remote):	 FAILED rhel7-1
     * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
-    * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
+    * container2	(ocf:heartbeat:VirtualDomain):	 FAILED rhel7-3
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Promoted: [ lxc2 ]
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc2
       * Unpromoted: [ lxc1 ]
+      * Stopped: [ remote-rhel7-2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * Container bundle set: stateful-bundle [pcmktest:http]:
-      * stateful-bundle-0 (192.168.122.131)	(ocf:pacemaker:Stateful):	 Promoted rhel7-5
+      * stateful-bundle-0 (192.168.122.131)	(ocf:pacemaker:Stateful):	 FAILED Promoted rhel7-5
       * stateful-bundle-1 (192.168.122.132)	(ocf:pacemaker:Stateful):	 Unpromoted rhel7-1
-      * stateful-bundle-2 (192.168.122.133)	(ocf:pacemaker:Stateful):	 Unpromoted rhel7-3
+      * stateful-bundle-2 (192.168.122.133)	(ocf:pacemaker:Stateful):	 FAILED rhel7-4 (UNCLEAN)
