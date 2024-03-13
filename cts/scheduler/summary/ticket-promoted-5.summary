@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -11,16 +14,15 @@ Transition Summary:
   * Promote    rsc1:0     ( Unpromoted -> Promoted node1 )
 
 Executing Cluster Transition:
-  * Pseudo action:   ms1_promote_0
-  * Resource action: rsc1:1          promote on node1
-  * Pseudo action:   ms1_promoted_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Clone Set: ms1 [rsc1] (promotable):
-      * Promoted: [ node1 ]
-      * Unpromoted: [ node2 ]
+      * Unpromoted: [ node1 node2 ]

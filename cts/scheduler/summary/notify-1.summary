@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
     * OFFLINE: [ node2 ]
@@ -16,28 +18,11 @@ Transition Summary:
   * Stop       child_rsc2:0     ( node1 )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: child_rsc1:1    monitor on node1
-  * Pseudo action:   rsc1_pre_notify_start_0
-  * Resource action: child_rsc2:1    monitor on node1
-  * Pseudo action:   rsc2_pre_notify_stop_0
   * Resource action: child_rsc1:0    notify on node1
-  * Pseudo action:   rsc1_confirmed-pre_notify_start_0
-  * Pseudo action:   rsc1_start_0
-  * Resource action: child_rsc2:0    notify on node1
-  * Pseudo action:   rsc2_confirmed-pre_notify_stop_0
-  * Pseudo action:   rsc2_stop_0
-  * Resource action: child_rsc1:1    start on node1
-  * Pseudo action:   rsc1_running_0
-  * Resource action: child_rsc2:0    stop on node1
-  * Pseudo action:   rsc2_stopped_0
-  * Pseudo action:   rsc1_post_notify_running_0
-  * Pseudo action:   rsc2_post_notify_stopped_0
-  * Resource action: child_rsc1:0    notify on node1
-  * Resource action: child_rsc1:1    notify on node1
-  * Pseudo action:   rsc1_confirmed-post_notify_running_0
-  * Pseudo action:   rsc2_confirmed-post_notify_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
     * OFFLINE: [ node2 ]
@@ -45,7 +30,7 @@ Revised Cluster Status:
   * Full List of Resources:
     * Clone Set: rsc1 [child_rsc1] (unique):
       * child_rsc1:0	(ocf:heartbeat:apache):	 Started node1
-      * child_rsc1:1	(ocf:heartbeat:apache):	 Started node1
+      * child_rsc1:1	(ocf:heartbeat:apache):	 Stopped
     * Clone Set: rsc2 [child_rsc2] (unique):
-      * child_rsc2:0	(ocf:heartbeat:apache):	 Stopped
+      * child_rsc2:0	(ocf:heartbeat:apache):	 Started node1
       * child_rsc2:1	(ocf:heartbeat:apache):	 Stopped

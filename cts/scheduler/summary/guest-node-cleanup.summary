@@ -1,8 +1,10 @@
 Using the original execution date of: 2018-10-15 16:02:04Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
-    * GuestOnline: [ lxc2 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-2
@@ -10,6 +12,7 @@ Current cluster status:
     * container1	(ocf:heartbeat:VirtualDomain):	 FAILED
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc1
       * Unpromoted: [ lxc2 ]
       * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
@@ -20,27 +23,11 @@ Transition Summary:
   * Restart    lxc1           (       rhel7-1 )  due to required container1 start
 
 Executing Cluster Transition:
-  * Resource action: container1      monitor on rhel7-1
-  * Pseudo action:   lxc-ms-master_demote_0
-  * Resource action: lxc1            stop on rhel7-1
-  * Pseudo action:   stonith-lxc1-reboot on lxc1
-  * Resource action: container1      start on rhel7-1
-  * Pseudo action:   lxc-ms_demote_0
-  * Pseudo action:   lxc-ms-master_demoted_0
-  * Pseudo action:   lxc-ms-master_stop_0
-  * Resource action: lxc1            start on rhel7-1
-  * Resource action: lxc1            monitor=30000 on rhel7-1
-  * Pseudo action:   lxc-ms_stop_0
-  * Pseudo action:   lxc-ms-master_stopped_0
-  * Pseudo action:   lxc-ms-master_start_0
-  * Resource action: lxc-ms          start on lxc1
-  * Pseudo action:   lxc-ms-master_running_0
-  * Pseudo action:   lxc-ms-master_promote_0
-  * Resource action: lxc-ms          promote on lxc1
-  * Pseudo action:   lxc-ms-master_promoted_0
 Using the original execution date of: 2018-10-15 16:02:04Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
     * GuestOnline: [ lxc1 lxc2 ]
@@ -48,8 +35,9 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-2
     * FencingPass	(stonith:fence_dummy):	 Started rhel7-3
-    * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
+    * container1	(ocf:heartbeat:VirtualDomain):	 FAILED
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Promoted: [ lxc1 ]
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc1
       * Unpromoted: [ lxc2 ]
+      * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]

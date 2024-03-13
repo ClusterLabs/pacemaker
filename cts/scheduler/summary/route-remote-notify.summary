@@ -1,5 +1,7 @@
 Using the original execution date of: 2018-10-31 11:51:32Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
     * GuestOnline: [ rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 ]
@@ -21,78 +23,3 @@ Current cluster status:
       * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-2
     * Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]:
       * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started controller-0
-
-Transition Summary:
-  * Stop       rabbitmq-bundle-docker-0             (                 controller-0 )  due to node availability
-  * Stop       rabbitmq-bundle-0                    (                 controller-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
-  * Stop       rabbitmq:0                           (            rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
-  * Move       ip-192.168.24.12                     ( controller-0 -> controller-2 )
-  * Move       ip-172.17.1.11                       ( controller-0 -> controller-1 )
-  * Stop       haproxy-bundle-docker-0              (                 controller-0 )  due to node availability
-  * Move       openstack-cinder-volume-docker-0     ( controller-0 -> controller-2 )
-
-Executing Cluster Transition:
-  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0
-  * Pseudo action:   openstack-cinder-volume_stop_0
-  * Pseudo action:   openstack-cinder-volume_start_0
-  * Pseudo action:   haproxy-bundle_stop_0
-  * Pseudo action:   rabbitmq-bundle_stop_0
-  * Resource action: rabbitmq        notify on rabbitmq-bundle-0
-  * Resource action: rabbitmq        notify on rabbitmq-bundle-1
-  * Resource action: rabbitmq        notify on rabbitmq-bundle-2
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_stop_0
-  * Pseudo action:   rabbitmq-bundle-clone_stop_0
-  * Resource action: haproxy-bundle-docker-0 stop on controller-0
-  * Resource action: openstack-cinder-volume-docker-0 stop on controller-0
-  * Pseudo action:   openstack-cinder-volume_stopped_0
-  * Pseudo action:   haproxy-bundle_stopped_0
-  * Resource action: rabbitmq        stop on rabbitmq-bundle-0
-  * Pseudo action:   rabbitmq-bundle-clone_stopped_0
-  * Resource action: rabbitmq-bundle-0 stop on controller-0
-  * Resource action: ip-192.168.24.12 stop on controller-0
-  * Resource action: ip-172.17.1.11  stop on controller-0
-  * Resource action: openstack-cinder-volume-docker-0 start on controller-2
-  * Pseudo action:   openstack-cinder-volume_running_0
-  * Pseudo action:   rabbitmq-bundle-clone_post_notify_stopped_0
-  * Resource action: rabbitmq-bundle-docker-0 stop on controller-0
-  * Resource action: ip-192.168.24.12 start on controller-2
-  * Resource action: ip-172.17.1.11  start on controller-1
-  * Resource action: openstack-cinder-volume-docker-0 monitor=60000 on controller-2
-  * Cluster action:  do_shutdown on controller-0
-  * Resource action: rabbitmq        notify on rabbitmq-bundle-1
-  * Resource action: rabbitmq        notify on rabbitmq-bundle-2
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_stopped_0
-  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
-  * Resource action: ip-192.168.24.12 monitor=10000 on controller-2
-  * Resource action: ip-172.17.1.11  monitor=10000 on controller-1
-  * Pseudo action:   rabbitmq-bundle_stopped_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_running_0
-  * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
-  * Pseudo action:   rabbitmq-bundle_running_0
-Using the original execution date of: 2018-10-31 11:51:32Z
-
-Revised Cluster Status:
-  * Node List:
-    * Online: [ controller-0 controller-1 controller-2 ]
-    * GuestOnline: [ rabbitmq-bundle-1 rabbitmq-bundle-2 ]
-
-  * Full List of Resources:
-    * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
-      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Stopped
-      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
-      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
-    * ip-192.168.24.12	(ocf:heartbeat:IPaddr2):	 Started controller-2
-    * ip-10.0.0.101	(ocf:heartbeat:IPaddr2):	 Started controller-1
-    * ip-172.17.1.20	(ocf:heartbeat:IPaddr2):	 Started controller-2
-    * ip-172.17.1.11	(ocf:heartbeat:IPaddr2):	 Started controller-1
-    * ip-172.17.3.16	(ocf:heartbeat:IPaddr2):	 Started controller-1
-    * ip-172.17.4.15	(ocf:heartbeat:IPaddr2):	 Started controller-2
-    * Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]:
-      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Stopped
-      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started controller-1
-      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-2
-    * Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]:
-      * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started controller-2

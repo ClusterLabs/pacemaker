@@ -74,7 +74,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster01" id="1" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="4" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -174,7 +173,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster01" id="1" with_quorum="true" mixed_version="true"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="4" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>

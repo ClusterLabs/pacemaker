@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node c001n04: UNCLEAN (online)
     * Online: [ c001n02 c001n06 c001n07 ]
@@ -37,17 +39,18 @@ Current cluster status:
 Transition Summary:
   * Fence (reboot) c001n04 'ocf_msdummy:6 failed there'
   * Stop       ocf_msdummy:6     ( Unpromoted c001n04 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Fencing c001n04 (reboot)
-  * Pseudo action:   master_rsc_1_stop_0
-  * Pseudo action:   ocf_msdummy:6_stop_0
-  * Pseudo action:   master_rsc_1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * Node c001n04: UNCLEAN (online)
     * Online: [ c001n02 c001n06 c001n07 ]
-    * OFFLINE: [ c001n03 c001n04 c001n05 ]
+    * OFFLINE: [ c001n03 c001n05 ]
 
   * Full List of Resources:
     * Clone Set: DoFencing [child_DoFencing]:
@@ -72,7 +75,7 @@ Revised Cluster Status:
       * ocf_msdummy:3	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Stopped
       * ocf_msdummy:4	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Unpromoted c001n02
       * ocf_msdummy:5	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Stopped
-      * ocf_msdummy:6	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Stopped
+      * ocf_msdummy:6	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 FAILED c001n04
       * ocf_msdummy:7	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Stopped
       * ocf_msdummy:8	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Unpromoted c001n06
       * ocf_msdummy:9	(ocf:heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	 Unpromoted c001n07

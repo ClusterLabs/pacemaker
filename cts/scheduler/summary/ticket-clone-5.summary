@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -12,18 +14,14 @@ Transition Summary:
   * Start      rsc1:1     ( node1 )
 
 Executing Cluster Transition:
-  * Pseudo action:   clone1_start_0
-  * Resource action: rsc1:0          start on node2
-  * Resource action: rsc1:1          start on node1
-  * Pseudo action:   clone1_running_0
-  * Resource action: rsc1:0          monitor=5000 on node2
-  * Resource action: rsc1:1          monitor=5000 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Clone Set: clone1 [rsc1]:
-      * Started: [ node1 node2 ]
+      * Stopped: [ node1 node2 ]

@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cl-virt-1 cl-virt-2 ]
 
@@ -40,20 +42,10 @@ Transition Summary:
   * Restart    pingd:1     ( cl-virt-2 )  due to resource definition change
 
 Executing Cluster Transition:
-  * Cluster action:  clear_failcount for pingd on cl-virt-1
-  * Cluster action:  clear_failcount for pingd on cl-virt-2
-  * Pseudo action:   pingdclone_stop_0
-  * Resource action: pingd:0         stop on cl-virt-1
-  * Resource action: pingd:0         stop on cl-virt-2
-  * Pseudo action:   pingdclone_stopped_0
-  * Pseudo action:   pingdclone_start_0
-  * Resource action: pingd:0         start on cl-virt-1
-  * Resource action: pingd:0         monitor=30000 on cl-virt-1
-  * Resource action: pingd:0         start on cl-virt-2
-  * Resource action: pingd:0         monitor=30000 on cl-virt-2
-  * Pseudo action:   pingdclone_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cl-virt-1 cl-virt-2 ]
 

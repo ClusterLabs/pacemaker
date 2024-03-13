@@ -1,6 +1,8 @@
 1 of 6 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18builder 18node1 18node2 ]
     * RemoteOnline: [ remote1 ]
@@ -18,18 +20,18 @@ Transition Summary:
   * Stop       FAKE2       (   remote1 )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: FAKE2           stop on remote1
-  * Resource action: remote1         stop on 18builder
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18builder 18node1 18node2 ]
-    * RemoteOFFLINE: [ remote1 ]
+    * RemoteOnline: [ remote1 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started 18node1
-    * remote1	(ocf:pacemaker:remote):	 Stopped (disabled)
+    * remote1	(ocf:pacemaker:remote):	 Started 18builder (disabled)
     * FAKE1	(ocf:heartbeat:Dummy):	 Started 18node2
-    * FAKE2	(ocf:heartbeat:Dummy):	 Stopped
+    * FAKE2	(ocf:heartbeat:Dummy):	 Started remote1
     * FAKE3	(ocf:heartbeat:Dummy):	 Started 18builder
     * FAKE4	(ocf:heartbeat:Dummy):	 Started 18node1

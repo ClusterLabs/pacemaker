@@ -1,7 +1,9 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 18node4 ]
-    * RemoteOFFLINE: [ remote1 ]
+    * RemoteOnline: [ remote1 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Stopped
@@ -12,7 +14,7 @@ Current cluster status:
     * FAKE4	(ocf:heartbeat:Dummy):	 Stopped
     * FAKE5	(ocf:heartbeat:Dummy):	 Stopped
     * Clone Set: FAKECLONE1-clone [FAKECLONE1]:
-      * Stopped: [ 18node1 18node2 18node3 18node4 remote1 ]
+      * Stopped: [ 18node1 remote1 ]
     * Clone Set: FAKECLONE2-clone [FAKECLONE2]:
       * Stopped: [ 18node1 18node2 18node3 18node4 remote1 ]
     * Resource Group: FAKEGROUP:
@@ -38,91 +40,26 @@ Transition Summary:
   * Start      FAKE7            ( 18node1 )
 
 Executing Cluster Transition:
-  * Resource action: shooter         monitor on 18node4
-  * Resource action: shooter         monitor on 18node3
-  * Resource action: shooter         monitor on 18node2
-  * Resource action: shooter         monitor on 18node1
-  * Resource action: remote1         monitor on 18node4
-  * Resource action: remote1         monitor on 18node3
-  * Resource action: remote1         monitor on 18node2
-  * Resource action: remote1         monitor on 18node1
-  * Resource action: FAKE1           monitor on 18node4
-  * Resource action: FAKE2           monitor on 18node2
-  * Resource action: FAKE2           monitor on 18node1
-  * Resource action: FAKE3           monitor on 18node3
-  * Resource action: FAKE4           monitor on 18node4
-  * Resource action: FAKE5           monitor on 18node4
-  * Resource action: FAKE5           monitor on 18node3
-  * Resource action: FAKE5           monitor on 18node2
-  * Resource action: FAKE5           monitor on 18node1
-  * Resource action: FAKECLONE1:0    monitor on 18node1
-  * Resource action: FAKECLONE2:0    monitor on 18node3
-  * Resource action: FAKECLONE2:1    monitor on 18node1
-  * Resource action: FAKECLONE2:3    monitor on 18node4
-  * Pseudo action:   FAKEGROUP_start_0
-  * Resource action: FAKE6           monitor on 18node2
-  * Resource action: FAKE6           monitor on 18node1
-  * Resource action: FAKE7           monitor on 18node2
-  * Resource action: FAKE7           monitor on 18node1
-  * Resource action: shooter         start on 18node2
-  * Resource action: remote1         start on 18node1
-  * Resource action: FAKE1           start on 18node4
-  * Resource action: FAKE2           start on 18node2
-  * Resource action: FAKE3           start on 18node3
-  * Resource action: FAKE4           start on 18node4
-  * Resource action: FAKE5           monitor on remote1
-  * Resource action: FAKECLONE1:1    monitor on remote1
-  * Pseudo action:   FAKECLONE1-clone_start_0
-  * Resource action: FAKECLONE2:4    monitor on remote1
-  * Pseudo action:   FAKECLONE2-clone_start_0
-  * Resource action: FAKE6           start on 18node1
-  * Resource action: FAKE7           start on 18node1
-  * Resource action: shooter         monitor=60000 on 18node2
-  * Resource action: remote1         monitor=60000 on 18node1
-  * Resource action: FAKE1           monitor=60000 on 18node4
-  * Resource action: FAKE2           monitor=60000 on 18node2
-  * Resource action: FAKE3           monitor=60000 on 18node3
-  * Resource action: FAKE4           monitor=60000 on 18node4
-  * Resource action: FAKE5           start on remote1
-  * Resource action: FAKECLONE1:0    start on 18node1
-  * Resource action: FAKECLONE1:1    start on remote1
-  * Pseudo action:   FAKECLONE1-clone_running_0
-  * Resource action: FAKECLONE2:0    start on 18node3
-  * Resource action: FAKECLONE2:1    start on 18node1
-  * Resource action: FAKECLONE2:2    start on 18node2
-  * Resource action: FAKECLONE2:3    start on 18node4
-  * Resource action: FAKECLONE2:4    start on remote1
-  * Pseudo action:   FAKECLONE2-clone_running_0
-  * Pseudo action:   FAKEGROUP_running_0
-  * Resource action: FAKE6           monitor=10000 on 18node1
-  * Resource action: FAKE7           monitor=10000 on 18node1
-  * Resource action: FAKE5           monitor=60000 on remote1
-  * Resource action: FAKECLONE1:0    monitor=60000 on 18node1
-  * Resource action: FAKECLONE1:1    monitor=60000 on remote1
-  * Resource action: FAKECLONE2:0    monitor=60000 on 18node3
-  * Resource action: FAKECLONE2:1    monitor=60000 on 18node1
-  * Resource action: FAKECLONE2:2    monitor=60000 on 18node2
-  * Resource action: FAKECLONE2:3    monitor=60000 on 18node4
-  * Resource action: FAKECLONE2:4    monitor=60000 on remote1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 18node4 ]
     * RemoteOnline: [ remote1 ]
 
   * Full List of Resources:
-    * shooter	(stonith:fence_xvm):	 Started 18node2
-    * remote1	(ocf:pacemaker:remote):	 Started 18node1
-    * FAKE1	(ocf:heartbeat:Dummy):	 Started 18node4
-    * FAKE2	(ocf:heartbeat:Dummy):	 Started 18node2
-    * FAKE3	(ocf:heartbeat:Dummy):	 Started 18node3
-    * FAKE4	(ocf:heartbeat:Dummy):	 Started 18node4
-    * FAKE5	(ocf:heartbeat:Dummy):	 Started remote1
+    * shooter	(stonith:fence_xvm):	 Stopped
+    * remote1	(ocf:pacemaker:remote):	 Stopped
+    * FAKE1	(ocf:heartbeat:Dummy):	 Stopped
+    * FAKE2	(ocf:heartbeat:Dummy):	 Stopped
+    * FAKE3	(ocf:heartbeat:Dummy):	 Stopped
+    * FAKE4	(ocf:heartbeat:Dummy):	 Stopped
+    * FAKE5	(ocf:heartbeat:Dummy):	 Stopped
     * Clone Set: FAKECLONE1-clone [FAKECLONE1]:
-      * Started: [ 18node1 remote1 ]
-      * Stopped: [ 18node2 18node3 18node4 ]
+      * Stopped: [ 18node1 remote1 ]
     * Clone Set: FAKECLONE2-clone [FAKECLONE2]:
-      * Started: [ 18node1 18node2 18node3 18node4 remote1 ]
+      * Stopped: [ 18node1 18node2 18node3 18node4 remote1 ]
     * Resource Group: FAKEGROUP:
-      * FAKE6	(ocf:heartbeat:Dummy):	 Started 18node1
-      * FAKE7	(ocf:heartbeat:Dummy):	 Started 18node1
+      * FAKE6	(ocf:heartbeat:Dummy):	 Stopped
+      * FAKE7	(ocf:heartbeat:Dummy):	 Stopped

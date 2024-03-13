@@ -37,7 +37,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -284,7 +283,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -503,7 +501,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -607,7 +605,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -733,7 +731,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -837,7 +835,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -947,7 +945,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1058,7 +1056,6 @@ Negative Location Constraints:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1312,7 +1309,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1374,7 +1371,6 @@ Negative Location Constraints:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1501,7 +1497,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1569,7 +1565,6 @@ Negative Location Constraints:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1708,7 +1703,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1740,7 +1735,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1798,7 +1792,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1898,7 +1891,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1930,7 +1923,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1974,7 +1966,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2009,7 +2001,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2060,7 +2051,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2092,7 +2083,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2137,7 +2127,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2174,7 +2164,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2229,7 +2218,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2266,7 +2255,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2321,7 +2309,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2361,7 +2349,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2431,7 +2418,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2506,7 +2492,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2635,7 +2620,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2735,7 +2719,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2833,7 +2816,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2937,7 +2919,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3025,7 +3006,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3068,7 +3049,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3136,7 +3116,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3179,7 +3159,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3247,7 +3226,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3288,7 +3267,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3342,7 +3320,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3385,7 +3363,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3453,7 +3430,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3494,7 +3471,6 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3592,7 +3568,6 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="4"/>
     <resources_configured number="16" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3785,7 +3760,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3966,7 +3941,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB is valid
+  * CIB syntax is valid
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -4085,7 +4060,6 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="4"/>
     <resources_configured number="16" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4183,7 +4157,6 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="2"/>
     <resources_configured number="3" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="true" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4315,7 +4288,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="true" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4576,7 +4548,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4838,7 +4809,6 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
-    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>

@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node pcmk-2: pending
     * Node pcmk-3: pending
@@ -22,19 +24,21 @@ Transition Summary:
   * Start      Fencing     ( pcmk-1 )  blocked
 
 Executing Cluster Transition:
-  * Fencing pcmk-5 (reboot)
-  * Fencing pcmk-7 (reboot)
-  * Fencing pcmk-8 (reboot)
-  * Fencing pcmk-10 (reboot)
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node pcmk-2: pending
     * Node pcmk-3: pending
+    * Node pcmk-5: UNCLEAN (offline)
+    * Node pcmk-7: UNCLEAN (online)
+    * Node pcmk-8: UNCLEAN (offline)
     * Node pcmk-9: pending
+    * Node pcmk-10: UNCLEAN (online)
     * Node pcmk-11: pending
     * Online: [ pcmk-1 ]
-    * OFFLINE: [ pcmk-4 pcmk-5 pcmk-6 pcmk-7 pcmk-8 pcmk-10 ]
+    * OFFLINE: [ pcmk-4 pcmk-6 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Stopped

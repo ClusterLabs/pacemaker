@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node xen-2: standby (with active resources)
     * Online: [ xen-1 xen-3 xen-4 ]
@@ -12,35 +14,20 @@ Current cluster status:
 Transition Summary:
   * Stop       child_DoFencing:1     ( xen-2 )  due to node availability
   * Stop       ocfs2:1               ( xen-2 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   DoFencing_stop_0
-  * Pseudo action:   ocfs2-clone_pre_notify_stop_0
-  * Resource action: child_DoFencing:2 stop on xen-2
-  * Pseudo action:   DoFencing_stopped_0
-  * Resource action: ocfs2:1         notify on xen-3
-  * Resource action: ocfs2:1         notify on xen-2
-  * Resource action: ocfs2:3         notify on xen-1
-  * Resource action: ocfs2:0         notify on xen-4
-  * Pseudo action:   ocfs2-clone_confirmed-pre_notify_stop_0
-  * Pseudo action:   ocfs2-clone_stop_0
-  * Resource action: ocfs2:1         stop on xen-2
-  * Pseudo action:   ocfs2-clone_stopped_0
-  * Pseudo action:   ocfs2-clone_post_notify_stopped_0
-  * Resource action: ocfs2:1         notify on xen-3
-  * Resource action: ocfs2:3         notify on xen-1
-  * Resource action: ocfs2:0         notify on xen-4
-  * Pseudo action:   ocfs2-clone_confirmed-post_notify_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node xen-2: standby
+    * Node xen-2: standby (with active resources)
     * Online: [ xen-1 xen-3 xen-4 ]
 
   * Full List of Resources:
     * Clone Set: DoFencing [child_DoFencing]:
-      * Started: [ xen-1 xen-3 xen-4 ]
-      * Stopped: [ xen-2 ]
+      * Started: [ xen-1 xen-2 xen-3 xen-4 ]
     * Clone Set: ocfs2-clone [ocfs2]:
-      * Started: [ xen-1 xen-3 xen-4 ]
-      * Stopped: [ xen-2 ]
+      * Started: [ xen-1 xen-2 xen-3 xen-4 ]

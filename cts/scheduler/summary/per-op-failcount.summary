@@ -1,5 +1,7 @@
 Using the original execution date of: 2017-04-06 09:04:22Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node rh73-01-snmp: UNCLEAN (online)
     * Online: [ rh73-02-snmp ]
@@ -15,20 +17,16 @@ Transition Summary:
   * Move       prmStonith2-1     ( rh73-01-snmp -> rh73-02-snmp )
 
 Executing Cluster Transition:
-  * Pseudo action:   prmStonith2-1_stop_0
-  * Fencing rh73-01-snmp (reboot)
-  * Pseudo action:   prmDummy_stop_0
-  * Resource action: prmStonith2-1   start on rh73-02-snmp
-  * Resource action: prmDummy        start on rh73-02-snmp
-  * Resource action: prmDummy        monitor=10000 on rh73-02-snmp
 Using the original execution date of: 2017-04-06 09:04:22Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
+    * Node rh73-01-snmp: UNCLEAN (online)
     * Online: [ rh73-02-snmp ]
-    * OFFLINE: [ rh73-01-snmp ]
 
   * Full List of Resources:
-    * prmDummy	(ocf:pacemaker:Dummy):	 Started rh73-02-snmp
+    * prmDummy	(ocf:pacemaker:Dummy):	 FAILED rh73-01-snmp
     * prmStonith1-1	(stonith:external/ssh):	 Started rh73-02-snmp
-    * prmStonith2-1	(stonith:external/ssh):	 Started rh73-02-snmp
+    * prmStonith2-1	(stonith:external/ssh):	 Started rh73-01-snmp

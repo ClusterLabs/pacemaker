@@ -1,6 +1,9 @@
 3 of 15 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -33,6 +36,9 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 

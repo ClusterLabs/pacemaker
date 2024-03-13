@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
 
@@ -11,19 +13,14 @@ Transition Summary:
   * Move       dummystateful     ( Promoted 18node2 -> Started 18node3 )
 
 Executing Cluster Transition:
-  * Resource action: dummystateful   demote on 18node3
-  * Resource action: dummystateful   demote on 18node1
-  * Resource action: dummystateful   demote on 18node2
-  * Resource action: dummystateful   stop on 18node3
-  * Resource action: dummystateful   stop on 18node1
-  * Resource action: dummystateful   stop on 18node2
-  * Resource action: dummystateful   start on 18node3
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
 
   * Full List of Resources:
     * shoot1	(stonith:fence_xvm):	 Started 18node1
     * shoot2	(stonith:fence_xvm):	 Started 18node2
-    * dummystateful	(ocf:pacemaker:Stateful):	 Started 18node3
+    * dummystateful	(ocf:pacemaker:Stateful):	 Promoted [ 18node2 18node1 18node3 ]

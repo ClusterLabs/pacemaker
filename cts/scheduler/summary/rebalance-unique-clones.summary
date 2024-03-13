@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -11,19 +13,14 @@ Transition Summary:
   * Move       P:1     ( node1 -> node2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   C_stop_0
-  * Resource action: P:1             stop on node1
-  * Pseudo action:   C_stopped_0
-  * Pseudo action:   C_start_0
-  * Resource action: P:1             start on node2
-  * Pseudo action:   C_running_0
-  * Resource action: P:1             monitor=10000 on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
     * Clone Set: C [P] (unique):
       * P:0	(ocf:heartbeat:IPaddr2):	 Started node1
-      * P:1	(ocf:heartbeat:IPaddr2):	 Started node2
+      * P:1	(ocf:heartbeat:IPaddr2):	 Started node1

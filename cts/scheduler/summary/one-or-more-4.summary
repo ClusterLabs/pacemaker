@@ -1,6 +1,8 @@
 1 of 4 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
@@ -17,22 +19,16 @@ Transition Summary:
   * Start      C       ( fc16-builder )
 
 Executing Cluster Transition:
-  * Resource action: A               monitor on fc16-builder
-  * Resource action: B               monitor on fc16-builder
-  * Resource action: C               monitor on fc16-builder
-  * Resource action: D               monitor on fc16-builder
-  * Resource action: A               start on fc16-builder
-  * Resource action: B               start on fc16-builder
-  * Resource action: C               start on fc16-builder
-  * Pseudo action:   one-or-more:require-all-set-1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
 
   * Full List of Resources:
-    * A	(ocf:pacemaker:Dummy):	 Started fc16-builder
-    * B	(ocf:pacemaker:Dummy):	 Started fc16-builder
-    * C	(ocf:pacemaker:Dummy):	 Started fc16-builder
+    * A	(ocf:pacemaker:Dummy):	 Stopped
+    * B	(ocf:pacemaker:Dummy):	 Stopped
+    * C	(ocf:pacemaker:Dummy):	 Stopped
     * D	(ocf:pacemaker:Dummy):	 Stopped (disabled)

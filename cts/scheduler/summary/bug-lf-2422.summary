@@ -1,6 +1,8 @@
 4 of 21 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
 
@@ -24,60 +26,20 @@ Transition Summary:
   * Stop       ocfs:1        ( qa-suse-4 )  due to node availability
   * Stop       ocfs:2        ( qa-suse-3 )  due to node availability
   * Stop       ocfs:3        ( qa-suse-2 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: sbd_stonith     monitor=15000 on qa-suse-2
-  * Pseudo action:   c-ocfs_stop_0
-  * Resource action: ocfs:3          stop on qa-suse-2
-  * Resource action: ocfs:2          stop on qa-suse-3
-  * Resource action: ocfs:0          stop on qa-suse-4
-  * Resource action: ocfs:1          stop on qa-suse-1
-  * Pseudo action:   c-ocfs_stopped_0
-  * Pseudo action:   c-o2stage_stop_0
-  * Pseudo action:   o2stage:0_stop_0
-  * Resource action: cmirror:1       stop on qa-suse-1
-  * Pseudo action:   o2stage:1_stop_0
-  * Resource action: cmirror:0       stop on qa-suse-4
-  * Pseudo action:   o2stage:2_stop_0
-  * Resource action: cmirror:2       stop on qa-suse-3
-  * Pseudo action:   o2stage:3_stop_0
-  * Resource action: cmirror:3       stop on qa-suse-2
-  * Resource action: o2cb:1          stop on qa-suse-1
-  * Resource action: o2cb:0          stop on qa-suse-4
-  * Resource action: o2cb:2          stop on qa-suse-3
-  * Resource action: o2cb:3          stop on qa-suse-2
-  * Pseudo action:   o2stage:0_stopped_0
-  * Pseudo action:   o2stage:1_stopped_0
-  * Pseudo action:   o2stage:2_stopped_0
-  * Pseudo action:   o2stage:3_stopped_0
-  * Pseudo action:   c-o2stage_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
 
   * Full List of Resources:
     * sbd_stonith	(stonith:external/sbd):	 Started qa-suse-2
     * Clone Set: c-o2stage [o2stage]:
-      * Resource Group: o2stage:0:
-        * dlm	(ocf:pacemaker:controld):	 Started qa-suse-1
-        * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-1
-        * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
-        * cmirror	(ocf:lvm2:cmirrord):	 Stopped
-      * Resource Group: o2stage:1:
-        * dlm	(ocf:pacemaker:controld):	 Started qa-suse-4
-        * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-4
-        * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
-        * cmirror	(ocf:lvm2:cmirrord):	 Stopped
-      * Resource Group: o2stage:2:
-        * dlm	(ocf:pacemaker:controld):	 Started qa-suse-3
-        * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-3
-        * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
-        * cmirror	(ocf:lvm2:cmirrord):	 Stopped
-      * Resource Group: o2stage:3:
-        * dlm	(ocf:pacemaker:controld):	 Started qa-suse-2
-        * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-2
-        * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
-        * cmirror	(ocf:lvm2:cmirrord):	 Stopped
+      * Started: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
     * Clone Set: c-ocfs [ocfs]:
-      * Stopped: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]
+      * Started: [ qa-suse-1 qa-suse-2 qa-suse-3 qa-suse-4 ]

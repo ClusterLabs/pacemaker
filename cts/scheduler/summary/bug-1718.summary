@@ -1,6 +1,8 @@
 1 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]
     * OFFLINE: [ defiant.ds9 warbird.ds9 ]
@@ -19,17 +21,10 @@ Transition Summary:
   * Stop       resource_dummy   ( ops.ds9 )  due to required resource_IP3 start
 
 Executing Cluster Transition:
-  * Pseudo action:   group_fUN_stop_0
-  * Resource action: resource_dummy  stop on ops.ds9
-  * Resource action: OpenVPN_IP      delete on ops.ds9
-  * Resource action: OpenVPN_IP      delete on heartbeat.ds9
-  * Resource action: Apache          delete on ops.ds9
-  * Resource action: Apache          delete on heartbeat.ds9
-  * Resource action: Apache          delete on biggame.ds9
-  * Resource action: resource_IP3    stop on ops.ds9
-  * Pseudo action:   group_fUN_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ biggame.ds9 heartbeat.ds9 ops.ds9 ]
     * OFFLINE: [ defiant.ds9 warbird.ds9 ]
@@ -40,5 +35,5 @@ Revised Cluster Status:
       * resource_IP2	(ocf:heartbeat:IPaddr):	 Stopped (disabled)
       * resource_dummyweb	(ocf:heartbeat:Dummy):	 Stopped
     * Resource Group: group_fUN:
-      * resource_IP3	(ocf:heartbeat:IPaddr):	 Stopped
-      * resource_dummy	(ocf:heartbeat:Dummy):	 Stopped
+      * resource_IP3	(ocf:heartbeat:IPaddr):	 Started ops.ds9
+      * resource_dummy	(ocf:heartbeat:Dummy):	 Started ops.ds9

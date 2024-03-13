@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pcmk-1 pcmk-2 ]
 
@@ -10,13 +12,14 @@ Current cluster status:
 
 Transition Summary:
   * Stop       r192.168.122.115     ( pcmk-1 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   group-1_stop_0
-  * Resource action: r192.168.122.115 stop on pcmk-1
-  * Pseudo action:   group-1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pcmk-1 pcmk-2 ]
 
@@ -24,4 +27,4 @@ Revised Cluster Status:
     * Resource Group: group-1:
       * r192.168.122.113	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
       * r192.168.122.114	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
-      * r192.168.122.115	(ocf:heartbeat:IPaddr2):	 Stopped
+      * r192.168.122.115	(ocf:heartbeat:IPaddr2):	 Started pcmk-1

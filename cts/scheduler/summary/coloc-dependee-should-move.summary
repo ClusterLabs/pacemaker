@@ -1,5 +1,7 @@
 Using the original execution date of: 2019-10-22 20:53:06Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
@@ -24,25 +26,11 @@ Transition Summary:
   * Move       dummy2d     ( rhel7-4 -> rhel7-3 )
 
 Executing Cluster Transition:
-  * Pseudo action:   dummy2_stop_0
-  * Resource action: dummy2d         stop on rhel7-4
-  * Resource action: dummy2c         stop on rhel7-4
-  * Resource action: dummy2b         stop on rhel7-4
-  * Resource action: dummy2a         stop on rhel7-4
-  * Pseudo action:   dummy2_stopped_0
-  * Pseudo action:   dummy2_start_0
-  * Resource action: dummy2a         start on rhel7-3
-  * Resource action: dummy2b         start on rhel7-3
-  * Resource action: dummy2c         start on rhel7-3
-  * Resource action: dummy2d         start on rhel7-3
-  * Pseudo action:   dummy2_running_0
-  * Resource action: dummy2a         monitor=10000 on rhel7-3
-  * Resource action: dummy2b         monitor=10000 on rhel7-3
-  * Resource action: dummy2c         monitor=10000 on rhel7-3
-  * Resource action: dummy2d         monitor=10000 on rhel7-3
 Using the original execution date of: 2019-10-22 20:53:06Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
@@ -55,7 +43,7 @@ Revised Cluster Status:
       * dummy1c	(ocf:heartbeat:Dummy):	 Started rhel7-3
       * dummy1d	(ocf:heartbeat:Dummy):	 Started rhel7-3
     * Resource Group: dummy2:
-      * dummy2a	(ocf:pacemaker:Dummy):	 Started rhel7-3
-      * dummy2b	(ocf:heartbeat:Dummy):	 Started rhel7-3
-      * dummy2c	(ocf:heartbeat:Dummy):	 Started rhel7-3
-      * dummy2d	(ocf:heartbeat:Dummy):	 Started rhel7-3
+      * dummy2a	(ocf:pacemaker:Dummy):	 Started rhel7-4
+      * dummy2b	(ocf:heartbeat:Dummy):	 Started rhel7-4
+      * dummy2c	(ocf:heartbeat:Dummy):	 Started rhel7-4
+      * dummy2d	(ocf:heartbeat:Dummy):	 Started rhel7-4

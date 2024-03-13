@@ -1,6 +1,8 @@
 1 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ yingying.site ]
 
@@ -14,6 +16,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ yingying.site ]
 

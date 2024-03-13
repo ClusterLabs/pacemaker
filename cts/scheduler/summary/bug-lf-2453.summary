@@ -1,6 +1,8 @@
 2 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ domu1 domu2 ]
 
@@ -12,30 +14,23 @@ Current cluster status:
       * Started: [ domu1 domu2 ]
 
 Transition Summary:
-  * Stop       PrimitiveResource1     ( domu1 )  due to required CloneResource2 running
+  * Stop       PrimitiveResource1     ( domu1 )  due to unrunnable CloneResource2 running
   * Stop       apache:0               ( domu1 )  due to node availability
   * Stop       apache:1               ( domu2 )  due to node availability
   * Stop       DummyResource:0        ( domu1 )  due to unrunnable CloneResource1 running
   * Stop       DummyResource:1        ( domu2 )  due to unrunnable CloneResource1 running
 
 Executing Cluster Transition:
-  * Resource action: PrimitiveResource1 stop on domu1
-  * Pseudo action:   CloneResource2_stop_0
-  * Resource action: DummyResource:1 stop on domu1
-  * Resource action: DummyResource:0 stop on domu2
-  * Pseudo action:   CloneResource2_stopped_0
-  * Pseudo action:   CloneResource1_stop_0
-  * Resource action: apache:1        stop on domu1
-  * Resource action: apache:0        stop on domu2
-  * Pseudo action:   CloneResource1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ domu1 domu2 ]
 
   * Full List of Resources:
-    * PrimitiveResource1	(ocf:heartbeat:IPaddr2):	 Stopped
+    * PrimitiveResource1	(ocf:heartbeat:IPaddr2):	 Started domu1
     * Clone Set: CloneResource1 [apache] (disabled):
-      * Stopped (disabled): [ domu1 domu2 ]
+      * Started: [ domu1 domu2 ]
     * Clone Set: CloneResource2 [DummyResource]:
-      * Stopped: [ domu1 domu2 ]
+      * Started: [ domu1 domu2 ]

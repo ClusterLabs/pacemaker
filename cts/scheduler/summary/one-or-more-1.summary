@@ -1,6 +1,8 @@
 1 of 4 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]
@@ -17,12 +19,10 @@ Transition Summary:
   * Start      D       ( fc16-builder )  due to unrunnable one-or-more:require-all-set-1 (blocked)
 
 Executing Cluster Transition:
-  * Resource action: A               monitor on fc16-builder
-  * Resource action: B               monitor on fc16-builder
-  * Resource action: C               monitor on fc16-builder
-  * Resource action: D               monitor on fc16-builder
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
     * OFFLINE: [ fc16-builder2 ]

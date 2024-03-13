@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node1: standby (with active resources)
     * Online: [ node2 ]
@@ -10,14 +12,13 @@ Transition Summary:
   * Recover    rsc3    ( node1 -> node2 )
 
 Executing Cluster Transition:
-  * Resource action: rsc3            monitor on node2
-  * Resource action: rsc3            stop on node1
-  * Resource action: rsc3            start on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
-    * Node node1: standby
+    * Node node1: standby (with active resources)
     * Online: [ node2 ]
 
   * Full List of Resources:
-    * rsc3	(ocf:heartbeat:apache):	 Started node2
+    * rsc3	(ocf:heartbeat:apache):	 FAILED node1

@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -10,12 +12,12 @@ Transition Summary:
   * Stop       rsc1    ( node2 )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: rsc1            stop on node2
-  * Resource action: rsc1            stop on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * rsc1	(ocf:heartbeat:apache):	 Stopped
+    * rsc1	(ocf:heartbeat:apache):	 FAILED [ node1 node2 ]

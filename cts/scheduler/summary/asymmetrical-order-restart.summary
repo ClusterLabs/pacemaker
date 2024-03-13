@@ -2,6 +2,10 @@ Using the original execution date of: 2018-08-09 18:55:41Z
 1 of 3 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for cesr104ipmi on cesr105-p16 changed: 0:0;1166:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c
+Only 'private' parameters to 60s-interval monitor for cesr104ipmi on cesr105-p16 changed: 0:0;1167:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c
+
   * Node List:
     * Online: [ cesr105-p16 cesr109-p16 ]
 
@@ -14,14 +18,15 @@ Transition Summary:
   * Stop       sleep_b     ( cesr109-p16 )  due to unrunnable sleep_a start
 
 Executing Cluster Transition:
-  * Resource action: sleep_b         stop on cesr109-p16
 Using the original execution date of: 2018-08-09 18:55:41Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cesr105-p16 cesr109-p16 ]
 
   * Full List of Resources:
     * cesr104ipmi	(stonith:fence_ipmilan):	 Started cesr105-p16
     * sleep_a	(ocf:classe:anything):	 Stopped (disabled)
-    * sleep_b	(ocf:classe:anything):	 Stopped
+    * sleep_b	(ocf:classe:anything):	 FAILED cesr109-p16

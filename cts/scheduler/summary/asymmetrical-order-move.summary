@@ -2,6 +2,8 @@ Using the original execution date of: 2016-04-28 11:50:29Z
 1 of 3 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ sle12sp2-1 sle12sp2-2 ]
 
@@ -14,14 +16,15 @@ Transition Summary:
   * Stop       dummy2     ( sle12sp2-1 )  due to unrunnable dummy1 start
 
 Executing Cluster Transition:
-  * Resource action: dummy2          stop on sle12sp2-1
 Using the original execution date of: 2016-04-28 11:50:29Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ sle12sp2-1 sle12sp2-2 ]
 
   * Full List of Resources:
     * st_sbd	(stonith:external/sbd):	 Started sle12sp2-2
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Started sle12sp2-1

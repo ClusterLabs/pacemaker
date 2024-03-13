@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ dhcp69 dhcp180 ]
 
@@ -9,14 +11,12 @@ Transition Summary:
   * Recover    Dummy-test2     ( dhcp180 )
 
 Executing Cluster Transition:
-  * Resource action: Dummy-test2     stop on dhcp180
-  * Resource action: Dummy-test2     start on dhcp180
-  * Resource action: Dummy-test2     monitor=30000 on dhcp180
-  * Resource action: Dummy-test2     monitor=10000 on dhcp180
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ dhcp69 dhcp180 ]
 
   * Full List of Resources:
-    * Dummy-test2	(ocf:test:Dummy):	 Started dhcp180
+    * Dummy-test2	(ocf:test:Dummy):	 FAILED dhcp180

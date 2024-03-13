@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ frigg odin ]
 
@@ -17,46 +19,17 @@ Transition Summary:
   * Start      MailTo      (                         odin )
 
 Executing Cluster Transition:
-  * Resource action: drbd0:1         cancel=12000 on odin
-  * Resource action: drbd0:0         cancel=10000 on frigg
-  * Pseudo action:   ms_drbd_pre_notify_demote_0
-  * Resource action: drbd0:1         notify on odin
-  * Resource action: drbd0:0         notify on frigg
-  * Pseudo action:   ms_drbd_confirmed-pre_notify_demote_0
-  * Pseudo action:   ms_drbd_demote_0
-  * Resource action: drbd0:0         demote on frigg
-  * Pseudo action:   ms_drbd_demoted_0
-  * Pseudo action:   ms_drbd_post_notify_demoted_0
-  * Resource action: drbd0:1         notify on odin
-  * Resource action: drbd0:0         notify on frigg
-  * Pseudo action:   ms_drbd_confirmed-post_notify_demoted_0
-  * Pseudo action:   ms_drbd_pre_notify_promote_0
-  * Resource action: drbd0:1         notify on odin
-  * Resource action: drbd0:0         notify on frigg
-  * Pseudo action:   ms_drbd_confirmed-pre_notify_promote_0
-  * Pseudo action:   ms_drbd_promote_0
-  * Resource action: drbd0:1         promote on odin
-  * Pseudo action:   ms_drbd_promoted_0
-  * Pseudo action:   ms_drbd_post_notify_promoted_0
-  * Resource action: drbd0:1         notify on odin
-  * Resource action: drbd0:0         notify on frigg
-  * Pseudo action:   ms_drbd_confirmed-post_notify_promoted_0
-  * Pseudo action:   group_start_0
-  * Resource action: IPaddr0         start on odin
-  * Resource action: MailTo          start on odin
-  * Resource action: drbd0:1         monitor=10000 on odin
-  * Resource action: drbd0:0         monitor=12000 on frigg
-  * Pseudo action:   group_running_0
-  * Resource action: IPaddr0         monitor=5000 on odin
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ frigg odin ]
 
   * Full List of Resources:
     * Clone Set: ms_drbd [drbd0] (promotable):
-      * Promoted: [ odin ]
-      * Unpromoted: [ frigg ]
+      * Promoted: [ frigg ]
+      * Unpromoted: [ odin ]
     * Resource Group: group:
-      * IPaddr0	(ocf:heartbeat:IPaddr):	 Started odin
-      * MailTo	(ocf:heartbeat:MailTo):	 Started odin
+      * IPaddr0	(ocf:heartbeat:IPaddr):	 Stopped
+      * MailTo	(ocf:heartbeat:MailTo):	 Stopped

@@ -1,9 +1,17 @@
 Using the original execution date of: 2018-02-13 23:40:47Z
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400fec0c8 on controller-1 changed: 0:0;178:2:0:8b283351-71e8-4848-b470-8664f73af1e9
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400fec0c8 on controller-1 changed: 0:0;179:2:0:8b283351-71e8-4848-b470-8664f73af1e9
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254008f971a on controller-1 changed: 0:0;182:2:0:8b283351-71e8-4848-b470-8664f73af1e9
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254008f971a on controller-1 changed: 0:0;183:2:0:8b283351-71e8-4848-b470-8664f73af1e9
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254002ff217 on controller-2 changed: 0:0;180:2:0:8b283351-71e8-4848-b470-8664f73af1e9
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254002ff217 on controller-2 changed: 0:0;181:2:0:8b283351-71e8-4848-b470-8664f73af1e9
+
   * Node List:
     * Online: [ controller-1 controller-2 ]
     * OFFLINE: [ controller-0 ]
-    * GuestOnline: [ galera-bundle-1 galera-bundle-2 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-1 redis-bundle-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq:pcmklatest]:
@@ -42,33 +50,19 @@ Transition Summary:
   * Start      redis:0               (    redis-bundle-0 )  due to unrunnable redis-bundle-docker-0 start (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
-  * Pseudo action:   redis-bundle-master_pre_notify_start_0
-  * Pseudo action:   redis-bundle_start_0
-  * Pseudo action:   galera-bundle_start_0
-  * Pseudo action:   rabbitmq-bundle_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_start_0
-  * Pseudo action:   galera-bundle-master_start_0
-  * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
-  * Pseudo action:   redis-bundle-master_start_0
-  * Pseudo action:   rabbitmq-bundle-clone_running_0
-  * Pseudo action:   galera-bundle-master_running_0
-  * Pseudo action:   redis-bundle-master_running_0
-  * Pseudo action:   galera-bundle_running_0
-  * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
-  * Pseudo action:   redis-bundle-master_post_notify_running_0
-  * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
-  * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
-  * Pseudo action:   redis-bundle_running_0
-  * Pseudo action:   rabbitmq-bundle_running_0
+  * Resource action: rabbitmq        notify on rabbitmq-bundle-1
+  * Resource action: rabbitmq        notify on rabbitmq-bundle-2
+  * Resource action: redis           notify on redis-bundle-1
+  * Resource action: redis           notify on redis-bundle-2
 Using the original execution date of: 2018-02-13 23:40:47Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ controller-1 controller-2 ]
     * OFFLINE: [ controller-0 ]
-    * GuestOnline: [ galera-bundle-1 galera-bundle-2 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-1 redis-bundle-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq:pcmklatest]:
