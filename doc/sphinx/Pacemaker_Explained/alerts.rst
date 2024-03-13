@@ -1,3 +1,5 @@
+.. _alerts:
+
 .. index::
    single: alert
    single: resource; alert
