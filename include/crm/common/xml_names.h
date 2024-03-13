@@ -296,6 +296,7 @@ extern "C" {
 #define PCMK_XA_INTERVAL                    "interval"
 #define PCMK_XA_IP_RANGE_START              "ip-range-start"
 #define PCMK_XA_IS_DC                       "is_dc"
+#define PCMK_XA_IS_VALID                    "is_valid"
 #define PCMK_XA_KIND                        "kind"
 #define PCMK_XA_LANG                        "lang"
 #define PCMK_XA_LAST_FAILURE                "last-failure"
