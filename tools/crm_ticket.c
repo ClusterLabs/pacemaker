@@ -267,49 +267,6 @@ find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
     return g_hash_table_lookup(scheduler->tickets, ticket_id);
 }
 
-static int
-find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml)
-{
-    int rc = pcmk_rc_ok;
-    xmlNode *xml_search = NULL;
-
-    GString *xpath = NULL;
-
-    CRM_ASSERT(ticket_state_xml != NULL);
-    *ticket_state_xml = NULL;
-
-    xpath = g_string_sized_new(1024);
-    g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
-
-    if (ticket_id != NULL) {
-        pcmk__g_strcat(xpath,
-                       "/" PCMK__XE_TICKET_STATE
-                       "[@" PCMK_XA_ID "=\"", ticket_id, "\"]", NULL);
-    }
-
-    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
-                              cib_sync_call | cib_scope_local | cib_xpath);
-    rc = pcmk_legacy2rc(rc);
-    g_string_free(xpath, TRUE);
-
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    crm_log_xml_debug(xml_search, "Match");
-    if (xml_search->children != NULL) {
-        if (ticket_id) {
-            out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
-                      ticket_id);
-        }
-        *ticket_state_xml = xml_search;
-    } else {
-        *ticket_state_xml = xml_search;
-    }
-    return rc;
-}
-
 PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
 static int
 ticket_state_default(pcmk__output_t *out, va_list args)
@@ -429,7 +386,14 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
 
     pcmk_ticket_t *ticket = NULL;
 
-    rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
+    rc = pcmk__get_ticket_state(cib, ticket_id, &ticket_state_xml);
+
+    if (rc == pcmk_rc_duplicate_id) {
+        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                  ticket_id);
+        rc = pcmk_rc_ok;
+    }
+
     if (rc == pcmk_rc_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
@@ -493,11 +457,14 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
 {
     xmlNode *ticket_state_xml = NULL;
 
-    int rc = pcmk_rc_ok;
+    int rc = pcmk__get_ticket_state(cib, ticket_id, &ticket_state_xml);
 
-    rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
+    if (rc == pcmk_rc_duplicate_id) {
+        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                  ticket_id);
+        rc = pcmk_rc_ok;
 
-    if (rc == ENXIO) {
+    } else if (rc == ENXIO) {
         return pcmk_rc_ok;
 
     } else if (rc != pcmk_rc_ok) {
@@ -706,7 +673,14 @@ main(int argc, char **argv)
 
     } else if (options.ticket_cmd == 'q') {
         xmlNode *state_xml = NULL;
-        rc = find_ticket_state(cib_conn, options.ticket_id, &state_xml);
+
+        rc = pcmk__get_ticket_state(cib_conn, options.ticket_id, &state_xml);
+
+        if (rc == pcmk_rc_duplicate_id) {
+            out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                      options.ticket_id);
+            rc = pcmk_rc_ok;
+        }
 
         if (state_xml != NULL) {
             out->message(out, "ticket-state", options.ticket_id, state_xml);

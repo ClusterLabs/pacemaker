@@ -16,6 +16,21 @@
 
 /*!
  * \internal
+ * \brief Return the state XML for a given ticket
+ *
+ * \param[in]  cib          Open CIB connection
+ * \param[in]  ticket_id    Ticket to get state for, or \c NULL for all tickets
+ * \param[out] state        Where to store the result XML
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If \p ticket_id is not \c NULL and more than one ticket exists with
+ *       that ID, this function returns \c pcmk_rc_duplicate_id.
+ */
+int pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state);
+
+/*!
+ * \internal
  * \brief Display the constraints that apply to a given ticket
  *
  * \param[in,out]   out         Output object
