@@ -60,7 +60,7 @@ Node List:
   * Node cluster01 (1): online, feature set 3.15.1
   * Node cluster02 (2): online, feature set 3.15.1
   * Node cluster03 (3): OFFLINE
-  * GuestNode guest01-0@: OFFLINE
+  * GuestNode guest01-0@: online
   * RemoteNode remote01 (4): OFFLINE
 
 Active Resources:
@@ -74,6 +74,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster01" id="1" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="4" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -82,7 +83,7 @@ Active Resources:
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member"/>
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member"/>
     <node name="cluster03" id="3" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="member"/>
-    <node name="guest01-0" id="guest01-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
+    <node name="guest01-0" id="guest01-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
     <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
   </nodes>
   <resources>
@@ -159,7 +160,7 @@ Node List:
   * Node cluster01 (1): online, feature set 3.15.1
   * Node cluster02 (2): online, feature set 3.15.0
   * Node cluster03 (3): OFFLINE
-  * GuestNode guest01-0@: OFFLINE
+  * GuestNode guest01-0@: online
   * RemoteNode remote01 (4): OFFLINE
 
 Active Resources:
@@ -173,6 +174,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster01" id="1" with_quorum="true" mixed_version="true"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="4" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -181,7 +183,7 @@ Active Resources:
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member"/>
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.0" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member"/>
     <node name="cluster03" id="3" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="member"/>
-    <node name="guest01-0" id="guest01-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
+    <node name="guest01-0" id="guest01-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
     <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
   </nodes>
   <resources>
