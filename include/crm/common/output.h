@@ -44,9 +44,6 @@ typedef enum {
     pcmk_section_verify        = 1 << 17,
 } pcmk_section_e;
 
-// always show errors, even if the user didn't request it.
-// if there's no errors, show that only if the new validation flag is set.
-
 #define pcmk_section_fencing_all    (pcmk_section_fence_failed | pcmk_section_fence_pending | pcmk_section_fence_worked)
 #define pcmk_section_summary        (pcmk_section_stack | pcmk_section_dc | pcmk_section_times | \
                                      pcmk_section_counts | pcmk_section_maint_mode)
