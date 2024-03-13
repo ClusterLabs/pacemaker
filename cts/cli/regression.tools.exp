@@ -1448,13 +1448,18 @@ Deleted crm_config option: id=(null) name=cluster-delay
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+pcmk__verify 	error: CIB did not pass schema validation
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
+  * Cluster Summary:
+    * CIB has errors (for details, run crm_verify -LV)
+
   * Full List of Resources:
     * No resources
 
@@ -1466,6 +1471,9 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 ]
 
@@ -1716,7 +1724,11 @@ scope=status  name=fail-count-foo value=3
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
+  * Cluster Summary:
+    * CIB has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 ]
 
@@ -3891,6 +3903,8 @@ Error performing operation: No such object
 * Passed: cibadmin       - Create a fencing resource
 =#=#=#= Begin test: Bring resources online =#=#=#=
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
 
@@ -3903,20 +3917,18 @@ Transition Summary:
   * Start      Fence   ( node1 )
 
 Executing Cluster Transition:
-  * Resource action: dummy           monitor on node1
-  * Resource action: Fence           monitor on node1
-  * Resource action: dummy           start on node1
-  * Resource action: Fence           start on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
 
   * Full List of Resources:
-    * dummy	(ocf:pacemaker:Dummy):	 Started node1
-    * Fence	(stonith:fence_true):	 Started node1
+    * dummy	(ocf:pacemaker:Dummy):	 Stopped
+    * Fence	(stonith:fence_true):	 Stopped
 =#=#=#= Current cib after: Bring resources online =#=#=#=
-<cib epoch="27" num_updates="4" admin_epoch="0">
+<cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3952,25 +3964,14 @@ Revised Cluster Status:
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
   </status>
 </cib>
 =#=#=#= End test: Bring resources online - OK (0) =#=#=#=
 * Passed: crm_simulate   - Bring resources online
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
-crm_resource: Error performing operation: Requested item already exists
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
-<cib epoch="27" num_updates="4" admin_epoch="0">
+<cib epoch="28" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3999,37 +4000,28 @@ crm_resource: Error performing operation: Requested item already exists
       </primitive>
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
-    <constraints/>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+    </constraints>
   </configuration>
   <status>
     <node_state id="node1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Try to move a resource to its existing location - Requested item already exists (108) =#=#=#=
-* Passed: crm_resource   - Try to move a resource to its existing location
+=#=#=#= End test: Try to move a resource to its existing location - OK (0) =#=#=#=
+* Failed (rc=000): crm_resource   - Try to move a resource to its existing location
 =#=#=#= Begin test: Try to move a resource that doesn't exist =#=#=#=
 crm_resource: Resource 'xyz' not found
 Error performing operation: No such object
 =#=#=#= End test: Try to move a resource that doesn't exist - No such object (105) =#=#=#=
 * Passed: crm_resource   - Try to move a resource that doesn't exist
 =#=#=#= Begin test: Move a resource from its existing location =#=#=#=
-WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
-	This will be the case even if node1 is the last node in the cluster
+crm_resource: Resource 'dummy' not moved: active in 0 locations.
+To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
 <cib epoch="28" num_updates="0" admin_epoch="0">
   <configuration>
@@ -4061,7 +4053,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -4069,23 +4061,13 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Move a resource from its existing location - OK (0) =#=#=#=
-* Passed: crm_resource   - Move a resource from its existing location
+=#=#=#= End test: Move a resource from its existing location - Incorrect usage (64) =#=#=#=
+* Failed (rc=064): crm_resource   - Move a resource from its existing location
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
-Removing constraint: cli-ban-dummy-on-node1
+Removing constraint: cli-prefer-dummy
 =#=#=#= Current cib after: Clear out constraints generated by --move =#=#=#=
 <cib epoch="29" num_updates="0" admin_epoch="0">
   <configuration>
@@ -4123,16 +4105,6 @@ Removing constraint: cli-ban-dummy-on-node1
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
   </status>
 </cib>
@@ -4177,16 +4149,6 @@ false
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
   </status>
 </cib>
@@ -4230,16 +4192,6 @@ false
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA" granted="false"/>
@@ -4315,16 +4267,6 @@ false
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA" granted="false"/>
@@ -4382,16 +4324,6 @@ false
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA"/>
@@ -4438,16 +4370,6 @@ false
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA" standby="true"/>
@@ -4495,16 +4417,6 @@ true
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA" standby="true"/>
@@ -4551,16 +4463,6 @@ true
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA" standby="false"/>
@@ -4805,16 +4707,6 @@ ticketB	revoked
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA"/>
@@ -4999,16 +4891,6 @@ Error performing operation: No such object
       <transient_attributes id="node1">
         <instance_attributes id="status-node1"/>
       </transient_attributes>
-      <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
     </node_state>
     <tickets>
       <ticket_state id="ticketA"/>
@@ -5019,29 +4901,36 @@ Error performing operation: No such object
 * Passed: crm_resource   - Ban a resource on unknown node
 =#=#=#= Begin test: Create two more nodes and bring them online =#=#=#=
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
 
   * Full List of Resources:
-    * dummy	(ocf:pacemaker:Dummy):	 Started node1
-    * Fence	(stonith:fence_true):	 Started node1
+    * dummy	(ocf:pacemaker:Dummy):	 Stopped
+    * Fence	(stonith:fence_true):	 Stopped
 
 Performing Requested Modifications:
   * Bringing node node2 online
   * Bringing node node3 online
 
 Transition Summary:
-  * Move       Fence   ( node1 -> node2 )
+  * Start      dummy   ( node1 )
+  * Start      Fence   ( node2 )
 
 Executing Cluster Transition:
   * Resource action: dummy           monitor on node3
   * Resource action: dummy           monitor on node2
-  * Resource action: Fence           stop on node1
+  * Resource action: dummy           monitor on node1
   * Resource action: Fence           monitor on node3
   * Resource action: Fence           monitor on node2
+  * Resource action: Fence           monitor on node1
+  * Resource action: dummy           start on node1
   * Resource action: Fence           start on node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
@@ -5049,7 +4938,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
-<cib epoch="33" num_updates="8" admin_epoch="0">
+<cib epoch="31" num_updates="10" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5093,7 +4982,7 @@ Revised Cluster Status:
             <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5180,7 +5069,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
             <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5277,7 +5166,7 @@ Locations:
             <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5315,6 +5204,8 @@ Locations:
 * Passed: crm_resource   - Ban dummy from node2
 =#=#=#= Begin test: Relocate resources due to ban =#=#=#=
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
@@ -5326,18 +5217,18 @@ Transition Summary:
   * Move       dummy   ( node1 -> node3 )
 
 Executing Cluster Transition:
-  * Resource action: dummy           stop on node1
-  * Resource action: dummy           start on node3
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
   * Full List of Resources:
-    * dummy	(ocf:pacemaker:Dummy):	 Started node3
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
-<cib epoch="35" num_updates="2" admin_epoch="0">
+<cib epoch="33" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5381,10 +5272,10 @@ Revised Cluster Status:
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5408,7 +5299,7 @@ Revised Cluster Status:
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
             <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -5422,10 +5313,14 @@ Revised Cluster Status:
 * Passed: crm_simulate   - Relocate resources due to ban
 =#=#=#= Begin test: Move dummy to node1 =#=#=#=
 <pacemaker-result api-version="X" request="crm_resource -r dummy -M -N node1 --output-as=xml">
-  <status code="0" message="OK"/>
+  <status code="108" message="Requested item already exists">
+    <errors>
+      <error>crm_resource: Error performing operation: Requested item already exists</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= Current cib after: Move dummy to node1 =#=#=#=
-<cib epoch="37" num_updates="0" admin_epoch="0">
+<cib epoch="33" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5457,8 +5352,8 @@ Revised Cluster Status:
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
       <rsc_location id="cli-ban-dummy-on-node2" rsc="dummy" role="Started" node="node2" score="-INFINITY"/>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -5467,33 +5362,6 @@ Revised Cluster Status:
         <instance_attributes id="status-node1"/>
       </transient_attributes>
       <lrm id="node1">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
-    </node_state>
-    <tickets>
-      <ticket_state id="ticketA"/>
-    </tickets>
-    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
-      <lrm id="node2">
-        <lrm_resources>
-          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
-          </lrm_resource>
-          <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-          </lrm_resource>
-        </lrm_resources>
-      </lrm>
-    </node_state>
-    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
-      <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
             <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
@@ -5504,14 +5372,41 @@ Revised Cluster Status:
         </lrm_resources>
       </lrm>
     </node_state>
+    <tickets>
+      <ticket_state id="ticketA"/>
+    </tickets>
+    <node_state id="node2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+          <lrm_resource id="Fence" class="stonith" type="fence_true">
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node3">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+          </lrm_resource>
+          <lrm_resource id="Fence" class="stonith" type="fence_true">
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
   </status>
 </cib>
-=#=#=#= End test: Move dummy to node1 - OK (0) =#=#=#=
-* Passed: crm_resource   - Move dummy to node1
+=#=#=#= End test: Move dummy to node1 - Requested item already exists (108) =#=#=#=
+* Failed (rc=108): crm_resource   - Move dummy to node1
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
 Removing constraint: cli-ban-dummy-on-node2
 =#=#=#= Current cib after: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="38" num_updates="0" admin_epoch="0">
+<cib epoch="34" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5543,7 +5438,7 @@ Removing constraint: cli-ban-dummy-on-node2
       <primitive id="Fence" class="stonith" type="fence_true"/>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status>
@@ -5554,10 +5449,10 @@ Removing constraint: cli-ban-dummy-on-node2
       <lrm id="node1">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
-            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_stop_0" operation="stop" crm-debug-origin="crm_simulate" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -5581,7 +5476,7 @@ Removing constraint: cli-ban-dummy-on-node2
       <lrm id="node3">
         <lrm_resources>
           <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="crm_simulate" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="0830891652dabe627ca72b8e879199b1"/>
           </lrm_resource>
           <lrm_resource id="Fence" class="stonith" type="fence_true">
             <lrm_rsc_op id="Fence_last_0" operation_key="Fence_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -5603,7 +5498,7 @@ Removing constraint: cli-ban-dummy-on-node2
 Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="40" num_updates="0" admin_epoch="0">
+<cib epoch="36" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5641,7 +5536,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -5651,7 +5546,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="0">
+<cib epoch="37" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5693,7 +5588,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -5708,7 +5603,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates =#=#=#=
-<cib epoch="42" num_updates="0" admin_epoch="0">
+<cib epoch="38" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -5750,7 +5645,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -5760,6 +5655,218 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Update resource meta attribute with duplicates (force clone) =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates (force clone) =#=#=#=
+<cib epoch="39" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Update resource meta attribute with duplicates (force clone) - OK (0) =#=#=#=
+* Passed: crm_resource   - Update resource meta attribute with duplicates (force clone)
+=#=#=#= Begin test: Update child resource meta attribute with duplicates =#=#=#=
+Multiple attributes match name=is-managed
+  Value: true 	(id=test-primitive-meta_attributes-is-managed)
+  Value: true 	(id=test-clone-meta_attributes-is-managed)
+
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=false
+=#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
+<cib epoch="40" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Update child resource meta attribute with duplicates - OK (0) =#=#=#=
+* Passed: crm_resource   - Update child resource meta attribute with duplicates
+=#=#=#= Begin test: Delete resource meta attribute with duplicates =#=#=#=
+Multiple attributes match name=is-managed
+  Value: false 	(id=test-primitive-meta_attributes-is-managed)
+  Value: true 	(id=test-clone-meta_attributes-is-managed)
+
+A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
+Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
+=#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
+<cib epoch="41" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete resource meta attribute with duplicates - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource meta attribute with duplicates
+=#=#=#= Begin test: Delete resource meta attribute in parent =#=#=#=
+Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
+Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
+=#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
+<cib epoch="42" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+        <utilization id="nodes-node1-utilization">
+          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Delete resource meta attribute in parent - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource meta attribute in parent
+=#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
+=#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
 <cib epoch="43" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -5793,29 +5900,24 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-manage
       <clone id="test-clone">
         <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
           <meta_attributes id="test-primitive-meta_attributes">
-            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
           </meta_attributes>
         </primitive>
-        <meta_attributes id="test-clone-meta_attributes">
-          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
-        </meta_attributes>
+        <meta_attributes id="test-clone-meta_attributes"/>
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Update resource meta attribute with duplicates (force clone) - OK (0) =#=#=#=
-* Passed: crm_resource   - Update resource meta attribute with duplicates (force clone)
-=#=#=#= Begin test: Update child resource meta attribute with duplicates =#=#=#=
-Multiple attributes match name=is-managed
-  Value: true 	(id=test-primitive-meta_attributes-is-managed)
-  Value: true 	(id=test-clone-meta_attributes-is-managed)
-
-Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=false
-=#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
+=#=#=#= End test: Create a resource meta attribute in the primitive - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in the primitive
+=#=#=#= Begin test: Update existing resource meta attribute =#=#=#=
+A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
+Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
+=#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
 <cib epoch="44" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -5849,30 +5951,23 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
       <clone id="test-clone">
         <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
           <meta_attributes id="test-primitive-meta_attributes">
-            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
           </meta_attributes>
         </primitive>
-        <meta_attributes id="test-clone-meta_attributes">
-          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
-        </meta_attributes>
+        <meta_attributes id="test-clone-meta_attributes"/>
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Update child resource meta attribute with duplicates - OK (0) =#=#=#=
-* Passed: crm_resource   - Update child resource meta attribute with duplicates
-=#=#=#= Begin test: Delete resource meta attribute with duplicates =#=#=#=
-Multiple attributes match name=is-managed
-  Value: false 	(id=test-primitive-meta_attributes-is-managed)
-  Value: true 	(id=test-clone-meta_attributes-is-managed)
-
-A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
-Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
-=#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
+=#=#=#= End test: Update existing resource meta attribute - OK (0) =#=#=#=
+* Passed: crm_resource   - Update existing resource meta attribute
+=#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
+Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=true
+=#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
 <cib epoch="45" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -5905,7 +6000,9 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
       <primitive id="Fence" class="stonith" type="fence_true"/>
       <clone id="test-clone">
         <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="test-primitive-meta_attributes"/>
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="test-clone-meta_attributes">
           <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
@@ -5913,17 +6010,19 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Delete resource meta attribute with duplicates - OK (0) =#=#=#=
-* Passed: crm_resource   - Delete resource meta attribute with duplicates
-=#=#=#= Begin test: Delete resource meta attribute in parent =#=#=#=
-Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
+=#=#=#= End test: Create a resource meta attribute in the parent - OK (0) =#=#=#=
+* Passed: crm_resource   - Create a resource meta attribute in the parent
+=#=#=#= Begin test: Copy resources =#=#=#=
+=#=#=#= End test: Copy resources - OK (0) =#=#=#=
+* Passed: cibadmin       - Copy resources
+=#=#=#= Begin test: Delete resource parent meta attribute (force) =#=#=#=
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
-=#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
+=#=#=#= Current cib after: Delete resource parent meta attribute (force) =#=#=#=
 <cib epoch="46" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -5956,22 +6055,23 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
       <primitive id="Fence" class="stonith" type="fence_true"/>
       <clone id="test-clone">
         <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="test-primitive-meta_attributes"/>
+          <meta_attributes id="test-primitive-meta_attributes">
+            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="test-clone-meta_attributes"/>
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Delete resource meta attribute in parent - OK (0) =#=#=#=
-* Passed: crm_resource   - Delete resource meta attribute in parent
-=#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
-Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
-=#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
+=#=#=#= End test: Delete resource parent meta attribute (force) - OK (0) =#=#=#=
+* Passed: crm_resource   - Delete resource parent meta attribute (force)
+=#=#=#= Begin test: Restore duplicates =#=#=#=
+=#=#=#= Current cib after: Restore duplicates =#=#=#=
 <cib epoch="47" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
@@ -6005,107 +6105,6 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
       <clone id="test-clone">
         <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
           <meta_attributes id="test-primitive-meta_attributes">
-            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="false"/>
-          </meta_attributes>
-        </primitive>
-        <meta_attributes id="test-clone-meta_attributes"/>
-      </clone>
-    </resources>
-    <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
-    </constraints>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Create a resource meta attribute in the primitive - OK (0) =#=#=#=
-* Passed: crm_resource   - Create a resource meta attribute in the primitive
-=#=#=#= Begin test: Update existing resource meta attribute =#=#=#=
-A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
-Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
-=#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
-<cib epoch="48" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-      </cluster_property_set>
-      <cluster_property_set id="duplicate">
-        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes>
-      <node id="node1" uname="node1">
-        <instance_attributes id="nodes-node1">
-          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
-        </instance_attributes>
-        <utilization id="nodes-node1-utilization">
-          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
-        </utilization>
-      </node>
-      <node id="node2" uname="node2"/>
-      <node id="node3" uname="node3"/>
-    </nodes>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes"/>
-        <instance_attributes id="dummy-instance_attributes">
-          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
-        </instance_attributes>
-      </primitive>
-      <primitive id="Fence" class="stonith" type="fence_true"/>
-      <clone id="test-clone">
-        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="test-primitive-meta_attributes">
-            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
-          </meta_attributes>
-        </primitive>
-        <meta_attributes id="test-clone-meta_attributes"/>
-      </clone>
-    </resources>
-    <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
-    </constraints>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Update existing resource meta attribute - OK (0) =#=#=#=
-* Passed: crm_resource   - Update existing resource meta attribute
-=#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
-Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=true
-=#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
-<cib epoch="49" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-      </cluster_property_set>
-      <cluster_property_set id="duplicate">
-        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes>
-      <node id="node1" uname="node1">
-        <instance_attributes id="nodes-node1">
-          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
-        </instance_attributes>
-        <utilization id="nodes-node1-utilization">
-          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
-        </utilization>
-      </node>
-      <node id="node2" uname="node2"/>
-      <node id="node3" uname="node3"/>
-    </nodes>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes"/>
-        <instance_attributes id="dummy-instance_attributes">
-          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
-        </instance_attributes>
-      </primitive>
-      <primitive id="Fence" class="stonith" type="fence_true"/>
-      <clone id="test-clone">
-        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="test-primitive-meta_attributes">
             <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
           </meta_attributes>
         </primitive>
@@ -6115,111 +6114,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
-    </constraints>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Create a resource meta attribute in the parent - OK (0) =#=#=#=
-* Passed: crm_resource   - Create a resource meta attribute in the parent
-=#=#=#= Begin test: Copy resources =#=#=#=
-=#=#=#= End test: Copy resources - OK (0) =#=#=#=
-* Passed: cibadmin       - Copy resources
-=#=#=#= Begin test: Delete resource parent meta attribute (force) =#=#=#=
-Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
-=#=#=#= Current cib after: Delete resource parent meta attribute (force) =#=#=#=
-<cib epoch="50" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-      </cluster_property_set>
-      <cluster_property_set id="duplicate">
-        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes>
-      <node id="node1" uname="node1">
-        <instance_attributes id="nodes-node1">
-          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
-        </instance_attributes>
-        <utilization id="nodes-node1-utilization">
-          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
-        </utilization>
-      </node>
-      <node id="node2" uname="node2"/>
-      <node id="node3" uname="node3"/>
-    </nodes>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes"/>
-        <instance_attributes id="dummy-instance_attributes">
-          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
-        </instance_attributes>
-      </primitive>
-      <primitive id="Fence" class="stonith" type="fence_true"/>
-      <clone id="test-clone">
-        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="test-primitive-meta_attributes">
-            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
-          </meta_attributes>
-        </primitive>
-        <meta_attributes id="test-clone-meta_attributes"/>
-      </clone>
-    </resources>
-    <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
-    </constraints>
-  </configuration>
-  <status/>
-</cib>
-=#=#=#= End test: Delete resource parent meta attribute (force) - OK (0) =#=#=#=
-* Passed: crm_resource   - Delete resource parent meta attribute (force)
-=#=#=#= Begin test: Restore duplicates =#=#=#=
-=#=#=#= Current cib after: Restore duplicates =#=#=#=
-<cib epoch="51" num_updates="0" admin_epoch="0">
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-      </cluster_property_set>
-      <cluster_property_set id="duplicate">
-        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes>
-      <node id="node1" uname="node1">
-        <instance_attributes id="nodes-node1">
-          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
-        </instance_attributes>
-        <utilization id="nodes-node1-utilization">
-          <nvpair id="nodes-node1-utilization-cpu" name="cpu" value="1"/>
-        </utilization>
-      </node>
-      <node id="node2" uname="node2"/>
-      <node id="node3" uname="node3"/>
-    </nodes>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes"/>
-        <instance_attributes id="dummy-instance_attributes">
-          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
-        </instance_attributes>
-      </primitive>
-      <primitive id="Fence" class="stonith" type="fence_true"/>
-      <clone id="test-clone">
-        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="test-primitive-meta_attributes">
-            <nvpair id="test-primitive-meta_attributes-is-managed" name="is-managed" value="true"/>
-          </meta_attributes>
-        </primitive>
-        <meta_attributes id="test-clone-meta_attributes">
-          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
-        </meta_attributes>
-      </clone>
-    </resources>
-    <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -6233,7 +6128,7 @@ Multiple attributes match name=is-managed
 
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource child meta attribute =#=#=#=
-<cib epoch="52" num_updates="0" admin_epoch="0">
+<cib epoch="48" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6273,7 +6168,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -6282,7 +6177,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 * Passed: crm_resource   - Delete resource child meta attribute
 =#=#=#= Begin test: Create the dummy-group resource group =#=#=#=
 =#=#=#= Current cib after: Create the dummy-group resource group =#=#=#=
-<cib epoch="53" num_updates="0" admin_epoch="0">
+<cib epoch="49" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6326,7 +6221,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
       </group>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -6336,7 +6231,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 =#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
-<cib epoch="54" num_updates="0" admin_epoch="0">
+<cib epoch="50" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6384,7 +6279,7 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
       </group>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -6395,7 +6290,7 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed name=is-managed value=false
 Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-group-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in dummy-group =#=#=#=
-<cib epoch="56" num_updates="0" admin_epoch="0">
+<cib epoch="52" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6446,7 +6341,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
       </group>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -6455,7 +6350,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 * Passed: crm_resource   - Create a resource meta attribute in dummy-group
 =#=#=#= Begin test: Delete the dummy-group resource group =#=#=#=
 =#=#=#= Current cib after: Delete the dummy-group resource group =#=#=#=
-<cib epoch="57" num_updates="0" admin_epoch="0">
+<cib epoch="53" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6495,7 +6390,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started" node="node1" score="INFINITY"/>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
     </constraints>
   </configuration>
   <status/>
@@ -6505,7 +6400,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="59" num_updates="0" admin_epoch="0">
+<cib epoch="54" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6545,6 +6440,7 @@ Migration will take effect until:
       </clone>
     </resources>
     <constraints>
+      <rsc_location id="cli-ban-dummy-on-node1" rsc="dummy" role="Started" node="node1" score="-INFINITY"/>
       <rsc_location id="cli-prefer-dummy" rsc="dummy" role="Started">
         <rule id="cli-prefer-rule-dummy" score="INFINITY" boolean-op="and">
           <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="node2" type="string"/>
@@ -6559,7 +6455,7 @@ Migration will take effect until:
 * Passed: crm_resource   - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="61" num_updates="0" admin_epoch="0">
+<cib epoch="57" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6612,7 +6508,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
-<cib epoch="62" num_updates="0" admin_epoch="0">
+<cib epoch="58" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6668,7 +6564,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=
-<cib epoch="63" num_updates="0" admin_epoch="0">
+<cib epoch="59" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6718,7 +6614,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Clear all implicit constraints for dummy =#=#=#=
 Removing constraint: cli-prefer-dummy
 =#=#=#= Current cib after: Clear all implicit constraints for dummy =#=#=#=
-<cib epoch="64" num_updates="0" admin_epoch="0">
+<cib epoch="60" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6765,7 +6661,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Clear all implicit constraints for dummy
 =#=#=#= Begin test: Set a node health strategy =#=#=#=
 =#=#=#= Current cib after: Set a node health strategy =#=#=#=
-<cib epoch="65" num_updates="0" admin_epoch="0">
+<cib epoch="61" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6813,7 +6709,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_attribute  - Set a node health strategy
 =#=#=#= Begin test: Set a node health attribute =#=#=#=
 =#=#=#= Current cib after: Set a node health attribute =#=#=#=
-<cib epoch="66" num_updates="0" admin_epoch="0">
+<cib epoch="62" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -6874,7 +6770,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Show why a resource is not running on an unhealthy node
 =#=#=#= Begin test: Delete a resource =#=#=#=
 =#=#=#= Current cib after: Delete a resource =#=#=#=
-<cib epoch="67" num_updates="0" admin_epoch="0">
+<cib epoch="63" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -7730,12 +7626,207 @@ export overcloud-rabbit-2=overcloud-rabbit-2
 =#=#=#= Begin test: Show allocation scores with crm_simulate =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon.xml --show-scores --output-as=xml">
   <cluster_status>
+    <summary>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="ping-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="ping-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="ping:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="1" id="ping:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="1" id="ping:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="ping:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="ping:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="ping:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="ping:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="ping:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Fencing"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Fencing"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="dummy"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="dummy"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="inactive-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="inactive-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:1"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-group"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-group"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-0"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-1"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="501" id="httpd:0"/>
+      <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="501" id="httpd:1"/>
+      <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="500" id="httpd:2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="10000" id="httpd-bundle-0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="10000" id="httpd-bundle-1"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
+      <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__clone_assign" node="httpd-bundle-0" score="0" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__clone_assign" node="httpd-bundle-1" score="0" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__clone_assign" node="httpd-bundle-2" score="0" id="httpd-bundle-clone"/>
+      <node_weight function="pcmk__clone_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+      <node_weight function="pcmk__clone_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+      <node_weight function="pcmk__clone_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="exim-group"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="exim-group"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="Public-IP"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="Public-IP"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="Email"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="Email"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Public-IP"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Public-IP"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="Email"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Email"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-clone-group"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-clone-group"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:3"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:3"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:3"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:3"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:4"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:4"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:4"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:4"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-group:0"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="mysql-group:0"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-group:1"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:1"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:2"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:2"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:3"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:3"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:4"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:4"/>
+      <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
+      <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-clone"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="1" id="promotable-rsc:0"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="1" id="promotable-rsc:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:1"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:2"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:3"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:3"/>
+      <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:4"/>
+      <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:4"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="promotable-rsc:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="promotable-rsc:0"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="promotable-rsc:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:1"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:2"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:3"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:3"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:4"/>
+      <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:4"/>
+      <promotion_score id="promotable-rsc:0" score="9" node="cluster02"/>
+      <promotion_score id="promotable-rsc:2" score="0"/>
+      <promotion_score id="promotable-rsc:3" score="0"/>
+      <promotion_score id="promotable-rsc:4" score="0"/>
+      <promotion_score id="promotable-rsc:1" score="-1" node="cluster01"/>
+      <verifications is_valid="true"/>
+    </summary>
     <nodes>
       <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
       <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
       <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
       <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-      <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+      <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
     </nodes>
     <resources>
       <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -7837,200 +7928,64 @@ export overcloud-rabbit-2=overcloud-rabbit-2
         <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </clone>
     </resources>
-  </cluster_status>
-  <allocations>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="ping-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="ping-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="ping:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="1" id="ping:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="1" id="ping:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="ping:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="ping:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="ping:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="ping:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="ping:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Fencing"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Fencing"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="dummy"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="dummy"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="inactive-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="inactive-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-group"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-group"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
     <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle"/>
     <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle"/>
     <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
     <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
     <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="10000" id="httpd-bundle-0"/>
     <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
     <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
     <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
     <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="10000" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
     <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
     <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="501" id="httpd:0"/>
-    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="501" id="httpd:1"/>
-    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="500" id="httpd:2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="10000" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="10000" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__clone_assign" node="httpd-bundle-0" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__clone_assign" node="httpd-bundle-1" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__clone_assign" node="httpd-bundle-2" score="0" id="httpd-bundle-clone"/>
-    <node_weight function="pcmk__clone_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
-    <node_weight function="pcmk__clone_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
-    <node_weight function="pcmk__clone_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="exim-group"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="exim-group"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="Email"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="Email"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="Email"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Email"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-clone-group"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-clone-group"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:3"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:3"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-group:4"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-group:4"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-group:0"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="mysql-group:0"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-group:1"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:1"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:2"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:2"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:3"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:3"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:4"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:4"/>
-    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-clone"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="1" id="promotable-rsc:0"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="1" id="promotable-rsc:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:1"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:2"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:3"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:3"/>
-    <node_weight function="pcmk__clone_assign" node="cluster01" score="0" id="promotable-rsc:4"/>
-    <node_weight function="pcmk__clone_assign" node="cluster02" score="0" id="promotable-rsc:4"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="promotable-rsc:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="promotable-rsc:0"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="promotable-rsc:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:1"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:2"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:3"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:3"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:4"/>
-    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:4"/>
-    <promotion_score id="promotable-rsc:0" score="9" node="cluster02"/>
-    <promotion_score id="promotable-rsc:2" score="0"/>
-    <promotion_score id="promotable-rsc:3" score="0"/>
-    <promotion_score id="promotable-rsc:4" score="0"/>
-    <promotion_score id="promotable-rsc:1" score="-1" node="cluster01"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
+  </cluster_status>
+  <allocations>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="10000" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="10000" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+    <node_weight function="pcmk__bundle_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
   </allocations>
   <actions>
     <rsc_action action="start" resource="httpd-bundle-2" node="cluster01" reason="unrunnable httpd-bundle-docker-2 start" blocked="true"/>
@@ -8038,30 +7993,15 @@ export overcloud-rabbit-2=overcloud-rabbit-2
   </actions>
   <status code="0" message="OK"/>
 </pacemaker-result>
-=#=#=#= End test: Show allocation scores with crm_simulate - OK (0) =#=#=#=
-* Passed: crm_simulate   - Show allocation scores with crm_simulate
+/tmp/cts-cli.ta_outfile.H4yI62EbXj:1: element pacemaker-result: Relax-NG validity error : Expecting element status, got cluster_status
+/tmp/cts-cli.ta_outfile.H4yI62EbXj:1: element pacemaker-result: Relax-NG validity error : Element pacemaker-result failed to validate content
+/tmp/cts-cli.ta_outfile.H4yI62EbXj fails to validate
+=#=#=#= End test: Show allocation scores with crm_simulate - Failed to validate (3) =#=#=#=
+* Failed (rc=003): crm_simulate   - Show allocation scores with crm_simulate
 =#=#=#= Begin test: Show utilization with crm_simulate =#=#=#=
 4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
-[ cluster01 cluster02 ]
-[ httpd-bundle-0 httpd-bundle-1 ]
-
-Started: [ cluster01 cluster02 ]
-Fencing	(stonith:fence_xvm):	 Started cluster01
-dummy	(ocf:pacemaker:Dummy):	 Started cluster02
-Stopped (disabled): [ cluster01 cluster02 ]
-inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
-inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
-httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
-httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
-httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
-Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
-Email	(lsb:exim):	 Started cluster02
-Started: [ cluster01 cluster02 ]
-Promoted: [ cluster02 ]
-Unpromoted: [ cluster01 ]
-
-Only 'private' parameters to 1m-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
 Original: cluster01 capacity:
 Original: cluster02 capacity:
 Original: httpd-bundle-0 capacity:
@@ -8093,6 +8033,36 @@ Remaining: httpd-bundle-0 capacity:
 Remaining: httpd-bundle-1 capacity:
 Remaining: httpd-bundle-2 capacity:
 
+[ cluster01 cluster02 ]
+[ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+
+Started: [ cluster01 cluster02 ]
+Fencing	(stonith:fence_xvm):	 Started cluster01
+dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+Stopped (disabled): [ cluster01 cluster02 ]
+inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+Email	(lsb:exim):	 Started cluster02
+Started: [ cluster01 cluster02 ]
+Promoted: [ cluster02 ]
+Unpromoted: [ cluster01 ]
+
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+Original: cluster01 capacity:
+Original: cluster02 capacity:
+Original: httpd-bundle-0 capacity:
+Original: httpd-bundle-1 capacity:
+Original: httpd-bundle-2 capacity:
+Remaining: cluster01 capacity:
+Remaining: cluster02 capacity:
+Remaining: httpd-bundle-0 capacity:
+Remaining: httpd-bundle-1 capacity:
+Remaining: httpd-bundle-2 capacity:
+
 Start      httpd-bundle-2     (      cluster01 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
 Start      httpd:2            ( httpd-bundle-2 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
 =#=#=#= End test: Show utilization with crm_simulate - OK (0) =#=#=#=
@@ -8101,9 +8071,12 @@ Start      httpd:2            ( httpd-bundle-2 )  due to unrunnable httpd-bundle
 4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -8153,9 +8126,11 @@ Executing Cluster Transition:
   * Pseudo action:   httpd-bundle_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -8185,9 +8160,12 @@ Revised Cluster Status:
 4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -8238,10 +8216,12 @@ Executing Cluster Transition:
   * Pseudo action:   httpd-bundle_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster02 ]
     * OFFLINE: [ cluster01 ]
-    * GuestOnline: [ httpd-bundle-1 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -8273,9 +8253,12 @@ Revised Cluster Status:
 4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -8359,10 +8342,12 @@ Executing Cluster Transition:
   * Pseudo action:   httpd-bundle_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cluster01 ]
     * OFFLINE: [ cluster02 ]
-    * GuestOnline: [ httpd-bundle-0 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -8591,7 +8576,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:

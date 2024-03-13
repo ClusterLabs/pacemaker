@@ -9,7 +9,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -37,6 +37,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -46,7 +47,7 @@ Active Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -242,6 +243,7 @@ Active Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -282,6 +284,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -480,15 +483,18 @@ Active Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output without the node section
 =#=#=#= Begin test: Text output with only the node section =#=#=#=
+Cluster Summary:
+
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 =#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
@@ -497,12 +503,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -591,6 +598,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output
 =#=#=#= Begin test: Complete text output with detail =#=#=#=
@@ -599,6 +607,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -607,7 +616,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -715,6 +724,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
+  * not-on-cluster1	prevents dummy from running on cluster01 (1)
 =#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output with detail
 =#=#=#= Begin test: Complete brief text output =#=#=#=
@@ -723,12 +733,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
@@ -817,6 +828,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output
 =#=#=#= Begin test: Complete text output grouped by node =#=#=#=
@@ -825,6 +837,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -853,7 +866,7 @@ Node List:
   * GuestNode httpd-bundle-1: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-2: OFFLINE:
+  * GuestNode httpd-bundle-2: online:
     * Resources:
 
 Node Attributes:
@@ -925,6 +938,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output grouped by node
 =#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
@@ -933,6 +947,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1033,6 +1048,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node
 =#=#=#= Begin test: XML output grouped by node =#=#=#=
@@ -1042,6 +1058,7 @@ Negative Location Constraints:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1109,7 +1126,7 @@ Negative Location Constraints:
         <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
       </resource>
     </node>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="inactive-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="true" failed="false" failure_ignored="false" target_role="stopped">
@@ -1283,6 +1300,7 @@ Negative Location Constraints:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1294,6 +1312,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1345,6 +1364,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by node
 =#=#=#= Begin test: XML output filtered by node =#=#=#=
@@ -1354,6 +1374,7 @@ Negative Location Constraints:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1468,6 +1489,7 @@ Negative Location Constraints:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1479,6 +1501,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1536,6 +1559,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
 =#=#=#= Begin test: XML output filtered by tag =#=#=#=
@@ -1545,6 +1569,7 @@ Negative Location Constraints:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1671,6 +1696,7 @@ Negative Location Constraints:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1682,12 +1708,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1713,6 +1740,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1722,7 +1750,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1770,6 +1798,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1787,6 +1816,7 @@ Active Resources:
   </resources>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1803,7 +1833,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -1868,12 +1898,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1899,6 +1930,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1908,7 +1940,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1942,12 +1974,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -1976,6 +2009,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -1985,7 +2019,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <group id="exim-group" number_resources="2" maintenance="false" managed="true" disabled="false">
@@ -2026,12 +2060,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2057,6 +2092,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2066,7 +2102,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <group id="exim-group" number_resources="1" maintenance="false" managed="true" disabled="false">
@@ -2101,12 +2137,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2137,6 +2174,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2146,7 +2184,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -2191,12 +2229,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2227,6 +2266,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2236,7 +2276,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -2281,6 +2321,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2289,7 +2330,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2320,6 +2361,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2329,7 +2371,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -2376,7 +2418,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * No active resources
@@ -2389,6 +2431,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2398,7 +2441,7 @@ Active Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources/>
   <node_attributes>
@@ -2426,7 +2469,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
@@ -2447,7 +2490,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2463,6 +2506,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2472,7 +2516,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2576,7 +2620,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2591,6 +2635,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2600,7 +2645,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2675,7 +2720,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2690,6 +2735,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2699,7 +2745,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2772,7 +2818,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2787,6 +2833,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2796,7 +2843,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2871,7 +2918,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2890,6 +2937,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -2899,7 +2947,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2977,6 +3025,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2985,7 +3034,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3019,6 +3068,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3028,7 +3078,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3086,6 +3136,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3094,7 +3145,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3128,6 +3179,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3137,7 +3189,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3195,6 +3247,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3203,7 +3256,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3235,6 +3288,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3244,7 +3298,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3288,6 +3342,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3296,7 +3351,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3330,6 +3385,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3339,7 +3395,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3397,6 +3453,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3405,7 +3462,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3437,6 +3494,7 @@ Operations:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3446,7 +3504,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3534,6 +3592,7 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="4"/>
     <resources_configured number="16" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -3726,6 +3785,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3906,6 +3966,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB is valid
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -4024,6 +4085,7 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="4"/>
     <resources_configured number="16" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4121,6 +4183,7 @@ Active Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="2"/>
     <resources_configured number="3" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="true" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4252,6 +4315,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="true" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4261,7 +4325,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="true" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="true" managed="false" disabled="false" failed="false" failure_ignored="false">
@@ -4457,6 +4521,7 @@ Full List of Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4475,7 +4540,7 @@ Node List:
   * Node cluster02: maintenance
   * GuestNode httpd-bundle-1: maintenance
   * Online: [ cluster01 ]
-  * GuestOnline: [ httpd-bundle-0 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-2 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -4511,6 +4576,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4520,7 +4586,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -4717,6 +4783,7 @@ Full List of Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -4771,6 +4838,7 @@ Full List of Resources:
     <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true" mixed_version="false"/>
     <last_update time=""/>
     <last_change time=""/>
+    <verifications is_valid="true"/>
     <nodes_configured number="5"/>
     <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
@@ -4780,7 +4848,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="true" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="true" managed="false" disabled="false" failed="false" failure_ignored="false">
@@ -4975,6 +5043,7 @@ Full List of Resources:
     </node>
   </node_history>
   <bans>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
