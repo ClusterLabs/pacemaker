@@ -18,6 +18,42 @@
 #include "libpacemaker_private.h"
 
 int
+pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *xml_search = NULL;
+    char *xpath = NULL;
+
+    CRM_ASSERT(cib!= NULL && state != NULL);
+    *state = NULL;
+
+    if (ticket_id != NULL) {
+        xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS
+                                  "/" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"%s\"]",
+                                  ticket_id);
+    } else {
+        xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
+    }
+
+    rc = cib->cmds->query(cib, xpath, &xml_search,
+                          cib_sync_call | cib_scope_local | cib_xpath);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc == pcmk_rc_ok) {
+        crm_log_xml_debug(xml_search, "Match");
+
+        if (xml_search->children != NULL && ticket_id != NULL) {
+            rc = pcmk_rc_duplicate_id;
+        }
+    }
+
+    free(xpath);
+
+    *state = xml_search;
+    return rc;
+}
+
+int
 pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
 {
     int rc = pcmk_rc_ok;
