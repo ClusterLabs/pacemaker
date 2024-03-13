@@ -98,6 +98,11 @@
                 </element>
             </optional>
             <optional>
+                <element name="verifications">
+                    <attribute name="is_valid"> <data type="boolean" /> </attribute>
+                </element>
+            </optional>
+            <optional>
                 <element name="nodes_configured">
                     <attribute name="number"> <data type="nonNegativeInteger" /> </attribute>
                 </element>
