@@ -76,9 +76,8 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
         lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
         if (lifetime != NULL) {
             pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
-                              "(in %s) is deprecated (the rules it contains "
-                              "should instead be direct descendants of the "
-                              "constraint object)", id);
+                              "(in %s) is deprecated and will be dropped "
+                              "in a later release", id);
         }
 
         if ((lifetime != NULL) && !evaluate_lifetime(lifetime, scheduler)) {
