@@ -137,7 +137,7 @@ class Scenario:
         self._bad_news = LogWatcher(self._cm.env["LogFileName"],
                                     self._cm.templates.get_patterns("BadNews"),
                                     self._cm.env["nodes"],
-                                    self._cm.env["LogWatcher"],
+                                    self._cm.env["log_kind"],
                                     "BadNews", 0)
         self._bad_news.set_watch()  # Call after we've figured out what type of log watching to do in LogAudit
 

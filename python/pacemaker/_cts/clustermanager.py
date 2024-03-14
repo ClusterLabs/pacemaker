@@ -183,7 +183,7 @@ class ClusterManager(UserDict):
             ])
 
         stonith = LogWatcher(self.env["LogFileName"], stonith_pats, self.env["nodes"],
-                             self.env["LogWatcher"], "StartupFencing", 0)
+                             self.env["log_kind"], "StartupFencing", 0)
         stonith.set_watch()
         return stonith
 
@@ -292,7 +292,8 @@ class ClusterManager(UserDict):
         else:
             patterns.append(self.templates["Pat:NonDC_started"] % node)
 
-        watch = LogWatcher(self.env["LogFileName"], patterns, self.env["nodes"], self.env["LogWatcher"],
+        watch = LogWatcher(self.env["LogFileName"], patterns,
+                           self.env["nodes"], self.env["log_kind"],
                            "StartaCM", self.env["StartTime"] + 10)
 
         self.install_config(node)
@@ -395,7 +396,8 @@ class ClusterManager(UserDict):
 
         #   Start all the nodes - at about the same time...
         watch = LogWatcher(self.env["LogFileName"], watchpats, self.env["nodes"],
-                           self.env["LogWatcher"], "fast-start", self.env["DeadTime"] + 10)
+                           self.env["log_kind"], "fast-start",
+                           self.env["DeadTime"] + 10)
         watch.set_watch()
 
         if not self.start_cm(nodelist[0], verbose=verbose):
@@ -579,7 +581,7 @@ class ClusterManager(UserDict):
         ]
 
         idle_watch = LogWatcher(self.env["LogFileName"], watchpats, [node],
-                                self.env["LogWatcher"], "ClusterIdle")
+                                self.env["log_kind"], "ClusterIdle")
         idle_watch.set_watch()
 
         (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
@@ -653,7 +655,7 @@ class ClusterManager(UserDict):
             return True
 
         idle_watch = LogWatcher(self.env["LogFileName"], watchpats, nodes.split(),
-                                self.env["LogWatcher"], "ClusterStable", timeout)
+                                self.env["log_kind"], "ClusterStable", timeout)
         idle_watch.set_watch()
 
         for node in nodes.split():
