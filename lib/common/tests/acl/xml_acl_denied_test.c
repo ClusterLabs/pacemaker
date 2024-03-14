@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,7 +38,7 @@ is_xml_acl_denied_with_node(void **state)
     xmlNode *test_xml = create_xml_node(NULL, "test_xml");
 
     // allocate memory for _private, which is NULL by default
-    test_xml->doc->_private = calloc(1, sizeof(xml_doc_private_t));
+    test_xml->doc->_private = pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
 
     assert_false(xml_acl_denied(test_xml));
 

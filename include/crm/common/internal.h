@@ -267,6 +267,48 @@ extern int pcmk__score_yellow;
 
 /*!
  * \internal
+ * \brief Allocate new zero-initialized memory, asserting on failure
+ *
+ * \param[in] file      File where \p function is located
+ * \param[in] function  Calling function
+ * \param[in] line      Line within \p file
+ * \param[in] nmemb     Number of elements to allocate memory for
+ * \param[in] size      Size of each element
+ *
+ * \return Newly allocated memory of of size <tt>nmemb * size</tt> (guaranteed
+ *         not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+static inline void *
+pcmk__assert_alloc_as(const char *file, const char *function, uint32_t line,
+                      size_t nmemb, size_t size)
+{
+    void *ptr = calloc(nmemb, size);
+
+    if (ptr == NULL) {
+        crm_abort(file, function, line, "Out of memory", FALSE, FALSE);
+    }
+    return ptr;
+}
+
+/*!
+ * \internal
+ * \brief Allocate new zero-initialized memory, asserting on failure
+ *
+ * \param[in] nmemb  Number of elements to allocate memory for
+ * \param[in] size   Size of each element
+ *
+ * \return Newly allocated memory of of size <tt>nmemb * size</tt> (guaranteed
+ *         not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+#define pcmk__assert_alloc(nmemb, size) \
+    pcmk__assert_alloc_as(__FILE__, __func__, __LINE__, nmemb, size)
+
+/*!
+ * \internal
  * \brief Resize a dynamically allocated memory block
  *
  * \param[in] ptr   Memory block to resize (or NULL to allocate new memory)
@@ -293,6 +335,45 @@ pcmk__realloc(void *ptr, size_t size)
     return new_ptr;
 }
 
+/*!
+ * \internal
+ * \brief Copy a string, asserting on failure
+ *
+ * \param[in] file      File where \p function is located
+ * \param[in] function  Calling function
+ * \param[in] line      Line within \p file
+ * \param[in] str       String to copy (can be \c NULL)
+ *
+ * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+static inline char *
+pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
+                  const char *str)
+{
+    if (str != NULL) {
+        char *result = strdup(str);
+
+        if (result == NULL) {
+            crm_abort(file, function, line, "Out of memory", FALSE, FALSE);
+        }
+        return result;
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Copy a string, asserting on failure
+ *
+ * \param[in] str  String to copy (can be \c NULL)
+ *
+ * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+#define pcmk__str_copy(str) pcmk__str_copy_as(__FILE__, __func__, __LINE__, str)
 
 static inline char *
 pcmk__getpid_s(void)

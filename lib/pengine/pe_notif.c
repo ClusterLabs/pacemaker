@@ -95,9 +95,8 @@ compare_notify_entries(gconstpointer a, gconstpointer b)
 static notify_entry_t *
 dup_notify_entry(const notify_entry_t *entry)
 {
-    notify_entry_t *dup = calloc(1, sizeof(notify_entry_t));
+    notify_entry_t *dup = pcmk__assert_alloc(1, sizeof(notify_entry_t));
 
-    CRM_ASSERT(dup != NULL);
     dup->rsc = entry->rsc;
     dup->node = entry->node;
     return dup;
@@ -439,8 +438,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         return NULL;
     }
 
-    n_data = calloc(1, sizeof(notify_data_t));
-    CRM_ASSERT(n_data != NULL);
+    n_data = pcmk__assert_alloc(1, sizeof(notify_data_t));
 
     n_data->action = task;
 
@@ -520,9 +518,8 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
 static notify_entry_t *
 new_notify_entry(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
+    notify_entry_t *entry = pcmk__assert_alloc(1, sizeof(notify_entry_t));
 
-    CRM_ASSERT(entry != NULL);
     entry->rsc = rsc;
     entry->node = node;
     return entry;

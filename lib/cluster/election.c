@@ -488,19 +488,12 @@ parse_election_message(const election_t *e, const xmlNode *message,
 static void
 record_vote(election_t *e, struct vote *vote)
 {
-    char *voter_copy = NULL;
-    char *vote_copy = NULL;
-
     CRM_ASSERT(e && vote && vote->from && vote->op);
+
     if (e->voted == NULL) {
         e->voted = pcmk__strkey_table(free, free);
     }
-
-    voter_copy = strdup(vote->from);
-    vote_copy = strdup(vote->op);
-    CRM_ASSERT(voter_copy && vote_copy);
-
-    g_hash_table_replace(e->voted, voter_copy, vote_copy);
+    pcmk__insert_dup(e->voted, vote->from, vote->op);
 }
 
 static void

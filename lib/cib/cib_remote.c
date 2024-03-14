@@ -611,10 +611,9 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->variant = cib_remote;
     cib->variant_opaque = private;
 
-    pcmk__str_update(&private->server, server);
-    pcmk__str_update(&private->user, user);
-    pcmk__str_update(&private->passwd, passwd);
-
+    private->server = pcmk__str_copy(server);
+    private->user = pcmk__str_copy(user);
+    private->passwd = pcmk__str_copy(passwd);
     private->port = port;
     private->encrypted = encrypted;
 

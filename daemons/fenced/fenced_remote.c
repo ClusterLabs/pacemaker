@@ -801,7 +801,8 @@ add_required_device(remote_fencing_op_t *op, const char *device)
                                          sort_strings);
 
     if (!match) {
-        op->automatic_list = g_list_prepend(op->automatic_list, strdup(device));
+        op->automatic_list = g_list_prepend(op->automatic_list,
+                                            pcmk__str_copy(device));
     }
 }
 
@@ -834,7 +835,10 @@ set_op_device_list(remote_fencing_op_t * op, GList *devices)
         op->devices_list = NULL;
     }
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
-        op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
+        const char *device = lpc->data;
+
+        op->devices_list = g_list_append(op->devices_list,
+                                         pcmk__str_copy(device));
     }
     op->devices = op->devices_list;
 }
@@ -1112,7 +1116,7 @@ fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
     }
     op->state = st_done;
     set_fencing_completed(op);
-    op->delegate = strdup("a human");
+    op->delegate = pcmk__str_copy("a human");
 
     // For the fencer's purposes, the fencing operation is done
     pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -1161,8 +1165,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         }
     }
 
-    op = calloc(1, sizeof(remote_fencing_op_t));
-    CRM_ASSERT(op != NULL);
+    op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
     crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
@@ -1187,21 +1190,17 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
      * Or may be the name of the function that created the operation.
      */
     op->originator = crm_element_value_copy(dev, PCMK__XA_ST_ORIGIN);
+    if (op->originator == NULL) {
+        /* Local or relayed request */
+        op->originator = pcmk__str_copy(stonith_our_uname);
+    }
 
     // Delegate may not be set
     op->delegate = crm_element_value_copy(dev, PCMK__XA_ST_DELEGATE);
     op->created = time(NULL);
 
-    if (op->originator == NULL) {
-        /* Local or relayed request */
-        op->originator = strdup(stonith_our_uname);
-    }
-
     CRM_LOG_ASSERT(client != NULL);
-    if (client) {
-        op->client_id = strdup(client);
-    }
-
+    op->client_id = pcmk__str_copy(client);
 
     /* For a RELAY operation, set fenced on the client. */
     operation = crm_element_value(request, PCMK__XA_ST_OP);
@@ -1243,8 +1242,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
 
         if (node && node->uname) {
-            free(op->target);
-            op->target = strdup(node->uname);
+            pcmk__str_update(&(op->target), node->uname);
 
         } else {
             crm_warn("Could not expand nodeid '%s' into a host name", op->target);
@@ -2165,12 +2163,12 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
 {
     xmlNode *child;
     int verified = 0;
-    device_properties_t *props = calloc(1, sizeof(device_properties_t));
+    device_properties_t *props =
+        pcmk__assert_alloc(1, sizeof(device_properties_t));
     int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
 
     /* Add a new entry to this peer's devices list */
-    CRM_ASSERT(props != NULL);
-    g_hash_table_insert(peer->devices, strdup(device), props);
+    g_hash_table_insert(peer->devices, pcmk__str_copy(device), props);
 
     /* Peers with verified (monitored) access will be preferred */
     crm_element_value_int(xml, PCMK__XA_ST_MONITOR_VERIFIED, &verified);
@@ -2219,13 +2217,11 @@ static peer_device_info_t *
 add_result(remote_fencing_op_t *op, const char *host, int ndevices,
            const xmlNode *xml)
 {
-    peer_device_info_t *peer = calloc(1, sizeof(peer_device_info_t));
+    peer_device_info_t *peer = pcmk__assert_alloc(1,
+                                                  sizeof(peer_device_info_t));
     xmlNode *child;
 
-    // cppcheck seems not to understand the abort logic in CRM_CHECK
-    // cppcheck-suppress memleak
-    CRM_CHECK(peer != NULL, return NULL);
-    peer->host = strdup(host);
+    peer->host = pcmk__str_copy(host);
     peer->devices = pcmk__strkey_table(free, free);
 
     /* Each child element describes one capable device available to the peer */

@@ -205,7 +205,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     /* Create a pattern that matches desired attributes */
 
     if (rsc == NULL) {
-        pattern = strdup(ATTRD_RE_CLEAR_ALL);
+        pattern = pcmk__str_copy(ATTRD_RE_CLEAR_ALL);
     } else if (op == NULL) {
         pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
@@ -288,11 +288,9 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
     pcmk__scan_min_int(value, &ver, 0);
 
     if (ver > 0) {
-        char *host_name = strdup(host);
-
         /* Record the peer attrd's protocol version. */
-        CRM_ASSERT(host_name != NULL);
-        g_hash_table_insert(peer_protocol_vers, host_name, GINT_TO_POINTER(ver));
+        g_hash_table_insert(peer_protocol_vers, pcmk__str_copy(host),
+                            GINT_TO_POINTER(ver));
 
         /* If the protocol version is a new minimum, record it as such. */
         if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {

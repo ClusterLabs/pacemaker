@@ -320,12 +320,12 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     // Set output variables
     if (rsc_id != NULL) {
         *rsc_id = strndup(key, action_underbar);
-        CRM_ASSERT(*rsc_id != NULL);
+        pcmk__mem_assert(*rsc_id);
     }
     if (op_type != NULL) {
         *op_type = strndup(key + action_underbar + 1,
                            interval_underbar - action_underbar - 1);
-        CRM_ASSERT(*op_type != NULL);
+        pcmk__mem_assert(*op_type);
     }
     if (interval_ms != NULL) {
         *interval_ms = local_interval_ms;
@@ -374,8 +374,8 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 #ifdef HAVE_SSCANF_M
     res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
 #else
-    key = calloc(1, strlen(magic) - 3); // magic must have >=4 other characters
-    CRM_ASSERT(key);
+    // magic must have >=4 other characters
+    key = pcmk__assert_alloc(1, strlen(magic) - 3);
     res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
 #endif
     if (res == EOF) {
@@ -455,8 +455,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
         crm_warn("Invalid UUID '%s' in transition key '%s'", local_uuid, key);
     }
     if (uuid) {
-        *uuid = strdup(local_uuid);
-        CRM_ASSERT(*uuid);
+        *uuid = pcmk__str_copy(local_uuid);
     }
     if (transition_id) {
         *transition_id = local_transition_id;

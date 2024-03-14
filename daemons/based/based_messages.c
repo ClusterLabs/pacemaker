@@ -399,7 +399,7 @@ cib_msg_copy(xmlNode *msg)
 
     xmlNode *copy = create_xml_node(NULL, PCMK__XE_COPY);
 
-    CRM_ASSERT(copy != NULL);
+    pcmk__mem_assert(copy);
 
     for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
         const char *field = field_list[lpc];

@@ -205,9 +205,9 @@ new_private_data(xmlNode *node)
 {
     switch (node->type) {
         case XML_DOCUMENT_NODE: {
-            xml_doc_private_t *docpriv = NULL;
-            docpriv = calloc(1, sizeof(xml_doc_private_t));
-            CRM_ASSERT(docpriv != NULL);
+            xml_doc_private_t *docpriv =
+                pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
+
             docpriv->check = XML_DOC_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(docpriv, pcmk__xf_dirty|pcmk__xf_created);
@@ -217,9 +217,9 @@ new_private_data(xmlNode *node)
         case XML_ELEMENT_NODE:
         case XML_ATTRIBUTE_NODE:
         case XML_COMMENT_NODE: {
-            xml_node_private_t *nodepriv = NULL;
-            nodepriv = calloc(1, sizeof(xml_node_private_t));
-            CRM_ASSERT(nodepriv != NULL);
+            xml_node_private_t *nodepriv =
+                pcmk__assert_alloc(1, sizeof(xml_node_private_t));
+
             nodepriv->check = XML_NODE_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
@@ -735,10 +735,10 @@ free_xml_with_position(xmlNode * child, int position)
                     crm_trace("Deleting %s %p from %p",
                               (const char *) xpath->str, child, doc);
 
-                    deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
-                    deleted_obj->path = strdup((const char *) xpath->str);
+                    deleted_obj =
+                        pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
 
-                    CRM_ASSERT(deleted_obj->path != NULL);
+                    deleted_obj->path = pcmk__str_copy(xpath->str);
                     g_string_free(xpath, TRUE);
 
                     deleted_obj->position = -1;
@@ -796,16 +796,16 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
         CRM_ASSERT(src->type == XML_ELEMENT_NODE);
 
         doc = xmlNewDoc(PCMK__XML_VERSION);
-        CRM_ASSERT(doc != NULL);
+        pcmk__mem_assert(doc);
 
         copy = xmlDocCopyNode(src, doc, 1);
-        CRM_ASSERT(copy != NULL);
+        pcmk__mem_assert(copy);
 
         xmlDocSetRootElement(doc, copy);
 
     } else {
         copy = xmlDocCopyNode(src, parent->doc, 1);
-        CRM_ASSERT(copy != NULL);
+        pcmk__mem_assert(copy);
 
         xmlAddChild(parent, copy);
     }
@@ -1124,7 +1124,7 @@ pcmk__xml_escape(const char *text, bool escape_quote)
         return NULL;
     }
     length = strlen(text);
-    pcmk__str_update(&copy, text);
+    copy = pcmk__str_copy(text);
 
     for (size_t index = 0; index < length; index++) {
         // Don't escape any non-ASCII characters
@@ -1834,7 +1834,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             xmlNode *old = child;
             xmlNode *new = xmlCopyNode(update, 1);
 
-            CRM_ASSERT(new != NULL);
+            pcmk__mem_assert(new);
 
             // May be unnecessary but avoids slight changes to some test outputs
             reset_xml_node_flags(new);
@@ -2206,8 +2206,7 @@ crm_xml_escape(const char *text)
     }
 
     length = strlen(text);
-    copy = strdup(text);
-    CRM_ASSERT(copy != NULL);
+    copy = pcmk__str_copy(text);
     for (size_t index = 0; index <= length; index++) {
         if(copy[index] & 0x80 && copy[index+1] & 0x80){
             index++;
@@ -2259,9 +2258,13 @@ xmlNode *
 copy_xml(xmlNode *src)
 {
     xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlNode *copy = xmlDocCopyNode(src, doc, 1);
+    xmlNode *copy = NULL;
 
-    CRM_ASSERT(copy != NULL);
+    pcmk__mem_assert(doc);
+
+    copy = xmlDocCopyNode(src, doc, 1);
+    pcmk__mem_assert(copy);
+
     xmlDocSetRootElement(doc, copy);
     return copy;
 }

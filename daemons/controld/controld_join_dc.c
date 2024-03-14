@@ -598,7 +598,7 @@ do_dc_join_finalize(long long action,
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
-        pcmk__str_update(&sync_from, controld_globals.our_nodename);
+        sync_from = pcmk__str_copy(controld_globals.our_nodename);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
                   current_join_id, count_finalizable,
                   pcmk__plural_s(count_finalizable));
@@ -606,7 +606,7 @@ do_dc_join_finalize(long long action,
 
     } else {
         // Ask for the agreed best CIB
-        pcmk__str_update(&sync_from, max_generation_from);
+        sync_from = pcmk__str_copy(max_generation_from);
         crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
                    current_join_id, count_finalizable,
                    pcmk__plural_s(count_finalizable), sync_from);

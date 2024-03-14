@@ -1519,8 +1519,8 @@ main(int argc, char **argv)
     if ((options.remainder != NULL) && (options.override_params != NULL)) {
         // Commands that use positional arguments will create override_params
         for (gchar **s = options.remainder; *s; s++) {
-            char *name = calloc(1, strlen(*s));
-            char *value = calloc(1, strlen(*s));
+            char *name = pcmk__assert_alloc(1, strlen(*s));
+            char *value = pcmk__assert_alloc(1, strlen(*s));
             int rc = sscanf(*s, "%[^=]=%s", name, value);
 
             if (rc == 2) {
@@ -1552,7 +1552,7 @@ main(int argc, char **argv)
         /* Add 1 for the strv[0] string below, and add another 1 for the NULL
          * at the end of the array so g_strjoinv knows when to stop.
          */
-        strv = calloc(len+2, sizeof(char *));
+        strv = pcmk__assert_alloc(len+2, sizeof(char *));
         strv[0] = strdup("non-option ARGV-elements:\n");
 
         for (gchar **s = options.remainder; *s; s++) {

@@ -27,7 +27,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
              iter2 != NULL; iter2 = iter2->next) {
 
             const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
-            node_info_t *ni = calloc(1, sizeof(node_info_t));
+            node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
             ni->promoted = pcmk_is_set(rsc->flags, pcmk_rsc_promotable) &&
@@ -62,7 +62,8 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     } else if (rsc->running_on != NULL) {
         for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
-            node_info_t *ni = calloc(1, sizeof(node_info_t));
+            node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
+
             ni->node_name = node->details->uname;
             ni->promoted = (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted);
 

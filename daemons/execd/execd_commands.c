@@ -277,7 +277,7 @@ build_rsc_from_xml(xmlNode * msg)
     xmlNode *rsc_xml = get_xpath_object("//" PCMK__XE_LRMD_RSC, msg, LOG_ERR);
     lrmd_rsc_t *rsc = NULL;
 
-    rsc = calloc(1, sizeof(lrmd_rsc_t));
+    rsc = pcmk__assert_alloc(1, sizeof(lrmd_rsc_t));
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
@@ -301,11 +301,11 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     xmlNode *rsc_xml = get_xpath_object("//" PCMK__XE_LRMD_RSC, msg, LOG_ERR);
     lrmd_cmd_t *cmd = NULL;
 
-    cmd = calloc(1, sizeof(lrmd_cmd_t));
+    cmd = pcmk__assert_alloc(1, sizeof(lrmd_cmd_t));
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
     cmd->call_opts = call_options;
-    cmd->client_id = strdup(client->id);
+    cmd->client_id = pcmk__str_copy(client->id);
 
     crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
     crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL,
@@ -861,7 +861,7 @@ action_complete(svc_action_t * action)
              */
             goagain = true;
             cmd->real_action = cmd->action;
-            cmd->action = strdup(PCMK_ACTION_MONITOR);
+            cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
 
         } else if (cmd->real_action != NULL) {
             // This is follow-up monitor to check whether start/stop completed

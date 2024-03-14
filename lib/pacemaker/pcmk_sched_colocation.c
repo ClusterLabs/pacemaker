@@ -367,8 +367,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
         return;
     }
 
-    new_con = calloc(1, sizeof(pcmk__colocation_t));
-    CRM_ASSERT(new_con != NULL);
+    new_con = pcmk__assert_alloc(1, sizeof(pcmk__colocation_t));
 
     if (pcmk__str_eq(dependent_role, PCMK__ROLE_STARTED,
                      pcmk__str_null_matches|pcmk__str_casei)) {

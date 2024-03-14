@@ -316,7 +316,7 @@ cib_remote_listen(gpointer data)
     num_clients++;
 
     new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -416,7 +416,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     if (client->name == NULL) {
-        client->name = strdup(client->id);
+        client->name = pcmk__str_copy(client->id);
     }
 
     /* unset dangerous options */
@@ -511,7 +511,7 @@ cib_remote_msg(gpointer data)
 
         user = crm_element_value(command, PCMK_XA_USER);
         if (user) {
-            client->user = strdup(user);
+            client->user = pcmk__str_copy(user);
         }
 
         /* send ACK */
@@ -551,8 +551,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
     CRM_CHECK(data, return PAM_CONV_ERR);
     CRM_CHECK(num_msg == 1, return PAM_CONV_ERR);       /* We only want to handle one message */
 
-    reply = calloc(1, sizeof(struct pam_response));
-    CRM_ASSERT(reply != NULL);
+    reply = pcmk__assert_alloc(1, sizeof(struct pam_response));
 
     for (count = 0; count < num_msg; ++count) {
         switch (msg[count]->msg_style) {
@@ -626,7 +625,7 @@ authenticate_user(const char *user, const char *passwd)
     }
 
     p_conv.conv = construct_pam_passwd;
-    p_conv.appdata_ptr = strdup(passwd);
+    p_conv.appdata_ptr = pcmk__str_copy(passwd);
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {

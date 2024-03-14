@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <stdio.h>                          // NULL, size_t
-#include <stdlib.h>                         // calloc()
 #include <stdbool.h>                        // bool
 #include <ctype.h>                          // isdigit()
 #include <regex.h>                          // regmatch_t
@@ -699,8 +698,7 @@ pcmk__replace_submatches(const char *string, const char *match,
     }
 
     // Allocate enough space for expanded string
-    result = calloc(nbytes, sizeof(char));
-    CRM_ASSERT(result != NULL);
+    result = pcmk__assert_alloc(nbytes, sizeof(char));
 
     // Expand submatches
     (void) process_submatches(string, match, submatches, nmatches, result,

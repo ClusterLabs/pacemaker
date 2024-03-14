@@ -385,7 +385,7 @@ reap_crm_member(uint32_t id, const char *name)
     }
 
     search.id = id;
-    pcmk__str_update(&search.uname, name);
+    search.uname = pcmk__str_copy(name);
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
         crm_notice("Purged %d peer%s with " PCMK_XA_ID
@@ -603,8 +603,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
         /* node_name could be a pointer into the cache entry being purged,
          * so reassign it to a copy before the original gets freed
          */
-        node_name_copy = strdup(node_name);
-        CRM_ASSERT(node_name_copy != NULL);
+        node_name_copy = pcmk__str_copy(node_name);
         node_name = node_name_copy;
 
         crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
@@ -824,8 +823,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
 
-        node = calloc(1, sizeof(crm_node_t));
-        CRM_ASSERT(node);
+        node = pcmk__assert_alloc(1, sizeof(crm_node_t));
 
         crm_info("Created entry %s/%p for node %s/%u (%d total)",
                  uniqueid, node, uname, id, 1 + g_hash_table_size(crm_peer_cache));
@@ -1316,14 +1314,10 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
 
-        node = calloc(1, sizeof(crm_node_t));
-        CRM_ASSERT(node != NULL);
+        node = pcmk__assert_alloc(1, sizeof(crm_node_t));
 
-        node->uname = strdup(uname);
-        CRM_ASSERT(node->uname != NULL);
-
-        node->uuid = strdup(id);
-        CRM_ASSERT(node->uuid != NULL);
+        node->uname = pcmk__str_copy(uname);
+        node->uuid = pcmk__str_copy(id);
 
         g_hash_table_replace(known_node_cache, uniqueid, node);
 

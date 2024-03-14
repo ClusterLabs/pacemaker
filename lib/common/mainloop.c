@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -191,7 +191,6 @@ mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
 
     CRM_ASSERT(sizeof(crm_trigger_t) > sizeof(GSource));
     source = g_source_new(&crm_trigger_funcs, sizeof(crm_trigger_t));
-    CRM_ASSERT(source != NULL);
 
     return mainloop_setup_trigger(source, priority, dispatch, userdata);
 }
@@ -1256,7 +1255,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
                    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
 {
     static bool need_init = TRUE;
-    mainloop_child_t *child = calloc(1, sizeof(mainloop_child_t));
+    mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
 
     child->pid = pid;
     child->timerid = 0;
@@ -1264,7 +1263,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
     child->privatedata = privatedata;
     child->callback = callback;
     child->flags = flags;
-    pcmk__str_update(&child->desc, desc);
+    child->desc = pcmk__str_copy(desc);
 
     if (timeout) {
         child->timerid = g_timeout_add(timeout, child_timeout_callback, child);
@@ -1368,7 +1367,7 @@ mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
 mainloop_timer_t *
 mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata)
 {
-    mainloop_timer_t *t = calloc(1, sizeof(mainloop_timer_t));
+    mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
     if(t) {
         if(name) {

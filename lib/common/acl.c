@@ -71,8 +71,7 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
         return NULL;
     }
 
-    acl = calloc(1, sizeof (xml_acl_t));
-    CRM_ASSERT(acl != NULL);
+    acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
 
     acl->mode = mode;
     if (xpath) {
@@ -767,15 +766,13 @@ pcmk_acl_required(const char *user)
 char *
 pcmk__uid2username(uid_t uid)
 {
-    char *result = NULL;
     struct passwd *pwent = getpwuid(uid);
 
     if (pwent == NULL) {
         crm_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
         return NULL;
     }
-    pcmk__str_update(&result, pwent->pw_name);
-    return result;
+    return pcmk__str_copy(pwent->pw_name);
 }
 
 /*!
@@ -807,8 +804,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     if (effective_user == NULL) {
         effective_user = pcmk__uid2username(geteuid());
         if (effective_user == NULL) {
-            effective_user = strdup("#unprivileged");
-            CRM_CHECK(effective_user != NULL, return NULL);
+            effective_user = pcmk__str_copy("#unprivileged");
             crm_err("Unable to determine effective user, assuming unprivileged for ACLs");
         }
     }

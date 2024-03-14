@@ -255,7 +255,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 continue; // Not possible with schema validation enabled
             }
 
-            pair = calloc(1, sizeof(sorted_set_t));
+            pair = pcmk__assert_alloc(1, sizeof(sorted_set_t));
             pair->name = pcmk__xe_id(expanded_attr_set);
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;

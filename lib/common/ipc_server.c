@@ -174,7 +174,10 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = strdup("#unprivileged");
-            CRM_CHECK(client->user != NULL, free(client); return NULL);
+            if (client->user == NULL) {
+                free(client);
+                return NULL;
+            }
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
         }
@@ -259,10 +262,7 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 static struct iovec *
 pcmk__new_ipc_event(void)
 {
-    struct iovec *iov = calloc(2, sizeof(struct iovec));
-
-    CRM_ASSERT(iov != NULL);
-    return iov;
+    return (struct iovec *) pcmk__assert_alloc(2, sizeof(struct iovec));
 }
 
 /*!
@@ -413,7 +413,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
     if (header->size_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
-        uncompressed = calloc(1, size_u);
+        uncompressed = pcmk__assert_alloc(1, size_u);
 
         crm_trace("Decompressing message data %u bytes into %u bytes",
                   header->size_compressed, size_u);
@@ -618,7 +618,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     total = iov[0].iov_len + header->size_uncompressed;
 
     if (total < max_send_size) {
-        pcmk__str_update((char **) &(iov[1].iov_base), buffer->str);
+        iov[1].iov_base = pcmk__str_copy(buffer->str);
         iov[1].iov_len = header->size_uncompressed;
 
     } else {

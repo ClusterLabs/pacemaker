@@ -118,7 +118,8 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
     if ((alert_id == NULL) || (alert_path == NULL) ||
         (client == NULL) || (client->id == NULL)) { /* hint static analyzer */
-        return -EINVAL;
+        rc = -EINVAL;
+        goto err;
     }
     if (draining_alerts) {
         return pcmk_ok;
@@ -132,18 +133,9 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     pcmk__add_alert_key_int(params, PCMK__alert_key_node_sequence,
                             ++alert_sequence_no);
 
-    cb_data = calloc(1, sizeof(struct alert_cb_s));
-    if (cb_data == NULL) {
-        rc = -errno;
-        goto err;
-    }
+    cb_data = pcmk__assert_alloc(1, sizeof(struct alert_cb_s));
 
-    /* coverity[deref_ptr] False Positive */
-    cb_data->client_id = strdup(client->id);
-    if (cb_data->client_id == NULL) {
-        rc = -errno;
-        goto err;
-    }
+    cb_data->client_id = pcmk__str_copy(client->id);
 
     crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
 
@@ -167,9 +159,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
 err:
     if (cb_data) {
-        if (cb_data->client_id) {
-            free(cb_data->client_id);
-        }
+        free(cb_data->client_id);
         free(cb_data);
     }
     services_action_free(action);

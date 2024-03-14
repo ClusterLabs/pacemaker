@@ -73,16 +73,9 @@ ra_param_from_xml(xmlNode *param_xml)
     const char *param_name = crm_element_value(param_xml, PCMK_XA_NAME);
     struct ra_param_s *p;
 
-    p = calloc(1, sizeof(struct ra_param_s));
-    if (p == NULL) {
-        return NULL;
-    }
+    p = pcmk__assert_alloc(1, sizeof(struct ra_param_s));
 
-    p->rap_name = strdup(param_name);
-    if (p->rap_name == NULL) {
-        free(p);
-        return NULL;
-    }
+    p->rap_name = pcmk__str_copy(param_name);
 
     if (pcmk__xe_attr_is_true(param_xml, PCMK_XA_RELOADABLE)) {
         controld_set_ra_param_flags(p, ra_param_reloadable);
@@ -145,11 +138,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         goto err;
     }
 
-    md = calloc(1, sizeof(struct ra_metadata_s));
-    if (md == NULL) {
-        reason = "Could not allocate memory";
-        goto err;
-    }
+    md = pcmk__assert_alloc(1, sizeof(struct ra_metadata_s));
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;

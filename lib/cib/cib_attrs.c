@@ -187,8 +187,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             free_xml(xml_search);
             return ENOTUNIQ;
         } else {
-            pcmk__str_update(&local_attr_id,
-                             crm_element_value(xml_search, PCMK_XA_ID));
+            local_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
             attr_id = local_attr_id;
             free_xml(xml_search);
             goto do_modify;
@@ -245,7 +244,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
         if (set_name == NULL) {
             if (pcmk__str_eq(section, PCMK_XE_CRM_CONFIG, pcmk__str_casei)) {
-                local_set_name = strdup(PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
+                local_set_name =
+                    pcmk__str_copy(PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
 
             } else if (pcmk__str_eq(node_type, PCMK_XE_TICKETS,
                                     pcmk__str_casei)) {
@@ -384,8 +384,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
             free_xml(xml_search);
             return rc;
         } else {
-            pcmk__str_update(&local_attr_id,
-                             crm_element_value(xml_search, PCMK_XA_ID));
+            local_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
             attr_id = local_attr_id;
             free_xml(xml_search);
         }

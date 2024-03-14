@@ -147,10 +147,7 @@ pcmk__add_scores(int score1, int score2)
 char *
 score2char(int score)
 {
-    char *result = strdup(pcmk_readable_score(score));
-
-    CRM_ASSERT(result != NULL);
-    return result;
+    return pcmk__str_copy(pcmk_readable_score(score));
 }
 
 char *

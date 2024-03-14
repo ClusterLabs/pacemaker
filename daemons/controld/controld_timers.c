@@ -229,40 +229,13 @@ crm_timer_popped(gpointer data)
 bool
 controld_init_fsa_timers(void)
 {
-    transition_timer = calloc(1, sizeof(fsa_timer_t));
-    if (transition_timer == NULL) {
-        return FALSE;
-    }
-
-    integration_timer = calloc(1, sizeof(fsa_timer_t));
-    if (integration_timer == NULL) {
-        return FALSE;
-    }
-
-    finalization_timer = calloc(1, sizeof(fsa_timer_t));
-    if (finalization_timer == NULL) {
-        return FALSE;
-    }
-
-    election_timer = calloc(1, sizeof(fsa_timer_t));
-    if (election_timer == NULL) {
-        return FALSE;
-    }
-
-    shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
-    if (shutdown_escalation_timer == NULL) {
-        return FALSE;
-    }
-
-    wait_timer = calloc(1, sizeof(fsa_timer_t));
-    if (wait_timer == NULL) {
-        return FALSE;
-    }
-
-    recheck_timer = calloc(1, sizeof(fsa_timer_t));
-    if (recheck_timer == NULL) {
-        return FALSE;
-    }
+    transition_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    integration_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    finalization_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    election_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    shutdown_escalation_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    wait_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    recheck_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
 
     election_timer->source_id = 0;
     election_timer->period_ms = 0;

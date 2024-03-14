@@ -147,7 +147,7 @@ xpath_search(const xmlNode *xml_top, const char *path)
     CRM_CHECK(strlen(path) > 0, return NULL);
 
     xpathCtx = xmlXPathNewContext(xml_top->doc);
-    CRM_ASSERT(xpathCtx != NULL);
+    pcmk__mem_assert(xpathCtx);
 
     xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
     xmlXPathFreeContext(xpathCtx);
@@ -387,10 +387,7 @@ xml_get_path(const xmlNode *xml)
     if (g_path == NULL) {
         return NULL;
     }
-
-    path = strdup((const char *) g_path->str);
-    CRM_ASSERT(path != NULL);
-
+    path = pcmk__str_copy(g_path->str);
     g_string_free(g_path, TRUE);
     return path;
 }

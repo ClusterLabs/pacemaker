@@ -933,9 +933,6 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *tmp_cib = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
     char *tmp_digest = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
 
-    CRM_ASSERT((cib_path != NULL) && (digest_path != NULL)
-               && (tmp_cib != NULL) && (tmp_digest != NULL));
-
     /* Ensure the admin didn't modify the existing CIB underneath us */
     crm_trace("Reading cluster configuration file %s", cib_path);
     rc = cib_file_read_and_verify(cib_path, NULL, NULL);

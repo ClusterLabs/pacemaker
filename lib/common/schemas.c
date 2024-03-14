@@ -240,8 +240,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     pcmk__schema_t *schema = NULL;
     int last = g_list_length(known_schemas);
 
-    schema = calloc(1, sizeof(pcmk__schema_t));
-    CRM_ASSERT(schema != NULL);
+    schema = pcmk__assert_alloc(1, sizeof(pcmk__schema_t));
 
     schema->validator = validator;
     schema->version.v[0] = version->v[0];
@@ -251,18 +250,15 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     if (version->v[0] || version->v[1]) {
         schema->name = schema_strdup_printf("pacemaker-", *version, "");
     } else {
-        schema->name = strdup(name);
-        CRM_ASSERT(schema->name != NULL);
+        schema->name = pcmk__str_copy(name);
     }
 
     if (transform) {
-        schema->transform = strdup(transform);
-        CRM_ASSERT(schema->transform != NULL);
+        schema->transform = pcmk__str_copy(transform);
     }
 
     if (transform_enter) {
-        schema->transform_enter = strdup(transform_enter);
-        CRM_ASSERT(schema->transform_enter != NULL);
+        schema->transform_enter = pcmk__str_copy(transform_enter);
     }
 
     known_schemas = g_list_append(known_schemas, schema);
@@ -531,7 +527,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
 
     } else {
         crm_debug("Creating RNG parser context");
-        ctx = calloc(1, sizeof(relaxng_ctx_cache_t));
+        ctx = pcmk__assert_alloc(1, sizeof(relaxng_ctx_cache_t));
 
         ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
         CRM_CHECK(ctx->parser != NULL, goto cleanup);
@@ -1397,16 +1393,12 @@ static void
 append_href(xmlNode *xml, void *user_data)
 {
     GList **list = user_data;
-    const char *href = crm_element_value(xml, "href");
-    char *s = NULL;
+    char *href = crm_element_value_copy(xml, "href");
 
     if (href == NULL) {
         return;
     }
-
-    s = strdup(href);
-    CRM_ASSERT(s != NULL);
-    *list = g_list_prepend(*list, s);
+    *list = g_list_prepend(*list, href);
 }
 
 static void
@@ -1460,8 +1452,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
         path = crm_strdup_printf("%s.rng", file);
     } else {
-        path = strdup(file);
-        CRM_ASSERT(path != NULL);
+        path = pcmk__str_copy(file);
     }
 
     rc = read_file_contents(path, &contents);

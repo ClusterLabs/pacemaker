@@ -175,7 +175,7 @@ st_fail_count_increment(const char *target)
         }
 
         rec->count = 1;
-        g_hash_table_insert(stonith_failures, strdup(target), rec);
+        g_hash_table_insert(stonith_failures, pcmk__str_copy(target), rec);
     }
 }
 
@@ -235,7 +235,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
 
     if (peer->uuid == NULL) {
         crm_info("Recording uuid '%s' for node '%s'", uuid, target);
-        peer->uuid = strdup(uuid);
+        peer->uuid = pcmk__str_copy(uuid);
     }
 
     crmd_peer_down(peer, TRUE);
@@ -261,7 +261,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
 
     /* Delay processing the trigger until the update completes */
     crm_debug("Sending fencing update %d for %s", rc, target);
-    fsa_register_cib_callback(rc, strdup(target), cib_fencing_updated);
+    fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
     // Make sure it sticks
     /* controld_globals.cib_conn->cmds->bump_epoch(controld_globals.cib_conn,
@@ -315,7 +315,8 @@ static GList *stonith_cleanup_list = NULL;
  */
 void
 add_stonith_cleanup(const char *target) {
-    stonith_cleanup_list = g_list_append(stonith_cleanup_list, strdup(target));
+    stonith_cleanup_list = g_list_append(stonith_cleanup_list,
+                                         pcmk__str_copy(target));
 }
 
 /*!

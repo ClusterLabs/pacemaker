@@ -1943,8 +1943,7 @@ clone_zero(const char *last_rsc_id)
     char *zero = NULL;
 
     CRM_ASSERT(end);
-    zero = calloc(base_name_len + 3, sizeof(char));
-    CRM_ASSERT(zero);
+    zero = pcmk__assert_alloc(base_name_len + 3, sizeof(char));
     memcpy(zero, last_rsc_id, base_name_len);
     zero[base_name_len] = ':';
     zero[base_name_len + 1] = '0';
@@ -3517,15 +3516,13 @@ last_change_str(const xmlNode *xml_op)
 
         // Skip day of week to make message shorter
         if ((p != NULL) && (*(++p) != '\0')) {
-            result = strdup(p);
-            CRM_ASSERT(result != NULL);
+            result = pcmk__str_copy(p);
         }
         free(when_s);
     }
 
     if (result == NULL) {
-        result = strdup("unknown time");
-        CRM_ASSERT(result != NULL);
+        result = pcmk__str_copy("unknown_time");
     }
 
     return result;

@@ -86,7 +86,7 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
 
     /* This ipc client is bound to a single ipc provider. If the
      * provider goes away, this client is disconnected */
-    client->userdata = strdup(ipc_proxy->id);
+    client->userdata = pcmk__str_copy(ipc_proxy->id);
     client->name = crm_strdup_printf("proxy-%s-%d-%.8s", ipc_channel, client->pid, client->id);
 
     /* Allow remote executor to distinguish between proxied local clients and

@@ -203,7 +203,7 @@ services__get_nagios_metadata(const char *type, char **output)
 
     } else {
         crm_trace("Reading %d bytes from file", length);
-        *output = calloc(1, (length + 1));
+        *output = pcmk__assert_alloc(1, (length + 1));
         read_len = fread(*output, 1, length, file_strm);
         if (read_len != length) {
             crm_err("Calculated and read bytes differ: %d vs. %d",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,6 +59,22 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
         } else {                                                    \
             pcmk__config_warning_handler(pcmk__config_warning_context, fmt);   \
         }                                                           \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Abort without dumping core if a pointer is \c NULL
+ *
+ * This is intended to check for memory allocation failure, rather than for null
+ * pointers in general.
+ *
+ * \param[in] ptr  Pointer to check
+ */
+#define pcmk__mem_assert(ptr) do {                                          \
+        if ((ptr) == NULL) {                                                \
+            crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
+                      FALSE);                                               \
+        }                                                                   \
     } while (0)
 
 /*!

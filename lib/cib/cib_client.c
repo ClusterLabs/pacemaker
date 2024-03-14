@@ -88,7 +88,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
     crm_trace("Adding callback for %s events (%d)",
               event, g_list_length(cib->notify_list));
 
-    new_client = calloc(1, sizeof(cib_notify_client_t));
+    new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
     new_client->callback = callback;
 
@@ -146,7 +146,7 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
 
     crm_debug("Removing callback for %s events", event);
 
-    new_client = calloc(1, sizeof(cib_notify_client_t));
+    new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
     new_client->callback = callback;
 
@@ -208,7 +208,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
         return FALSE;
     }
 
-    blob = calloc(1, sizeof(cib_callback_client_t));
+    blob = pcmk__assert_alloc(1, sizeof(cib_callback_client_t));
     blob->id = callback_name;
     blob->only_success = only_success;
     blob->user_data = user_data;
@@ -216,9 +216,9 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
     blob->free_func = free_func;
 
     if (timeout > 0) {
-        struct timer_rec_s *async_timer = NULL;
+        struct timer_rec_s *async_timer =
+            pcmk__assert_alloc(1, sizeof(struct timer_rec_s));
 
-        async_timer = calloc(1, sizeof(struct timer_rec_s));
         blob->timer = async_timer;
 
         async_timer->cib = cib;

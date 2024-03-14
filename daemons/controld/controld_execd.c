@@ -174,14 +174,14 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
     entry = g_hash_table_lookup(lrm_state->resource_history, op->rsc_id);
     if (entry == NULL && rsc) {
-        entry = calloc(1, sizeof(rsc_history_t));
-        entry->id = strdup(op->rsc_id);
+        entry = pcmk__assert_alloc(1, sizeof(rsc_history_t));
+        entry->id = pcmk__str_copy(op->rsc_id);
         g_hash_table_insert(lrm_state->resource_history, entry->id, entry);
 
         entry->rsc.id = entry->id;
-        entry->rsc.type = strdup(rsc->type);
-        entry->rsc.standard = strdup(rsc->standard);
-        pcmk__str_update(&entry->rsc.provider, rsc->provider);
+        entry->rsc.type = pcmk__str_copy(rsc->type);
+        entry->rsc.standard = pcmk__str_copy(rsc->standard);
+        entry->rsc.provider = pcmk__str_copy(rsc->provider);
 
     } else if (entry == NULL) {
         crm_info("Resource %s no longer exists, not updating cache", op->rsc_id);
@@ -713,7 +713,7 @@ delete_rsc_entry(lrm_state_t *lrm_state, ha_msg_input_t *input,
     CRM_CHECK(rsc_id != NULL, return);
 
     if (rc == pcmk_ok) {
-        char *rsc_id_copy = strdup(rsc_id);
+        char *rsc_id_copy = pcmk__str_copy(rsc_id);
 
         if (rsc_iter) {
             g_hash_table_iter_remove(rsc_iter);
@@ -983,8 +983,8 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
             struct pending_deletion_op_s *op = NULL;
             char *ref = crm_element_value_copy(request->msg, PCMK_XA_REFERENCE);
 
-            op = calloc(1, sizeof(struct pending_deletion_op_s));
-            op->rsc = strdup(rsc->id);
+            op = pcmk__assert_alloc(1, sizeof(struct pending_deletion_op_s));
+            op->rsc = pcmk__str_copy(rsc->id);
             op->input = copy_ha_msg_input(request);
             g_hash_table_insert(lrm_state->deletion_ops, ref, op);
         }
@@ -1365,8 +1365,7 @@ new_metadata_cb_data(lrmd_rsc_info_t *rsc, xmlNode *input_xml)
 {
     struct metadata_cb_data *data = NULL;
 
-    data = calloc(1, sizeof(struct metadata_cb_data));
-    CRM_ASSERT(data != NULL);
+    data = pcmk__assert_alloc(1, sizeof(struct metadata_cb_data));
     data->input_xml = pcmk__xml_copy(NULL, input_xml);
     data->rsc = lrmd_copy_rsc_info(rsc);
     return data;
@@ -1712,7 +1711,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     transition = crm_element_value(rsc_op, PCMK__XA_TRANSITION_KEY);
     CRM_CHECK(transition != NULL, return op);
 
-    op->user_data = strdup(transition);
+    op->user_data = pcmk__str_copy(transition);
 
     if (op->interval_ms != 0) {
         if (pcmk__strcase_any_of(operation, PCMK_ACTION_START, PCMK_ACTION_STOP,
@@ -1753,8 +1752,9 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     CRM_CHECK(op != NULL, return);
     if (op->rsc_id == NULL) {
+        // op->rsc_id is a (const char *) but lrmd_free_event() frees it
         CRM_ASSERT(rsc_id != NULL);
-        op->rsc_id = strdup(rsc_id);
+        op->rsc_id = pcmk__str_copy(rsc_id);
     }
     if (to_sys == NULL) {
         to_sys = CRM_SYSTEM_TENGINE;
@@ -2022,16 +2022,16 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         char *call_id_s = make_stop_id(rsc->id, call_id);
         active_op_t *pending = NULL;
 
-        pending = calloc(1, sizeof(active_op_t));
+        pending = pcmk__assert_alloc(1, sizeof(active_op_t));
         crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;
         pending->interval_ms = op->interval_ms;
-        pending->op_type = strdup(operation);
-        pending->op_key = strdup(op_id);
-        pending->rsc_id = strdup(rsc->id);
+        pending->op_type = pcmk__str_copy(operation);
+        pending->op_key = pcmk__str_copy(op_id);
+        pending->rsc_id = pcmk__str_copy(rsc->id);
         pending->start_time = time(NULL);
-        pcmk__str_update(&pending->user_data, op->user_data);
+        pending->user_data = pcmk__str_copy(op->user_data);
         if (crm_element_value_epoch(msg, PCMK_OPT_SHUTDOWN_LOCK,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;
@@ -2091,7 +2091,7 @@ unescape_newlines(const char *string)
         return NULL;
     }
 
-    ret = strdup(string);
+    ret = pcmk__str_copy(string);
     pch = strstr(ret, escaped_newline);
     while (pch != NULL) {
         /* Replace newline escape pattern with actual newline (and a space so we
