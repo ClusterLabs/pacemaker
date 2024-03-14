@@ -482,6 +482,20 @@ int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
  */
 int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
 
+/*!
+ * \brief Return a ticket's state XML
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find state for, or \c NULL for all
+ *                              tickets
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If \p ticket_id is not \c NULL and more than one ticket exists with
+ *       that ID, this function returns \c pcmk_rc_duplicate_id.
+ */
+int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

@@ -267,47 +267,6 @@ find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
     return g_hash_table_lookup(scheduler->tickets, ticket_id);
 }
 
-PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
-static int
-ticket_state_default(pcmk__output_t *out, va_list args)
-{
-    gchar *ticket_id G_GNUC_UNUSED = va_arg(args, gchar *);
-    xmlNode *state_xml = va_arg(args, xmlNode *);
-
-    GString *buf = g_string_sized_new(1024);
-
-    pcmk__formatted_printf(out, "State XML:\n\n");
-    pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
-    out->output_xml(out, PCMK__XE_TICKET_STATE, buf->str);
-
-    g_string_free(buf, TRUE);
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("ticket-state", "gchar *", "xmlNode *")
-static int
-ticket_state_xml(pcmk__output_t *out, va_list args)
-{
-    gchar *ticket_id = va_arg(args, gchar *);
-    xmlNode *state_xml = va_arg(args, xmlNode *);
-
-    xmlNode *ticket_node = NULL;
-
-    /* Create:
-     * <tickets>
-     *   <ticket id="" ... />
-     * </tickets>
-     */
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
-    ticket_node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET,
-                                               PCMK_XA_ID, ticket_id,
-                                               NULL);
-    copy_in_properties(ticket_node, state_xml);
-    pcmk__output_xml_pop_parent(out);
-
-    return pcmk_rc_ok;
-}
-
 static void
 ticket_grant_warning(gchar *ticket_id)
 {
@@ -535,13 +494,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
-static pcmk__message_entry_t fmt_functions[] = {
-    { "ticket-state", "default", ticket_state_default },
-    { "ticket-state", "xml", ticket_state_xml },
-
-    { NULL, NULL, NULL }
-};
-
 int
 main(int argc, char **argv)
 {
@@ -583,7 +535,6 @@ main(int argc, char **argv)
 
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
-    pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
         out->version(out, false);
@@ -672,26 +623,14 @@ main(int argc, char **argv)
         }
 
     } else if (options.ticket_cmd == 'q') {
-        xmlNode *state_xml = NULL;
+        rc = pcmk__ticket_state(out, cib_conn, options.ticket_id);
 
-        rc = pcmk__get_ticket_state(cib_conn, options.ticket_id, &state_xml);
-
-        if (rc == pcmk_rc_duplicate_id) {
-            out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
-                      options.ticket_id);
-            rc = pcmk_rc_ok;
-        }
-
-        if (state_xml != NULL) {
-            out->message(out, "ticket-state", options.ticket_id, state_xml);
-            free_xml(state_xml);
-        }
-
-        exit_code = pcmk_rc2exitc(rc);
-
-        if (rc != pcmk_rc_ok) {
+        if (rc != pcmk_rc_ok && rc != pcmk_rc_duplicate_id) {
+            exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not query ticket XML: %s", pcmk_rc_str(rc));
+        } else {
+            exit_code = CRM_EX_OK;
         }
 
     } else if (options.ticket_cmd == 'c') {

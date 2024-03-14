@@ -2520,6 +2520,61 @@ ticket_constraints_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket-state", "xmlNode *")
+static int
+ticket_state_default(pcmk__output_t *out, va_list args)
+{
+    xmlNode *state_xml = va_arg(args, xmlNode *);
+
+    GString *buf = g_string_sized_new(1024);
+
+    out->info(out, "State XML:\n");
+    pcmk__xml_string(state_xml, pcmk__xml_fmt_pretty, buf, 0);
+    out->output_xml(out, PCMK__XE_TICKET_STATE, buf->str);
+
+    g_string_free(buf, TRUE);
+    return pcmk_rc_ok;
+}
+
+static int
+add_ticket_element(xmlNode *node, void *userdata)
+{
+    pcmk__output_t *out = (pcmk__output_t *) userdata;
+    xmlNode *ticket_node = NULL;
+
+    ticket_node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET, NULL);
+    copy_in_properties(ticket_node, node);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ticket-state", "xmlNode *")
+static int
+ticket_state_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNode *state_xml = va_arg(args, xmlNode *);
+
+    /* Create:
+     * <tickets>
+     *   <ticket />
+     *   ...
+     * </tickets>
+     */
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+
+    if (state_xml->children != NULL) {
+        /* Iterate through the list of children once to create all the
+         * ticket elements.
+         */
+        pcmk__xe_foreach_child(state_xml, PCMK__XE_TICKET_STATE, add_ticket_element, out);
+
+    } else {
+        add_ticket_element(state_xml, out);
+    }
+
+    pcmk__output_xml_pop_parent(out);
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "attribute", "default", attribute_default },
     { "attribute", "xml", attribute_xml },
@@ -2585,6 +2640,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "ticket-attribute", "xml", ticket_attribute_xml },
     { "ticket-constraints", "default", ticket_constraints_default },
     { "ticket-constraints", "xml", ticket_constraints_xml },
+    { "ticket-state", "default", ticket_state_default },
+    { "ticket-state", "xml", ticket_state_xml },
 
     { NULL, NULL, NULL }
 };
