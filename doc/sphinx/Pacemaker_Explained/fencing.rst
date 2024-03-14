@@ -326,8 +326,8 @@ for ``pacemaker-fenced``.
           single: pcmk_reboot_timeout
 
        pcmk_reboot_timeout
-     - :ref:`integer <integer>`
-     - 60
+     - :ref:`timeout <timeout>`
+     - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
        for ``reboot`` actions instead of the value of ``stonith-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
@@ -364,8 +364,8 @@ for ``pacemaker-fenced``.
           single: pcmk_off_timeout
 
        pcmk_off_timeout
-     - :ref:`integer <integer>`
-     - 60
+     - :ref:`timeout <timeout>`
+     - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
        for ``off`` actions instead of the value of ``stonith-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
@@ -402,8 +402,8 @@ for ``pacemaker-fenced``.
           single: pcmk_list_timeout
 
        pcmk_list_timeout
-     - :ref:`integer <integer>`
-     - 60
+     - :ref:`timeout <timeout>`
+     - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
        for ``list`` actions instead of the value of ``stonith-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
@@ -440,8 +440,8 @@ for ``pacemaker-fenced``.
           single: pcmk_monitor_timeout
 
        pcmk_monitor_timeout
-     - :ref:`integer <integer>`
-     - 60
+     - :ref:`timeout <timeout>`
+     - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
        for ``monitor`` actions instead of the value of ``stonith-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
@@ -478,8 +478,8 @@ for ``pacemaker-fenced``.
           single: pcmk_status_timeout
 
        pcmk_status_timeout
-     - :ref:`integer <integer>`
-     - 60
+     - :ref:`timeout <timeout>`
+     - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
        for ``status`` actions instead of the value of ``stonith-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
