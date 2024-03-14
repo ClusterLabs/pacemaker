@@ -57,22 +57,23 @@ Also:
 | RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
 | unit tests                                      | 1.1.0 or later | libcmocka-devel         | libcmocka-devel         | libcmocka-dev           |
 
-## Optional testing dependencies
-* procps and psmisc (if running cts-exec, cts-fencing, or CTS)
-* valgrind (if running CTS valgrind tests)
-* python3-systemd (if using CTS on cluster nodes running systemd)
+## Optional Testing Dependencies
+* procps and psmisc (if running cts-exec, cts-fencing, or CTS lab)
+* valgrind (if running valgrind tests in cts-cli, cts-scheduler, or CTS lab)
+* python3-dateutil and python3-systemd (if running CTS lab on cluster nodes
+  running systemd)
 * nmap (if not specifying an IP address base)
-* oprofile (if running CTS profiling tests)
-* dlm (to log DLM debugging info after CTS tests)
+* oprofile (if running CTS lab profiling tests)
+* dlm (to log DLM debugging info after CTS lab tests)
 * xmllint (to validate tool output in cts-cli)
 
-## Simple install
+## Simple Install
 
     $ make && sudo make install
 
 If GNU make is not your default make, use "gmake" instead.
 
-## Detailed install
+## Detailed Install
 
 First, browse the build options that are available:
 
