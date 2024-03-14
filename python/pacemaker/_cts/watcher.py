@@ -389,9 +389,7 @@ class LogWatcher:
         out         -- stdout from the file read
         err         -- stderr from the file read
         """
-        # It's not clear to me whether this function ever gets called as
-        # delegate somewhere, which is what would pass returncode and err
-        # as parameters.  Just disable the warning for now.
+        # Called as delegate through {File,Journal}Obj.async_complete()
         # pylint: disable=unused-argument
 
         # TODO: Probably need a lock for updating self._line_cache
