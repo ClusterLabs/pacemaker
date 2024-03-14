@@ -1954,7 +1954,7 @@ main(int argc, char **argv)
             } else if (pcmk__str_eq(options.attr_set_type,
                                     PCMK_XE_META_ATTRIBUTES, pcmk__str_none)) {
                 params = pcmk__strkey_table(free, free);
-                get_meta_attributes(params, rsc, current, scheduler);
+                get_meta_attributes(params, rsc, NULL, scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
 

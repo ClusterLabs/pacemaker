@@ -1066,7 +1066,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, node, scheduler);
+    get_meta_attributes(meta, rsc, NULL, scheduler);
     if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
