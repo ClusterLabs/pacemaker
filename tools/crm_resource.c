@@ -89,7 +89,7 @@ struct {
     char *prop_name;              // Attribute name
     gchar *prop_set;              // --set-name (attribute block XML ID)
     gchar *prop_value;            // --parameter-value (attribute value)
-    long long timeout_ms;         // Parsed from --timeout value
+    guint timeout_ms;             // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
     gchar *xml_file;              // Value of (deprecated) --xml-file
     int check_level;              // Optional value of --validate or --force-check
@@ -802,13 +802,14 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.timeout_ms = crm_get_msec(optarg);
+    long long timeout_ms = crm_get_msec(optarg);
 
-    if (options.timeout_ms < 0) {
+    if (timeout_ms < 0) {
+        // @COMPAT When we can break backward compatibilty, return FALSE
         crm_warn("Ignoring invalid timeout '%s'", optarg);
-        options.timeout_ms = 0;
+        options.timeout_ms = 0U;
     } else {
-        options.timeout_ms = QB_MIN(options.timeout_ms, INT_MAX);
+        options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
     }
     return TRUE;
 }
