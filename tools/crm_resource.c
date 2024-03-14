@@ -1965,9 +1965,14 @@ main(int argc, char **argv)
                 free_params = false;
 
             } else {
+                pe_rule_eval_data_t rule_data = {
+                    .now = scheduler->now,
+                };
+
                 params = pcmk__strkey_table(free, free);
-                pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_UTILIZATION, NULL,
-                                           params, NULL, FALSE, scheduler);
+                pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_UTILIZATION,
+                                           &rule_data, params, NULL, FALSE,
+                                           scheduler);
 
                 value = g_hash_table_lookup(params, options.prop_name);
             }
