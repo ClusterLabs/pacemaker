@@ -218,3 +218,49 @@ done:
     pe_free_working_set(scheduler);
     return rc;
 }
+
+int
+pcmk__ticket_state(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
+{
+    xmlNode *state_xml = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT(out != NULL && cib != NULL);
+
+    rc = pcmk__get_ticket_state(cib, ticket_id, &state_xml);
+
+    if (rc == pcmk_rc_duplicate_id) {
+        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                  ticket_id);
+    }
+
+    if (state_xml != NULL) {
+        out->message(out, "ticket-state", state_xml);
+        free_xml(state_xml);
+    }
+
+    return rc;
+}
+
+int
+pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+    cib_t *cib = NULL;
+
+    rc = pcmk__setup_output_cib_sched(&out, &cib, NULL, xml);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__ticket_state(out, cib, ticket_id);
+
+done:
+    if (cib != NULL) {
+        cib__clean_up_connection(&cib);
+    }
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    return rc;
+}

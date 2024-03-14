@@ -80,4 +80,20 @@ int pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 int pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
                       const char *ticket_id, bool details, bool raw);
 
+/*!
+ * \internal
+ * \brief Return a ticket's state XML
+ *
+ * \param[in,out]   out         Output object
+ * \param[in]       cib         Open CIB connection
+ * \param[in]       ticket_id   Ticket to find constraints for,
+ *                              or \c NULL for all ticket constraints
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If \p ticket_id is not \c NULL and more than one ticket exists with
+ *       that ID, this function returns \c pcmk_rc_duplicate_id.
+ */
+int pcmk__ticket_state(pcmk__output_t *out, cib_t *cib, const char *ticket_id);
+
 #endif
