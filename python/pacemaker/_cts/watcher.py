@@ -172,9 +172,10 @@ class FileObj(SearchObj):
 
             return None
 
-        return self.rsh.call_async(self.host,
-                                   "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, self.offset),
-                                   delegate=self)
+        cmd = ("%s -p CTSwatcher: -l 200 -f %s -o %s"
+               % (LOG_WATCHER_BIN, self.filename, self.offset))
+
+        return self.rsh.call_async(self.host, cmd, delegate=self)
 
     def set_end(self):
         """
@@ -186,10 +187,11 @@ class FileObj(SearchObj):
         if self.limit:
             return
 
+        cmd = ("%s -p CTSwatcher: -l 2 -f %s -o EOF"
+               % (LOG_WATCHER_BIN, self.filename))
+
         # pylint: disable=not-callable
-        (_, lines) = self.rsh(self.host,
-                              "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, "EOF"),
-                              verbose=0)
+        (_, lines) = self.rsh(self.host, cmd, verbose=0)
 
         for line in lines:
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
