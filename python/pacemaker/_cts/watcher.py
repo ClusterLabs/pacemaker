@@ -4,7 +4,7 @@ __all__ = ["LogKind", "LogWatcher"]
 __copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-from enum import Enum, unique
+from enum import Enum, auto, unique
 import re
 import time
 import threading
@@ -20,21 +20,14 @@ LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 class LogKind(Enum):
     """The various kinds of log files that can be watched."""
 
-    ANY = 0
-    FILE = 1
-    REMOTE_FILE = 2
-    JOURNAL = 3
+    ANY = auto()            # From an undetermined log source
+    LOCAL_FILE = auto()     # From a local aggregation file on the exerciser
+    REMOTE_FILE = auto()    # From a file on each cluster node
+    JOURNAL = auto()        # From the systemd journal on each cluster node
 
     def __str__(self):
         """Return a printable string for a LogKind value."""
-        if self.value == 0:
-            return "any"
-        if self.value == 1:
-            return "combined syslog"
-        if self.value == 2:
-            return "remote"
-
-        return "journal"
+        return self.name.lower().replace('_', ' ')
 
 
 class SearchObj:
@@ -371,16 +364,16 @@ class LogWatcher:
 
     def set_watch(self):
         """Mark the place to start watching the log from."""
-        if self.kind == LogKind.REMOTE_FILE:
+        if self.kind == LogKind.LOCAL_FILE:
+            self._file_list.append(FileObj(self.filename))
+
+        elif self.kind == LogKind.REMOTE_FILE:
             for node in self.hosts:
                 self._file_list.append(FileObj(self.filename, node, self.name))
 
         elif self.kind == LogKind.JOURNAL:
             for node in self.hosts:
                 self._file_list.append(JournalObj(node, self.name))
-
-        else:
-            self._file_list.append(FileObj(self.filename))
 
     def async_complete(self, pid, returncode, out, err):
         """
