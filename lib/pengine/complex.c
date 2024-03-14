@@ -248,6 +248,20 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         get_rsc_attributes(meta_hash, rsc->parent, node, scheduler);
 
     } else {
+        if (pcmk__xe_first_child(scheduler->rsc_defaults,
+                                 PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
+                                 NULL) != NULL) {
+            /* Not possible with schema validation enabled
+             *
+             * @COMPAT Drop support when we can break behavioral
+             * backward compatibility
+             */
+            pcmk__warn_once(pcmk__wo_instance_defaults,
+                            "Support for " PCMK_XE_INSTANCE_ATTRIBUTES " in "
+                            PCMK_XE_RSC_DEFAULTS " is deprecated and will be "
+                            "removed in a future release");
+        }
+
         /* and finally check the defaults */
         pe__unpack_dataset_nvpairs(scheduler->rsc_defaults,
                                    PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
