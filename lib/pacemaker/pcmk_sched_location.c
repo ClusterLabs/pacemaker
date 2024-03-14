@@ -355,7 +355,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     value = crm_element_value(xml_obj, PCMK_XA_RSC_PATTERN);
     if (value) {
-        regex_t *r_patt = pcmk__assert_alloc(1, sizeof(regex_t));
+        regex_t regex;
         bool invert = false;
 
         if (value[0] == '!') {
@@ -363,11 +363,10 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             invert = true;
         }
 
-        if (regcomp(r_patt, value, REG_EXTENDED) != 0) {
+        if (regcomp(&regex, value, REG_EXTENDED) != 0) {
             pcmk__config_err("Ignoring constraint '%s' because "
                              PCMK_XA_RSC_PATTERN
                              " has invalid value '%s'", id, value);
-            free(r_patt);
             return;
         }
 
@@ -379,14 +378,14 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             regmatch_t *pmatch = NULL;
             int status;
 
-            if (r_patt->re_nsub > 0) {
-                nregs = r_patt->re_nsub + 1;
+            if (regex.re_nsub > 0) {
+                nregs = regex.re_nsub + 1;
             } else {
                 nregs = 1;
             }
             pmatch = pcmk__assert_alloc(nregs, sizeof(regmatch_t));
 
-            status = regexec(r_patt, r->id, nregs, pmatch, 0);
+            status = regexec(&regex, r->id, nregs, pmatch, 0);
 
             if (!invert && (status == 0)) {
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
@@ -405,8 +404,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             free(pmatch);
         }
 
-        regfree(r_patt);
-        free(r_patt);
+        regfree(&regex);
     }
 }
 
