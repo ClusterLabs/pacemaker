@@ -9,7 +9,10 @@ import re
 import time
 import threading
 
+from dateutil.parser import isoparser
+
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.errors import OutputNotFoundError
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
@@ -65,6 +68,7 @@ class SearchObj:
         else:
             self.host = "localhost"
 
+        self._cache = []
         self._delegate = None
 
         async_task = self.harvest_async()
@@ -95,6 +99,12 @@ class SearchObj:
         """
         raise NotImplementedError
 
+    def harvest_cached(self):
+        """
+        Return cached logs from before the limit timestamp.
+        """
+        raise NotImplementedError
+
     def end(self):
         """
         Mark that a log is done being watched.
@@ -103,7 +113,8 @@ class SearchObj:
         of the file.  Subsequent watches will therefore start from the
         beginning again.
         """
-        self.debug("Unsetting the limit")
+        self.debug("Clearing cache and unsetting limit")
+        self._cache = []
         self.limit = None
 
 
@@ -172,6 +183,14 @@ class FileObj(SearchObj):
                                    "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, self.offset),
                                    delegate=self)
 
+    def harvest_cached(self):
+        """
+        Return cached logs from before the limit timestamp.
+        """
+        # cts-log-watcher script renders caching unnecessary for FileObj.
+        # @TODO Caching might be slightly more efficient, if not too complex.
+        return []
+
     def set_end(self):
         """
         Internally record where we expect to find the end of a log file.
@@ -206,6 +225,36 @@ class JournalObj(SearchObj):
         name     -- A unique name to use when logging about this watch
         """
         SearchObj.__init__(self, name, host, name)
+        self._parser = isoparser()
+
+    def _split_msgs_by_limit(self, msgs):
+        """
+        Split a list of messages relative to the limit timestamp.
+
+        Arguments:
+        msgs -- List of messages to split
+
+        Returns a tuple:
+        (list of messages logged before limit timestamp (inclusive),
+         list of messages logged after limit timestamp (exclusive)).
+        """
+        if self.limit:
+            limit_dt = self._parser.isoparse(self.limit)
+
+            for idx, msg in enumerate(msgs):
+                match = re.search(r"^\S+", msg)
+                if not match:
+                    continue
+
+                msg_timestamp = match.group(0)
+                msg_dt = self._parser.isoparse(msg_timestamp)
+                if msg_dt > limit_dt:
+                    self.debug("Got %d lines before passing limit timestamp"
+                               % idx)
+                    return msgs[:idx], msgs[idx:]
+
+        self.debug("Got %s lines" % len(msgs))
+        return msgs, []
 
     def async_complete(self, pid, returncode, out, err):
         """
@@ -221,18 +270,24 @@ class JournalObj(SearchObj):
         out         -- stdout from the journal read
         err         -- stderr from the journal read
         """
-        messages = []
-        for line in out:
-            match = re.search(r"^-- cursor: ([^.]+)", line)
+        if out:
+            # Cursor should always be last line of journalctl output
+            out, cursor_line = out[:-1], out[-1]
+            match = re.search(r"^-- cursor: ([^.]+)", cursor_line)
+            if not match:
+                raise OutputNotFoundError('Cursor not found at end of output:'
+                                          + '\n%s' % out)
 
-            if match:
-                self.offset = match.group(1).strip()
-                self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
-            else:
-                messages.append(line)
+            self.offset = match.group(1).strip()
+            self.debug("Got new cursor: %s" % self.offset)
+
+        before, after = self._split_msgs_by_limit(out)
+
+        # Save remaining messages after limit for later processing
+        self._cache.extend(after)
 
         if self._delegate:
-            self._delegate.async_complete(pid, returncode, messages, err)
+            self._delegate.async_complete(pid, returncode, before, err)
 
     def harvest_async(self, delegate=None):
         """
@@ -246,14 +301,20 @@ class JournalObj(SearchObj):
 
         # Use --lines to prevent journalctl from overflowing the Popen input
         # buffer
+        command = "journalctl --quiet --output=short-iso --show-cursor"
         if self.offset == "EOF":
-            command = "journalctl -q -n 0 --show-cursor"
-        elif self.limit:
-            command = "journalctl -q --after-cursor='%s' --until '%s' --lines=200 --show-cursor" % (self.offset, self.limit)
+            command += " --lines 0"
         else:
-            command = "journalctl -q --after-cursor='%s' --lines=200 --show-cursor" % (self.offset)
+            command += " --after-cursor='%s' --lines=200" % self.offset
 
         return self.rsh.call_async(self.host, command, delegate=self)
+
+    def harvest_cached(self):
+        """
+        Return cached logs from before the limit timestamp.
+        """
+        before, self._cache = self._split_msgs_by_limit(self._cache)
+        return before
 
     def set_end(self):
         """
@@ -265,8 +326,11 @@ class JournalObj(SearchObj):
         if self.limit:
             return
 
+        # --iso-8601=seconds yields YYYY-MM-DDTHH:MM:SSZ, where Z is timezone
+        # as offset from UTC
+
         # pylint: disable=not-callable
-        (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
+        (rc, lines) = self.rsh(self.host, "date --iso-8601=seconds", verbose=0)
 
         if rc == 0 and len(lines) == 1:
             self.limit = lines[0].strip()
@@ -384,9 +448,16 @@ class LogWatcher:
         pending = []
 
         for f in self._file_list:
-            t = f.harvest_async(self)
-            if t:
-                pending.append(t)
+            cached = f.harvest_cached()
+            if cached:
+                self._debug("Got %d lines from %s cache (total %d)"
+                            % (len(cached), f.name, len(self._line_cache)))
+                with self._cache_lock:
+                    self._line_cache.extend(cached)
+            else:
+                t = f.harvest_async(self)
+                if t:
+                    pending.append(t)
 
         for t in pending:
             t.join(60.0)
