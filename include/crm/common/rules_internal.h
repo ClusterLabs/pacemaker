@@ -23,12 +23,6 @@ char *pcmk__replace_submatches(const char *string, const char *match,
 int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    const crm_time_t *now,
                                    crm_time_t *next_change);
-int pcmk__evaluate_attr_expression(const xmlNode *expression,
-                                   const pcmk_rule_input_t *rule_input);
-int pcmk__evaluate_rsc_expression(const xmlNode *expr,
-                                  const pcmk_rule_input_t *rule_input);
-int pcmk__evaluate_op_expression(const xmlNode *expr,
-                                 const pcmk_rule_input_t *rule_input);
 int pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
                              crm_time_t *next_change);
 
