@@ -60,7 +60,7 @@ class Environment:
         self["ClobberCIB"] = False
         self["CIBfilename"] = None
         self["CIBResource"] = False
-        self["log_kind"] = LogKind.ANY
+        self["log_kind"] = None
         self["node-limit"] = 0
         self["scenario"] = "random"
 

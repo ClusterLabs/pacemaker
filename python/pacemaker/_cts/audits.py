@@ -121,7 +121,7 @@ class LogAudit(ClusterAudit):
             patterns.append("%s.*%s %s %s" % (simple, prefix, node, suffix))
 
         watch_pref = self._cm.env["log_kind"]
-        if watch_pref == LogKind.ANY:
+        if watch_pref is None:
             kinds = [LogKind.LOCAL_FILE]
             if self._cm.env["have_systemd"]:
                 kinds.append(LogKind.JOURNAL)
@@ -142,14 +142,14 @@ class LogAudit(ClusterAudit):
 
         for k in list(watch.keys()):
             w = watch[k]
-            if watch_pref == LogKind.ANY:
+            if watch_pref is None:
                 self._cm.log("Checking for test message in %s logs" % k)
             w.look_for_all(silent=True)
             if w.unmatched:
                 for regex in w.unmatched:
                     self._cm.log("Test message [%s] not found in %s logs" % (regex, w.kind))
             else:
-                if watch_pref == LogKind.ANY:
+                if watch_pref is None:
                     self._cm.log("Found test message in %s logs" % k)
                     self._cm.env["log_kind"] = k
                 return 1

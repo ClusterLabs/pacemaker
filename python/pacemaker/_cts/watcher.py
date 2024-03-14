@@ -20,7 +20,6 @@ LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 class LogKind(Enum):
     """The various kinds of log files that can be watched."""
 
-    ANY = auto()            # From an undetermined log source
     LOCAL_FILE = auto()     # From a local aggregation file on the exerciser
     REMOTE_FILE = auto()    # From a file on each cluster node
     JOURNAL = auto()        # From the systemd journal on each cluster node
@@ -314,7 +313,8 @@ class LogWatcher:
         - Call look() to scan the log looking for the patterns
     """
 
-    def __init__(self, log, regexes, hosts, kind=LogKind.ANY, name="Anon", timeout=10, silent=False):
+    def __init__(self, log, regexes, hosts, kind, name="Anon", timeout=10,
+                 silent=False):
         """
         Create a new LogWatcher instance.
 
