@@ -457,6 +457,19 @@ int pcmk_list_primitive_meta(xmlNode **xml, bool all);
  */
 int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
 
+
+/*!
+ * \brief Delete a ticket's state from the local cluster site
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     ticket_id Ticket to delete
+ * \param[in]     force     If \c true, delete the ticket even if it has
+ *                          been granted
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
+
 /*!
  * \brief Return the value of a ticket's attribute
  *

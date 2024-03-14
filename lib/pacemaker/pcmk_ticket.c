@@ -109,6 +109,97 @@ done:
     return rc;
 }
 
+static int
+delete_single_ticket(xmlNode *child, void *userdata)
+{
+    int rc = pcmk_rc_ok;
+    cib_t *cib = (cib_t *) userdata;
+
+    rc = cib->cmds->remove(cib, PCMK_XE_STATUS, child, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+
+    return rc;
+}
+
+int
+pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
+                    const char *ticket_id, bool force)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *state = NULL;
+
+    CRM_ASSERT(cib != NULL && scheduler != NULL);
+
+    if (ticket_id == NULL) {
+        return EINVAL;
+    }
+
+    if (!force) {
+        pcmk_ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+
+        if (ticket == NULL) {
+            return ENXIO;
+        }
+
+        if (ticket->granted) {
+            return EACCES;
+        }
+    }
+
+    rc = pcmk__get_ticket_state(cib, ticket_id, &state);
+
+    if (rc == pcmk_rc_duplicate_id) {
+        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
+                  ticket_id);
+
+    } else if (rc == ENXIO) {
+        return pcmk_rc_ok;
+
+    } else if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    crm_log_xml_debug(state, "Delete");
+
+    if (rc == pcmk_rc_duplicate_id) {
+        rc = pcmk__xe_foreach_child(state, NULL, delete_single_ticket, cib);
+    } else {
+        rc = delete_single_ticket(state, cib);
+    }
+
+    if (rc == pcmk_rc_ok) {
+        out->info(out, "Cleaned up %s", ticket_id);
+    }
+
+    free_xml(state);
+    return rc;
+}
+
+int
+pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force)
+{
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
+    cib_t *cib = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__setup_output_cib_sched(&out, &cib, &scheduler, xml);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__ticket_delete(out, cib, scheduler, ticket_id, force);
+
+done:
+    if (cib != NULL) {
+        cib__clean_up_connection(&cib);
+    }
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    pe_free_working_set(scheduler);
+    return rc;
+}
+
 int
 pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
                       const char *ticket_id, const char *attr_name,

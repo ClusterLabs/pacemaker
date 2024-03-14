@@ -411,38 +411,6 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     return rc;
 }
 
-static int
-delete_ticket_state(gchar *ticket_id, cib_t * cib)
-{
-    xmlNode *ticket_state_xml = NULL;
-
-    int rc = pcmk__get_ticket_state(cib, ticket_id, &ticket_state_xml);
-
-    if (rc == pcmk_rc_duplicate_id) {
-        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
-                  ticket_id);
-        rc = pcmk_rc_ok;
-
-    } else if (rc == ENXIO) {
-        return pcmk_rc_ok;
-
-    } else if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    crm_log_xml_debug(ticket_state_xml, "Delete");
-
-    rc = cib->cmds->remove(cib, PCMK_XE_STATUS, ticket_state_xml, cib_options);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc == pcmk_rc_ok) {
-        out->info(out, "Cleaned up %s", ticket_id);
-    }
-
-    free_xml(ticket_state_xml);
-    return rc;
-}
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
@@ -662,30 +630,28 @@ main(int argc, char **argv)
             goto done;
         }
 
-        if (options.force == FALSE) {
-            pcmk_ticket_t *ticket = NULL;
-
-            ticket = find_ticket(options.ticket_id, scheduler);
-            if (ticket == NULL) {
-                exit_code = CRM_EX_NOSUCH;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "No such ticket '%s'", options.ticket_id);
-                goto done;
-            }
-
-            if (ticket->granted) {
-                ticket_revoke_warning(options.ticket_id);
-                exit_code = CRM_EX_INSUFFICIENT_PRIV;
-                goto done;
-            }
-        }
-
-        rc = delete_ticket_state(options.ticket_id, cib_conn);
+        rc = pcmk__ticket_delete(out, cib_conn, scheduler, options.ticket_id,
+                                 options.force);
         exit_code = pcmk_rc2exitc(rc);
 
-        if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not clean up ticket: %s", pcmk_rc_str(rc));
+        switch (rc) {
+            case ENXIO:
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "No such ticket '%s'", options.ticket_id);
+                break;
+
+            case EACCES:
+                ticket_revoke_warning(options.ticket_id);
+                break;
+
+            case pcmk_rc_ok:
+            case pcmk_rc_duplicate_id:
+                break;
+
+            default:
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Could not clean up ticket: %s", pcmk_rc_str(rc));
+                break;
         }
 
     } else if (modified) {

@@ -44,6 +44,22 @@ int pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket
 
 /*!
  * \internal
+ * \brief Delete a ticket's state from the local cluster site
+ *
+ * \param[in,out]   out         Output object
+ * \param[in]       cib         Open CIB connection
+ * \param[in]       scheduler   Scheduler data
+ * \param[in]       ticket_id   Ticket to delete
+ * \param[in]       force       If \c true, delete the ticket even if it has
+ *                              been granted
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
+                        const char *ticket_id, bool force);
+
+/*!
+ * \internal
  * \brief Return the value of a ticket's attribute
  *
  * \param[in,out]   out             Output object
