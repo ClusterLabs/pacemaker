@@ -3317,12 +3317,8 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     while (g_hash_table_iter_next(&iter, (void **) &name, (void **) &value)) {
         /* PCMK_XA_LAST_GRANTED and "expires" are already added by the check
          * for ticket->last_granted above.
-         *
-         * PCMK__XA_GRANTED should not be added because it duplicates the
-         * status value.
          */
         if (pcmk__str_any_of(name, PCMK_XA_LAST_GRANTED, PCMK_XA_EXPIRES,
-                             PCMK__XA_GRANTED,
                              NULL)) {
             continue;
         }
