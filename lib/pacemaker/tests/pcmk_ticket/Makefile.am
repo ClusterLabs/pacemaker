@@ -17,6 +17,7 @@ LDADD += $(top_builddir)/lib/cib/libcib.la
 
 check_PROGRAMS = pcmk__get_ticket_state_test \
 		 pcmk_ticket_constraints_test \
+		 pcmk_ticket_delete_test \
 		 pcmk_ticket_get_attr_test \
 		 pcmk_ticket_info_test \
 		 pcmk_ticket_state_test
