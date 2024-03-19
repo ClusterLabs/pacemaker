@@ -8944,7 +8944,7 @@ Diff: +++ 0.1.0 (null)
 -- /cib/status/node_state[@id='1']
 -- /cib/status/node_state[@id='httpd-bundle-0']
 -- /cib/status/node_state[@id='httpd-bundle-1']
-+  /cib:  @num_updates=0, @admin_epoch=0
++  /cib:  @validate-with=pacemaker-3.10, @num_updates=0, @admin_epoch=0
 -- /cib:  @cib-last-written, @update-origin, @update-client, @update-user, @have-quorum, @dc-uuid
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow     - Get active shadow instance's diff (empty CIB)
@@ -8979,6 +8979,7 @@ Diff: +++ 0.1.0 (null)
   <change operation="modify" path="/cib">
     <change-list>
       <change-attr name="crm_feature_set" operation="set" value=""/>
+      <change-attr name="validate-with" operation="set" value="pacemaker-3.10"/>
       <change-attr name="num_updates" operation="set" value="0"/>
       <change-attr name="admin_epoch" operation="set" value="0"/>
       <change-attr name="cib-last-written" operation="unset"/>
