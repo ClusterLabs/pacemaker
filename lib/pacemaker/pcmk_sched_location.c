@@ -118,7 +118,6 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     const char *role_spec = NULL;
 
     GList *iter = NULL;
-    GList *nodes = NULL;
 
     bool raw_score = true;
     bool score_allocated = false;
@@ -196,58 +195,21 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    if (combine == pcmk__combine_and) {
-        nodes = pcmk__copy_node_list(rsc->cluster->nodes, true);
-        for (iter = nodes; iter != NULL; iter = iter->next) {
-            pcmk_node_t *node = iter->data;
-
-            node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
-        }
-    }
-
     for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
-        int rc = pcmk_rc_ok;
-        int score_f = 0;
         pcmk_node_t *node = iter->data;
 
         rule_input->node_attrs = node->details->attrs;
         rule_input->rsc_params = pe_rsc_params(rsc, node, rsc->cluster);
 
-        rc = pcmk_evaluate_rule(rule_xml, rule_input, next_change);
+        if (pcmk_evaluate_rule(rule_xml, rule_input,
+                               next_change) == pcmk_rc_ok) {
+            pcmk_node_t *local = pe__copy_node(node);
 
-        crm_trace("Rule %s %s on %s",
-                  pcmk__xe_id(rule_xml),
-                  ((rc == pcmk_rc_ok)? "passed" : "failed"),
-                  pcmk__node_name(node));
-
-        score_f = get_node_score(rule_id, score, raw_score, node, rsc);
-
-        if (rc == pcmk_rc_ok) {
-            pcmk_node_t *local = pe_find_node_id(nodes, node->details->id);
-
-            if ((local == NULL) && (combine == pcmk__combine_and)) {
-                continue;
-
-            } else if (local == NULL) {
-                local = pe__copy_node(node);
-                nodes = g_list_append(nodes, local);
-            }
-
-            if (combine == pcmk__combine_or) {
-                local->weight = pcmk__add_scores(local->weight, score_f);
-            }
+            location_rule->nodes = g_list_prepend(location_rule->nodes, local);
+            local->weight = get_node_score(rule_id, score, raw_score, node,
+                                           rsc);
             crm_trace("%s has score %s after %s", pcmk__node_name(node),
                       pcmk_readable_score(local->weight), rule_id);
-
-        } else if (combine == pcmk__combine_and) {
-            // Remove it
-            pcmk_node_t *delete = pe_find_node_id(nodes, node->details->id);
-
-            if (delete != NULL) {
-                nodes = g_list_remove(nodes, delete);
-                crm_trace("%s did not match", pcmk__node_name(node));
-            }
-            free(delete);
         }
     }
 
@@ -255,7 +217,6 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         free((char *)score);
     }
 
-    location_rule->nodes = nodes;
     if (location_rule->nodes == NULL) {
         crm_trace("No matching nodes for location constraint rule %s", rule_id);
     } else {
