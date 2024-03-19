@@ -210,7 +210,6 @@ class JournalObj(SearchObj):
         """
         SearchObj.__init__(self, name, host, name)
         self._delegate = None
-        self._hit_limit = False
 
         self.harvest()
 
@@ -229,33 +228,14 @@ class JournalObj(SearchObj):
         err         -- stderr from the journal read
         """
         messages = []
-        found_cursor = False
         for line in out:
             match = re.search(r"^-- cursor: ([^.]+)", line)
 
             if match:
-                found_cursor = True
                 self.offset = match.group(1).strip()
                 self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
             else:
                 messages.append(line)
-
-        if self.limit and not found_cursor:
-            self._hit_limit = True
-            self.debug("Got %d lines but no cursor: %s" % (len(out), self.offset))
-
-            # Get the current cursor
-            # pylint: disable=not-callable
-            (_, out) = self.rsh(self.host, "journalctl -q -n 0 --show-cursor", verbose=0)
-            for line in out:
-                match = re.search(r"^-- cursor: ([^.]+)", line)
-
-                if match:
-                    self.offset = match.group(1).strip()
-                    self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
-                else:
-                    self.log("Not a new cursor: %s" % line)
-                    messages.append(line)
 
         if self._delegate:
             self._delegate.async_complete(pid, returncode, messages, err)
@@ -270,10 +250,8 @@ class JournalObj(SearchObj):
         """
         self._delegate = delegate
 
-        # Use --lines to prevent journalctl from overflowing the Popen input buffer
-        if self.limit and self._hit_limit:
-            return None
-
+        # Use --lines to prevent journalctl from overflowing the Popen input
+        # buffer
         if self.offset == "EOF":
             command = "journalctl -q -n 0 --show-cursor"
         elif self.limit:
@@ -293,7 +271,6 @@ class JournalObj(SearchObj):
         if self.limit:
             return
 
-        self._hit_limit = False
         # pylint: disable=not-callable
         (rc, lines) = self.rsh(self.host, "date +'%Y-%m-%d %H:%M:%S'", verbose=0)
 
