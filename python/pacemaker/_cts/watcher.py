@@ -65,6 +65,8 @@ class SearchObj:
         else:
             self.host = "localhost"
 
+        self._delegate = None
+
         async_task = self.harvest_async()
         async_task.join()
 
@@ -118,7 +120,6 @@ class FileObj(SearchObj):
         name     -- A unique name to use when logging about this watch
         """
         SearchObj.__init__(self, filename, host, name)
-        self._delegate = None
 
     def async_complete(self, pid, returncode, out, err):
         """
@@ -205,7 +206,6 @@ class JournalObj(SearchObj):
         name     -- A unique name to use when logging about this watch
         """
         SearchObj.__init__(self, name, host, name)
-        self._delegate = None
 
     def async_complete(self, pid, returncode, out, err):
         """
