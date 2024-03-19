@@ -53,7 +53,6 @@ class SearchObj:
         host     -- The cluster node on which to watch the log
         name     -- A unique name to use when logging about this watch
         """
-        self.cache = []
         self.filename = filename
         self.limit = None
         self.logger = LogFactory()
@@ -139,6 +138,7 @@ class FileObj(SearchObj):
         out         -- stdout from the file read
         err         -- stderr from the file read
         """
+        messages = []
         for line in out:
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
 
@@ -150,10 +150,10 @@ class FileObj(SearchObj):
             elif re.search(r"^CTSwatcher:", line):
                 self.debug("Got control line: %s" % line)
             else:
-                self.cache.append(line)
+                messages.append(line)
 
         if self._delegate:
-            self._delegate.async_complete(pid, returncode, self.cache, err)
+            self._delegate.async_complete(pid, returncode, messages, err)
 
     def harvest_async(self, delegate=None):
         """
@@ -164,7 +164,6 @@ class FileObj(SearchObj):
         log file is hit.
         """
         self._delegate = delegate
-        self.cache = []
 
         if self.limit and (self.offset == "EOF" or int(self.offset) > self.limit):
             if self._delegate:
@@ -229,6 +228,7 @@ class JournalObj(SearchObj):
         out         -- stdout from the journal read
         err         -- stderr from the journal read
         """
+        messages = []
         found_cursor = False
         for line in out:
             match = re.search(r"^-- cursor: ([^.]+)", line)
@@ -238,7 +238,7 @@ class JournalObj(SearchObj):
                 self.offset = match.group(1).strip()
                 self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
             else:
-                self.cache.append(line)
+                messages.append(line)
 
         if self.limit and not found_cursor:
             self._hit_limit = True
@@ -255,10 +255,10 @@ class JournalObj(SearchObj):
                     self.debug("Got %d lines, new cursor: %s" % (len(out), self.offset))
                 else:
                     self.log("Not a new cursor: %s" % line)
-                    self.cache.append(line)
+                    messages.append(line)
 
         if self._delegate:
-            self._delegate.async_complete(pid, returncode, self.cache, err)
+            self._delegate.async_complete(pid, returncode, messages, err)
 
     def harvest_async(self, delegate=None):
         """
@@ -269,7 +269,6 @@ class JournalObj(SearchObj):
         is hit.
         """
         self._delegate = delegate
-        self.cache = []
 
         # Use --lines to prevent journalctl from overflowing the Popen input buffer
         if self.limit and self._hit_limit:
