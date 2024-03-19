@@ -65,6 +65,9 @@ class SearchObj:
         else:
             self.host = "localhost"
 
+        async_task = self.harvest_async()
+        async_task.join()
+
     def __str__(self):
         if self.host:
             return "%s:%s" % (self.host, self.filename)
@@ -80,11 +83,6 @@ class SearchObj:
         """Log a debug message."""
         message = "lw: %s: %s" % (self, args)
         self.logger.debug(message)
-
-    def harvest(self, delegate=None):
-        """Collect lines from a log, optionally calling delegate when complete."""
-        async_task = self.harvest_async(delegate)
-        async_task.join()
 
     def harvest_async(self, delegate=None):
         """
@@ -121,8 +119,6 @@ class FileObj(SearchObj):
         """
         SearchObj.__init__(self, filename, host, name)
         self._delegate = None
-
-        self.harvest()
 
     def async_complete(self, pid, returncode, out, err):
         """
@@ -210,8 +206,6 @@ class JournalObj(SearchObj):
         """
         SearchObj.__init__(self, name, host, name)
         self._delegate = None
-
-        self.harvest()
 
     def async_complete(self, pid, returncode, out, err):
         """
