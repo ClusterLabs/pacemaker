@@ -23,7 +23,7 @@
 
     <define name="element-ticket">
         <element name="ticket">
-            <attribute name="id"> <data type="ID" /> </attribute>
+            <attribute name="id"> <text /> </attribute>
             <optional>
                 <attribute name="status">
                     <choice>
