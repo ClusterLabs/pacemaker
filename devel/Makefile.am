@@ -165,6 +165,8 @@ coverity-clean:
 ## cppcheck
 
 GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
+GLIB_INCL_DEF_CFLAGS = $(shell echo $(GLIB_CFLAGS) 		\
+				| tr ' ' '\n' | grep '^-[IDU]' | paste -d ' ')
 
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
 # --enable={warning,style,performance,portability,information,all}
@@ -181,7 +183,7 @@ cppcheck:
 		--output-file=$(CPPCHECK_OUT)			\
 		--max-configs=30 --inline-suppr -q		\
 		--library=posix --library=gnu --library=gtk	\
-		$(GLIB_CFLAGS) -D__GNUC__ 			\
+		$(GLIB_INCL_DEF_CFLAGS) -D__GNUC__ 		\
 		$(foreach dir,$(CPPCHECK_DIRS),$(top_srcdir)/$(dir))
 	@echo "Done: See $(CPPCHECK_OUT)"
 	@echo "When no longer needed, make cppcheck-clean"
