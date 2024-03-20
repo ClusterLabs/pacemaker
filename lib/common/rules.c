@@ -705,3 +705,186 @@ pcmk__replace_submatches(const char *string, const char *match,
                               NULL);
     return result;
 }
+
+/*!
+ * \internal
+ * \brief Parse a comparison type from a string
+ *
+ * \param[in] op  String with comparison type (valid values are
+ *                \c PCMK_VALUE_DEFINED, \c PCMK_VALUE_NOT_DEFINED,
+ *                \c PCMK_VALUE_EQ, \c PCMK_VALUE_NE,
+ *                \c PCMK_VALUE_LT, \c PCMK_VALUE_LTE,
+ *                \c PCMK_VALUE_GT, or \c PCMK_VALUE_GTE)
+ *
+ * \return Comparison type corresponding to \p op
+ */
+enum pcmk__comparison
+pcmk__parse_comparison(const char *op)
+{
+    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
+        return pcmk__comparison_defined;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
+        return pcmk__comparison_undefined;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
+        return pcmk__comparison_eq;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)) {
+        return pcmk__comparison_ne;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
+        return pcmk__comparison_lt;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_LTE, pcmk__str_casei)) {
+        return pcmk__comparison_lte;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
+        return pcmk__comparison_gt;
+
+    } else if (pcmk__str_eq(op, PCMK_VALUE_GTE, pcmk__str_casei)) {
+        return pcmk__comparison_gte;
+    }
+
+    return pcmk__comparison_unknown;
+}
+
+/*!
+ * \internal
+ * \brief Parse a value type from a string
+ *
+ * \param[in] type    String with value type (valid values are NULL,
+ *                    \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
+ *                    \c PCMK_VALUE_NUMBER, and \c PCMK_VALUE_VERSION)
+ * \param[in] op      Operation type (used only to select default)
+ * \param[in] value1  First value being compared (used only to select default)
+ * \param[in] value2  Second value being compared (used only to select default)
+ */
+enum pcmk__type
+pcmk__parse_type(const char *type, enum pcmk__comparison op,
+                 const char *value1, const char *value2)
+{
+    if (type == NULL) {
+        switch (op) {
+            case pcmk__comparison_lt:
+            case pcmk__comparison_lte:
+            case pcmk__comparison_gt:
+            case pcmk__comparison_gte:
+                if (((value1 != NULL) && (strchr(value1, '.') != NULL))
+                    || ((value2 != NULL) && (strchr(value2, '.') != NULL))) {
+                    return pcmk__type_number;
+                }
+                return pcmk__type_integer;
+
+            default:
+                return pcmk__type_string;
+        }
+    }
+
+    if (pcmk__str_eq(type, PCMK_VALUE_STRING, pcmk__str_casei)) {
+        return pcmk__type_string;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_INTEGER, pcmk__str_casei)) {
+        return pcmk__type_integer;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_NUMBER, pcmk__str_casei)) {
+        return pcmk__type_number;
+
+    } else if (pcmk__str_eq(type, PCMK_VALUE_VERSION, pcmk__str_casei)) {
+        return pcmk__type_version;
+    }
+
+    return pcmk__type_unknown;
+}
+
+/*!
+ * \internal
+ * \brief Compare two strings according to a given type
+ *
+ * \param[in] value1  String with first value to compare
+ * \param[in] value2  String with second value to compare
+ * \param[in] type    How to interpret the values
+ *
+ * \return Standard comparison result (a negative integer if \p value1 is
+ *         lesser, 0 if the values are equal, and a positive integer if
+ *         \p value1 is greater)
+ */
+int
+pcmk__cmp_by_type(const char *value1, const char *value2, enum pcmk__type type)
+{
+    //  NULL compares as less than non-NULL
+    if (value2 == NULL) {
+        return (value1 == NULL)? 0 : 1;
+    }
+    if (value1 == NULL) {
+        return -1;
+    }
+
+    switch (type) {
+        case pcmk__type_string:
+            return strcasecmp(value1, value2);
+
+        case pcmk__type_integer:
+            {
+                long long integer1;
+                long long integer2;
+
+                if ((pcmk__scan_ll(value1, &integer1, 0LL) != pcmk_rc_ok)
+                    || (pcmk__scan_ll(value2, &integer2, 0LL) != pcmk_rc_ok)) {
+                    crm_warn("Comparing '%s' and '%s' as strings because "
+                             "invalid as integers", value1, value2);
+                    return strcasecmp(value1, value2);
+                }
+                return (integer1 < integer2)? -1 : (integer1 > integer2)? 1 : 0;
+            }
+            break;
+
+        case pcmk__type_number:
+            {
+                double num1;
+                double num2;
+
+                if ((pcmk__scan_double(value1, &num1, NULL, NULL) != pcmk_rc_ok)
+                    || (pcmk__scan_double(value2, &num2, NULL,
+                                          NULL) != pcmk_rc_ok)) {
+                    crm_warn("Comparing '%s' and '%s' as strings because invalid as "
+                             "numbers", value1, value2);
+                    return strcasecmp(value1, value2);
+                }
+                return (num1 < num2)? -1 : (num1 > num2)? 1 : 0;
+            }
+            break;
+
+        case pcmk__type_version:
+            return compare_version(value1, value2);
+
+        default: // Invalid type
+            return 0;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Parse a reference value source from a string
+ *
+ * \param[in] source  String indicating reference value source
+ *
+ * \return Reference value source corresponding to \p source
+ */
+enum pcmk__reference_source
+pcmk__parse_source(const char *source)
+{
+    if (pcmk__str_eq(source, PCMK_VALUE_LITERAL,
+                     pcmk__str_casei|pcmk__str_null_matches)) {
+        return pcmk__source_literal;
+
+    } else if (pcmk__str_eq(source, PCMK_VALUE_PARAM, pcmk__str_casei)) {
+        return pcmk__source_instance_attrs;
+
+    } else if (pcmk__str_eq(source, PCMK_VALUE_META, pcmk__str_casei)) {
+        return pcmk__source_meta_attrs;
+
+    } else {
+        return pcmk__source_unknown;
+    }
+}

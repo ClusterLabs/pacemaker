@@ -11,8 +11,12 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__evaluate_date_expression_test	\
+check_PROGRAMS = pcmk__cmp_by_type_test			\
+		 pcmk__evaluate_date_expression_test	\
 		 pcmk__evaluate_date_spec_test		\
+		 pcmk__parse_comparison_test		\
+		 pcmk__parse_source_test		\
+		 pcmk__parse_type_test			\
 		 pcmk__replace_submatches_test		\
 		 pcmk__unpack_duration_test
 

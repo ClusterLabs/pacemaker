@@ -502,197 +502,106 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
 
 /*!
  * \internal
- * \brief   Compare two values in a rule's node attribute expression
- *
- * \param[in]   l_val   Value on left-hand side of comparison
- * \param[in]   r_val   Value on right-hand side of comparison
- * \param[in]   type    How to interpret the values (allowed values:
- *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
- *                      \c PCMK_VALUE_NUMBER, \c PCMK_VALUE_VERSION, \c NULL)
- * \param[in]   op      Type of comparison
- *
- * \return  -1 if <tt>(l_val < r_val)</tt>,
- *           0 if <tt>(l_val == r_val)</tt>,
- *           1 if <tt>(l_val > r_val)</tt>
- */
-static int
-compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
-                       const char *op)
-{
-    int cmp = 0;
-
-    if (l_val != NULL && r_val != NULL) {
-        if (type == NULL) {
-            if (pcmk__strcase_any_of(op,
-                                     PCMK_VALUE_LT, PCMK_VALUE_LTE,
-                                     PCMK_VALUE_GT, PCMK_VALUE_GTE, NULL)) {
-                if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
-                    type = PCMK_VALUE_NUMBER;
-                } else {
-                    type = PCMK_VALUE_INTEGER;
-                }
-
-            } else {
-                type = PCMK_VALUE_STRING;
-            }
-            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
-        }
-
-        if (pcmk__str_eq(type, PCMK_VALUE_STRING, pcmk__str_casei)) {
-            cmp = strcasecmp(l_val, r_val);
-
-        } else if (pcmk__str_eq(type, PCMK_VALUE_INTEGER, pcmk__str_casei)) {
-            long long l_val_num;
-            int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
-
-            long long r_val_num;
-            int rc2 = pcmk__scan_ll(r_val, &r_val_num, 0LL);
-
-            if ((rc1 == pcmk_rc_ok) && (rc2 == pcmk_rc_ok)) {
-                if (l_val_num < r_val_num) {
-                    cmp = -1;
-                } else if (l_val_num > r_val_num) {
-                    cmp = 1;
-                } else {
-                    cmp = 0;
-                }
-
-            } else {
-                crm_debug("Integer parse error. Comparing %s and %s as strings",
-                          l_val, r_val);
-                cmp = compare_attr_expr_vals(l_val, r_val, PCMK_VALUE_STRING,
-                                             op);
-            }
-
-        } else if (pcmk__str_eq(type, PCMK_VALUE_NUMBER, pcmk__str_casei)) {
-            double l_val_num;
-            double r_val_num;
-
-            int rc1 = pcmk__scan_double(l_val, &l_val_num, NULL, NULL);
-            int rc2 = pcmk__scan_double(r_val, &r_val_num, NULL, NULL);
-
-            if (rc1 == pcmk_rc_ok && rc2 == pcmk_rc_ok) {
-                if (l_val_num < r_val_num) {
-                    cmp = -1;
-                } else if (l_val_num > r_val_num) {
-                    cmp = 1;
-                } else {
-                    cmp = 0;
-                }
-
-            } else {
-                crm_debug("Floating-point parse error. Comparing %s and %s as "
-                          "strings", l_val, r_val);
-                cmp = compare_attr_expr_vals(l_val, r_val, PCMK_VALUE_STRING,
-                                             op);
-            }
-
-        } else if (pcmk__str_eq(type, PCMK_VALUE_VERSION, pcmk__str_casei)) {
-            cmp = compare_version(l_val, r_val);
-
-        }
-
-    } else if (l_val == NULL && r_val == NULL) {
-        cmp = 0;
-    } else if (r_val == NULL) {
-        cmp = 1;
-    } else {    // l_val == NULL && r_val != NULL
-        cmp = -1;
-    }
-
-    return cmp;
-}
-
-/*!
- * \internal
  * \brief Check whether an attribute expression evaluates to \c true
  *
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
- * \param[in]   type    How to interpret the values (allowed values:
- *                      \c PCMK_VALUE_STRING, \c PCMK_VALUE_INTEGER,
- *                      \c PCMK_VALUE_NUMBER, \c PCMK_VALUE_VERSION, \c NULL)
+ * \param[in]   type    How to interpret the values
  * \param[in]   op      Type of comparison.
  *
  * \return  \c true if expression evaluates to \c true, \c false
  *          otherwise
  */
 static bool
-accept_attr_expr(const char *l_val, const char *r_val, const char *type,
-                 const char *op)
+accept_attr_expr(const char *l_val, const char *r_val, enum pcmk__type type,
+                 enum pcmk__comparison op)
 {
     int cmp;
 
-    if (pcmk__str_eq(op, PCMK_VALUE_DEFINED, pcmk__str_casei)) {
-        return (l_val != NULL);
+    switch (op) {
+        case pcmk__comparison_defined:
+            return (l_val != NULL);
 
-    } else if (pcmk__str_eq(op, PCMK_VALUE_NOT_DEFINED, pcmk__str_casei)) {
-        return (l_val == NULL);
+        case pcmk__comparison_undefined:
+            return (l_val == NULL);
 
+        default:
+            break;
     }
 
-    cmp = compare_attr_expr_vals(l_val, r_val, type, op);
+    cmp = pcmk__cmp_by_type(l_val, r_val, type);
 
-    if (pcmk__str_eq(op, PCMK_VALUE_EQ, pcmk__str_casei)) {
-        return (cmp == 0);
+    switch (op) {
+        case pcmk__comparison_eq:
+            return (cmp == 0);
 
-    } else if (pcmk__str_eq(op, PCMK_VALUE_NE, pcmk__str_casei)) {
-        return (cmp != 0);
+        case pcmk__comparison_ne:
+            return (cmp != 0);
 
-    } else if (l_val == NULL || r_val == NULL) {
+        default:
+            break;
+    }
+
+    if ((l_val == NULL) || (r_val == NULL)) {
         // The comparison is meaningless from this point on
         return false;
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_LT, pcmk__str_casei)) {
-        return (cmp < 0);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_LTE, pcmk__str_casei)) {
-        return (cmp <= 0);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_GT, pcmk__str_casei)) {
-        return (cmp > 0);
-
-    } else if (pcmk__str_eq(op, PCMK_VALUE_GTE, pcmk__str_casei)) {
-        return (cmp >= 0);
     }
 
-    return false;   // Should never reach this point
+    switch (op) {
+        case pcmk__comparison_lt:
+            return (cmp < 0);
+
+        case pcmk__comparison_lte:
+            return (cmp <= 0);
+
+        case pcmk__comparison_gt:
+            return (cmp > 0);
+
+        case pcmk__comparison_gte:
+            return (cmp >= 0);
+
+        default: // Not possible with schema validation enabled
+            return false;
+    }
 }
 
 /*!
  * \internal
  * \brief Get correct value according to \c PCMK_XA_VALUE_SOURCE
  *
- * \param[in] expr_id       Rule expression ID (for logging only)
- * \param[in] value         value given in rule expression
- * \param[in] value_source  \c PCMK_XA_VALUE_SOURCE given in rule expressions
- * \param[in] match_data    If not NULL, resource back-references and params
+ * \param[in] value       value given in rule expression
+ * \param[in] source      Reference value source
+ * \param[in] match_data  If not NULL, resource back-references and params
  */
 static const char *
-expand_value_source(const char *expr_id, const char *value,
-                    const char *value_source, const pe_match_data_t *match_data)
+expand_value_source(const char *value, enum pcmk__reference_source source,
+                    const pe_match_data_t *match_data)
 {
     GHashTable *table = NULL;
 
     if (pcmk__str_empty(value)) {
-        return NULL; // value_source is irrelevant
+        /* @COMPAT When we can break backward compatibility, drop this block so
+         * empty strings are treated as such (there should never be an empty
+         * string as an instance attribute or meta-attribute name, so those will
+         * get NULL anyway, but it could matter for literal comparisons)
+         */
+        return NULL;
+    }
 
-    } else if (pcmk__str_eq(value_source, PCMK_VALUE_PARAM, pcmk__str_casei)) {
-        table = match_data->params;
+    switch (source) {
+        case pcmk__source_literal:
+            return value;
 
-    } else if (pcmk__str_eq(value_source, PCMK_VALUE_META, pcmk__str_casei)) {
-        table = match_data->meta;
+        case pcmk__source_instance_attrs:
+            table = match_data->params;
+            break;
 
-    } else { // literal
-        if (!pcmk__str_eq(value_source, PCMK_VALUE_LITERAL,
-                          pcmk__str_null_matches|pcmk__str_casei)) {
+        case pcmk__source_meta_attrs:
+            table = match_data->meta;
+            break;
 
-            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
-                              " value '%s', using default "
-                              "('" PCMK_VALUE_LITERAL "')",
-                              pcmk__s(expr_id, "without ID"), value_source);
-        }
-        return value;
+        default:
+            return NULL; // Not possible
     }
 
     if (table == NULL) {
@@ -719,22 +628,40 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
 
     const char *id = pcmk__xe_id(expr);
     const char *attr = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
-    const char *op = crm_element_value(expr, PCMK_XA_OPERATION);
-    const char *type = crm_element_value(expr, PCMK_XA_TYPE);
+    const char *op = NULL;
+    const char *type_s = crm_element_value(expr, PCMK_XA_TYPE);
     const char *value = crm_element_value(expr, PCMK_XA_VALUE);
     const char *value_source = crm_element_value(expr, PCMK_XA_VALUE_SOURCE);
+
+    enum pcmk__comparison comparison = pcmk__comparison_unknown;
+    enum pcmk__type type = pcmk__type_unknown;
 
     if (attr == NULL) {
         pcmk__config_err("Expression %s invalid: " PCMK_XA_ATTRIBUTE
                          " not specified", pcmk__s(id, "without ID"));
         return FALSE;
-    } else if (op == NULL) {
-        pcmk__config_err("Expression %s invalid: " PCMK_XA_OPERATION
-                         " not specified", pcmk__s(id, "without ID"));
+    }
+
+    // Get and validate operation
+    op = crm_element_value(expr, PCMK_XA_OPERATION);
+    comparison = pcmk__parse_comparison(op);
+    if (comparison == pcmk__comparison_unknown) {
+        // Not possible with schema validation enabled
+        if (op == NULL) {
+            pcmk__config_err("Treating expression %s as not passing "
+                             "because it has no " PCMK_XA_OPERATION,
+                             pcmk__s(id, "without ID"));
+        } else {
+            pcmk__config_err("Treating expression %s as not passing "
+                             "because '%s' is not a valid " PCMK_XA_OPERATION,
+                             pcmk__s(id, "without ID"), op);
+        }
         return FALSE;
     }
 
     if (rule_data->match_data != NULL) {
+        enum pcmk__reference_source source = pcmk__source_unknown;
+
         // Expand any regular expression submatches (%0-%9) in attribute name
         if (rule_data->match_data->re != NULL) {
             const char *match = rule_data->match_data->re->string;
@@ -751,8 +678,17 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         }
 
         // Get value appropriate to PCMK_XA_VALUE_SOURCE
-        value = expand_value_source(id, value, value_source,
-                                    rule_data->match_data);
+        source = pcmk__parse_source(value_source);
+        if (source == pcmk__source_unknown) {
+            // Not possible with schema validation enabled
+            // @COMPAT Fail expression once we can break backward compatibility
+            pcmk__config_warn("Expression %s has invalid " PCMK_XA_VALUE_SOURCE
+                              " value '%s', using default "
+                              "('" PCMK_VALUE_LITERAL "')",
+                              pcmk__s(id, "without ID"), value_source);
+            source = pcmk__source_literal;
+        }
+        value = expand_value_source(value, source, rule_data->match_data);
     }
 
     if (rule_data->node_hash != NULL) {
@@ -764,7 +700,20 @@ pe__eval_attr_expr(const xmlNode *expr, const pe_rule_eval_data_t *rule_data)
         attr = NULL;
     }
 
-    return accept_attr_expr(h_val, value, type, op);
+    // Get and validate value type (after expanding value)
+    type = pcmk__parse_type(type_s, comparison, h_val, value);
+    if (type == pcmk__type_unknown) {
+        /* Not possible with schema validation enabled
+         *
+         * @COMPAT When we can break behavioral backward compatibility, treat
+         * the expression as not passing.
+         */
+        pcmk__config_warn("Non-empty node attribute values will be treated as "
+                          "equal for expression %s because '%s' is not a "
+                          "valid type", pcmk__s(id, "without ID"), type);
+    }
+
+    return accept_attr_expr(h_val, value, type, comparison);
 }
 
 gboolean
