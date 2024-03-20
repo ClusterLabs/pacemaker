@@ -56,6 +56,31 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
     }
 }
 
+#define XPATH_DEPRECATED_RULES                          \
+    "//" PCMK_XE_OP_DEFAULTS "//" PCMK_XE_EXPRESSION    \
+    "|//" PCMK_XE_OP "//" PCMK_XE_EXPRESSION
+
+/*!
+ * \internal
+ * \brief Log a warning for deprecated rule syntax in operations
+ *
+ * \param[in] scheduler  Scheduler data
+ */
+static void
+check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
+{
+    // @COMPAT Drop this function when support for the syntax is dropped
+    xmlNode *deprecated = get_xpath_object(XPATH_DEPRECATED_RULES,
+                                           scheduler->input, LOG_NEVER);
+
+    if (deprecated != NULL) {
+        pcmk__warn_once(pcmk__wo_op_attr_expr,
+                        "Support for rules with node attribute expressions in "
+                        PCMK_XE_OP " or " PCMK_XE_OP_DEFAULTS " is deprecated "
+                        "and will be dropped in a future release");
+    }
+}
+
 /*
  * Unpack everything
  * At the end you'll have:
@@ -109,6 +134,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
                                               scheduler->input, LOG_NEVER);
+    check_for_deprecated_rules(scheduler);
+
     scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
                                                scheduler->input, LOG_NEVER);
 
