@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,6 @@ extern "C" {
 #  define CRM_ASSERT(expr) do {                                              \
         if (!(expr)) {                                                       \
             crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
-            abort(); /* crm_abort() doesn't always abort! */                 \
         }                                                                    \
     } while(0)
 
