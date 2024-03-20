@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,13 +12,9 @@
 
 #include <glib.h>               // GQuark
 
-// Generic result code type
+extern const size_t pcmk__n_rc;
 
 int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
-
-// Standard Pacemaker API return codes
-
-extern const size_t pcmk__n_rc;
 
 /* Error domains for use with g_set_error */
 
