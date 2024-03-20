@@ -46,6 +46,32 @@ build_ticket_modify_xml(cib_t *cib, const char *ticket_id, xmlNode **ticket_stat
     return rc;
 }
 
+static void
+add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
+                  GHashTable *attr_set, xmlNode **ticket_state_xml)
+{
+    GHashTableIter hash_iter;
+    char *key = NULL;
+    char *value = NULL;
+
+    pcmk_ticket_t *ticket = g_hash_table_lookup(scheduler->tickets, ticket_id);
+
+    g_hash_table_iter_init(&hash_iter, attr_set);
+    while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
+        crm_xml_add(*ticket_state_xml, key, value);
+
+        if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
+            && (ticket == NULL || ticket->granted == FALSE)
+            && crm_is_true(value)) {
+
+            char *now = pcmk__ttoa(time(NULL));
+
+            crm_xml_add(*ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
+            free(now);
+        }
+    }
+}
+
 int
 pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
 {
@@ -394,6 +420,69 @@ pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_dele
     }
 
     rc = pcmk__ticket_remove_attr(out, cib, scheduler, ticket_id, attr_delete);
+
+done:
+    if (cib != NULL) {
+        cib__clean_up_connection(&cib);
+    }
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    pe_free_working_set(scheduler);
+    return rc;
+}
+
+int
+pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
+                      const char *ticket_id, GHashTable *attr_set)
+{
+    xmlNode *ticket_state_xml = NULL;
+    xmlNode *xml_top = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT(out != NULL && cib != NULL && scheduler != NULL);
+
+    if (ticket_id == NULL) {
+        return EINVAL;
+    }
+
+    /* Nothing to do */
+    if (attr_set == NULL || g_hash_table_size(attr_set) == 0) {
+        return pcmk_rc_ok;
+    }
+
+    rc = build_ticket_modify_xml(cib, ticket_id, &ticket_state_xml, &xml_top);
+
+    if (rc == pcmk_rc_duplicate_id) {
+        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s", ticket_id);
+    } else if (rc != pcmk_rc_ok) {
+        free_xml(ticket_state_xml);
+        return rc;
+    }
+
+    add_attribute_xml(scheduler, ticket_id, attr_set, &ticket_state_xml);
+
+    crm_log_xml_debug(xml_top, "Update");
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+
+    free_xml(xml_top);
+    return rc;
+}
+
+int
+pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set)
+{
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+    cib_t *cib = NULL;
+
+    rc = pcmk__setup_output_cib_sched(&out, &cib, &scheduler, xml);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__ticket_set_attr(out, cib, scheduler, ticket_id, attr_set);
 
 done:
     if (cib != NULL) {
