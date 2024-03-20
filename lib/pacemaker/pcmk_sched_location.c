@@ -327,13 +327,27 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         /* This loop is logically parallel to pe_evaluate_rules(), except
          * instead of checking whether any rule is active, we set up location
          * constraints for each active rule.
+         *
+         * @COMPAT When we can break backward compatibility, limit location
+         * constraints to a single rule, for consistency with other contexts.
+         * Since a rule may contain other rules, this does not prohibit any
+         * existing use cases.
          */
         for (xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE,
                                                       NULL, NULL);
              rule_xml != NULL; rule_xml = pcmk__xe_next_same(rule_xml)) {
 
-            empty = false;
-            crm_trace("Unpacking %s/%s", id, pcmk__xe_id(rule_xml));
+            if (empty) {
+                empty = false;
+            } else {
+                pcmk__warn_once(pcmk__wo_location_rules,
+                                "Support for multiple " PCMK_XE_RULE
+                                " elements in a location constraint is "
+                                "deprecated and will be removed in a future "
+                                "release (use a single new rule combining the "
+                                "previous rules with " PCMK_XA_BOOLEAN_OP
+                                " set to '" PCMK_VALUE_OR "' instead)");
+            }
             generate_location_rule(rsc, rule_xml, discovery, next_change,
                                    re_match_data);
         }
