@@ -158,26 +158,17 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
  * \param[in] key         Connection table key (NULL to use sane default)
  * \param[in] uid_client  UID corresponding to c (ignored if c is NULL)
  *
- * \return Pointer to new pcmk__client_t (or NULL on error)
+ * \return Pointer to new pcmk__client_t (guaranteed not to be \c NULL)
  */
 static pcmk__client_t *
 client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 {
-    pcmk__client_t *client = calloc(1, sizeof(pcmk__client_t));
-
-    if (client == NULL) {
-        crm_perror(LOG_ERR, "Allocating client");
-        return NULL;
-    }
+    pcmk__client_t *client = pcmk__assert_alloc(1, sizeof(pcmk__client_t));
 
     if (c) {
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
-            client->user = strdup("#unprivileged");
-            if (client->user == NULL) {
-                free(client);
-                return NULL;
-            }
+            client->user = pcmk__str_copy("#unprivileged");
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
         }
@@ -211,10 +202,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 pcmk__client_t *
 pcmk__new_unauth_client(void *key)
 {
-    pcmk__client_t *client = client_from_connection(NULL, key, 0);
-
-    CRM_ASSERT(client != NULL);
-    return client;
+    return client_from_connection(NULL, key, 0);
 }
 
 pcmk__client_t *
@@ -245,9 +233,6 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 
     /* TODO: Do our own auth checking, return NULL if unauthorized */
     client = client_from_connection(c, NULL, uid_client);
-    if (client == NULL) {
-        return NULL;
-    }
 
     if ((uid_client == 0) || (uid_client == uid_cluster)) {
         /* Remember when a connection came from root or hacluster */
