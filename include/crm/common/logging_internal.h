@@ -63,22 +63,6 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
 
 /*!
  * \internal
- * \brief Abort without dumping core if a pointer is \c NULL
- *
- * This is intended to check for memory allocation failure, rather than for null
- * pointers in general.
- *
- * \param[in] ptr  Pointer to check
- */
-#define pcmk__mem_assert(ptr) do {                                          \
-        if ((ptr) == NULL) {                                                \
-            crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
-                      FALSE);                                               \
-        }                                                                   \
-    } while (0)
-
-/*!
- * \internal
  * \brief Execute code depending on whether trace logging is enabled
  *
  * This is similar to \p do_crm_log_unlikely() except instead of logging, it

@@ -16,6 +16,22 @@ extern const size_t pcmk__n_rc;
 
 int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
 
+/*!
+ * \internal
+ * \brief Abort without dumping core if a pointer is \c NULL
+ *
+ * This is intended to check for memory allocation failure, rather than for null
+ * pointers in general.
+ *
+ * \param[in] ptr  Pointer to check
+ */
+#define pcmk__mem_assert(ptr) do {                                          \
+        if ((ptr) == NULL) {                                                \
+            crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
+                      FALSE);                                               \
+        }                                                                   \
+    } while (0)
+
 /* Error domains for use with g_set_error */
 
 GQuark pcmk__rc_error_quark(void);
