@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// LCOV_EXCL_START
+
 void
 pcmk__assert_validates(xmlNode *xml)
 {
@@ -120,3 +122,5 @@ pcmk__cib_test_cleanup(char *out_path)
     free(out_path);
     unsetenv("CIB_file");
 }
+
+// LCOV_EXCL_STOP
