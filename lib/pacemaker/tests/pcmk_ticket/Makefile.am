@@ -21,6 +21,7 @@ check_PROGRAMS = pcmk__get_ticket_state_test \
 		 pcmk_ticket_get_attr_test \
 		 pcmk_ticket_info_test \
 		 pcmk_ticket_remove_attr_test \
+		 pcmk_ticket_set_attr_test \
 		 pcmk_ticket_state_test
 
 TESTS = $(check_PROGRAMS)
