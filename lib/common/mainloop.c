@@ -1369,19 +1369,17 @@ mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc c
 {
     mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
-    if(t) {
-        if(name) {
-            t->name = crm_strdup_printf("%s-%u-%d", name, period_ms, repeat);
-        } else {
-            t->name = crm_strdup_printf("%p-%u-%d", t, period_ms, repeat);
-        }
-        t->id = 0;
-        t->period_ms = period_ms;
-        t->repeat = repeat;
-        t->cb = cb;
-        t->userdata = userdata;
-        crm_trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
+    if (name != NULL) {
+        t->name = crm_strdup_printf("%s-%u-%d", name, period_ms, repeat);
+    } else {
+        t->name = crm_strdup_printf("%p-%u-%d", t, period_ms, repeat);
     }
+    t->id = 0;
+    t->period_ms = period_ms;
+    t->repeat = repeat;
+    t->cb = cb;
+    t->userdata = userdata;
+    crm_trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
     return t;
 }
 
