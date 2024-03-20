@@ -295,7 +295,10 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         enum rsc_role_e role = pcmk_role_unknown;
         pcmk__location_t *location = NULL;
 
-        if (!match) {
+        if (match == NULL) {
+            crm_info("Ignoring location constraint %s "
+                     "because '%s' is not a known node",
+                     pcmk__s(id, "without ID"), node);
             return;
         }
 
