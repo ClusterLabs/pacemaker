@@ -111,6 +111,25 @@ int pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *
                              const char *ticket_id, GList *attr_delete);
 
 /*!
+ * \brief Set the given attribute(s) on a ticket
+ *
+ * \param[in,out] out           Output object
+ * \param[in]     cib           Open CIB connection
+ * \param[in,out] scheduler     Scheduler data
+ * \param[in]     ticket_id     Ticket to set attributes on
+ * \param[in]     attr_set      A hash table of attributes, where keys are the
+ *                              attribute names and the values are the attribute
+ *                              values
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
+ *       ticket will be created with the given attributes.
+ */
+int pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
+                          const char *ticket_id, GHashTable *attr_set);
+
+/*!
  * \internal
  * \brief Return a ticket's state XML
  *

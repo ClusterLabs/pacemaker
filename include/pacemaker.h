@@ -507,6 +507,22 @@ int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
 int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete);
 
 /*!
+ * \brief Set the given attribute(s) on a ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to set attributes on
+ * \param[in]     attr_set      A hash table of attributes, where keys are the
+ *                              attribute names and the values are the attribute
+ *                              values
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
+ *       ticket will be created with the given attributes.
+ */
+int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set);
+
+/*!
  * \brief Return a ticket's state XML
  *
  * \param[in,out] xml           The destination for the result, as an XML tree
