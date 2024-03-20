@@ -41,7 +41,8 @@ calloc_fails(void **state) {
     char *result = pcmk__assert_alloc(1024, sizeof(char));
     unsigned int len;
 
-    pcmk__assert_asserts(
+    pcmk__assert_exits(
+        CRM_EX_OSERR,
         {
             pcmk__mock_calloc = true;   // calloc() will return NULL
             expect_value(__wrap_calloc, nmemb, (size_t) ((40 * 1.01) + 601));

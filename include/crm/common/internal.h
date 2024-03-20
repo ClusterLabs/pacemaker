@@ -287,7 +287,8 @@ pcmk__assert_alloc_as(const char *file, const char *function, uint32_t line,
     void *ptr = calloc(nmemb, size);
 
     if (ptr == NULL) {
-        crm_abort(file, function, line, "Out of memory", FALSE, FALSE);
+        crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
+        crm_exit(CRM_EX_OSERR);
     }
     return ptr;
 }
@@ -356,7 +357,8 @@ pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
         char *result = strdup(str);
 
         if (result == NULL) {
-            crm_abort(file, function, line, "Out of memory", FALSE, FALSE);
+            crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
+            crm_exit(CRM_EX_OSERR);
         }
         return result;
     }

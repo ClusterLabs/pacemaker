@@ -28,7 +28,8 @@ int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
 #define pcmk__mem_assert(ptr) do {                                          \
         if ((ptr) == NULL) {                                                \
             crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
-                      FALSE);                                               \
+                      TRUE);                                                \
+            crm_exit(CRM_EX_OSERR);                                         \
         }                                                                   \
     } while (0)
 

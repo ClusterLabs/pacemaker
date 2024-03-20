@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,8 +18,13 @@ function_asserts(void **state)
 {
     pcmk__assert_asserts(pcmk__full_path(NULL, "/dir"));
     pcmk__assert_asserts(pcmk__full_path("file", NULL));
+}
 
-    pcmk__assert_asserts(
+static void
+function_exits(void **state)
+{
+    pcmk__assert_exits(
+        CRM_EX_OSERR,
         {
             pcmk__mock_strdup = true;   // strdup() will return NULL
             expect_string(__wrap_strdup, s, "/full/path");
@@ -49,4 +54,5 @@ full_path(void **state)
 
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(function_asserts),
+                cmocka_unit_test(function_exits),
                 cmocka_unit_test(full_path))
