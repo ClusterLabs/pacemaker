@@ -179,6 +179,10 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     agent = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
+    /* @COMPAT Support for node attribute expressions in rules for resource
+     * meta-attributes is deprecated. When we can break behavioral backward
+     * compatibility, replace node with NULL here.
+     */
     get_meta_attributes(rsc->meta, rsc, node, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
 

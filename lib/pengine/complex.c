@@ -186,6 +186,10 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     };
 
     if (node) {
+        /* @COMPAT Support for node attribute expressions in rules for
+         * meta-attributes is deprecated. When we can break behavioral backward
+         * compatibility, drop this block.
+         */
         rule_data.node_hash = node->details->attrs;
     }
 
