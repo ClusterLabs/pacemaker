@@ -336,47 +336,6 @@ pcmk__realloc(void *ptr, size_t size)
     return new_ptr;
 }
 
-/*!
- * \internal
- * \brief Copy a string, asserting on failure
- *
- * \param[in] file      File where \p function is located
- * \param[in] function  Calling function
- * \param[in] line      Line within \p file
- * \param[in] str       String to copy (can be \c NULL)
- *
- * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-static inline char *
-pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
-                  const char *str)
-{
-    if (str != NULL) {
-        char *result = strdup(str);
-
-        if (result == NULL) {
-            crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
-            crm_exit(CRM_EX_OSERR);
-        }
-        return result;
-    }
-    return NULL;
-}
-
-/*!
- * \internal
- * \brief Copy a string, asserting on failure
- *
- * \param[in] str  String to copy (can be \c NULL)
- *
- * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-#define pcmk__str_copy(str) pcmk__str_copy_as(__FILE__, __func__, __LINE__, str)
-
 static inline char *
 pcmk__getpid_s(void)
 {

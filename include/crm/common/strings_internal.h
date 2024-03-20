@@ -142,7 +142,24 @@ bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
 int pcmk__numeric_strcasecmp(const char *s1, const char *s2);
+
+char *pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
+                        const char *str);
+
+/*!
+ * \internal
+ * \brief Copy a string, asserting on failure
+ *
+ * \param[in] str  String to copy (can be \c NULL)
+ *
+ * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+#define pcmk__str_copy(str) pcmk__str_copy_as(__FILE__, __func__, __LINE__, str)
+
 void pcmk__str_update(char **str, const char *value);
+
 void pcmk__g_strcat(GString *buffer, ...) G_GNUC_NULL_TERMINATED;
 
 static inline bool
