@@ -687,7 +687,7 @@ pcmk__replace_submatches(const char *string, const char *match,
     size_t nbytes = 0;
     char *result = NULL;
 
-    if (pcmk__str_empty(string)) {
+    if (pcmk__str_empty(string) || pcmk__str_empty(match)) {
         return NULL; // Nothing to expand
     }
 
