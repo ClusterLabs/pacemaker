@@ -29,7 +29,7 @@ escape_unchanged(void **state)
     const char *unchanged = "abcdefghijklmnopqrstuvwxyz"
                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                             "0123456789"
-                            "\n\t`~!@#$%^*()-_=+/|\\[]{}?.,'";
+                            "`~!@#$%^*()-_=+/|\\[]{}?.,'";
 
     assert_false(pcmk__xml_needs_escape(unchanged, false));
     assert_false(pcmk__xml_needs_escape(unchanged, true));
@@ -102,6 +102,54 @@ escape_double_quote(void **state)
 }
 
 static void
+escape_newline(void **state)
+{
+    const char *newline_left = "\nabcdef";
+    const char *newline_mid = "abc\ndef";
+    const char *newline_right = "abcdef\n";
+
+    assert_false(pcmk__xml_needs_escape(newline_left, false));
+    assert_false(pcmk__xml_needs_escape(newline_mid, false));
+    assert_false(pcmk__xml_needs_escape(newline_right, false));
+
+    assert_true(pcmk__xml_needs_escape(newline_left, true));
+    assert_true(pcmk__xml_needs_escape(newline_mid, true));
+    assert_true(pcmk__xml_needs_escape(newline_right, true));
+}
+
+static void
+escape_tab(void **state)
+{
+    const char *tab_left = "\tabcdef";
+    const char *tab_mid = "abc\tdef";
+    const char *tab_right = "abcdef\t";
+
+    assert_false(pcmk__xml_needs_escape(tab_left, false));
+    assert_false(pcmk__xml_needs_escape(tab_mid, false));
+    assert_false(pcmk__xml_needs_escape(tab_right, false));
+
+    assert_true(pcmk__xml_needs_escape(tab_left, true));
+    assert_true(pcmk__xml_needs_escape(tab_mid, true));
+    assert_true(pcmk__xml_needs_escape(tab_right, true));
+}
+
+static void
+escape_carriage_return(void **state)
+{
+    const char *cr_left = "\rabcdef";
+    const char *cr_mid = "abc\rdef";
+    const char *cr_right = "abcdef\r";
+
+    assert_true(pcmk__xml_needs_escape(cr_left, false));
+    assert_true(pcmk__xml_needs_escape(cr_mid, false));
+    assert_true(pcmk__xml_needs_escape(cr_right, false));
+
+    assert_true(pcmk__xml_needs_escape(cr_left, true));
+    assert_true(pcmk__xml_needs_escape(cr_mid, true));
+    assert_true(pcmk__xml_needs_escape(cr_right, true));
+}
+
+static void
 escape_nonprinting(void **state)
 {
     const char *alert_left = "\aabcdef";
@@ -112,7 +160,7 @@ escape_nonprinting(void **state)
     const char *delete_mid = "abc\x7F""def";
     const char *delete_right = "abcdef\x7F";
 
-    const char *nonprinting_all = "\a\r\x7F\x1B";
+    const char *nonprinting_all = "\a\x7F\x1B";
 
     assert_true(pcmk__xml_needs_escape(alert_left, false));
     assert_true(pcmk__xml_needs_escape(alert_mid, false));
@@ -174,5 +222,8 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(escape_right_angle),
                 cmocka_unit_test(escape_ampersand),
                 cmocka_unit_test(escape_double_quote),
+                cmocka_unit_test(escape_newline),
+                cmocka_unit_test(escape_tab),
+                cmocka_unit_test(escape_carriage_return),
                 cmocka_unit_test(escape_nonprinting),
                 cmocka_unit_test(escape_utf8));

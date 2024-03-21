@@ -1061,14 +1061,14 @@ replace_text(char *text, size_t *index, size_t *length, const char *replace)
  *
  * See \c pcmk__xml_escape() for more details.
  *
- * \param[in] text          String to check
- * \param[in] escape_quote  If \c true, double quotes must be escaped
+ * \param[in] text      String to check
+ * \param[in] for_attr  If \c true, escape extra characters for attribute value
  *
  * \return \c true if \p text has special characters that need to be escaped, or
  *         \c false otherwise
  */
 bool
-pcmk__xml_needs_escape(const char *text, bool escape_quote)
+pcmk__xml_needs_escape(const char *text, bool for_attr)
 {
     size_t length = 0;
 
@@ -1088,18 +1088,15 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
             case '<':
                 return true;
             case '>':
-                // Not necessary, but for symmetry with '<'
                 return true;
             case '&':
                 return true;
             case '"':
-                if (escape_quote) {
-                    return true;
-                }
-                break;
             case '\n':
             case '\t':
-                // Don't escape newline or tab
+                if (for_attr) {
+                    return true;
+                }
                 break;
             default:
                 if ((text[index] < 0x20) || (text[index] >= 0x7F)) {
@@ -1120,25 +1117,42 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
  * references (for example, <tt>"&quot;"</tt>) or character references (for
  * example, <tt>"&#13;"</tt>).
  *
- * The special characters <tt>'<'</tt> and <tt>'&'</tt> are not allowed in their
- * literal forms in XML character data. Character data is non-markup text (for
- * example, the content of a text node).
- *
- * Additionally, if an attribute value is delimited by single quotes, then
- * single quotes must be escaped within the value. Similarly, if an attribute
- * value is delimited by double quotes, then double quotes must be escaped
- * within the value.
+ * The special characters <tt>'&'</tt> (except as the beginning of an entity
+ * reference) and <tt>'<'</tt> are not allowed in their literal forms in XML
+ * character data. Character data is non-markup text (for example, the content
+ * of a text node). <tt>'>'</tt> is allowed under most circumstances; we escape
+ * it for safety and symmetry.
  *
  * For more details, see the "Character Data and Markup" section of the XML
  * spec, currently section 2.4:
  * https://www.w3.org/TR/xml/#dt-markup
  *
+ * Attribute values are handled specially.
+ * * If an attribute value is delimited by single quotes, then single quotes
+ *   must be escaped within the value.
+ * * Similarly, if an attribute value is delimited by double quotes, then double
+ *   quotes must be escaped within the value.
+ * * A conformant XML processor replaces a literal whitespace character (tab,
+ *   newline, carriage return, space) in an attribute value with a space
+ *   (\c '#x20') character. However, a reference to a whitespace character (for
+ *   example, \c "&#x0A;" for \c '\n') does not get replaced.
+ *   * For more details, see the "Attribute-Value Normalization" section of the
+ *     XML spec, currently section 3.3.3. Note that the default attribute type
+ *     is CDATA; we don't deal with NMTOKENS, etc.:
+ *     https://www.w3.org/TR/xml/#AVNormalize
+ *
  * Pacemaker always delimits attribute values with double quotes, so this
  * function doesn't escape single quotes.
  *
- * \param[in] text          Text to escape
- * \param[in] escape_quote  If \c true, escape double quotes (should be enabled
- *                          for attribute values)
+ * This function escapes newlines and tabs in attribute values, so that future
+ * processing of the output preserves them instead of replacing them with space
+ * characters.
+ *
+ * This function always escapes carriage returns even outside of attribute
+ * values, since displaying them as literals would be messy.
+ *
+ * \param[in] text      Text to escape
+ * \param[in] for_attr  If \c true, escape extra characters for attribute value
  *
  * \return Newly allocated string equivalent to \p text but with special
  *         characters replaced with XML escape sequences (or \c NULL if \p text
@@ -1151,7 +1165,7 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
  *       https://discourse.gnome.org/t/intended-use-of-xmlencodeentitiesreentrant-vs-xmlencodespecialchars/19252
  */
 char *
-pcmk__xml_escape(const char *text, bool escape_quote)
+pcmk__xml_escape(const char *text, bool for_attr)
 {
     size_t length = 0;
     char *copy = NULL;
@@ -1175,20 +1189,25 @@ pcmk__xml_escape(const char *text, bool escape_quote)
                 copy = replace_text(copy, &index, &length, "&lt;");
                 break;
             case '>':
-                // Not necessary, but for symmetry with '<'
                 copy = replace_text(copy, &index, &length, "&gt;");
                 break;
             case '&':
                 copy = replace_text(copy, &index, &length, "&amp;");
                 break;
             case '"':
-                if (escape_quote) {
+                if (for_attr) {
                     copy = replace_text(copy, &index, &length, "&quot;");
                 }
                 break;
             case '\n':
+                if (for_attr) {
+                    copy = replace_text(copy, &index, &length, "&#x0A;");
+                }
+                break;
             case '\t':
-                // Don't escape newlines and tabs
+                if (for_attr) {
+                    copy = replace_text(copy, &index, &length, "&#x09;");
+                }
                 break;
             default:
                 if ((copy[index] < 0x20) || (copy[index] >= 0x7F)) {

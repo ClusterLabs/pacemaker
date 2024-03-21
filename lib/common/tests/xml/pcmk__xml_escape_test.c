@@ -39,7 +39,7 @@ escape_unchanged(void **state)
     const char *unchanged = "abcdefghijklmnopqrstuvwxyz"
                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                             "0123456789"
-                            "\n\t`~!@#$%^*()-_=+/|\\[]{}?.,'";
+                            "`~!@#$%^*()-_=+/|\\[]{}?.,'";
     char *str = NULL;
 
     str = pcmk__xml_escape(unchanged, false);
@@ -118,10 +118,58 @@ escape_double_quote(void **state)
 }
 
 static void
+escape_newline(void **state)
+{
+    const char *newline = "\nabc\ndef\n";
+    const char *newline_esc = "&#x0A;abc&#x0A;def&#x0A;";
+    char *str = NULL;
+
+    str = pcmk__xml_escape(newline, false);
+    assert_string_equal(str, newline);
+    free(str);
+
+    str = pcmk__xml_escape(newline, true);
+    assert_string_equal(str, newline_esc);
+    free(str);
+}
+
+static void
+escape_tab(void **state)
+{
+    const char *tab = "\tabc\tdef\t";
+    const char *tab_esc = "&#x09;abc&#x09;def&#x09;";
+    char *str = NULL;
+
+    str = pcmk__xml_escape(tab, false);
+    assert_string_equal(str, tab);
+    free(str);
+
+    str = pcmk__xml_escape(tab, true);
+    assert_string_equal(str, tab_esc);
+    free(str);
+}
+
+static void
+escape_carriage_return(void **state)
+{
+    const char *cr = "\rabc\rdef\r";
+    const char *cr_esc = "&#x0D;abc&#x0D;def&#x0D;";
+    char *str = NULL;
+
+    str = pcmk__xml_escape(cr, false);
+    assert_string_equal(str, cr_esc);
+    free(str);
+
+    str = pcmk__xml_escape(cr, true);
+    assert_string_equal(str, cr_esc);
+    free(str);
+}
+
+static void
 escape_nonprinting(void **state)
 {
-    const char *nonprinting = "\a\r\x7F\x1B";
-    const char *nonprinting_esc = "&#x07;&#x0D;&#x7F;&#x1B;";
+    const char *nonprinting = "\a\x7F\x1B";
+    const char *nonprinting_esc = "&#x07;&#x7F;&#x1B;";
     char *str = NULL;
 
     str = pcmk__xml_escape(nonprinting, false);
@@ -188,5 +236,8 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(escape_right_angle),
                 cmocka_unit_test(escape_ampersand),
                 cmocka_unit_test(escape_double_quote),
+                cmocka_unit_test(escape_newline),
+                cmocka_unit_test(escape_tab),
+                cmocka_unit_test(escape_carriage_return),
                 cmocka_unit_test(escape_nonprinting),
                 cmocka_unit_test(escape_utf8));
