@@ -1102,7 +1102,7 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
                 // Don't escape newline or tab
                 break;
             default:
-                if ((text[index] < 0x20) || (text[index] >= 0x7f)) {
+                if ((text[index] < 0x20) || (text[index] >= 0x7F)) {
                     // Escape non-printing characters
                     return true;
                 }
@@ -1191,9 +1191,9 @@ pcmk__xml_escape(const char *text, bool escape_quote)
                 // Don't escape newlines and tabs
                 break;
             default:
-                if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
+                if ((copy[index] < 0x20) || (copy[index] >= 0x7F)) {
                     // Escape non-printing characters
-                    snprintf(buf, sizeof(buf), "&#x%.2x;", copy[index]);
+                    snprintf(buf, sizeof(buf), "&#x%.2X;", copy[index]);
                     copy = replace_text(copy, &index, &length, buf);
                 }
                 break;

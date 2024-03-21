@@ -120,8 +120,8 @@ escape_double_quote(void **state)
 static void
 escape_nonprinting(void **state)
 {
-    const char *nonprinting = "\a\r\x7f\x1b";
-    const char *nonprinting_esc = "&#x07;&#x0d;&#x7f;&#x1b;";
+    const char *nonprinting = "\a\r\x7F\x1B";
+    const char *nonprinting_esc = "&#x07;&#x0D;&#x7F;&#x1B;";
     char *str = NULL;
 
     str = pcmk__xml_escape(nonprinting, false);
@@ -140,12 +140,12 @@ escape_utf8(void **state)
      * and should not be escaped.
      */
     const char *chinese = "仅高级使用";
-    const char *two_byte = "abc""\xcf\xa6""d<ef";
-    const char *two_byte_esc = "abc""\xcf\xa6""d&lt;ef";
-    const char *three_byte = "abc""\xef\x98\x98""d<ef";
-    const char *three_byte_esc = "abc""\xef\x98\x98""d&lt;ef";
-    const char *four_byte = "abc""\xf0\x94\x81\x90""d<ef";
-    const char *four_byte_esc = "abc""\xf0\x94\x81\x90""d&lt;ef";
+    const char *two_byte = "abc""\xCF\xA6""d<ef";
+    const char *two_byte_esc = "abc""\xCF\xA6""d&lt;ef";
+    const char *three_byte = "abc""\xEF\x98\x98""d<ef";
+    const char *three_byte_esc = "abc""\xEF\x98\x98""d&lt;ef";
+    const char *four_byte = "abc""\xF0\x94\x81\x90""d<ef";
+    const char *four_byte_esc = "abc""\xF0\x94\x81\x90""d&lt;ef";
     char *str = NULL;
 
     str = pcmk__xml_escape(chinese, false);

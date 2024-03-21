@@ -108,11 +108,11 @@ escape_nonprinting(void **state)
     const char *alert_mid = "abc\adef";
     const char *alert_right = "abcdef\a";
 
-    const char *delete_left = "\x7f""abcdef";
-    const char *delete_mid = "abc\x7f""def";
-    const char *delete_right = "abcdef\x7f";
+    const char *delete_left = "\x7F""abcdef";
+    const char *delete_mid = "abc\x7F""def";
+    const char *delete_right = "abcdef\x7F";
 
-    const char *nonprinting_all = "\a\r\x7f\x1b";
+    const char *nonprinting_all = "\a\r\x7F\x1B";
 
     assert_true(pcmk__xml_needs_escape(alert_left, false));
     assert_true(pcmk__xml_needs_escape(alert_mid, false));
@@ -141,12 +141,12 @@ escape_utf8(void **state)
      * and should not be escaped.
      */
     const char *chinese = "仅高级使用";
-    const char *two_byte = "abc""\xcf\xa6""def";
-    const char *two_byte_special = "abc""\xcf\xa6""d<ef";
-    const char *three_byte = "abc""\xef\x98\x98""def";
-    const char *three_byte_special = "abc""\xef\x98\x98""d<ef";
-    const char *four_byte = "abc""\xf0\x94\x81\x90""def";
-    const char *four_byte_special = "abc""\xf0\x94\x81\x90""d<ef";
+    const char *two_byte = "abc""\xCF\xA6""def";
+    const char *two_byte_special = "abc""\xCF\xA6""d<ef";
+    const char *three_byte = "abc""\xEF\x98\x98""def";
+    const char *three_byte_special = "abc""\xEF\x98\x98""d<ef";
+    const char *four_byte = "abc""\xF0\x94\x81\x90""def";
+    const char *four_byte_special = "abc""\xF0\x94\x81\x90""d<ef";
 
     assert_false(pcmk__xml_needs_escape(chinese, false));
     assert_false(pcmk__xml_needs_escape(chinese, true));
