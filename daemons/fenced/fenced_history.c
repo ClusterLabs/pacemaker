@@ -131,34 +131,51 @@ stonith_fence_history_cleanup(const char *target,
  * situations where it would be handy to have it probably.
  */
 
-
-static int
-op_time_sort(const void *a_voidp, const void *b_voidp)
+/*!
+ * \internal
+ * \brief Compare two remote fencing operations by status and completion time
+ *
+ * A pending operation is ordered before a completed operation. If both
+ * operations have completed, then the more recently completed operation is
+ * ordered first. Two pending operations are considered equal.
+ *
+ * \param[in] a  First operation to compare
+ * \param[in] b  Second operation to compare
+ *
+ * \return Standard comparison result (a negative integer if \p a is lesser,
+ *         0 if the values are equal, and a positive integer if \p a is greater)
+ */
+static gint
+cmp_op_by_completion(const void *a, const void *b)
 {
-    const remote_fencing_op_t **a = (const remote_fencing_op_t **) a_voidp;
-    const remote_fencing_op_t **b = (const remote_fencing_op_t **) b_voidp;
-    gboolean a_pending = ((*a)->state != st_failed) && ((*a)->state != st_done);
-    gboolean b_pending = ((*b)->state != st_failed) && ((*b)->state != st_done);
+    const remote_fencing_op_t *op1 = *((const remote_fencing_op_t **) a);
+    const remote_fencing_op_t *op2 = *((const remote_fencing_op_t **) b);
+    bool op1_pending = (op1->state != st_failed) && (op1->state != st_done);
+    bool op2_pending = (op2->state != st_failed) && (op2->state != st_done);
 
-    if (a_pending && b_pending) {
+    if (op1_pending && op2_pending) {
         return 0;
-    } else if (a_pending) {
+    }
+    if (op1_pending) {
         return -1;
-    } else if (b_pending) {
-        return 1;
-    } else if ((*b)->completed == (*a)->completed) {
-        if ((*b)->completed_nsec > (*a)->completed_nsec) {
-            return 1;
-        } else if ((*b)->completed_nsec == (*a)->completed_nsec) {
-            return 0;
-        }
-    } else if ((*b)->completed > (*a)->completed) {
+    }
+    if (op2_pending) {
         return 1;
     }
-
-    return -1;
+    if (op1->completed > op2->completed) {
+        return -1;
+    }
+    if (op1->completed < op2->completed) {
+        return 1;
+    }
+    if (op1->completed_nsec > op2->completed_nsec) {
+        return -1;
+    }
+    if (op1->completed_nsec < op2->completed_nsec) {
+        return 1;
+    }
+    return 0;
 }
-
 
 /*!
  * \internal
@@ -192,7 +209,8 @@ stonith_fence_history_trim(void)
         /* run quicksort over the array so that we get pending ops
          * first and then sorted most recent to oldest
          */
-        qsort(ops, num_ops, sizeof(remote_fencing_op_t *), op_time_sort);
+        qsort(ops, num_ops, sizeof(remote_fencing_op_t *),
+              cmp_op_by_completion);
         /* purgest oldest half of the history entries */
         for (i = MAX_STONITH_HISTORY / 2; i < num_ops; i++) {
             /* keep pending ops even if they shouldn't fill more than
