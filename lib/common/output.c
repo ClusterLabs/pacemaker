@@ -128,7 +128,14 @@ pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create,
                       const GOptionEntry *options)
 {
+    char *name_copy = NULL;
+
     CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
+
+    name_copy = strdup(name);
+    if (name_copy == NULL) {
+        return ENOMEM;
+    }
 
     if (formatters == NULL) {
         formatters = pcmk__strkey_table(free, NULL);
@@ -138,7 +145,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
         g_option_group_add_entries(group, options);
     }
 
-    g_hash_table_insert(formatters, strdup(name), create);
+    g_hash_table_insert(formatters, name_copy, create);
     return pcmk_rc_ok;
 }
 
