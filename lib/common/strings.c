@@ -1233,6 +1233,35 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 
 /*!
  * \internal
+ * \brief Copy a string, asserting on failure
+ *
+ * \param[in] file      File where \p function is located
+ * \param[in] function  Calling function
+ * \param[in] line      Line within \p file
+ * \param[in] str       String to copy (can be \c NULL)
+ *
+ * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
+                  const char *str)
+{
+    if (str != NULL) {
+        char *result = strdup(str);
+
+        if (result == NULL) {
+            crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
+            crm_exit(CRM_EX_OSERR);
+        }
+        return result;
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
  * \brief Update a dynamically allocated string with a new value
  *
  * Given a dynamically allocated string and a new value for it, if the string
