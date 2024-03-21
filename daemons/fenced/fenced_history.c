@@ -139,19 +139,19 @@ stonith_fence_history_cleanup(const char *target,
  * operations have completed, then the more recently completed operation is
  * ordered first. Two pending operations are considered equal.
  *
- * \param[in] a  First operation to compare
- * \param[in] b  Second operation to compare
+ * \param[in] a  First \c remote_fencing_op_t to compare
+ * \param[in] b  Second \c remote_fencing_op_t to compare
  *
  * \return Standard comparison result (a negative integer if \p a is lesser,
  *         0 if the values are equal, and a positive integer if \p a is greater)
  */
 static gint
-cmp_op_by_completion(const void *a, const void *b)
+cmp_op_by_completion(gconstpointer a, gconstpointer b)
 {
-    const remote_fencing_op_t *op1 = *((const remote_fencing_op_t **) a);
-    const remote_fencing_op_t *op2 = *((const remote_fencing_op_t **) b);
-    bool op1_pending = (op1->state != st_failed) && (op1->state != st_done);
-    bool op2_pending = (op2->state != st_failed) && (op2->state != st_done);
+    const remote_fencing_op_t *op1 = a;
+    const remote_fencing_op_t *op2 = b;
+    bool op1_pending = stonith__op_state_pending(op1->state);
+    bool op2_pending = stonith__op_state_pending(op2->state);
 
     if (op1_pending && op2_pending) {
         return 0;
@@ -179,50 +179,47 @@ cmp_op_by_completion(const void *a, const void *b)
 
 /*!
  * \internal
+ * \brief Remove a completed operation from \c stonith_remote_op_list
+ *
+ * \param[in] data       \c remote_fencing_op_t to remove
+ * \param[in] user_data  Ignored
+ */
+static void
+remove_completed_remote_op(gpointer data, gpointer user_data)
+{
+    const remote_fencing_op_t *op = data;
+
+    if (!stonith__op_state_pending(op->state)) {
+        g_hash_table_remove(stonith_remote_op_list, op->id);
+    }
+}
+
+/*!
+ * \internal
  * \brief Do a local history-trim to MAX_STONITH_HISTORY / 2 entries
  *        once over MAX_STONITH_HISTORY
  */
 void
 stonith_fence_history_trim(void)
 {
-    guint num_ops;
-
-    if (!stonith_remote_op_list) {
+    if (stonith_remote_op_list == NULL) {
         return;
     }
-    num_ops = g_hash_table_size(stonith_remote_op_list);
-    if (num_ops > MAX_STONITH_HISTORY) {
-        remote_fencing_op_t *ops[num_ops];
-        remote_fencing_op_t *op = NULL;
-        GHashTableIter iter;
-        int i;
 
-        crm_trace("Fencing History growing beyond limit of %d so purge "
-                  "half of failed/successful attempts", MAX_STONITH_HISTORY);
+    if (g_hash_table_size(stonith_remote_op_list) > MAX_STONITH_HISTORY) {
+        GList *ops = g_hash_table_get_values(stonith_remote_op_list);
 
-        /* write all ops into an array */
-        i = 0;
-        g_hash_table_iter_init(&iter, stonith_remote_op_list);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
-            ops[i++] = op;
-        }
-        /* run quicksort over the array so that we get pending ops
-         * first and then sorted most recent to oldest
-         */
-        qsort(ops, num_ops, sizeof(remote_fencing_op_t *),
-              cmp_op_by_completion);
-        /* purgest oldest half of the history entries */
-        for (i = MAX_STONITH_HISTORY / 2; i < num_ops; i++) {
-            /* keep pending ops even if they shouldn't fill more than
-             * half of our buffer
-             */
-            if ((ops[i]->state == st_failed) || (ops[i]->state == st_done)) {
-                g_hash_table_remove(stonith_remote_op_list, ops[i]->id);
-            }
-        }
-        /* we've just purged valid data from the list so there is no need
-         * to create a notification - if displayed it can stay
-         */
+        crm_trace("More than %d entries in fencing history, purging oldest "
+                  "completed operations", MAX_STONITH_HISTORY);
+
+        ops = g_list_sort(ops, cmp_op_by_completion);
+
+        // Always keep pending ops regardless of number of entries
+        g_list_foreach(g_list_nth(ops, MAX_STONITH_HISTORY / 2),
+                       remove_completed_remote_op, NULL);
+
+        // No need for a notification after purging old data
+        g_list_free(ops);
     }
 }
 
