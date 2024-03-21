@@ -143,7 +143,7 @@ get_operation_list(xmlNode *rsc_entry) {
     GList *op_list = NULL;
     xmlNode *rsc_op = NULL;
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
+    for (rsc_op = pcmk__xe_first_child_any(rsc_entry); rsc_op != NULL;
          rsc_op = pcmk__xe_next(rsc_op)) {
         const char *task = crm_element_value(rsc_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = crm_element_value(rsc_op,
@@ -1672,7 +1672,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
         return rc;
     }
 
-    for (xml_op = pcmk__xe_first_child(scheduler->failed); xml_op != NULL;
+    for (xml_op = pcmk__xe_first_child_any(scheduler->failed); xml_op != NULL;
          xml_op = pcmk__xe_next(xml_op)) {
         char *rsc = NULL;
 

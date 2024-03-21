@@ -325,7 +325,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     template_ops = find_xml_node(new_xml, PCMK_XE_OPERATIONS, FALSE);
 
-    for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
+    for (child_xml = pcmk__xe_first_child_any(xml_obj); child_xml != NULL;
          child_xml = pcmk__xe_next(child_xml)) {
 
         xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
@@ -339,7 +339,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         xmlNode *op = NULL;
         GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
 
-        for (op = pcmk__xe_first_child(rsc_ops); op != NULL;
+        for (op = pcmk__xe_first_child_any(rsc_ops); op != NULL;
              op = pcmk__xe_next(op)) {
 
             char *key = template_op_key(op);
@@ -347,7 +347,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             g_hash_table_insert(rsc_ops_hash, key, op);
         }
 
-        for (op = pcmk__xe_first_child(template_ops); op != NULL;
+        for (op = pcmk__xe_first_child_any(template_ops); op != NULL;
              op = pcmk__xe_next(op)) {
 
             char *key = template_op_key(op);

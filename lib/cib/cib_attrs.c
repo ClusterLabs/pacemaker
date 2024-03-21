@@ -542,7 +542,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
 
     /* If there are multiple results, the first is sufficient */
     if (pcmk__xe_is(result, PCMK__XE_XPATH_QUERY)) {
-        result = pcmk__xe_first_child(result);
+        result = pcmk__xe_first_child_any(result);
         CRM_CHECK(result != NULL, return rc);
     }
 

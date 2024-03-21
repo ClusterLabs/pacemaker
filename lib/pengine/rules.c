@@ -155,7 +155,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         list = list->children;
     }
 
-    for (an_attr = pcmk__xe_first_child(list); an_attr != NULL;
+    for (an_attr = pcmk__xe_first_child_any(list); an_attr != NULL;
          an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
@@ -243,8 +243,8 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     if (xml_obj == NULL) {
         return NULL;
     }
-    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
-         attr_set = pcmk__xe_next(attr_set)) {
+    for (xmlNode *attr_set = pcmk__xe_first_child_any(xml_obj);
+         attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             const char *score = NULL;
@@ -407,7 +407,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     }
 
     crm_trace("Testing rule %s", pcmk__xe_id(rule));
-    for (expr = pcmk__xe_first_child(rule); expr != NULL;
+    for (expr = pcmk__xe_first_child_any(rule); expr != NULL;
          expr = pcmk__xe_next(expr)) {
 
         test = pe_eval_subexpr(expr, rule_data, next_change);

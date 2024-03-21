@@ -124,7 +124,7 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
-    for (event_type = pcmk__xe_first_child(select); event_type != NULL;
+    for (event_type = pcmk__xe_first_child_any(select); event_type != NULL;
          event_type = pcmk__xe_next(event_type)) {
 
         if (pcmk__xe_is(event_type, PCMK_XE_SELECT_FENCING)) {

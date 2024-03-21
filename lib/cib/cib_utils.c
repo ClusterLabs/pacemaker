@@ -168,7 +168,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
 
         if (pcmk__str_eq(op, PCMK_VALUE_CREATE, pcmk__str_none)
             && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
-            && pcmk__xe_is(pcmk__xe_first_child(change), element)) {
+            && pcmk__xe_is(pcmk__xe_first_child_any(change), element)) {
 
             // Newly added element
             rc = true;

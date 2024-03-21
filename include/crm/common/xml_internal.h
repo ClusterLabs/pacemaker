@@ -322,7 +322,7 @@ pcmk__xml_next(const xmlNode *child)
  * \return First child element of \p parent (or NULL if none)
  */
 static inline xmlNode *
-pcmk__xe_first_child(const xmlNode *parent)
+pcmk__xe_first_child_any(const xmlNode *parent)
 {
     xmlNode *child = (parent? parent->children : NULL);
 

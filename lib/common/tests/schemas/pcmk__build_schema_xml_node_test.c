@@ -79,11 +79,11 @@ single_schema(void **state)
      *   </schema>
      * </schemas>
      */
-    schema_node = pcmk__xe_first_child(parent);
+    schema_node = pcmk__xe_first_child_any(parent);
     assert_string_equal("pacemaker-3.0",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
-    file_node = pcmk__xe_first_child(schema_node);
+    file_node = pcmk__xe_first_child_any(schema_node);
     while (file_node != NULL && rngs1[i] != NULL) {
         assert_string_equal(rngs1[i],
                             crm_element_value(file_node, PCMK_XA_PATH));
@@ -115,11 +115,11 @@ multiple_schemas(void **state)
     /* Like single_schema, but make sure files aren't included multiple times
      * when the function is called repeatedly.
      */
-    schema_node = pcmk__xe_first_child(parent);
+    schema_node = pcmk__xe_first_child_any(parent);
     assert_string_equal("pacemaker-2.0",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
-    file_node = pcmk__xe_first_child(schema_node);
+    file_node = pcmk__xe_first_child_any(schema_node);
     while (file_node != NULL && rngs2[i] != NULL) {
         assert_string_equal(rngs2[i],
                             crm_element_value(file_node, PCMK_XA_PATH));
@@ -133,7 +133,7 @@ multiple_schemas(void **state)
     assert_string_equal("pacemaker-2.1",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
-    file_node = pcmk__xe_first_child(schema_node);
+    file_node = pcmk__xe_first_child_any(schema_node);
     i = 0;
 
     while (file_node != NULL && rngs3[i] != NULL) {
