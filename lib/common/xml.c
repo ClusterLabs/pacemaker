@@ -383,17 +383,21 @@ xmlNode *
 pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                      const char *attr_n, const char *attr_v)
 {
+    xmlNode *child = NULL;
     const char *parent_name = "<null>";
-
-    if (parent != NULL) {
-        parent_name = (const char *) parent->name;
-    }
 
     CRM_CHECK((attr_v == NULL) || (attr_n != NULL), return NULL);
 
-    for (xmlNode *child = pcmk__xe_first_child_any(parent); child != NULL;
-         child = pcmk__xe_next(child)) {
+    if (parent != NULL) {
+        child = parent->children;
+        while ((child != NULL) && (child->type != XML_ELEMENT_NODE)) {
+            child = child->next;
+        }
 
+        parent_name = (const char *) parent->name;
+    }
+
+    for (; child != NULL; child = pcmk__xe_next(child)) {
         const char *value = NULL;
 
         if ((node_name != NULL) && !pcmk__xe_is(child, node_name)) {
@@ -475,8 +479,9 @@ fix_plus_plus_recursive(xmlNode *target)
 
         expand_plus_plus(target, p_name, p_value);
     }
-    for (child = pcmk__xe_first_child_any(target); child != NULL;
+    for (child = pcmk__xe_first_child(target, NULL, NULL, NULL); child != NULL;
          child = pcmk__xe_next(child)) {
+
         fix_plus_plus_recursive(child);
     }
 }
@@ -1896,7 +1901,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     pcmk_nvpairs2xml_attrs(nvpairs, result);
     pcmk_free_nvpairs(nvpairs);
 
-    for (child = pcmk__xe_first_child_any(input); child != NULL;
+    for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
          child = pcmk__xe_next(child)) {
 
         if (recursive) {

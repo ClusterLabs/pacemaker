@@ -57,7 +57,8 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
     xmlNode *xml_constraints = pcmk_find_cib_element(scheduler->input,
                                                      PCMK_XE_CONSTRAINTS);
 
-    for (xmlNode *xml_obj = pcmk__xe_first_child_any(xml_constraints);
+    for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints, NULL, NULL,
+                                                 NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         xmlNode *lifetime = NULL;

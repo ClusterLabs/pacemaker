@@ -415,7 +415,7 @@ ticket_constraints_default(pcmk__output_t *out, va_list args)
     pcmk__formatted_printf(out, "Constraints XML:\n\n");
 
     if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
-        xmlNode *child = pcmk__xe_first_child_any(constraint_xml);
+        xmlNode *child = pcmk__xe_first_child(constraint_xml, NULL, NULL, NULL);
 
         do {
             GString *buf = g_string_sized_new(1024);

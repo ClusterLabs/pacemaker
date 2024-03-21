@@ -317,25 +317,6 @@ pcmk__xml_next(const xmlNode *child)
 
 /*!
  * \internal
- * \brief Return first non-text child element of an XML node
- *
- * \param[in] parent  XML node to check
- *
- * \return First child element of \p parent (or NULL if none)
- */
-static inline xmlNode *
-pcmk__xe_first_child_any(const xmlNode *parent)
-{
-    xmlNode *child = (parent? parent->children : NULL);
-
-    while (child && (child->type != XML_ELEMENT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-/*!
- * \internal
  * \brief Return next non-text sibling element of an XML element
  *
  * \param[in] child  XML element to check

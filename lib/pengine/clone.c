@@ -387,8 +387,8 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                     pcmk__flag_text(rsc->flags, pcmk_rsc_promotable));
 
     // Clones may contain a single group or primitive
-    for (a_child = pcmk__xe_first_child_any(xml_obj); a_child != NULL;
-         a_child = pcmk__xe_next(a_child)) {
+    for (a_child = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         a_child != NULL; a_child = pcmk__xe_next(a_child)) {
 
         if (pcmk__str_any_of((const char *) a_child->name,
                              PCMK_XE_PRIMITIVE, PCMK_XE_GROUP, NULL)) {

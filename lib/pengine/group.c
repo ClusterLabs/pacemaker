@@ -198,7 +198,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     clone_id = crm_element_value(rsc->xml, PCMK__META_CLONE);
 
-    for (xml_native_rsc = pcmk__xe_first_child_any(xml_obj);
+    for (xml_native_rsc = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
          xml_native_rsc != NULL;
          xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
 

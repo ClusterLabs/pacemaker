@@ -487,8 +487,9 @@ attrd_peer_sync_response(const crm_node_t *peer, bool peer_won, xmlNode *xml)
     }
 
     // Process each attribute update in the sync response
-    for (xmlNode *child = pcmk__xe_first_child_any(xml); child != NULL;
-         child = pcmk__xe_next(child)) {
+    for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child)) {
+
         attrd_peer_update(peer, child,
                           crm_element_value(child, PCMK__XA_ATTR_HOST), true);
     }

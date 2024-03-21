@@ -2184,7 +2184,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
-    for (child = pcmk__xe_first_child_any(xml); child != NULL;
+    for (child = pcmk__xe_first_child(xml, NULL, NULL, NULL); child != NULL;
          child = pcmk__xe_next(child)) {
         /* Replies for "reboot" operations will include the action-specific
          * values for "off" and "on" in child elements, just in case the reboot
@@ -2225,7 +2225,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices,
     peer->devices = pcmk__strkey_table(free, free);
 
     /* Each child element describes one capable device available to the peer */
-    for (child = pcmk__xe_first_child_any(xml); child != NULL;
+    for (child = pcmk__xe_first_child(xml, NULL, NULL, NULL); child != NULL;
          child = pcmk__xe_next(child)) {
         const char *device = pcmk__xe_id(child);
 

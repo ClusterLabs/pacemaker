@@ -125,8 +125,9 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 {
     xmlNode *child = NULL;
 
-    for (child = pcmk__xe_first_child_any(acl_entry); child;
-         child = pcmk__xe_next(child)) {
+    for (child = pcmk__xe_first_child(acl_entry, NULL, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child)) {
+
         const char *tag = (const char *) child->name;
         const char *kind = crm_element_value(child, PCMK_XA_KIND);
 
@@ -147,8 +148,9 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
             if (ref_role) {
                 xmlNode *role = NULL;
 
-                for (role = pcmk__xe_first_child_any(acl_top); role;
-                     role = pcmk__xe_next(role)) {
+                for (role = pcmk__xe_first_child(acl_top, NULL, NULL, NULL);
+                     role != NULL; role = pcmk__xe_next(role)) {
+
                     if (!strcmp(PCMK_XE_ACL_ROLE, (const char *) role->name)) {
                         const char *role_id = crm_element_value(role,
                                                                 PCMK_XA_ID);
@@ -305,8 +307,8 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         if (acls) {
             xmlNode *child = NULL;
 
-            for (child = pcmk__xe_first_child_any(acls); child;
-                 child = pcmk__xe_next(child)) {
+            for (child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
+                 child != NULL; child = pcmk__xe_next(child)) {
 
                 /* @COMPAT PCMK__XE_ACL_USER was deprecated in Pacemaker 1.1.12
                  * (needed for rolling upgrades)

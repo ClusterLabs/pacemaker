@@ -226,8 +226,9 @@ stonith_xml_history_to_list(const xmlNode *history)
 
     CRM_LOG_ASSERT(rv != NULL);
 
-    for (xml_op = pcmk__xe_first_child_any(history); xml_op != NULL;
-         xml_op = pcmk__xe_next(xml_op)) {
+    for (xml_op = pcmk__xe_first_child(history, NULL, NULL, NULL);
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
+
         remote_fencing_op_t *op = NULL;
         char *id = crm_element_value_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
         int state;
