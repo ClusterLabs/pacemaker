@@ -556,7 +556,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         target = find_xml_node(parent, object_name, FALSE);
 
     } else {
-        target = pcmk__xe_match(parent, object_name, PCMK_XA_ID, object_id);
+        target = pcmk__xe_first_child(parent, object_name, PCMK_XA_ID,
+                                      object_id);
     }
 
     if (target == NULL) {
@@ -673,7 +674,8 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     if (object_id == NULL) {
         equiv_node = find_xml_node(parent, object_name, FALSE);
     } else {
-        equiv_node = pcmk__xe_match(parent, object_name, PCMK_XA_ID, object_id);
+        equiv_node = pcmk__xe_first_child(parent, object_name, PCMK_XA_ID,
+                                          object_id);
     }
     if (equiv_node != NULL) {
         return -EEXIST;

@@ -1202,7 +1202,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
   again:
-    xml_op = pcmk__xe_match(parent, PCMK__XE_LRM_RSC_OP, PCMK_XA_ID, op_id);
+    xml_op = pcmk__xe_first_child(parent, PCMK__XE_LRM_RSC_OP, PCMK_XA_ID,
+                                  op_id);
     if (xml_op == NULL) {
         xml_op = pcmk__xe_create(parent, PCMK__XE_LRM_RSC_OP);
     }

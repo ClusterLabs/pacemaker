@@ -41,8 +41,8 @@ static void
 bad_input(void **state) {
     xmlNode *xml = pcmk__xml_parse(str1);
 
-    assert_null(pcmk__xe_match(NULL, NULL, NULL, NULL));
-    assert_null(pcmk__xe_match(NULL, NULL, NULL, "attrX"));
+    assert_null(pcmk__xe_first_child(NULL, NULL, NULL, NULL));
+    assert_null(pcmk__xe_first_child(NULL, NULL, NULL, "attrX"));
 
     free_xml(xml);
 }
@@ -52,13 +52,13 @@ not_found(void **state) {
     xmlNode *xml = pcmk__xml_parse(str1);
 
     /* No node with an attrX attribute */
-    assert_null(pcmk__xe_match(xml, NULL, "attrX", NULL));
+    assert_null(pcmk__xe_first_child(xml, NULL, "attrX", NULL));
     /* No nodeX node */
-    assert_null(pcmk__xe_match(xml, "nodeX", NULL, NULL));
+    assert_null(pcmk__xe_first_child(xml, "nodeX", NULL, NULL));
     /* No nodeA node with attrX */
-    assert_null(pcmk__xe_match(xml, "nodeA", "attrX", NULL));
+    assert_null(pcmk__xe_first_child(xml, "nodeA", "attrX", NULL));
     /* No nodeA node with attrA=XYZ */
-    assert_null(pcmk__xe_match(xml, "nodeA", "attrA", "XYZ"));
+    assert_null(pcmk__xe_first_child(xml, "nodeA", "attrA", "XYZ"));
 
     free_xml(xml);
 }
@@ -69,12 +69,12 @@ find_attrB(void **state) {
     xmlNode *result = NULL;
 
     /* Find the first node with attrB */
-    result = pcmk__xe_match(xml, NULL, "attrB", NULL);
+    result = pcmk__xe_first_child(xml, NULL, "attrB", NULL);
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "3");
 
     /* Find the first nodeB with attrB */
-    result = pcmk__xe_match(xml, "nodeB", "attrB", NULL);
+    result = pcmk__xe_first_child(xml, "nodeB", "attrB", NULL);
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "5");
 
@@ -87,12 +87,12 @@ find_attrA_matching(void **state) {
     xmlNode *result = NULL;
 
     /* Find attrA=456 */
-    result = pcmk__xe_match(xml, NULL, "attrA", "456");
+    result = pcmk__xe_first_child(xml, NULL, "attrA", "456");
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "2");
 
     /* Find a nodeB with attrA=123 */
-    result = pcmk__xe_match(xml, "nodeB", "attrA", "123");
+    result = pcmk__xe_first_child(xml, "nodeB", "attrA", "123");
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "4");
 

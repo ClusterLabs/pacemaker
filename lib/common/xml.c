@@ -336,7 +336,8 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
         const char *id = pcmk__xe_id(needle);
         const char *attr = (id == NULL)? NULL : PCMK_XA_ID;
 
-        return pcmk__xe_match(haystack, (const char *) needle->name, attr, id);
+        return pcmk__xe_first_child(haystack, (const char *) needle->name, attr,
+                                    id);
     }
 }
 
@@ -408,8 +409,8 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
  * \return Matching XML child element, or \c NULL if none found
  */
 xmlNode *
-pcmk__xe_match(const xmlNode *parent, const char *node_name,
-               const char *attr_n, const char *attr_v)
+pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
+                     const char *attr_n, const char *attr_v)
 {
     const char *parent_name = "<null>";
 
@@ -1680,8 +1681,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(target != NULL || parent != NULL, return);
 
     if (target == NULL) {
-        target = pcmk__xe_match(parent, object_name,
-                                object_href, object_href_val);
+        target = pcmk__xe_first_child(parent, object_name,
+                                      object_href, object_href_val);
     }
 
     if (target == NULL) {
@@ -2158,8 +2159,8 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 xmlNode *
 find_entity(xmlNode *parent, const char *node_name, const char *id)
 {
-    return pcmk__xe_match(parent, node_name,
-                          ((id == NULL)? id : PCMK_XA_ID), id);
+    return pcmk__xe_first_child(parent, node_name,
+                                ((id == NULL)? id : PCMK_XA_ID), id);
 }
 
 void

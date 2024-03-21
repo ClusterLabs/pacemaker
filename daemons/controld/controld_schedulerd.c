@@ -407,20 +407,21 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
                   PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name, attr_name,
                   attr_value);
 
-        configuration = pcmk__xe_match(xml, PCMK_XE_CONFIGURATION, NULL, NULL);
+        configuration = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
+                                             NULL);
         if (configuration == NULL) {
             configuration = pcmk__xe_create(xml, PCMK_XE_CONFIGURATION);
         }
 
-        crm_config = pcmk__xe_match(configuration, PCMK_XE_CRM_CONFIG, NULL,
-                                    NULL);
+        crm_config = pcmk__xe_first_child(configuration, PCMK_XE_CRM_CONFIG,
+                                          NULL, NULL);
         if (crm_config == NULL) {
             crm_config = pcmk__xe_create(configuration, PCMK_XE_CRM_CONFIG);
         }
 
-        cluster_property_set = pcmk__xe_match(crm_config,
-                                              PCMK_XE_CLUSTER_PROPERTY_SET,
-                                              NULL, NULL);
+        cluster_property_set =
+            pcmk__xe_first_child(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
+                                 NULL);
         if (cluster_property_set == NULL) {
             cluster_property_set =
                 pcmk__xe_create(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);

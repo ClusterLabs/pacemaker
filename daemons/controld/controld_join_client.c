@@ -352,7 +352,7 @@ do_cl_join_finalize_respond(long long action,
         /* Update the remote node cache with information about which node
          * is hosting the connection.
          */
-        remotes = pcmk__xe_match(input->msg, PCMK_XE_NODES, NULL, NULL);
+        remotes = pcmk__xe_first_child(input->msg, PCMK_XE_NODES, NULL, NULL);
         if (remotes != NULL) {
             pcmk__xe_foreach_child(remotes, PCMK_XE_NODE,
                                    update_conn_host_cache, NULL);
