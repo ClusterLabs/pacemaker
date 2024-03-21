@@ -131,34 +131,68 @@ stonith_fence_history_cleanup(const char *target,
  * situations where it would be handy to have it probably.
  */
 
-
-static int
-op_time_sort(const void *a_voidp, const void *b_voidp)
+/*!
+ * \internal
+ * \brief Compare two remote fencing operations by status and completion time
+ *
+ * A pending operation is ordered before a completed operation. If both
+ * operations have completed, then the more recently completed operation is
+ * ordered first. Two pending operations are considered equal.
+ *
+ * \param[in] a  First \c remote_fencing_op_t to compare
+ * \param[in] b  Second \c remote_fencing_op_t to compare
+ *
+ * \return Standard comparison result (a negative integer if \p a is lesser,
+ *         0 if the values are equal, and a positive integer if \p a is greater)
+ */
+static gint
+cmp_op_by_completion(gconstpointer a, gconstpointer b)
 {
-    const remote_fencing_op_t **a = (const remote_fencing_op_t **) a_voidp;
-    const remote_fencing_op_t **b = (const remote_fencing_op_t **) b_voidp;
-    gboolean a_pending = ((*a)->state != st_failed) && ((*a)->state != st_done);
-    gboolean b_pending = ((*b)->state != st_failed) && ((*b)->state != st_done);
+    const remote_fencing_op_t *op1 = a;
+    const remote_fencing_op_t *op2 = b;
+    bool op1_pending = stonith__op_state_pending(op1->state);
+    bool op2_pending = stonith__op_state_pending(op2->state);
 
-    if (a_pending && b_pending) {
+    if (op1_pending && op2_pending) {
         return 0;
-    } else if (a_pending) {
+    }
+    if (op1_pending) {
         return -1;
-    } else if (b_pending) {
-        return 1;
-    } else if ((*b)->completed == (*a)->completed) {
-        if ((*b)->completed_nsec > (*a)->completed_nsec) {
-            return 1;
-        } else if ((*b)->completed_nsec == (*a)->completed_nsec) {
-            return 0;
-        }
-    } else if ((*b)->completed > (*a)->completed) {
+    }
+    if (op2_pending) {
         return 1;
     }
-
-    return -1;
+    if (op1->completed > op2->completed) {
+        return -1;
+    }
+    if (op1->completed < op2->completed) {
+        return 1;
+    }
+    if (op1->completed_nsec > op2->completed_nsec) {
+        return -1;
+    }
+    if (op1->completed_nsec < op2->completed_nsec) {
+        return 1;
+    }
+    return 0;
 }
 
+/*!
+ * \internal
+ * \brief Remove a completed operation from \c stonith_remote_op_list
+ *
+ * \param[in] data       \c remote_fencing_op_t to remove
+ * \param[in] user_data  Ignored
+ */
+static void
+remove_completed_remote_op(gpointer data, gpointer user_data)
+{
+    const remote_fencing_op_t *op = data;
+
+    if (!stonith__op_state_pending(op->state)) {
+        g_hash_table_remove(stonith_remote_op_list, op->id);
+    }
+}
 
 /*!
  * \internal
@@ -168,43 +202,24 @@ op_time_sort(const void *a_voidp, const void *b_voidp)
 void
 stonith_fence_history_trim(void)
 {
-    guint num_ops;
-
-    if (!stonith_remote_op_list) {
+    if (stonith_remote_op_list == NULL) {
         return;
     }
-    num_ops = g_hash_table_size(stonith_remote_op_list);
-    if (num_ops > MAX_STONITH_HISTORY) {
-        remote_fencing_op_t *ops[num_ops];
-        remote_fencing_op_t *op = NULL;
-        GHashTableIter iter;
-        int i;
 
-        crm_trace("Fencing History growing beyond limit of %d so purge "
-                  "half of failed/successful attempts", MAX_STONITH_HISTORY);
+    if (g_hash_table_size(stonith_remote_op_list) > MAX_STONITH_HISTORY) {
+        GList *ops = g_hash_table_get_values(stonith_remote_op_list);
 
-        /* write all ops into an array */
-        i = 0;
-        g_hash_table_iter_init(&iter, stonith_remote_op_list);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
-            ops[i++] = op;
-        }
-        /* run quicksort over the array so that we get pending ops
-         * first and then sorted most recent to oldest
-         */
-        qsort(ops, num_ops, sizeof(remote_fencing_op_t *), op_time_sort);
-        /* purgest oldest half of the history entries */
-        for (i = MAX_STONITH_HISTORY / 2; i < num_ops; i++) {
-            /* keep pending ops even if they shouldn't fill more than
-             * half of our buffer
-             */
-            if ((ops[i]->state == st_failed) || (ops[i]->state == st_done)) {
-                g_hash_table_remove(stonith_remote_op_list, ops[i]->id);
-            }
-        }
-        /* we've just purged valid data from the list so there is no need
-         * to create a notification - if displayed it can stay
-         */
+        crm_trace("More than %d entries in fencing history, purging oldest "
+                  "completed operations", MAX_STONITH_HISTORY);
+
+        ops = g_list_sort(ops, cmp_op_by_completion);
+
+        // Always keep pending ops regardless of number of entries
+        g_list_foreach(g_list_nth(ops, MAX_STONITH_HISTORY / 2),
+                       remove_completed_remote_op, NULL);
+
+        // No need for a notification after purging old data
+        g_list_free(ops);
     }
 }
 

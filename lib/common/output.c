@@ -128,7 +128,14 @@ pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create,
                       const GOptionEntry *options)
 {
+    char *name_copy = NULL;
+
     CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
+
+    name_copy = strdup(name);
+    if (name_copy == NULL) {
+        return ENOMEM;
+    }
 
     if (formatters == NULL) {
         formatters = pcmk__strkey_table(free, NULL);
@@ -138,7 +145,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
         g_option_group_add_entries(group, options);
     }
 
-    g_hash_table_insert(formatters, strdup(name), create);
+    g_hash_table_insert(formatters, name_copy, create);
     return pcmk_rc_ok;
 }
 
@@ -190,7 +197,7 @@ pcmk__register_message(pcmk__output_t *out, const char *message_id,
                        pcmk__message_fn_t fn) {
     CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id) && fn != NULL);
 
-    g_hash_table_replace(out->messages, strdup(message_id), fn);
+    g_hash_table_replace(out->messages, pcmk__str_copy(message_id), fn);
 }
 
 void

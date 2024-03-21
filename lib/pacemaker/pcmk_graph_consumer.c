@@ -20,6 +20,67 @@
 
 
 /*
+ * Functions for freeing transition graph objects
+ */
+
+/*!
+ * \internal
+ * \brief Free a transition graph action object
+ *
+ * \param[in,out] user_data  Action to free
+ */
+static void
+free_graph_action(gpointer user_data)
+{
+    pcmk__graph_action_t *action = user_data;
+
+    if (action->timer != 0) {
+        crm_warn("Cancelling timer for graph action %d", action->id);
+        g_source_remove(action->timer);
+    }
+    if (action->params != NULL) {
+        g_hash_table_destroy(action->params);
+    }
+    free_xml(action->xml);
+    free(action);
+}
+
+/*!
+ * \internal
+ * \brief Free a transition graph synapse object
+ *
+ * \param[in,out] user_data  Synapse to free
+ */
+static void
+free_graph_synapse(gpointer user_data)
+{
+    pcmk__graph_synapse_t *synapse = user_data;
+
+    g_list_free_full(synapse->actions, free_graph_action);
+    g_list_free_full(synapse->inputs, free_graph_action);
+    free(synapse);
+}
+
+/*!
+ * \internal
+ * \brief Free a transition graph object
+ *
+ * \param[in,out] graph  Transition graph to free
+ */
+void
+pcmk__free_graph(pcmk__graph_t *graph)
+{
+    if (graph != NULL) {
+        g_list_free_full(graph->synapses, free_graph_synapse);
+        free(graph->source);
+        free(graph->failed_stop_offset);
+        free(graph->failed_start_offset);
+        free(graph);
+    }
+}
+
+
+/*
  * Functions for updating graph
  */
 
@@ -590,8 +651,8 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     value = crm_element_value(xml_synapse, PCMK__XA_PRIORITY);
     pcmk__scan_min_int(value, &(new_synapse->priority), 0);
 
-    CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
-                                    return NULL);
+    CRM_CHECK(new_synapse->id >= 0,
+              free_graph_synapse((gpointer) new_synapse); return NULL);
 
     new_graph->num_synapses++;
 
@@ -686,7 +747,7 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
 
     new_graph->source = strdup(pcmk__s(reference, "unknown"));
     if (new_graph->source == NULL) {
-        free(new_graph);
+        pcmk__free_graph(new_graph);
         return NULL;
     }
 
@@ -700,13 +761,13 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     if (xml_graph != NULL) {
         const char *buf = crm_element_value(xml_graph, "transition_id");
 
-        CRM_CHECK(buf != NULL, free(new_graph);
-                               return NULL);
+        CRM_CHECK(buf != NULL,
+                  pcmk__free_graph(new_graph); return NULL);
         pcmk__scan_min_int(buf, &(new_graph->id), -1);
 
         buf = crm_element_value(xml_graph, PCMK_OPT_CLUSTER_DELAY);
-        CRM_CHECK(buf != NULL, free(new_graph);
-                               return NULL);
+        CRM_CHECK(buf != NULL,
+                  pcmk__free_graph(new_graph); return NULL);
         pcmk_parse_interval_spec(buf, &(new_graph->network_delay));
 
         buf = crm_element_value(xml_graph, PCMK_OPT_STONITH_TIMEOUT);
@@ -756,67 +817,6 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
               new_graph->num_synapses);
 
     return new_graph;
-}
-
-
-/*
- * Functions for freeing transition graph objects
- */
-
-/*!
- * \internal
- * \brief Free a transition graph action object
- *
- * \param[in,out] user_data  Action to free
- */
-static void
-free_graph_action(gpointer user_data)
-{
-    pcmk__graph_action_t *action = user_data;
-
-    if (action->timer != 0) {
-        crm_warn("Cancelling timer for graph action %d", action->id);
-        g_source_remove(action->timer);
-    }
-    if (action->params != NULL) {
-        g_hash_table_destroy(action->params);
-    }
-    free_xml(action->xml);
-    free(action);
-}
-
-/*!
- * \internal
- * \brief Free a transition graph synapse object
- *
- * \param[in,out] user_data  Synapse to free
- */
-static void
-free_graph_synapse(gpointer user_data)
-{
-    pcmk__graph_synapse_t *synapse = user_data;
-
-    g_list_free_full(synapse->actions, free_graph_action);
-    g_list_free_full(synapse->inputs, free_graph_action);
-    free(synapse);
-}
-
-/*!
- * \internal
- * \brief Free a transition graph object
- *
- * \param[in,out] graph  Transition graph to free
- */
-void
-pcmk__free_graph(pcmk__graph_t *graph)
-{
-    if (graph != NULL) {
-        g_list_free_full(graph->synapses, free_graph_synapse);
-        free(graph->source);
-        free(graph->failed_stop_offset);
-        free(graph->failed_start_offset);
-        free(graph);
-    }
 }
 
 

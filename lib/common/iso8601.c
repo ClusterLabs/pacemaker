@@ -623,7 +623,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
 
     if (pcmk_is_set(flags, crm_time_log_date)) {
         if (pcmk_is_set(flags, crm_time_weeks)) { // YYYY-WW-D
-            uint32_t y, w, d;
+            uint32_t y = 0;
+            uint32_t w = 0;
+            uint32_t d = 0;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -632,7 +634,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             }
 
         } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
-            uint32_t y, d;
+            uint32_t y = 0;
+            uint32_t d = 0;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -640,7 +643,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             }
 
         } else { // YYYY-MM-DD
-            uint32_t y, m, d;
+            uint32_t y = 0;
+            uint32_t m = 0;
+            uint32_t d = 0;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -1912,12 +1917,21 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
-    const char *mark_s;
-    int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
-        date_len = 0, nano_digits = 0;
-    char nano_s[10], date_s[max+1], nanofmt_s[5] = "%", *tmp_fmt_s;
-    struct tm tm;
-    crm_time_t dt;
+#define DATE_LEN_MAX 128
+    const char *mark_s = NULL;
+    int scanned_pos = 0;
+    int printed_pos = 0;
+    int fmt_pos = 0;
+    size_t date_len = 0;
+    int nano_digits = 0;
+
+    char nano_s[10] = { '\0', };
+    char date_s[DATE_LEN_MAX] = { '\0', };
+    char nanofmt_s[5] = "%";
+    char *tmp_fmt_s = NULL;
+
+    struct tm tm = { 0, };
+    crm_time_t dt = { 0, };
 
     if (!format) {
         return NULL;
@@ -1958,7 +1972,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-        date_len += strftime(&date_s[date_len], max-date_len, tmp_fmt_s, &tm);
+        date_len += strftime(&date_s[date_len], DATE_LEN_MAX - date_len,
+                             tmp_fmt_s, &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
@@ -1969,7 +1984,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-            date_len += snprintf(&date_s[date_len], max-date_len,
+            date_len += snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
                                  nanofmt_s, nano_s);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
@@ -1979,6 +1994,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     }
 
     return (date_len == 0)?NULL:strdup(date_s);
+#undef DATE_LEN_MAX
 }
 
 /*!
