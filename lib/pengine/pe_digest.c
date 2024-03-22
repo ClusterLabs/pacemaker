@@ -308,10 +308,13 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                       const xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pcmk_scheduler_t *scheduler)
 {
-    pcmk__op_digest_t *data = calloc(1, sizeof(pcmk__op_digest_t));
+    pcmk__op_digest_t *data = NULL;
     const char *op_version = NULL;
     GHashTable *params = NULL;
 
+    CRM_CHECK(scheduler != NULL, return NULL);
+
+    data = calloc(1, sizeof(pcmk__op_digest_t));
     if (data == NULL) {
         pcmk__sched_err("Could not allocate memory for operation digest");
         return NULL;
@@ -323,7 +326,7 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
         op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     }
 
-    if (op_version == NULL && scheduler != NULL && scheduler->input != NULL) {
+    if ((op_version == NULL) && (scheduler->input != NULL)) {
         op_version = crm_element_value(scheduler->input,
                                        PCMK_XA_CRM_FEATURE_SET);
     }
