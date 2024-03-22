@@ -161,10 +161,10 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     if (title != NULL ) {
         child_node = pcmk__xe_create(head_node, "title");
-        pcmk__xe_set_content(child_node, title);
+        pcmk__xe_set_content(child_node, "%s", title);
     } else if (out->request != NULL) {
         child_node = pcmk__xe_create(head_node, "title");
-        pcmk__xe_set_content(child_node, out->request);
+        pcmk__xe_set_content(child_node, "%s", out->request);
     }
 
     charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
@@ -182,7 +182,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * given.
      */
     child_node = pcmk__xe_create(head_node, "style");
-    pcmk__xe_set_content(child_node, stylesheet_default);
+    pcmk__xe_set_content(child_node, "%s", stylesheet_default);
 
     if (stylesheet_link != NULL) {
         htmlNodePtr link_node = pcmk__xe_create(head_node, "link");

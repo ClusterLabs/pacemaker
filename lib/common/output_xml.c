@@ -177,7 +177,7 @@ add_error_node(gpointer data, gpointer user_data) {
     xmlNodePtr node = (xmlNodePtr) user_data;
 
     node = pcmk__xe_create(node, PCMK_XE_ERROR);
-    pcmk__xe_set_content(node, str);
+    pcmk__xe_set_content(node, "%s", str);
 }
 
 static void
@@ -258,13 +258,13 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     if (proc_stdout != NULL) {
         child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
-        pcmk__xe_set_content(child_node, proc_stdout);
+        pcmk__xe_set_content(child_node, "%s", proc_stdout);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
         child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
-        pcmk__xe_set_content(child_node, proc_stderr);
+        pcmk__xe_set_content(child_node, "%s", proc_stderr);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
@@ -541,7 +541,7 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
-    pcmk__xe_set_content(node, content);
+    pcmk__xe_set_content(node, "%s", content);
     return node;
 }
 

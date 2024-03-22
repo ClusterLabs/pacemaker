@@ -640,21 +640,45 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 
 /*!
  * \internal
- * \brief Set a given string as an XML node's content
+ * \brief Set a formatted string as an XML node's content
  *
- * \param[in,out] node     Node whose content to set
- * \param[in]     content  String to set as the content
+ * \param[in,out] node    Node whose content to set
+ * \param[in]     format  <tt>printf(3)</tt>-style format string
+ * \param[in]     ...     Arguments for \p format
  *
- * \note \c xmlNodeSetContent() does not escape special characters.
+ * \note This function escapes special characters. \c xmlNodeSetContent() does
+ *       not.
  */
+G_GNUC_PRINTF(2, 3)
 void
-pcmk__xe_set_content(xmlNode *node, const char *content)
+pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 {
     if (node != NULL) {
-        char *escaped = pcmk__xml_escape(content, false);
+        const char *content = NULL;
+        char *buf = NULL;
 
-        xmlNodeSetContent(node, (pcmkXmlStr) escaped);
-        free(escaped);
+        if (strchr(format, '%') == NULL) {
+            // Nothing to format
+            content = format;
+
+        } else {
+            va_list ap;
+
+            va_start(ap, format);
+            CRM_ASSERT(vasprintf(&buf, format, ap) >= 0);
+            content = buf;
+            va_end(ap);
+        }
+
+        if (pcmk__xml_needs_escape(content, false)) {
+            char *escaped = pcmk__xml_escape(content, false);
+
+            free(buf);
+            buf = escaped;
+            content = buf;
+        }
+        xmlNodeSetContent(node, (pcmkXmlStr) content);
+        free(buf);
     }
 }
 
@@ -672,7 +696,7 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
         crm_xml_add(node, PCMK_XA_ID, id);
     }
 
-    pcmk__xe_set_content(node, text);
+    pcmk__xe_set_content(node, "%s", text);
     return node;
 }
 
@@ -2300,7 +2324,7 @@ pcmk_create_xml_text_node(xmlNode *parent, const char *name,
 {
     xmlNode *node = pcmk__xe_create(parent, name);
 
-    pcmk__xe_set_content(node, content);
+    pcmk__xe_set_content(node, "%s", content);
     return node;
 }
 
