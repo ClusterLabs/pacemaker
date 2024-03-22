@@ -108,7 +108,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
      */
-    (void) pe__add_bundle_remote_name(rsc, scheduler, data->params_all,
+    (void) pe__add_bundle_remote_name(rsc, data->params_all,
                                       PCMK_REMOTE_RA_ADDR);
 
     if (overrides != NULL) {

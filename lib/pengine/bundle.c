@@ -937,8 +937,8 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 }
 
 const char *
-pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
-                           xmlNode *xml, const char *field)
+pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
+                           const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
