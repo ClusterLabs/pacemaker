@@ -752,12 +752,22 @@ Function names should be unique across the entire project, to allow for
 individual tracing via ``PCMK_trace_functions``, and make it easier to search
 code and follow detail logs.
 
-A common function signature is a comparison function that returns 0 if its
-arguments are equal for sorting purposes, -1 if the first argument should sort
-first, and 1 is the second argument should sort first. Such a function should
-have ``cmp`` in its name, to parallel ``strcmp()``; ``sort`` should only be
-used in the names of functions that sort an entire list (typically using a
-``cmp`` function).
+.. _sort_func:
+
+Sorting
+^^^^^^^
+
+A function that sorts an entire list should have ``sort`` in its name. It sorts
+elements using a :ref:`comparison <compare_func>` function, which may be either
+hard-coded or passed as an argument.
+
+.. _compare_func:
+
+Comparison
+^^^^^^^^^^
+
+A comparison function for :ref:`sorting <sort_func>` should have ``cmp`` in its
+name and should *not* have ``sort`` in its name.
 
 
 Function Definitions
@@ -831,6 +841,12 @@ messages and converting from one to another, can be found in
 
 Of course, functions may have return values that aren't success/failure
 indicators, such as a pointer, integer count, or bool.
+
+:ref:`Comparison <compare_func>` functions should return
+
+* a negative integer if the first argument should sort first
+* 0 if its arguments are equal for sorting purposes
+* a positive integer is the second argument should sort first
 
 
 Public API Functions
