@@ -1075,21 +1075,20 @@ replace_text(char *text, size_t *index, size_t *length, const char *replace)
 bool
 pcmk__xml_needs_escape(const char *text, bool for_attr)
 {
-    size_t length = 0;
-
     if (text == NULL) {
         return false;
     }
-    length = strlen(text);
 
-    for (size_t index = 0; index < length; index++) {
+    while (*text != '\0') {
         // Don't escape any non-ASCII characters
-        index += utf8_bytes(&(text[index]));
+        size_t ubytes = utf8_bytes(text);
 
-        switch (text[index]) {
-            case '\0':
-                // Reached end of string by skipping UTF-8 bytes
-                return false;
+        if (ubytes > 0) {
+            text += ubytes;
+            continue;
+        }
+
+        switch (*text) {
             case '<':
                 return true;
             case '>':
@@ -1104,12 +1103,13 @@ pcmk__xml_needs_escape(const char *text, bool for_attr)
                 }
                 break;
             default:
-                if ((text[index] < 0x20) || (text[index] >= 0x7F)) {
-                    // Escape non-printing characters
+                if (!isprint(*text)) {
                     return true;
                 }
                 break;
         }
+
+        text++;
     }
     return false;
 }
