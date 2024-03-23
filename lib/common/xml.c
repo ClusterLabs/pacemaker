@@ -714,13 +714,6 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
             va_end(ap);
         }
 
-        if (pcmk__xml_needs_escape(content, false)) {
-            char *escaped = pcmk__xml_escape(content, false);
-
-            free(buf);
-            buf = escaped;
-            content = buf;
-        }
         xmlNodeSetContent(node, (pcmkXmlStr) content);
         free(buf);
     }
