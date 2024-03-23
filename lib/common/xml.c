@@ -1010,6 +1010,11 @@ utf8_bytes(const char *text)
 #endif  // CHAR_BIT != 8
     }
 
+    for (int i = 0; i < c_bytes; i++) {
+        // Sanity-check that we haven't passed end of string as "non-ASCII"
+        CRM_ASSERT(text[i] != '\0');
+    }
+
     return c_bytes;
 }
 
