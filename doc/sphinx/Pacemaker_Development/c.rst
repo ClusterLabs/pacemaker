@@ -769,6 +769,19 @@ Comparison
 A comparison function for :ref:`sorting <sort_func>` should have ``cmp`` in its
 name and should *not* have ``sort`` in its name.
 
+.. _constructor_func:
+
+Constructors
+^^^^^^^^^^^^
+
+A constructor creates a new dynamically allocated object. It may perform some
+initialization procedure on the new object.
+
+* If the constructor always creates an independent object instance, its name
+  should include ``new``.
+* If the constructor may add the new object to some existing object, its name
+  should include ``create``.
+
 
 Function Definitions
 ____________________
