@@ -15,7 +15,7 @@
 static void
 null_empty(void **state)
 {
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(NULL, false);
     assert_null(str);
@@ -25,11 +25,11 @@ null_empty(void **state)
 
     str = pcmk__xml_escape("", false);
     assert_string_equal(str, "");
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape("", true);
     assert_string_equal(str, "");
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -40,15 +40,15 @@ escape_unchanged(void **state)
                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                             "0123456789"
                             "`~!@#$%^*()-_=+/|\\[]{}?.,'";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(unchanged, false);
     assert_string_equal(str, unchanged);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(unchanged, true);
     assert_string_equal(str, unchanged);
-    free(str);
+    g_free(str);
 }
 
 // Ensure special characters get escaped at start, middle, and end
@@ -58,15 +58,15 @@ escape_left_angle(void **state)
 {
     const char *l_angle = "<abc<def<";
     const char *l_angle_esc = "&lt;abc&lt;def&lt;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(l_angle, false);
     assert_string_equal(str, l_angle_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(l_angle, true);
     assert_string_equal(str, l_angle_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -74,15 +74,15 @@ escape_right_angle(void **state)
 {
     const char *r_angle = ">abc>def>";
     const char *r_angle_esc = "&gt;abc&gt;def&gt;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(r_angle, false);
     assert_string_equal(str, r_angle_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(r_angle, true);
     assert_string_equal(str, r_angle_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -90,15 +90,15 @@ escape_ampersand(void **state)
 {
     const char *ampersand = "&abc&def&";
     const char *ampersand_esc = "&amp;abc&amp;def&amp;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(ampersand, false);
     assert_string_equal(str, ampersand_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(ampersand, true);
     assert_string_equal(str, ampersand_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -106,15 +106,15 @@ escape_double_quote(void **state)
 {
     const char *double_quote = "\"abc\"def\"";
     const char *double_quote_esc = "&quot;abc&quot;def&quot;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(double_quote, false);
     assert_string_equal(str, double_quote);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(double_quote, true);
     assert_string_equal(str, double_quote_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -122,15 +122,15 @@ escape_newline(void **state)
 {
     const char *newline = "\nabc\ndef\n";
     const char *newline_esc = "&#x0A;abc&#x0A;def&#x0A;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(newline, false);
     assert_string_equal(str, newline);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(newline, true);
     assert_string_equal(str, newline_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -138,15 +138,15 @@ escape_tab(void **state)
 {
     const char *tab = "\tabc\tdef\t";
     const char *tab_esc = "&#x09;abc&#x09;def&#x09;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(tab, false);
     assert_string_equal(str, tab);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(tab, true);
     assert_string_equal(str, tab_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -154,15 +154,15 @@ escape_carriage_return(void **state)
 {
     const char *cr = "\rabc\rdef\r";
     const char *cr_esc = "&#x0D;abc&#x0D;def&#x0D;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(cr, false);
     assert_string_equal(str, cr_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(cr, true);
     assert_string_equal(str, cr_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -170,15 +170,15 @@ escape_nonprinting(void **state)
 {
     const char *nonprinting = "\a\x7F\x1B";
     const char *nonprinting_esc = "&#x07;&#x7F;&#x1B;";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(nonprinting, false);
     assert_string_equal(str, nonprinting_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(nonprinting, true);
     assert_string_equal(str, nonprinting_esc);
-    free(str);
+    g_free(str);
 }
 
 static void
@@ -194,39 +194,39 @@ escape_utf8(void **state)
     const char *three_byte_esc = "abc""\xEF\x98\x98""d&lt;ef";
     const char *four_byte = "abc""\xF0\x94\x81\x90""d<ef";
     const char *four_byte_esc = "abc""\xF0\x94\x81\x90""d&lt;ef";
-    char *str = NULL;
+    gchar *str = NULL;
 
     str = pcmk__xml_escape(chinese, false);
     assert_string_equal(str, chinese);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(chinese, true);
     assert_string_equal(str, chinese);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(two_byte, false);
     assert_string_equal(str, two_byte_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(two_byte, true);
     assert_string_equal(str, two_byte_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(three_byte, false);
     assert_string_equal(str, three_byte_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(three_byte, true);
     assert_string_equal(str, three_byte_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(four_byte, false);
     assert_string_equal(str, four_byte_esc);
-    free(str);
+    g_free(str);
 
     str = pcmk__xml_escape(four_byte, true);
     assert_string_equal(str, four_byte_esc);
-    free(str);
+    g_free(str);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

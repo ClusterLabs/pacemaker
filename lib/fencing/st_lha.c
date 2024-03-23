@@ -208,8 +208,8 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         const char *meta_param = NULL;
         const char *timeout_str = NULL;
 
-        char *meta_longdesc_esc = NULL;
-        char *meta_shortdesc_esc = NULL;
+        gchar *meta_longdesc_esc = NULL;
+        gchar *meta_shortdesc_esc = NULL;
 
         stonith_obj = st_new_fn(agent);
         if (stonith_obj != NULL) {
@@ -259,8 +259,8 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
                                    meta_shortdesc, meta_param,
                                    timeout_str, timeout_str, timeout_str);
 
-        free(meta_longdesc_esc);
-        free(meta_shortdesc_esc);
+        g_free(meta_longdesc_esc);
+        g_free(meta_shortdesc_esc);
     }
     if (output) {
         *output = buffer;

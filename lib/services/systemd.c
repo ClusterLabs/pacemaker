@@ -710,13 +710,15 @@ systemd_unit_metadata(const char *name, int timeout)
     }
 
     if (pcmk__xml_needs_escape(desc, false)) {
-        char *escaped = pcmk__xml_escape(desc, false);
+        gchar *escaped = pcmk__xml_escape(desc, false);
 
-        free(desc);
-        desc = escaped;
+        meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
+        g_free(escaped);
+
+    } else {
+        meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
     }
 
-    meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
     free(desc);
     free(path);
     return meta;

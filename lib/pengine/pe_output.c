@@ -1595,7 +1595,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *status_s = NULL;
 
     time_t epoch = 0;
-    char *exit_reason_esc = NULL;
+    gchar *exit_reason_esc = NULL;
     char *rc_s = NULL;
     xmlNodePtr node = NULL;
 
@@ -1652,7 +1652,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         free(rc_change);
     }
 
-    free(exit_reason_esc);
+    g_free(exit_reason_esc);
     return pcmk_rc_ok;
 }
 

@@ -63,7 +63,7 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
     const char *name = NULL;
     const char *value = NULL;
-    char *value_esc = NULL;
+    gchar *value_esc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     if (attr == NULL || attr->children == NULL) {
@@ -91,5 +91,5 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
     }
 
     pcmk__g_strcat(buffer, " ", name, "=\"", value, "\"", NULL);
-    free(value_esc);
+    g_free(value_esc);
 }

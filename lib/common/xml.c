@@ -1020,48 +1020,6 @@ utf8_bytes(const char *text)
 
 /*!
  * \internal
- * \brief Replace a character in a dynamically allocated string, reallocating
- *        memory
- *
- * \param[in,out] text     String to replace a character in
- * \param[in,out] index    Index of character to replace with new string; on
- *                         return, reset to index of end of replacement string
- * \param[in,out] length   Length of \p text
- * \param[in]     replace  String to replace character at \p index with (must
- *                         not be empty)
- *
- * \return \p text, with the character at \p index replaced by \p replace
- */
-static char *
-replace_text(char *text, size_t *index, size_t *length, const char *replace)
-{
-    /* @TODO Replace with GString? Or at least copy char-by-char, escaping
-     * characters as needed, instead of shifting characters on every replacement
-     */
-
-    // We have space for 1 char already
-    size_t offset = strlen(replace) - 1;
-
-    if (offset > 0) {
-        *length += offset;
-        text = pcmk__realloc(text, *length + 1);
-
-        // Shift characters to the right to make room for the replacement string
-        for (size_t i = *length; i > (*index + offset); i--) {
-            text[i] = text[i - offset];
-        }
-    }
-
-    // Replace the character at index by the replacement string
-    memcpy(text + *index, replace, offset + 1);
-
-    // Reset index to the end of replacement string
-    *index += offset;
-    return text;
-}
-
-/*!
- * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
  * See \c pcmk__xml_escape() for more details.
@@ -1168,62 +1126,72 @@ pcmk__xml_needs_escape(const char *text, bool for_attr)
  *       \c xmlEncodeEntitiesReentrant() and \c xmlEncodeSpecialChars().
  *       However, their escaping is incomplete. See:
  *       https://discourse.gnome.org/t/intended-use-of-xmlencodeentitiesreentrant-vs-xmlencodespecialchars/19252
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
  */
-char *
+gchar *
 pcmk__xml_escape(const char *text, bool for_attr)
 {
-    size_t length = 0;
-    char *copy = NULL;
-    char buf[32] = { '\0', };
+    GString *copy = NULL;
 
     if (text == NULL) {
         return NULL;
     }
-    length = strlen(text);
-    copy = pcmk__str_copy(text);
+    copy = g_string_sized_new(strlen(text));
 
-    for (size_t index = 0; index < length; index++) {
+    while (*text != '\0') {
         // Don't escape any non-ASCII characters
-        index += utf8_bytes(&(copy[index]));
+        size_t ubytes = utf8_bytes(text);
 
-        switch (copy[index]) {
-            case '\0':
-                // Reached end of string by skipping UTF-8 bytes
-                break;
+        if (ubytes > 0) {
+            g_string_append_len(copy, text, ubytes);
+            text += ubytes;
+            continue;
+        }
+
+        switch (*text) {
             case '<':
-                copy = replace_text(copy, &index, &length, "&lt;");
+                g_string_append(copy, "&lt;");
                 break;
             case '>':
-                copy = replace_text(copy, &index, &length, "&gt;");
+                g_string_append(copy, "&gt;");
                 break;
             case '&':
-                copy = replace_text(copy, &index, &length, "&amp;");
+                g_string_append(copy, "&amp;");
                 break;
             case '"':
                 if (for_attr) {
-                    copy = replace_text(copy, &index, &length, "&quot;");
+                    g_string_append(copy, "&quot;");
+                } else {
+                    g_string_append_c(copy, *text);
                 }
                 break;
             case '\n':
                 if (for_attr) {
-                    copy = replace_text(copy, &index, &length, "&#x0A;");
+                    g_string_append(copy, "&#x0A;");
+                } else {
+                    g_string_append_c(copy, *text);
                 }
                 break;
             case '\t':
                 if (for_attr) {
-                    copy = replace_text(copy, &index, &length, "&#x09;");
+                    g_string_append(copy, "&#x09;");
+                } else {
+                    g_string_append_c(copy, *text);
                 }
                 break;
             default:
-                if ((copy[index] < 0x20) || (copy[index] >= 0x7F)) {
-                    // Escape non-printing characters
-                    snprintf(buf, sizeof(buf), "&#x%.2X;", copy[index]);
-                    copy = replace_text(copy, &index, &length, buf);
+                if (!isprint(*text)) {
+                    g_string_append_printf(copy, "&#x%.2X;", *text);
+                } else {
+                    g_string_append_c(copy, *text);
                 }
                 break;
         }
+
+        text++;
     }
-    return copy;
+    return g_string_free(copy, FALSE);
 }
 
 /*!
@@ -2212,6 +2180,30 @@ xml_has_children(const xmlNode * xml_root)
         return TRUE;
     }
     return FALSE;
+}
+
+static char *
+replace_text(char *text, size_t *index, size_t *length, const char *replace)
+{
+    // We have space for 1 char already
+    size_t offset = strlen(replace) - 1;
+
+    if (offset > 0) {
+        *length += offset;
+        text = pcmk__realloc(text, *length + 1);
+
+        // Shift characters to the right to make room for the replacement string
+        for (size_t i = *length; i > (*index + offset); i--) {
+            text[i] = text[i - offset];
+        }
+    }
+
+    // Replace the character at index by the replacement string
+    memcpy(text + *index, replace, offset + 1);
+
+    // Reset index to the end of replacement string
+    *index += offset;
+    return text;
 }
 
 char *
