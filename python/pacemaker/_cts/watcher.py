@@ -227,28 +227,44 @@ class JournalObj(SearchObj):
         SearchObj.__init__(self, name, host, name)
         self._parser = isoparser()
 
+    def _msg_after_limit(self, msg):
+        """
+        Check whether a message was logged after the limit timestamp.
+
+        Arguments:
+        msg -- Message to check
+
+        Returns `True` if `msg` was logged after `self.limit`, or `False`
+        otherwise.
+        """
+        if not self.limit:
+            return False
+
+        match = re.search(r"^\S+", msg)
+        if not match:
+            return False
+
+        msg_timestamp = match.group(0)
+        msg_dt = self._parser.isoparse(msg_timestamp)
+        return msg_dt > self.limit
+
     def _split_msgs_by_limit(self, msgs):
         """
-        Split a list of messages relative to the limit timestamp.
+        Split a sorted list of messages relative to the limit timestamp.
 
         Arguments:
         msgs -- List of messages to split
 
         Returns a tuple:
-        (list of messages logged before limit timestamp (inclusive),
-         list of messages logged after limit timestamp (exclusive)).
+        (list of messages logged on or before limit timestamp,
+         list of messages logged after limit timestamp).
         """
-        if self.limit:
-            limit_dt = self._parser.isoparse(self.limit)
+        # If last message was logged before limit, all messages were
+        if msgs and self._msg_after_limit(msgs[-1]):
 
+            # Else find index of first message logged after limit
             for idx, msg in enumerate(msgs):
-                match = re.search(r"^\S+", msg)
-                if not match:
-                    continue
-
-                msg_timestamp = match.group(0)
-                msg_dt = self._parser.isoparse(msg_timestamp)
-                if msg_dt > limit_dt:
+                if self._msg_after_limit(msg):
                     self.debug("Got %d lines before passing limit timestamp"
                                % idx)
                     return msgs[:idx], msgs[idx:]
@@ -333,7 +349,7 @@ class JournalObj(SearchObj):
         (rc, lines) = self.rsh(self.host, "date --iso-8601=seconds", verbose=0)
 
         if rc == 0 and len(lines) == 1:
-            self.limit = lines[0].strip()
+            self.limit = self._parser.isoparse(lines[0].strip())
             self.debug("Set limit to: %s" % self.limit)
         else:
             self.debug("Unable to set limit for %s because date returned %d lines with status %d"
