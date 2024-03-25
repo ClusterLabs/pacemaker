@@ -1286,13 +1286,19 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
     GString *metadata_s = NULL;
 
     int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
+
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
     pcmk__output_set_legacy_xml(tmp_out);
-    pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
-                                 (uint32_t) filter, true);
+
+    if (filter == pcmk__opt_fencing) {
+        pcmk__output_fencing_params(tmp_out, name, desc_short, desc_long, true);
+    } else {
+        pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
+                                     (uint32_t) filter, true);
+    }
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = pcmk__xe_first_child(top, PCMK_XE_RESOURCE_AGENT, NULL, NULL);
