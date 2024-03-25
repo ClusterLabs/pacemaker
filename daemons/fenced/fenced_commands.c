@@ -231,7 +231,8 @@ get_action_timeout(const stonith_device_t *device, const char *action,
         snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
-            return atoi(value);
+            long long timeout_ms = crm_get_msec(value);
+            return (int) QB_MIN(timeout_ms / 1000, INT_MAX);
         }
     }
     return default_timeout;
@@ -2314,7 +2315,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     // pcmk_<action>_timeout if configured
     action_specific_timeout = get_action_timeout(device, action, 0);
     if (action_specific_timeout) {
-        crm_trace("Action '%s' has timeout %dms using %s",
+        crm_trace("Action '%s' has timeout %ds using %s",
                   action, action_specific_timeout, device->id);
         crm_xml_add_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
                         action_specific_timeout);

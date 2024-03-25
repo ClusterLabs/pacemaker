@@ -133,7 +133,7 @@ class FenceTests(Tests):
                      '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4"')
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4 = 10
-        test.add_log_pattern("Total timeout set to 12")
+        test.add_log_pattern("Total timeout set to 12s")
 
         # custom timeout _WITH_ topology
         test = self.new_test("cpg_custom_timeout_2",
@@ -141,15 +141,15 @@ class FenceTests(Tests):
         test.add_cmd('stonith_admin',
                      '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node1 node2 node3"')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1"')
+                     '--output-as=xml -R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1000ms"')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4000"')
+                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4000s"')
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v false2")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4000 = 4006
-        test.add_log_pattern("Total timeout set to 4807")
+        test.add_log_pattern("Total timeout set to 4807s")
 
     def build_fence_merge_tests(self):
         """ Register tests to verify when fence operations should be merged """
@@ -262,7 +262,7 @@ class FenceTests(Tests):
                          "--output-as=xml -R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             if test_type["use_cpg"]:
                 test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.TIMEOUT)
-                test.add_log_pattern("Total timeout set to 7")
+                test.add_log_pattern("Total timeout set to 7s")
             else:
                 test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.ERROR)
 
@@ -284,7 +284,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
             if test_type["use_cpg"]:
-                test.add_log_pattern("Total timeout set to 18")
+                test.add_log_pattern("Total timeout set to 18s")
 
         # test what happens when we try to use a missing fence-agent.
         for test_type in test_types:
@@ -313,7 +313,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            test.add_log_pattern("Total timeout set to 6")
+            test.add_log_pattern("Total timeout set to 6s")
             test.add_log_pattern("targeting node3 using true returned 0")
 
 
@@ -331,7 +331,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -d node3 -i 1")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            test.add_log_pattern("Total timeout set to 6")
+            test.add_log_pattern("Total timeout set to 6s")
             test.add_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level has multiple devices.
@@ -350,7 +350,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
-            test.add_log_pattern("Total timeout set to 48")
+            test.add_log_pattern("Total timeout set to 48s")
             test.add_log_pattern("targeting node3 using false returned 1")
             test.add_log_pattern("targeting node3 using true returned 0")
 
@@ -384,7 +384,7 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 3")
 
-            test.add_log_pattern("Total timeout set to 21")
+            test.add_log_pattern("Total timeout set to 21s")
             test.add_log_pattern("targeting node3 using false1 returned 1")
             test.add_log_pattern("targeting node3 using false2 returned 1")
             test.add_log_pattern("targeting node3 using true3 returned 0")
@@ -451,7 +451,7 @@ class FenceTests(Tests):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
-            test.add_log_pattern("Total timeout set to 96")
+            test.add_log_pattern("Total timeout set to 96s")
             test.add_log_pattern("targeting node3 using false1 returned 1")
             test.add_log_pattern("targeting node3 using false2 returned ",
                                  negative=True)
@@ -659,7 +659,7 @@ class FenceTests(Tests):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
 
             # Total fencing timeout takes all fencing delays into account.
-            test.add_log_pattern("Total timeout set to 582")
+            test.add_log_pattern("Total timeout set to 582s")
 
             # Fencing timeout for the first device takes the requested fencing delay into account.
             # Fencing timeout also takes pcmk_delay_base into account.
@@ -869,7 +869,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
-        test.add_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_log_pattern("Total timeout set to 3s for peer's fencing targeting node_fake")
         test.add_log_pattern("perform 'off' action targeting node_fake using true1")
         test.add_log_pattern("perform 'off' action targeting node_fake using true2")
         test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
@@ -895,7 +895,7 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
-        test.add_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
+        test.add_log_pattern("Total timeout set to 3s for peer's fencing targeting node_fake")
         test.add_log_pattern("perform 'off' action targeting node_fake using true1")
         test.add_log_pattern("perform 'off' action targeting node_fake using true2")
         test.add_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")

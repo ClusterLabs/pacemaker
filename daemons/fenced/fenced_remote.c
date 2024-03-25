@@ -1048,7 +1048,7 @@ merge_duplicates(remote_fencing_op_t *op)
         }
         if ((other->total_timeout > 0)
             && (now > (other->total_timeout + other->created))) {
-            crm_trace("%.8s not duplicate of %.8s: old (%ld vs. %ld + %d)",
+            crm_trace("%.8s not duplicate of %.8s: old (%ld vs. %ld + %ds)",
                       op->id, other->id, now, other->created,
                       other->total_timeout);
             continue;
@@ -1061,7 +1061,7 @@ merge_duplicates(remote_fencing_op_t *op)
         if (other->total_timeout == 0) {
             other->total_timeout = op->total_timeout =
                 TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, NULL);
-            crm_trace("Best guess as to timeout used for %.8s: %d",
+            crm_trace("Best guess as to timeout used for %.8s: %ds",
                       other->id, other->total_timeout);
         }
         crm_notice("Merging fencing action '%s' targeting %s originating from "
@@ -1223,7 +1223,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     crm_element_value_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
 
     crm_trace("%s new fencing op %s ('%s' targeting %s for client %s, "
-              "base timeout %d, %u %s expected)",
+              "base timeout %ds, %u %s expected)",
               (peer && dev)? "Recorded" : "Generated", op->id, op->action,
               op->target, op->client_name, op->base_timeout,
               op->replies_expected,
@@ -1320,7 +1320,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
 
         default:
             crm_notice("Requesting peer fencing (%s) targeting %s "
-                       CRM_XS " id=%.8s state=%s base_timeout=%d",
+                       CRM_XS " id=%.8s state=%s base_timeout=%ds",
                        op->action, op->target, op->id,
                        stonith_op_state_str(op->state), op->base_timeout);
     }
@@ -1362,6 +1362,16 @@ enum find_best_peer_options {
     /*! Skip peers and devices that are not verified */
     FIND_PEER_VERIFIED_ONLY = 0x0004,
 };
+
+static bool
+is_watchdog_fencing(const remote_fencing_op_t *op, const char *device)
+{
+    return (stonith_watchdog_timeout_ms > 0
+            // Only an explicit mismatch is considered not a watchdog fencing.
+            && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_null_matches)
+            && pcmk__is_fencing_action(op->action)
+            && node_does_watchdog_fencing(op->target));
+}
 
 static peer_device_info_t *
 find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer_options options)
@@ -1458,10 +1468,10 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && pcmk_is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
-    if ((stonith_watchdog_timeout_ms > 0)
-        && pcmk__is_fencing_action(op->action)
-        && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
-        && node_does_watchdog_fencing(op->target)) {
+    /* With a simple watchdog fencing configuration without a topology,
+     * "device" is NULL here. Consider it should be done with watchdog fencing.
+     */
+    if (is_watchdog_fencing(op, device)) {
         crm_info("Couldn't contact watchdog-fencing target-node (%s)",
                  op->target);
         /* check_watchdog_fencing_and_wait will log additional info */
@@ -1473,32 +1483,69 @@ stonith_choose_peer(remote_fencing_op_t * op)
 }
 
 static int
+valid_fencing_timeout(int specified_timeout, bool action_specific,
+                      const remote_fencing_op_t *op, const char *device)
+{
+    int timeout = specified_timeout;
+
+    if (!is_watchdog_fencing(op, device)) {
+        return timeout;
+    }
+
+    timeout = (int) QB_MIN(QB_MAX(specified_timeout,
+                                  stonith_watchdog_timeout_ms / 1000), INT_MAX);
+
+    if (timeout > specified_timeout) {
+        if (action_specific) {
+            crm_warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
+                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     "instead",
+                     op->action, specified_timeout, device? device : "watchdog",
+                     timeout, timeout);
+
+        } else {
+            crm_warn("Fencing timeout %ds is too short (must be >= "
+                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     "instead",
+                     specified_timeout, timeout, timeout);
+        }
+    }
+
+    return timeout;
+}
+
+static int
 get_device_timeout(const remote_fencing_op_t *op,
                    const peer_device_info_t *peer, const char *device,
                    bool with_delay)
 {
+    int timeout = op->base_timeout;
     device_properties_t *props;
-    int delay = 0;
+
+    timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
 
     if (!peer || !device) {
-        return op->base_timeout;
+        return timeout;
     }
 
     props = g_hash_table_lookup(peer->devices, device);
     if (!props) {
-        return op->base_timeout;
+        return timeout;
+    }
+
+    if (props->custom_action_timeout[op->phase]) {
+        timeout = valid_fencing_timeout(props->custom_action_timeout[op->phase],
+                                        true, op, device);
     }
 
     // op->client_delay < 0 means disable any static/random fencing delays
     if (with_delay && (op->client_delay >= 0)) {
         // delay_base is eventually limited by delay_max
-        delay = (props->delay_max[op->phase] > 0 ?
-                 props->delay_max[op->phase] : props->delay_base[op->phase]);
+        timeout += (props->delay_max[op->phase] > 0 ?
+                    props->delay_max[op->phase] : props->delay_base[op->phase]);
     }
 
-    return (props->custom_action_timeout[op->phase]?
-            props->custom_action_timeout[op->phase] : op->base_timeout)
-           + delay;
+    return timeout;
 }
 
 struct timeout_data {
@@ -1573,17 +1620,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 continue;
             }
             for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
-                /* in case of watchdog-device we add the timeout to the budget
-                   regardless of if we got a reply or not
-                 */
-                if ((stonith_watchdog_timeout_ms > 0)
-                    && pcmk__is_fencing_action(op->action)
-                    && pcmk__str_eq(device_list->data, STONITH_WATCHDOG_ID,
-                                    pcmk__str_none)
-                    && node_does_watchdog_fencing(op->target)) {
-                    total_timeout += stonith_watchdog_timeout_ms / 1000;
-                    continue;
-                }
+                bool found = false;
 
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
@@ -1601,9 +1638,17 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data,
                                                             true);
+                        found = true;
                         break;
                     }
                 }               /* End Loop3: match device with peer that owns device, find device's timeout period */
+
+                /* in case of watchdog-device we add the timeout to the budget
+                   if didn't get a reply
+                 */
+                if (!found && is_watchdog_fencing(op, device_list->data)) {
+                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                }
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */
 
@@ -1627,8 +1672,10 @@ get_op_total_timeout(const remote_fencing_op_t *op,
 
     } else if (chosen_peer) {
         total_timeout = get_peer_timeout(op, chosen_peer);
+
     } else {
-        total_timeout = op->base_timeout;
+        total_timeout = valid_fencing_timeout(op->base_timeout, false, op,
+                                              NULL);
     }
 
     if (total_timeout <= 0) {
@@ -1843,7 +1890,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, peer);
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
-        crm_info("Total timeout set to %d for peer's fencing targeting %s for %s"
+        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s"
                  CRM_XS "id=%.8s",
                  op->total_timeout, op->target, op->client_name, op->id);
     }
@@ -1900,9 +1947,10 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
-                       CRM_XS " for client %s (%ds, %lds)",
+                       CRM_XS " for client %s (%ds, %s)",
                        peer->host, op->action, op->target, op->client_name,
-                       timeout_one, stonith_watchdog_timeout_ms);
+                       timeout_one,
+                       pcmk__readable_interval(stonith_watchdog_timeout_ms));
         }
 
         op->state = st_exec;
@@ -1911,11 +1959,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = 0;
         }
 
-        if (!((stonith_watchdog_timeout_ms > 0)
-              && (pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
-                  || (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
-                      && pcmk__is_fencing_action(op->action)))
-              && check_watchdog_fencing_and_wait(op))) {
+        if (!is_watchdog_fencing(op, device)
+            || !check_watchdog_fencing_and_wait(op)) {
 
             /* Some thoughts about self-fencing cases reaching this point:
                - Actually check in check_watchdog_fencing_and_wait
@@ -1974,11 +2019,15 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
 
-        if(stonith_watchdog_timeout_ms > 0 && pcmk__str_eq(device,
-           STONITH_WATCHDOG_ID, pcmk__str_null_matches)) {
-            if (check_watchdog_fencing_and_wait(op)) {
-                return;
-            }
+        if (is_watchdog_fencing(op, device)
+            && check_watchdog_fencing_and_wait(op)) {
+            /* Consider a watchdog fencing targeting an offline node executing
+             * once it starts waiting for the target to self-fence. So that when
+             * the query timer pops, remote_op_query_timeout() considers the
+             * fencing already in progress.
+             */
+            op->state = st_exec;
+            return;
         }
 
         if (op->state == st_query) {
@@ -2107,14 +2156,14 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     crm_element_value_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
                           &props->custom_action_timeout[phase]);
     if (props->custom_action_timeout[phase]) {
-        crm_trace("Peer %s with device %s returned %s action timeout %d",
+        crm_trace("Peer %s with device %s returned %s action timeout %ds",
                   peer, device, action, props->custom_action_timeout[phase]);
     }
 
     props->delay_max[phase] = 0;
     crm_element_value_int(xml, PCMK__XA_ST_DELAY_MAX, &props->delay_max[phase]);
     if (props->delay_max[phase]) {
-        crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
+        crm_trace("Peer %s with device %s returned maximum of random delay %ds for %s",
                   peer, device, props->delay_max[phase], action);
     }
 
@@ -2122,7 +2171,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     crm_element_value_int(xml, PCMK__XA_ST_DELAY_BASE,
                           &props->delay_base[phase]);
     if (props->delay_base[phase]) {
-        crm_trace("Peer %s with device %s returned base delay %d for %s",
+        crm_trace("Peer %s with device %s returned base delay %ds for %s",
                   peer, device, props->delay_base[phase], action);
     }
 
