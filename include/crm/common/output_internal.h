@@ -735,29 +735,9 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G
 void
 pcmk__text_prompt(const char *prompt, bool echo, char **dest);
 
-/*!
- * \internal
- * \brief Get the log level used by the formatted output logger
- *
- * \param[in] out  Output object
- *
- * \return Log level used by \p out
- */
 uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out);
 
-/*!
- * \internal
- * \brief Set the log level used by the formatted output logger.
- *
- * \param[in,out] out       The output functions structure.
- * \param[in]     log_level The log level constant (LOG_INFO, LOG_ERR, etc.)
- *                          to use.
- *
- * \note By default, LOG_INFO is used.
- * \note Almost all formatted output messages will respect this setting.
- *       However, out->err will always log at LOG_ERR.
- */
 void
 pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level);
 
