@@ -486,6 +486,9 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
     }
 }
 
+/* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
+ * crm_resource --list-options=fencing instead of querying daemon metadata.
+ */
 static int
 fencer_metadata(void)
 {
@@ -519,8 +522,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, "text (default), xml", group,
-                                      "[metadata]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
 }
