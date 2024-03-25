@@ -103,6 +103,15 @@ CTS includes:
   *must* match the hosts' names as returned by `uname -n`; they do not have to
   match the machines' fully qualified domain names.
 
+* Optionally, configure the exerciser as a log aggregator, using something like
+  `rsyslog` log forwarding. If aggregation is detected, the exerciser will look
+  for new messages locally instead of requesting them repeatedly from cluster
+  nodes.
+  * Currently, `/var/log/messages` on the exerciser is the only supported log
+    destination. Further, if it's specified explicitly on the command line as
+    the log file, then CTS lab will not check for aggregation.
+  * CTS lab does not currently detect systemd journal log aggregation.
+
 
 ### Run
 

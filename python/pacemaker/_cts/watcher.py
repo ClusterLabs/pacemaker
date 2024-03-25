@@ -4,7 +4,7 @@ __all__ = ["LogKind", "LogWatcher"]
 __copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-from enum import Enum, unique
+from enum import Enum, auto, unique
 import re
 import time
 import threading
@@ -23,21 +23,13 @@ LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
 class LogKind(Enum):
     """The various kinds of log files that can be watched."""
 
-    ANY = 0
-    FILE = 1
-    REMOTE_FILE = 2
-    JOURNAL = 3
+    LOCAL_FILE = auto()     # From a local aggregation file on the exerciser
+    REMOTE_FILE = auto()    # From a file on each cluster node
+    JOURNAL = auto()        # From the systemd journal on each cluster node
 
     def __str__(self):
         """Return a printable string for a LogKind value."""
-        if self.value == 0:
-            return "any"
-        if self.value == 1:
-            return "combined syslog"
-        if self.value == 2:
-            return "remote"
-
-        return "journal"
+        return self.name.lower().replace('_', ' ')
 
 
 class SearchObj:
@@ -179,9 +171,10 @@ class FileObj(SearchObj):
 
             return None
 
-        return self.rsh.call_async(self.host,
-                                   "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, self.offset),
-                                   delegate=self)
+        cmd = ("%s -p CTSwatcher: -l 200 -f %s -o %s"
+               % (LOG_WATCHER_BIN, self.filename, self.offset))
+
+        return self.rsh.call_async(self.host, cmd, delegate=self)
 
     def harvest_cached(self):
         """
@@ -201,10 +194,11 @@ class FileObj(SearchObj):
         if self.limit:
             return
 
+        cmd = ("%s -p CTSwatcher: -l 2 -f %s -o EOF"
+               % (LOG_WATCHER_BIN, self.filename))
+
         # pylint: disable=not-callable
-        (_, lines) = self.rsh(self.host,
-                              "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (LOG_WATCHER_BIN, self.name, self.filename, "EOF"),
-                              verbose=0)
+        (_, lines) = self.rsh(self.host, cmd, verbose=0)
 
         for line in lines:
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
@@ -369,7 +363,8 @@ class LogWatcher:
         - Call look() to scan the log looking for the patterns
     """
 
-    def __init__(self, log, regexes, hosts, kind=LogKind.ANY, name="Anon", timeout=10, silent=False):
+    def __init__(self, log, regexes, hosts, kind, name="Anon", timeout=10,
+                 silent=False):
         """
         Create a new LogWatcher instance.
 
@@ -419,16 +414,16 @@ class LogWatcher:
 
     def set_watch(self):
         """Mark the place to start watching the log from."""
-        if self.kind == LogKind.REMOTE_FILE:
+        if self.kind == LogKind.LOCAL_FILE:
+            self._file_list.append(FileObj(self.filename))
+
+        elif self.kind == LogKind.REMOTE_FILE:
             for node in self.hosts:
                 self._file_list.append(FileObj(self.filename, node, self.name))
 
         elif self.kind == LogKind.JOURNAL:
             for node in self.hosts:
                 self._file_list.append(JournalObj(node, self.name))
-
-        else:
-            self._file_list.append(FileObj(self.filename))
 
     def async_complete(self, pid, returncode, out, err):
         """
@@ -444,9 +439,7 @@ class LogWatcher:
         out         -- stdout from the file read
         err         -- stderr from the file read
         """
-        # It's not clear to me whether this function ever gets called as
-        # delegate somewhere, which is what would pass returncode and err
-        # as parameters.  Just disable the warning for now.
+        # Called as delegate through {File,Journal}Obj.async_complete()
         # pylint: disable=unused-argument
 
         # TODO: Probably need a lock for updating self._line_cache

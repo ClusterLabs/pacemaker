@@ -173,7 +173,9 @@ class CTSTest:
         if not name:
             name = self.name
 
-        return LogWatcher(self._env["LogFileName"], patterns, self._env["nodes"], self._env["LogWatcher"], name, timeout)
+        return LogWatcher(self._env["LogFileName"], patterns,
+                          self._env["nodes"], self._env["log_kind"], name,
+                          timeout)
 
     def local_badnews(self, prefix, watch, local_ignore=None):
         """
