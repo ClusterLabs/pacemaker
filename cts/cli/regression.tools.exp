@@ -23,6 +23,20 @@ A new shadow instance was created. To begin using it, enter the following into y
 </cib>
 =#=#=#= End test: Validate CIB - OK (0) =#=#=#=
 * Passed: cibadmin       - Validate CIB
+=#=#=#= Begin test: List all available options (invalid type) =#=#=#=
+crm_attribute: Invalid --list-options value 'asdf'. Allowed values: cluster
+=#=#=#= End test: List all available options (invalid type) - Incorrect usage (64) =#=#=#=
+* Passed: crm_attribute  - List all available options (invalid type)
+=#=#=#= Begin test: List all available options (invalid type) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute --list-options=asdf --output-as=xml">
+  <status code="64" message="Incorrect usage">
+    <errors>
+      <error>crm_attribute: Invalid --list-options value 'asdf'. Allowed values: cluster</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: List all available options (invalid type) (XML) - Incorrect usage (64) =#=#=#=
+* Passed: crm_attribute  - List all available options (invalid type) (XML)
 =#=#=#= Begin test: List non-advanced cluster options =#=#=#=
 Pacemaker cluster options
 
@@ -913,20 +927,6 @@ Also known as properties, these are options that affect behavior across the enti
 </pacemaker-result>
 =#=#=#= End test: List all available cluster options (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute  - List all available cluster options (XML)
-=#=#=#= Begin test: List all available options (invalid type) =#=#=#=
-crm_attribute: Invalid --list-options value 'asdf'. Allowed values: cluster
-=#=#=#= End test: List all available options (invalid type) - Incorrect usage (64) =#=#=#=
-* Passed: crm_attribute  - List all available options (invalid type)
-=#=#=#= Begin test: List all available cluster options (invalid type) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute --list-options=asdf --output-as=xml">
-  <status code="64" message="Incorrect usage">
-    <errors>
-      <error>crm_attribute: Invalid --list-options value 'asdf'. Allowed values: cluster</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: List all available cluster options (invalid type) (XML) - Incorrect usage (64) =#=#=#=
-* Passed: crm_attribute  - List all available cluster options (invalid type) (XML)
 =#=#=#= Begin test: Query the value of an attribute that does not exist =#=#=#=
 crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Query the value of an attribute that does not exist - No such object (105) =#=#=#=

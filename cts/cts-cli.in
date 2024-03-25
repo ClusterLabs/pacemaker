@@ -812,6 +812,14 @@ function test_tools() {
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK
 
+    desc="List all available options (invalid type)"
+    cmd="crm_attribute --list-options=asdf"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="List all available options (invalid type) (XML)"
+    cmd="crm_attribute --list-options=asdf --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
     desc="List non-advanced cluster options"
     cmd="crm_attribute --list-options=cluster"
     test_assert $CRM_EX_OK 0
@@ -827,14 +835,6 @@ function test_tools() {
     desc="List all available cluster options (XML)"
     cmd="crm_attribute --list-options=cluster --all --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
-
-    desc="List all available options (invalid type)"
-    cmd="crm_attribute --list-options=asdf"
-    test_assert $CRM_EX_USAGE 0
-
-    desc="List all available cluster options (invalid type) (XML)"
-    cmd="crm_attribute --list-options=asdf --output-as=xml"
-    test_assert_validate $CRM_EX_USAGE 0
 
     desc="Query the value of an attribute that does not exist"
     cmd="crm_attribute -n ABCD --query --quiet"
