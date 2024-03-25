@@ -17,6 +17,35 @@
 
 #include "libpacemaker_private.h"
 
+static int
+build_ticket_modify_xml(cib_t *cib, const char *ticket_id, xmlNode **ticket_state_xml,
+                        xmlNode **xml_top)
+{
+    int rc = pcmk__get_ticket_state(cib, ticket_id, ticket_state_xml);
+
+    if (rc == pcmk_rc_ok || rc == pcmk_rc_duplicate_id) {
+        /* Ticket(s) found - return their state */
+        *xml_top = *ticket_state_xml;
+
+    } else if (rc == ENXIO) {
+        /* No ticket found - build the XML needed to create it */
+        xmlNode *xml_obj = NULL;
+
+        *xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
+        xml_obj = pcmk__xe_create(*xml_top, PCMK_XE_TICKETS);
+        *ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
+        crm_xml_add(*ticket_state_xml, PCMK_XA_ID, ticket_id);
+
+        rc = pcmk_rc_ok;
+
+    } else {
+        /* Some other error occurred - clean up and return */
+        free_xml(*ticket_state_xml);
+    }
+
+    return rc;
+}
+
 int
 pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
 {
@@ -305,6 +334,72 @@ pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id)
     rc = pcmk__ticket_info(out, scheduler, ticket_id, false, false);
 
 done:
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    pe_free_working_set(scheduler);
+    return rc;
+}
+
+int
+pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
+                         const char *ticket_id, GList *attr_delete)
+{
+    xmlNode *ticket_state_xml = NULL;
+    xmlNode *xml_top = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_ASSERT(out != NULL && cib != NULL && scheduler != NULL);
+
+    if (ticket_id == NULL) {
+        return EINVAL;
+    }
+
+    /* Nothing to do */
+    if (attr_delete == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    rc = build_ticket_modify_xml(cib, ticket_id, &ticket_state_xml, &xml_top);
+
+    if (rc == pcmk_rc_duplicate_id) {
+        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s", ticket_id);
+    } else if (rc != pcmk_rc_ok) {
+        free_xml(ticket_state_xml);
+        return rc;
+    }
+
+    for (GList *list_iter = attr_delete; list_iter != NULL; list_iter = list_iter->next) {
+        const char *key = list_iter->data;
+        pcmk__xe_remove_attr(ticket_state_xml, key);
+    }
+
+    crm_log_xml_debug(xml_top, "Replace");
+    rc = cib->cmds->replace(cib, PCMK_XE_STATUS, ticket_state_xml, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+
+    free_xml(xml_top);
+    return rc;
+}
+
+int
+pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete)
+{
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+    cib_t *cib = NULL;
+
+    rc = pcmk__setup_output_cib_sched(&out, &cib, &scheduler, xml);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__ticket_remove_attr(out, cib, scheduler, ticket_id, attr_delete);
+
+done:
+    if (cib != NULL) {
+        cib__clean_up_connection(&cib);
+    }
+
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     pe_free_working_set(scheduler);
     return rc;

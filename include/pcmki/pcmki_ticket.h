@@ -97,6 +97,20 @@ int pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
                       const char *ticket_id, bool details, bool raw);
 
 /*!
+ * \brief Remove the given attribute(s) from a ticket
+ *
+ * \param[in,out] out           Output object
+ * \param[in]     cib           Open CIB connection
+ * \param[in,out] scheduler     Scheduler data
+ * \param[in]     ticket_id     Ticket to remove attributes from
+ * \param[in]     attr_delete   A list of attribute names
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
+                             const char *ticket_id, GList *attr_delete);
+
+/*!
  * \internal
  * \brief Return a ticket's state XML
  *

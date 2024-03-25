@@ -496,6 +496,17 @@ int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
 int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
 
 /*!
+ * \brief Remove the given attribute(s) from a ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to remove attributes from
+ * \param[in]     attr_delete   A list of attribute names
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete);
+
+/*!
  * \brief Return a ticket's state XML
  *
  * \param[in,out] xml           The destination for the result, as an XML tree
