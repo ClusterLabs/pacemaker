@@ -43,7 +43,7 @@ pcmk__cli_help(char cmd)
  * Option metadata
  */
 
-static pcmk__cluster_option_t cluster_options[] = {
+static const pcmk__cluster_option_t cluster_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
      * flags,
@@ -536,7 +536,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     { NULL, },
 };
 
-static pcmk__cluster_option_t fencing_params[] = {
+static const pcmk__cluster_option_t fencing_params[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
      * flags,
