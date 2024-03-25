@@ -985,6 +985,7 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
         return rc;
     }
 
+    pcmk__output_set_legacy_xml(tmp_out);
     pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
                                  (uint32_t) filter, true);
 

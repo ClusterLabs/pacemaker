@@ -290,7 +290,21 @@ add_option_metadata_xml(pcmk__output_t *out,
     const char *desc_long = option->description_long;
     const char *desc_short = option->description_short;
     const bool advanced = pcmk_is_set(option->flags, pcmk__opt_advanced);
+    const bool deprecated = pcmk_is_set(option->flags, pcmk__opt_deprecated);
     const bool generated = pcmk_is_set(option->flags, pcmk__opt_generated);
+
+    // OCF requires "1"/"0" and does not allow "true"/"false
+    // @COMPAT Variables no longer needed after we drop legacy mode
+    const char *advanced_s = advanced? "1" : "0";
+    const char *generated_s = generated? "1" : "0";
+
+    // @COMPAT For daemon metadata only; drop when daemon metadata is dropped
+    const bool legacy = pcmk__output_get_legacy_xml(out);
+    char *desc_long_legacy = NULL;
+    GString *desc_short_legacy = NULL;
+
+    // The standard requires a parameter type
+    CRM_ASSERT(option->type != NULL);
 
     // The standard requires long and short parameter descriptions
     CRM_ASSERT((desc_long != NULL) || (desc_short != NULL));
@@ -301,17 +315,55 @@ add_option_metadata_xml(pcmk__output_t *out,
         desc_short = desc_long;
     }
 
-    // The standard requires a parameter type
-    CRM_ASSERT(option->type != NULL);
+    if (legacy) {
+        // This is ugly but it will go away at a major release bump
+        if (option->values != NULL) {
+            desc_long_legacy = crm_strdup_printf("%s  Allowed values: %s",
+                                                 desc_long, option->values);
+            desc_long = desc_long_legacy;
+        }
 
-    // OCF requires "1"/"0" and does not allow "true"/"false
+        if (deprecated || advanced) {
+            const size_t init_sz = 1023;
+
+            if (desc_long != option->description_long) {
+                /* desc_long was NULL and got assigned desc_short, which was
+                 * non-empty. Let desc_long have the "real" description, and put
+                 * the flag in desc_short.
+                 */
+                desc_short = "";
+            } else {
+                desc_short = pcmk__s(option->description_short, "");
+            }
+
+            if (deprecated) {
+                pcmk__add_separated_word(&desc_short_legacy, init_sz,
+                                         "*** Deprecated ***", NULL);
+            }
+            if (advanced) {
+                pcmk__add_separated_word(&desc_short_legacy, init_sz,
+                                         "*** Advanced Use Only ***", NULL);
+            }
+            pcmk__add_separated_word(&desc_short_legacy, 0, desc_short, NULL);
+
+            desc_short = desc_short_legacy->str;
+        }
+
+        /* These must be NULL when used as attribute values later.
+         * PCMK_XA_ADVANCED and PCMK_XA_GENERATED break validation for some
+         * legacy tools.
+         */
+        advanced_s = NULL;
+        generated_s = NULL;
+    }
+
     pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETER,
                                    PCMK_XA_NAME, option->name,
-                                   PCMK_XA_ADVANCED, (advanced? "1" : "0"),
-                                   PCMK_XA_GENERATED, (generated? "1" : "0"),
+                                   PCMK_XA_ADVANCED, advanced_s,
+                                   PCMK_XA_GENERATED, generated_s,
                                    NULL);
 
-    if (pcmk_is_set(option->flags, pcmk__opt_deprecated)) {
+    if (deprecated && !legacy) {
         // No need yet to support "replaced-with" or "desc"; add if needed
         pcmk__output_create_xml_node(out, PCMK_XE_DEPRECATED, NULL);
     }
@@ -327,6 +379,11 @@ add_option_metadata_xml(pcmk__output_t *out,
 
     pcmk__output_xml_pop_parent(out);
     pcmk__output_xml_pop_parent(out);
+
+    free(desc_long_legacy);
+    if (desc_short_legacy != NULL) {
+        g_string_free(desc_short_legacy, TRUE);
+    }
 }
 
 /*!
