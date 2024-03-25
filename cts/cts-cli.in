@@ -816,7 +816,7 @@ function test_tools() {
     cmd="crm_attribute --list-options=cluster"
     test_assert $CRM_EX_OK 0
 
-    desc="List non-advanced cluster options (XML)"
+    desc="List non-advanced cluster options (XML) (shows all)"
     cmd="crm_attribute --list-options=cluster --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
@@ -828,11 +828,11 @@ function test_tools() {
     cmd="crm_attribute --list-options=cluster --all --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
-    desc="List all available options (invalid value)"
+    desc="List all available options (invalid type)"
     cmd="crm_attribute --list-options=asdf"
     test_assert $CRM_EX_USAGE 0
 
-    desc="List all available cluster options (invalid value) (XML)"
+    desc="List all available cluster options (invalid type) (XML)"
     cmd="crm_attribute --list-options=asdf --output-as=xml"
     test_assert_validate $CRM_EX_USAGE 0
 
@@ -1012,6 +1012,30 @@ function test_tools() {
     desc="crm_resource run with extra arguments"
     cmd="crm_resource foo bar"
     test_assert $CRM_EX_USAGE 0
+
+    desc="List all available resource options (invalid type)"
+    cmd="crm_resource --list-options=asdf"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="List all available resource options (invalid type) (XML)"
+    cmd="crm_resource --list-options=asdf --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="List non-advanced fencing parameters"
+    cmd="crm_resource --list-options=fencing"
+    test_assert $CRM_EX_OK 0
+
+    desc="List non-advanced fencing parameters (XML) (shows all)"
+    cmd="crm_resource --list-options=fencing --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available fencing parameters"
+    cmd="crm_resource --list-options=fencing --all"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available fencing parameters (XML)"
+    cmd="crm_resource --list-options=fencing --all --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="crm_resource given both -r and resource config"
     cmd="crm_resource -r xyz --class ocf --provider pacemaker --agent Dummy"
