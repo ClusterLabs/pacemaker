@@ -312,6 +312,50 @@ bool pcmk__output_text_get_fancy(pcmk__output_t *out);
  * Rules
  */
 
+// How node attribute values may be compared in rules
+enum pcmk__comparison {
+    pcmk__comparison_unknown,
+    pcmk__comparison_defined,
+    pcmk__comparison_undefined,
+    pcmk__comparison_eq,
+    pcmk__comparison_ne,
+    pcmk__comparison_lt,
+    pcmk__comparison_lte,
+    pcmk__comparison_gt,
+    pcmk__comparison_gte,
+};
+
+// How node attribute values may be parsed in rules
+enum pcmk__type {
+    pcmk__type_unknown,
+    pcmk__type_string,
+    pcmk__type_integer,
+    pcmk__type_number,
+    pcmk__type_version,
+};
+
+// Where to obtain reference value for a node attribute comparison
+enum pcmk__reference_source {
+    pcmk__source_unknown,
+    pcmk__source_literal,
+    pcmk__source_instance_attrs,
+    pcmk__source_meta_attrs,
+};
+
+G_GNUC_INTERNAL
+enum pcmk__comparison pcmk__parse_comparison(const char *op);
+
+G_GNUC_INTERNAL
+enum pcmk__type pcmk__parse_type(const char *type, enum pcmk__comparison op,
+                                 const char *value1, const char *value2);
+
+G_GNUC_INTERNAL
+enum pcmk__reference_source pcmk__parse_source(const char *source);
+
+G_GNUC_INTERNAL
+int pcmk__cmp_by_type(const char *value1, const char *value2,
+                      enum pcmk__type type);
+
 G_GNUC_INTERNAL
 int pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
                           crm_time_t **end);

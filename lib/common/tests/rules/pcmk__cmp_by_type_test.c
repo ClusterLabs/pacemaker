@@ -14,6 +14,7 @@
 #include <crm/common/util.h>                // crm_strdup_printf()
 #include <crm/common/rules_internal.h>
 #include <crm/common/unittest_internal.h>
+#include "crmcommon_private.h"
 
 static void
 null_compares_lesser(void **state)
