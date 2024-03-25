@@ -789,6 +789,7 @@ fencer_metadata(void)
         return rc;
     }
 
+    pcmk__output_set_legacy_xml(tmp_out);
     out->message(tmp_out, "option-list", name, desc_short, desc_long,
                  pcmk__opt_none, fencer_options, true);
 

@@ -926,12 +926,29 @@ int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
 
 /*!
  * \internal
- * \brief Enable the older style XML output used by `crm_mon -X`
+ * \brief Check whether older style XML output is enabled
  *
- * \note This function should not be used anywhere except in crm_mon.
+ * The legacy flag should be used sparingly. Its meaning depends on the context
+ * in which it's used.
  *
- * @COMPAT This can be removed when `crm_mon -X` is removed
+ * \param[in] out  Output object
+ *
+ * \return \c true if the \c legacy_xml flag is enabled for \p out, or \c false
+ *         otherwise
  */
+// @COMPAT This can be removed when `crm_mon -X` and daemon metadata are removed
+bool pcmk__output_get_legacy_xml(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Enable older style XML output
+ *
+ * The legacy flag should be used sparingly. Its meaning depends on the context
+ * in which it's used.
+ *
+ * \param[in,out] out  Output object
+ */
+// @COMPAT This can be removed when `crm_mon -X` and daemon metadata are removed
 void pcmk__output_set_legacy_xml(pcmk__output_t *out);
 
 /*!

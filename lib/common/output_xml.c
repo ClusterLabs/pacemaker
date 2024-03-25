@@ -589,6 +589,23 @@ pcmk__output_xml_peek_parent(pcmk__output_t *out) {
     return g_queue_peek_tail(priv->parent_q);
 }
 
+bool
+pcmk__output_get_legacy_xml(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
+        return false;
+    }
+
+    CRM_ASSERT(out->priv != NULL);
+
+    priv = out->priv;
+    return priv->legacy_xml;
+}
+
 void
 pcmk__output_set_legacy_xml(pcmk__output_t *out)
 {
