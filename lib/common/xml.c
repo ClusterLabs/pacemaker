@@ -702,8 +702,15 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
             va_list ap;
 
             va_start(ap, format);
-            CRM_ASSERT(vasprintf(&buf, format, ap) >= 0);
-            content = buf;
+
+            if (pcmk__str_eq(format, "%s", pcmk__str_none)) {
+                // No need to make a copy
+                content = va_arg(ap, const char *);
+
+            } else {
+                CRM_ASSERT(vasprintf(&buf, format, ap) >= 0);
+                content = buf;
+            }
             va_end(ap);
         }
 
