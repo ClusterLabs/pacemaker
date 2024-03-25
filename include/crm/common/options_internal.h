@@ -72,6 +72,9 @@ const char *pcmk__cluster_option(GHashTable *options, const char *name);
 int pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
                                  const char *desc_short, const char *desc_long,
                                  uint32_t filter, bool all);
+int pcmk__output_fencing_params(pcmk__output_t *out, const char *name,
+                                const char *desc_short, const char *desc_long,
+                                bool all);
 
 int pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
                           const char *short_desc, const char *long_desc,
