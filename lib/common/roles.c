@@ -27,7 +27,7 @@ pcmk_role_text(enum rsc_role_e role)
             return PCMK_ROLE_STOPPED;
 
         case pcmk_role_started:
-            return PCMK__ROLE_STARTED;
+            return PCMK_ROLE_STARTED;
 
         case pcmk_role_unpromoted:
 #ifdef PCMK__COMPAT_2_0
@@ -63,7 +63,7 @@ pcmk_parse_role(const char *role)
         return pcmk_role_unknown;
     } else if (pcmk__str_eq(role, PCMK_ROLE_STOPPED, pcmk__str_casei)) {
         return pcmk_role_stopped;
-    } else if (pcmk__str_eq(role, PCMK__ROLE_STARTED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(role, PCMK_ROLE_STARTED, pcmk__str_casei)) {
         return pcmk_role_started;
     } else if (pcmk__strcase_any_of(role, PCMK__ROLE_UNPROMOTED,
                                     PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {

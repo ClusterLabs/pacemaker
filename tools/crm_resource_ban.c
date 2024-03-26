@@ -92,7 +92,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     if(promoted_role_only) {
         crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, PCMK_XA_ROLE, PCMK__ROLE_STARTED);
+        crm_xml_add(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
     }
 
     if (later_s == NULL) {
@@ -169,7 +169,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     if(promoted_role_only) {
         crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, PCMK_XA_ROLE, PCMK__ROLE_STARTED);
+        crm_xml_add(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
     }
 
     if (later_s == NULL) {

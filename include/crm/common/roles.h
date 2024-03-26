@@ -23,6 +23,7 @@ extern "C" {
 // String equivalents of enum rsc_role_e
 
 #define PCMK_ROLE_STOPPED       "Stopped"
+#define PCMK_ROLE_STARTED       "Started"
 
 /*!
  * Possible roles that a resource can be in
