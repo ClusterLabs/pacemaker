@@ -51,7 +51,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
      * long description
      */
     {
-        PCMK_OPT_DC_VERSION, NULL, "string", NULL,
+        PCMK_OPT_DC_VERSION, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
@@ -60,14 +60,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "built from. Used for diagnostic purposes."),
     },
     {
-        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
+        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),
     },
     {
-        PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
+        PCMK_OPT_CLUSTER_NAME, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld,
         N_("An arbitrary name for the cluster"),
@@ -544,7 +544,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
      * long description
      */
     {
-        PCMK_STONITH_HOST_ARGUMENT, NULL, "string", NULL,
+        PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
         "port", NULL,
         pcmk__opt_advanced,
         N_("An alternate parameter to supply instead of 'port'"),
@@ -555,7 +555,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "to supply any additional parameters."),
     },
     {
-        PCMK_STONITH_HOST_MAP, NULL, "string", NULL,
+        PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("A mapping of node names to port numbers for devices that do not "
@@ -564,7 +564,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "port 1 for node1 and ports 2 and 3 for node2."),
     },
     {
-        PCMK_STONITH_HOST_LIST, NULL, "string", NULL,
+        PCMK_STONITH_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Nodes targeted by this device"),
@@ -599,7 +599,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "that the sum is kept below this maximum."),
     },
     {
-        PCMK_STONITH_DELAY_BASE, NULL, "string", NULL,
+        PCMK_STONITH_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a base delay for fencing actions and specify base delay "
@@ -626,7 +626,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "parallel."),
     },
     {
-        "pcmk_reboot_action", NULL, "string", NULL,
+        "pcmk_reboot_action", NULL, PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_REBOOT, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'reboot'"),
@@ -657,7 +657,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'reboot' action before giving up."),
     },
     {
-        "pcmk_off_action", NULL, "string", NULL,
+        "pcmk_off_action", NULL, PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_OFF, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'off'"),
@@ -688,7 +688,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'off' action before giving up."),
     },
     {
-        "pcmk_on_action", NULL, "string", NULL,
+        "pcmk_on_action", NULL, PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_ON, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'on'"),
@@ -719,7 +719,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'on' action before giving up."),
     },
     {
-        "pcmk_list_action", NULL, "string", NULL,
+        "pcmk_list_action", NULL, PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_LIST, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'list'"),
@@ -750,7 +750,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'list' action before giving up."),
     },
     {
-        "pcmk_monitor_action", NULL, "string", NULL,
+        "pcmk_monitor_action", NULL, PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_MONITOR, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'monitor'"),
@@ -781,7 +781,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "tries a 'monitor' action before giving up."),
     },
     {
-        "pcmk_status_action", NULL, "string", NULL,
+        "pcmk_status_action", NULL, PCMK_VALUE_STRING, NULL,
         PCMK_ACTION_STATUS, NULL,
         pcmk__opt_advanced,
         N_("An alternate command to run instead of 'status'"),
