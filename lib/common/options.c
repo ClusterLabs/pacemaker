@@ -100,7 +100,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "(for example, \"5min\")."),
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, "select",
+        PCMK_OPT_FENCE_REACTION, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
         PCMK_VALUE_STOP, NULL,
         pcmk__opt_controld,
@@ -159,7 +159,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "the order in which ping updates arrive."),
     },
     {
-        PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
+        PCMK_OPT_NO_QUORUM_POLICY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_FREEZE ", " PCMK_VALUE_IGNORE
                 ", " PCMK_VALUE_DEMOTE ", " PCMK_VALUE_FENCE_LEGACY,
         PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
@@ -245,7 +245,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_STONITH_ACTION, NULL, "select", "reboot, off, poweroff",
+        PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
+            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF ", " PCMK__ACTION_POWEROFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
         N_("Action to send to fence device when a node needs to be fenced "
@@ -475,7 +476,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Node health
     {
-        PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, "select",
+        PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_NONE ", " PCMK_VALUE_MIGRATE_ON_RED ", "
                 PCMK_VALUE_ONLY_GREEN ", " PCMK_VALUE_PROGRESSIVE ", "
                 PCMK_VALUE_CUSTOM,
@@ -524,7 +525,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Placement strategy
     {
-        PCMK_OPT_PLACEMENT_STRATEGY, NULL, "select",
+        PCMK_OPT_PLACEMENT_STRATEGY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_DEFAULT ", " PCMK_VALUE_UTILIZATION ", "
                 PCMK_VALUE_MINIMAL ", " PCMK_VALUE_BALANCED,
         PCMK_VALUE_DEFAULT, pcmk__valid_placement_strategy,
@@ -573,7 +574,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
            "\"static-list\", either this or pcmk_host_map must be set."),
     },
     {
-        PCMK_STONITH_HOST_CHECK, NULL, "select",
+        PCMK_STONITH_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
             "dynamic-list, static-list, status, none",
         NULL, NULL,
         pcmk__opt_none,
