@@ -1063,7 +1063,7 @@ target_list_type(stonith_device_t * dev)
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
             check_type = "static-list";
         } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
-            check_type = "dynamic-list";
+            check_type = PCMK_VALUE_DYNAMIC_LIST;
         } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
             check_type = "status";
         } else {
@@ -1300,7 +1300,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
         }
 
         /* Fall back to pcmk_host_check="status" if the user didn't explicitly
-         * specify "dynamic-list".
+         * specify PCMK_VALUE_DYNAMIC_LIST
          */
         if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
             crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
@@ -2174,7 +2174,8 @@ can_fence_host_with_device(stonith_device_t *dev,
             can = TRUE;
         }
 
-    } else if (pcmk__str_eq(check_type, "dynamic-list", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(check_type, PCMK_VALUE_DYNAMIC_LIST,
+                            pcmk__str_casei)) {
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
