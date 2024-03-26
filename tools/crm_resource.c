@@ -290,9 +290,15 @@ validate_opt_list(const gchar *optarg)
 {
     if (pcmk__str_eq(optarg, PCMK_VALUE_FENCING, pcmk__str_none)) {
         options.opt_list = pcmk__opt_fencing;
-        return TRUE;
+
+    } else if (pcmk__str_eq(optarg, PCMK__VALUE_PRIMITIVE, pcmk__str_none)) {
+        options.opt_list = pcmk__opt_primitive;
+
+    } else {
+        return FALSE;
     }
-    return FALSE;
+
+    return TRUE;
 }
 
 /*!
@@ -482,6 +488,7 @@ static GOptionEntry query_entries[] = {
     { "list-options", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
       "List all available options of the given type\n"
       INDENT "Allowed values:\n"
+      INDENT PCMK__VALUE_PRIMITIVE "(primitive resource meta-attributes), "
       INDENT PCMK_VALUE_FENCING " (parameters common to all fencing resources)",
       "TYPE" },
     { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -1038,6 +1045,10 @@ list_options(void)
     switch (options.opt_list) {
         case pcmk__opt_fencing:
             exit_code = pcmk_rc2exitc(pcmk__list_fencing_params(out,
+                                                                options.all));
+            break;
+        case pcmk__opt_primitive:
+            exit_code = pcmk_rc2exitc(pcmk__list_primitive_meta(out,
                                                                 options.all));
             break;
         default:
