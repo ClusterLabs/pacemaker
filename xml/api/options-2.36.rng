@@ -17,10 +17,19 @@
         </define>
     </include>
 
-    <!-- Extend the allowed types to include percentage and time -->
+    <!-- Extend the allowed types (see Pacemaker Explained for details) -->
     <define name="atomic-types" combine="choice">
         <choice>
+            <value>duration</value>
+            <value>epoch_time</value>
+            <value>nonnegative_integer</value>
             <value>percentage</value>
+            <value>port</value>
+            <value>score</value>
+            <value>timeout</value>
+            <value>version</value>
+
+            <!-- @COMPAT Deprecated -->
             <value>time</value>
         </choice>
     </define>
