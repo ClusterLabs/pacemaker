@@ -291,6 +291,10 @@ map_legacy_option_type(const char *type)
     if (pcmk__str_eq(type, PCMK_VALUE_DURATION, pcmk__str_none)) {
         return PCMK__VALUE_TIME;
 
+    } else if (pcmk__str_eq(type, PCMK_VALUE_NONNEGATIVE_INTEGER,
+                            pcmk__str_none)) {
+        return PCMK_VALUE_INTEGER;
+
     } else {
         return type;
     }
