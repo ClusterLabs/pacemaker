@@ -143,6 +143,7 @@ extern     "C" {
 #define PCMK_VALUE_DELETE                       "delete"
 #define PCMK_VALUE_DEMOTE                       "demote"
 #define PCMK_VALUE_DENY                         "deny"
+#define PCMK_VALUE_DURATION                     "duration"
 #define PCMK_VALUE_EQ                           "eq"
 #define PCMK_VALUE_EXCLUSIVE                    "exclusive"
 #define PCMK_VALUE_FAILED                       "failed"
