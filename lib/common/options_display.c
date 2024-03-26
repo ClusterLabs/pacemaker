@@ -288,7 +288,7 @@ static const char *
 map_legacy_option_type(const char *type)
 {
     // @COMPAT Drop this function when we drop daemon metadata commands
-    if (pcmk__str_eq(type, PCMK_VALUE_DURATION, pcmk__str_none)) {
+    if (pcmk__str_any_of(type, PCMK_VALUE_DURATION, PCMK_VALUE_TIMEOUT, NULL)) {
         return PCMK__VALUE_TIME;
 
     } else if (pcmk__str_any_of(type,

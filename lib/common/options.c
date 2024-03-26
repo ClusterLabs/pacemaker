@@ -285,7 +285,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
@@ -648,7 +648,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'reboot' action."),
     },
     {
-        "pcmk_reboot_timeout", NULL, "time", NULL,
+        "pcmk_reboot_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'reboot' actions instead "
@@ -679,7 +679,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'off' action."),
     },
     {
-        "pcmk_off_timeout", NULL, "time", NULL,
+        "pcmk_off_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'off' actions instead of "
@@ -710,7 +710,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'on' action."),
     },
     {
-        "pcmk_on_timeout", NULL, "time", NULL,
+        "pcmk_on_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'on' actions instead of "
@@ -741,7 +741,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'list' action."),
     },
     {
-        "pcmk_list_timeout", NULL, "time", NULL,
+        "pcmk_list_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'list' actions instead of "
@@ -772,7 +772,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'monitor' action."),
     },
     {
-        "pcmk_monitor_timeout", NULL, "time", NULL,
+        "pcmk_monitor_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'monitor' actions instead "
@@ -803,7 +803,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "specific, command that implements the 'status' action."),
     },
     {
-        "pcmk_status_timeout", NULL, "time", NULL,
+        "pcmk_status_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'status' actions instead "
