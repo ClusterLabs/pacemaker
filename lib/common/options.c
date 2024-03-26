@@ -305,7 +305,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
+        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_INTEGER, NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
@@ -381,7 +381,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "system resources used (currently CPU) approaches this limit"),
     },
     {
-        PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_NODE_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_controld,
         N_("Maximum number of jobs that can be scheduled per node (defaults to "
@@ -389,7 +389,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_BATCH_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_BATCH_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Maximum number of jobs that the cluster may execute in parallel "
@@ -400,7 +400,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "high load."),
     },
     {
-        PCMK_OPT_MIGRATION_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_MIGRATION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "-1", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of live migration actions that the cluster is allowed "
@@ -408,7 +408,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "500", pcmk__valid_positive_int,
         pcmk__opt_based,
         N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
@@ -452,21 +452,21 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Storing inputs
     {
-        PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, "integer", NULL,
+        PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
         "-1", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in errors to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
-        PCMK_OPT_PE_WARN_SERIES_MAX, NULL, "integer", NULL,
+        PCMK_OPT_PE_WARN_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
         "5000", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in warnings to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
-        PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, "integer", NULL,
+        PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
         "4000", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs without errors or warnings to save"),
@@ -487,7 +487,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"green\".")
     },
     {
-        PCMK_OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_BASE, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Base health score assigned to a node"),
@@ -495,7 +495,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_GREEN, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -504,7 +504,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -513,7 +513,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_RED, NULL, PCMK_VALUE_INTEGER, NULL,
         "-INFINITY", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -614,7 +614,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "\"node1:1s;node2:5\") to set a different value for each target."),
     },
     {
-        PCMK_STONITH_ACTION_LIMIT, NULL, "integer", NULL,
+        PCMK_STONITH_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "1", NULL,
         pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "
@@ -645,7 +645,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'reboot' actions."),
     },
     {
-        "pcmk_reboot_retries", NULL, "integer", NULL,
+        "pcmk_reboot_retries", NULL, PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'reboot' command within the "
@@ -676,7 +676,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'off' actions."),
     },
     {
-        "pcmk_off_retries", NULL, "integer", NULL,
+        "pcmk_off_retries", NULL, PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'off' command within the "
@@ -707,7 +707,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'on' actions."),
     },
     {
-        "pcmk_on_retries", NULL, "integer", NULL,
+        "pcmk_on_retries", NULL, PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'on' command within the "
@@ -738,7 +738,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'list' actions."),
     },
     {
-        "pcmk_list_retries", NULL, "integer", NULL,
+        "pcmk_list_retries", NULL, PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'list' command within the "
@@ -769,7 +769,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'monitor' actions."),
     },
     {
-        "pcmk_monitor_retries", NULL, "integer", NULL,
+        "pcmk_monitor_retries", NULL, PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'monitor' command within "
@@ -800,7 +800,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "'status' actions."),
     },
     {
-        "pcmk_status_retries", NULL, "integer", NULL,
+        "pcmk_status_retries", NULL, PCMK_VALUE_INTEGER, NULL,
         "2", NULL,
         pcmk__opt_advanced,
         N_("The maximum number of times to try the 'status' command within "
