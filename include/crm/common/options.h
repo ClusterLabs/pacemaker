@@ -207,6 +207,7 @@ extern     "C" {
 #define PCMK_VALUE_STOP                         "stop"
 #define PCMK_VALUE_STOP_ONLY                    "stop_only"
 #define PCMK_VALUE_STOP_START                   "stop_start"
+#define PCMK_VALUE_STOP_UNEXPECTED              "stop_unexpected"
 #define PCMK_VALUE_SUCCESS                      "success"
 #define PCMK_VALUE_TIMEOUT                      "timeout"
 #define PCMK_VALUE_TRUE                         "true"
