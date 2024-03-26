@@ -829,7 +829,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
-    if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_STOP_ONLY, pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_stop;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
                         (*rsc)->id);
