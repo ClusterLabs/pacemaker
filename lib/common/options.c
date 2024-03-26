@@ -168,7 +168,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to lock resources to a cleanly shut down node"),
@@ -193,21 +193,21 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "rejoined."),
     },
     {
-        PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
+        PCMK_OPT_ENABLE_ACL, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_based,
         N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL,
     },
     {
-        PCMK_OPT_SYMMETRIC_CLUSTER, NULL, "boolean", NULL,
+        PCMK_OPT_SYMMETRIC_CLUSTER, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether resources can run on any node by default"),
         NULL,
     },
     {
-        PCMK_OPT_MAINTENANCE_MODE, NULL, "boolean", NULL,
+        PCMK_OPT_MAINTENANCE_MODE, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should refrain from monitoring, starting, and "
@@ -215,7 +215,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_START_FAILURE_IS_FATAL, NULL, "boolean", NULL,
+        PCMK_OPT_START_FAILURE_IS_FATAL, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether a start failure should prevent a resource from being "
@@ -225,7 +225,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, "boolean", NULL,
+        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should check for active resources during "
@@ -235,7 +235,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Fencing-related options
     {
-        PCMK_OPT_STONITH_ENABLED, NULL, "boolean", NULL,
+        PCMK_OPT_STONITH_ENABLED, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether nodes may be fenced as part of recovery"),
@@ -261,7 +261,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
+        PCMK_OPT_HAVE_WATCHDOG, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_generated,
         N_("Whether watchdog integration is enabled"),
@@ -313,14 +313,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CONCURRENT_FENCING, NULL, "boolean", NULL,
+        PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Allow performing fencing operations in parallel"),
         NULL,
     },
     {
-        PCMK_OPT_STARTUP_FENCING, NULL, "boolean", NULL,
+        PCMK_OPT_STARTUP_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether to fence unseen nodes at start-up"),
@@ -419,14 +419,14 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Orphans and stopping
     {
-        PCMK_OPT_STOP_ALL_RESOURCES, NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ALL_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should stop all active resources"),
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to stop resources that were removed from the "
@@ -434,7 +434,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to cancel recurring actions removed from the "
@@ -442,7 +442,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK__OPT_REMOVE_AFTER_STOP, NULL, "boolean", NULL,
+        PCMK__OPT_REMOVE_AFTER_STOP, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to remove stopped resources from the executor"),
