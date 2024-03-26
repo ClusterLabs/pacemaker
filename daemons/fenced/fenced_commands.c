@@ -1059,9 +1059,9 @@ target_list_type(stonith_device_t * dev)
     if (check_type == NULL) {
 
         if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
-            check_type = "static-list";
+            check_type = PCMK_VALUE_STATIC_LIST;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
-            check_type = "static-list";
+            check_type = PCMK_VALUE_STATIC_LIST;
         } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
             check_type = PCMK_VALUE_DYNAMIC_LIST;
         } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
@@ -1099,8 +1099,10 @@ build_device_from_xml(xmlNode *dev)
     device->aliases = build_port_aliases(value, &(device->targets));
 
     value = target_list_type(device);
-    if (!pcmk__str_eq(value, "static-list", pcmk__str_casei) && device->targets) {
-        /* Other than "static-list", dev-> targets is unnecessary. */
+    if (!pcmk__str_eq(value, PCMK_VALUE_STATIC_LIST, pcmk__str_casei)
+        && (device->targets != NULL)) {
+
+        // device->targets is necessary only with PCMK_VALUE_STATIC_LIST
         g_list_free_full(device->targets, free);
         device->targets = NULL;
     }
@@ -2166,7 +2168,9 @@ can_fence_host_with_device(stonith_device_t *dev,
     if (pcmk__str_eq(check_type, PCMK_VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
-    } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(check_type, PCMK_VALUE_STATIC_LIST,
+                            pcmk__str_casei)) {
+
         if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
