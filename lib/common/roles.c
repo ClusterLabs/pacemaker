@@ -40,7 +40,7 @@ pcmk_role_text(enum rsc_role_e role)
 #ifdef PCMK__COMPAT_2_0
             return PCMK__ROLE_PROMOTED_LEGACY;
 #else
-            return PCMK__ROLE_PROMOTED;
+            return PCMK_ROLE_PROMOTED;
 #endif
 
         default: // pcmk_role_unknown
@@ -68,7 +68,7 @@ pcmk_parse_role(const char *role)
     } else if (pcmk__strcase_any_of(role, PCMK_ROLE_UNPROMOTED,
                                     PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
         return pcmk_role_unpromoted;
-    } else if (pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+    } else if (pcmk__strcase_any_of(role, PCMK_ROLE_PROMOTED,
                                     PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
         return pcmk_role_promoted;
     }

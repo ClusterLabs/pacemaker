@@ -1555,7 +1555,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         out->quiet = true;
         rc = cli_resource_ban(out, lookup_id, host, move_lifetime, cib,
                               cib_options, promoted_role_only,
-                              PCMK__ROLE_PROMOTED);
+                              PCMK_ROLE_PROMOTED);
     } else {
         /* Stop the resource by setting PCMK_META_TARGET_ROLE to Stopped.
          * Remember any existing PCMK_META_TARGET_ROLE so we can restore it
@@ -2249,7 +2249,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     /* Record an explicit preference for 'dest' */
     rc = cli_resource_prefer(out, rsc_id, dest->details->uname, move_lifetime,
                              cib, cib_options, promoted_role_only,
-                             PCMK__ROLE_PROMOTED);
+                             PCMK_ROLE_PROMOTED);
 
     crm_trace("%s%s now prefers %s%s",
               rsc->id, (promoted_role_only? " (promoted)" : ""),
@@ -2263,7 +2263,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         if(current) {
             (void)cli_resource_ban(out, rsc_id, current->details->uname, move_lifetime,
                                    cib, cib_options, promoted_role_only,
-                                   PCMK__ROLE_PROMOTED);
+                                   PCMK_ROLE_PROMOTED);
         } else if(count > 1) {
             out->info(out, "Resource '%s' is currently %s in %d locations. "
                       "One may now move to %s",
