@@ -407,9 +407,9 @@ behave and can be easily set using the ``--meta`` option of the
        is-managed
      - :ref:`boolean <boolean>`
      - true
-     - If false, the cluster will not start or stop the resource on any node.
-       Recurring actions for the resource are unaffected. Maintenance mode
-       overrides this setting.
+     - If false, the cluster will not start, stop, promote, or demote the
+       resource on any node. Recurring actions for the resource are
+       unaffected. Maintenance mode overrides this setting.
 
    * - .. _meta_maintenance:
        .. _rsc_maintenance:
@@ -421,11 +421,11 @@ behave and can be easily set using the ``--meta`` option of the
        maintenance
      - :ref:`boolean <boolean>`
      - false
-     - If true, the cluster will not start or stop the resource on any node, and
-       will pause any recurring monitors (except those specifying ``role`` as
-       ``Stopped``). If true, the :ref:`maintenance-mode <maintenance_mode>`
-       cluster option or :ref:`maintenance <node_maintenance>` node attribute
-       override this.
+     - If true, the cluster will not start, stop, promote, or demote the
+       resource on any node, and will pause any recurring monitors (except those
+       specifying ``role`` as ``Stopped``). If true, the
+       :ref:`maintenance-mode <maintenance_mode>` cluster option or
+       :ref:`maintenance <node_maintenance>` node attribute overrides this.
 
    * - .. _meta_resource_stickiness:
        .. _resource-stickiness:
@@ -512,7 +512,7 @@ behave and can be easily set using the ``--meta`` option of the
 
        * ``block``: mark the resource as unmanaged
        * ``stop_only``: stop all active instances and leave them that way
-       * `stop_start``: stop all active instances and start the resource in one
+       * ``stop_start``: stop all active instances and start the resource in one
          location only
        * ``stop_unexpected``: stop all active instances except where the
          resource should be active (this should be used only when extra
