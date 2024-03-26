@@ -105,7 +105,7 @@ Also known as properties, these are options that affect behavior across the enti
 
   * stonith-watchdog-timeout: How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use
     * If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.
-    * Possible values: time (default: )
+    * Possible values: timeout (default: )
 
   * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
     * Possible values: score (default: )
@@ -326,7 +326,7 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="stonith-watchdog-timeout" advanced="0" generated="0">
         <longdesc lang="en">If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.</longdesc>
         <shortdesc lang="en">How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="stonith-max-attempts" advanced="0" generated="0">
         <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
@@ -534,7 +534,7 @@ Also known as properties, these are options that affect behavior across the enti
 
   * stonith-watchdog-timeout: How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use
     * If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.
-    * Possible values: time (default: )
+    * Possible values: timeout (default: )
 
   * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
     * Possible values: score (default: )
@@ -787,7 +787,7 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="stonith-watchdog-timeout" advanced="0" generated="0">
         <longdesc lang="en">If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.</longdesc>
         <shortdesc lang="en">How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="stonith-max-attempts" advanced="0" generated="0">
         <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
@@ -2017,7 +2017,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_reboot_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_reboot_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'reboot' action before giving up.</longdesc>
@@ -2032,7 +2032,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_off_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_off_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'off' action before giving up.</longdesc>
@@ -2047,7 +2047,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_on_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_on_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'on' action before giving up.</longdesc>
@@ -2062,7 +2062,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_list_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_list_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'list' action before giving up.</longdesc>
@@ -2077,7 +2077,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_monitor_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_monitor_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'monitor' action before giving up.</longdesc>
@@ -2092,7 +2092,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_status_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_status_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'status' action before giving up.</longdesc>
@@ -2146,7 +2146,7 @@ Special parameters that are available for all fencing resources, regardless of t
 
     * pcmk_reboot_timeout: Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
-      * Possible values: time (default: )
+      * Possible values: timeout (default: )
 
     * pcmk_reboot_retries: The maximum number of times to try the 'reboot' command within the timeout period
       * Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'reboot' action before giving up.
@@ -2158,7 +2158,7 @@ Special parameters that are available for all fencing resources, regardless of t
 
     * pcmk_off_timeout: Specify an alternate timeout to use for 'off' actions instead of stonith-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
-      * Possible values: time (default: )
+      * Possible values: timeout (default: )
 
     * pcmk_off_retries: The maximum number of times to try the 'off' command within the timeout period
       * Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'off' action before giving up.
@@ -2170,7 +2170,7 @@ Special parameters that are available for all fencing resources, regardless of t
 
     * pcmk_on_timeout: Specify an alternate timeout to use for 'on' actions instead of stonith-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.
-      * Possible values: time (default: )
+      * Possible values: timeout (default: )
 
     * pcmk_on_retries: The maximum number of times to try the 'on' command within the timeout period
       * Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'on' action before giving up.
@@ -2182,7 +2182,7 @@ Special parameters that are available for all fencing resources, regardless of t
 
     * pcmk_list_timeout: Specify an alternate timeout to use for 'list' actions instead of stonith-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
-      * Possible values: time (default: )
+      * Possible values: timeout (default: )
 
     * pcmk_list_retries: The maximum number of times to try the 'list' command within the timeout period
       * Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'list' action before giving up.
@@ -2194,7 +2194,7 @@ Special parameters that are available for all fencing resources, regardless of t
 
     * pcmk_monitor_timeout: Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
-      * Possible values: time (default: )
+      * Possible values: timeout (default: )
 
     * pcmk_monitor_retries: The maximum number of times to try the 'monitor' command within the timeout period
       * Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'monitor' action before giving up.
@@ -2206,7 +2206,7 @@ Special parameters that are available for all fencing resources, regardless of t
 
     * pcmk_status_timeout: Specify an alternate timeout to use for 'status' actions instead of stonith-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
-      * Possible values: time (default: )
+      * Possible values: timeout (default: )
 
     * pcmk_status_retries: The maximum number of times to try the 'status' command within the timeout period
       * Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'status' action before giving up.
@@ -2268,7 +2268,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_reboot_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_reboot_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'reboot' action before giving up.</longdesc>
@@ -2283,7 +2283,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_off_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_off_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'off' action before giving up.</longdesc>
@@ -2298,7 +2298,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_on_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_on_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'on' action before giving up.</longdesc>
@@ -2313,7 +2313,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_list_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_list_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'list' action before giving up.</longdesc>
@@ -2328,7 +2328,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_monitor_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_monitor_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'monitor' action before giving up.</longdesc>
@@ -2343,7 +2343,7 @@ Special parameters that are available for all fencing resources, regardless of t
       <parameter name="pcmk_status_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
         <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
-        <content type="time" default=""/>
+        <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_status_retries" advanced="1" generated="0">
         <longdesc lang="en">Some devices do not support multiple connections. Operations may "fail" if the device is busy with another task. In that case, Pacemaker will automatically retry the operation if there is time remaining. Use this option to alter the number of times Pacemaker tries a 'status' action before giving up.</longdesc>
