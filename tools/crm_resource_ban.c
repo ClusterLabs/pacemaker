@@ -128,7 +128,10 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     free_xml(fragment);
     free(later_s);
 
-    if (rc != pcmk_rc_ok && promoted_role_only && strcmp(promoted_role, PCMK__ROLE_PROMOTED) == 0) {
+    if ((rc != pcmk_rc_ok)
+        && promoted_role_only
+        && (strcmp(promoted_role, PCMK_ROLE_PROMOTED) == 0)) {
+
         int banrc = cli_resource_ban(out, rsc_id, host, move_lifetime,
                               cib_conn, cib_options, promoted_role_only,
                               PCMK__ROLE_PROMOTED_LEGACY);
@@ -205,7 +208,10 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     free_xml(fragment);
     free(later_s);
 
-    if (rc != pcmk_rc_ok && promoted_role_only && strcmp(promoted_role, PCMK__ROLE_PROMOTED) == 0) {
+    if ((rc != pcmk_rc_ok)
+        && promoted_role_only
+        && (strcmp(promoted_role, PCMK_ROLE_PROMOTED) == 0)) {
+
         int preferrc = cli_resource_prefer(out, rsc_id, host, move_lifetime,
                                  cib_conn, cib_options, promoted_role_only,
                                  PCMK__ROLE_PROMOTED_LEGACY);
@@ -355,7 +361,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     const char *cons_id = pcmk__xe_id(constraint_node);
     const char *cons_rsc = crm_element_value(constraint_node, PCMK_XA_RSC);
     GString *rsc_role_substr = NULL;
-    const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK__ROLE_PROMOTED
+    const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK_ROLE_PROMOTED
                                      "' or @" PCMK_XA_ROLE "='"
                                      PCMK__ROLE_PROMOTED_LEGACY "'";
 

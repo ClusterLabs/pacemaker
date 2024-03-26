@@ -25,6 +25,7 @@ extern "C" {
 #define PCMK_ROLE_STOPPED       "Stopped"
 #define PCMK_ROLE_STARTED       "Started"
 #define PCMK_ROLE_UNPROMOTED    "Unpromoted"
+#define PCMK_ROLE_PROMOTED      "Promoted"
 
 /*!
  * Possible roles that a resource can be in

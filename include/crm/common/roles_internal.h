@@ -16,7 +16,6 @@ extern "C" {
 
 // String equivalents of enum rsc_role_e
 #define PCMK__ROLE_UNKNOWN      "Unknown"
-#define PCMK__ROLE_PROMOTED     "Promoted"
 #define PCMK__ROLE_UNPROMOTED_LEGACY    "Slave"
 #define PCMK__ROLE_PROMOTED_LEGACY      "Master"
 
