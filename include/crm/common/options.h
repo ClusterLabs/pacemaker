@@ -184,6 +184,7 @@ extern     "C" {
 #define PCMK_VALUE_PANIC                        "panic"
 #define PCMK_VALUE_PARAM                        "param"
 #define PCMK_VALUE_PENDING                      "pending"
+#define PCMK_VALUE_PERCENTAGE                   "percentage"
 #define PCMK_VALUE_PLUS_INFINITY                "+" PCMK_VALUE_INFINITY
 #define PCMK_VALUE_PROGRESSIVE                  "progressive"
 #define PCMK_VALUE_QUORUM                       "quorum"
