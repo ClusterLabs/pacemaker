@@ -587,8 +587,8 @@ static const pcmk__cluster_option_t fencing_params[] = {
     },
     {
         PCMK_STONITH_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
-            PCMK_VALUE_DYNAMIC_LIST ", " PCMK_VALUE_STATIC_LIST ", status, "
-            "none",
+            PCMK_VALUE_DYNAMIC_LIST ", " PCMK_VALUE_STATIC_LIST ", "
+            PCMK_VALUE_STATUS ", " PCMK_VALUE_NONE,
         NULL, NULL,
         pcmk__opt_none,
         N_("How to determine which nodes can be targeted by the device"),
