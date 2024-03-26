@@ -388,8 +388,8 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Add a status section if not already present */
-    if (find_xml_node(root, PCMK_XE_STATUS, FALSE) == NULL) {
-        create_xml_node(root, PCMK_XE_STATUS);
+    if (pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL) == NULL) {
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Validate XML against its specified schema */
@@ -893,11 +893,9 @@ cib_file_prepare_xml(xmlNode *root)
 
     /* Delete status section before writing to file, because
      * we discard it on startup anyway, and users get confused by it */
-    cib_status_root = find_xml_node(root, PCMK_XE_STATUS, TRUE);
-    CRM_LOG_ASSERT(cib_status_root != NULL);
-    if (cib_status_root != NULL) {
-        free_xml(cib_status_root);
-    }
+    cib_status_root = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
+    CRM_CHECK(cib_status_root != NULL, return);
+    free_xml(cib_status_root);
 }
 
 /*!
@@ -1058,9 +1056,10 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    for (xmlNode *request = first_named_child(transaction,
-                                              PCMK__XE_CIB_COMMAND);
-         request != NULL; request = crm_next_same_xml(request)) {
+    for (xmlNode *request = pcmk__xe_first_child(transaction,
+                                                 PCMK__XE_CIB_COMMAND, NULL,
+                                                 NULL);
+         request != NULL; request = pcmk__xe_next_same(request)) {
 
         xmlNode *output = NULL;
         const char *op = crm_element_value(request, PCMK__XA_CIB_OP);

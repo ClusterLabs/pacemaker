@@ -659,10 +659,12 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     crm_trace("Unpacking synapse %s action sets",
               crm_element_value(xml_synapse, PCMK_XA_ID));
 
-    for (action_set = first_named_child(xml_synapse, "action_set");
-         action_set != NULL; action_set = crm_next_same_xml(action_set)) {
+    for (action_set = pcmk__xe_first_child(xml_synapse, "action_set", NULL,
+                                           NULL);
+         action_set != NULL; action_set = pcmk__xe_next_same(action_set)) {
 
-        for (xmlNode *action = pcmk__xe_first_child(action_set);
+        for (xmlNode *action = pcmk__xe_first_child(action_set, NULL, NULL,
+                                                    NULL);
              action != NULL; action = pcmk__xe_next(action)) {
 
             pcmk__graph_action_t *new_action = unpack_action(new_synapse,
@@ -682,13 +684,16 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
-    for (xmlNode *inputs = first_named_child(xml_synapse, "inputs");
-         inputs != NULL; inputs = crm_next_same_xml(inputs)) {
+    for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, "inputs", NULL,
+                                                NULL);
+         inputs != NULL; inputs = pcmk__xe_next_same(inputs)) {
 
-        for (xmlNode *trigger = first_named_child(inputs, "trigger");
-             trigger != NULL; trigger = crm_next_same_xml(trigger)) {
+        for (xmlNode *trigger = pcmk__xe_first_child(inputs, "trigger", NULL,
+                                                     NULL);
+             trigger != NULL; trigger = pcmk__xe_next_same(trigger)) {
 
-            for (xmlNode *input = pcmk__xe_first_child(trigger);
+            for (xmlNode *input = pcmk__xe_first_child(trigger, NULL, NULL,
+                                                       NULL);
                  input != NULL; input = pcmk__xe_next(input)) {
 
                 pcmk__graph_action_t *new_input = unpack_action(new_synapse,
@@ -800,8 +805,10 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
     }
 
     // Unpack each child <synapse> element
-    for (const xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
-         synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
+    for (const xmlNode *synapse_xml = pcmk__xe_first_child(xml_graph,
+                                                           "synapse", NULL,
+                                                           NULL);
+         synapse_xml != NULL; synapse_xml = pcmk__xe_next_same(synapse_xml)) {
 
         pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
                                                             synapse_xml);
@@ -850,7 +857,8 @@ pcmk__event_from_graph_action(const xmlNode *resource,
     CRM_CHECK(action != NULL, return NULL);
     CRM_CHECK(action->type == pcmk__rsc_graph_action, return NULL);
 
-    action_resource = first_named_child(action->xml, PCMK_XE_PRIMITIVE);
+    action_resource = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
+                                           NULL);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");
                                        return NULL);
 
@@ -867,8 +875,9 @@ pcmk__event_from_graph_action(const xmlNode *resource,
         pcmk__insert_dup(op->params, name, value);
     }
 
-    for (xmlNode *xop = pcmk__xe_first_child(resource); xop != NULL;
-         xop = pcmk__xe_next(xop)) {
+    for (xmlNode *xop = pcmk__xe_first_child(resource, NULL, NULL, NULL);
+         xop != NULL; xop = pcmk__xe_next(xop)) {
+
         int tmp = 0;
 
         crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);

@@ -159,8 +159,9 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     pcmk_controld_api_node_t *node_info;
 
     data->reply_type = pcmk_controld_reply_nodes;
-    for (xmlNode *node = first_named_child(msg_data, PCMK_XE_NODE);
-         node != NULL; node = crm_next_same_xml(node)) {
+    for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
+                                              NULL);
+         node != NULL; node = pcmk__xe_next_same(node)) {
 
         long long id_ll = 0;
 
@@ -349,7 +350,7 @@ create_reprobe_message_data(const char *target_node, const char *router_node)
 {
     xmlNode *msg_data;
 
-    msg_data = create_xml_node(NULL, "data_for_" CRM_OP_REPROBE);
+    msg_data = pcmk__xe_create(NULL, "data_for_" CRM_OP_REPROBE);
     crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
     if ((router_node != NULL) && !pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
         crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
@@ -487,7 +488,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
         router_node = target_node;
     }
 
-    msg_data = create_xml_node(NULL, PCMK__XE_RSC_OP);
+    msg_data = pcmk__xe_create(NULL, PCMK__XE_RSC_OP);
 
     /* The controller logs the transition key from resource op requests, so we
      * need to have *something* for it.
@@ -508,14 +509,14 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
         crm_xml_add(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
     }
 
-    xml_rsc = create_xml_node(msg_data, PCMK_XE_PRIMITIVE);
+    xml_rsc = pcmk__xe_create(msg_data, PCMK_XE_PRIMITIVE);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_xml_add(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
     crm_xml_add(xml_rsc, PCMK_XA_CLASS, standard);
     crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, provider);
     crm_xml_add(xml_rsc, PCMK_XA_TYPE, type);
 
-    params = create_xml_node(msg_data, PCMK__XE_ATTRIBUTES);
+    params = pcmk__xe_create(msg_data, PCMK__XE_ATTRIBUTES);
     crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
@@ -632,13 +633,7 @@ create_hello_message(const char *uuid, const char *client_name,
         return NULL;
     }
 
-    hello_node = create_xml_node(NULL, PCMK__XE_OPTIONS);
-    if (hello_node == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Message data creation failed", client_name, uuid);
-        return NULL;
-    }
-
+    hello_node = pcmk__xe_create(NULL, PCMK__XE_OPTIONS);
     crm_xml_add(hello_node, PCMK__XA_MAJOR_VERSION, major_version);
     crm_xml_add(hello_node, PCMK__XA_MINOR_VERSION, minor_version);
     crm_xml_add(hello_node, PCMK__XA_CLIENT_NAME, client_name);

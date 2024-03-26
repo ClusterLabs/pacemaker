@@ -95,6 +95,31 @@ xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 //! \deprecated Do not use
 gboolean can_prune_leaf(xmlNode *xml_node);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *create_xml_node(xmlNode *parent, const char *name);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *pcmk_create_xml_text_node(xmlNode *parent, const char *name,
+                                   const char *content);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *pcmk_create_html_node(xmlNode *parent, const char *element_name,
+                               const char *id, const char *class_name,
+                               const char *text);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *first_named_child(const xmlNode *parent, const char *name);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
+                       gboolean must_find);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *crm_next_same_xml(const xmlNode *sibling);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void xml_remove_prop(xmlNode *obj, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

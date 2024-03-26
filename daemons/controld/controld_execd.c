@@ -538,7 +538,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     while (g_hash_table_iter_next(&iter, NULL, (void **)&entry)) {
 
         GList *gIter = NULL;
-        xmlNode *xml_rsc = create_xml_node(rsc_list, PCMK__XE_LRM_RESOURCE);
+        xmlNode *xml_rsc = pcmk__xe_create(rsc_list, PCMK__XE_LRM_RESOURCE);
 
         crm_xml_add(xml_rsc, PCMK_XA_ID, entry->id);
         crm_xml_add(xml_rsc, PCMK_XA_TYPE, entry->rsc.type);
@@ -593,9 +593,9 @@ controld_query_executor_state(void)
         return NULL;
     }
 
-    xml_data = create_xml_node(xml_state, PCMK__XE_LRM);
+    xml_data = pcmk__xe_create(xml_state, PCMK__XE_LRM);
     crm_xml_add(xml_data, PCMK_XA_ID, peer->uuid);
-    rsc_list = create_xml_node(xml_data, PCMK__XE_LRM_RESOURCES);
+    rsc_list = pcmk__xe_create(xml_data, PCMK__XE_LRM_RESOURCES);
 
     /* Build a list of active (not always running) resources */
     build_active_RAs(lrm_state, rsc_list);
@@ -1100,7 +1100,8 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, PCMK_XA_OPERATION);
     const char *target_node = crm_element_value(action, PCMK__META_ON_NODE);
-    xmlNode *xml_rsc = find_xml_node(action, PCMK_XE_PRIMITIVE, TRUE);
+    xmlNode *xml_rsc = pcmk__xe_first_child(action, PCMK_XE_PRIMITIVE, NULL,
+                                            NULL);
 
     if ((xml_rsc == NULL) || (pcmk__xe_id(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
@@ -1162,7 +1163,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 {
     lrmd_event_data_t *op = NULL;
     lrmd_rsc_info_t *rsc = NULL;
-    xmlNode *xml_rsc = find_xml_node(xml, PCMK_XE_PRIMITIVE, TRUE);
+    xmlNode *xml_rsc = pcmk__xe_first_child(xml, PCMK_XE_PRIMITIVE, NULL, NULL);
 
     CRM_CHECK(xml_rsc != NULL, return);
 
@@ -1247,7 +1248,8 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     const char *op_task = NULL;
     guint interval_ms = 0;
     gboolean in_progress = FALSE;
-    xmlNode *params = find_xml_node(input->xml, PCMK__XE_ATTRIBUTES, TRUE);
+    xmlNode *params = pcmk__xe_first_child(input->xml, PCMK__XE_ATTRIBUTES,
+                                           NULL, NULL);
 
     CRM_CHECK(params != NULL, return FALSE);
 
@@ -1492,7 +1494,8 @@ do_lrm_invoke(long long action,
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
-        xmlNode *xml_rsc = find_xml_node(input->xml, PCMK_XE_PRIMITIVE, TRUE);
+        xmlNode *xml_rsc = pcmk__xe_first_child(input->xml, PCMK_XE_PRIMITIVE,
+                                                NULL, NULL);
         gboolean create_rsc = !pcmk__str_eq(operation, PCMK_ACTION_DELETE,
                                             pcmk__str_none);
         int rc;
@@ -1659,7 +1662,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
     /* Use pcmk_monitor_timeout instead of meta timeout for stonith
        recurring monitor, if set */
-    primitive = find_xml_node(rsc_op, PCMK_XE_PRIMITIVE, FALSE);
+    primitive = pcmk__xe_first_child(rsc_op, PCMK_XE_PRIMITIVE, NULL, NULL);
     class = crm_element_value(primitive, PCMK_XA_CLASS);
 
     if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
@@ -1765,10 +1768,10 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 
-    iter = create_xml_node(update, PCMK__XE_LRM);
+    iter = pcmk__xe_create(update, PCMK__XE_LRM);
     crm_xml_add(iter, PCMK_XA_ID, controld_globals.our_uuid);
-    iter = create_xml_node(iter, PCMK__XE_LRM_RESOURCES);
-    iter = create_xml_node(iter, PCMK__XE_LRM_RESOURCE);
+    iter = pcmk__xe_create(iter, PCMK__XE_LRM_RESOURCES);
+    iter = pcmk__xe_create(iter, PCMK__XE_LRM_RESOURCE);
 
     crm_xml_add(iter, PCMK_XA_ID, op->rsc_id);
 
@@ -2258,7 +2261,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
     }
     if ((rsc == NULL) && action_xml) {
-        xmlNode *xml = find_xml_node(action_xml, PCMK_XE_PRIMITIVE, TRUE);
+        xmlNode *xml = pcmk__xe_first_child(action_xml, PCMK_XE_PRIMITIVE, NULL,
+                                            NULL);
 
         const char *standard = crm_element_value(xml, PCMK_XA_CLASS);
         const char *provider = crm_element_value(xml, PCMK_XA_PROVIDER);

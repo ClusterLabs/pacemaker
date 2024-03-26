@@ -347,10 +347,10 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = create_xml_node(NULL, (const char *) rsc->xml->name);
+                xml_top = pcmk__xe_create(NULL, (const char *) rsc->xml->name);
                 crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
-                xml_obj = create_xml_node(xml_top, attr_set_type);
+                xml_obj = pcmk__xe_create(xml_top, attr_set_type);
                 crm_xml_add(xml_obj, PCMK_XA_ID, rsc_attr_set);
                 break;
 
@@ -451,7 +451,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                                  "delete", force);
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        xml_remove_prop(rsc->xml, attr_name);
+        pcmk__xe_remove_attr(rsc->xml, attr_name);
         CRM_ASSERT(cib != NULL);
         rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
         rc = pcmk_legacy2rc(rc);
@@ -668,9 +668,9 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         interval_ms_s = crm_strdup_printf("%u", interval_ms);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->failed);
-         xml_op != NULL;
-         xml_op = pcmk__xe_next(xml_op)) {
+    for (xmlNode *xml_op = pcmk__xe_first_child(scheduler->failed, NULL, NULL,
+                                                NULL);
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
         failed_id = crm_element_value(xml_op, PCMK__XA_RSC_ID);
         if (failed_id == NULL) {

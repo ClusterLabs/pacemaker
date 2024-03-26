@@ -358,9 +358,8 @@ void pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
 pcmk_resource_t *pe__find_bundle_replica(const pcmk_resource_t *bundle,
                                          const pcmk_node_t *node);
 bool pe__bundle_needs_remote_name(pcmk_resource_t *rsc);
-const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc,
-                                       pcmk_scheduler_t *scheduler,
-                                       xmlNode *xml, const char *field);
+const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
+                                       const char *field);
 bool pe__is_universal_clone(const pcmk_resource_t *rsc,
                             const pcmk_scheduler_t *scheduler);
 void pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,

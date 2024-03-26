@@ -47,7 +47,7 @@ static void
 invalid_name(void **state)
 {
     GList *already_included = NULL;
-    xmlNode *parent = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    xmlNode *parent = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
     pcmk__build_schema_xml_node(parent, "pacemaker-9.0", &already_included);
     assert_null(parent->children);
@@ -59,7 +59,7 @@ static void
 single_schema(void **state)
 {
     GList *already_included = NULL;
-    xmlNode *parent = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    xmlNode *parent = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
     xmlNode *schema_node = NULL;
     xmlNode *file_node = NULL;
     int i = 0;
@@ -79,11 +79,11 @@ single_schema(void **state)
      *   </schema>
      * </schemas>
      */
-    schema_node = pcmk__xe_first_child(parent);
+    schema_node = pcmk__xe_first_child(parent, NULL, NULL, NULL);
     assert_string_equal("pacemaker-3.0",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
-    file_node = pcmk__xe_first_child(schema_node);
+    file_node = pcmk__xe_first_child(schema_node, NULL, NULL, NULL);
     while (file_node != NULL && rngs1[i] != NULL) {
         assert_string_equal(rngs1[i],
                             crm_element_value(file_node, PCMK_XA_PATH));
@@ -101,7 +101,7 @@ static void
 multiple_schemas(void **state)
 {
     GList *already_included = NULL;
-    xmlNode *parent = create_xml_node(NULL, PCMK__XA_SCHEMAS);
+    xmlNode *parent = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
     xmlNode *schema_node = NULL;
     xmlNode *file_node = NULL;
     int i = 0;
@@ -115,11 +115,11 @@ multiple_schemas(void **state)
     /* Like single_schema, but make sure files aren't included multiple times
      * when the function is called repeatedly.
      */
-    schema_node = pcmk__xe_first_child(parent);
+    schema_node = pcmk__xe_first_child(parent, NULL, NULL, NULL);
     assert_string_equal("pacemaker-2.0",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
-    file_node = pcmk__xe_first_child(schema_node);
+    file_node = pcmk__xe_first_child(schema_node, NULL, NULL, NULL);
     while (file_node != NULL && rngs2[i] != NULL) {
         assert_string_equal(rngs2[i],
                             crm_element_value(file_node, PCMK_XA_PATH));
@@ -133,7 +133,7 @@ multiple_schemas(void **state)
     assert_string_equal("pacemaker-2.1",
                         crm_element_value(schema_node, PCMK_XA_VERSION));
 
-    file_node = pcmk__xe_first_child(schema_node);
+    file_node = pcmk__xe_first_child(schema_node, NULL, NULL, NULL);
     i = 0;
 
     while (file_node != NULL && rngs3[i] != NULL) {

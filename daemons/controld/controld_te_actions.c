@@ -264,7 +264,8 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     int target_rc = get_target_rc(action);
 
-    action_rsc = find_xml_node(action->xml, PCMK_XE_PRIMITIVE, TRUE);
+    action_rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
+                                      NULL);
     if (action_rsc == NULL) {
         return;
     }
@@ -282,16 +283,16 @@ controld_record_action_event(pcmk__graph_action_t *action,
           <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
 */
 
-    state = create_xml_node(NULL, PCMK__XE_NODE_STATE);
+    state = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
 
     crm_xml_add(state, PCMK_XA_ID, target_uuid);
     crm_xml_add(state, PCMK_XA_UNAME, target);
 
-    rsc = create_xml_node(state, PCMK__XE_LRM);
+    rsc = pcmk__xe_create(state, PCMK__XE_LRM);
     crm_xml_add(rsc, PCMK_XA_ID, target_uuid);
 
-    rsc = create_xml_node(rsc, PCMK__XE_LRM_RESOURCES);
-    rsc = create_xml_node(rsc, PCMK__XE_LRM_RESOURCE);
+    rsc = pcmk__xe_create(rsc, PCMK__XE_LRM_RESOURCES);
+    rsc = pcmk__xe_create(rsc, PCMK__XE_LRM_RESOURCE);
     crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
 
 

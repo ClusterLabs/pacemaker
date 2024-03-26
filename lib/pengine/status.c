@@ -90,7 +90,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     if (scheduler->failed != NULL) {
         free_xml(scheduler->failed);
     }
-    scheduler->failed = create_xml_node(NULL, "failed-ops");
+    scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
 
     if (scheduler->now == NULL) {
         scheduler->now = crm_time_new(NULL);

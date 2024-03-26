@@ -318,7 +318,7 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
 static xmlNode *
 create_resource(const char *name, const char *provider, const char *kind)
 {
-    xmlNode *rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
+    xmlNode *rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
     crm_xml_add(rsc, PCMK_XA_ID, name);
     crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
@@ -374,7 +374,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
 
-        xml_obj = create_xml_node(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
+        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -391,7 +391,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
         }
 
-        xml_obj = create_xml_node(xml_ip, PCMK_XE_OPERATIONS);
+        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
         crm_create_op_xml(xml_obj, pcmk__xe_id(xml_ip), PCMK_ACTION_MONITOR,
                           "60s", NULL);
 
@@ -462,7 +462,7 @@ create_container_resource(pcmk_resource_t *parent,
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
 
-    xml_obj = create_xml_node(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
+    xml_obj = pcmk__xe_create(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
     crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
@@ -643,7 +643,7 @@ create_container_resource(pcmk_resource_t *parent,
         crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
     }
 
-    xml_obj = create_xml_node(xml_container, PCMK_XE_OPERATIONS);
+    xml_obj = pcmk__xe_create(xml_container, PCMK_XE_OPERATIONS);
     crm_create_op_xml(xml_obj, pcmk__xe_id(xml_container), PCMK_ACTION_MONITOR,
                       "60s", NULL);
 
@@ -937,8 +937,8 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 }
 
 const char *
-pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
-                           xmlNode *xml, const char *field)
+pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
+                           const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
@@ -999,11 +999,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_DOCKER);
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_DOCKER, NULL, NULL);
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {
-        xml_obj = first_named_child(rsc->xml, PCMK__XE_RKT);
+        xml_obj = pcmk__xe_first_child(rsc->xml, PCMK__XE_RKT, NULL, NULL);
         if (xml_obj != NULL) {
             pcmk__warn_once(pcmk__wo_rkt,
                             "Support for " PCMK__XE_RKT " in bundles "
@@ -1011,7 +1011,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                             "removed in a future release", rsc->id);
             bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
-            xml_obj = first_named_child(rsc->xml, PCMK_XE_PODMAN);
+            xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_PODMAN, NULL,
+                                           NULL);
             if (xml_obj != NULL) {
                 bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
             } else {
@@ -1057,7 +1058,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     bundle_data->container_network = crm_element_value_copy(xml_obj,
                                                             PCMK_XA_NETWORK);
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_NETWORK);
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_NETWORK, NULL, NULL);
     if(xml_obj) {
         bundle_data->ip_range_start =
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
@@ -1072,8 +1073,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             bundle_data->add_host = TRUE;
         }
 
-        for (xml_child = first_named_child(xml_obj, PCMK_XE_PORT_MAPPING);
-             xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
+        for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_PORT_MAPPING,
+                                              NULL, NULL);
+             xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
 
             pe__bundle_port_t *port =
                 pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
@@ -1101,9 +1103,10 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_STORAGE);
-    for (xml_child = first_named_child(xml_obj, PCMK_XE_STORAGE_MAPPING);
-         xml_child != NULL; xml_child = crm_next_same_xml(xml_child)) {
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_STORAGE, NULL, NULL);
+    for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_STORAGE_MAPPING,
+                                          NULL, NULL);
+         xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
 
         const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
         const char *target = crm_element_value(xml_child, PCMK_XA_TARGET_DIR);
@@ -1127,12 +1130,12 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, PCMK_XE_PRIMITIVE);
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_PRIMITIVE, NULL, NULL);
     if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
-        xml_resource = create_xml_node(NULL, PCMK_XE_CLONE);
+        xml_resource = pcmk__xe_create(NULL, PCMK_XE_CLONE);
 
         /* @COMPAT We no longer use the <master> tag, but we need to keep it as
          * part of the resource name, so that bundles don't restart in a rolling
@@ -1142,7 +1145,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                       (bundle_data->promoted_max? "master"
                       : (const char *)xml_resource->name));
 
-        xml_set = create_xml_node(xml_resource, PCMK_XE_META_ATTRIBUTES);
+        xml_set = pcmk__xe_create(xml_resource, PCMK_XE_META_ATTRIBUTES);
         crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,

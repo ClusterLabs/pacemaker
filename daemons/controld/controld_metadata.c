@@ -142,7 +142,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;
-        xmlNode *version_element = first_named_child(metadata, PCMK_XE_VERSION);
+        xmlNode *version_element = pcmk__xe_first_child(metadata,
+                                                        PCMK_XE_VERSION, NULL,
+                                                        NULL);
 
         if (version_element != NULL) {
             content = xmlNodeGetContent(version_element);
@@ -155,9 +157,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Check supported actions
-    match = first_named_child(metadata, PCMK_XE_ACTIONS);
-    for (match = first_named_child(match, PCMK_XE_ACTION); match != NULL;
-         match = crm_next_same_xml(match)) {
+    match = pcmk__xe_first_child(metadata, PCMK_XE_ACTIONS, NULL, NULL);
+    for (match = pcmk__xe_first_child(match, PCMK_XE_ACTION, NULL, NULL);
+         match != NULL; match = pcmk__xe_next_same(match)) {
 
         const char *action_name = crm_element_value(match, PCMK_XA_NAME);
 
@@ -177,9 +179,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Build a parameter list
-    match = first_named_child(metadata, PCMK_XE_PARAMETERS);
-    for (match = first_named_child(match, PCMK_XE_PARAMETER); match != NULL;
-         match = crm_next_same_xml(match)) {
+    match = pcmk__xe_first_child(metadata, PCMK_XE_PARAMETERS, NULL, NULL);
+    for (match = pcmk__xe_first_child(match, PCMK_XE_PARAMETER, NULL, NULL);
+         match != NULL; match = pcmk__xe_next_same(match)) {
 
         const char *param_name = crm_element_value(match, PCMK_XA_NAME);
 

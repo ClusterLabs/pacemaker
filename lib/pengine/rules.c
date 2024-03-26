@@ -190,8 +190,8 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         list = list->children;
     }
 
-    for (an_attr = pcmk__xe_first_child(list); an_attr != NULL;
-         an_attr = pcmk__xe_next(an_attr)) {
+    for (an_attr = pcmk__xe_first_child(list, NULL, NULL, NULL);
+         an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
@@ -278,8 +278,8 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     if (xml_obj == NULL) {
         return NULL;
     }
-    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
-         attr_set = pcmk__xe_next(attr_set)) {
+    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             const char *score = NULL;
@@ -386,8 +386,9 @@ pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
     // If there are no rules, pass by default
     gboolean ruleset_default = TRUE;
 
-    for (xmlNode *rule = first_named_child(ruleset, PCMK_XE_RULE);
-         rule != NULL; rule = crm_next_same_xml(rule)) {
+    for (xmlNode *rule = pcmk__xe_first_child(ruleset, PCMK_XE_RULE, NULL,
+                                              NULL);
+         rule != NULL; rule = pcmk__xe_next_same(rule)) {
 
         ruleset_default = FALSE;
         if (pe_eval_expr(rule, rule_data, next_change)) {
@@ -442,7 +443,7 @@ pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
     }
 
     crm_trace("Testing rule %s", pcmk__xe_id(rule));
-    for (expr = pcmk__xe_first_child(rule); expr != NULL;
+    for (expr = pcmk__xe_first_child(rule, NULL, NULL, NULL); expr != NULL;
          expr = pcmk__xe_next(expr)) {
 
         test = pe_eval_subexpr(expr, rule_data, next_change);

@@ -310,8 +310,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    template = pcmk__xe_match(cib_resources, PCMK_XE_TEMPLATE,
-                              PCMK_XA_ID, template_ref);
+    template = pcmk__xe_first_child(cib_resources, PCMK_XE_TEMPLATE,
+                                    PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);
         return FALSE;
@@ -323,10 +323,11 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     crm_xml_add(new_xml, PCMK__META_CLONE,
                 crm_element_value(xml_obj, PCMK__META_CLONE));
 
-    template_ops = find_xml_node(new_xml, PCMK_XE_OPERATIONS, FALSE);
+    template_ops = pcmk__xe_first_child(new_xml, PCMK_XE_OPERATIONS, NULL,
+                                        NULL);
 
-    for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
-         child_xml = pcmk__xe_next(child_xml)) {
+    for (child_xml = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         child_xml != NULL; child_xml = pcmk__xe_next(child_xml)) {
 
         xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
@@ -339,7 +340,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         xmlNode *op = NULL;
         GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
 
-        for (op = pcmk__xe_first_child(rsc_ops); op != NULL;
+        for (op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL); op != NULL;
              op = pcmk__xe_next(op)) {
 
             char *key = template_op_key(op);
@@ -347,8 +348,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             g_hash_table_insert(rsc_ops_hash, key, op);
         }
 
-        for (op = pcmk__xe_first_child(template_ops); op != NULL;
-             op = pcmk__xe_next(op)) {
+        for (op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
+             op != NULL; op = pcmk__xe_next(op)) {
 
             char *key = template_op_key(op);
 
@@ -672,7 +673,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->parent = parent;
 
-    ops = find_xml_node((*rsc)->xml, PCMK_XE_OPERATIONS, FALSE);
+    ops = pcmk__xe_first_child((*rsc)->xml, PCMK_XE_OPERATIONS, NULL, NULL);
     (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);

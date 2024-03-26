@@ -415,7 +415,7 @@ ticket_constraints_default(pcmk__output_t *out, va_list args)
     pcmk__formatted_printf(out, "Constraints XML:\n\n");
 
     if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
-        xmlNode *child = pcmk__xe_first_child(constraint_xml);
+        xmlNode *child = pcmk__xe_first_child(constraint_xml, NULL, NULL, NULL);
 
         do {
             GString *buf = g_string_sized_new(1024);
@@ -680,15 +680,15 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     } else {
         xmlNode *xml_obj = NULL;
 
-        xml_top = create_xml_node(NULL, PCMK_XE_STATUS);
-        xml_obj = create_xml_node(xml_top, PCMK_XE_TICKETS);
-        ticket_state_xml = create_xml_node(xml_obj, PCMK__XE_TICKET_STATE);
+        xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
+        xml_obj = pcmk__xe_create(xml_top, PCMK_XE_TICKETS);
+        ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
     }
 
     for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
         const char *key = (const char *)list_iter->data;
-        xml_remove_prop(ticket_state_xml, key);
+        pcmk__xe_remove_attr(ticket_state_xml, key);
     }
 
     ticket = find_ticket(ticket_id, scheduler);

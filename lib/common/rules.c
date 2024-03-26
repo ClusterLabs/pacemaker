@@ -378,8 +378,8 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
     }
 
     if (end == NULL) {
-        xmlNode *duration = first_named_child(date_expression,
-                                              PCMK_XE_DURATION);
+        xmlNode *duration = pcmk__xe_first_child(date_expression,
+                                                 PCMK_XE_DURATION, NULL, NULL);
 
         if (duration != NULL) {
             /* @COMPAT When we can break behavioral backward compatibility,
@@ -559,8 +559,9 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
         rc = evaluate_in_range(date_expression, id, now, next_change);
 
     } else if (pcmk__str_eq(op, PCMK_VALUE_DATE_SPEC, pcmk__str_casei)) {
-        xmlNode *date_spec = first_named_child(date_expression,
-                                               PCMK_XE_DATE_SPEC);
+        xmlNode *date_spec = pcmk__xe_first_child(date_expression,
+                                                  PCMK_XE_DATE_SPEC, NULL,
+                                                  NULL);
 
         if (date_spec == NULL) { // Not possible with schema validation enabled
             /* @COMPAT When we can break behavioral backward compatibility,

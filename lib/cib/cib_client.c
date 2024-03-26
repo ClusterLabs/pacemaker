@@ -400,10 +400,7 @@ cib_client_init_transaction(cib_t *cib)
     }
 
     if (rc == pcmk_rc_ok) {
-        cib->transaction = create_xml_node(NULL, PCMK__XE_CIB_TRANSACTION);
-        if (cib->transaction == NULL) {
-            rc = ENOMEM;
-        }
+        cib->transaction = pcmk__xe_create(NULL, PCMK__XE_CIB_TRANSACTION);
     }
 
     if (rc != pcmk_rc_ok) {
@@ -454,7 +451,7 @@ static int
 cib_client_fetch_schemas(cib_t *cib, xmlNode **output_data, const char *after_ver,
                          int call_options)
 {
-    xmlNode *data = create_xml_node(NULL, PCMK__XA_SCHEMA);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XA_SCHEMA);
 
     crm_xml_add(data, PCMK_XA_VERSION, after_ver);
 

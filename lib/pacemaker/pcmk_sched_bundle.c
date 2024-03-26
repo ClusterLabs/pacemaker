@@ -794,9 +794,8 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
         const char *calculated_addr = NULL;
 
         // Replace the value in replica->remote->xml (if appropriate)
-        calculated_addr = pe__add_bundle_remote_name(replica->remote,
-                                                     replica->remote->cluster,
-                                                     nvpair, PCMK_XA_VALUE);
+        calculated_addr = pe__add_bundle_remote_name(replica->remote, nvpair,
+                                                     PCMK_XA_VALUE);
         if (calculated_addr != NULL) {
             /* Since this is for the bundle as a resource, and not any
              * particular action, replace the value in the default

@@ -544,17 +544,14 @@ static int
 remove_from_section(cib_t *cib, const char *element, const char *section,
                     const char *node_name, long node_id)
 {
-    xmlNode *xml = NULL;
     int rc = pcmk_rc_ok;
+    xmlNode *xml = pcmk__xe_create(NULL, element);
 
-    xml = create_xml_node(NULL, element);
-    if (xml == NULL) {
-        return pcmk_rc_error;
-    }
     crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
         crm_xml_set_id(xml, "%ld", node_id);
     }
+
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
     free_xml(xml);
     return (rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(rc);

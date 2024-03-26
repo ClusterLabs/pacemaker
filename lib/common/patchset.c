@@ -52,7 +52,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         if (xpath != NULL) {
             int position = pcmk__xml_position(xml, pcmk__xf_deleted);
 
-            change = create_xml_node(patchset, PCMK_XE_CHANGE);
+            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
             crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
@@ -78,17 +78,17 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             GString *xpath = pcmk__element_xpath(xml);
 
             if (xpath != NULL) {
-                change = create_xml_node(patchset, PCMK_XE_CHANGE);
+                change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
                 crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
                 crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
 
-                change = create_xml_node(change, PCMK_XE_CHANGE_LIST);
+                change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
                 g_string_free(xpath, TRUE);
             }
         }
 
-        attr = create_xml_node(change, PCMK_XE_CHANGE_ATTR);
+        attr = pcmk__xe_create(change, PCMK_XE_CHANGE_ATTR);
 
         crm_xml_add(attr, PCMK_XA_NAME, (const char *) pIter->name);
         if (nodepriv->flags & pcmk__xf_deleted) {
@@ -105,8 +105,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     if (change) {
         xmlNode *result = NULL;
 
-        change = create_xml_node(change->parent, PCMK_XE_CHANGE_RESULT);
-        result = create_xml_node(change, (const char *)xml->name);
+        change = pcmk__xe_create(change->parent, PCMK_XE_CHANGE_RESULT);
+        result = pcmk__xe_create(change, (const char *)xml->name);
 
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
              pIter = pIter->next) {
@@ -133,7 +133,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
                   pcmk__xml_position(xml, pcmk__xf_skip));
 
         if (xpath != NULL) {
-            change = create_xml_node(patchset, PCMK_XE_CHANGE);
+            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
             crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
             crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
@@ -150,7 +150,8 @@ is_config_change(xmlNode *xml)
     GList *gIter = NULL;
     xml_node_private_t *nodepriv = NULL;
     xml_doc_private_t *docpriv;
-    xmlNode *config = first_named_child(xml, PCMK_XE_CONFIGURATION);
+    xmlNode *config = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
+                                           NULL);
 
     if (config) {
         nodepriv = config->_private;
@@ -196,15 +197,15 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     }
 
     tag = PCMK__XE_DIFF_REMOVED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
+    diff_child = pcmk__xe_first_child(local_diff, tag, NULL, NULL);
     if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
+        diff_child = pcmk__xe_create(local_diff, tag);
     }
 
     tag = PCMK_XE_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
+    cib = pcmk__xe_first_child(diff_child, tag, NULL, NULL);
     if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
+        cib = pcmk__xe_create(diff_child, tag);
     }
 
     for (lpc = 0; (last != NULL) && (lpc < PCMK__NELEM(vfields)); lpc++) {
@@ -217,15 +218,15 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
     }
 
     tag = PCMK__XE_DIFF_ADDED;
-    diff_child = find_xml_node(local_diff, tag, FALSE);
+    diff_child = pcmk__xe_first_child(local_diff, tag, NULL, NULL);
     if (diff_child == NULL) {
-        diff_child = create_xml_node(local_diff, tag);
+        diff_child = pcmk__xe_create(local_diff, tag);
     }
 
     tag = PCMK_XE_CIB;
-    cib = find_xml_node(diff_child, tag, FALSE);
+    cib = pcmk__xe_first_child(diff_child, tag, NULL, NULL);
     if (cib == NULL) {
-        cib = create_xml_node(diff_child, tag);
+        cib = pcmk__xe_create(diff_child, tag);
     }
 
     for (lpc = 0; next && lpc < PCMK__NELEM(vfields); lpc++) {
@@ -283,12 +284,12 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     CRM_ASSERT(target->doc);
     docpriv = target->doc->_private;
 
-    patchset = create_xml_node(NULL, PCMK_XE_DIFF);
+    patchset = pcmk__xe_create(NULL, PCMK_XE_DIFF);
     crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
 
-    version = create_xml_node(patchset, PCMK_XE_VERSION);
+    version = pcmk__xe_create(patchset, PCMK_XE_VERSION);
 
-    v = create_xml_node(version, PCMK_XE_SOURCE);
+    v = pcmk__xe_create(version, PCMK_XE_SOURCE);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         const char *value = crm_element_value(source, vfields[lpc]);
 
@@ -298,7 +299,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         crm_xml_add(v, vfields[lpc], value);
     }
 
-    v = create_xml_node(version, PCMK_XE_TARGET);
+    v = pcmk__xe_create(version, PCMK_XE_TARGET);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         const char *value = crm_element_value(target, vfields[lpc]);
 
@@ -310,7 +311,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
-        xmlNode *change = create_xml_node(patchset, PCMK_XE_CHANGE);
+        xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
         crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
         crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
@@ -488,7 +489,7 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     }
 
     // @TODO Avoiding creating the full hierarchy would save work here
-    diff = create_xml_node(parent, name);
+    diff = pcmk__xe_create(parent, name);
 
     // Changes to child objects
     for (left_child = pcmk__xml_first_child(left); left_child != NULL;
@@ -726,7 +727,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
         const char *p_name = (const char *) xIter->name;
         const char *p_value = pcmk__xml_attr_value(xIter);
 
-        xml_remove_prop(target, p_name); // Preserve patch order
+        pcmk__xe_remove_attr(target, p_name);   // Preserve patch order
         crm_xml_add(target, p_name, p_value);
     }
 
@@ -761,16 +762,18 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
         case 1:
             // @COMPAT Remove when v1 patchsets are removed
             label = added? PCMK__XE_DIFF_ADDED : PCMK__XE_DIFF_REMOVED;
-            *patch_node = find_xml_node(patchset, label, FALSE);
-            cib_node = find_xml_node(*patch_node, PCMK_XE_CIB, FALSE);
+            *patch_node = pcmk__xe_first_child(patchset, label, NULL, NULL);
+            cib_node = pcmk__xe_first_child(*patch_node, PCMK_XE_CIB, NULL,
+                                            NULL);
             if (cib_node != NULL) {
                 *patch_node = cib_node;
             }
             break;
         case 2:
             label = added? PCMK_XE_TARGET : PCMK_XE_SOURCE;
-            *patch_node = find_xml_node(patchset, PCMK_XE_VERSION, FALSE);
-            *patch_node = find_xml_node(*patch_node, label, FALSE);
+            *patch_node = pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL,
+                                               NULL);
+            *patch_node = pcmk__xe_first_child(*patch_node, label, NULL, NULL);
             break;
         default:
             crm_warn("Unknown patch format: %d", format);
@@ -905,7 +908,7 @@ purge_v1_diff_markers(xmlNode *node)
 
     CRM_CHECK(node != NULL, return);
 
-    xml_remove_prop(node, PCMK__XA_CRM_DIFF_MARKER);
+    pcmk__xe_remove_attr(node, PCMK__XA_CRM_DIFF_MARKER);
     for (child = pcmk__xml_first_child(node); child != NULL;
          child = pcmk__xml_next(child)) {
         purge_v1_diff_markers(child);
@@ -929,8 +932,10 @@ apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
     int root_nodes_seen = 0;
 
     xmlNode *child_diff = NULL;
-    xmlNode *added = find_xml_node(patchset, PCMK__XE_DIFF_ADDED, FALSE);
-    xmlNode *removed = find_xml_node(patchset, PCMK__XE_DIFF_REMOVED, FALSE);
+    xmlNode *added = pcmk__xe_first_child(patchset, PCMK__XE_DIFF_ADDED, NULL,
+                                          NULL);
+    xmlNode *removed = pcmk__xe_first_child(patchset, PCMK__XE_DIFF_REMOVED,
+                                            NULL, NULL);
     xmlNode *old = pcmk__xml_copy(NULL, xml);
 
     crm_trace("Subtraction Phase");
@@ -1192,8 +1197,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             free_xml(match);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            const xmlNode *child = first_named_child(change,
-                                                     PCMK_XE_CHANGE_RESULT);
+            const xmlNode *child = pcmk__xe_first_child(change,
+                                                        PCMK_XE_CHANGE_RESULT,
+                                                        NULL, NULL);
             const xmlNode *attrs = pcmk__xml_first_child(child);
 
             if (attrs == NULL) {
@@ -1441,9 +1447,9 @@ xmlNode *
 pcmk__diff_v1_xml_object(xmlNode *old, xmlNode *new, bool suppress)
 {
     xmlNode *tmp1 = NULL;
-    xmlNode *diff = create_xml_node(NULL, PCMK_XE_DIFF);
-    xmlNode *removed = create_xml_node(diff, PCMK__XE_DIFF_REMOVED);
-    xmlNode *added = create_xml_node(diff, PCMK__XE_DIFF_ADDED);
+    xmlNode *diff = pcmk__xe_create(NULL, PCMK_XE_DIFF);
+    xmlNode *removed = pcmk__xe_create(diff, PCMK__XE_DIFF_REMOVED);
+    xmlNode *added = pcmk__xe_create(diff, PCMK__XE_DIFF_ADDED);
 
     crm_xml_add(diff, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
@@ -1480,8 +1486,10 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     const char *version = crm_element_value(diff, PCMK_XA_CRM_FEATURE_SET);
 
     xmlNode *child_diff = NULL;
-    xmlNode *added = find_xml_node(diff, PCMK__XE_DIFF_ADDED, FALSE);
-    xmlNode *removed = find_xml_node(diff, PCMK__XE_DIFF_REMOVED, FALSE);
+    xmlNode *added = pcmk__xe_first_child(diff, PCMK__XE_DIFF_ADDED, NULL,
+                                          NULL);
+    xmlNode *removed = pcmk__xe_first_child(diff, PCMK__XE_DIFF_REMOVED, NULL,
+                                            NULL);
 
     CRM_CHECK(new_xml != NULL, return FALSE);
 

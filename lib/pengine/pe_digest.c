@@ -103,12 +103,12 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 {
     xmlNode *action_config = NULL;
 
-    data->params_all = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+    data->params_all = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
 
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
      */
-    (void) pe__add_bundle_remote_name(rsc, scheduler, data->params_all,
+    (void) pe__add_bundle_remote_name(rsc, data->params_all,
                                       PCMK_REMOTE_RA_ADDR);
 
     if (overrides != NULL) {
@@ -199,7 +199,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (old_version) {
-        data->params_secure = create_xml_node(NULL, PCMK_XE_PARAMETERS);
+        data->params_secure = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
         if (overrides != NULL) {
             g_hash_table_foreach(overrides, hash2field, data->params_secure);
         }
@@ -235,7 +235,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
      * Remove any timeout that made it this far, to match.
      */
     if (old_version) {
-        xml_remove_prop(data->params_secure, CRM_META "_" PCMK_META_TIMEOUT);
+        pcmk__xe_remove_attr(data->params_secure,
+                             CRM_META "_" PCMK_META_TIMEOUT);
     }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
@@ -307,10 +308,13 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                       const xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pcmk_scheduler_t *scheduler)
 {
-    pcmk__op_digest_t *data = calloc(1, sizeof(pcmk__op_digest_t));
+    pcmk__op_digest_t *data = NULL;
     const char *op_version = NULL;
     GHashTable *params = NULL;
 
+    CRM_CHECK(scheduler != NULL, return NULL);
+
+    data = calloc(1, sizeof(pcmk__op_digest_t));
     if (data == NULL) {
         pcmk__sched_err("Could not allocate memory for operation digest");
         return NULL;
@@ -322,7 +326,7 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
         op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     }
 
-    if (op_version == NULL && scheduler != NULL && scheduler->input != NULL) {
+    if ((op_version == NULL) && (scheduler->input != NULL)) {
         op_version = crm_element_value(scheduler->input,
                                        PCMK_XA_CRM_FEATURE_SET);
     }

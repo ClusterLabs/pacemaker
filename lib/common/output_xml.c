@@ -111,10 +111,10 @@ add_root_node(pcmk__output_t *out)
     priv = out->priv;
 
     if (priv->legacy_xml) {
-        priv->root = create_xml_node(NULL, PCMK_XE_CRM_MON);
+        priv->root = pcmk__xe_create(NULL, PCMK_XE_CRM_MON);
         crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
     } else {
-        priv->root = create_xml_node(NULL, PCMK_XE_PACEMAKER_RESULT);
+        priv->root = pcmk__xe_create(NULL, PCMK_XE_PACEMAKER_RESULT);
         crm_xml_add(priv->root, PCMK_XA_API_VERSION, PCMK__API_VERSION);
         crm_xml_add(priv->root, PCMK_XA_REQUEST,
                     pcmk__s(out->request, "libpacemaker"));
@@ -173,9 +173,11 @@ xml_init(pcmk__output_t *out) {
 
 static void
 add_error_node(gpointer data, gpointer user_data) {
-    char *str = (char *) data;
+    const char *str = (const char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
-    pcmk_create_xml_text_node(node, PCMK_XE_ERROR, str);
+
+    node = pcmk__xe_create(node, PCMK_XE_ERROR);
+    pcmk__xe_set_content(node, "%s", str);
 }
 
 static void
@@ -206,14 +208,14 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     } else {
         char *rc_as_str = pcmk__itoa(exit_status);
 
-        node = create_xml_node(priv->root, PCMK_XE_STATUS);
+        node = pcmk__xe_create(priv->root, PCMK_XE_STATUS);
         pcmk__xe_set_props(node,
                            PCMK_XA_CODE, rc_as_str,
                            PCMK_XA_MESSAGE, crm_exit_str(exit_status),
                            NULL);
 
         if (g_slist_length(priv->errors) > 0) {
-            xmlNodePtr errors_node = create_xml_node(node, PCMK_XE_ERRORS);
+            xmlNodePtr errors_node = pcmk__xe_create(node, PCMK_XE_ERRORS);
             g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
         }
 
@@ -255,14 +257,14 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
                                           NULL);
 
     if (proc_stdout != NULL) {
-        child_node = pcmk_create_xml_text_node(node, PCMK_XE_OUTPUT,
-                                               proc_stdout);
+        child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
+        pcmk__xe_set_content(child_node, "%s", proc_stdout);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
-        child_node = pcmk_create_xml_text_node(node, PCMK_XE_OUTPUT,
-                                               proc_stderr);
+        child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
+        pcmk__xe_set_content(child_node, "%s", proc_stderr);
         crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
@@ -523,7 +525,7 @@ pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
 
     priv = out->priv;
 
-    node = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
+    node = pcmk__xe_create(g_queue_peek_tail(priv->parent_q), name);
     va_start(args, name);
     pcmk__xe_set_propv(node, args);
     va_end(args);
@@ -539,7 +541,7 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
-    pcmk__xe_set_content(node, content);
+    pcmk__xe_set_content(node, "%s", content);
     return node;
 }
 

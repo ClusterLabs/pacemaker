@@ -192,7 +192,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
         result = -ENXIO;
 
     } else if (options & cib_no_children) {
-        xmlNode *shallow = create_xml_node(*answer,
+        xmlNode *shallow = pcmk__xe_create(*answer,
                                            (const char *) obj_root->name);
 
         copy_in_properties(shallow, obj_root);
@@ -487,7 +487,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
             return -EINVAL;
         }
 
-        tmp_section = create_xml_node(NULL, section);
+        tmp_section = pcmk__xe_create(NULL, section);
         cib_process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
                           NULL, result_cib, answer);
         free_xml(tmp_section);
@@ -553,14 +553,15 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     if (object_id == NULL) {
         /*  placeholder object */
-        target = find_xml_node(parent, object_name, FALSE);
+        target = pcmk__xe_first_child(parent, object_name, NULL, NULL);
 
     } else {
-        target = pcmk__xe_match(parent, object_name, PCMK_XA_ID, object_id);
+        target = pcmk__xe_first_child(parent, object_name, PCMK_XA_ID,
+                                      object_id);
     }
 
     if (target == NULL) {
-        target = create_xml_node(parent, object_name);
+        target = pcmk__xe_create(parent, object_name);
     }
 
     crm_trace("Found node <%s%s%s%s> to update", object_name,
@@ -578,8 +579,14 @@ update_cib_object(xmlNode * parent, xmlNode * update)
             if (replace[lpc] == ',' || replace[lpc] == 0) {
                 if (last != lpc) {
                     char *replace_item = strndup(replace + last, lpc - last);
-                    xmlNode *remove = find_xml_node(target, replace_item,
-                                                    FALSE);
+                    xmlNode *remove = NULL;
+
+                    if (replace_item == NULL) {
+                        return -errno;
+                    }
+
+                    remove = pcmk__xe_first_child(target, replace_item, NULL,
+                                                  NULL);
 
                     if (remove != NULL) {
                         crm_trace("Replacing node <%s> in <%s>",
@@ -591,8 +598,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                 last = lpc + 1;
             }
         }
-        xml_remove_prop(update, PCMK__XA_REPLACE);
-        xml_remove_prop(target, PCMK__XA_REPLACE);
+        pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
+        pcmk__xe_remove_attr(target, PCMK__XA_REPLACE);
     }
 
     copy_in_properties(target, update);
@@ -671,9 +678,10 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
               ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
-        equiv_node = find_xml_node(parent, object_name, FALSE);
+        equiv_node = pcmk__xe_first_child(parent, object_name, NULL, NULL);
     } else {
-        equiv_node = pcmk__xe_match(parent, object_name, PCMK_XA_ID, object_id);
+        equiv_node = pcmk__xe_first_child(parent, object_name, PCMK_XA_ID,
+                                          object_id);
     }
     if (equiv_node != NULL) {
         return -EEXIST;
@@ -694,7 +702,7 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         error_msg = pcmk_strerror(return_code);
 
         was_error = true;
-        xml_node = create_xml_node(failed, PCMK__XE_FAILED_UPDATE);
+        xml_node = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
         pcmk__xml_copy(xml_node, target);
 
         crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
@@ -741,7 +749,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
                                   answer);
     }
 
-    failed = create_xml_node(NULL, PCMK__XE_FAILED);
+    failed = pcmk__xe_create(NULL, PCMK__XE_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);
     if (pcmk__xe_is(input, section)) {
@@ -901,7 +909,7 @@ cib_process_xpath(const char *op, int options, const char *section,
 
     } else if (is_query) {
         if (max > 1) {
-            *answer = create_xml_node(NULL, PCMK__XE_XPATH_QUERY);
+            *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
         }
     }
 
@@ -949,7 +957,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
 
             if (options & cib_no_children) {
-                xmlNode *shallow = create_xml_node(*answer,
+                xmlNode *shallow = pcmk__xe_create(*answer,
                                                    (const char *) match->name);
 
                 copy_in_properties(shallow, match);
@@ -982,9 +990,9 @@ cib_process_xpath(const char *op, int options, const char *section,
                 crm_trace("Got: %s", path);
 
                 if (*answer == NULL) {
-                    *answer = create_xml_node(NULL, PCMK__XE_XPATH_QUERY);
+                    *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
                 }
-                parent = create_xml_node(*answer, PCMK__XE_XPATH_QUERY_PATH);
+                parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
                 crm_xml_add(parent, PCMK_XA_ID, path);
                 free(path);
 

@@ -311,8 +311,8 @@ attrd_request_sync_point(xmlNode *xml)
     CRM_CHECK(xml != NULL, return NULL);
 
     if (xml->children != NULL) {
-        xmlNode *child = pcmk__xe_match(xml, PCMK_XE_OP,
-                                        PCMK__XA_ATTR_SYNC_POINT, NULL);
+        xmlNode *child = pcmk__xe_first_child(xml, PCMK_XE_OP,
+                                              PCMK__XA_ATTR_SYNC_POINT, NULL);
 
         if (child) {
             return crm_element_value(child, PCMK__XA_ATTR_SYNC_POINT);

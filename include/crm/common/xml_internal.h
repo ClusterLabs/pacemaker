@@ -210,9 +210,11 @@ enum pcmk__xml_artefact_ns {
 void pcmk__strip_xml_text(xmlNode *xml);
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
-xmlNode *pcmk__xe_match(const xmlNode *parent, const char *node_name,
-                        const char *attr_n, const char *attr_v);
+xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
+                              const char *attr_n, const char *attr_v);
 
+
+void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
@@ -315,25 +317,6 @@ pcmk__xml_next(const xmlNode *child)
 
 /*!
  * \internal
- * \brief Return first non-text child element of an XML node
- *
- * \param[in] parent  XML node to check
- *
- * \return First child element of \p parent (or NULL if none)
- */
-static inline xmlNode *
-pcmk__xe_first_child(const xmlNode *parent)
-{
-    xmlNode *child = (parent? parent->children : NULL);
-
-    while (child && (child->type != XML_ELEMENT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-/*!
- * \internal
  * \brief Return next non-text sibling element of an XML element
  *
  * \param[in] child  XML element to check
@@ -351,9 +334,12 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+xmlNode *pcmk__xe_next_same(const xmlNode *node);
 
-void pcmk__xe_set_content(xmlNode *node, const char *content);
+void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
+    G_GNUC_PRINTF(2, 3);
 
 /*!
  * \internal

@@ -57,7 +57,8 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
     xmlNode *xml_constraints = pcmk_find_cib_element(scheduler->input,
                                                      PCMK_XE_CONSTRAINTS);
 
-    for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
+    for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints, NULL, NULL,
+                                                 NULL);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         xmlNode *lifetime = NULL;
@@ -72,7 +73,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
 
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
-        lifetime = first_named_child(xml_obj, PCMK__XE_LIFETIME);
+        lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
         if (lifetime != NULL) {
             pcmk__config_warn("Support for '" PCMK__XE_LIFETIME "' element "
                               "(in %s) is deprecated (the rules it contains "
@@ -220,20 +221,23 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
     bool any_refs = false;
 
     // Short-circuit if there are no sets
-    if (first_named_child(xml_obj, PCMK_XE_RESOURCE_SET) == NULL) {
+    if (pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL,
+                             NULL) == NULL) {
         return NULL;
     }
 
     new_xml = pcmk__xml_copy(NULL, xml_obj);
 
-    for (xmlNode *set = first_named_child(new_xml, PCMK_XE_RESOURCE_SET);
-         set != NULL; set = crm_next_same_xml(set)) {
+    for (xmlNode *set = pcmk__xe_first_child(new_xml, PCMK_XE_RESOURCE_SET,
+                                             NULL, NULL);
+         set != NULL; set = pcmk__xe_next_same(set)) {
 
         GList *tag_refs = NULL;
         GList *iter = NULL;
 
-        for (xmlNode *xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
-             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+        for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
+                                                     NULL, NULL);
+             xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
             pcmk_resource_t *rsc = NULL;
             pcmk_tag_t *tag = NULL;
@@ -369,14 +373,14 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          * template or tag. Add the corresponding PCMK_XE_RESOURCE_SET
          * containing the resources derived from or tagged with it.
          */
-        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
+        *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
         for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
             const char *obj_ref = iter->data;
             xmlNode *rsc_ref = NULL;
 
-            rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
+            rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
             crm_xml_add(rsc_ref, PCMK_XA_ID, obj_ref);
         }
 
@@ -390,10 +394,10 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
          */
         xmlNode *rsc_ref = NULL;
 
-        *rsc_set = create_xml_node(xml_obj, PCMK_XE_RESOURCE_SET);
+        *rsc_set = pcmk__xe_create(xml_obj, PCMK_XE_RESOURCE_SET);
         crm_xml_add(*rsc_set, PCMK_XA_ID, id);
 
-        rsc_ref = create_xml_node(*rsc_set, PCMK_XE_RESOURCE_REF);
+        rsc_ref = pcmk__xe_create(*rsc_set, PCMK_XE_RESOURCE_REF);
         crm_xml_add(rsc_ref, PCMK_XA_ID, id);
 
     } else {
@@ -402,7 +406,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     /* Remove the "attr" attribute referencing the template/tag */
     if (*rsc_set != NULL) {
-        xml_remove_prop(xml_obj, attr);
+        pcmk__xe_remove_attr(xml_obj, attr);
     }
 
     return true;

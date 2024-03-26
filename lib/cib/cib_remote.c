@@ -380,7 +380,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     /* login to server */
-    login = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
+    login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     crm_xml_add(login, PCMK_XA_OP, "authenticate");
     crm_xml_add(login, PCMK_XA_USER, private->user);
     crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
@@ -539,7 +539,7 @@ cib_remote_inputfd(cib_t * cib)
 static int
 cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 {
-    xmlNode *notify_msg = create_xml_node(NULL, PCMK__XE_CIB_COMMAND);
+    xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);

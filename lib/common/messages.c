@@ -61,7 +61,7 @@ create_request_adv(const char *task, xmlNode *msg_data,
     }
 
     // host_from will get set for us if necessary by the controller when routed
-    request = create_xml_node(NULL, __func__);
+    request = pcmk__xe_create(NULL, __func__);
     crm_xml_add(request, PCMK_XA_ORIGIN, origin);
     crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_CRMD);
     crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
@@ -127,12 +127,8 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
          */
         crm_trace("Creating a reply for a non-request original message");
     }
-    reply = create_xml_node(NULL, __func__);
-    if (reply == NULL) {
-        crm_err("Cannot create new_message, malloc failed");
-        return NULL;
-    }
 
+    reply = pcmk__xe_create(NULL, __func__);
     crm_xml_add(reply, PCMK_XA_ORIGIN, origin);
     crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CRMD);
     crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
@@ -159,13 +155,15 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 xmlNode *
 get_message_xml(const xmlNode *msg, const char *field)
 {
-    return pcmk__xe_first_child(first_named_child(msg, field));
+    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
+
+    return pcmk__xe_first_child(child, NULL, NULL, NULL);
 }
 
 gboolean
 add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
 {
-    xmlNode *holder = create_xml_node(msg, field);
+    xmlNode *holder = pcmk__xe_create(msg, field);
 
     pcmk__xml_copy(holder, xml);
     return TRUE;

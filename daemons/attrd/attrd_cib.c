@@ -346,31 +346,19 @@ static int
 add_set_attr_update(const attribute_t *attr, const char *attr_id,
                     const char *node_id, const char *set_id, const char *value)
 {
-    xmlNode *update = create_xml_node(NULL, PCMK__XE_NODE_STATE);
+    xmlNode *update = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
     xmlNode *child = update;
     int rc = ENOMEM;
 
-    if (child == NULL) {
-        goto done;
-    }
     crm_xml_add(child, PCMK_XA_ID, node_id);
 
-    child = create_xml_node(child, PCMK__XE_TRANSIENT_ATTRIBUTES);
-    if (child == NULL) {
-        goto done;
-    }
+    child = pcmk__xe_create(child, PCMK__XE_TRANSIENT_ATTRIBUTES);
     crm_xml_add(child, PCMK_XA_ID, node_id);
 
-    child = create_xml_node(child, attr->set_type);
-    if (child == NULL) {
-        goto done;
-    }
+    child = pcmk__xe_create(child, attr->set_type);
     crm_xml_add(child, PCMK_XA_ID, set_id);
 
-    child = create_xml_node(child, PCMK_XE_NVPAIR);
-    if (child == NULL) {
-        goto done;
-    }
+    child = pcmk__xe_create(child, PCMK_XE_NVPAIR);
     crm_xml_add(child, PCMK_XA_ID, attr_id);
     crm_xml_add(child, PCMK_XA_NAME, attr->id);
     crm_xml_add(child, PCMK_XA_VALUE, value);
@@ -379,7 +367,6 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
                                cib_can_create|cib_transaction);
     rc = pcmk_legacy2rc(rc);
 
-done:
     free_xml(update);
     return rc;
 }

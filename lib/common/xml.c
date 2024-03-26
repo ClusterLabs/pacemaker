@@ -336,7 +336,8 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
         const char *id = pcmk__xe_id(needle);
         const char *attr = (id == NULL)? NULL : PCMK_XA_ID;
 
-        return pcmk__xe_match(haystack, (const char *) needle->name, attr, id);
+        return pcmk__xe_first_child(haystack, (const char *) needle->name, attr,
+                                    id);
     }
 }
 
@@ -365,74 +366,71 @@ xml_accept_changes(xmlNode * xml)
     accept_attr_deletions(top);
 }
 
-xmlNode *
-find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
-{
-    xmlNode *a_child = NULL;
-    const char *name = (root == NULL)? "<NULL>" : (const char *) root->name;
-
-    if (search_path == NULL) {
-        crm_warn("Will never find <NULL>");
-        return NULL;
-    }
-
-    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
-        if (strcmp((const char *)a_child->name, search_path) == 0) {
-            return a_child;
-        }
-    }
-
-    if (must_find) {
-        crm_warn("Could not find %s in %s.", search_path, name);
-    } else if (root != NULL) {
-        crm_trace("Could not find %s in %s.", search_path, name);
-    } else {
-        crm_trace("Could not find %s in <NULL>.", search_path);
-    }
-
-    return NULL;
-}
-
-#define attr_matches(c, n, v) pcmk__str_eq(crm_element_value((c), (n)), \
-                                           (v), pcmk__str_none)
-
 /*!
  * \internal
  * \brief Find first XML child element matching given criteria
  *
- * \param[in] parent     XML element to search
- * \param[in] node_name  If not NULL, only match children of this type
- * \param[in] attr_n     If not NULL, only match children with an attribute
+ * \param[in] parent     XML element to search (can be \c NULL)
+ * \param[in] node_name  If not \c NULL, only match children of this type
+ * \param[in] attr_n     If not \c NULL, only match children with an attribute
  *                       of this name.
  * \param[in] attr_v     If \p attr_n and this are not NULL, only match children
  *                       with an attribute named \p attr_n and this value
  *
- * \return Matching XML child element, or NULL if none found
+ * \return Matching XML child element, or \c NULL if none found
  */
 xmlNode *
-pcmk__xe_match(const xmlNode *parent, const char *node_name,
-               const char *attr_n, const char *attr_v)
+pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
+                     const char *attr_n, const char *attr_v)
 {
-    CRM_CHECK(parent != NULL, return NULL);
-    CRM_CHECK(attr_v == NULL || attr_n != NULL, return NULL);
+    xmlNode *child = NULL;
+    const char *parent_name = "<null>";
 
-    for (xmlNode *child = pcmk__xe_first_child(parent); child != NULL;
-         child = pcmk__xe_next(child)) {
-        if (((node_name == NULL) || pcmk__xe_is(child, node_name))
-            && ((attr_n == NULL) ||
-                (attr_v == NULL && xmlHasProp(child, (pcmkXmlStr) attr_n)) ||
-                (attr_v != NULL && attr_matches(child, attr_n, attr_v)))) {
+    CRM_CHECK((attr_v == NULL) || (attr_n != NULL), return NULL);
+
+    if (parent != NULL) {
+        child = parent->children;
+        while ((child != NULL) && (child->type != XML_ELEMENT_NODE)) {
+            child = child->next;
+        }
+
+        parent_name = (const char *) parent->name;
+    }
+
+    for (; child != NULL; child = pcmk__xe_next(child)) {
+        const char *value = NULL;
+
+        if ((node_name != NULL) && !pcmk__xe_is(child, node_name)) {
+            // Node name mismatch
+            continue;
+        }
+        if (attr_n == NULL) {
+            // No attribute match needed
+            return child;
+        }
+
+        value = crm_element_value(child, attr_n);
+
+        if ((attr_v == NULL) && (value != NULL)) {
+            // attr_v == NULL: Attribute attr_n must be set (to any value)
+            return child;
+        }
+        if ((attr_v != NULL) && (pcmk__str_eq(value, attr_v, pcmk__str_none))) {
+            // attr_v != NULL: Attribute attr_n must be set to value attr_v
             return child;
         }
     }
-    crm_trace("XML child node <%s%s%s%s%s> not found in %s",
-              (node_name? node_name : "(any)"),
-              (attr_n? " " : ""),
-              (attr_n? attr_n : ""),
-              (attr_n? "=" : ""),
-              (attr_n? attr_v : ""),
-              (const char *) parent->name);
+
+    if (node_name == NULL) {
+        node_name = "(any)";    // For logging
+    }
+    if (attr_n != NULL) {
+        crm_trace("XML child node <%s %s=%s> not found in %s",
+                  node_name, attr_n, attr_v, parent_name);
+    } else {
+        crm_trace("XML child node <%s> not found in %s",
+                  node_name, parent_name);
+    }
     return NULL;
 }
 
@@ -481,8 +479,9 @@ fix_plus_plus_recursive(xmlNode *target)
 
         expand_plus_plus(target, p_name, p_value);
     }
-    for (child = pcmk__xe_first_child(target); child != NULL;
+    for (child = pcmk__xe_first_child(target, NULL, NULL, NULL); child != NULL;
          child = pcmk__xe_next(child)) {
+
         fix_plus_plus_recursive(child);
     }
 }
@@ -566,6 +565,56 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
 
 /*!
  * \internal
+ * \brief Remove an XML attribute from an element
+ *
+ * \param[in,out] element  XML element that owns \p attr
+ * \param[in,out] attr     XML attribute to remove from \p element
+ *
+ * \return Standard Pacemaker return code (\c EPERM if ACLs prevent removal of
+ *         attributes from \p element, or \c pcmk_rc_ok otherwise)
+ */
+static int
+remove_xe_attr(xmlNode *element, xmlAttr *attr)
+{
+    if (attr == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
+        // ACLs apply to element, not to particular attributes
+        crm_trace("ACLs prevent removal of attributes from %s element",
+                  (const char *) element->name);
+        return EPERM;
+    }
+
+    if (pcmk__tracking_xml_changes(element, false)) {
+        // Leave in place (marked for removal) until after diff is calculated
+        set_parent_flag(element, pcmk__xf_dirty);
+        pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
+                            pcmk__xf_deleted);
+    } else {
+        xmlRemoveProp(attr);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Remove a named attribute from an XML element
+ *
+ * \param[in,out] element  XML element to remove an attribute from
+ * \param[in]     name     Name of attribute to remove
+ */
+void
+pcmk__xe_remove_attr(xmlNode *element, const char *name)
+{
+    if (name != NULL) {
+        remove_xe_attr(element, xmlHasProp(element, (pcmkXmlStr) name));
+    }
+}
+
+/*!
+ * \internal
  * \brief Remove an XML element's attributes that match some criteria
  *
  * \param[in,out] element    XML element to modify
@@ -583,54 +632,44 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
-                crm_trace("ACLs prevent removal of attributes (%s and "
-                          "possibly others) from %s element",
-                          (const char *) a->name, (const char *) element->name);
-                return; // ACLs apply to element, not particular attributes
-            }
-
-            if (pcmk__tracking_xml_changes(element, false)) {
-                // Leave (marked for removal) until after diff is calculated
-                set_parent_flag(element, pcmk__xf_dirty);
-                pcmk__set_xml_flags((xml_node_private_t *) a->_private,
-                                    pcmk__xf_deleted);
-            } else {
-                xmlRemoveProp(a);
+            if (remove_xe_attr(element, a) != pcmk_rc_ok) {
+                return;
             }
         }
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a new XML element under a given parent
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ *
+ * \return Newly created XML element (guaranteed not to be \c NULL)
+ */
 xmlNode *
-create_xml_node(xmlNode * parent, const char *name)
+pcmk__xe_create(xmlNode *parent, const char *name)
 {
-    xmlDoc *doc = NULL;
     xmlNode *node = NULL;
 
-    if (pcmk__str_empty(name)) {
-        CRM_CHECK(name != NULL && name[0] == 0, return NULL);
-        return NULL;
-    }
+    CRM_ASSERT(!pcmk__str_empty(name));
 
     if (parent == NULL) {
-        doc = xmlNewDoc(PCMK__XML_VERSION);
-        if (doc == NULL) {
-            return NULL;
-        }
+        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+
+        pcmk__mem_assert(doc);
 
         node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            xmlFreeDoc(doc);
-            return NULL;
-        }
+        pcmk__mem_assert(node);
+
         xmlDocSetRootElement(doc, node);
 
     } else {
         node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            return NULL;
-        }
+        pcmk__mem_assert(node);
     }
     pcmk__mark_xml_created(node);
     return node;
@@ -638,48 +677,53 @@ create_xml_node(xmlNode * parent, const char *name)
 
 /*!
  * \internal
- * \brief Set a given string as an XML node's content
+ * \brief Set a formatted string as an XML node's content
  *
- * \param[in,out] node     Node whose content to set
- * \param[in]     content  String to set as the content
+ * \param[in,out] node    Node whose content to set
+ * \param[in]     format  <tt>printf(3)</tt>-style format string
+ * \param[in]     ...     Arguments for \p format
  *
- * \note \c xmlNodeSetContent() does not escape special characters.
+ * \note This function escapes special characters. \c xmlNodeSetContent() does
+ *       not.
  */
+G_GNUC_PRINTF(2, 3)
 void
-pcmk__xe_set_content(xmlNode *node, const char *content)
+pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 {
     if (node != NULL) {
-        char *escaped = pcmk__xml_escape(content, false);
+        const char *content = NULL;
+        char *buf = NULL;
 
-        xmlNodeSetContent(node, (pcmkXmlStr) escaped);
-        free(escaped);
+        if (strchr(format, '%') == NULL) {
+            // Nothing to format
+            content = format;
+
+        } else {
+            va_list ap;
+
+            va_start(ap, format);
+
+            if (pcmk__str_eq(format, "%s", pcmk__str_none)) {
+                // No need to make a copy
+                content = va_arg(ap, const char *);
+
+            } else {
+                CRM_ASSERT(vasprintf(&buf, format, ap) >= 0);
+                content = buf;
+            }
+            va_end(ap);
+        }
+
+        if (pcmk__xml_needs_escape(content, false)) {
+            char *escaped = pcmk__xml_escape(content, false);
+
+            free(buf);
+            buf = escaped;
+            content = buf;
+        }
+        xmlNodeSetContent(node, (pcmkXmlStr) content);
+        free(buf);
     }
-}
-
-xmlNode *
-pcmk_create_xml_text_node(xmlNode * parent, const char *name, const char *content)
-{
-    xmlNode *node = create_xml_node(parent, name);
-
-    pcmk__xe_set_content(node, content);
-    return node;
-}
-
-xmlNode *
-pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id,
-                      const char *class_name, const char *text)
-{
-    xmlNode *node = pcmk_create_xml_text_node(parent, element_name, text);
-
-    if (class_name != NULL) {
-        crm_xml_add(node, PCMK_XA_CLASS, class_name);
-    }
-
-    if (id != NULL) {
-        crm_xml_add(node, PCMK_XA_ID, id);
-    }
-
-    return node;
 }
 
 /*!
@@ -1165,28 +1209,6 @@ pcmk__xml_escape(const char *text, bool escape_quote)
     return copy;
 }
 
-void
-xml_remove_prop(xmlNode * obj, const char *name)
-{
-    if (crm_element_value(obj, name) == NULL) {
-        return;
-    }
-
-    if (pcmk__check_acl(obj, NULL, pcmk__xf_acl_write) == FALSE) {
-        crm_trace("Cannot remove %s from %s", name, obj->name);
-
-    } else if (pcmk__tracking_xml_changes(obj, FALSE)) {
-        /* Leave in place (marked for removal) until after the diff is calculated */
-        xmlAttr *attr = xmlHasProp(obj, (pcmkXmlStr) name);
-        xml_node_private_t *nodepriv = attr->_private;
-
-        set_parent_flag(obj, pcmk__xf_dirty);
-        pcmk__set_xml_flags(nodepriv, pcmk__xf_deleted);
-    } else {
-        xmlUnsetProp(obj, (pcmkXmlStr) name);
-    }
-}
-
 /*!
  * \internal
  * \brief Set a flag on all attributes of an XML element
@@ -1236,7 +1258,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     nodepriv->flags = 0;
 
     // Check ACLs and mark restored value for later removal
-    xml_remove_prop(new_xml, attr_name);
+    remove_xe_attr(new_xml, attr);
 
     crm_trace("XML attribute %s=%s was removed from %s",
               attr_name, old_value, element);
@@ -1658,13 +1680,12 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(target != NULL || parent != NULL, return);
 
     if (target == NULL) {
-        target = pcmk__xe_match(parent, object_name,
-                                object_href, object_href_val);
+        target = pcmk__xe_first_child(parent, object_name,
+                                      object_href, object_href_val);
     }
 
     if (target == NULL) {
-        target = create_xml_node(parent, object_name);
-        CRM_CHECK(target != NULL, return);
+        target = pcmk__xe_create(parent, object_name);
 #if XML_PARSER_DEBUG
         crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
@@ -1772,7 +1793,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
 
     } else {
         if (*children == NULL) {
-            *children = create_xml_node(NULL, __func__);
+            *children = pcmk__xe_create(NULL, __func__);
         }
         pcmk__xml_copy(*children, root);
         match_found = 1;
@@ -1881,13 +1902,13 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 
     CRM_CHECK(input != NULL, return NULL);
 
-    result = create_xml_node(parent, (const char *) input->name);
+    result = pcmk__xe_create(parent, (const char *) input->name);
     nvpairs = pcmk_xml_attrs2nvpairs(input);
     nvpairs = pcmk_sort_nvpairs(nvpairs);
     pcmk_nvpairs2xml_attrs(nvpairs, result);
     pcmk_free_nvpairs(nvpairs);
 
-    for (child = pcmk__xe_first_child(input); child != NULL;
+    for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
          child = pcmk__xe_next(child)) {
 
         if (recursive) {
@@ -1900,42 +1921,23 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     return result;
 }
 
-xmlNode *
-first_named_child(const xmlNode *parent, const char *name)
-{
-    xmlNode *match = NULL;
-
-    for (match = pcmk__xe_first_child(parent); match != NULL;
-         match = pcmk__xe_next(match)) {
-        /*
-         * name == NULL gives first child regardless of name; this is
-         * semantically incorrect in this function, but may be necessary
-         * due to prior use of xml_child_iter_filter
-         */
-        if ((name == NULL) || pcmk__xe_is(match, name)) {
-            return match;
-        }
-    }
-    return NULL;
-}
-
 /*!
- * \brief Get next instance of same XML tag
+ * \internal
+ * \brief Get next sibling XML element with the same name as a given element
  *
- * \param[in] sibling  XML tag to start from
+ * \param[in] node  XML element to start from
  *
- * \return Next sibling XML tag with same name
+ * \return Next sibling XML element with same name
  */
 xmlNode *
-crm_next_same_xml(const xmlNode *sibling)
+pcmk__xe_next_same(const xmlNode *node)
 {
-    xmlNode *match = pcmk__xe_next(sibling);
+    for (xmlNode *match = pcmk__xe_next(node); match != NULL;
+         match = pcmk__xe_next(match)) {
 
-    while (match != NULL) {
-        if (pcmk__xe_is(match, (const char *) sibling->name)) {
+        if (pcmk__xe_is(match, (const char *) node->name)) {
             return match;
         }
-        match = pcmk__xe_next(match);
     }
     return NULL;
 }
@@ -2137,8 +2139,8 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 xmlNode *
 find_entity(xmlNode *parent, const char *node_name, const char *id)
 {
-    return pcmk__xe_match(parent, node_name,
-                          ((id == NULL)? id : PCMK_XA_ID), id);
+    return pcmk__xe_first_child(parent, node_name,
+                                ((id == NULL)? id : PCMK_XA_ID), id);
 }
 
 void
@@ -2267,6 +2269,97 @@ copy_xml(xmlNode *src)
 
     xmlDocSetRootElement(doc, copy);
     return copy;
+}
+
+xmlNode *
+create_xml_node(xmlNode *parent, const char *name)
+{
+    // Like pcmk__xe_create(), but returns NULL on failure
+    xmlNode *node = NULL;
+
+    CRM_CHECK(!pcmk__str_empty(name), return NULL);
+
+    if (parent == NULL) {
+        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
+
+        if (doc == NULL) {
+            return NULL;
+        }
+
+        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            xmlFreeDoc(doc);
+            return NULL;
+        }
+        xmlDocSetRootElement(doc, node);
+
+    } else {
+        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        if (node == NULL) {
+            return NULL;
+        }
+    }
+    pcmk__mark_xml_created(node);
+    return node;
+}
+
+xmlNode *
+pcmk_create_xml_text_node(xmlNode *parent, const char *name,
+                          const char *content)
+{
+    xmlNode *node = pcmk__xe_create(parent, name);
+
+    pcmk__xe_set_content(node, "%s", content);
+    return node;
+}
+
+xmlNode *
+pcmk_create_html_node(xmlNode *parent, const char *element_name, const char *id,
+                      const char *class_name, const char *text)
+{
+    xmlNode *node = pcmk__html_create(parent, element_name, id, class_name);
+
+    pcmk__xe_set_content(node, "%s", text);
+    return node;
+}
+
+xmlNode *
+first_named_child(const xmlNode *parent, const char *name)
+{
+    return pcmk__xe_first_child(parent, name, NULL, NULL);
+}
+
+xmlNode *
+find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
+{
+    xmlNode *result = NULL;
+
+    if (search_path == NULL) {
+        crm_warn("Will never find <NULL>");
+        return NULL;
+    }
+
+    result = pcmk__xe_first_child(root, search_path, NULL, NULL);
+
+    if (must_find && (result == NULL)) {
+        crm_warn("Could not find %s in %s",
+                 search_path,
+                 ((root != NULL)? (const char *) root->name : "<NULL>"));
+    }
+
+    return result;
+}
+
+xmlNode *
+crm_next_same_xml(const xmlNode *sibling)
+{
+    return pcmk__xe_next_same(sibling);
+}
+
+void
+xml_remove_prop(xmlNode * obj, const char *name)
+{
+    pcmk__xe_remove_attr(obj, name);
 }
 
 // LCOV_EXCL_STOP

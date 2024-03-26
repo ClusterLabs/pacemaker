@@ -543,15 +543,16 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     const char *remote_allow_migrate=NULL;
     const char *is_managed = NULL;
 
-    for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
-         attr_set = pcmk__xe_next(attr_set)) {
+    for (attr_set = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if (!pcmk__xe_is(attr_set, PCMK_XE_META_ATTRIBUTES)) {
             continue;
         }
 
-        for (attr = pcmk__xe_first_child(attr_set); attr != NULL;
-             attr = pcmk__xe_next(attr)) {
+        for (attr = pcmk__xe_first_child(attr_set, NULL, NULL, NULL);
+             attr != NULL; attr = pcmk__xe_next(attr)) {
+
             const char *value = crm_element_value(attr, PCMK_XA_VALUE);
             const char *name = crm_element_value(attr, PCMK_XA_NAME);
 
@@ -630,8 +631,8 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     const char *type = NULL;
     const char *score = NULL;
 
-    for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_nodes, NULL, NULL, NULL);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         if (pcmk__xe_is(xml_obj, PCMK_XE_NODE)) {
             new_node = NULL;
@@ -708,8 +709,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     /* Create remote nodes and guest nodes from the resource configuration
      * before unpacking resources.
      */
-    for (xml_obj = pcmk__xe_first_child(xml_resources); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_resources, NULL, NULL, NULL);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         const char *new_node_id = NULL;
 
@@ -755,8 +756,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
          */
         if (pcmk__xe_is(xml_obj, PCMK_XE_GROUP)) {
             xmlNode *xml_obj2 = NULL;
-            for (xml_obj2 = pcmk__xe_first_child(xml_obj); xml_obj2 != NULL;
-                 xml_obj2 = pcmk__xe_next(xml_obj2)) {
+            for (xml_obj2 = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+                 xml_obj2 != NULL; xml_obj2 = pcmk__xe_next(xml_obj2)) {
 
                 new_node_id = expand_remote_rsc_meta(xml_obj2, xml_resources,
                                                      scheduler);
@@ -851,8 +852,8 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
 
     scheduler->template_rsc_sets = pcmk__strkey_table(free, destroy_tag);
 
-    for (xml_obj = pcmk__xe_first_child(xml_resources); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_resources, NULL, NULL, NULL);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         pcmk_resource_t *new_rsc = NULL;
         const char *id = pcmk__xe_id(xml_obj);
@@ -916,8 +917,8 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 
     scheduler->tags = pcmk__strkey_table(free, destroy_tag);
 
-    for (xml_tag = pcmk__xe_first_child(xml_tags); xml_tag != NULL;
-         xml_tag = pcmk__xe_next(xml_tag)) {
+    for (xml_tag = pcmk__xe_first_child(xml_tags, NULL, NULL, NULL);
+         xml_tag != NULL; xml_tag = pcmk__xe_next(xml_tag)) {
 
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = pcmk__xe_id(xml_tag);
@@ -932,8 +933,8 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        for (xml_obj_ref = pcmk__xe_first_child(xml_tag); xml_obj_ref != NULL;
-             xml_obj_ref = pcmk__xe_next(xml_obj_ref)) {
+        for (xml_obj_ref = pcmk__xe_first_child(xml_tag, NULL, NULL, NULL);
+             xml_obj_ref != NULL; xml_obj_ref = pcmk__xe_next(xml_obj_ref)) {
 
             const char *obj_ref = pcmk__xe_id(xml_obj_ref);
 
@@ -1031,8 +1032,8 @@ unpack_tickets_state(xmlNode *xml_tickets, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_obj = NULL;
 
-    for (xml_obj = pcmk__xe_first_child(xml_tickets); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_tickets, NULL, NULL, NULL);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
 
         if (!pcmk__xe_is(xml_obj, PCMK__XE_TICKET_STATE)) {
             continue;
@@ -1069,7 +1070,8 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->unclean = FALSE;
         this_node->details->unseen = FALSE;
     }
-    attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES, FALSE);
+    attrs = pcmk__xe_first_child(state, PCMK__XE_TRANSIENT_ATTRIBUTES, NULL,
+                                 NULL);
     add_node_attrs(attrs, this_node, TRUE, scheduler);
 
     if (pe__shutdown_requested(this_node)) {
@@ -1133,8 +1135,9 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
                             pcmk_scheduler_t *scheduler)
 {
     const char *discovery = NULL;
-    const xmlNode *attrs = find_xml_node(state, PCMK__XE_TRANSIENT_ATTRIBUTES,
-                                         FALSE);
+    const xmlNode *attrs = pcmk__xe_first_child(state,
+                                                PCMK__XE_TRANSIENT_ATTRIBUTES,
+                                                NULL, NULL);
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
@@ -1270,8 +1273,10 @@ unpack_node_history(const xmlNode *status, bool fence,
     int rc = pcmk_rc_ok;
 
     // Loop through all PCMK__XE_NODE_STATE entries in CIB status
-    for (const xmlNode *state = first_named_child(status, PCMK__XE_NODE_STATE);
-         state != NULL; state = crm_next_same_xml(state)) {
+    for (const xmlNode *state = pcmk__xe_first_child(status,
+                                                     PCMK__XE_NODE_STATE, NULL,
+                                                     NULL);
+         state != NULL; state = pcmk__xe_next_same(state)) {
 
         const char *id = pcmk__xe_id(state);
         const char *uname = crm_element_value(state, PCMK_XA_UNAME);
@@ -1376,7 +1381,7 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
         scheduler->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
-    for (state = pcmk__xe_first_child(status); state != NULL;
+    for (state = pcmk__xe_first_child(status, NULL, NULL, NULL); state != NULL;
          state = pcmk__xe_next(state)) {
 
         if (pcmk__xe_is(state, PCMK_XE_TICKETS)) {
@@ -1955,7 +1960,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
                      pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
-    xmlNode *xml_rsc = create_xml_node(NULL, PCMK_XE_PRIMITIVE);
+    xmlNode *xml_rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
     copy_in_properties(xml_rsc, rsc_entry);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
@@ -2706,8 +2711,9 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     /* Build a list of individual PCMK__XE_LRM_RSC_OP entries, so we can sort
      * them
      */
-    for (rsc_op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
-         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
+    for (rsc_op = pcmk__xe_first_child(lrm_resource, PCMK__XE_LRM_RSC_OP, NULL,
+                                       NULL);
+         rsc_op != NULL; rsc_op = pcmk__xe_next_same(rsc_op)) {
 
         op_list = g_list_prepend(op_list, rsc_op);
     }
@@ -2783,7 +2789,8 @@ static void
 handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
                                   pcmk_scheduler_t *scheduler)
 {
-    for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list);
+    for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list, NULL,
+                                                         NULL, NULL);
          rsc_entry != NULL; rsc_entry = pcmk__xe_next(rsc_entry)) {
 
         pcmk_resource_t *rsc;
@@ -2834,19 +2841,20 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     bool found_orphaned_container_filler = false;
 
     // Drill down to PCMK__XE_LRM_RESOURCES section
-    xml = find_xml_node(xml, PCMK__XE_LRM, FALSE);
+    xml = pcmk__xe_first_child(xml, PCMK__XE_LRM, NULL, NULL);
     if (xml == NULL) {
         return;
     }
-    xml = find_xml_node(xml, PCMK__XE_LRM_RESOURCES, FALSE);
+    xml = pcmk__xe_first_child(xml, PCMK__XE_LRM_RESOURCES, NULL, NULL);
     if (xml == NULL) {
         return;
     }
 
     // Unpack each PCMK__XE_LRM_RESOURCE entry
-    for (const xmlNode *rsc_entry = first_named_child(xml,
-                                                      PCMK__XE_LRM_RESOURCE);
-         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+    for (const xmlNode *rsc_entry = pcmk__xe_first_child(xml,
+                                                         PCMK__XE_LRM_RESOURCE,
+                                                         NULL, NULL);
+         rsc_entry != NULL; rsc_entry = pcmk__xe_next_same(rsc_entry)) {
 
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
 
@@ -3042,8 +3050,10 @@ non_monitor_after(const char *rsc_id, const char *node_name,
         return false;
     }
 
-    for (xmlNode *op = first_named_child(lrm_resource, PCMK__XE_LRM_RSC_OP);
-         op != NULL; op = crm_next_same_xml(op)) {
+    for (xmlNode *op = pcmk__xe_first_child(lrm_resource, PCMK__XE_LRM_RSC_OP,
+                                            NULL, NULL);
+         op != NULL; op = pcmk__xe_next_same(op)) {
+
         const char * task = NULL;
 
         if (op == xml_op) {
@@ -5040,7 +5050,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     op_list = NULL;
     sorted_op_list = NULL;
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry);
+    for (rsc_op = pcmk__xe_first_child(rsc_entry, NULL, NULL, NULL);
          rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
 
         if (pcmk__xe_is(rsc_op, PCMK__XE_LRM_RSC_OP)) {
@@ -5094,14 +5104,17 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     GList *intermediate = NULL;
 
     xmlNode *tmp = NULL;
-    xmlNode *status = find_xml_node(scheduler->input, PCMK_XE_STATUS, TRUE);
+    xmlNode *status = pcmk__xe_first_child(scheduler->input, PCMK_XE_STATUS,
+                                           NULL, NULL);
 
     pcmk_node_t *this_node = NULL;
 
     xmlNode *node_state = NULL;
 
-    for (node_state = pcmk__xe_first_child(status); node_state != NULL;
-         node_state = pcmk__xe_next(node_state)) {
+    CRM_CHECK(status != NULL, return NULL);
+
+    for (node_state = pcmk__xe_first_child(status, NULL, NULL, NULL);
+         node_state != NULL; node_state = pcmk__xe_next(node_state)) {
 
         if (pcmk__xe_is(node_state, PCMK__XE_NODE_STATE)) {
             const char *uname = crm_element_value(node_state, PCMK_XA_UNAME);
@@ -5130,11 +5143,13 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                  */
                 xmlNode *lrm_rsc = NULL;
 
-                tmp = find_xml_node(node_state, PCMK__XE_LRM, FALSE);
-                tmp = find_xml_node(tmp, PCMK__XE_LRM_RESOURCES, FALSE);
+                tmp = pcmk__xe_first_child(node_state, PCMK__XE_LRM, NULL,
+                                           NULL);
+                tmp = pcmk__xe_first_child(tmp, PCMK__XE_LRM_RESOURCES, NULL,
+                                           NULL);
 
-                for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;
-                     lrm_rsc = pcmk__xe_next(lrm_rsc)) {
+                for (lrm_rsc = pcmk__xe_first_child(tmp, NULL, NULL, NULL);
+                     lrm_rsc != NULL; lrm_rsc = pcmk__xe_next(lrm_rsc)) {
 
                     if (pcmk__xe_is(lrm_rsc, PCMK__XE_LRM_RESOURCE)) {
                         const char *rsc_id = crm_element_value(lrm_rsc,

@@ -143,7 +143,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
      * However, v1 patchsets can only exist during rolling upgrades from
      * Pacemaker 1.1.11, so not worth worrying about.
      */
-    removed = find_xml_node(patchset, PCMK__XE_DIFF_REMOVED, FALSE);
+    removed = pcmk__xe_first_child(patchset, PCMK__XE_DIFF_REMOVED, NULL, NULL);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "- ", child, 0,
@@ -159,7 +159,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
     }
 
     is_first = true;
-    added = find_xml_node(patchset, PCMK__XE_DIFF_ADDED, FALSE);
+    added = pcmk__xe_first_child(patchset, PCMK__XE_DIFF_ADDED, NULL, NULL);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "+ ", child, 0,
@@ -197,8 +197,10 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
     int rc = xml_show_patchset_header(out, patchset);
     int temp_rc = pcmk_rc_no_output;
 
-    for (const xmlNode *change = pcmk__xe_first_child(patchset);
+    for (const xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL,
+                                                      NULL);
          change != NULL; change = pcmk__xe_next(change)) {
+
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
@@ -235,12 +237,15 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-            xmlNode *clist = first_named_child(change, PCMK_XE_CHANGE_LIST);
+            xmlNode *clist = pcmk__xe_first_child(change, PCMK_XE_CHANGE_LIST,
+                                                  NULL, NULL);
             GString *buffer_set = NULL;
             GString *buffer_unset = NULL;
 
-            for (const xmlNode *child = pcmk__xe_first_child(clist);
+            for (const xmlNode *child = pcmk__xe_first_child(clist, NULL, NULL,
+                                                             NULL);
                  child != NULL; child = pcmk__xe_next(child)) {
+
                 const char *name = crm_element_value(child, PCMK_XA_NAME);
 
                 op = crm_element_value(child, PCMK_XA_OPERATION);

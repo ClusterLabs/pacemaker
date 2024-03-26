@@ -169,7 +169,8 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 
     crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if (format == 2) {
-        xmlNode *version_xml = find_xml_node(patch, PCMK_XE_VERSION, FALSE);
+        xmlNode *version_xml = pcmk__xe_first_child(patch, PCMK_XE_VERSION,
+                                                    NULL, NULL);
 
         if (version_xml) {
             free_xml(version_xml);
@@ -187,16 +188,16 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
             xmlNode *tmp = NULL;
             int lpc;
 
-            tmp = find_xml_node(patch, tags[i], FALSE);
+            tmp = pcmk__xe_first_child(patch, tags[i], NULL, NULL);
             if (tmp) {
                 for (lpc = 0; lpc < nvfields; lpc++) {
-                    xml_remove_prop(tmp, vfields[lpc]);
+                    pcmk__xe_remove_attr(tmp, vfields[lpc]);
                 }
 
-                tmp = find_xml_node(tmp, PCMK_XE_CIB, FALSE);
+                tmp = pcmk__xe_first_child(tmp, PCMK_XE_CIB, NULL, NULL);
                 if (tmp) {
                     for (lpc = 0; lpc < nvfields; lpc++) {
-                        xml_remove_prop(tmp, vfields[lpc]);
+                        pcmk__xe_remove_attr(tmp, vfields[lpc]);
                     }
                 }
             }

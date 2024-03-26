@@ -112,7 +112,7 @@ html_init(pcmk__output_t *out) {
 
     priv->parent_q = g_queue_new();
 
-    priv->root = create_xml_node(NULL, "html");
+    priv->root = pcmk__xe_create(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
     crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
@@ -136,6 +136,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     private_data_t *priv = NULL;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
+    xmlNode *child_node = NULL;
 
     CRM_ASSERT(out != NULL);
 
@@ -159,12 +160,14 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     head_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) "head", NULL);
 
     if (title != NULL ) {
-        pcmk_create_xml_text_node(head_node, "title", title);
+        child_node = pcmk__xe_create(head_node, "title");
+        pcmk__xe_set_content(child_node, "%s", title);
     } else if (out->request != NULL) {
-        pcmk_create_xml_text_node(head_node, "title", out->request);
+        child_node = pcmk__xe_create(head_node, "title");
+        pcmk__xe_set_content(child_node, "%s", out->request);
     }
 
-    charset_node = create_xml_node(head_node, PCMK__XE_META);
+    charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
     crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
@@ -178,10 +181,11 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * stylesheet.  The second can override the first.  At least one should be
      * given.
      */
-    pcmk_create_xml_text_node(head_node, "style", stylesheet_default);
+    child_node = pcmk__xe_create(head_node, "style");
+    pcmk__xe_set_content(child_node, "%s", stylesheet_default);
 
     if (stylesheet_link != NULL) {
-        htmlNodePtr link_node = create_xml_node(head_node, "link");
+        htmlNodePtr link_node = pcmk__xe_create(head_node, "link");
         pcmk__xe_set_props(link_node, "rel", "stylesheet",
                            "href", stylesheet_link,
                            NULL);
@@ -460,6 +464,32 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
         crm_xml_add(node, PCMK_XA_ID, id);
     }
 
+    return node;
+}
+
+/*!
+ * \internal
+ * \brief Create a new HTML element under a given parent with ID and class
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ * \param[in]     id      CSS ID of new element (can be \c NULL)
+ * \param[in]     class   CSS class of new element (can be \c NULL)
+ *
+ * \return Newly created XML element (guaranteed not to be \c NULL)
+ */
+xmlNode *
+pcmk__html_create(xmlNode *parent, const char *name, const char *id,
+                  const char *class)
+{
+    xmlNode *node = pcmk__xe_create(parent, name);
+
+    pcmk__xe_set_props(node,
+                       PCMK_XA_CLASS, class,
+                       PCMK_XA_ID, id,
+                       NULL);
     return node;
 }
 

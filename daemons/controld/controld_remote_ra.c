@@ -325,7 +325,7 @@ remote_node_up(const char *node_name)
      */
     broadcast_remote_state_message(node_name, true);
 
-    update = create_xml_node(NULL, PCMK_XE_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_cluster, update,
                                      __func__);
 
@@ -388,7 +388,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     broadcast_remote_state_message(node_name, false);
 
     /* Update CIB node state */
-    update = create_xml_node(NULL, PCMK_XE_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     create_node_state_update(node, node_update_cluster, update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
     free_xml(update);
@@ -1394,7 +1394,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     call_opt = crmd_cib_smart_opt();
     node = crm_remote_peer_get(lrm_state->node_name);
     CRM_CHECK(node != NULL, return);
-    update = create_xml_node(NULL, PCMK_XE_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
     crm_xml_add(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
@@ -1429,8 +1429,9 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node = first_named_child(getXpathResult(search, 0), PCMK_XE_NODE);
-             node != NULL; node = crm_next_same_xml(node)) {
+        for (node = pcmk__xe_first_child(getXpathResult(search, 0),
+                                         PCMK_XE_NODE, NULL, NULL);
+             node != NULL; node = pcmk__xe_next_same(node)) {
 
             lrm_state_t *lrm_state = lrm_state_find(pcmk__xe_id(node));
 

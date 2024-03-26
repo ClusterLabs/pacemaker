@@ -733,9 +733,10 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
 {
     const char *kind = crm_element_value(rsc->xml, PCMK_XA_TYPE);
     const char *target_role = NULL;
-
-    xmlNodePtr list_node = NULL;
     const char *cl = NULL;
+
+    xmlNode *child = NULL;
+    gchar *content = NULL;
 
     CRM_ASSERT(rsc->variant == pcmk_rsc_variant_primitive);
     CRM_ASSERT(kind != NULL);
@@ -773,14 +774,12 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
         cl = PCMK__VALUE_RSC_OK;
     }
 
-    {
-        gchar *s = pcmk__native_output_string(rsc, name, node, show_opts,
-                                              target_role, true);
-
-        list_node = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
-        pcmk_create_html_node(list_node, PCMK__XE_SPAN, NULL, cl, s);
-        g_free(s);
-    }
+    child = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
+    child = pcmk__html_create(child, PCMK__XE_SPAN, NULL, cl);
+    content = pcmk__native_output_string(rsc, name, node, show_opts,
+                                         target_role, true);
+    pcmk__xe_set_content(child, "%s", content);
+    g_free(content);
 
     return pcmk_rc_ok;
 }

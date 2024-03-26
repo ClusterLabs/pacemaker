@@ -257,14 +257,14 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = find_xml_node(root, PCMK_XE_STATUS, FALSE);
+    status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
     if (discard_status && status != NULL) {
         // Strip out the PCMK_XE_STATUS section if there is one
         free_xml(status);
         status = NULL;
     }
     if (status == NULL) {
-        create_xml_node(root, PCMK_XE_STATUS);
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Do this before schema validation happens */
@@ -295,7 +295,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     // Unset (DC should set appropriate value)
-    xml_remove_prop(root, PCMK_XA_DC_UUID);
+    pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
     if (discard_status) {
         crm_log_xml_trace(root, "[on-disk]");

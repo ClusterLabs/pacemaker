@@ -46,8 +46,10 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     free(xpath);
 
     // Examine each history entry
-    for (xmlNode *lrm_rsc_op = first_named_child(history, PCMK__XE_LRM_RSC_OP);
-         lrm_rsc_op != NULL; lrm_rsc_op = crm_next_same_xml(lrm_rsc_op)) {
+    for (xmlNode *lrm_rsc_op = pcmk__xe_first_child(history,
+                                                    PCMK__XE_LRM_RSC_OP, NULL,
+                                                    NULL);
+         lrm_rsc_op != NULL; lrm_rsc_op = pcmk__xe_next_same(lrm_rsc_op)) {
 
         const char *digest = crm_element_value(lrm_rsc_op,
                                                PCMK__XA_OP_RESTART_DIGEST);
@@ -132,7 +134,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
         return EINVAL;
     }
 
-    msg_data = create_xml_node(NULL, rsc_type);
+    msg_data = pcmk__xe_create(NULL, rsc_type);
     crm_xml_add(msg_data, PCMK_XA_ID, rsc_id);
 
     rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);

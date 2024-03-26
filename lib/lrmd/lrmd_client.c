@@ -538,11 +538,11 @@ static xmlNode *
 lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
                enum lrmd_call_options options)
 {
-    xmlNode *op_msg = create_xml_node(NULL, PCMK__XE_LRMD_COMMAND);
+    xmlNode *op_msg = NULL;
 
-    CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
+    op_msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
     crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_LRMD);
     crm_xml_add(op_msg, PCMK__XA_LRMD_OP, op);
     crm_xml_add_int(op_msg, PCMK__XA_LRMD_TIMEOUT, timeout);
@@ -951,7 +951,7 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
 {
     int rc;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
@@ -968,7 +968,7 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     int rc = pcmk_rc_ok;
     const char *value;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = create_xml_node(NULL, PCMK__XA_LRMD_OP);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XA_LRMD_OP);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
 
@@ -990,7 +990,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *reply = NULL;
-    xmlNode *hello = create_xml_node(NULL, PCMK__XE_LRMD_COMMAND);
+    xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
 
     crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
     crm_xml_add(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
@@ -1745,7 +1745,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
         return -EINVAL;
     }
 
-    data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
+    data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
@@ -1762,7 +1762,7 @@ static int
 lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
@@ -1809,7 +1809,7 @@ static lrmd_rsc_info_t *
 lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
     lrmd_rsc_info_t *rsc_info = NULL;
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
     xmlNode *output = NULL;
     const char *class = NULL;
     const char *provider = NULL;
@@ -1869,7 +1869,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
 
     // Send request
     if (rsc_id) {
-        data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
+        data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
         crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
         crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     }
@@ -1883,17 +1883,21 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     if ((rc != pcmk_ok) || (output_xml == NULL)) {
         return rc;
     }
-    for (xmlNode *rsc_xml = first_named_child(output_xml, PCMK__XE_LRMD_RSC);
+    for (const xmlNode *rsc_xml = pcmk__xe_first_child(output_xml,
+                                                       PCMK__XE_LRMD_RSC, NULL,
+                                                       NULL);
          (rsc_xml != NULL) && (rc == pcmk_ok);
-         rsc_xml = crm_next_same_xml(rsc_xml)) {
+         rsc_xml = pcmk__xe_next_same(rsc_xml)) {
 
         rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         if (rsc_id == NULL) {
             crm_err("Could not parse recurring operation information from executor");
             continue;
         }
-        for (xmlNode *op_xml = first_named_child(rsc_xml, PCMK__XE_LRMD_RSC_OP);
-             op_xml != NULL; op_xml = crm_next_same_xml(op_xml)) {
+        for (const xmlNode *op_xml = pcmk__xe_first_child(rsc_xml,
+                                                          PCMK__XE_LRMD_RSC_OP,
+                                                          NULL, NULL);
+             op_xml != NULL; op_xml = pcmk__xe_next_same(op_xml)) {
 
             lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
 
@@ -2050,8 +2054,8 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
               enum lrmd_call_options options, lrmd_key_value_t * params)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
-    xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
@@ -2079,8 +2083,8 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
                     int timeout, lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_ALERT);
-    xmlNode *args = create_xml_node(data, PCMK__XE_ATTRIBUTES);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_ALERT);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
@@ -2105,7 +2109,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
                 guint interval_ms)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);

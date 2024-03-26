@@ -313,8 +313,10 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
          * instead of checking whether any rule is active, we set up location
          * constraints for each active rule.
          */
-        for (xmlNode *rule_xml = first_named_child(xml_obj, PCMK_XE_RULE);
-             rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
+        for (xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE,
+                                                      NULL, NULL);
+             rule_xml != NULL; rule_xml = pcmk__xe_next_same(rule_xml)) {
+
             empty = false;
             crm_trace("Unpacking %s/%s", id, pcmk__xe_id(rule_xml));
             generate_location_rule(rsc, rule_xml, discovery, next_change,
@@ -479,7 +481,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
              * PCMK_XA_ROLE attribute
              */
             crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
-            xml_remove_prop(*expanded_xml, PCMK_XA_ROLE);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
         }
         crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
 
@@ -516,8 +518,8 @@ unpack_location_set(xmlNode *location, xmlNode *set,
     role = crm_element_value(set, PCMK_XA_ROLE);
     local_score = crm_element_value(set, PCMK_XA_SCORE);
 
-    for (xml_rsc = first_named_child(set, PCMK_XE_RESOURCE_REF);
-         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+    for (xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF, NULL, NULL);
+         xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
         resource = pcmk__find_constraint_resource(scheduler->resources,
                                                   pcmk__xe_id(xml_rsc));
@@ -551,8 +553,8 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         xml_obj = expanded_xml;
     }
 
-    for (set = first_named_child(xml_obj, PCMK_XE_RESOURCE_SET); set != NULL;
-         set = crm_next_same_xml(set)) {
+    for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
+         set != NULL; set = pcmk__xe_next_same(set)) {
 
         any_sets = true;
         set = expand_idref(set, scheduler->input);
