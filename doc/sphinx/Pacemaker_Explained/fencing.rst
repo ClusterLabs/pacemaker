@@ -269,7 +269,7 @@ for ``pacemaker-fenced``.
           single: pcmk_delay_base
 
        pcmk_delay_base
-     - :ref:`duration <duration>`
+     - :ref:`text <text>`
      - 0s
      - Enable a static delay before executing fencing actions. This can be
        used, for example, in two-node clusters to ensure that the nodes don't
