@@ -1317,43 +1317,6 @@ pcmk__valid_percentage(const char *value)
 
 /*!
  * \internal
- * \brief Check whether a string represents a valid script
- *
- * Valid values include \c /dev/null and paths of executable regular files
- *
- * \param[in] value  String to validate
- *
- * \return \c true if \p value is a valid script, or \c false otherwise
- */
-bool
-pcmk__valid_script(const char *value)
-{
-    struct stat st;
-
-    if (pcmk__str_eq(value, "/dev/null", pcmk__str_none)) {
-        return true;
-    }
-
-    if (stat(value, &st) != 0) {
-        crm_err("Script %s does not exist", value);
-        return false;
-    }
-
-    if (S_ISREG(st.st_mode) == 0) {
-        crm_err("Script %s is not a regular file", value);
-        return false;
-    }
-
-    if ((st.st_mode & (S_IXUSR | S_IXGRP)) == 0) {
-        crm_err("Script %s is not executable", value);
-        return false;
-    }
-
-    return true;
-}
-
-/*!
- * \internal
  * \brief Check whether a string represents a valid placement strategy
  *
  * \param[in] value  String to validate
