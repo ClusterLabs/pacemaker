@@ -254,4 +254,7 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
  */
 #define PCMK__VALUE_GROUP                   "group"
 
+// @COMPAT Drop when daemon metadata commands are dropped
+#define PCMK__VALUE_TIME                    "time"
+
 #endif // PCMK__OPTIONS_INTERNAL__H

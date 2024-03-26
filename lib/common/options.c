@@ -77,7 +77,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "by higher-level tools and resource agents."),
     },
     {
-        PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
+        PCMK_OPT_DC_DEADTIME, NULL, PCMK_VALUE_DURATION, NULL,
         "20s", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("How long to wait for a response from other nodes during start-up"),
@@ -85,7 +85,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "network and the type of switches used."),
     },
     {
-        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time", NULL,
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, PCMK_VALUE_DURATION, NULL,
         "15min", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
@@ -113,7 +113,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "node, falling back to stop on failure."),
     },
     {
-        PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_ELECTION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "2min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Declare an election failed if it is not decided within this much "
@@ -122,7 +122,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, PCMK_VALUE_DURATION, NULL,
         "20min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Exit immediately if shutdown does not complete within this much "
@@ -131,8 +131,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
-            NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout",
+            PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -141,7 +141,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
-            "time", NULL,
+            PCMK_VALUE_DURATION, NULL,
         "30min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -149,7 +149,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
+        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", PCMK_VALUE_DURATION,
+            NULL,
         "0s", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Enabling this option will slow down cluster recovery under all "
@@ -182,7 +183,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "release."),
     },
     {
-        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Do not lock resources to a cleanly shut down node longer than "
@@ -254,7 +255,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STONITH_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_STONITH_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
@@ -329,7 +330,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
+        PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Apply fencing delay targeting the lost nodes with the highest "
@@ -348,7 +349,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "fencing delay is disabled."),
     },
     {
-        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for a node that has joined the cluster to join "
@@ -360,7 +361,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "2 hours."),
     },
     {
-        PCMK_OPT_CLUSTER_DELAY, NULL, "time", NULL,
+        PCMK_OPT_CLUSTER_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Maximum time for node-to-node communication"),
@@ -589,7 +590,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "supports the status operation; otherwise \"none\""),
     },
     {
-        PCMK_STONITH_DELAY_MAX, NULL, "time", NULL,
+        PCMK_STONITH_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a delay of no more than the time specified before executing "
