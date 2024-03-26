@@ -434,6 +434,18 @@ int pcmk_list_cluster_options(xmlNode **xml, bool all);
  */
 int pcmk_list_fencing_params(xmlNode **xml, bool all);
 
+/*!
+ * \internal
+ * \brief List meta-attributes applicable to primitive resources as OCF-like XML
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_primitive_meta(xmlNode **xml, bool all);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!
