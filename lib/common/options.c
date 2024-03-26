@@ -307,7 +307,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_SCORE, NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
@@ -500,7 +500,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"green\".")
     },
     {
-        PCMK_OPT_NODE_HEALTH_BASE, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_NODE_HEALTH_BASE, NULL, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Base health score assigned to a node"),
@@ -508,7 +508,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_GREEN, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_NODE_HEALTH_GREEN, NULL, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -517,7 +517,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -526,7 +526,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_RED, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_OPT_NODE_HEALTH_RED, NULL, PCMK_VALUE_SCORE, NULL,
         "-INFINITY", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
