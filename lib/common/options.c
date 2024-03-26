@@ -410,7 +410,18 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        /* @TODO This is actually ignored if not strictly positive. We should
+         * overhaul value types in Pacemaker Explained. There are lots of
+         * inaccurate ranges (assumptions of 32-bit width, "nonnegative" when
+         * positive is required, etc.).
+         *
+         * Maybe a single integer type with the allowed range specified would be
+         * better.
+         *
+         * Drop the PCMK_VALUE_NONNEGATIVE_INTEGER constant if we do this before
+         * a release.
+         */
+        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
         "500", pcmk__valid_positive_int,
         pcmk__opt_based,
         N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
