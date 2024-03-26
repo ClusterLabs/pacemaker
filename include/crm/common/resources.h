@@ -165,7 +165,10 @@ enum pcmk_rsc_flags {
     //! \deprecated Do not use
     pcmk_rsc_stopping               = (1ULL << 21),
 
-    //! Whether resource is multiply active with recovery set to stop_unexpected
+    /*!
+     * Whether resource is multiply active with recovery set to
+     * \c PCMK_VALUE_STOP_UNEXPECTED
+     */
     pcmk_rsc_stop_unexpected        = (1ULL << 22),
 
     //! Whether resource is allowed to live-migrate
