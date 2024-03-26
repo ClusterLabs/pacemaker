@@ -25,5 +25,9 @@ int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    crm_time_t *next_change);
 int pcmk__evaluate_attr_expression(const xmlNode *expression,
                                    const pcmk_rule_input_t *rule_input);
+int pcmk__evaluate_rsc_expression(const xmlNode *expr,
+                                  const pcmk_rule_input_t *rule_input);
+int pcmk__evaluate_op_expression(const xmlNode *expr,
+                                 const pcmk_rule_input_t *rule_input);
 
 #endif // PCMK__CRM_COMMON_RULES_INTERNAL__H
