@@ -846,12 +846,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         "stop unexpected instances",
                         (*rsc)->id);
 
-    } else { // "stop_start"
-        if (!pcmk__str_eq(value, "stop_start",
+    } else { // PCMK_VALUE_STOP_START
+        if (!pcmk__str_eq(value, PCMK_VALUE_STOP_START,
                           pcmk__str_casei|pcmk__str_null_matches)) {
             pcmk__config_warn("%s is not a valid value for "
                               PCMK_META_MULTIPLE_ACTIVE
-                              ", using default of \"stop_start\"", value);
+                              ", using default of "
+                              "\"" PCMK_VALUE_STOP_START "\"",
+                              value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
         pcmk__rsc_trace(*rsc,
