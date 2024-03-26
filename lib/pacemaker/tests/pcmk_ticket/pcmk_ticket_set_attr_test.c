@@ -25,7 +25,7 @@ cib_not_connected(void **state)
      * native CIB which means IPC calls.  But there's nothing listening for those
      * calls, so signon() will return ENOTCONN.  Check that we handle that.
      */
-    assert_int_equal(pcmk_ticket_set_attr(&xml, NULL, NULL), ENOTCONN);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, NULL, NULL, false), ENOTCONN);
     pcmk__assert_validates(xml);
     free_xml(xml);
 }
@@ -55,9 +55,9 @@ bad_arguments(void **state)
 {
     xmlNode *xml = NULL;
 
-    assert_int_equal(pcmk_ticket_set_attr(NULL, "ticketA", NULL), EINVAL);
+    assert_int_equal(pcmk_ticket_set_attr(NULL, "ticketA", NULL, false), EINVAL);
 
-    assert_int_equal(pcmk_ticket_set_attr(&xml, NULL, NULL), EINVAL);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, NULL, NULL, false), EINVAL);
     pcmk__assert_validates(xml);
     free_xml(xml);
 }
@@ -73,7 +73,7 @@ unknown_ticket_no_attrs(void **state)
     cib->cmds->signon(cib, crm_system_name, cib_command);
 
     /* Setting no attributes on a ticket that doesn't exist is a no-op */
-    assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", NULL, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
     free_xml(xml);
     xml = NULL;
@@ -83,7 +83,7 @@ unknown_ticket_no_attrs(void **state)
     assert_null(xml_search);
 
     /* Another way of specifying no attributes */
-    assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", attrs), pcmk_rc_ok);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
     free_xml(xml);
 
@@ -109,7 +109,7 @@ unknown_ticket_with_attrs(void **state)
     /* Setting attributes on a ticket that doesn't exist causes the ticket to
      * be created with the given attributes
      */
-    assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", attrs), pcmk_rc_ok);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
     free_xml(xml);
 
@@ -136,7 +136,7 @@ overwrite_existing_attr(void **state)
 
     pcmk__insert_dup(attrs, "owner", "2");
 
-    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs), pcmk_rc_ok);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
     free_xml(xml);
 
@@ -153,7 +153,7 @@ overwrite_existing_attr(void **state)
 }
 
 static void
-not_granted_to_granted(void **state)
+not_granted_to_granted_without_force(void **state)
 {
     GHashTable *attrs = pcmk__strkey_table(free, free);
     xmlNode *xml = NULL;
@@ -162,7 +162,34 @@ not_granted_to_granted(void **state)
 
     pcmk__insert_dup(attrs, PCMK__XA_GRANTED, "true");
 
-    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs), pcmk_rc_ok);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs, false), EACCES);
+    pcmk__assert_validates(xml);
+    free_xml(xml);
+
+    cib = cib_new();
+    cib->cmds->signon(cib, crm_system_name, cib_command);
+    cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
+                     &xml_search, cib_xpath | cib_scope_local);
+
+    assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
+    assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
+
+    free_xml(xml_search);
+    g_hash_table_destroy(attrs);
+    cib__clean_up_connection(&cib);
+}
+
+static void
+not_granted_to_granted_with_force(void **state)
+{
+    GHashTable *attrs = pcmk__strkey_table(free, free);
+    xmlNode *xml = NULL;
+    xmlNode *xml_search = NULL;
+    cib_t *cib;
+
+    pcmk__insert_dup(attrs, PCMK__XA_GRANTED, "true");
+
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketA", attrs, true), pcmk_rc_ok);
     pcmk__assert_validates(xml);
     free_xml(xml);
 
@@ -180,7 +207,7 @@ not_granted_to_granted(void **state)
 }
 
 static void
-granted_to_not_granted(void **state)
+granted_to_not_granted_without_force(void **state)
 {
     GHashTable *attrs = pcmk__strkey_table(free, free);
     xmlNode *xml = NULL;
@@ -189,7 +216,34 @@ granted_to_not_granted(void **state)
 
     pcmk__insert_dup(attrs, PCMK__XA_GRANTED, "false");
 
-    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketB", attrs), pcmk_rc_ok);
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketB", attrs, false), EACCES);
+    pcmk__assert_validates(xml);
+    free_xml(xml);
+
+    cib = cib_new();
+    cib->cmds->signon(cib, crm_system_name, cib_command);
+    cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
+                     &xml_search, cib_xpath | cib_scope_local);
+
+    assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
+    assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
+
+    free_xml(xml_search);
+    g_hash_table_destroy(attrs);
+    cib__clean_up_connection(&cib);
+}
+
+static void
+granted_to_not_granted_with_force(void **state)
+{
+    GHashTable *attrs = pcmk__strkey_table(free, free);
+    xmlNode *xml = NULL;
+    xmlNode *xml_search = NULL;
+    cib_t *cib;
+
+    pcmk__insert_dup(attrs, PCMK__XA_GRANTED, "false");
+
+    assert_int_equal(pcmk_ticket_set_attr(&xml, "ticketB", attrs, true), pcmk_rc_ok);
     pcmk__assert_validates(xml);
     free_xml(xml);
 
@@ -221,5 +275,7 @@ PCMK__UNIT_TEST(pcmk__cib_test_setup_group, NULL,
                 cmocka_unit_test_setup_teardown(unknown_ticket_no_attrs, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket_with_attrs, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(overwrite_existing_attr, setup_test, teardown_test),
-                cmocka_unit_test_setup_teardown(not_granted_to_granted, setup_test, teardown_test),
-                cmocka_unit_test_setup_teardown(granted_to_not_granted, setup_test, teardown_test))
+                cmocka_unit_test_setup_teardown(not_granted_to_granted_without_force, setup_test, teardown_test),
+                cmocka_unit_test_setup_teardown(not_granted_to_granted_with_force, setup_test, teardown_test),
+                cmocka_unit_test_setup_teardown(granted_to_not_granted_without_force, setup_test, teardown_test),
+                cmocka_unit_test_setup_teardown(granted_to_not_granted_with_force, setup_test, teardown_test))
