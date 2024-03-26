@@ -203,6 +203,7 @@ extern     "C" {
 #define PCMK_VALUE_STRING                       "string"
 #define PCMK_VALUE_STOP                         "stop"
 #define PCMK_VALUE_SUCCESS                      "success"
+#define PCMK_VALUE_TIMEOUT                      "timeout"
 #define PCMK_VALUE_TRUE                         "true"
 #define PCMK_VALUE_UNFENCING                    "unfencing"
 #define PCMK_VALUE_UNKNOWN                      "unknown"
