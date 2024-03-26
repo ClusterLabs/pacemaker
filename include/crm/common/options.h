@@ -196,6 +196,7 @@ extern     "C" {
 #define PCMK_VALUE_RESTART                      "restart"
 #define PCMK_VALUE_RESTART_CONTAINER            "restart-container"
 #define PCMK_VALUE_REVOKED                      "revoked"
+#define PCMK_VALUE_SCORE                        "score"
 #define PCMK_VALUE_SELECT                       "select"
 #define PCMK_VALUE_SERIALIZE                    "Serialize"
 #define PCMK_VALUE_STANDBY                      "standby"
