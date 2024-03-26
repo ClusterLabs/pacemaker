@@ -261,12 +261,6 @@ static GOptionEntry deprecated_entries[] = {
     { NULL }
 };
 
-static pcmk_ticket_t *
-find_ticket(gchar *ticket_id, pcmk_scheduler_t *scheduler)
-{
-    return g_hash_table_lookup(scheduler->tickets, ticket_id);
-}
-
 static void
 ticket_grant_warning(gchar *ticket_id)
 {
@@ -327,71 +321,6 @@ allow_modification(gchar *ticket_id)
     }
 
     return true;
-}
-
-static int
-modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
-{
-    int rc = pcmk_rc_ok;
-    xmlNode *xml_top = NULL;
-    xmlNode *ticket_state_xml = NULL;
-    GHashTableIter hash_iter;
-
-    char *key = NULL;
-    char *value = NULL;
-
-    pcmk_ticket_t *ticket = NULL;
-
-    rc = pcmk__get_ticket_state(cib, ticket_id, &ticket_state_xml);
-
-    if (rc == pcmk_rc_duplicate_id) {
-        out->info(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket=%s",
-                  ticket_id);
-        rc = pcmk_rc_ok;
-    }
-
-    if (rc == pcmk_rc_ok) {
-        crm_debug("Found a match state for ticket: id=%s", ticket_id);
-        xml_top = ticket_state_xml;
-
-    } else if (rc != ENXIO) {
-        return rc;
-
-    } else if (g_hash_table_size(attr_set) == 0){
-        return pcmk_rc_ok;
-
-    } else {
-        xmlNode *xml_obj = NULL;
-
-        xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-        xml_obj = pcmk__xe_create(xml_top, PCMK_XE_TICKETS);
-        ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
-        crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
-    }
-
-    ticket = find_ticket(ticket_id, scheduler);
-
-    g_hash_table_iter_init(&hash_iter, attr_set);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
-        crm_xml_add(ticket_state_xml, key, value);
-
-        if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
-            && (ticket == NULL || ticket->granted == FALSE)
-            && crm_is_true(value)) {
-
-            char *now = pcmk__ttoa(time(NULL));
-
-            crm_xml_add(ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
-            free(now);
-        }
-    }
-
-    crm_log_xml_debug(xml_top, "Update");
-    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_options);
-    rc = pcmk_legacy2rc(rc);
-
-    free_xml(xml_top);
-    return rc;
 }
 
 static GOptionContext *
@@ -672,7 +601,8 @@ main(int argc, char **argv)
             rc = pcmk__ticket_remove_attr(out, cib_conn, scheduler, options.ticket_id,
                                           attr_delete);
         } else {
-            rc = modify_ticket_state(options.ticket_id, cib_conn, scheduler);
+            rc = pcmk__ticket_set_attr(out, cib_conn, scheduler, options.ticket_id,
+                                       attr_set);
         }
 
         exit_code = pcmk_rc2exitc(rc);
