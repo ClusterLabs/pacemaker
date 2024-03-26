@@ -501,10 +501,14 @@ int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
  * \param[in,out] xml           The destination for the result, as an XML tree
  * \param[in]     ticket_id     Ticket to remove attributes from
  * \param[in]     attr_delete   A list of attribute names
+ * \param[in]     force         Attempting to remove the granted attribute of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete);
+int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete,
+                            bool force);
 
 /*!
  * \brief Set the given attribute(s) on a ticket
@@ -514,13 +518,17 @@ int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_
  * \param[in]     attr_set      A hash table of attributes, where keys are the
  *                              attribute names and the values are the attribute
  *                              values
+ * \param[in]     force         Attempting to change the granted status of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
  *
  * \return Standard Pacemaker return code
  *
  * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
  *       ticket will be created with the given attributes.
  */
-int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set);
+int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
+                         bool force);
 
 /*!
  * \brief Return a ticket's state XML

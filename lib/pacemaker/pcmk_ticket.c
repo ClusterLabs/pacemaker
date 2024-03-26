@@ -367,7 +367,7 @@ done:
 
 int
 pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
-                         const char *ticket_id, GList *attr_delete)
+                         const char *ticket_id, GList *attr_delete, bool force)
 {
     xmlNode *ticket_state_xml = NULL;
     xmlNode *xml_top = NULL;
@@ -395,6 +395,12 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
 
     for (GList *list_iter = attr_delete; list_iter != NULL; list_iter = list_iter->next) {
         const char *key = list_iter->data;
+
+        if (!force && pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)) {
+            free_xml(ticket_state_xml);
+            return EACCES;
+        }
+
         pcmk__xe_remove_attr(ticket_state_xml, key);
     }
 
@@ -407,7 +413,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
 }
 
 int
-pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete)
+pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete, bool force)
 {
     pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
@@ -419,7 +425,7 @@ pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_dele
         goto done;
     }
 
-    rc = pcmk__ticket_remove_attr(out, cib, scheduler, ticket_id, attr_delete);
+    rc = pcmk__ticket_remove_attr(out, cib, scheduler, ticket_id, attr_delete, force);
 
 done:
     if (cib != NULL) {
@@ -433,7 +439,7 @@ done:
 
 int
 pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
-                      const char *ticket_id, GHashTable *attr_set)
+                      const char *ticket_id, GHashTable *attr_set, bool force)
 {
     xmlNode *ticket_state_xml = NULL;
     xmlNode *xml_top = NULL;
@@ -459,6 +465,11 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
         return rc;
     }
 
+    if (!force && g_hash_table_lookup(attr_set, PCMK__XA_GRANTED)) {
+        free_xml(ticket_state_xml);
+        return EACCES;
+    }
+
     add_attribute_xml(scheduler, ticket_id, attr_set, &ticket_state_xml);
 
     crm_log_xml_debug(xml_top, "Update");
@@ -470,7 +481,8 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
 }
 
 int
-pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set)
+pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
+                     bool force)
 {
     pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
@@ -482,7 +494,7 @@ pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_se
         goto done;
     }
 
-    rc = pcmk__ticket_set_attr(out, cib, scheduler, ticket_id, attr_set);
+    rc = pcmk__ticket_set_attr(out, cib, scheduler, ticket_id, attr_set, force);
 
 done:
     if (cib != NULL) {

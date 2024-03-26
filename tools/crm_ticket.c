@@ -289,40 +289,6 @@ ticket_revoke_warning(gchar *ticket_id)
               ticket_id, ticket_id);
 }
 
-static bool
-allow_modification(gchar *ticket_id)
-{
-    const char *value = NULL;
-    GList *list_iter = NULL;
-
-    if (options.force) {
-        return true;
-    }
-
-    if (g_hash_table_lookup_extended(attr_set, PCMK__XA_GRANTED, NULL,
-                                     (gpointer *) &value)) {
-        if (crm_is_true(value)) {
-            ticket_grant_warning(ticket_id);
-            return false;
-
-        } else {
-            ticket_revoke_warning(ticket_id);
-            return false;
-        }
-    }
-
-    for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
-        const char *key = (const char *)list_iter->data;
-
-        if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)) {
-            ticket_revoke_warning(ticket_id);
-            return false;
-        }
-    }
-
-    return true;
-}
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
@@ -590,24 +556,39 @@ main(int argc, char **argv)
             goto done;
         }
 
-        if (!allow_modification(options.ticket_id)) {
-            exit_code = CRM_EX_INSUFFICIENT_PRIV;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Ticket modification not allowed");
-            goto done;
-        }
-
         if (attr_delete != NULL) {
             rc = pcmk__ticket_remove_attr(out, cib_conn, scheduler, options.ticket_id,
-                                          attr_delete);
+                                          attr_delete, options.force);
+
+            if (rc == EACCES) {
+                ticket_revoke_warning(options.ticket_id);
+                exit_code = pcmk_rc2exitc(rc);
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Ticket modification not allowed without --force");
+            }
         } else {
             rc = pcmk__ticket_set_attr(out, cib_conn, scheduler, options.ticket_id,
-                                       attr_set);
+                                       attr_set, options.force);
+
+            if (rc == EACCES) {
+                const char *value = NULL;
+
+                value = g_hash_table_lookup(attr_set, PCMK__XA_GRANTED);
+                if (crm_is_true(value)) {
+                    ticket_grant_warning(options.ticket_id);
+                } else {
+                    ticket_revoke_warning(options.ticket_id);
+                }
+
+                exit_code = pcmk_rc2exitc(rc);
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Ticket modification not allowed without --force");
+            }
         }
 
         exit_code = pcmk_rc2exitc(rc);
 
-        if (rc != pcmk_rc_ok) {
+        if (rc != pcmk_rc_ok && error == NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not modify ticket: %s", pcmk_rc_str(rc));
         }

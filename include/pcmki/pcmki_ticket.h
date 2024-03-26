@@ -104,11 +104,14 @@ int pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
  * \param[in,out] scheduler     Scheduler data
  * \param[in]     ticket_id     Ticket to remove attributes from
  * \param[in]     attr_delete   A list of attribute names
+ * \param[in]     force         Attempting to remove the granted attribute of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
  *
  * \return Standard Pacemaker return code
  */
 int pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
-                             const char *ticket_id, GList *attr_delete);
+                             const char *ticket_id, GList *attr_delete, bool force);
 
 /*!
  * \brief Set the given attribute(s) on a ticket
@@ -120,6 +123,9 @@ int pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *
  * \param[in]     attr_set      A hash table of attributes, where keys are the
  *                              attribute names and the values are the attribute
  *                              values
+ * \param[in]     force         Attempting to change the granted status of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
  *
  * \return Standard Pacemaker return code
  *
@@ -127,7 +133,7 @@ int pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *
  *       ticket will be created with the given attributes.
  */
 int pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler,
-                          const char *ticket_id, GHashTable *attr_set);
+                          const char *ticket_id, GHashTable *attr_set, bool force);
 
 /*!
  * \internal
