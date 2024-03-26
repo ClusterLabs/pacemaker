@@ -335,9 +335,6 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
-    bool found = false;
-
-    GList *list_iter = NULL;
     GHashTableIter hash_iter;
 
     char *key = NULL;
@@ -356,7 +353,6 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
     if (rc == pcmk_rc_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
-        found = true;
 
     } else if (rc != ENXIO) {
         return rc;
@@ -371,11 +367,6 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
         xml_obj = pcmk__xe_create(xml_top, PCMK_XE_TICKETS);
         ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
         crm_xml_add(ticket_state_xml, PCMK_XA_ID, ticket_id);
-    }
-
-    for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
-        const char *key = (const char *)list_iter->data;
-        pcmk__xe_remove_attr(ticket_state_xml, key);
     }
 
     ticket = find_ticket(ticket_id, scheduler);
@@ -395,17 +386,9 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
         }
     }
 
-    if (found && (attr_delete != NULL)) {
-        crm_log_xml_debug(xml_top, "Replace");
-        rc = cib->cmds->replace(cib, PCMK_XE_STATUS, ticket_state_xml,
-                                cib_options);
-        rc = pcmk_legacy2rc(rc);
-
-    } else {
-        crm_log_xml_debug(xml_top, "Update");
-        rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_options);
-        rc = pcmk_legacy2rc(rc);
-    }
+    crm_log_xml_debug(xml_top, "Update");
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_options);
+    rc = pcmk_legacy2rc(rc);
 
     free_xml(xml_top);
     return rc;
@@ -685,7 +668,13 @@ main(int argc, char **argv)
             goto done;
         }
 
-        rc = modify_ticket_state(options.ticket_id, cib_conn, scheduler);
+        if (attr_delete != NULL) {
+            rc = pcmk__ticket_remove_attr(out, cib_conn, scheduler, options.ticket_id,
+                                          attr_delete);
+        } else {
+            rc = modify_ticket_state(options.ticket_id, cib_conn, scheduler);
+        }
+
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {
