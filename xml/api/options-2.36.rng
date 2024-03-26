@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!--
+     Pacemaker outputs option lists in an OCF-like XML format, but there are
+     differences that break validation against the unaltered schema.
+     -->
+
+    <include href="ocf-ra-1.1.rng">
+        <!--
+         The OCF RA 1.1 schema requires an actions element. Pacemaker option
+         lists don't include an actions element.
+         -->
+        <define name="element-actions">
+            <empty />
+        </define>
+    </include>
+
+    <!-- Extend the allowed types to include percentage and time -->
+    <define name="atomic-types" combine="choice">
+        <choice>
+            <value>percentage</value>
+            <value>time</value>
+        </choice>
+    </define>
+
+    <!-- Pacemaker options have additional parameter attributes -->
+    <define name="parameter-attributes" combine="interleave">
+        <!-- Parameter is for advanced use only -->
+        <attribute name="advanced" />
+
+        <!-- Parameter's value is Pacemaker-generated, not user-configured -->
+        <attribute name="generated" />
+    </define>
+
+</grammar>
