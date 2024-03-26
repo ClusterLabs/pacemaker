@@ -98,6 +98,9 @@ const char *pcmk__cluster_option(GHashTable *options, const char *name);
 int pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
                                  const char *desc_short, const char *desc_long,
                                  uint32_t filter, bool all);
+int pcmk__output_primitive_meta(pcmk__output_t *out, const char *name,
+                                const char *desc_short, const char *desc_long,
+                                bool all);
 int pcmk__output_fence_params(pcmk__output_t *out, const char *name,
                               const char *desc_short, const char *desc_long,
                               bool all);
