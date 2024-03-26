@@ -51,7 +51,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
      * long description
      */
     {
-        PCMK_OPT_DC_VERSION, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_OPT_DC_VERSION, NULL, PCMK_VALUE_VERSION, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
