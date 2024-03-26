@@ -417,7 +417,7 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
     pcmk__rsc_info(rsc,
                    "Cancelling %s-interval %s action for %s on %s because "
-                   "configured for " PCMK__ROLE_STOPPED " role (not %s)",
+                   "configured for " PCMK_ROLE_STOPPED " role (not %s)",
                    pcmk__readable_interval(interval_ms), name, rsc->id,
                    pcmk__node_name(node), pcmk_role_text(rsc->next_role));
 }
@@ -505,7 +505,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
-        crm_notice("Ignoring %s (recurring monitors for " PCMK__ROLE_STOPPED
+        crm_notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
                    " role are not supported for anonymous clones)", op->id);
         return; // @TODO add support
     }
@@ -535,7 +535,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         pcmk__rsc_trace(rsc,
                         "Creating %s recurring action %s for %s (%s "
-                        PCMK__ROLE_STOPPED " on %s)",
+                        PCMK_ROLE_STOPPED " on %s)",
                         (is_optional? "optional" : "mandatory"),
                         op->key, op->id, rsc->id, pcmk__node_name(stop_node));
 
@@ -562,7 +562,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         if (pcmk_is_set(stopped_mon->flags, pcmk_action_runnable)
             && !pcmk_is_set(stopped_mon->flags, pcmk_action_optional)) {
             crm_notice("Start recurring %s-interval %s for "
-                       PCMK__ROLE_STOPPED " %s on %s",
+                       PCMK_ROLE_STOPPED " %s on %s",
                        pcmk__readable_interval(op->interval_ms),
                        stopped_mon->task, rsc->id, pcmk__node_name(stop_node));
         }

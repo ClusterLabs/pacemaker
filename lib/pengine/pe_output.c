@@ -642,7 +642,7 @@ role_desc(enum rsc_role_e role)
 #ifdef PCMK__COMPAT_2_0
         return "as " PCMK__ROLE_PROMOTED_LEGACY " ";
 #else
-        return "in " PCMK__ROLE_PROMOTED " role ";
+        return "in " PCMK_ROLE_PROMOTED " role ";
 #endif
     }
     return "";

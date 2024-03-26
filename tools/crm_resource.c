@@ -54,6 +54,7 @@ enum rsc_command {
     cmd_list_all_ops,
     cmd_list_alternatives,
     cmd_list_instances,
+    cmd_list_options,
     cmd_list_providers,
     cmd_list_resources,
     cmd_list_standards,
@@ -76,6 +77,7 @@ struct {
     // Command-line option values
     gchar *rsc_id;                // Value of --resource
     gchar *rsc_type;              // Value of --resource-type
+    gboolean all;                 // --all was given
     gboolean force;               // --force was given
     gboolean clear_expired;       // --expired was given
     gboolean recursive;           // --recursive was given
@@ -84,6 +86,7 @@ struct {
     gchar *interval_spec;         // Value of --interval
     gchar *move_lifetime;         // Value of --lifetime
     gchar *operation;             // Value of --operation
+    char *opt_list;               // Value of --list-options
     const char *attr_set_type;    // Instance, meta, utilization, or element attribute
     gchar *prop_id;               // --nvpair (attribute XML ID)
     char *prop_name;              // Attribute name
@@ -384,6 +387,10 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         options.rsc_cmd = cmd_list_alternatives;
         pcmk__str_update(&options.agent_spec, optarg);
 
+    } else if (pcmk__str_eq(option_name, "--list-options", pcmk__str_none)) {
+        options.rsc_cmd = cmd_list_options;
+        pcmk__str_update(&options.opt_list, optarg);
+
     } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
         options.rsc_cmd = cmd_list_instances;
 
@@ -462,6 +469,12 @@ static GOptionEntry query_entries[] = {
       "List all resource operations, optionally filtered by\n"
       INDENT "--resource and/or --node",
       NULL },
+    { "list-options", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
+      "List all available options of the given type\n"
+      INDENT "Allowed values:\n"
+      INDENT PCMK__VALUE_PRIMITIVE "(primitive resource meta-attributes), "
+      INDENT PCMK_VALUE_FENCING " (parameters common to all fencing resources)",
+      "TYPE" },
     { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           command_cb,
       "List supported standards",
@@ -739,6 +752,10 @@ static GOptionEntry addl_entries[] = {
       "(Advanced) Abort if command does not finish in this time (with\n"
       INDENT "--restart, --wait, --force-*)",
       "N" },
+    { "all", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.all,
+      "List all options, including advanced and deprecated (with\n"
+      INDENT "--list-options)",
+      NULL },
     { "force", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.force,
       "Force the action to be performed. See help for individual commands for\n"
       INDENT "additional behavior.",
@@ -828,7 +845,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
     if (nactive == 1) {
         rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
                               cib_conn, cib_sync_call,
-                              options.promoted_role_only, PCMK__ROLE_PROMOTED);
+                              options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         int count = 0;
@@ -849,7 +866,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
             rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
                                   cib_conn, cib_sync_call,
                                   options.promoted_role_only,
-                                  PCMK__ROLE_PROMOTED);
+                                  PCMK_ROLE_PROMOTED);
 
         } else {
             rc = EINVAL;
@@ -1003,6 +1020,26 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
 
     cluster_status(scheduler);
     return pcmk_rc_ok;
+}
+
+static void
+list_options(void)
+{
+    if (pcmk__str_eq(options.opt_list, PCMK__VALUE_PRIMITIVE, pcmk__str_none)) {
+        exit_code = pcmk_rc2exitc(pcmk__list_primitive_meta(out, options.all));
+
+    } else if (pcmk__str_eq(options.opt_list, PCMK_VALUE_FENCING,
+                            pcmk__str_none)) {
+        exit_code = pcmk_rc2exitc(pcmk__list_fence_params(out, options.all));
+
+    } else {
+        // @TODO Improve usage messages to reduce duplication
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "Invalid --list-options value '%s'. Allowed values: "
+                    PCMK__VALUE_PRIMITIVE ", " PCMK_VALUE_FENCING,
+                    pcmk__s(options.opt_list, "(BUG: none)"));
+    }
 }
 
 static int
@@ -1279,6 +1316,7 @@ is_resource_required(void)
         case cmd_list_all_ops:
         case cmd_list_alternatives:
         case cmd_list_instances:
+        case cmd_list_options:
         case cmd_list_providers:
         case cmd_list_resources:
         case cmd_list_standards:
@@ -1309,6 +1347,7 @@ is_cib_required(void)
     switch (options.rsc_cmd) {
         case cmd_list_agents:
         case cmd_list_alternatives:
+        case cmd_list_options:
         case cmd_list_providers:
         case cmd_list_standards:
         case cmd_metadata:
@@ -1362,6 +1401,7 @@ is_scheduler_required(void)
     switch (options.rsc_cmd) {
         case cmd_list_agents:
         case cmd_list_alternatives:
+        case cmd_list_options:
         case cmd_list_providers:
         case cmd_list_standards:
         case cmd_metadata:
@@ -1376,8 +1416,8 @@ is_scheduler_required(void)
  * \internal
  * \brief Check whether the chosen command accepts clone instances
  *
- * \return \c true if \p options.rsc_cmd accepts clone instances, or \c false
- *         otherwise
+ * \return \c true if \p options.rsc_cmd accepts or ignores clone instances, or
+ *         \c false otherwise
  */
 static bool
 accept_clone_instance(void)
@@ -1758,6 +1798,10 @@ main(int argc, char **argv)
 
             break;
 
+        case cmd_list_options:
+            list_options();
+            break;
+
         case cmd_list_alternatives:
             rc = pcmk__list_alternatives(out, options.agent_spec);
             break;
@@ -1906,7 +1950,7 @@ main(int argc, char **argv)
                 rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
                                       options.move_lifetime, cib_conn,
                                       cib_sync_call, options.promoted_role_only,
-                                      PCMK__ROLE_PROMOTED);
+                                      PCMK_ROLE_PROMOTED);
             }
 
             if (rc == EINVAL) {
