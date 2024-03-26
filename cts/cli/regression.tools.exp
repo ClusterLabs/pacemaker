@@ -108,7 +108,7 @@ Also known as properties, these are options that affect behavior across the enti
     * Possible values: time (default: )
 
   * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * concurrent-fencing: Allow performing fencing operations in parallel
     * Possible values: boolean (default: )
@@ -170,19 +170,19 @@ Also known as properties, these are options that affect behavior across the enti
 
   * node-health-base: Base health score assigned to a node
     * Only used when "node-health-strategy" is set to "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * node-health-green: The score to use for a node health attribute whose value is "green"
     * Only used when "node-health-strategy" is set to "custom" or "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * node-health-yellow: The score to use for a node health attribute whose value is "yellow"
     * Only used when "node-health-strategy" is set to "custom" or "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * node-health-red: The score to use for a node health attribute whose value is "red"
     * Only used when "node-health-strategy" is set to "custom" or "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * placement-strategy: How the cluster should allocate resources to nodes
     * Possible values: "default" (default), "utilization", "minimal", "balanced"
@@ -331,7 +331,7 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="stonith-max-attempts" advanced="0" generated="0">
         <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
         <shortdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="concurrent-fencing" advanced="0" generated="0">
         <longdesc lang="en">Allow performing fencing operations in parallel</longdesc>
@@ -433,22 +433,22 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="node-health-base" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "progressive".</longdesc>
         <shortdesc lang="en">Base health score assigned to a node</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="node-health-green" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
         <shortdesc lang="en">The score to use for a node health attribute whose value is "green"</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="node-health-yellow" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
         <shortdesc lang="en">The score to use for a node health attribute whose value is "yellow"</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="node-health-red" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
         <shortdesc lang="en">The score to use for a node health attribute whose value is "red"</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="placement-strategy" advanced="0" generated="0">
         <longdesc lang="en">How the cluster should allocate resources to nodes</longdesc>
@@ -537,7 +537,7 @@ Also known as properties, these are options that affect behavior across the enti
     * Possible values: time (default: )
 
   * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * concurrent-fencing: Allow performing fencing operations in parallel
     * Possible values: boolean (default: )
@@ -599,19 +599,19 @@ Also known as properties, these are options that affect behavior across the enti
 
   * node-health-base: Base health score assigned to a node
     * Only used when "node-health-strategy" is set to "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * node-health-green: The score to use for a node health attribute whose value is "green"
     * Only used when "node-health-strategy" is set to "custom" or "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * node-health-yellow: The score to use for a node health attribute whose value is "yellow"
     * Only used when "node-health-strategy" is set to "custom" or "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * node-health-red: The score to use for a node health attribute whose value is "red"
     * Only used when "node-health-strategy" is set to "custom" or "progressive".
-    * Possible values: integer (default: )
+    * Possible values: score (default: )
 
   * placement-strategy: How the cluster should allocate resources to nodes
     * Possible values: "default" (default), "utilization", "minimal", "balanced"
@@ -792,7 +792,7 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="stonith-max-attempts" advanced="0" generated="0">
         <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
         <shortdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="concurrent-fencing" advanced="0" generated="0">
         <longdesc lang="en">Allow performing fencing operations in parallel</longdesc>
@@ -894,22 +894,22 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="node-health-base" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "progressive".</longdesc>
         <shortdesc lang="en">Base health score assigned to a node</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="node-health-green" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
         <shortdesc lang="en">The score to use for a node health attribute whose value is "green"</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="node-health-yellow" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
         <shortdesc lang="en">The score to use for a node health attribute whose value is "yellow"</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="node-health-red" advanced="0" generated="0">
         <longdesc lang="en">Only used when "node-health-strategy" is set to "custom" or "progressive".</longdesc>
         <shortdesc lang="en">The score to use for a node health attribute whose value is "red"</shortdesc>
-        <content type="integer" default=""/>
+        <content type="score" default=""/>
       </parameter>
       <parameter name="placement-strategy" advanced="0" generated="0">
         <longdesc lang="en">How the cluster should allocate resources to nodes</longdesc>
