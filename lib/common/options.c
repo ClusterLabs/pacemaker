@@ -373,7 +373,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Limits
     {
-        PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
+        PCMK_OPT_LOAD_THRESHOLD, NULL, PCMK_VALUE_PERCENTAGE, NULL,
         "80%", pcmk__valid_percentage,
         pcmk__opt_controld,
         N_("Maximum amount of system load that should be used by cluster "
