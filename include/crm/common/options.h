@@ -202,6 +202,7 @@ extern     "C" {
 #define PCMK_VALUE_SERIALIZE                    "Serialize"
 #define PCMK_VALUE_STANDBY                      "standby"
 #define PCMK_VALUE_STATIC_LIST                  "static-list"
+#define PCMK_VALUE_STATUS                       "status"
 #define PCMK_VALUE_STRING                       "string"
 #define PCMK_VALUE_STOP                         "stop"
 #define PCMK_VALUE_SUCCESS                      "success"
