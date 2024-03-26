@@ -278,6 +278,26 @@ add_possible_values_xml(pcmk__output_t *out,
 
 /*!
  * \internal
+ * \brief Map an option type to one suitable for daemon metadata
+ *
+ * \param[in] type  Option type to map
+ *
+ * \return String suitable for daemon metadata to display as an option type
+ */
+static const char *
+map_legacy_option_type(const char *type)
+{
+    // @COMPAT Drop this function when we drop daemon metadata commands
+    if (pcmk__str_eq(type, PCMK_VALUE_DURATION, pcmk__str_none)) {
+        return PCMK__VALUE_TIME;
+
+    } else {
+        return type;
+    }
+}
+
+/*!
+ * \internal
  * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
  *
  * \param[in,out] out     Output object
@@ -287,6 +307,7 @@ static void
 add_option_metadata_xml(pcmk__output_t *out,
                         const pcmk__cluster_option_t *option)
 {
+    const char *type = option->type;
     const char *desc_long = option->description_long;
     const char *desc_short = option->description_short;
     const bool advanced = pcmk_is_set(option->flags, pcmk__opt_advanced);
@@ -304,7 +325,7 @@ add_option_metadata_xml(pcmk__output_t *out,
     GString *desc_short_legacy = NULL;
 
     // The standard requires a parameter type
-    CRM_ASSERT(option->type != NULL);
+    CRM_ASSERT(type != NULL);
 
     // The standard requires long and short parameter descriptions
     CRM_ASSERT((desc_long != NULL) || (desc_short != NULL));
@@ -317,6 +338,8 @@ add_option_metadata_xml(pcmk__output_t *out,
 
     if (legacy) {
         // This is ugly but it will go away at a major release bump
+        type = map_legacy_option_type(type);
+
         if (option->values != NULL) {
             desc_long_legacy = crm_strdup_printf("%s  Allowed values: %s",
                                                  desc_long, option->values);
@@ -371,7 +394,7 @@ add_option_metadata_xml(pcmk__output_t *out,
     add_desc_xml(out, false, desc_short);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_CONTENT,
-                                   PCMK_XA_TYPE, option->type,
+                                   PCMK_XA_TYPE, type,
                                    PCMK_XA_DEFAULT, option->default_value,
                                    NULL);
 
