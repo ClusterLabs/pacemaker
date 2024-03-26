@@ -472,6 +472,7 @@ static GOptionEntry query_entries[] = {
     { "list-options", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
       "List all available options of the given type\n"
       INDENT "Allowed values:\n"
+      INDENT PCMK__VALUE_PRIMITIVE "(primitive resource meta-attributes), "
       INDENT PCMK_VALUE_FENCING " (parameters common to all fencing resources)",
       "TYPE" },
     { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -1024,7 +1025,11 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
 static void
 list_options(void)
 {
-    if (pcmk__str_eq(options.opt_list, PCMK_VALUE_FENCING, pcmk__str_none)) {
+    if (pcmk__str_eq(options.opt_list, PCMK__VALUE_PRIMITIVE, pcmk__str_none)) {
+        exit_code = pcmk_rc2exitc(pcmk__list_primitive_meta(out, options.all));
+
+    } else if (pcmk__str_eq(options.opt_list, PCMK_VALUE_FENCING,
+                            pcmk__str_none)) {
         exit_code = pcmk_rc2exitc(pcmk__list_fence_params(out, options.all));
 
     } else {
@@ -1032,7 +1037,7 @@ list_options(void)
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "Invalid --list-options value '%s'. Allowed values: "
-                    PCMK_VALUE_FENCING,
+                    PCMK__VALUE_PRIMITIVE ", " PCMK_VALUE_FENCING,
                     pcmk__s(options.opt_list, "(BUG: none)"));
     }
 }
