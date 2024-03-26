@@ -2120,7 +2120,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                          rsc_action, rsc->id);
                 out->err(out,
                          "Try setting "
-                         PCMK_META_TARGET_ROLE "=" PCMK__ROLE_STOPPED
+                         PCMK_META_TARGET_ROLE "=" PCMK_ROLE_STOPPED
                          " first or specifying the force option");
                 return CRM_EX_UNSAFE;
             }
