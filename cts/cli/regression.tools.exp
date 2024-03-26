@@ -141,7 +141,7 @@ Also known as properties, these are options that affect behavior across the enti
 
   * cluster-ipc-limit: Maximum IPC message backlog before disconnecting a cluster daemon
     * Raise this if log has "Evicting client" messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
-    * Possible values: integer (default: )
+    * Possible values: nonnegative_integer (default: )
 
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
@@ -381,7 +381,7 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="cluster-ipc-limit" advanced="0" generated="0">
         <longdesc lang="en">Raise this if log has "Evicting client" messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).</longdesc>
         <shortdesc lang="en">Maximum IPC message backlog before disconnecting a cluster daemon</shortdesc>
-        <content type="integer" default=""/>
+        <content type="nonnegative_integer" default=""/>
       </parameter>
       <parameter name="stop-all-resources" advanced="0" generated="0">
         <longdesc lang="en">Whether the cluster should stop all active resources</longdesc>
@@ -570,7 +570,7 @@ Also known as properties, these are options that affect behavior across the enti
 
   * cluster-ipc-limit: Maximum IPC message backlog before disconnecting a cluster daemon
     * Raise this if log has "Evicting client" messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
-    * Possible values: integer (default: )
+    * Possible values: nonnegative_integer (default: )
 
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
@@ -842,7 +842,7 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="cluster-ipc-limit" advanced="0" generated="0">
         <longdesc lang="en">Raise this if log has "Evicting client" messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).</longdesc>
         <shortdesc lang="en">Maximum IPC message backlog before disconnecting a cluster daemon</shortdesc>
-        <content type="integer" default=""/>
+        <content type="nonnegative_integer" default=""/>
       </parameter>
       <parameter name="stop-all-resources" advanced="0" generated="0">
         <longdesc lang="en">Whether the cluster should stop all active resources</longdesc>
