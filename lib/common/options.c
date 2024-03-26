@@ -829,6 +829,245 @@ static const pcmk__cluster_option_t fencing_params[] = {
     { NULL, },
 };
 
+static const pcmk__cluster_option_t primitive_meta[] = {
+    /* name, old name, type, allowed values,
+     * default value, validator,
+     * flags,
+     * short description,
+     * long description
+     */
+    {
+        PCMK_META_PRIORITY, NULL, PCMK_VALUE_SCORE, NULL,
+        "0", NULL,
+        pcmk__opt_none,
+        N_("Resource assignment priority"),
+        N_("If not all resources can be active, the cluster will stop "
+            "lower-priority resources in order to keep higher-priority ones "
+            "active."),
+    },
+    {
+        PCMK_META_CRITICAL, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_TRUE, NULL,
+        pcmk__opt_none,
+        N_("Default value for influence in colocation constraints"),
+        N_("Use this value as the default for influence in all colocation "
+            "constraints involving this resource, as well as in the implicit "
+            "colocation constraints created if this resource is in a group."),
+    },
+    {
+        PCMK_META_TARGET_ROLE, NULL, PCMK_VALUE_SELECT,
+            PCMK_ROLE_STOPPED ", " PCMK_ROLE_STARTED ", "
+            PCMK_ROLE_UNPROMOTED ", " PCMK_ROLE_PROMOTED,
+        PCMK_ROLE_STARTED, NULL,
+        pcmk__opt_none,
+        N_("State the cluster should attempt to keep this resource in"),
+        N_("\"Stopped\" forces the resource to be stopped. "
+            "\"Started\" allows the resource to be started (and in the case of "
+            "promotable clone resources, promoted if appropriate). "
+            "\"Unpromoted\" allows the resource to be started, but only in the "
+            "unpromoted role if the resource is promotable. "
+            "\"Promoted\" is equivalent to \"Started\"."),
+    },
+    {
+        PCMK_META_IS_MANAGED, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_TRUE, NULL,
+        pcmk__opt_none,
+        N_("Whether the cluster is allowed to actively change the resource's "
+            "state"),
+        N_("If false, the cluster will not start, stop, promote, or demote the "
+            "resource on any node. Recurring actions for the resource are "
+            "unaffected. If true, a true value for the maintenance-mode "
+            "cluster option, the maintenance node attribute, or the "
+            "maintenance resource meta-attribute overrides this."),
+    },
+    {
+        PCMK_META_MAINTENANCE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_FALSE, NULL,
+        pcmk__opt_none,
+        N_("If true, the cluster will not schedule any actions involving the "
+            "resource"),
+        N_("If true, the cluster will not start, stop, promote, or demote the "
+            "resource on any node, and will pause any recurring monitors "
+            "(except those specifying role as \"Stopped\"). If false, a true "
+            "value for the maintenance-mode cluster option or maintenance node "
+            "attribute overrides this."),
+    },
+    {
+        PCMK_META_RESOURCE_STICKINESS, NULL, PCMK_VALUE_SCORE, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Score to add to the current node when a resource is already "
+            "active"),
+        N_("Score to add to the current node when a resource is already "
+            "active. This allows running resources to stay where they are, "
+            "even if they would be placed elsewhere if they were being started "
+            "from a stopped state. "
+            "The default is 1 for individual clone instances, and 0 for all "
+            "other resources."),
+    },
+    {
+        PCMK_META_REQUIRES, NULL, PCMK_VALUE_SELECT,
+            PCMK_VALUE_NOTHING ", " PCMK_VALUE_QUORUM ", "
+            PCMK_VALUE_FENCING ", " PCMK_VALUE_UNFENCING,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Conditions under which the resource can be started"),
+        N_("Conditions under which the resource can be started. "
+            "\"nothing\" means the cluster can always start this resource. "
+            "\"quorum\" means the cluster can start this resource only if a "
+            "majority of the configured nodes are active. "
+            "\"fencing\" means the cluster can start this resource only if a "
+            "majority of the configured nodes are active and any failed or "
+            "unknown nodes have been fenced. "
+            "\"unfencing\" means the cluster can start this resource only if "
+            "a majority of the configured nodes are active and any failed or "
+            "unknown nodes have been fenced, and only on nodes that have been "
+            "unfenced. "
+            "The default is \"quorum\" for resources with a class of stonith; "
+            "otherwise, \"unfencing\" if unfencing is active in the cluster; "
+            "otherwise, \"fencing\" if the stonith-enabled cluster option is "
+            "true; "
+            "otherwise, \"quorum\"."),
+    },
+    {
+        PCMK_META_MIGRATION_THRESHOLD, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_VALUE_INFINITY, NULL,
+        pcmk__opt_none,
+        N_("Number of failures on a node before the resource becomes "
+            "ineligible to run there."),
+        N_("Number of failures that may occur for this resource on a node, "
+            "before that node is marked ineligible to host this resource. A "
+            "value of 0 indicates that this feature is disabled (the node will "
+            "never be marked ineligible). By contrast, the cluster treats "
+            "\"INFINITY\" (the default) as a very large but finite number. "
+            "This option has an effect only if the failed operation specifies "
+            "its on-fail attribute as \"restart\" (the default), and "
+            "additionally for failed start operations, if the "
+            "start-failure-is-fatal cluster property is set to false."),
+    },
+    {
+        PCMK_META_FAILURE_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        "0", NULL,
+        pcmk__opt_none,
+        N_("Number of seconds before acting as if a failure had not occurred"),
+        N_("Number of seconds after a failed action for this resource before "
+            "acting as if the failure had not occurred, and potentially "
+            "allowing the resource back to the node on which it failed. "
+            "A value of 0 indicates that this feature is disabled."),
+    },
+    {
+        PCMK_META_MULTIPLE_ACTIVE, NULL, PCMK_VALUE_SELECT,
+            PCMK_VALUE_BLOCK ", " PCMK_VALUE_STOP_ONLY ", "
+            PCMK_VALUE_STOP_START ", " PCMK_VALUE_STOP_UNEXPECTED,
+        PCMK_VALUE_STOP_START, NULL,
+        pcmk__opt_none,
+        N_("What to do if the cluster finds the resource active on more than "
+            "one node"),
+        N_("What to do if the cluster finds the resource active on more than "
+            "one node. "
+            "\"block\" means to mark the resource as unmanaged. "
+            "\"stop_only\" means to stop all active instances of this resource "
+            "and leave them stopped. "
+            "\"stop_start\" means to stop all active instances of this "
+            "resource and start the resource in one location only. "
+            "\"stop_unexpected\" means to stop all active instances of this "
+            "resource except where the resource should be active. (This should "
+            "be used only when extra instances are not expected to disrupt "
+            "existing instances, and the resource agent's monitor of an "
+            "existing instance is capable of detecting any problems that could "
+            "be caused. Note that any resources ordered after this one will "
+            "still need to be restarted.)"),
+    },
+    {
+        PCMK_META_ALLOW_MIGRATE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Whether the cluster should try to \"live migrate\" this resource "
+            "when it needs to be moved"),
+        N_("Whether the cluster should try to \"live migrate\" this resource "
+            "when it needs to be moved. "
+            "The default is true for ocf:pacemaker:remote resources, and false "
+            "otherwise."),
+    },
+    {
+        PCMK_META_ALLOW_UNHEALTHY_NODES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_FALSE, NULL,
+        pcmk__opt_none,
+        N_("Whether the resource should be allowed to run on a node even if "
+            "the node's health score would otherwise prevent it"),
+        NULL,
+    },
+    {
+        PCMK_META_CONTAINER_ATTRIBUTE_TARGET, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Where to check user-defined node attributes"),
+        N_("Whether to check user-defined node attributes on the physical host "
+            "where a container is running or on the local node. This is "
+            "usually set for a bundle resource and inherited by the bundle's "
+            "primitive resource. "
+            "A value of \"host\" means to check user-defined node attributes "
+            "on the underlying physical host. Any other value means to check "
+            "user-defined node attributes on the local node (for a bundled "
+            "primitive resource, this is the bundle node)."),
+    },
+    {
+        PCMK_META_REMOTE_NODE, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Name of the Pacemaker Remote guest node this resource is "
+            "associated with, if any"),
+        N_("Name of the Pacemaker Remote guest node this resource is "
+            "associated with, if any. If specified, this both enables the "
+            "resource as a guest node and defines the unique name used to "
+            "identify the guest node. The guest must be configured to run the "
+            "Pacemaker Remote daemon when it is started. "
+            "WARNING: This value cannot overlap with any resource or node "
+            "IDs."),
+    },
+    {
+        PCMK_META_REMOTE_ADDR, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, the IP address or hostname used to "
+            "connect to the guest via Pacemaker Remote"),
+        N_("If remote-node is specified, the IP address or hostname used to "
+            "connect to the guest via Pacemaker Remote. The Pacemaker Remote "
+            "daemon on the guest must be configured to accept connections on "
+            "this address. "
+            "The default is the value of the remote-node meta-attribute."),
+    },
+    {
+        PCMK_META_REMOTE_PORT, NULL, PCMK_VALUE_PORT, NULL,
+        "3121", NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, port on the guest used for its "
+            "Pacemaker Remote connection"),
+        N_("If remote-node is specified, the port on the guest used for its "
+            "Pacemaker Remote connection. The Pacemaker Remote daemon on the "
+            "guest must be configured to listen on this port."),
+    },
+    {
+        PCMK_META_REMOTE_CONNECT_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, how long before a pending Pacemaker "
+            "Remote guest connection times out."),
+        NULL,
+    },
+    {
+        PCMK_META_REMOTE_ALLOW_MIGRATE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_TRUE, NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, this acts as the allow-migrate "
+            "meta-attribute for the implicit remote connection resource "
+            "(ocf:pacemaker:remote)."),
+        NULL,
+    },
+
+    { NULL, },
+};
+
 /*
  * Environment variable option handling
  */
@@ -1246,6 +1485,29 @@ pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
 {
     return out->message(out, "option-list", name, desc_short, desc_long, filter,
                         cluster_options, all);
+}
+
+/*!
+ * \internal
+ * \brief Output primitive resource meta-attributes as OCF-like XML
+ *
+ * \param[in,out] out         Output object
+ * \param[in]     name        Fake resource agent name for the option list
+ * \param[in]     desc_short  Short description of the option list
+ * \param[in]     desc_long   Long description of the option list
+ * \param[in]     all         If \c true, output all options; otherwise, exclude
+ *                            advanced and deprecated options. This is always
+ *                            treated as true for XML output objects.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__output_primitive_meta(pcmk__output_t *out, const char *name,
+                            const char *desc_short, const char *desc_long,
+                            bool all)
+{
+    return out->message(out, "option-list", name, desc_short, desc_long,
+                        pcmk__opt_none, primitive_meta, all);
 }
 
 /*!
