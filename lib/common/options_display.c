@@ -296,6 +296,9 @@ map_legacy_option_type(const char *type)
                                 PCMK_VALUE_SCORE, NULL)) {
         return PCMK_VALUE_INTEGER;
 
+    } else if (pcmk__str_eq(type, PCMK_VALUE_VERSION, pcmk__str_none)) {
+        return PCMK_VALUE_STRING;
+
     } else {
         return type;
     }
