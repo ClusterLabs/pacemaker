@@ -92,6 +92,26 @@ pcmk__list_fencing_params(pcmk__output_t *out, bool all)
     return pcmk__output_fencing_params(out, name, desc_short, desc_long, all);
 }
 
+/*!
+ * \internal
+ * \brief List meta-attributes applicable to primitive resources as OCF-like XML
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__list_primitive_meta(pcmk__output_t *out, bool all)
+{
+    const char *name = "primitive-meta";
+    const char *desc_short = "Primitive meta-attributes";
+    const char *desc_long = "Meta-attributes applicable to primitive resources";
+
+    return pcmk__output_primitive_meta(out, name, desc_short, desc_long, all);
+}
+
 // Documented in header
 int
 pcmk_list_fencing_params(xmlNode **xml, bool all)
