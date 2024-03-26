@@ -1021,6 +1021,22 @@ function test_tools() {
     cmd="crm_resource --list-options=asdf --output-as=xml"
     test_assert_validate $CRM_EX_USAGE 0
 
+    desc="List non-advanced primitive meta-attributes"
+    cmd="crm_resource --list-options=primitive"
+    test_assert $CRM_EX_OK 0
+
+    desc="List non-advanced primitive meta-attributes (XML) (shows all)"
+    cmd="crm_resource --list-options=primitive --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available primitive meta-attributes"
+    cmd="crm_resource --list-options=primitive --all"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available primitive meta-attributes (XML)"
+    cmd="crm_resource --list-options=primitive --all --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="List non-advanced fencing parameters"
     cmd="crm_resource --list-options=fencing"
     test_assert $CRM_EX_OK 0
