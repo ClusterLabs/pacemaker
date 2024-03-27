@@ -97,7 +97,7 @@ lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
      * extra variables in the caller.
      */
     if ((*value == NULL) && pcmk__starts_with(line, prefix)) {
-        *value = pcmk__xml_escape(line + strlen(prefix), false);
+        *value = pcmk__xml_escape(line + strlen(prefix), pcmk__xml_escape_text);
         return TRUE;
     }
     return FALSE;
@@ -200,7 +200,7 @@ services__get_lsb_metadata(const char *type, char **output)
             }
 
             // Make long description safe to use in XML
-            long_desc = pcmk__xml_escape(desc->str, false);
+            long_desc = pcmk__xml_escape(desc->str, pcmk__xml_escape_text);
             g_string_free(desc, TRUE);
 
             if (processed_line) {

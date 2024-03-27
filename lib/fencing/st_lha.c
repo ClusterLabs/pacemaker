@@ -241,12 +241,14 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             return -EINVAL;
         }
 
-        if (pcmk__xml_needs_escape(meta_longdesc, false)) {
-            meta_longdesc_esc = pcmk__xml_escape(meta_longdesc, false);
+        if (pcmk__xml_needs_escape(meta_longdesc, pcmk__xml_escape_text)) {
+            meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
+                                                 pcmk__xml_escape_text);
             meta_longdesc = meta_longdesc_esc;
         }
-        if (pcmk__xml_needs_escape(meta_shortdesc, false)) {
-            meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc, false);
+        if (pcmk__xml_needs_escape(meta_shortdesc, pcmk__xml_escape_text)) {
+            meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
+                                                  pcmk__xml_escape_text);
             meta_shortdesc = meta_shortdesc_esc;
         }
 

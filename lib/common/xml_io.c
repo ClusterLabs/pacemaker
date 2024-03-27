@@ -357,8 +357,8 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     const char *content = (const char *) data->content;
     gchar *content_esc = NULL;
 
-    if (pcmk__xml_needs_escape(content, false)) {
-        content_esc = pcmk__xml_escape(content, false);
+    if (pcmk__xml_needs_escape(content, pcmk__xml_escape_text)) {
+        content_esc = pcmk__xml_escape(content, pcmk__xml_escape_text);
         content = content_esc;
     }
 

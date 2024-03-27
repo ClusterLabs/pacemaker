@@ -709,8 +709,8 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    if (pcmk__xml_needs_escape(desc, false)) {
-        gchar *escaped = pcmk__xml_escape(desc, false);
+    if (pcmk__xml_needs_escape(desc, pcmk__xml_escape_text)) {
+        gchar *escaped = pcmk__xml_escape(desc, pcmk__xml_escape_text);
 
         meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
         g_free(escaped);

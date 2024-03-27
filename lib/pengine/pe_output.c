@@ -1599,8 +1599,8 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     char *rc_s = NULL;
     xmlNodePtr node = NULL;
 
-    if (pcmk__xml_needs_escape(exit_reason, true)) {
-        exit_reason_esc = pcmk__xml_escape(exit_reason, true);
+    if (pcmk__xml_needs_escape(exit_reason, pcmk__xml_escape_attr)) {
+        exit_reason_esc = pcmk__xml_escape(exit_reason, pcmk__xml_escape_attr);
         exit_reason = exit_reason_esc;
     }
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);

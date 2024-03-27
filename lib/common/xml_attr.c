@@ -85,8 +85,8 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         return;
     }
 
-    if (pcmk__xml_needs_escape(value, true)) {
-        value_esc = pcmk__xml_escape(value, true);
+    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr)) {
+        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr);
         value = value_esc;
     }
 

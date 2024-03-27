@@ -1022,16 +1022,16 @@ utf8_bytes(const char *text)
  * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
- * See \c pcmk__xml_escape() for more details.
+ * See \c pcmk__xml_escape() and \c pcmk__xml_escape_type for more details.
  *
- * \param[in] text      String to check
- * \param[in] for_attr  If \c true, escape extra characters for attribute value
+ * \param[in] text  String to check
+ * \param[in] type  Type of escaping
  *
  * \return \c true if \p text has special characters that need to be escaped, or
  *         \c false otherwise
  */
 bool
-pcmk__xml_needs_escape(const char *text, bool for_attr)
+pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
 {
     if (text == NULL) {
         return false;
@@ -1046,24 +1046,41 @@ pcmk__xml_needs_escape(const char *text, bool for_attr)
             continue;
         }
 
-        switch (*text) {
-            case '<':
-                return true;
-            case '>':
-                return true;
-            case '&':
-                return true;
-            case '"':
-            case '\n':
-            case '\t':
-                if (for_attr) {
-                    return true;
+        switch (type) {
+            case pcmk__xml_escape_text:
+                switch (*text) {
+                    case '<':
+                    case '>':
+                    case '&':
+                        return true;
+                    case '\n':
+                    case '\t':
+                        break;
+                    default:
+                        if (!isprint(*text)) {
+                            return true;
+                        }
+                        break;
                 }
                 break;
-            default:
-                if (!isprint(*text)) {
-                    return true;
+
+            case pcmk__xml_escape_attr:
+                switch (*text) {
+                    case '<':
+                    case '>':
+                    case '&':
+                    case '"':
+                        return true;
+                    default:
+                        if (!isprint(*text)) {
+                            return true;
+                        }
+                        break;
                 }
+                break;
+
+            default:    // Invalid enum value
+                CRM_ASSERT(false);
                 break;
         }
 
@@ -1076,46 +1093,8 @@ pcmk__xml_needs_escape(const char *text, bool for_attr)
  * \internal
  * \brief Replace special characters with their XML escape sequences
  *
- * XML allows the escaping of special characters by replacing them with entity
- * references (for example, <tt>"&quot;"</tt>) or character references (for
- * example, <tt>"&#13;"</tt>).
- *
- * The special characters <tt>'&'</tt> (except as the beginning of an entity
- * reference) and <tt>'<'</tt> are not allowed in their literal forms in XML
- * character data. Character data is non-markup text (for example, the content
- * of a text node). <tt>'>'</tt> is allowed under most circumstances; we escape
- * it for safety and symmetry.
- *
- * For more details, see the "Character Data and Markup" section of the XML
- * spec, currently section 2.4:
- * https://www.w3.org/TR/xml/#dt-markup
- *
- * Attribute values are handled specially.
- * * If an attribute value is delimited by single quotes, then single quotes
- *   must be escaped within the value.
- * * Similarly, if an attribute value is delimited by double quotes, then double
- *   quotes must be escaped within the value.
- * * A conformant XML processor replaces a literal whitespace character (tab,
- *   newline, carriage return, space) in an attribute value with a space
- *   (\c '#x20') character. However, a reference to a whitespace character (for
- *   example, \c "&#x0A;" for \c '\n') does not get replaced.
- *   * For more details, see the "Attribute-Value Normalization" section of the
- *     XML spec, currently section 3.3.3. Note that the default attribute type
- *     is CDATA; we don't deal with NMTOKENS, etc.:
- *     https://www.w3.org/TR/xml/#AVNormalize
- *
- * Pacemaker always delimits attribute values with double quotes, so this
- * function doesn't escape single quotes.
- *
- * This function escapes newlines and tabs in attribute values, so that future
- * processing of the output preserves them instead of replacing them with space
- * characters.
- *
- * This function always escapes carriage returns even outside of attribute
- * values, since displaying them as literals would be messy.
- *
- * \param[in] text      Text to escape
- * \param[in] for_attr  If \c true, escape extra characters for attribute value
+ * \param[in] text  Text to escape
+ * \param[in] type  Type of escaping
  *
  * \return Newly allocated string equivalent to \p text but with special
  *         characters replaced with XML escape sequences (or \c NULL if \p text
@@ -1130,7 +1109,7 @@ pcmk__xml_needs_escape(const char *text, bool for_attr)
  *       \c g_free().
  */
 gchar *
-pcmk__xml_escape(const char *text, bool for_attr)
+pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 {
     GString *copy = NULL;
 
@@ -1149,43 +1128,58 @@ pcmk__xml_escape(const char *text, bool for_attr)
             continue;
         }
 
-        switch (*text) {
-            case '<':
-                g_string_append(copy, "&lt;");
-                break;
-            case '>':
-                g_string_append(copy, "&gt;");
-                break;
-            case '&':
-                g_string_append(copy, "&amp;");
-                break;
-            case '"':
-                if (for_attr) {
-                    g_string_append(copy, "&quot;");
-                } else {
-                    g_string_append_c(copy, *text);
+        switch (type) {
+            case pcmk__xml_escape_text:
+                switch (*text) {
+                    case '<':
+                        g_string_append(copy, "&lt;");
+                        break;
+                    case '>':
+                        g_string_append(copy, "&gt;");
+                        break;
+                    case '&':
+                        g_string_append(copy, "&amp;");
+                        break;
+                    case '\n':
+                    case '\t':
+                        g_string_append_c(copy, *text);
+                        break;
+                    default:
+                        if (!isprint(*text)) {
+                            g_string_append_printf(copy, "&#x%.2X;", *text);
+                        } else {
+                            g_string_append_c(copy, *text);
+                        }
+                        break;
                 }
                 break;
-            case '\n':
-                if (for_attr) {
-                    g_string_append(copy, "&#x0A;");
-                } else {
-                    g_string_append_c(copy, *text);
+
+            case pcmk__xml_escape_attr:
+                switch (*text) {
+                    case '<':
+                        g_string_append(copy, "&lt;");
+                        break;
+                    case '>':
+                        g_string_append(copy, "&gt;");
+                        break;
+                    case '&':
+                        g_string_append(copy, "&amp;");
+                        break;
+                    case '"':
+                        g_string_append(copy, "&quot;");
+                        break;
+                    default:
+                        if (!isprint(*text)) {
+                            g_string_append_printf(copy, "&#x%.2X;", *text);
+                        } else {
+                            g_string_append_c(copy, *text);
+                        }
+                        break;
                 }
                 break;
-            case '\t':
-                if (for_attr) {
-                    g_string_append(copy, "&#x09;");
-                } else {
-                    g_string_append_c(copy, *text);
-                }
-                break;
-            default:
-                if (!isprint(*text)) {
-                    g_string_append_printf(copy, "&#x%.2X;", *text);
-                } else {
-                    g_string_append_c(copy, *text);
-                }
+
+            default:    // Invalid enum value
+                CRM_ASSERT(false);
                 break;
         }
 
