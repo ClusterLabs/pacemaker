@@ -12,6 +12,8 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 
+#include "crmcommon_private.h"
+
 static void
 assert_escape(const char *str, const char *reference,
               enum pcmk__xml_escape_type type)
@@ -67,7 +69,8 @@ static void
 escape_left_angle(void **state)
 {
     const char *l_angle = "<abc<def<";
-    const char *l_angle_esc = "&lt;abc&lt;def&lt;";
+    const char *l_angle_esc = PCMK__XML_ENTITY_LT "abc"
+                              PCMK__XML_ENTITY_LT "def" PCMK__XML_ENTITY_LT;
 
     assert_escape(l_angle, l_angle_esc, pcmk__xml_escape_text);
     assert_escape(l_angle, l_angle_esc, pcmk__xml_escape_attr);
@@ -78,7 +81,8 @@ static void
 escape_right_angle(void **state)
 {
     const char *r_angle = ">abc>def>";
-    const char *r_angle_esc = "&gt;abc&gt;def&gt;";
+    const char *r_angle_esc = PCMK__XML_ENTITY_GT "abc"
+                              PCMK__XML_ENTITY_GT "def" PCMK__XML_ENTITY_GT;
 
     assert_escape(r_angle, r_angle_esc, pcmk__xml_escape_text);
     assert_escape(r_angle, r_angle_esc, pcmk__xml_escape_attr);
@@ -89,7 +93,8 @@ static void
 escape_ampersand(void **state)
 {
     const char *ampersand = "&abc&def&";
-    const char *ampersand_esc = "&amp;abc&amp;def&amp;";
+    const char *ampersand_esc = PCMK__XML_ENTITY_AMP "abc"
+                                PCMK__XML_ENTITY_AMP "def" PCMK__XML_ENTITY_AMP;
 
     assert_escape(ampersand, ampersand_esc, pcmk__xml_escape_text);
     assert_escape(ampersand, ampersand_esc, pcmk__xml_escape_attr);
@@ -100,7 +105,9 @@ static void
 escape_double_quote(void **state)
 {
     const char *double_quote = "\"abc\"def\"";
-    const char *double_quote_esc_ref = "&quot;abc&quot;def&quot;";
+    const char *double_quote_esc_ref = PCMK__XML_ENTITY_QUOT "abc"
+                                       PCMK__XML_ENTITY_QUOT "def"
+                                       PCMK__XML_ENTITY_QUOT;
     const char *double_quote_esc_backslash = "\\\"abc\\\"def\\\"";
 
     assert_escape(double_quote, double_quote, pcmk__xml_escape_text);
@@ -164,11 +171,15 @@ escape_utf8(void **state)
      */
     const char *chinese = "仅高级使用";
     const char *two_byte = "abc""\xCF\xA6""d<ef";
-    const char *two_byte_esc = "abc""\xCF\xA6""d&lt;ef";
+    const char *two_byte_esc = "abc""\xCF\xA6""d" PCMK__XML_ENTITY_LT "ef";
+
     const char *three_byte = "abc""\xEF\x98\x98""d<ef";
-    const char *three_byte_esc = "abc""\xEF\x98\x98""d&lt;ef";
+    const char *three_byte_esc = "abc""\xEF\x98\x98""d"
+                                 PCMK__XML_ENTITY_LT "ef";
+
     const char *four_byte = "abc""\xF0\x94\x81\x90""d<ef";
-    const char *four_byte_esc = "abc""\xF0\x94\x81\x90""d&lt;ef";
+    const char *four_byte_esc = "abc""\xF0\x94\x81\x90""d"
+                                PCMK__XML_ENTITY_LT "ef";
 
     assert_escape(chinese, chinese, pcmk__xml_escape_text);
     assert_escape(chinese, chinese, pcmk__xml_escape_attr);
