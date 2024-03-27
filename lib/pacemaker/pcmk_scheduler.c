@@ -11,6 +11,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/scheduler_internal.h>
@@ -818,4 +819,74 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     if (get_crm_log_level() == LOG_TRACE) {
         log_unrunnable_actions(scheduler);
     }
+}
+
+/*!
+ * \internal
+ * \brief Initialize scheduler data
+ *
+ * Make our own copies of the CIB XML and date/time object, if they're not
+ * \c NULL. This way we don't have to take ownership of the objects passed via
+ * the API.
+ *
+ * This function is most useful for public API functions that want the caller
+ * to retain ownership of the CIB object
+ *
+ * \param[in,out] out        Output object
+ * \param[in]     input      The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date       Date and time to use in the scheduler (if \c NULL,
+ *                           use current date and time).  This can be used for
+ *                           checking whether a rule is in effect at a certa
+ *                           date and time.
+ * \param[out]    scheduler  Where to store initialized scheduler data
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
+                     pcmk_scheduler_t **scheduler)
+{
+    // Allows for cleaner syntax than dereferencing the scheduler argument
+    pcmk_scheduler_t *new_scheduler = NULL;
+
+    new_scheduler = pe_new_working_set();
+    if (new_scheduler == NULL) {
+        return ENOMEM;
+    }
+
+    pcmk__set_scheduler_flags(new_scheduler,
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
+
+    // Populate the scheduler data
+
+    // Make our own copy of the given input or fetch the CIB and use that
+    if (input != NULL) {
+        new_scheduler->input = pcmk__xml_copy(NULL, input);
+        if (new_scheduler->input == NULL) {
+            out->err(out, "Failed to copy input XML");
+            pe_free_working_set(new_scheduler);
+            return ENOMEM;
+        }
+
+    } else {
+        int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
+
+        if (rc != pcmk_rc_ok) {
+            pe_free_working_set(new_scheduler);
+            return rc;
+        }
+    }
+
+    // Make our own copy of the given crm_time_t object; otherwise
+    // cluster_status() populates with the current time
+    if (date != NULL) {
+        // pcmk_copy_time() guarantees non-NULL
+        new_scheduler->now = pcmk_copy_time(date);
+    }
+
+    // Unpack everything
+    cluster_status(new_scheduler);
+    *scheduler = new_scheduler;
+
+    return pcmk_rc_ok;
 }

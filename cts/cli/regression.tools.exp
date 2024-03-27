@@ -3214,7 +3214,7 @@ ticketA
 =#=#=#= Begin test: List ticket IDs, outputting in XML =#=#=#=
 <pacemaker-result api-version="X" request="crm_ticket -w --output-as=xml">
   <tickets>
-    <ticket id="ticketA" status="revoked" standby="false"/>
+    <ticket id="ticketA" status="revoked" standby="false" granted="false"/>
   </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -3664,7 +3664,7 @@ ticketB	revoked
 <pacemaker-result api-version="X" request="crm_ticket -l --output-as=xml">
   <tickets>
     <ticket id="ticketA" status="revoked" standby="false"/>
-    <ticket id="ticketB" status="revoked" standby="false"/>
+    <ticket id="ticketB" status="revoked" standby="false" granted="false"/>
   </tickets>
   <status code="0" message="OK"/>
 </pacemaker-result>
