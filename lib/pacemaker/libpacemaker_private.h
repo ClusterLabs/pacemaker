@@ -1171,4 +1171,11 @@ G_GNUC_INTERNAL
 int pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                          pcmk_scheduler_t **scheduler);
 
+
+// General setup functions (pcmk_setup.c)
+
+G_GNUC_INTERNAL
+int pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
+                                 pcmk_scheduler_t **scheduler, xmlNode **xml);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
