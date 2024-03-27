@@ -25,11 +25,6 @@
 #include <crm/common/xml_internal.h>    // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
-// Define this as 1 in development to get insanely verbose trace messages
-#ifndef XML_PARSER_DEBUG
-#define XML_PARSER_DEBUG 0
-#endif
-
 /*!
  * \internal
  * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
@@ -1681,10 +1676,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                *object_href = NULL,
                *object_href_val = NULL;
 
-#if XML_PARSER_DEBUG
     crm_log_xml_trace(update, "update:");
     crm_log_xml_trace(target, "target:");
-#endif
 
     CRM_CHECK(update != NULL, return);
 
@@ -1712,7 +1705,6 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     if (target == NULL) {
         target = pcmk__xe_create(parent, object_name);
-#if XML_PARSER_DEBUG
         crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
@@ -1726,7 +1718,6 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                   object_href ? object_href : "",
                   object_href ? "=" : "",
                   object_href ? object_href_val : "");
-#endif
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
@@ -1749,24 +1740,20 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
-#if XML_PARSER_DEBUG
         crm_trace("Updating child <%s%s%s%s%s/>",
                   pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
                   object_href ? "=" : "",
                   object_href ? object_href_val : "");
-#endif
         pcmk__xml_update(target, NULL, a_child, as_diff);
     }
 
-#if XML_PARSER_DEBUG
     crm_trace("Finished with <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
               object_href ? " " : "",
               object_href ? object_href : "",
               object_href ? "=" : "",
               object_href ? object_href_val : "");
-#endif
 }
 
 /*!
@@ -1809,10 +1796,8 @@ delete_xe_if_matching(xmlNode *xml, void *user_data)
         }
     }
 
-#if XML_PARSER_DEBUG
     crm_log_xml_trace(xml, "delete-match");
     crm_log_xml_trace(search, "delete-search");
-#endif  // XML_PARSER_DEBUG
     free_xml(xml);
 
     // Found a match and deleted it; stop traversing tree
@@ -1925,10 +1910,8 @@ replace_xe_if_matching(xmlNode *xml, void *user_data)
         return true;
     }
 
-#if XML_PARSER_DEBUG
     crm_log_xml_trace(xml, "replace-match");
     crm_log_xml_trace(replace, "replace-with");
-#endif  // XML_PARSER_DEBUG
     replace_node(xml, replace);
 
     // Found a match and replaced it; stop traversing tree
@@ -2012,10 +1995,8 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
         return true;
     }
 
-#if XML_PARSER_DEBUG
     crm_log_xml_trace(xml, "update-match");
     crm_log_xml_trace(update, "update-with");
-#endif  // XML_PARSER_DEBUG
     pcmk__xml_update(NULL, xml, update, false);
 
     // Found a match and replaced it; stop traversing tree
