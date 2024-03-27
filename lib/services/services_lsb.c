@@ -91,13 +91,13 @@
  * \return TRUE if value was set, FALSE otherwise
  */
 static inline gboolean
-lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
+lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
 {
     /* @TODO Perhaps update later to use pcmk__xml_needs_escape(). Involves many
      * extra variables in the caller.
      */
-    if (!*value && pcmk__starts_with(line, prefix)) {
-        *value = pcmk__xml_escape(line + strlen(prefix), false);
+    if ((*value == NULL) && pcmk__starts_with(line, prefix)) {
+        *value = pcmk__xml_escape(line + strlen(prefix), pcmk__xml_escape_text);
         return TRUE;
     }
     return FALSE;
@@ -109,15 +109,15 @@ services__get_lsb_metadata(const char *type, char **output)
     char ra_pathname[PATH_MAX] = { 0, };
     FILE *fp = NULL;
     char buffer[1024] = { 0, };
-    char *provides = NULL;
-    char *required_start = NULL;
-    char *required_stop = NULL;
-    char *should_start = NULL;
-    char *should_stop = NULL;
-    char *default_start = NULL;
-    char *default_stop = NULL;
-    char *short_desc = NULL;
-    char *long_desc = NULL;
+    gchar *provides = NULL;
+    gchar *required_start = NULL;
+    gchar *required_stop = NULL;
+    gchar *should_start = NULL;
+    gchar *should_stop = NULL;
+    gchar *default_start = NULL;
+    gchar *default_stop = NULL;
+    gchar *short_desc = NULL;
+    gchar *long_desc = NULL;
     bool in_header = FALSE;
 
     if (type[0] == '/') {
@@ -200,7 +200,7 @@ services__get_lsb_metadata(const char *type, char **output)
             }
 
             // Make long description safe to use in XML
-            long_desc = pcmk__xml_escape(desc->str, false);
+            long_desc = pcmk__xml_escape(desc->str, pcmk__xml_escape_text);
             g_string_free(desc, TRUE);
 
             if (processed_line) {
@@ -230,15 +230,15 @@ services__get_lsb_metadata(const char *type, char **output)
                                 pcmk__s(default_start, ""),
                                 pcmk__s(default_stop, ""));
 
-    free(long_desc);
-    free(short_desc);
-    free(provides);
-    free(required_start);
-    free(required_stop);
-    free(should_start);
-    free(should_stop);
-    free(default_start);
-    free(default_stop);
+    g_free(long_desc);
+    g_free(short_desc);
+    g_free(provides);
+    g_free(required_start);
+    g_free(required_stop);
+    g_free(should_start);
+    g_free(should_stop);
+    g_free(default_start);
+    g_free(default_stop);
     return pcmk_ok;
 }
 

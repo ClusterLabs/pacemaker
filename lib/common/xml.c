@@ -714,13 +714,6 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
             va_end(ap);
         }
 
-        if (pcmk__xml_needs_escape(content, false)) {
-            char *escaped = pcmk__xml_escape(content, false);
-
-            free(buf);
-            buf = escaped;
-            content = buf;
-        }
         xmlNodeSetContent(node, (pcmkXmlStr) content);
         free(buf);
     }
@@ -1017,104 +1010,93 @@ utf8_bytes(const char *text)
 #endif  // CHAR_BIT != 8
     }
 
-    return c_bytes;
-}
-
-/*!
- * \internal
- * \brief Replace a character in a dynamically allocated string, reallocating
- *        memory
- *
- * \param[in,out] text     String to replace a character in
- * \param[in,out] index    Index of character to replace with new string; on
- *                         return, reset to index of end of replacement string
- * \param[in,out] length   Length of \p text
- * \param[in]     replace  String to replace character at \p index with (must
- *                         not be empty)
- *
- * \return \p text, with the character at \p index replaced by \p replace
- */
-static char *
-replace_text(char *text, size_t *index, size_t *length, const char *replace)
-{
-    /* @TODO Replace with GString? Or at least copy char-by-char, escaping
-     * characters as needed, instead of shifting characters on every replacement
-     */
-
-    // We have space for 1 char already
-    size_t offset = strlen(replace) - 1;
-
-    if (offset > 0) {
-        *length += offset;
-        text = pcmk__realloc(text, *length + 1);
-
-        // Shift characters to the right to make room for the replacement string
-        for (size_t i = *length; i > (*index + offset); i--) {
-            text[i] = text[i - offset];
-        }
+    for (int i = 0; i < c_bytes; i++) {
+        // Sanity-check that we haven't passed end of string as "non-ASCII"
+        CRM_ASSERT(text[i] != '\0');
     }
 
-    // Replace the character at index by the replacement string
-    memcpy(text + *index, replace, offset + 1);
-
-    // Reset index to the end of replacement string
-    *index += offset;
-    return text;
+    return c_bytes;
 }
 
 /*!
  * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
- * See \c pcmk__xml_escape() for more details.
+ * See \c pcmk__xml_escape() and \c pcmk__xml_escape_type for more details.
  *
- * \param[in] text          String to check
- * \param[in] escape_quote  If \c true, double quotes must be escaped
+ * \param[in] text  String to check
+ * \param[in] type  Type of escaping
  *
  * \return \c true if \p text has special characters that need to be escaped, or
  *         \c false otherwise
  */
 bool
-pcmk__xml_needs_escape(const char *text, bool escape_quote)
+pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
 {
-    size_t length = 0;
-
     if (text == NULL) {
         return false;
     }
-    length = strlen(text);
 
-    for (size_t index = 0; index < length; index++) {
+    while (*text != '\0') {
         // Don't escape any non-ASCII characters
-        index += utf8_bytes(&(text[index]));
+        size_t ubytes = utf8_bytes(text);
 
-        switch (text[index]) {
-            case '\0':
-                // Reached end of string by skipping UTF-8 bytes
-                return false;
-            case '<':
-                return true;
-            case '>':
-                // Not necessary, but for symmetry with '<'
-                return true;
-            case '&':
-                return true;
-            case '"':
-                if (escape_quote) {
-                    return true;
+        if (ubytes > 0) {
+            text += ubytes;
+            continue;
+        }
+
+        switch (type) {
+            case pcmk__xml_escape_text:
+                switch (*text) {
+                    case '<':
+                    case '>':
+                    case '&':
+                        return true;
+                    case '\n':
+                    case '\t':
+                        break;
+                    default:
+                        if (!isprint(*text)) {
+                            return true;
+                        }
+                        break;
                 }
                 break;
-            case '\n':
-            case '\t':
-                // Don't escape newline or tab
-                break;
-            default:
-                if ((text[index] < 0x20) || (text[index] >= 0x7f)) {
-                    // Escape non-printing characters
-                    return true;
+
+            case pcmk__xml_escape_attr:
+                switch (*text) {
+                    case '<':
+                    case '>':
+                    case '&':
+                    case '"':
+                        return true;
+                    default:
+                        if (!isprint(*text)) {
+                            return true;
+                        }
+                        break;
                 }
+                break;
+
+            case pcmk__xml_escape_attr_pretty:
+                switch (*text) {
+                    case '\n':
+                    case '\r':
+                    case '\t':
+                    case '"':
+                        return true;
+                    default:
+                        break;
+                }
+                break;
+
+            default:    // Invalid enum value
+                CRM_ASSERT(false);
                 break;
         }
+
+        text++;
     }
     return false;
 }
@@ -1123,29 +1105,8 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
  * \internal
  * \brief Replace special characters with their XML escape sequences
  *
- * XML allows the escaping of special characters by replacing them with entity
- * references (for example, <tt>"&quot;"</tt>) or character references (for
- * example, <tt>"&#13;"</tt>).
- *
- * The special characters <tt>'<'</tt> and <tt>'&'</tt> are not allowed in their
- * literal forms in XML character data. Character data is non-markup text (for
- * example, the content of a text node).
- *
- * Additionally, if an attribute value is delimited by single quotes, then
- * single quotes must be escaped within the value. Similarly, if an attribute
- * value is delimited by double quotes, then double quotes must be escaped
- * within the value.
- *
- * For more details, see the "Character Data and Markup" section of the XML
- * spec, currently section 2.4:
- * https://www.w3.org/TR/xml/#dt-markup
- *
- * Pacemaker always delimits attribute values with double quotes, so this
- * function doesn't escape single quotes.
- *
- * \param[in] text          Text to escape
- * \param[in] escape_quote  If \c true, escape double quotes (should be enabled
- *                          for attribute values)
+ * \param[in] text  Text to escape
+ * \param[in] type  Type of escaping
  *
  * \return Newly allocated string equivalent to \p text but with special
  *         characters replaced with XML escape sequences (or \c NULL if \p text
@@ -1156,57 +1117,107 @@ pcmk__xml_needs_escape(const char *text, bool escape_quote)
  *       \c xmlEncodeEntitiesReentrant() and \c xmlEncodeSpecialChars().
  *       However, their escaping is incomplete. See:
  *       https://discourse.gnome.org/t/intended-use-of-xmlencodeentitiesreentrant-vs-xmlencodespecialchars/19252
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
  */
-char *
-pcmk__xml_escape(const char *text, bool escape_quote)
+gchar *
+pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 {
-    size_t length = 0;
-    char *copy = NULL;
-    char buf[32] = { '\0', };
+    GString *copy = NULL;
 
     if (text == NULL) {
         return NULL;
     }
-    length = strlen(text);
-    copy = pcmk__str_copy(text);
+    copy = g_string_sized_new(strlen(text));
 
-    for (size_t index = 0; index < length; index++) {
+    while (*text != '\0') {
         // Don't escape any non-ASCII characters
-        index += utf8_bytes(&(copy[index]));
+        size_t ubytes = utf8_bytes(text);
 
-        switch (copy[index]) {
-            case '\0':
-                // Reached end of string by skipping UTF-8 bytes
-                break;
-            case '<':
-                copy = replace_text(copy, &index, &length, "&lt;");
-                break;
-            case '>':
-                // Not necessary, but for symmetry with '<'
-                copy = replace_text(copy, &index, &length, "&gt;");
-                break;
-            case '&':
-                copy = replace_text(copy, &index, &length, "&amp;");
-                break;
-            case '"':
-                if (escape_quote) {
-                    copy = replace_text(copy, &index, &length, "&quot;");
+        if (ubytes > 0) {
+            g_string_append_len(copy, text, ubytes);
+            text += ubytes;
+            continue;
+        }
+
+        switch (type) {
+            case pcmk__xml_escape_text:
+                switch (*text) {
+                    case '<':
+                        g_string_append(copy, PCMK__XML_ENTITY_LT);
+                        break;
+                    case '>':
+                        g_string_append(copy, PCMK__XML_ENTITY_GT);
+                        break;
+                    case '&':
+                        g_string_append(copy, PCMK__XML_ENTITY_AMP);
+                        break;
+                    case '\n':
+                    case '\t':
+                        g_string_append_c(copy, *text);
+                        break;
+                    default:
+                        if (!isprint(*text)) {
+                            g_string_append_printf(copy, "&#x%.2X;", *text);
+                        } else {
+                            g_string_append_c(copy, *text);
+                        }
+                        break;
                 }
                 break;
-            case '\n':
-            case '\t':
-                // Don't escape newlines and tabs
-                break;
-            default:
-                if ((copy[index] < 0x20) || (copy[index] >= 0x7f)) {
-                    // Escape non-printing characters
-                    snprintf(buf, sizeof(buf), "&#x%.2x;", copy[index]);
-                    copy = replace_text(copy, &index, &length, buf);
+
+            case pcmk__xml_escape_attr:
+                switch (*text) {
+                    case '<':
+                        g_string_append(copy, PCMK__XML_ENTITY_LT);
+                        break;
+                    case '>':
+                        g_string_append(copy, PCMK__XML_ENTITY_GT);
+                        break;
+                    case '&':
+                        g_string_append(copy, PCMK__XML_ENTITY_AMP);
+                        break;
+                    case '"':
+                        g_string_append(copy, PCMK__XML_ENTITY_QUOT);
+                        break;
+                    default:
+                        if (!isprint(*text)) {
+                            g_string_append_printf(copy, "&#x%.2X;", *text);
+                        } else {
+                            g_string_append_c(copy, *text);
+                        }
+                        break;
                 }
+                break;
+
+            case pcmk__xml_escape_attr_pretty:
+                switch (*text) {
+                    case '"':
+                        g_string_append(copy, "\\\"");
+                        break;
+                    case '\n':
+                        g_string_append(copy, "\\n");
+                        break;
+                    case '\r':
+                        g_string_append(copy, "\\r");
+                        break;
+                    case '\t':
+                        g_string_append(copy, "\\t");
+                        break;
+                    default:
+                        g_string_append_c(copy, *text);
+                        break;
+                }
+                break;
+
+            default:    // Invalid enum value
+                CRM_ASSERT(false);
                 break;
         }
+
+        text++;
     }
-    return copy;
+    return g_string_free(copy, FALSE);
 }
 
 /*!
@@ -2195,6 +2206,30 @@ xml_has_children(const xmlNode * xml_root)
         return TRUE;
     }
     return FALSE;
+}
+
+static char *
+replace_text(char *text, size_t *index, size_t *length, const char *replace)
+{
+    // We have space for 1 char already
+    size_t offset = strlen(replace) - 1;
+
+    if (offset > 0) {
+        *length += offset;
+        text = pcmk__realloc(text, *length + 1);
+
+        // Shift characters to the right to make room for the replacement string
+        for (size_t i = *length; i > (*index + offset); i--) {
+            text[i] = text[i - offset];
+        }
+    }
+
+    // Replace the character at index by the replacement string
+    memcpy(text + *index, replace, offset + 1);
+
+    // Reset index to the end of replacement string
+    *index += offset;
+    return text;
 }
 
 char *

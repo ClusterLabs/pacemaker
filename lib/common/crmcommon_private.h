@@ -50,6 +50,13 @@ typedef struct xml_doc_private_s {
         GList *deleted_objs; // List of pcmk__deleted_xml_t
 } xml_doc_private_t;
 
+// XML entity references
+
+#define PCMK__XML_ENTITY_AMP    "&amp;"
+#define PCMK__XML_ENTITY_GT     "&gt;"
+#define PCMK__XML_ENTITY_LT     "&lt;"
+#define PCMK__XML_ENTITY_QUOT   "&quot;"
+
 //! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
 #define PCMK__XML_VERSION ((pcmkXmlStr) "1.0")
 

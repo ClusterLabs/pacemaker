@@ -709,14 +709,16 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    if (pcmk__xml_needs_escape(desc, false)) {
-        char *escaped = pcmk__xml_escape(desc, false);
+    if (pcmk__xml_needs_escape(desc, pcmk__xml_escape_text)) {
+        gchar *escaped = pcmk__xml_escape(desc, pcmk__xml_escape_text);
 
-        free(desc);
-        desc = escaped;
+        meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
+        g_free(escaped);
+
+    } else {
+        meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
     }
 
-    meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
     free(desc);
     free(path);
     return meta;

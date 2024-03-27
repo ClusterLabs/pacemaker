@@ -63,7 +63,7 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
     const char *name = NULL;
     const char *value = NULL;
-    char *value_esc = NULL;
+    gchar *value_esc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     if (attr == NULL || attr->children == NULL) {
@@ -85,11 +85,11 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         return;
     }
 
-    if (pcmk__xml_needs_escape(value, true)) {
-        value_esc = pcmk__xml_escape(value, true);
+    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr)) {
+        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr);
         value = value_esc;
     }
 
     pcmk__g_strcat(buffer, " ", name, "=\"", value, "\"", NULL);
-    free(value_esc);
+    g_free(value_esc);
 }
