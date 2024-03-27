@@ -1144,13 +1144,13 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
             case pcmk__xml_escape_text:
                 switch (*text) {
                     case '<':
-                        g_string_append(copy, "&lt;");
+                        g_string_append(copy, PCMK__XML_ENTITY_LT);
                         break;
                     case '>':
-                        g_string_append(copy, "&gt;");
+                        g_string_append(copy, PCMK__XML_ENTITY_GT);
                         break;
                     case '&':
-                        g_string_append(copy, "&amp;");
+                        g_string_append(copy, PCMK__XML_ENTITY_AMP);
                         break;
                     case '\n':
                     case '\t':
@@ -1169,16 +1169,16 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
             case pcmk__xml_escape_attr:
                 switch (*text) {
                     case '<':
-                        g_string_append(copy, "&lt;");
+                        g_string_append(copy, PCMK__XML_ENTITY_LT);
                         break;
                     case '>':
-                        g_string_append(copy, "&gt;");
+                        g_string_append(copy, PCMK__XML_ENTITY_GT);
                         break;
                     case '&':
-                        g_string_append(copy, "&amp;");
+                        g_string_append(copy, PCMK__XML_ENTITY_AMP);
                         break;
                     case '"':
-                        g_string_append(copy, "&quot;");
+                        g_string_append(copy, PCMK__XML_ENTITY_QUOT);
                         break;
                     default:
                         if (!isprint(*text)) {
