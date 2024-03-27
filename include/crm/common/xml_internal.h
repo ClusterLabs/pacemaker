@@ -281,6 +281,23 @@ enum pcmk__xml_escape_type {
      *   character references.
      */
     pcmk__xml_escape_attr,
+
+    /* @COMPAT Drop escaping of at least '\n' and '\t' for
+     * pcmk__xml_escape_attr_pretty when openstack-info, openstack-floating-ip,
+     * and openstack-virtual-ip resource agents no longer depend on it.
+     *
+     * At time of writing, openstack-info may set a multiline value for the
+     * openstack_ports node attribute. The other two agents query the value and
+     * require it to be on one line with no spaces.
+     */
+    /*!
+     * For attribute values displayed in text output delimited by double quotes.
+     * * Escape \c '\n' as \c "\\n"
+     * * Escape \c '\r' as \c "\\r"
+     * * Escape \c '\t' as \c "\\t"
+     * * Escape \c '"' as \c "\\""
+     */
+    pcmk__xml_escape_attr_pretty,
 };
 
 bool pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type);

@@ -1079,6 +1079,18 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                 }
                 break;
 
+            case pcmk__xml_escape_attr_pretty:
+                switch (*text) {
+                    case '\n':
+                    case '\r':
+                    case '\t':
+                    case '"':
+                        return true;
+                    default:
+                        break;
+                }
+                break;
+
             default:    // Invalid enum value
                 CRM_ASSERT(false);
                 break;
@@ -1174,6 +1186,26 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                         } else {
                             g_string_append_c(copy, *text);
                         }
+                        break;
+                }
+                break;
+
+            case pcmk__xml_escape_attr_pretty:
+                switch (*text) {
+                    case '"':
+                        g_string_append(copy, "\\\"");
+                        break;
+                    case '\n':
+                        g_string_append(copy, "\\n");
+                        break;
+                    case '\r':
+                        g_string_append(copy, "\\r");
+                        break;
+                    case '\t':
+                        g_string_append(copy, "\\t");
+                        break;
+                    default:
+                        g_string_append_c(copy, *text);
                         break;
                 }
                 break;
