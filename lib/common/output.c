@@ -271,6 +271,10 @@ void
 pcmk__xml_output_finish(pcmk__output_t *out, crm_exit_t exit_status,
                         xmlNodePtr *xml)
 {
+    if (out == NULL) {
+        return;
+    }
+
     out->finish(out, exit_status, FALSE, (void **) xml);
     pcmk__output_free(out);
 }
