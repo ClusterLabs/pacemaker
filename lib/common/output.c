@@ -236,7 +236,7 @@ pcmk__output_and_clear_error(GError **error, pcmk__output_t *out)
  * functions that want to free any previous result supplied by the caller).
  *
  * \param[out]     out  Where to put newly created output object
- * \param[in,out]  xml  If non-NULL, this will be freed
+ * \param[in,out]  xml  If \c *xml is non-NULL, this will be freed
  *
  * \return Standard Pacemaker return code
  */
@@ -246,6 +246,10 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
         PCMK__SUPPORTED_FORMAT_XML,
         { NULL, NULL, NULL }
     };
+
+    if (xml == NULL) {
+        return EINVAL;
+    }
 
     if (*xml != NULL) {
         xmlFreeNode(*xml);
