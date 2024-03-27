@@ -2371,6 +2371,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "inject-rsc-action", "xml", inject_rsc_action_xml },
     { "inject-spec", "default", inject_spec },
     { "inject-spec", "xml", inject_spec_xml },
+    { "locations-and-colocations", "default", locations_and_colocations },
+    { "locations-and-colocations", "xml", locations_and_colocations_xml },
     { "locations-list", "default", locations_list },
     { "locations-list", "xml", locations_list_xml },
     { "node-action", "default", node_action },
@@ -2395,8 +2397,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "rscs-colocated-with-list", "xml", rscs_colocated_with_list_xml },
     { "rule-check", "default", rule_check_default },
     { "rule-check", "xml", rule_check_xml },
-    { "locations-and-colocations", "default", locations_and_colocations },
-    { "locations-and-colocations", "xml", locations_and_colocations_xml },
 
     { NULL, NULL, NULL }
 };

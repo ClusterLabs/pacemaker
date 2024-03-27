@@ -17,70 +17,7 @@
 #include <crm/pengine/rules_internal.h>
 #include <pacemaker-internal.h>
 
-/*!
- * \internal
- * \brief Initialize scheduler data for checking rules
- *
- * Make our own copies of the CIB XML and date/time object, if they're not
- * \c NULL. This way we don't have to take ownership of the objects passed via
- * the API.
- *
- * \param[in,out] out        Output object
- * \param[in]     input      The CIB XML to check (if \c NULL, use current CIB)
- * \param[in]     date       Check whether the rule is in effect at this date
- *                           and time (if \c NULL, use current date and time)
- * \param[out]    scheduler  Where to store initialized scheduler data
- *
- * \return Standard Pacemaker return code
- */
-static int
-init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
-                pcmk_scheduler_t **scheduler)
-{
-    // Allows for cleaner syntax than dereferencing the scheduler argument
-    pcmk_scheduler_t *new_scheduler = NULL;
-
-    new_scheduler = pe_new_working_set();
-    if (new_scheduler == NULL) {
-        return ENOMEM;
-    }
-
-    pcmk__set_scheduler_flags(new_scheduler,
-                              pcmk_sched_no_counts|pcmk_sched_no_compat);
-
-    // Populate the scheduler data
-
-    // Make our own copy of the given input or fetch the CIB and use that
-    if (input != NULL) {
-        new_scheduler->input = pcmk__xml_copy(NULL, input);
-        if (new_scheduler->input == NULL) {
-            out->err(out, "Failed to copy input XML");
-            pe_free_working_set(new_scheduler);
-            return ENOMEM;
-        }
-
-    } else {
-        int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
-
-        if (rc != pcmk_rc_ok) {
-            pe_free_working_set(new_scheduler);
-            return rc;
-        }
-    }
-
-    // Make our own copy of the given crm_time_t object; otherwise
-    // cluster_status() populates with the current time
-    if (date != NULL) {
-        // pcmk_copy_time() guarantees non-NULL
-        new_scheduler->now = pcmk_copy_time(date);
-    }
-
-    // Unpack everything
-    cluster_status(new_scheduler);
-    *scheduler = new_scheduler;
-
-    return pcmk_rc_ok;
-}
+#include "libpacemaker_private.h"
 
 #define XPATH_NODE_RULE "//" PCMK_XE_RULE "[@" PCMK_XA_ID "='%s']"
 
@@ -236,7 +173,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         return pcmk_rc_ok;
     }
 
-    rc = init_rule_check(out, input, date, &scheduler);
+    rc = pcmk__init_scheduler(out, input, date, &scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }

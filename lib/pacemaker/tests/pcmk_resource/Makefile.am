@@ -1,5 +1,5 @@
 #
-# Copyright 2023 the Pacemaker project contributors
+# Copyright 2023-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,9 +12,6 @@ include $(top_srcdir)/mk/unittest.mk
 
 LDADD += $(top_builddir)/lib/pacemaker/libpacemaker.la
 LDADD += $(top_builddir)/lib/cib/libcib.la
-
-AM_TESTS_ENVIRONMENT += PCMK_CTS_CLI_DIR=$(top_srcdir)/cts/cli
-AM_TESTS_ENVIRONMENT += PCMK_schema_directory=$(top_builddir)/xml
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 
