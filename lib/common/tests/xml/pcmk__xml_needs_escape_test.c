@@ -17,9 +17,11 @@ null_empty(void **state)
 {
     assert_false(pcmk__xml_needs_escape(NULL, pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape(NULL, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(NULL, pcmk__xml_escape_attr_pretty));
 
     assert_false(pcmk__xml_needs_escape("", pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape("", pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape("", pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -46,6 +48,8 @@ escape_unchanged(void **state)
 
     assert_false(pcmk__xml_needs_escape(unchanged, pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape(unchanged, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(unchanged,
+                                        pcmk__xml_escape_attr_pretty));
 }
 
 // Ensure special characters get escaped at start, middle, and end
@@ -64,6 +68,13 @@ escape_left_angle(void **state)
     assert_true(pcmk__xml_needs_escape(l_angle_left, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(l_angle_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(l_angle_right, pcmk__xml_escape_attr));
+
+    assert_false(pcmk__xml_needs_escape(l_angle_left,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(l_angle_mid,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(l_angle_right,
+                                        pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -80,6 +91,13 @@ escape_right_angle(void **state)
     assert_true(pcmk__xml_needs_escape(r_angle_left, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(r_angle_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(r_angle_right, pcmk__xml_escape_attr));
+
+    assert_false(pcmk__xml_needs_escape(r_angle_left,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(r_angle_mid,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(r_angle_right,
+                                        pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -96,6 +114,13 @@ escape_ampersand(void **state)
     assert_true(pcmk__xml_needs_escape(ampersand_left, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(ampersand_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(ampersand_right, pcmk__xml_escape_attr));
+
+    assert_false(pcmk__xml_needs_escape(ampersand_left,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(ampersand_mid,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(ampersand_right,
+                                        pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -118,6 +143,13 @@ escape_double_quote(void **state)
                                        pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(double_quote_right,
                                        pcmk__xml_escape_attr));
+
+    assert_true(pcmk__xml_needs_escape(double_quote_left,
+                                       pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(double_quote_mid,
+                                       pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(double_quote_right,
+                                       pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -134,6 +166,13 @@ escape_newline(void **state)
     assert_true(pcmk__xml_needs_escape(newline_left, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(newline_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(newline_right, pcmk__xml_escape_attr));
+
+    assert_true(pcmk__xml_needs_escape(newline_left,
+                                       pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(newline_mid,
+                                       pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(newline_right,
+                                       pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -150,6 +189,11 @@ escape_tab(void **state)
     assert_true(pcmk__xml_needs_escape(tab_left, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(tab_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(tab_right, pcmk__xml_escape_attr));
+
+    assert_true(pcmk__xml_needs_escape(tab_left, pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(tab_mid, pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(tab_right,
+                                       pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -166,6 +210,10 @@ escape_carriage_return(void **state)
     assert_true(pcmk__xml_needs_escape(cr_left, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(cr_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(cr_right, pcmk__xml_escape_attr));
+
+    assert_true(pcmk__xml_needs_escape(cr_left, pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(cr_mid, pcmk__xml_escape_attr_pretty));
+    assert_true(pcmk__xml_needs_escape(cr_right, pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -189,6 +237,13 @@ escape_nonprinting(void **state)
     assert_true(pcmk__xml_needs_escape(alert_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(alert_right, pcmk__xml_escape_attr));
 
+    assert_false(pcmk__xml_needs_escape(alert_left,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(alert_mid,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(alert_right,
+                                        pcmk__xml_escape_attr_pretty));
+
     assert_true(pcmk__xml_needs_escape(delete_left, pcmk__xml_escape_text));
     assert_true(pcmk__xml_needs_escape(delete_mid, pcmk__xml_escape_text));
     assert_true(pcmk__xml_needs_escape(delete_right, pcmk__xml_escape_text));
@@ -197,8 +252,17 @@ escape_nonprinting(void **state)
     assert_true(pcmk__xml_needs_escape(delete_mid, pcmk__xml_escape_attr));
     assert_true(pcmk__xml_needs_escape(delete_right, pcmk__xml_escape_attr));
 
+    assert_false(pcmk__xml_needs_escape(delete_left,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(delete_mid,
+                                        pcmk__xml_escape_attr_pretty));
+    assert_false(pcmk__xml_needs_escape(delete_right,
+                                        pcmk__xml_escape_attr_pretty));
+
     assert_true(pcmk__xml_needs_escape(nonprinting_all, pcmk__xml_escape_text));
     assert_true(pcmk__xml_needs_escape(nonprinting_all, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(nonprinting_all,
+                                        pcmk__xml_escape_attr_pretty));
 }
 
 static void
@@ -217,27 +281,43 @@ escape_utf8(void **state)
 
     assert_false(pcmk__xml_needs_escape(chinese, pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape(chinese, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(chinese, pcmk__xml_escape_attr_pretty));
 
     assert_false(pcmk__xml_needs_escape(two_byte, pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape(two_byte, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(two_byte,
+                                        pcmk__xml_escape_attr_pretty));
+
     assert_true(pcmk__xml_needs_escape(two_byte_special,
                                        pcmk__xml_escape_text));
     assert_true(pcmk__xml_needs_escape(two_byte_special,
                                        pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(two_byte_special,
+                                        pcmk__xml_escape_attr_pretty));
 
     assert_false(pcmk__xml_needs_escape(three_byte, pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape(three_byte, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(three_byte,
+                                        pcmk__xml_escape_attr_pretty));
+
     assert_true(pcmk__xml_needs_escape(three_byte_special,
                                        pcmk__xml_escape_text));
     assert_true(pcmk__xml_needs_escape(three_byte_special,
                                        pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(three_byte_special,
+                                        pcmk__xml_escape_attr_pretty));
 
     assert_false(pcmk__xml_needs_escape(four_byte, pcmk__xml_escape_text));
     assert_false(pcmk__xml_needs_escape(four_byte, pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(four_byte,
+                                        pcmk__xml_escape_attr_pretty));
+
     assert_true(pcmk__xml_needs_escape(four_byte_special,
                                        pcmk__xml_escape_text));
     assert_true(pcmk__xml_needs_escape(four_byte_special,
                                        pcmk__xml_escape_attr));
+    assert_false(pcmk__xml_needs_escape(four_byte_special,
+                                        pcmk__xml_escape_attr_pretty));
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
