@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2023 the Pacemaker project contributors
+# Copyright 2008-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,8 +23,8 @@ Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
  -t 'TEST [...]' Run only specified tests
-                 (default: 'daemons dates error_codes tools crm_mon acls
-                            validity upgrade rules feature_set').
+                 (default: 'access_render daemons dates error_codes tools
+                            crm_mon acls validity upgrade rules feature_set').
                  Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
@@ -43,8 +43,8 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="daemons dates error_codes tools crm_mon acls validity upgrade rules "
-tests="$tests feature_set"
+tests="access_render daemons dates error_codes tools crm_mon acls validity"
+tests="$tests upgrade rules feature_set"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -3255,25 +3255,23 @@ EOF
 # Ensure all command output is in portable locale for comparison
 export LC_ALL="C"
 test_access_render() {
-    local TMPXML
+    local TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
 
-    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
-
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib --create-empty
 
     # Create a test CIB that has ACL roles
     cat <<EOF > "$TMPXML"
-    <acls>
-      <acl_role id="role-deny-acls">
-        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
-        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
-      </acl_role>
-      <acl_target id="tony">
-        <role id="role-deny-acls"/>
-      </acl_target>
-    </acls>
+<acls>
+  <acl_role id="role-deny-acls-write-resources">
+    <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+    <acl_permission id="write-resources" kind="write"
+                    xpath="/cib/configuration/resources"/>
+    <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+  </acl_role>
+  <acl_target id="tony">
+    <role id="role-deny-acls-write-resources"/>
+  </acl_target>
+</acls>
 EOF
 
     desc="Configure some ACLs"
@@ -3286,7 +3284,7 @@ EOF
 
     unset CIB_user
 
-    # Run cibadmin --show-access on the test CIB with different users (tony here)
+    # Run cibadmin --show-access on the test CIB as an ACL-restricted user
 
     desc="An instance of ACLs render (into color)"
     cmd="cibadmin --force --show-access=color -Q --user tony"
@@ -3375,6 +3373,7 @@ done
 
 for t in $tests; do
     case "$t" in
+        access_render) ;;
         agents) ;;
         daemons) ;;
         dates) ;;
@@ -3429,6 +3428,12 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
+    # @TODO Add a way to suppress this message within cibadmin, and then drop
+    # the handling here.
+    suppress="The supplied command can provide skewed result since it is run"
+    suppress="$suppress under user that also gets guarded per ACLs on their"
+    suppress="$suppress own right. Continuing since --force flag was provided."
+
     # last-rc-change= is always numeric in the CIB. However, for the crm_mon
     # test we also need to compare against the XML output of the crm_mon
     # program. There, these are shown as human readable strings (like the
@@ -3481,6 +3486,7 @@ for t in $tests; do
         -e 's/Master/Promoted/' \
         -e 's/Slave/Unpromoted/' \
         -e 's/\x1b/\\x1b/' \
+        -e "/$suppress/d" \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
