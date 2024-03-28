@@ -1,22 +1,22 @@
 Created new pacemaker configuration
-Setting up shadow instance
-A new shadow instance was created.  To begin using it paste the following into your shell:
-  CIB_shadow=cts-cli ; export CIB_shadow
+A new shadow instance was created. To begin using it, enter the following into your shell:
+	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Configure some ACLs =#=#=#=
 =#=#=#= Current cib after: Configure some ACLs =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
     <resources/>
     <constraints/>
     <acls>
-      <acl_role id="role-deny-acls">
+      <acl_role id="role-deny-acls-write-resources">
         <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="write-resources" kind="write" xpath="/cib/configuration/resources"/>
         <acl_permission id="read-rest" kind="read" xpath="/cib"/>
       </acl_role>
       <acl_target id="tony">
-        <role id="role-deny-acls"/>
+        <role id="role-deny-acls-write-resources"/>
       </acl_target>
     </acls>
   </configuration>
@@ -26,7 +26,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: cibadmin       - Configure some ACLs
 =#=#=#= Begin test: Enable ACLs =#=#=#=
 =#=#=#= Current cib after: Enable ACLs =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -37,12 +37,13 @@ A new shadow instance was created.  To begin using it paste the following into y
     <resources/>
     <constraints/>
     <acls>
-      <acl_role id="role-deny-acls">
+      <acl_role id="role-deny-acls-write-resources">
         <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="write-resources" kind="write" xpath="/cib/configuration/resources"/>
         <acl_permission id="read-rest" kind="read" xpath="/cib"/>
       </acl_role>
       <acl_target id="tony">
-        <role id="role-deny-acls"/>
+        <role id="role-deny-acls-write-resources"/>
       </acl_target>
     </acls>
   </configuration>
@@ -52,7 +53,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: crm_attribute  - Enable ACLs
 =#=#=#= Begin test: An instance of ACLs render (into color) =#=#=#=
 <!-- ACLs as evaluated for user tony -->
-\x1b[34m<cib epoch="2" num_updates="0" admin_epoch="0">
+\x1b[34m<cib epoch="3" num_updates="0" admin_epoch="0">
   \x1b[34m<configuration>
     \x1b[34m<crm_config>
       \x1b[34m<cluster_property_set id="cib-bootstrap-options">
@@ -60,15 +61,16 @@ A new shadow instance was created.  To begin using it paste the following into y
       \x1b[34m</cluster_property_set>[0m
     \x1b[34m</crm_config>[0m
     \x1b[34m<nodes/>[0m
-    \x1b[34m<resources/>[0m
+    \x1b[32m<resources/>[0m
     \x1b[34m<constraints/>[0m
     \x1b[31m<acls>
-      \x1b[31m<acl_role id="role-deny-acls">
+      \x1b[31m<acl_role id="role-deny-acls-write-resources">
         \x1b[31m<acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>[0m
+        \x1b[31m<acl_permission id="write-resources" kind="write" xpath="/cib/configuration/resources"/>[0m
         \x1b[31m<acl_permission id="read-rest" kind="read" xpath="/cib"/>[0m
       \x1b[31m</acl_role>[0m
       \x1b[31m<acl_target id="tony">
-        \x1b[31m<role id="role-deny-acls"/>[0m
+        \x1b[31m<role id="role-deny-acls-write-resources"/>[0m
       \x1b[31m</acl_target>[0m
     \x1b[31m</acls>[0m
   \x1b[34m</configuration>[0m
@@ -78,7 +80,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: cibadmin       - An instance of ACLs render (into color)
 =#=#=#= Begin test: An instance of ACLs render (into namespacing) =#=#=#=
 <!-- ACLs as evaluated for user tony -->
-<pcmk-access-readable:cib epoch="2" num_updates="0" admin_epoch="0" xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable" xmlns:pcmk-access-denied="http://clusterlabs.org/ns/pacemaker/access/denied">
+<pcmk-access-readable:cib epoch="3" num_updates="0" admin_epoch="0" xmlns:pcmk-access-writable="http://clusterlabs.org/ns/pacemaker/access/writable" xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable" xmlns:pcmk-access-denied="http://clusterlabs.org/ns/pacemaker/access/denied">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -86,15 +88,16 @@ A new shadow instance was created.  To begin using it paste the following into y
       </cluster_property_set>
     </crm_config>
     <nodes/>
-    <resources/>
+    <pcmk-access-writable:resources/>
     <constraints/>
     <pcmk-access-denied:acls>
-      <acl_role id="role-deny-acls">
+      <acl_role id="role-deny-acls-write-resources">
         <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="write-resources" kind="write" xpath="/cib/configuration/resources"/>
         <acl_permission id="read-rest" kind="read" xpath="/cib"/>
       </acl_role>
       <acl_target id="tony">
-        <role id="role-deny-acls"/>
+        <role id="role-deny-acls-write-resources"/>
       </acl_target>
     </pcmk-access-denied:acls>
   </configuration>
@@ -105,7 +108,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 =#=#=#= Begin test: An instance of ACLs render (into text) =#=#=#=
 <!-- ACLs as evaluated for user tony -->
 vvv---[ READABLE ]---vvv
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -113,17 +116,20 @@ vvv---[ READABLE ]---vvv
       </cluster_property_set>
     </crm_config>
     <nodes/>
+    
+    vvv---[ WRITABLE ]---vvv
     <resources/>
     <constraints/>
     
     vvv---[ ~DENIED~ ]---vvv
     <acls>
-      <acl_role id="role-deny-acls">
+      <acl_role id="role-deny-acls-write-resources">
         <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="write-resources" kind="write" xpath="/cib/configuration/resources"/>
         <acl_permission id="read-rest" kind="read" xpath="/cib"/>
       </acl_role>
       <acl_target id="tony">
-        <role id="role-deny-acls"/>
+        <role id="role-deny-acls-write-resources"/>
       </acl_target>
     </acls>
   </configuration>
