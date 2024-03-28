@@ -317,6 +317,26 @@ unpack_meta_int(const pcmk_resource_t *rsc, const char *meta_name,
 
     if ((value == NULL) && (deprecated_name != NULL)) {
         value = g_hash_table_lookup(rsc->meta, deprecated_name);
+
+        if (value != NULL) {
+            if (pcmk__str_eq(deprecated_name, PCMK__META_PROMOTED_MAX_LEGACY,
+                             pcmk__str_none)) {
+                pcmk__warn_once(pcmk__wo_clone_master_max,
+                                "Support for the " PCMK__META_PROMOTED_MAX_LEGACY
+                                " meta-attribute (such as in %s) is deprecated "
+                                "and will be removed in a future release. Use the "
+                                PCMK_META_PROMOTED_MAX " meta-attribute instead.",
+                                rsc->id);
+            } else if (pcmk__str_eq(deprecated_name, PCMK__META_PROMOTED_NODE_MAX_LEGACY,
+                                    pcmk__str_none)) {
+                pcmk__warn_once(pcmk__wo_clone_master_node_max,
+                                "Support for the " PCMK__META_PROMOTED_NODE_MAX_LEGACY
+                                " meta-attribute (such as in %s) is deprecated "
+                                "and will be removed in a future release. Use the "
+                                PCMK_META_PROMOTED_NODE_MAX " meta-attribute instead.",
+                                rsc->id);
+            }
+        }
     }
     if (value != NULL) {
         pcmk__scan_min_int(value, &integer, 0);
