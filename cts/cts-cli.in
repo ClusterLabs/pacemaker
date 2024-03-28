@@ -3426,6 +3426,12 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
+    # @TODO Add a way to suppress this message within cibadmin, and then drop
+    # the handling here.
+    suppress="The supplied command can provide skewed result since it is run"
+    suppress="$suppress under user that also gets guarded per ACLs on their"
+    suppress="$suppress own right. Continuing since --force flag was provided."
+
     # last-rc-change= is always numeric in the CIB. However, for the crm_mon
     # test we also need to compare against the XML output of the crm_mon
     # program. There, these are shown as human readable strings (like the
@@ -3478,6 +3484,7 @@ for t in $tests; do
         -e 's/Master/Promoted/' \
         -e 's/Slave/Unpromoted/' \
         -e 's/\x1b/\\x1b/' \
+        -e "/$suppress/d" \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
