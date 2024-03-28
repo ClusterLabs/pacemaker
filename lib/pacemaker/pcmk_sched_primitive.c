@@ -537,7 +537,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
             pcmk__rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
         } else if ((rsc->running_on != NULL) && stop_if_fail) {
-            pcmk__rsc_info(rsc, "Stopping orphan resource %s", rsc->id);
+            pcmk__rsc_info(rsc, "Stopping removed resource %s", rsc->id);
         }
     }
 

@@ -1207,10 +1207,8 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
 
     this_node = pe_find_node_any(scheduler->nodes, id, uname);
     if (this_node == NULL) {
-        pcmk__config_warn("Ignoring recorded node state for "
-                          PCMK_XA_ID "=\"%s\" (%s) "
-                          "because it is no longer in the configuration",
-                          id, pcmk__s(uname, "uname unknown"));
+        crm_notice("Ignoring recorded state for removed node with name %s and "
+                   PCMK_XA_ID " %s", pcmk__s(uname, "unknown"), id);
         return;
     }
 
@@ -2466,13 +2464,13 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         && (rsc->role != pcmk_role_unknown)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
             if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-                pcmk__config_warn("Detected active orphan %s running on %s",
-                                  rsc->id, pcmk__node_name(node));
+                crm_notice("Removed resource %s is active on %s and will be "
+                           "stopped when possible",
+                           rsc->id, pcmk__node_name(node));
             } else {
-                pcmk__config_warn("Resource '%s' must be stopped manually on "
-                                  "%s because cluster is configured not to "
-                                  "stop active orphans",
-                                  rsc->id, pcmk__node_name(node));
+                crm_notice("Removed resource %s must be stopped manually on %s "
+                           "because " PCMK_OPT_STOP_ORPHAN_RESOURCES
+                           " is set to false", rsc->id, pcmk__node_name(node));
             }
         }
 
