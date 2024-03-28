@@ -23,8 +23,8 @@ Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
  -t 'TEST [...]' Run only specified tests
-                 (default: 'daemons dates error_codes tools crm_mon acls
-                            validity upgrade rules feature_set').
+                 (default: 'access_render daemons dates error_codes tools
+                            crm_mon acls validity upgrade rules feature_set').
                  Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
@@ -43,8 +43,8 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="daemons dates error_codes tools crm_mon acls validity upgrade rules "
-tests="$tests feature_set"
+tests="access_render daemons dates error_codes tools crm_mon acls validity"
+tests="$tests upgrade rules feature_set"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
