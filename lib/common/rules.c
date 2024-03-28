@@ -1150,3 +1150,146 @@ done:
     free(expanded_attr);
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Evaluate a resource rule expression
+ *
+ * \param[in] rsc_expression  XML of rule's \c PCMK_XE_RSC_EXPRESSION subelement
+ * \param[in] rule_input      Values used to evaluate rule criteria
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ *         passes, some other value if it does not)
+ */
+int
+pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
+                              const pcmk_rule_input_t *rule_input)
+{
+    const char *id = NULL;
+    const char *standard = NULL;
+    const char *provider = NULL;
+    const char *type = NULL;
+
+    if ((rsc_expression == NULL) || (rule_input == NULL)) {
+        return EINVAL;
+    }
+
+    // Validate XML ID
+    id = pcmk__xe_id(rsc_expression);
+    if (pcmk__str_empty(id)) {
+        // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * fail the expression
+         */
+        pcmk__config_warn(PCMK_XE_RSC_EXPRESSION " has no " PCMK_XA_ID);
+        id = "without ID"; // for logging
+    }
+
+    // Compare resource standard
+    standard = crm_element_value(rsc_expression, PCMK_XA_CLASS);
+    if ((standard != NULL)
+        && !pcmk__str_eq(standard, rule_input->rsc_standard, pcmk__str_none)) {
+        crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
+                  "actual standard '%s' doesn't match '%s'",
+                  id, pcmk__s(rule_input->rsc_standard, ""), standard);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    // Compare resource provider
+    provider = crm_element_value(rsc_expression, PCMK_XA_PROVIDER);
+    if ((provider != NULL)
+        && !pcmk__str_eq(provider, rule_input->rsc_provider, pcmk__str_none)) {
+        crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
+                  "actual provider '%s' doesn't match '%s'",
+                  id, pcmk__s(rule_input->rsc_provider, ""), provider);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    // Compare resource agent type
+    type = crm_element_value(rsc_expression, PCMK_XA_TYPE);
+    if ((type != NULL)
+        && !pcmk__str_eq(type, rule_input->rsc_agent, pcmk__str_none)) {
+        crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
+                  "actual agent '%s' doesn't match '%s'",
+                  id, pcmk__s(rule_input->rsc_agent, ""), type);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    crm_trace(PCMK_XE_RSC_EXPRESSION " %s is satisfied by %s%s%s:%s",
+              id, pcmk__s(standard, ""),
+              ((provider == NULL)? "" : ":"), pcmk__s(provider, ""),
+              pcmk__s(type, ""));
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Evaluate an operation rule expression
+ *
+ * \param[in] op_expression  XML of a rule's \c PCMK_XE_OP_EXPRESSION subelement
+ * \param[in] rule_input     Values used to evaluate rule criteria
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the expression
+ *         is satisfied, some other value if it is not)
+ */
+int
+pcmk__evaluate_op_expression(const xmlNode *op_expression,
+                             const pcmk_rule_input_t *rule_input)
+{
+    const char *id = NULL;
+    const char *name = NULL;
+    const char *interval_s = NULL;
+    guint interval_ms = 0U;
+
+    if ((op_expression == NULL) || (rule_input == NULL)) {
+        return EINVAL;
+    }
+
+    // Get operation expression ID (for logging)
+    id = pcmk__xe_id(op_expression);
+    if (pcmk__str_empty(id)) { // Not possible with schema validation enabled
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * return pcmk_rc_op_unsatisfied
+         */
+        pcmk__config_warn(PCMK_XE_OP_EXPRESSION " element has no " PCMK_XA_ID);
+        id = "without ID"; // for logging
+    }
+
+    // Validate operation name
+    name = crm_element_value(op_expression, PCMK_XA_NAME);
+    if (name == NULL) { // Not possible with schema validation enabled
+        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                          "passing because it has no " PCMK_XA_NAME, id);
+        return pcmk_rc_unpack_error;
+    }
+
+    // Validate operation interval
+    interval_s = crm_element_value(op_expression, PCMK_META_INTERVAL);
+    if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
+        pcmk__config_warn("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
+                          "passing because '%s' is not a valid interval",
+                          id, interval_s);
+        return pcmk_rc_unpack_error;
+    }
+
+    // Compare operation name
+    if (!pcmk__str_eq(name, rule_input->op_name, pcmk__str_none)) {
+        crm_trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because "
+                  "actual name '%s' doesn't match '%s'",
+                  id, pcmk__s(rule_input->op_name, ""), name);
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    // Compare operation interval (unspecified interval matches all)
+    if ((interval_s != NULL) && (interval_ms != rule_input->op_interval_ms)) {
+        crm_trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because "
+                  "actual interval %s doesn't match %s",
+                  id, pcmk__readable_interval(rule_input->op_interval_ms),
+                  pcmk__readable_interval(interval_ms));
+        return pcmk_rc_op_unsatisfied;
+    }
+
+    crm_trace(PCMK_XE_OP_EXPRESSION " %s is satisfied (name %s, interval %s)",
+              id, name, pcmk__readable_interval(rule_input->op_interval_ms));
+    return pcmk_rc_ok;
+}
