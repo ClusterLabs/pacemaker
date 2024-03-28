@@ -169,7 +169,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 
     if (call_data != NULL) {
         crm_trace("Attaching reply output");
-        add_message_xml(reply, PCMK__XA_CIB_CALLDATA, call_data);
+        pcmk__message_add_xml(reply, PCMK__XA_CIB_CALLDATA, call_data);
     }
 
     crm_log_xml_explicit(reply, "cib:reply");
@@ -424,7 +424,7 @@ process_ping_reply(xmlNode *reply)
     uint64_t seq = 0;
     const char *host = crm_element_value(reply, PCMK__XA_SRC);
 
-    xmlNode *pong = get_message_xml(reply, PCMK__XA_CIB_CALLDATA);
+    xmlNode *pong = pcmk__message_get_xml(reply, PCMK__XA_CIB_CALLDATA);
     const char *seq_s = crm_element_value(pong, PCMK__XA_CIB_PING_ID);
     const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
@@ -460,7 +460,8 @@ process_ping_reply(xmlNode *reply)
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *remote_cib = get_message_xml(pong, PCMK__XA_CIB_CALLDATA);
+            xmlNode *remote_cib = pcmk__message_get_xml(pong,
+                                                        PCMK__XA_CIB_CALLDATA);
             const char *admin_epoch_s = NULL;
             const char *epoch_s = NULL;
             const char *num_updates_s = NULL;
@@ -1002,7 +1003,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
             CRM_ASSERT(digest != NULL);
         }
 
-        add_message_xml(msg, PCMK__XA_CIB_UPDATE_DIFF, result_diff);
+        pcmk__message_add_xml(msg, PCMK__XA_CIB_UPDATE_DIFF, result_diff);
         crm_log_xml_explicit(msg, "copy");
         return send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
 
@@ -1305,14 +1306,15 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     switch (type) {
         case cib__op_apply_patch:
             if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-                input = get_message_xml(request, PCMK__XA_CIB_UPDATE_DIFF);
+                input = pcmk__message_get_xml(request,
+                                              PCMK__XA_CIB_UPDATE_DIFF);
             } else {
-                input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
+                input = pcmk__message_get_xml(request, PCMK__XA_CIB_CALLDATA);
             }
             break;
 
         default:
-            input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
+            input = pcmk__message_get_xml(request, PCMK__XA_CIB_CALLDATA);
             *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
             break;
     }

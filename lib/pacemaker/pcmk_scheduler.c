@@ -668,7 +668,8 @@ log_resource_details(pcmk_scheduler_t *scheduler)
         // Log all resources except inactive orphans
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
             || (rsc->role != pcmk_role_stopped)) {
-            out->message(out, crm_map_element_name(rsc->xml), 0UL, rsc, all, all);
+            out->message(out, pcmk__map_element_name(rsc->xml), 0UL, rsc, all,
+                         all);
         }
     }
 

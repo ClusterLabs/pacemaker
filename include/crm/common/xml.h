@@ -39,60 +39,13 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
-xmlNode *get_message_xml(const xmlNode *msg, const char *field);
-
-/*
- * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
- *
- * The gist is the same as with \c{xmlCopyPropList(target, src->properties)}.
- * The function exits prematurely when any attribute cannot be copied for
- * ACLs violation.  Even without bailing out, the result can possibly be
- * incosistent with expectations in that case, hence the caller shall,
- * aposteriori, verify that no document-level-tracked denial was indicated
- * with \c{xml_acl_denied(target)} and drop whole such intermediate object.
- *
- * \param[in,out] target  Element to receive attributes from #src element
- * \param[in]     src     Element carrying attributes to copy over to #target
- *
- * \note Original commit 1c632c506 sadly haven't stated which otherwise
- *       assumed behaviours of xmlCopyPropList were missing beyond otherwise
- *       custom extensions like said ACLs and "atomic increment" (that landed
- *       later on, anyway).
- */
-void copy_in_properties(xmlNode *target, const xmlNode *src);
-
-void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 void fix_plus_plus_recursive(xmlNode * target);
 
 
 /*
  * Searching & Modifying
  */
-gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
-                           gboolean delete_only);
-
-gboolean update_xml_child(xmlNode * child, xmlNode * to_update);
-
-int find_xml_children(xmlNode ** children, xmlNode * root,
-                      const char *tag, const char *field, const char *value,
-                      gboolean search_matches);
-
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
-
-static inline const char *
-crm_map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (strcmp((const char *) xml->name, "master") == 0) {
-        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
-}
 
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);

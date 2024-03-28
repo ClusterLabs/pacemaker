@@ -305,7 +305,7 @@ void
 attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest)
 {
     /* Copy attributes from the wrapper parent node into the child node.
-     * We can't just use copy_in_properties because we want to skip any
+     * We can't just use pcmk__xe_copy_attrs because we want to skip any
      * attributes that are already set on the child.  For instance, if
      * we were told to use a specific node, there will already be a node
      * attribute on the child.  Copying the parent's node attribute over

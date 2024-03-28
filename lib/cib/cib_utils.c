@@ -93,7 +93,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return pcmk_legacy2rc(rc);
     }
 
-    *patchset = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+    *patchset = pcmk__message_get_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (*patchset == NULL) {
         crm_err("CIB diff notification received with no patchset");
@@ -412,7 +412,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
         // Make a copy of the top-level element to store version details
         top = pcmk__xe_create(NULL, (const char *) scratch->name);
-        copy_in_properties(top, scratch);
+        pcmk__xe_copy_attrs(top, scratch);
         patchset_cib = top;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -689,7 +689,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
+        pcmk__message_add_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
     }
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
@@ -780,7 +780,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     if (msg != NULL) {
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        output = get_message_xml(msg, PCMK__XA_CIB_CALLDATA);
+        output = pcmk__message_get_xml(msg, PCMK__XA_CIB_CALLDATA);
     }
 
     blob = cib__lookup_id(call_id);
@@ -921,7 +921,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(output);
 
     crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
-    diff = get_message_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
+    diff = pcmk__message_get_xml(event, PCMK__XA_CIB_UPDATE_RESULT);
 
     if (rc < pcmk_ok || diff == NULL) {
         return rc;
@@ -1041,7 +1041,7 @@ cib_get_generation(cib_t * cib)
 
     cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
+        pcmk__xe_copy_attrs(generation, the_cib);
         free_xml(the_cib);
     }
 
