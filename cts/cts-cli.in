@@ -3255,25 +3255,21 @@ EOF
 # Ensure all command output is in portable locale for comparison
 export LC_ALL="C"
 test_access_render() {
-    local TMPXML
+    local TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
 
-    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
-
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib --create-empty
 
     # Create a test CIB that has ACL roles
     cat <<EOF > "$TMPXML"
-    <acls>
-      <acl_role id="role-deny-acls">
-        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
-        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
-      </acl_role>
-      <acl_target id="tony">
-        <role id="role-deny-acls"/>
-      </acl_target>
-    </acls>
+<acls>
+  <acl_role id="role-deny-acls">
+    <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+    <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+  </acl_role>
+  <acl_target id="tony">
+    <role id="role-deny-acls"/>
+  </acl_target>
+</acls>
 EOF
 
     desc="Configure some ACLs"
@@ -3286,7 +3282,7 @@ EOF
 
     unset CIB_user
 
-    # Run cibadmin --show-access on the test CIB with different users (tony here)
+    # Run cibadmin --show-access on the test CIB as an ACL-restricted user
 
     desc="An instance of ACLs render (into color)"
     cmd="cibadmin --force --show-access=color -Q --user tony"
