@@ -3262,12 +3262,14 @@ test_access_render() {
     # Create a test CIB that has ACL roles
     cat <<EOF > "$TMPXML"
 <acls>
-  <acl_role id="role-deny-acls">
+  <acl_role id="role-deny-acls-write-resources">
     <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+    <acl_permission id="write-resources" kind="write"
+                    xpath="/cib/configuration/resources"/>
     <acl_permission id="read-rest" kind="read" xpath="/cib"/>
   </acl_role>
   <acl_target id="tony">
-    <role id="role-deny-acls"/>
+    <role id="role-deny-acls-write-resources"/>
   </acl_target>
 </acls>
 EOF
