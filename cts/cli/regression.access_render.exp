@@ -3,7 +3,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Configure some ACLs =#=#=#=
 =#=#=#= Current cib after: Configure some ACLs =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -25,7 +25,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 * Passed: cibadmin       - Configure some ACLs
 =#=#=#= Begin test: Enable ACLs =#=#=#=
 =#=#=#= Current cib after: Enable ACLs =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -51,7 +51,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 * Passed: crm_attribute  - Enable ACLs
 =#=#=#= Begin test: An instance of ACLs render (into color) =#=#=#=
 <!-- ACLs as evaluated for user tony -->
-\x1b[34m<cib epoch="2" num_updates="0" admin_epoch="0">
+\x1b[34m<cib epoch="3" num_updates="0" admin_epoch="0">
   \x1b[34m<configuration>
     \x1b[34m<crm_config>
       \x1b[34m<cluster_property_set id="cib-bootstrap-options">
@@ -77,7 +77,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 * Passed: cibadmin       - An instance of ACLs render (into color)
 =#=#=#= Begin test: An instance of ACLs render (into namespacing) =#=#=#=
 <!-- ACLs as evaluated for user tony -->
-<pcmk-access-readable:cib epoch="2" num_updates="0" admin_epoch="0" xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable" xmlns:pcmk-access-denied="http://clusterlabs.org/ns/pacemaker/access/denied">
+<pcmk-access-readable:cib epoch="3" num_updates="0" admin_epoch="0" xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable" xmlns:pcmk-access-denied="http://clusterlabs.org/ns/pacemaker/access/denied">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -104,7 +104,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= Begin test: An instance of ACLs render (into text) =#=#=#=
 <!-- ACLs as evaluated for user tony -->
 vvv---[ READABLE ]---vvv
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
