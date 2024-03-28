@@ -221,8 +221,87 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
-bool pcmk__xml_needs_escape(const char *text, bool escape_quote);
-char *pcmk__xml_escape(const char *text, bool escape_quote);
+/*!
+ * \internal
+ * \enum pcmk__xml_escape_type
+ * \brief Indicators of which XML characters to escape
+ *
+ * XML allows the escaping of special characters by replacing them with entity
+ * references (for example, <tt>"&quot;"</tt>) or character references (for
+ * example, <tt>"&#13;"</tt>).
+ *
+ * The special characters <tt>'&'</tt> (except as the beginning of an entity
+ * reference) and <tt>'<'</tt> are not allowed in their literal forms in XML
+ * character data. Character data is non-markup text (for example, the content
+ * of a text node). <tt>'>'</tt> is allowed under most circumstances; we escape
+ * it for safety and symmetry.
+ *
+ * For more details, see the "Character Data and Markup" section of the XML
+ * spec, currently section 2.4:
+ * https://www.w3.org/TR/xml/#dt-markup
+ *
+ * Attribute values are handled specially.
+ * * If an attribute value is delimited by single quotes, then single quotes
+ *   must be escaped within the value.
+ * * Similarly, if an attribute value is delimited by double quotes, then double
+ *   quotes must be escaped within the value.
+ * * A conformant XML processor replaces a literal whitespace character (tab,
+ *   newline, carriage return, space) in an attribute value with a space
+ *   (\c '#x20') character. However, a reference to a whitespace character (for
+ *   example, \c "&#x0A;" for \c '\n') does not get replaced.
+ *   * For more details, see the "Attribute-Value Normalization" section of the
+ *     XML spec, currently section 3.3.3. Note that the default attribute type
+ *     is CDATA; we don't deal with NMTOKENS, etc.:
+ *     https://www.w3.org/TR/xml/#AVNormalize
+ *
+ * Pacemaker always delimits attribute values with double quotes, so there's no
+ * need to escape single quotes.
+ *
+ * Newlines and tabs should be escaped in attribute values when XML is
+ * serialized to text, so that future parsing preserves them rather than
+ * normalizing them to spaces.
+ *
+ * We always escape carriage returns, so that they're not converted to spaces
+ * during attribute-value normalization and because displaying them as literals
+ * is messy.
+ */
+enum pcmk__xml_escape_type {
+    /*!
+     * For text nodes.
+     * * Escape \c '<', \c '>', and \c '&' using entity references.
+     * * Do not escape \c '\n' and \c '\t'.
+     * * Escape other non-printing characters using character references.
+     */
+    pcmk__xml_escape_text,
+
+    /*!
+     * For attribute values.
+     * * Escape \c '<', \c '>', \c '&', and \c '"' using entity references.
+     * * Escape \c '\n', \c '\t', and other non-printing characters using
+     *   character references.
+     */
+    pcmk__xml_escape_attr,
+
+    /* @COMPAT Drop escaping of at least '\n' and '\t' for
+     * pcmk__xml_escape_attr_pretty when openstack-info, openstack-floating-ip,
+     * and openstack-virtual-ip resource agents no longer depend on it.
+     *
+     * At time of writing, openstack-info may set a multiline value for the
+     * openstack_ports node attribute. The other two agents query the value and
+     * require it to be on one line with no spaces.
+     */
+    /*!
+     * For attribute values displayed in text output delimited by double quotes.
+     * * Escape \c '\n' as \c "\\n"
+     * * Escape \c '\r' as \c "\\r"
+     * * Escape \c '\t' as \c "\\t"
+     * * Escape \c '"' as \c "\\""
+     */
+    pcmk__xml_escape_attr_pretty,
+};
+
+bool pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type);
+char *pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type);
 
 /*!
  * \internal

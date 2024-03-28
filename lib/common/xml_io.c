@@ -355,10 +355,10 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
     int spaces = pretty? (2 * depth) : 0;
     const char *content = (const char *) data->content;
-    char *content_esc = NULL;
+    gchar *content_esc = NULL;
 
-    if (pcmk__xml_needs_escape(content, false)) {
-        content_esc = pcmk__xml_escape(content, false);
+    if (pcmk__xml_needs_escape(content, pcmk__xml_escape_text)) {
+        content_esc = pcmk__xml_escape(content, pcmk__xml_escape_text);
         content = content_esc;
     }
 
@@ -371,7 +371,7 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     if (pretty) {
         g_string_append_c(buffer, '\n');
     }
-    free(content_esc);
+    g_free(content_esc);
 }
 
 /*!

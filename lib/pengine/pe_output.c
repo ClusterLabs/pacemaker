@@ -1595,12 +1595,12 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *status_s = NULL;
 
     time_t epoch = 0;
-    char *exit_reason_esc = NULL;
+    gchar *exit_reason_esc = NULL;
     char *rc_s = NULL;
     xmlNodePtr node = NULL;
 
-    if (pcmk__xml_needs_escape(exit_reason, true)) {
-        exit_reason_esc = pcmk__xml_escape(exit_reason, true);
+    if (pcmk__xml_needs_escape(exit_reason, pcmk__xml_escape_attr)) {
+        exit_reason_esc = pcmk__xml_escape(exit_reason, pcmk__xml_escape_attr);
         exit_reason = exit_reason_esc;
     }
     pcmk__scan_min_int(crm_element_value(xml_op, PCMK__XA_RC_CODE), &rc, 0);
@@ -1652,7 +1652,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         free(rc_change);
     }
 
-    free(exit_reason_esc);
+    g_free(exit_reason_esc);
     return pcmk_rc_ok;
 }
 

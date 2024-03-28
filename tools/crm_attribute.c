@@ -63,6 +63,13 @@ attribute_text(pcmk__output_t *out, va_list args)
     const char *value = va_arg(args, const char *);
     const char *host G_GNUC_UNUSED = va_arg(args, const char *);
 
+    gchar *value_esc = NULL;
+
+    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr_pretty)) {
+        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr_pretty);
+        value = value_esc;
+    }
+
     if (out->quiet) {
         if (value != NULL) {
             pcmk__formatted_printf(out, "%s\n", value);
@@ -75,6 +82,7 @@ attribute_text(pcmk__output_t *out, va_list args)
                   value ? value : "(null)");
     }
 
+    g_free(value_esc);
     return pcmk_rc_ok;
 }
 

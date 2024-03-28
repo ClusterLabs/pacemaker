@@ -2139,7 +2139,14 @@ attribute_default(pcmk__output_t *out, va_list args)
     const char *value = va_arg(args, const char *);
     const char *host = va_arg(args, const char *);
 
+    gchar *value_esc = NULL;
+
     GString *s = g_string_sized_new(50);
+
+    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr_pretty)) {
+        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr_pretty);
+        value = value_esc;
+    }
 
     if (!pcmk__str_empty(scope)) {
         pcmk__g_strcat(s, PCMK_XA_SCOPE "=\"", scope, "\" ", NULL);
@@ -2158,8 +2165,9 @@ attribute_default(pcmk__output_t *out, va_list args)
     pcmk__g_strcat(s, PCMK_XA_VALUE "=\"", pcmk__s(value, ""), "\"", NULL);
 
     out->info(out, "%s", s->str);
-    g_string_free(s, TRUE);
 
+    g_free(value_esc);
+    g_string_free(s, TRUE);
     return pcmk_rc_ok;
 }
 
