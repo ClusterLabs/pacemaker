@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// LCOV_EXCL_START
+
 void
 pcmk__assert_validates(xmlNode *xml)
 {
@@ -67,3 +69,58 @@ pcmk__assert_validates(xmlNode *xml)
     unlink(xmllint_input);
     free(xmllint_input);
 }
+
+int
+pcmk__cib_test_setup_group(void **state)
+{
+    /* This needs to be run before we attempt to read in a CIB or it will fail
+     * to validate.  There's no harm in doing this before all tests.
+     */
+    crm_xml_init();
+    return 0;
+}
+
+char *
+pcmk__cib_test_copy_cib(const char *in_file)
+{
+    char *in_path = crm_strdup_printf("%s/%s", getenv("PCMK_CTS_CLI_DIR"), in_file);
+    char *out_path = NULL;
+    char *contents = NULL;
+    int fd;
+
+    /* Copy the CIB over to a temp location so we can modify it. */
+    out_path = crm_strdup_printf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
+
+    fd = mkstemp(out_path);
+    if (fd < 0) {
+        free(out_path);
+        return NULL;
+    }
+
+    if (pcmk__file_contents(in_path, &contents) != pcmk_rc_ok) {
+        free(out_path);
+        close(fd);
+        return NULL;
+    }
+
+    if (pcmk__write_sync(fd, contents) != pcmk_rc_ok) {
+        free(out_path);
+        free(in_path);
+        free(contents);
+        close(fd);
+        return NULL;
+    }
+
+    setenv("CIB_file", out_path, 1);
+    return out_path;
+}
+
+void
+pcmk__cib_test_cleanup(char *out_path)
+{
+    unlink(out_path);
+    free(out_path);
+    unsetenv("CIB_file");
+}
+
+// LCOV_EXCL_STOP

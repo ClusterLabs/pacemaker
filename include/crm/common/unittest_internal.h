@@ -52,6 +52,53 @@ void pcmk__assert_validates(xmlNode *xml);
 
 /*!
  * \internal
+ * \brief Perform setup for a group of unit tests that will eventually access
+ *        a CIB.
+ *
+ * This function is suitable for being passed as the first argument to the
+ * \c PCMK__UNIT_TEST macro.
+ *
+ * \param[in] state     The cmocka state object, currently unused by this
+ *                      function
+ */
+int pcmk__cib_test_setup_group(void **state);
+
+/*!
+ * \internal
+ * \brief Copy the given CIB file to a temporary file so it can be modified
+ *        as part of doing unit tests, returning the full temporary file or
+ *        \c NULL on error.
+ *
+ * This function should be called as part of the process of setting up any
+ * single unit test that would access and modify a CIB.  That is, it should
+ * be called from whatever function is the second argument to
+ * cmocka_unit_test_setup_teardown.
+ *
+ * \param[in]   in_file     The filename of the input CIB file, which must
+ *                          exist in the \c $PCMK_CTS_CLI_DIR directory.  This
+ *                          should only be the filename, not the complete
+ *                          path.
+ */
+char *pcmk__cib_test_copy_cib(const char *in_file);
+
+/*!
+ * \internal
+ * \brief Clean up whatever was done by a previous call to
+ *        \c pcmk__cib_test_copy_cib.
+ *
+ * This function should be called as part of the process of tearing down
+ * any single unit test that accessed a CIB.  That is, it should be called
+ * from whatever function is the third argument to
+ * \c cmocka_unit_test_setup_teardown.
+ *
+ * \param[in]   out_path    The complete path to the temporary CIB location.
+ *                          This is the return value of
+ *                          \c pcmk__cib_test_copy_cib.
+ */
+void pcmk__cib_test_cleanup(char *out_path);
+
+/*!
+ * \internal
  * \brief Assert that a statement aborts through CRM_ASSERT().
  *
  * \param[in] stmt  Statement to execute; can be an expression.

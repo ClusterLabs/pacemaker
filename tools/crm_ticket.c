@@ -388,7 +388,7 @@ ticket_attribute_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket-constraints", "gchar *", "xmlNode *")
+PCMK__OUTPUT_ARGS("ticket-constraints", "xmlNode *")
 static int
 ticket_constraints_default(pcmk__output_t *out, va_list args)
 {

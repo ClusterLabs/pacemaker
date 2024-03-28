@@ -16,16 +16,6 @@
 
 static char *cib_path = NULL;
 
-static int
-setup_group(void **state)
-{
-    /* This needs to be run before we attempt to read in a CIB or it will fail
-     * to validate.  There's no harm in doing this before all tests.
-     */
-    crm_xml_init();
-    return 0;
-}
-
 static void
 cib_not_connected(void **state)
 {
@@ -43,45 +33,20 @@ cib_not_connected(void **state)
 static int
 setup_test(void **state)
 {
-    char *in_path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
-    char *contents = NULL;
-    int fd;
+    cib_path = pcmk__cib_test_copy_cib("crm_mon.xml");
 
-    /* Copy the CIB over to a temp location so we can modify it. */
-    cib_path = crm_strdup_printf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
-
-    fd = mkstemp(cib_path);
-    if (fd < 0) {
-        free(cib_path);
+    if (cib_path == NULL) {
         return -1;
     }
 
-    if (pcmk__file_contents(in_path, &contents) != pcmk_rc_ok) {
-        free(cib_path);
-        close(fd);
-        return -1;
-    }
-
-    if (pcmk__write_sync(fd, contents) != pcmk_rc_ok) {
-        free(cib_path);
-        free(in_path);
-        free(contents);
-        close(fd);
-        return -1;
-    }
-
-    setenv("CIB_file", cib_path, 1);
     return 0;
 }
 
 static int
 teardown_test(void **state)
 {
-    unlink(cib_path);
-    free(cib_path);
+    pcmk__cib_test_cleanup(cib_path);
     cib_path = NULL;
-
-    unsetenv("CIB_file");
     return 0;
 }
 
@@ -183,7 +148,7 @@ unknown_resource(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__cib_test_setup_group, NULL,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_input, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(incorrect_type, setup_test, teardown_test),
