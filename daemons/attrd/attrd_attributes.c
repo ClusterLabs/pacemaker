@@ -245,7 +245,7 @@ attrd_set_id(const attribute_t *attr, const char *node_state_id)
          */
         set_id = pcmk__str_copy(attr->set_id);
     }
-    crm_xml_sanitize_id(set_id);
+    pcmk__xml_sanitize_id(set_id);
     return set_id;
 }
 
@@ -270,6 +270,6 @@ attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
         nvpair_id = crm_strdup_printf(PCMK_XE_STATUS "-%s-%s",
                                       node_state_id, attr->id);
     }
-    crm_xml_sanitize_id(nvpair_id);
+    pcmk__xml_sanitize_id(nvpair_id);
     return nvpair_id;
 }

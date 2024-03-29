@@ -455,6 +455,8 @@ enum pcmk__xa_flags {
 
 int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
 
+void pcmk__xml_sanitize_id(char *id);
+
 /*!
  * \internal
  * \brief Like pcmk__xe_set_props, but takes a va_list instead of
