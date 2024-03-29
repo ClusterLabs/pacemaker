@@ -370,7 +370,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xmlNode *xml_obj = NULL;
 
         id = crm_strdup_printf("%s-ip-%s", data->prefix, replica->ipaddr);
-        crm_xml_sanitize_id(id);
+        pcmk__xml_sanitize_id(id);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
 
@@ -458,7 +458,7 @@ create_container_resource(pcmk_resource_t *parent,
 
     id = crm_strdup_printf("%s-%s-%d", data->prefix, agent_str,
                            replica->offset);
-    crm_xml_sanitize_id(id);
+    pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
 
