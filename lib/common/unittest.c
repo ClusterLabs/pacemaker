@@ -82,6 +82,24 @@ pcmk__xml_test_setup_group(void **state)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Perform teardown for a group of unit tests that manipulated XML
+ *
+ * This function is suitable for being passed as the second argument to the
+ * \c PCMK__UNIT_TEST macro.
+ *
+ * \param[in] state  Ignored
+ *
+ * \return 0
+ */
+int
+pcmk__xml_test_teardown_group(void **state)
+{
+    pcmk__xml_cleanup();
+    return 0;
+}
+
 char *
 pcmk__cib_test_copy_cib(const char *in_file)
 {

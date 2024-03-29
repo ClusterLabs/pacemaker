@@ -65,7 +65,7 @@ repeated_use(void **state) {
     pcmk__xml_free(node);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(bad_input),
                 cmocka_unit_test(expected_input),
                 cmocka_unit_test(repeated_use))

@@ -41,6 +41,7 @@ setup(void **state)
 static int
 teardown(void **state)
 {
+    pcmk__xml_test_teardown_group(state);
     pcmk__schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;

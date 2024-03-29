@@ -62,6 +62,8 @@ void pcmk__assert_validates(xmlNode *xml);
  */
 int pcmk__xml_test_setup_group(void **state);
 
+int pcmk__xml_test_teardown_group(void **state);
+
 /*!
  * \internal
  * \brief Copy the given CIB file to a temporary file so it can be modified
