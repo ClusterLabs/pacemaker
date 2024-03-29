@@ -11,7 +11,7 @@ URL:              @PACKAGE_URL@
 Version:          @PACKAGE_VERSION@
 Description:      Configuration Information Base (CIB) APIs for Pacemaker
 Requires:         pacemaker-pe_rules pacemaker
-Requires.private: glib-2.0 libxml-2.0 @PC_NAME_GNUTLS@
+Requires.private: glib-2.0 libxml-2.0 gnutls
 Conflicts:
 Cflags:           -I${includedir}
 Libs:             -L${libdir} -l${sub}

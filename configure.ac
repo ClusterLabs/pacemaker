@@ -329,13 +329,6 @@ AC_ARG_WITH([cibsecrets],
 yes_no_try "$with_cibsecrets" "no"
 with_cibsecrets=$?
 
-AC_ARG_WITH([gnutls],
-    [AS_HELP_STRING([--with-gnutls],
-        [support Pacemaker Remote and remote-tls-port using GnuTLS @<:@try@:>@])]
-)
-yes_no_try "$with_gnutls" "try"
-with_gnutls=$?
-
 PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
     [AS_HELP_STRING([--with-gnutls-priorities],
@@ -1678,27 +1671,9 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-dnl Require GnuTLS >=2.12.0 (2011-03) for Pacemaker Remote support
-PC_NAME_GNUTLS=""
-AS_CASE([$with_gnutls],
-        [$REQUIRED], [
-            REQUIRE_LIB([gnutls], [gnutls_sec_param_to_pk_bits])
-            REQUIRE_HEADER([gnutls/gnutls.h])
-        ],
-        [$OPTIONAL], [
-            AC_CHECK_LIB([gnutls], [gnutls_sec_param_to_pk_bits],
-                         [], [with_gnutls=$DISABLED])
-            AC_CHECK_HEADERS([gnutls/gnutls.h], [], [with_gnutls=$DISABLED])
-        ]
-)
-AS_IF([test $with_gnutls -ne $DISABLED],
-      [
-          PC_NAME_GNUTLS="gnutls"
-          PCMK_FEATURES="$PCMK_FEATURES remote"
-      ]
-)
-AC_SUBST([PC_NAME_GNUTLS])
-AM_CONDITIONAL([BUILD_REMOTE], [test $with_gnutls -ne $DISABLED])
+PKG_CHECK_MODULES(GNUTLS, [gnutls >= 2.12.0],
+                  [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
+                   LIBS="${LIBS} ${GNUTLS_LIBS}"])
 
 # --- ASAN/UBSAN/TSAN (see man gcc) ---
 # when using SANitizers, we need to pass the -fsanitize..

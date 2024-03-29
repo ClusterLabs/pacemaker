@@ -18,6 +18,7 @@
 | 3.4 or later    | python3            | python3            | python3        |
 | 0.18 or later   | gettext-devel      | gettext-tools      | gettext        |
 | 0.18 or later   |                    |                    | autopoint      |
+| 2.12.0 or later | gnutls-devel       | libgnutls-devel    | libgnutls-dev  |
 
 Also:
 * make must be GNU (or compatible) (setting MAKE=gmake might also work but is
@@ -41,7 +42,6 @@ Also:
 
 | Feature Enabled                                 | Version        | Fedora-based            | Suse-based              | Debian-based            |
 |:-----------------------------------------------:|:--------------:|:-----------------------:|:-----------------------:|:-----------------------:|
-| Pacemaker Remote and encrypted remote CIB admin | 2.12.0 or later| gnutls-devel            | libgnutls-devel         | libgnutls-dev           |
 | encrypted remote CIB admin                      |                | pam-devel               | pam-devel               | libpam0g-dev            |
 | interactive crm_mon                             |                | ncurses-devel           | ncurses-devel           | ncurses-dev             |
 | systemd support                                 |                | systemd-devel           | systemd-devel           | libsystemd-dev          |

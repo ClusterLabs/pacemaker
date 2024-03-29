@@ -25,7 +25,7 @@ Version:          @PACKAGE_VERSION@
 Description:      Low-level common APIs for Pacemaker
 # Some pacemaker APIs are extensions to libqb APIs
 Requires:         libqb
-Requires.private: glib-2.0 libxslt libxml-2.0 uuid @PC_NAME_GNUTLS@
+Requires.private: glib-2.0 libxslt libxml-2.0 uuid gnutls
 Conflicts:
 Cflags:           -I${includedir}
 Libs:             -L${libdir} -l${sub}
