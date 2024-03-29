@@ -951,8 +951,8 @@ pcmk__xml_sanitize_id(char *id)
      * in the same position. The strings are otherwise identical. Both strings
      * will be sanitized to the same valid ID, which is incorrect.
      *
-     * To avoid this, one option might be to append a UUID string to sanitized
-     * IDs.
+     * The caller is responsible for ensuring the sanitized ID does not already
+     * exist in a given XML document before using it, if uniqueness is desired.
      */
     valid = pcmk__xml_is_name_start_char(id, &len);
     CRM_CHECK(len > 0, return); // UTF-8 encoding error
