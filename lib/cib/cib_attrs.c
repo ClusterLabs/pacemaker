@@ -270,7 +270,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
         if (attr_id == NULL) {
             local_attr_id = crm_strdup_printf("%s-%s", set_name, attr_name);
-            crm_xml_sanitize_id(local_attr_id);
+            pcmk__xml_sanitize_id(local_attr_id);
             attr_id = local_attr_id;
 
         } else if (attr_name == NULL) {

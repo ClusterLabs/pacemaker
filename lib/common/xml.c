@@ -17,6 +17,7 @@
 #include <sys/stat.h>                   // stat(), S_ISREG, etc.
 #include <sys/types.h>
 
+#include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlstring.h>           // xmlGetUTF8Char()
@@ -898,6 +899,54 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
            || ((c >= 0xF900) && (c <= 0xFDCF))
            || ((c >= 0xFDF0) && (c <= 0xFFFD))
            || ((c >= 0x10000) && (c <= 0xEFFFF));
+}
+
+/*!
+ * \internal
+ * \brief Sanitize a string so it is usable as an XML ID
+ *
+ * An ID must match the Name production as defined here:
+ * https://www.w3.org/TR/xml/#NT-Name.
+ *
+ * Convert an invalid start character to \c '_'. Convert an invalid character
+ * after the start character to \c '.'.
+ *
+ * \param[in,out] id  String to sanitize
+ */
+void
+pcmk__xml_sanitize_id(char *id)
+{
+    bool valid = true;
+    int len = 0;
+
+    // If id is empty or NULL, there's no way to make it a valid XML ID
+    CRM_ASSERT(!pcmk__str_empty(id));
+
+    /* @TODO Suppose there are two strings and each has an invalid ID character
+     * in the same position. The strings are otherwise identical. Both strings
+     * will be sanitized to the same valid ID, which is incorrect.
+     *
+     * To avoid this, one option might be to append a UUID string to sanitized
+     * IDs.
+     */
+    valid = pcmk__xml_is_name_start_char(id, &len);
+    CRM_CHECK(len > 0, return); // UTF-8 encoding error
+    if (!valid) {
+        *id = '_';
+        for (int i = 1; i < len; i++) {
+            id[i] = '.';
+        }
+    }
+
+    for (id += len; *id != '\0'; id += len) {
+        valid = pcmk__xml_is_name_char(id, &len);
+        CRM_CHECK(len > 0, return); // UTF-8 encoding error
+        if (!valid) {
+            for (int i = 0; i < len; i++) {
+                id[i] = '.';
+            }
+        }
+    }
 }
 
 /*!
