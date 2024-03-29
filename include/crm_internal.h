@@ -44,6 +44,7 @@
 #  include <crm/common/xml_internal.h>
 #  include <crm/common/xml_io_internal.h>
 #  include <crm/common/xml_names_internal.h>
+#  include <crm/common/xml_schema_internal.h>
 #  include <crm/common/internal.h>
 #  include <locale.h>
 #  include <gettext.h>

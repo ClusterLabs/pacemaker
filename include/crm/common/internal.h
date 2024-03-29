@@ -131,17 +131,6 @@ unsigned int pcmk__procfs_num_cores(void);
 int pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size);
 bool pcmk__procfs_has_pids(void);
 
-/* internal XML schema functions (from xml.c) */
-
-void crm_schema_init(void);
-void crm_schema_cleanup(void);
-
-void pcmk__load_schemas_from_dir(const char *dir);
-GList *pcmk__schema_files_later_than(const char *name);
-void pcmk__build_schema_xml_node(xmlNode *parent, const char *name,
-                                 GList **already_included);
-
-
 /* internal functions related to process IDs (from pid.c) */
 
 /*!
