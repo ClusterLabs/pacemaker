@@ -2096,7 +2096,7 @@ pcmk__xml_init(void)
 void
 pcmk__xml_cleanup(void)
 {
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
     xmlCleanupParser();
 }
 

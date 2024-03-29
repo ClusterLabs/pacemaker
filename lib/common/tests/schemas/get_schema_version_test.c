@@ -22,7 +22,7 @@ setup(void **state) {
 
 static int
 teardown(void **state) {
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;
 }

@@ -19,7 +19,7 @@
 #include <libxml/tree.h>    // xmlNode
 
 void crm_schema_init(void);
-void crm_schema_cleanup(void);
+void pcmk__schema_cleanup(void);
 
 void pcmk__load_schemas_from_dir(const char *dir);
 GList *pcmk__schema_files_later_than(const char *name);
