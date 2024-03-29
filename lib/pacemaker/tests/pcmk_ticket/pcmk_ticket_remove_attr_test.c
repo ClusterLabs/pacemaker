@@ -221,7 +221,7 @@ remove_granted_with_force(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(no_attrs, setup_test, teardown_test),

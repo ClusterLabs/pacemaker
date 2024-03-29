@@ -211,7 +211,7 @@ time_after_monthdays_range(void **state)
                  pcmk_rc_before_range);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_invalid),
                 cmocka_unit_test(spec_id_missing),
                 cmocka_unit_test(invalid_range),

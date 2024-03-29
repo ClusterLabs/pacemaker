@@ -50,5 +50,5 @@ op_is_probe_test(void **state)
     pcmk__xml_free(node);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(op_is_probe_test))

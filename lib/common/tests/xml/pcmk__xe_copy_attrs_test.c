@@ -177,7 +177,7 @@ no_score_update(void **state)
     pcmk__xml_free(target);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_args),
                 cmocka_unit_test(no_source_attrs),
                 cmocka_unit_test(copy_one),

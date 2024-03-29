@@ -131,7 +131,7 @@ single_ticket(void **state)
     pcmk__xml_free(xml);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(all_tickets, setup_test, teardown_test),
