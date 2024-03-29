@@ -246,6 +246,29 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     return result;
 }
 
+static int
+update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
+                         cib_t *cib, int cib_options, const char *attr_name,
+                         const char *attr_value)
+{
+    int rc = pcmk_rc_ok;
+
+    if (cib == NULL) {
+        return ENOTCONN;
+    }
+
+    crm_xml_add(rsc->xml, attr_name, attr_value);
+
+    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
+    rc = pcmk_legacy2rc(rc);
+    if (rc == pcmk_rc_ok) {
+        out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
+                  attr_name, attr_value);
+    }
+
+    return rc;
+}
+
 // \return Standard Pacemaker return code
 int
 cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
@@ -290,16 +313,8 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         resources = g_list_append(resources, rsc);
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        crm_xml_add(rsc->xml, attr_name, attr_value);
-        CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
-        rc = pcmk_legacy2rc(rc);
-        if (rc == pcmk_rc_ok) {
-            out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
-                      attr_name, attr_value);
-        }
-        return rc;
-
+        return update_element_attribute(out, rsc, cib, cib_options,
+                                        attr_name, attr_value);
     } else {
         resources = find_matching_attr_resources(out, rsc, requested_name,
                                                  attr_set, attr_set_type,
