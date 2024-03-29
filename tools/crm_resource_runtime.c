@@ -269,6 +269,63 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
     return rc;
 }
 
+static int
+resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
+                    const char *requested_name, const char *attr_set,
+                    const char *attr_set_type, const char *attr_id,
+                    const char *attr_name, const char *top_id, gboolean force,
+                    GList **resources)
+{
+    if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
+                     pcmk__str_casei)) {
+        if (!force) {
+            char *found_attr_id = NULL;
+            int rc = pcmk_rc_ok;
+
+            rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
+                                    PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
+                                    attr_name, &found_attr_id);
+
+            if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
+                out->err(out,
+                         "WARNING: There is already a meta attribute "
+                         "for '%s' called '%s' (id=%s)",
+                         top_id, attr_name, found_attr_id);
+                out->err(out,
+                         "         Delete '%s' first or use the force option "
+                         "to override", found_attr_id);
+            }
+
+            free(found_attr_id);
+
+            if (rc == pcmk_rc_ok) {
+                return ENOTUNIQ;
+            }
+        }
+
+        *resources = g_list_append(*resources, rsc);
+
+    } else {
+        *resources = find_matching_attr_resources(out, rsc, requested_name,
+                                                  attr_set, attr_set_type,
+                                                  attr_id, attr_name, cib,
+                                                  "update", force);
+    }
+
+    /* If the user specified attr_set or attr_id, the intent is to modify a
+     * single resource, which will be the last item in the list.
+     */
+    if ((attr_set != NULL) || (attr_id != NULL)) {
+        GList *last = g_list_last(*resources);
+
+        *resources = g_list_remove_link(*resources, last);
+        g_list_free(*resources);
+        *resources = last;
+    }
+
+    return pcmk_rc_ok;
+}
+
 // \return Standard Pacemaker return code
 int
 cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
@@ -280,8 +337,6 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
 
-    char *found_attr_id = NULL;
-
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
 
@@ -290,58 +345,27 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                            attr_name, NULL);
     }
 
-    if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
-                     pcmk__str_casei)) {
-        if (!force) {
-            rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
-                                    PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
-                                    attr_name, &found_attr_id);
-            if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
-                out->err(out,
-                         "WARNING: There is already a meta attribute "
-                         "for '%s' called '%s' (id=%s)",
-                         top_id, attr_name, found_attr_id);
-                out->err(out,
-                         "         Delete '%s' first or use the force option "
-                         "to override", found_attr_id);
-            }
-            free(found_attr_id);
-            if (rc == pcmk_rc_ok) {
-                return ENOTUNIQ;
-            }
-        }
-        resources = g_list_append(resources, rsc);
-
-    } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+    if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
         return update_element_attribute(out, rsc, cib, cib_options,
                                         attr_name, attr_value);
-    } else {
-        resources = find_matching_attr_resources(out, rsc, requested_name,
-                                                 attr_set, attr_set_type,
-                                                 attr_id, attr_name, cib,
-                                                 "update", force);
     }
 
-    /* If the user specified attr_set or attr_id, the intent is to modify a
-     * single resource, which will be the last item in the list.
-     */
-    if ((attr_set != NULL) || (attr_id != NULL)) {
-        GList *last = g_list_last(resources);
+    rc = resources_with_attr(out, cib, rsc, requested_name, attr_set, attr_set_type,
+                             attr_id, attr_name, top_id, force, &resources);
 
-        resources = g_list_remove_link(resources, last);
-        g_list_free(resources);
-        resources = last;
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
         char *local_attr_set = NULL;
+        char *found_attr_id = NULL;
         const char *rsc_attr_id = attr_id;
         const char *rsc_attr_set = attr_set;
 
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
-        found_attr_id = NULL;
 
         rsc = (pcmk_resource_t *) iter->data;
 
