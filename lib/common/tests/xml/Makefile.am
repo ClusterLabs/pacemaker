@@ -17,6 +17,7 @@ check_PROGRAMS = pcmk__xa_set_expand_test	\
 		 pcmk__xe_foreach_child_test 	\
 		 pcmk__xml_escape_test		\
 		 pcmk__xml_init_test		\
-		 pcmk__xml_needs_escape_test
+		 pcmk__xml_needs_escape_test	\
+		 pcmk__xml_sanitize_id_test
 
 TESTS = $(check_PROGRAMS)

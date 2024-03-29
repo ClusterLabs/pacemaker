@@ -117,6 +117,13 @@ main(int argc, char **argv)
         goto done;
     }
 
+    {
+        char *s = pcmk__str_copy("\xC3\xB7" "\xCC\x80");
+        pcmk__xml_sanitize_id(s);
+        fprintf(stderr, "%s\n", s);
+        free(s);
+    }
+
     pcmk__register_lib_messages(out);
 
     if (options.do_list) {
