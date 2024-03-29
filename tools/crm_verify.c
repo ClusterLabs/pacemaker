@@ -232,9 +232,7 @@ main(int argc, char **argv)
     free(options.xml_file);
     free(options.xml_string);
 
-    if (cib_object != NULL) {
-        free_xml(cib_object);      
-    }
+    pcmk__xml_free(cib_object);
 
     if (exit_code == CRM_EX_OK) {
         exit_code = pcmk_rc2exitc(rc);

@@ -44,7 +44,7 @@ bad_input(void **state) {
     assert_null(pcmk__xe_first_child(NULL, NULL, NULL, NULL));
     assert_null(pcmk__xe_first_child(NULL, NULL, NULL, "attrX"));
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -60,7 +60,7 @@ not_found(void **state) {
     /* No nodeA node with attrA=XYZ */
     assert_null(pcmk__xe_first_child(xml, "nodeA", "attrA", "XYZ"));
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -78,7 +78,7 @@ find_attrB(void **state) {
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "5");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -96,7 +96,7 @@ find_attrA_matching(void **state) {
     assert_non_null(result);
     assert_string_equal(crm_element_value(result, PCMK_XA_ID), "4");
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

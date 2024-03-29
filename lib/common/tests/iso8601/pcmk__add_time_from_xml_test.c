@@ -35,7 +35,7 @@ null_time_invalid(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(NULL, pcmk__time_years, xml),
                      EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -59,7 +59,7 @@ invalid_component(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(NULL, pcmk__time_unknown, xml),
                      EINVAL);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -75,7 +75,7 @@ missing_attr(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -91,7 +91,7 @@ invalid_attr(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -104,12 +104,12 @@ out_of_range_attr(void **state)
     xml = pcmk__xml_parse(YEARS_TOO_BIG);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
     assert_int_equal(crm_time_compare(t, reference), 0);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     xml = pcmk__xml_parse(YEARS_TOO_SMALL);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
     assert_int_equal(crm_time_compare(t, reference), 0);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -128,7 +128,7 @@ add_years(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -144,7 +144,7 @@ add_months(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -160,7 +160,7 @@ add_weeks(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -176,7 +176,7 @@ add_days(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -192,7 +192,7 @@ add_hours(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -208,7 +208,7 @@ add_minutes(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -224,7 +224,7 @@ add_seconds(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

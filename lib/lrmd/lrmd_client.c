@@ -361,7 +361,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         xmlNode *msg = pcmk__xml_parse(buffer);
 
         lrmd_dispatch_internal(lrmd, msg);
-        free_xml(msg);
+        pcmk__xml_free(msg);
     }
     return 0;
 }
@@ -370,7 +370,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 static void
 lrmd_free_xml(gpointer userdata)
 {
-    free_xml((xmlNode *) userdata);
+    pcmk__xml_free((xmlNode *) userdata);
 }
 
 static bool
@@ -449,7 +449,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
             }
         }
-        free_xml(xml);
+        pcmk__xml_free(xml);
         xml = pcmk__remote_message_xml(native->remote);
     }
 
@@ -696,7 +696,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
 
         if (!msg_type) {
             crm_err("Empty msg type received while waiting for reply");
-            free_xml(*reply);
+            pcmk__xml_free(*reply);
             *reply = NULL;
         } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
@@ -710,7 +710,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             /* msg isn't a reply, make some noise */
             crm_err("Expected a reply, got %s", msg_type);
-            free_xml(*reply);
+            pcmk__xml_free(*reply);
             *reply = NULL;
         } else if (reply_id != expected_reply_id) {
             if (native->expected_late_replies > 0) {
@@ -718,7 +718,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             } else {
                 crm_err("Got outdated reply, expected id %d got id %d", expected_reply_id, reply_id);
             }
-            free_xml(*reply);
+            pcmk__xml_free(*reply);
             *reply = NULL;
         }
     }
@@ -778,7 +778,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     if (reply) {
         *reply = xml;
     } else {
-        free_xml(xml);
+        pcmk__xml_free(xml);
     }
 
     return pcmk_rc2legacy(rc);
@@ -941,8 +941,8 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         crm_err("Executor disconnected");
     }
 
-    free_xml(op_msg);
-    free_xml(op_reply);
+    pcmk__xml_free(op_msg);
+    pcmk__xml_free(op_reply);
     return rc;
 }
 
@@ -956,7 +956,7 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc < 0 ? rc : pcmk_ok;
 }
@@ -980,7 +980,7 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
-    free_xml(data);
+    pcmk__xml_free(data);
     return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
@@ -1054,8 +1054,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         }
     }
 
-    free_xml(reply);
-    free_xml(hello);
+    pcmk__xml_free(reply);
+    pcmk__xml_free(hello);
 
     if (rc != pcmk_ok) {
         lrmd_api_disconnect(lrmd);
@@ -1753,7 +1753,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
     crm_xml_add(data, PCMK__XA_LRMD_TYPE, type);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -1767,7 +1767,7 @@ lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_option
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     return rc;
 }
@@ -1818,7 +1818,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     if (!output) {
         return NULL;
@@ -1829,16 +1829,16 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     type = crm_element_value(output, PCMK__XA_LRMD_TYPE);
 
     if (!class || !type) {
-        free_xml(output);
+        pcmk__xml_free(output);
         return NULL;
     } else if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
                && !provider) {
-        free_xml(output);
+        pcmk__xml_free(output);
         return NULL;
     }
 
     rsc_info = lrmd_new_rsc_info(rsc_id, class, provider, type);
-    free_xml(output);
+    pcmk__xml_free(output);
     return rsc_info;
 }
 
@@ -1875,9 +1875,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     }
     rc = lrmd_send_command(lrmd, LRMD_OP_GET_RECURRING, data, &output_xml,
                            timeout_ms, options, TRUE);
-    if (data) {
-        free_xml(data);
-    }
+    pcmk__xml_free(data);
 
     // Process reply
     if ((rc != pcmk_ok) || (output_xml == NULL)) {
@@ -1915,7 +1913,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
             *output = g_list_prepend(*output, op_info);
         }
     }
-    free_xml(output_xml);
+    pcmk__xml_free(output_xml);
     return rc;
 }
 
@@ -2071,7 +2069,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
     return rc;
@@ -2098,7 +2096,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
 
     rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
                            lrmd_opt_notify_orig_only, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
     return rc;
@@ -2116,7 +2114,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
-    free_xml(data);
+    pcmk__xml_free(data);
     return rc;
 }
 

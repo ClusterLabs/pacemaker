@@ -999,7 +999,7 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
     out->output_xml(out, PCMK_XE_METADATA, metadata_s->str);
 
     pcmk__output_free(tmp_out);
-    free_xml(top);
+    pcmk__xml_free(top);
     g_string_free(metadata_s, TRUE);
     return pcmk_rc_ok;
 }

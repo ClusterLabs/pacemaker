@@ -56,7 +56,7 @@ do_cl_join_query(long long action,
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
     send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
-    free_xml(req);
+    pcmk__xml_free(req);
 }
 
 /*	 A_CL_JOIN_ANNOUNCE	*/
@@ -85,7 +85,7 @@ do_cl_join_announce(long long action,
         crm_debug("Announcing availability");
         update_dc(NULL);
         send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
-        free_xml(req);
+        pcmk__xml_free(req);
 
     } else {
         /* Delay announce until we have finished local startup */
@@ -180,11 +180,11 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
                                             pcmk__node_search_cluster),
                              crm_msg_crmd, reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
     }
 
   done:
-    free_xml(generation);
+    pcmk__xml_free(generation);
 }
 
 void
@@ -340,14 +340,14 @@ do_cl_join_finalize_respond(long long action,
         send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
                                             pcmk__node_search_cluster),
                              crm_msg_crmd, reply, TRUE);
-        free_xml(reply);
+        pcmk__xml_free(reply);
 
         if (AM_I_DC == FALSE) {
             register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE,
                                    __func__);
         }
 
-        free_xml(tmp1);
+        pcmk__xml_free(tmp1);
 
         /* Update the remote node cache with information about which node
          * is hosting the connection.

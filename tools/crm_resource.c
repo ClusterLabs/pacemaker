@@ -944,7 +944,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         _("Could not get modified CIB: %s\n"), pcmk_rc_str(rc));
             g_list_free(before);
-            free_xml(*cib_xml_copy);
+            pcmk__xml_free(*cib_xml_copy);
             *cib_xml_copy = NULL;
             return rc;
         }
@@ -996,7 +996,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
     }
 
     if (rc != pcmk_rc_ok) {
-        free_xml(*cib_xml_copy);
+        pcmk__xml_free(*cib_xml_copy);
         *cib_xml_copy = NULL;
         return rc;
     }
@@ -1101,7 +1101,7 @@ set_property(void)
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_RESOURCES, msg_data,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
-    free_xml(msg_data);
+    pcmk__xml_free(msg_data);
 
     return rc;
 }

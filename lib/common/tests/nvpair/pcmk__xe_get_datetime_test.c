@@ -45,7 +45,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__xe_get_datetime(NULL, NULL, &t), EINVAL);
     assert_null(t);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -57,7 +57,7 @@ nonnull_time_invalid(void **state)
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), EINVAL);
 
     crm_time_free(t);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -69,7 +69,7 @@ attr_missing(void **state)
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_MISSING, &t), pcmk_rc_ok);
     assert_null(t);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -84,7 +84,7 @@ attr_valid(void **state)
 
     crm_time_free(t);
     crm_time_free(reference);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -97,7 +97,7 @@ attr_invalid(void **state)
                      pcmk_rc_unpack_error);
     assert_null(t);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

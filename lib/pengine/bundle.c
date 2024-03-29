@@ -2008,19 +2008,19 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
     }
 
     if (replica->ip) {
-        free_xml(replica->ip->xml);
+        pcmk__xml_free(replica->ip->xml);
         replica->ip->xml = NULL;
         replica->ip->fns->free(replica->ip);
         replica->ip = NULL;
     }
     if (replica->container) {
-        free_xml(replica->container->xml);
+        pcmk__xml_free(replica->container->xml);
         replica->container->xml = NULL;
         replica->container->fns->free(replica->container);
         replica->container = NULL;
     }
     if (replica->remote) {
-        free_xml(replica->remote->xml);
+        pcmk__xml_free(replica->remote->xml);
         replica->remote->xml = NULL;
         replica->remote->fns->free(replica->remote);
         replica->remote = NULL;
@@ -2056,7 +2056,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
     g_list_free(rsc->children);
 
     if(bundle_data->child) {
-        free_xml(bundle_data->child->xml);
+        pcmk__xml_free(bundle_data->child->xml);
         bundle_data->child->xml = NULL;
         bundle_data->child->fns->free(bundle_data->child);
     }

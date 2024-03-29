@@ -346,12 +346,12 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return;
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return;
     }
 
@@ -584,7 +584,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         crm_err("Could not simulate action %d history for resource %s",
                 action->id, resource);
         free(node);
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
         return EINVAL;
     }
 
@@ -650,7 +650,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
   done:
     free(node);
-    free_xml(cib_node);
+    pcmk__xml_free(cib_node);
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     return pcmk_rc_ok;
@@ -726,7 +726,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
-        free_xml(cib_node);
+        pcmk__xml_free(cib_node);
         g_string_free(xpath, TRUE);
     }
 

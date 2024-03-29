@@ -89,7 +89,7 @@ assert_attr_expression(const char *xml_string, int reference_rc)
 
     assert_int_equal(pcmk__evaluate_attr_expression(xml, &rule_input),
                      reference_rc);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 
@@ -113,7 +113,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_attr_expression(xml, NULL), EINVAL);
     assert_int_equal(pcmk__evaluate_attr_expression(NULL, &rule_input), EINVAL);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 

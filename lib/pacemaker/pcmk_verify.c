@@ -146,6 +146,6 @@ pcmk_verify(xmlNodePtr *xml, const char *cib_source)
 done:
     pe_free_working_set(scheduler);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
-    free_xml(cib_object);
+    pcmk__xml_free(cib_object);
     return rc;
 }

@@ -367,7 +367,7 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
                                cib_can_create|cib_transaction);
     rc = pcmk_legacy2rc(rc);
 
-    free_xml(update);
+    pcmk__xml_free(update);
     return rc;
 }
 

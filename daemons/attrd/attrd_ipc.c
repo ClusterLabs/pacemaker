@@ -591,7 +591,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         pcmk__reset_request(&request);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return 0;
 }
 

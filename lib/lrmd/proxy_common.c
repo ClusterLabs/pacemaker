@@ -33,7 +33,7 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
     lrmd_internal_proxy_send(lrmd, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 
 /*!
@@ -48,7 +48,7 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd)
     xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_ACK);
     lrmd_internal_proxy_send(lrmd, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 
 /*!
@@ -63,7 +63,7 @@ remote_proxy_nack_shutdown(lrmd_t *lrmd)
     xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_NACK);
     lrmd_internal_proxy_send(lrmd, msg);
-    free_xml(msg);
+    pcmk__xml_free(msg);
 }
 
 void
@@ -76,7 +76,7 @@ remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
     pcmk__message_add_xml(event, PCMK__XE_LRMD_IPC_MSG, msg);
     crm_log_xml_explicit(event, "EventForProxy");
     lrmd_internal_proxy_send(proxy->lrm, event);
-    free_xml(event);
+    pcmk__xml_free(event);
 }
 
 void
@@ -89,7 +89,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
     crm_xml_add_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
     pcmk__message_add_xml(response, PCMK__XE_LRMD_IPC_MSG, msg);
     lrmd_internal_proxy_send(proxy->lrm, response);
-    free_xml(response);
+    pcmk__xml_free(response);
 }
 
 static void
@@ -140,7 +140,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
         remote_proxy_relay_event(proxy, xml);
     }
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return 1;
 }
 
@@ -278,7 +278,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                 crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
                 crm_xml_add_int(op_reply, PCMK_XA_RC, rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);
-                free_xml(op_reply);
+                pcmk__xml_free(op_reply);
 
             } else {
                 crm_trace("Relayed %s request %d from %s to %s for %s",
@@ -305,7 +305,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
             if(op_reply) {
                 remote_proxy_relay_response(proxy, op_reply, msg_id);
-                free_xml(op_reply);
+                pcmk__xml_free(op_reply);
             }
         }
     } else {

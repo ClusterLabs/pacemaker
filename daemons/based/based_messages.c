@@ -131,7 +131,7 @@ send_sync_request(const char *host)
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
     }
     send_cluster_message(peer, crm_msg_cib, sync_me, FALSE);
-    free_xml(sync_me);
+    pcmk__xml_free(sync_me);
 }
 
 int
@@ -161,7 +161,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
             pcmk__xe_copy_attrs(shallow, the_cib);
             pcmk__message_add_xml(*answer, PCMK__XA_CIB_CALLDATA, shallow);
-            free_xml(shallow);
+            pcmk__xml_free(shallow);
         }
     );
 
@@ -240,7 +240,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 send_cluster_message(NULL, crm_msg_cib, up, FALSE);
             }
 
-            free_xml(up);
+            pcmk__xml_free(up);
 
         } else if(rc == pcmk_ok) {
             rc = -pcmk_err_schema_unchanged;
@@ -272,10 +272,10 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                     == FALSE) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
-                free_xml(up);
+                pcmk__xml_free(up);
             }
         }
-        free_xml(scratch);
+        pcmk__xml_free(scratch);
     }
     return rc;
 }
@@ -328,7 +328,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
               (based_is_primary? "primary": "secondary"));
 
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
 
@@ -343,7 +343,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
                  CRM_XS " rc=%d", pcmk_strerror(rc), rc);
 
         pcmk__log_xml_patchset(LOG_INFO, input);
-        free_xml(*result_cib);
+        pcmk__xml_free(*result_cib);
         *result_cib = NULL;
         send_sync_request(NULL);
     }
@@ -454,7 +454,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     if (!send_cluster_message(peer, crm_msg_cib, replace_request, FALSE)) {
         result = -ENOTCONN;
     }
-    free_xml(replace_request);
+    pcmk__xml_free(replace_request);
     free(digest);
     return result;
 }

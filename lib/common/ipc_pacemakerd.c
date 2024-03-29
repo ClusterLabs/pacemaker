@@ -297,7 +297,7 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
             crm_debug("Couldn't send request to %s: %s rc=%d",
                       pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
         }
-        free_xml(cmd);
+        pcmk__xml_free(cmd);
     } else {
         rc = ENOMSG;
     }

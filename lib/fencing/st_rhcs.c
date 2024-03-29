@@ -208,7 +208,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         *metadata = xml;
 
     } else {
-        free_xml(xml);
+        pcmk__xml_free(xml);
     }
 
     return pcmk_ok;
@@ -249,7 +249,7 @@ done:
     if (buffer != NULL) {
         g_string_free(buffer, TRUE);
     }
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return rc;
 }
 
@@ -294,7 +294,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             }
         }
 
-        free_xml(metadata);
+        pcmk__xml_free(metadata);
 
         remaining_timeout -= time(NULL) - start_time;
 

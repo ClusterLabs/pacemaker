@@ -720,7 +720,7 @@ modify_ticket_state(gchar *ticket_id, cib_t *cib, pcmk_scheduler_t *scheduler)
         rc = pcmk_legacy2rc(rc);
     }
 
-    free_xml(xml_top);
+    pcmk__xml_free(xml_top);
     return rc;
 }
 
@@ -749,7 +749,7 @@ delete_ticket_state(gchar *ticket_id, cib_t * cib)
         out->info(out, "Cleaned up %s", ticket_id);
     }
 
-    free_xml(ticket_state_xml);
+    pcmk__xml_free(ticket_state_xml);
     return rc;
 }
 
@@ -961,7 +961,7 @@ main(int argc, char **argv)
 
         if (state_xml != NULL) {
             out->message(out, "ticket-state", options.ticket_id, state_xml);
-            free_xml(state_xml);
+            pcmk__xml_free(state_xml);
         }
 
         exit_code = pcmk_rc2exitc(rc);
@@ -977,7 +977,7 @@ main(int argc, char **argv)
 
         if (cons_xml != NULL) {
             out->message(out, "ticket-constraints", cons_xml);
-            free_xml(cons_xml);
+            pcmk__xml_free(cons_xml);
         }
 
         exit_code = pcmk_rc2exitc(rc);

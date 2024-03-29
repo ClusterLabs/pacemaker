@@ -339,7 +339,7 @@ cib_cs_dispatch(cpg_handle_t handle,
         cib_peer_callback(xml, NULL);
     }
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     free(data);
 }
 

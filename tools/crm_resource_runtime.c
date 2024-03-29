@@ -144,7 +144,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
   done:
     g_string_free(xpath, TRUE);
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     return rc;
 }
 
@@ -381,7 +381,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                       pcmk__s(attr_name, ""), attr_value);
         }
 
-        free_xml(xml_top);
+        pcmk__xml_free(xml_top);
 
         free(lookup_id);
         free(found_attr_id);
@@ -511,7 +511,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         free(lookup_id);
-        free_xml(xml_obj);
+        pcmk__xml_free(xml_obj);
         free(found_attr_id);
     }
     g_list_free(resources);
@@ -1221,7 +1221,7 @@ update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
     rc = update_scheduler_input(scheduler, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML");
-        free_xml(cib_xml_copy);
+        pcmk__xml_free(cib_xml_copy);
         return rc;
     }
 

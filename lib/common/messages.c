@@ -34,7 +34,8 @@
  * \note One of sys_from or uuid_from must be non-NULL
  * \note This function should not be called directly, but via the
  *       create_request() wrapper.
- * \note The caller is responsible for freeing the result using free_xml().
+ * \note The caller is responsible for freeing the result using
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 create_request_adv(const char *task, xmlNode *msg_data,
@@ -96,7 +97,8 @@ create_request_adv(const char *task, xmlNode *msg_data,
  *
  * \note This function should not be called directly, but via the
  *       create_reply() wrapper.
- * \note The caller is responsible for freeing the result using free_xml().
+ * \note The caller is responsible for freeing the result using
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
