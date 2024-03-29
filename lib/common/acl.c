@@ -587,7 +587,8 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
         } else if (check_top) {
             crm_trace("ACLs disallow creation of <%s> with "
                       PCMK_XA_ID "=\"%s\"", xml->name, display_id(xml));
-            pcmk_free_xml_subtree(xml);
+            xmlUnlinkNode(xml);
+            xmlFreeNode(xml);
             return;
 
         } else {
