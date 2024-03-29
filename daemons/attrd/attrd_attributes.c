@@ -227,7 +227,7 @@ attrd_set_id(const attribute_t *attr, const char *node_state_id)
 
     CRM_ASSERT((attr != NULL) && (node_state_id != NULL));
 
-    if (attr->set_id == NULL) {
+    if (pcmk__str_empty(attr->set_id)) {
         /* @COMPAT This should really take the set type into account. Currently
          * we use the same XML ID for transient attributes and utilization
          * attributes. It doesn't cause problems because the status section is
