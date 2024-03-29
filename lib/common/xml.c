@@ -25,10 +25,36 @@
 #include <crm/common/xml_internal.h>    // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
-// Define this as 1 in development to get insanely verbose trace messages
-#ifndef XML_PARSER_DEBUG
-#define XML_PARSER_DEBUG 0
-#endif
+/*!
+ * \internal
+ * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
+ *
+ * \param[in,out] xml        XML tree to traverse
+ * \param[in,out] fn         Function to call for each node (returns \c true to
+ *                           continue traversing the tree or \c false to stop)
+ * \param[in,out] user_data  Argument to \p fn
+ *
+ * \return \c false if any \p fn call returned \c false, or \c true otherwise
+ *
+ * \note This function is recursive.
+ */
+bool
+pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                       void *user_data)
+{
+    if (!fn(xml, user_data)) {
+        return false;
+    }
+
+    for (xml = pcmk__xml_first_child(xml); xml != NULL;
+         xml = pcmk__xml_next(xml)) {
+
+        if (!pcmk__xml_tree_foreach(xml, fn, user_data)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 bool
 pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
@@ -127,7 +153,7 @@ free_deleted_object(void *data)
     if(data) {
         pcmk__deleted_xml_t *deleted_obj = data;
 
-        free(deleted_obj->path);
+        g_free(deleted_obj->path);
         free(deleted_obj);
     }
 }
@@ -732,72 +758,67 @@ pcmk_free_xml_subtree(xmlNode *xml)
 }
 
 static void
-free_xml_with_position(xmlNode * child, int position)
+free_xml_with_position(xmlNode *child, int position)
 {
-    if (child != NULL) {
-        xmlNode *top = NULL;
-        xmlDoc *doc = child->doc;
-        xml_node_private_t *nodepriv = child->_private;
-        xml_doc_private_t *docpriv = NULL;
+    xmlDoc *doc = NULL;
+    xml_node_private_t *nodepriv = NULL;
 
-        if (doc != NULL) {
-            top = xmlDocGetRootElement(doc);
-        }
+    if (child == NULL) {
+        return;
+    }
+    doc = child->doc;
+    nodepriv = child->_private;
 
-        if (doc != NULL && top == child) {
-            /* Free everything */
-            xmlFreeDoc(doc);
+    if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
+        // Free everything
+        xmlFreeDoc(doc);
+        return;
+    }
 
-        } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
-            GString *xpath = NULL;
+    if (!pcmk__check_acl(child, NULL, pcmk__xf_acl_write)) {
+        GString *xpath = NULL;
 
-            pcmk__if_tracing({}, return);
-            xpath = pcmk__element_xpath(child);
-            qb_log_from_external_source(__func__, __FILE__,
-                                        "Cannot remove %s %x", LOG_TRACE,
-                                        __LINE__, 0, (const char *) xpath->str,
-                                        nodepriv->flags);
-            g_string_free(xpath, TRUE);
-            return;
+        pcmk__if_tracing({}, return);
+        xpath = pcmk__element_xpath(child);
+        qb_log_from_external_source(__func__, __FILE__,
+                                    "Cannot remove %s %x", LOG_TRACE,
+                                    __LINE__, 0, xpath->str, nodepriv->flags);
+        g_string_free(xpath, TRUE);
+        return;
+    }
 
-        } else {
-            if (doc && pcmk__tracking_xml_changes(child, FALSE)
-                && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+    if ((doc != NULL) && pcmk__tracking_xml_changes(child, false)
+        && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
-                GString *xpath = pcmk__element_xpath(child);
+        xml_doc_private_t *docpriv = doc->_private;
+        GString *xpath = pcmk__element_xpath(child);
 
-                if (xpath != NULL) {
-                    pcmk__deleted_xml_t *deleted_obj = NULL;
+        if (xpath != NULL) {
+            pcmk__deleted_xml_t *deleted_obj = NULL;
 
-                    crm_trace("Deleting %s %p from %p",
-                              (const char *) xpath->str, child, doc);
+            crm_trace("Deleting %s %p from %p", xpath->str, child, doc);
 
-                    deleted_obj =
-                        pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
+            deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
+            deleted_obj->path = g_string_free(xpath, FALSE);
+            deleted_obj->position = -1;
 
-                    deleted_obj->path = pcmk__str_copy(xpath->str);
-                    g_string_free(xpath, TRUE);
+            // Record the position only for XML comments for now
+            if (child->type == XML_COMMENT_NODE) {
+                if (position >= 0) {
+                    deleted_obj->position = position;
 
-                    deleted_obj->position = -1;
-                    /* Record the "position" only for XML comments for now */
-                    if (child->type == XML_COMMENT_NODE) {
-                        if (position >= 0) {
-                            deleted_obj->position = position;
-
-                        } else {
-                            deleted_obj->position = pcmk__xml_position(child,
-                                                                       pcmk__xf_skip);
-                        }
-                    }
-
-                    docpriv = doc->_private;
-                    docpriv->deleted_objs = g_list_append(docpriv->deleted_objs, deleted_obj);
-                    pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
+                } else {
+                    deleted_obj->position = pcmk__xml_position(child,
+                                                               pcmk__xf_skip);
                 }
             }
-            pcmk_free_xml_subtree(child);
+
+            docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
+                                                  deleted_obj);
+            pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
         }
     }
+    pcmk_free_xml_subtree(child);
 }
 
 
@@ -1666,10 +1687,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                *object_href = NULL,
                *object_href_val = NULL;
 
-#if XML_PARSER_DEBUG
     crm_log_xml_trace(update, "update:");
     crm_log_xml_trace(target, "target:");
-#endif
 
     CRM_CHECK(update != NULL, return);
 
@@ -1697,7 +1716,6 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     if (target == NULL) {
         target = pcmk__xe_create(parent, object_name);
-#if XML_PARSER_DEBUG
         crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
@@ -1711,7 +1729,6 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                   object_href ? object_href : "",
                   object_href ? "=" : "",
                   object_href ? object_href_val : "");
-#endif
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
@@ -1734,174 +1751,307 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
-#if XML_PARSER_DEBUG
         crm_trace("Updating child <%s%s%s%s%s/>",
                   pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
                   object_href ? "=" : "",
                   object_href ? object_href_val : "");
-#endif
         pcmk__xml_update(target, NULL, a_child, as_diff);
     }
 
-#if XML_PARSER_DEBUG
     crm_trace("Finished with <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
               object_href ? " " : "",
               object_href ? object_href : "",
               object_href ? "=" : "",
               object_href ? object_href_val : "");
-#endif
 }
 
-gboolean
-update_xml_child(xmlNode * child, xmlNode * to_update)
+/*!
+ * \internal
+ * \brief Delete an XML subtree if it matches a search element
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * If \p user_data has attributes set, \p xml has those attributes set to the
+ *   same values. (\p xml may have additional attributes set to arbitrary
+ *   values.)
+ *
+ * \param[in,out] xml        XML subtree to delete upon match
+ * \param[in]     user_data  Search element
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was deleted)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+delete_xe_if_matching(xmlNode *xml, void *user_data)
 {
-    gboolean can_update = TRUE;
-    xmlNode *child_of_child = NULL;
+    xmlNode *search = user_data;
 
-    CRM_CHECK(child != NULL, return FALSE);
-    CRM_CHECK(to_update != NULL, return FALSE);
-
-    if (!pcmk__xe_is(to_update, (const char *) child->name)) {
-        can_update = FALSE;
-
-    } else if (!pcmk__str_eq(pcmk__xe_id(to_update), pcmk__xe_id(child),
-                             pcmk__str_none)) {
-        can_update = FALSE;
-
-    } else if (can_update) {
-#if XML_PARSER_DEBUG
-        crm_log_xml_trace(child, "Update match found...");
-#endif
-        pcmk__xml_update(NULL, child, to_update, false);
+    if (!pcmk__xe_is(search, (const char *) xml->name)) {
+        // No match: either not both elements, or different element types
+        return true;
     }
 
-    for (child_of_child = pcmk__xml_first_child(child); child_of_child != NULL;
-         child_of_child = pcmk__xml_next(child_of_child)) {
-        /* only update the first one */
-        if (can_update) {
-            break;
+    for (const xmlAttr *attr = pcmk__xe_first_attr(search); attr != NULL;
+         attr = attr->next) {
+
+        const char *search_val = pcmk__xml_attr_value(attr);
+        const char *xml_val = crm_element_value(xml, (const char *) attr->name);
+
+        if (!pcmk__str_eq(search_val, xml_val, pcmk__str_casei)) {
+            // No match: an attr in xml doesn't match the attr in search
+            return true;
         }
-        can_update = update_xml_child(child_of_child, to_update);
     }
 
-    return can_update;
+    crm_log_xml_trace(xml, "delete-match");
+    crm_log_xml_trace(search, "delete-search");
+    free_xml(xml);
+
+    // Found a match and deleted it; stop traversing tree
+    return false;
 }
 
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and delete the first matching element
+ *
+ * This function does not attempt to match the tree root (\p xml).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p search are both element nodes of the same type.
+ * * If \p search has attributes set, \c node has those attributes set to the
+ *   same values. (\c node may have additional attributes set to arbitrary
+ *   values.)
+ *
+ * \param[in,out] xml     XML subtree to search
+ * \param[in]     search  Element to match against
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful deletion and an error code otherwise)
+ */
 int
-find_xml_children(xmlNode ** children, xmlNode * root,
-                  const char *tag, const char *field, const char *value, gboolean search_matches)
+pcmk__xe_delete_match(xmlNode *xml, xmlNode *search)
 {
-    int match_found = 0;
+    // See @COMPAT comment in pcmk__xe_replace_match()
+    CRM_CHECK((xml != NULL) && (search != NULL), return EINVAL);
 
-    CRM_CHECK(root != NULL, return FALSE);
-    CRM_CHECK(children != NULL, return FALSE);
+    for (xml = pcmk__xe_first_child(xml, NULL, NULL, NULL); xml != NULL;
+         xml = pcmk__xe_next(xml)) {
 
-    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
-
-    } else if (value != NULL && !pcmk__str_eq(value, crm_element_value(root, field), pcmk__str_casei)) {
-
-    } else {
-        if (*children == NULL) {
-            *children = pcmk__xe_create(NULL, __func__);
-        }
-        pcmk__xml_copy(*children, root);
-        match_found = 1;
-    }
-
-    if (search_matches || match_found == 0) {
-        xmlNode *child = NULL;
-
-        for (child = pcmk__xml_first_child(root); child != NULL;
-             child = pcmk__xml_next(child)) {
-            match_found += find_xml_children(children, child, tag, field, value, search_matches);
+        if (!pcmk__xml_tree_foreach(xml, delete_xe_if_matching, search)) {
+            // Found and deleted an element
+            return pcmk_rc_ok;
         }
     }
 
-    return match_found;
+    // No match found in this subtree
+    return ENXIO;
 }
 
-gboolean
-replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
+/*!
+ * \internal
+ * \brief Replace one XML node with a copy of another XML node
+ *
+ * This function handles change tracking and applies ACLs.
+ *
+ * \param[in,out] old  XML node to replace
+ * \param[in]     new  XML node to copy as replacement for \p old
+ *
+ * \note This frees \p old.
+ */
+static void
+replace_node(xmlNode *old, xmlNode *new)
 {
-    gboolean can_delete = FALSE;
-    xmlNode *child_of_child = NULL;
+    new = xmlCopyNode(new, 1);
+    pcmk__mem_assert(new);
 
-    const char *up_id = NULL;
-    const char *child_id = NULL;
-    const char *right_val = NULL;
+    // May be unnecessary but avoids slight changes to some test outputs
+    reset_xml_node_flags(new);
 
-    CRM_CHECK(child != NULL, return FALSE);
-    CRM_CHECK(update != NULL, return FALSE);
+    old = xmlReplaceNode(old, new);
 
-    up_id = pcmk__xe_id(update);
-    child_id = pcmk__xe_id(child);
-
-    if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
-        can_delete = TRUE;
+    if (xml_tracking_changes(new)) {
+        // Replaced sections may have included relevant ACLs
+        pcmk__apply_acl(new);
     }
-    if (!pcmk__xe_is(update, (const char *) child->name)) {
-        can_delete = FALSE;
-    }
-    if (can_delete && delete_only) {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
-             a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
+    xml_calculate_changes(old, new);
+    xmlFreeNode(old);
+}
 
-            right_val = crm_element_value(child, p_name);
-            if (!pcmk__str_eq(p_value, right_val, pcmk__str_casei)) {
-                can_delete = FALSE;
-            }
+/*!
+ * \internal
+ * \brief Replace one XML subtree with a copy of another if the two match
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * If \p user_data has the \c PCMK_XA_ID attribute set, then \p xml has
+ *   \c PCMK_XA_ID set to the same value.
+ *
+ * \param[in,out] xml        XML subtree to replace with \p user_data upon match
+ * \param[in]     user_data  XML to replace \p xml with a copy of upon match
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was replaced by \p user_data)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+replace_xe_if_matching(xmlNode *xml, void *user_data)
+{
+    xmlNode *replace = user_data;
+    const char *xml_id = NULL;
+    const char *replace_id = NULL;
+
+    xml_id = pcmk__xe_id(xml);
+    replace_id = pcmk__xe_id(replace);
+
+    if (!pcmk__xe_is(replace, (const char *) xml->name)) {
+        // No match: either not both elements, or different element types
+        return true;
+    }
+
+    if ((replace_id != NULL)
+        && !pcmk__str_eq(replace_id, xml_id, pcmk__str_none)) {
+
+        // No match: ID was provided in replace and doesn't match xml's ID
+        return true;
+    }
+
+    crm_log_xml_trace(xml, "replace-match");
+    crm_log_xml_trace(replace, "replace-with");
+    replace_node(xml, replace);
+
+    // Found a match and replaced it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and replace the first matching element
+ *
+ * This function does not attempt to match the tree root (\p xml).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p replace are both element nodes of the same type.
+ * * If \p replace has the \c PCMK_XA_ID attribute set, then \c node has
+ *   \c PCMK_XA_ID set to the same value.
+ *
+ * \param[in,out] xml      XML tree to search
+ * \param[in]     replace  XML to replace a matching element with a copy of
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful replacement and an error code otherwise)
+ */
+int
+pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
+{
+    /* @COMPAT Some of this behavior (like not matching the tree root, which is
+     * allowed by pcmk__xe_update_match()) is questionable for general use but
+     * required for backward compatibility by cib_process_replace() and
+     * cib_process_delete(). Behavior can change at a major version release if
+     * desired.
+     */
+    CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
+
+    for (xml = pcmk__xe_first_child(xml, NULL, NULL, NULL); xml != NULL;
+         xml = pcmk__xe_next(xml)) {
+
+        if (!pcmk__xml_tree_foreach(xml, replace_xe_if_matching, replace)) {
+            // Found and replaced an element
+            return pcmk_rc_ok;
         }
     }
 
-    if (can_delete && parent != NULL) {
-        crm_log_xml_trace(child, "Delete match found...");
-        if (delete_only || update == NULL) {
-            free_xml(child);
+    // No match found in this subtree
+    return ENXIO;
+}
 
-        } else {
-            xmlNode *old = child;
-            xmlNode *new = xmlCopyNode(update, 1);
+/*!
+ * \internal
+ * \brief Update one XML subtree with another if the two match
+ *
+ * "Update" means to make a target subtree match a source subtree in children
+ * and attributes, recursively. \c "++" and \c "+=" in attribute values are
+ * expanded where appropriate (see \c expand_plus_plus()).
+ *
+ * A match is defined as follows:
+ * * \p xml and \p user_data are both element nodes of the same type.
+ * * \p xml and \p user_data have the same \c PCMK_XA_ID attribute value, or
+ *   \c PCMK_XA_ID is unset in both
+ *
+ * \param[in,out] xml        XML subtree to update with \p user_data upon match
+ * \param[in]     user_data  XML to update \p xml with upon match
+ *
+ * \return \c true to continue traversing the tree, or \c false to stop (because
+ *         \p xml was updated by \p user_data)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+update_xe_if_matching(xmlNode *xml, void *user_data)
+{
+    xmlNode *update = user_data;
 
-            pcmk__mem_assert(new);
-
-            // May be unnecessary but avoids slight changes to some test outputs
-            reset_xml_node_flags(new);
-
-            old = xmlReplaceNode(old, new);
-
-            if (xml_tracking_changes(new)) {
-                // Replaced sections may have included relevant ACLs
-                pcmk__apply_acl(new);
-            }
-            xml_calculate_changes(old, new);
-            xmlFreeNode(old);
-        }
-        return TRUE;
-
-    } else if (can_delete) {
-        crm_log_xml_debug(child, "Cannot delete the search root");
-        can_delete = FALSE;
+    if (!pcmk__xe_is(update, (const char *) xml->name)) {
+        // No match: either not both elements, or different element types
+        return true;
     }
 
-    child_of_child = pcmk__xml_first_child(child);
-    while (child_of_child) {
-        xmlNode *next = pcmk__xml_next(child_of_child);
-
-        can_delete = replace_xml_child(child, child_of_child, update, delete_only);
-
-        /* only delete the first one */
-        if (can_delete) {
-            child_of_child = NULL;
-        } else {
-            child_of_child = next;
-        }
+    if (!pcmk__str_eq(pcmk__xe_id(xml), pcmk__xe_id(update), pcmk__str_none)) {
+        // No match: ID mismatch
+        return true;
     }
 
-    return can_delete;
+    crm_log_xml_trace(xml, "update-match");
+    crm_log_xml_trace(update, "update-with");
+    pcmk__xml_update(NULL, xml, update, false);
+
+    // Found a match and replaced it; stop traversing tree
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Search an XML tree depth-first and update the first matching element
+ *
+ * "Update" means to make a target subtree match a source subtree in children
+ * and attributes, recursively. \c "++" and \c "+=" in attribute values are
+ * expanded where appropriate (see \c expand_plus_plus()).
+ *
+ * A match with a node \c node is defined as follows:
+ * * \c node and \p update are both element nodes of the same type.
+ * * \c node and \p user_data have the same \c PCMK_XA_ID attribute value, or
+ *   \c PCMK_XA_ID is unset in both
+ *
+ * \param[in,out] xml     XML tree to search
+ * \param[in]     update  XML to update a matching element with
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
+ *         successful update and an error code otherwise)
+ */
+int
+pcmk__xe_update_match(xmlNode *xml, xmlNode *update)
+{
+    /* @COMPAT In pcmk__xe_delete_match() and pcmk__xe_replace_match(), we
+     * compare IDs only if the equivalent of the update argument has an ID.
+     * Here, we're stricter: we consider it a mismatch if only one element has
+     * an ID attribute, or if both elements have IDs but they don't match.
+     *
+     * Perhaps we should align the behavior at a major version release.
+     */
+    CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
+
+    if (!pcmk__xml_tree_foreach(xml, update_xe_if_matching, update)) {
+        // Found and updated an element
+        return pcmk_rc_ok;
+    }
+
+    // No match found in this subtree
+    return ENXIO;
 }
 
 xmlNode *
@@ -2395,6 +2545,115 @@ void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
     pcmk__xe_remove_attr(obj, name);
+}
+
+gboolean
+replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean delete_only)
+{
+    bool is_match = false;
+    const char *child_id = NULL;
+    const char *update_id = NULL;
+
+    CRM_CHECK(child != NULL, return FALSE);
+    CRM_CHECK(update != NULL, return FALSE);
+
+    child_id = pcmk__xe_id(child);
+    update_id = pcmk__xe_id(update);
+
+    /* Match element name and (if provided in update XML) element ID. Don't
+     * match search root (child is search root if parent == NULL).
+     */
+    is_match = (parent != NULL)
+               && pcmk__xe_is(update, (const char *) child->name)
+               && ((update_id == NULL)
+                   || pcmk__str_eq(update_id, child_id, pcmk__str_none));
+
+    /* For deletion, match all attributes provided in update. A matching node
+     * can have additional attributes, but values must match for provided ones.
+     */
+    if (is_match && delete_only) {
+        for (xmlAttr *attr = pcmk__xe_first_attr(update); attr != NULL;
+             attr = attr->next) {
+            const char *name = (const char *) attr->name;
+            const char *update_val = pcmk__xml_attr_value(attr);
+            const char *child_val = crm_element_value(child, name);
+
+            if (!pcmk__str_eq(update_val, child_val, pcmk__str_casei)) {
+                is_match = false;
+                break;
+            }
+        }
+    }
+
+    if (is_match) {
+        if (delete_only) {
+            crm_log_xml_trace(child, "delete-match");
+            crm_log_xml_trace(update, "delete-search");
+            free_xml(child);
+
+        } else {
+            crm_log_xml_trace(child, "replace-match");
+            crm_log_xml_trace(update, "replace-with");
+            replace_node(child, update);
+        }
+        return TRUE;
+    }
+
+    // Current node not a match; search the rest of the subtree depth-first
+    parent = child;
+    for (child = pcmk__xml_first_child(parent); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        // Only delete/replace the first match
+        if (replace_xml_child(parent, child, update, delete_only)) {
+            return TRUE;
+        }
+    }
+
+    // No match found in this subtree
+    return FALSE;
+}
+
+gboolean
+update_xml_child(xmlNode *child, xmlNode *to_update)
+{
+    return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
+}
+
+int
+find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
+                  const char *field, const char *value, gboolean search_matches)
+{
+    int match_found = 0;
+
+    CRM_CHECK(root != NULL, return FALSE);
+    CRM_CHECK(children != NULL, return FALSE);
+
+    if ((tag != NULL) && !pcmk__xe_is(root, tag)) {
+
+    } else if ((value != NULL)
+               && !pcmk__str_eq(value, crm_element_value(root, field),
+                                pcmk__str_casei)) {
+
+    } else {
+        if (*children == NULL) {
+            *children = pcmk__xe_create(NULL, __func__);
+        }
+        pcmk__xml_copy(*children, root);
+        match_found = 1;
+    }
+
+    if (search_matches || match_found == 0) {
+        xmlNode *child = NULL;
+
+        for (child = pcmk__xml_first_child(root); child != NULL;
+             child = pcmk__xml_next(child)) {
+            match_found += find_xml_children(children, child, tag, field, value,
+                                             search_matches);
+        }
+    }
+
+    return match_found;
 }
 
 // LCOV_EXCL_STOP

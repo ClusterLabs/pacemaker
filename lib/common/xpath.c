@@ -186,28 +186,6 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
 }
 
 xmlNode *
-get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
-{
-    xmlNode *result = NULL;
-    char *xpath_full = NULL;
-    char *xpath_prefix = NULL;
-
-    if (xml_obj == NULL || xpath == NULL) {
-        return NULL;
-    }
-
-    xpath_prefix = (char *)xmlGetNodePath(xml_obj);
-
-    xpath_full = crm_strdup_printf("%s%s", xpath_prefix, xpath);
-
-    result = get_xpath_object(xpath_full, xml_obj, error_level);
-
-    free(xpath_prefix);
-    free(xpath_full);
-    return result;
-}
-
-xmlNode *
 get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 {
     int max;
@@ -390,6 +368,28 @@ xml_get_path(const xmlNode *xml)
     path = pcmk__str_copy(g_path->str);
     g_string_free(g_path, TRUE);
     return path;
+}
+
+xmlNode *
+get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
+{
+    xmlNode *result = NULL;
+    char *xpath_full = NULL;
+    char *xpath_prefix = NULL;
+
+    if (xml_obj == NULL || xpath == NULL) {
+        return NULL;
+    }
+
+    xpath_prefix = (char *)xmlGetNodePath(xml_obj);
+
+    xpath_full = crm_strdup_printf("%s%s", xpath_prefix, xpath);
+
+    result = get_xpath_object(xpath_full, xml_obj, error_level);
+
+    free(xpath_prefix);
+    free(xpath_full);
+    return result;
 }
 
 // LCOV_EXCL_STOP

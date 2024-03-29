@@ -69,17 +69,7 @@ void fix_plus_plus_recursive(xmlNode * target);
 /*
  * Searching & Modifying
  */
-gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
-                           gboolean delete_only);
-
-gboolean update_xml_child(xmlNode * child, xmlNode * to_update);
-
-int find_xml_children(xmlNode ** children, xmlNode * root,
-                      const char *tag, const char *field, const char *value,
-                      gboolean search_matches);
-
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
 static inline const char *
 crm_map_element_name(const xmlNode *xml)

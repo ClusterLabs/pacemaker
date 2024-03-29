@@ -17,7 +17,7 @@
 #include <stdint.h>         // uint8_t, uint32_t
 #include <stdbool.h>        // bool
 #include <sys/types.h>      // size_t
-#include <glib.h>           // GList
+#include <glib.h>           // gchar, GList
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
@@ -33,8 +33,8 @@
  * (e.g. when checking differences) that something was deleted.
  */
 typedef struct pcmk__deleted_xml_s {
-        char *path;
-        int position;
+    gchar *path;
+    int position;
 } pcmk__deleted_xml_t;
 
 typedef struct xml_node_private_s {
@@ -71,6 +71,10 @@ typedef struct xml_doc_private_s {
             LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
+
+G_GNUC_INTERNAL
+bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                            void *user_data);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
