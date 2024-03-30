@@ -1003,74 +1003,6 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
 
 /*!
  * \internal
- * \brief Get consecutive bytes encoding non-ASCII UTF-8 characters
- *
- * \param[in] text  String to check
- *
- * \return Number of non-ASCII UTF-8 bytes at the beginning of \p text
- */
-static size_t
-utf8_bytes(const char *text)
-{
-    // Total number of consecutive bytes containing UTF-8 characters
-    size_t c_bytes = 0;
-
-    if (text == NULL) {
-        return 0;
-    }
-
-    /* UTF-8 uses one to four 8-bit bytes per character. The first byte
-     * indicates the width of the character. A byte beginning with a '0' bit is
-     * a one-byte ASCII character.
-     *
-     * A C byte is 8 bits on most systems, but this is not guaranteed.
-     *
-     * Count until we find an ASCII character or an invalid byte. Check bytes
-     * aligned with the C byte boundary.
-     */
-    for (const uint8_t *utf8_byte = (const uint8_t *) text;
-         (*utf8_byte & 0x80) != 0;
-         utf8_byte = (const uint8_t *) (text + c_bytes)) {
-
-        size_t utf8_bits = 0;
-
-        if ((*utf8_byte & 0xf0) == 0xf0) {
-            // Four-byte character (first byte: 11110xxx)
-            utf8_bits = 32;
-
-        } else if ((*utf8_byte & 0xe0) == 0xe0) {
-            // Three-byte character (first byte: 1110xxxx)
-            utf8_bits = 24;
-
-        } else if ((*utf8_byte & 0xc0) == 0xc0) {
-            // Two-byte character (first byte: 110xxxxx)
-            utf8_bits = 16;
-
-        } else {
-            crm_warn("Found invalid UTF-8 character %.2x",
-                     (unsigned char) *utf8_byte);
-            return c_bytes;
-        }
-
-        c_bytes += utf8_bits / CHAR_BIT;
-
-#if (CHAR_BIT != 8) // Coverity complains about dead code without this CPP guard
-        if ((utf8_bits % CHAR_BIT) > 0) {
-            c_bytes++;
-        }
-#endif  // CHAR_BIT != 8
-    }
-
-    for (int i = 0; i < c_bytes; i++) {
-        // Sanity-check that we haven't passed end of string as "non-ASCII"
-        CRM_ASSERT(text[i] != '\0');
-    }
-
-    return c_bytes;
-}
-
-/*!
- * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
  * See \c pcmk__xml_escape() and \c pcmk__xml_escape_type for more details.
@@ -1089,14 +1021,6 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
     }
 
     while (*text != '\0') {
-        // Don't escape any non-ASCII characters
-        size_t ubytes = utf8_bytes(text);
-
-        if (ubytes > 0) {
-            text += ubytes;
-            continue;
-        }
-
         switch (type) {
             case pcmk__xml_escape_text:
                 switch (*text) {
@@ -1108,7 +1032,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                     case '\t':
                         break;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             return true;
                         }
                         break;
@@ -1123,7 +1047,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                     case '"':
                         return true;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             return true;
                         }
                         break;
@@ -1147,7 +1071,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                 break;
         }
 
-        text++;
+        text = g_utf8_next_char(text);
     }
     return false;
 }
@@ -1183,11 +1107,11 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 
     while (*text != '\0') {
         // Don't escape any non-ASCII characters
-        size_t ubytes = utf8_bytes(text);
+        if ((*text & 0x80) != 0) {
+            size_t bytes = g_utf8_next_char(text) - text;
 
-        if (ubytes > 0) {
-            g_string_append_len(copy, text, ubytes);
-            text += ubytes;
+            g_string_append_len(copy, text, bytes);
+            text += bytes;
             continue;
         }
 
@@ -1208,7 +1132,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                         g_string_append_c(copy, *text);
                         break;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             g_string_append_printf(copy, "&#x%.2X;", *text);
                         } else {
                             g_string_append_c(copy, *text);
@@ -1232,7 +1156,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                         g_string_append(copy, PCMK__XML_ENTITY_QUOT);
                         break;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             g_string_append_printf(copy, "&#x%.2X;", *text);
                         } else {
                             g_string_append_c(copy, *text);
@@ -1266,7 +1190,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                 break;
         }
 
-        text++;
+        text = g_utf8_next_char(text);
     }
     return g_string_free(copy, FALSE);
 }
