@@ -769,7 +769,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             request = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL,
                                      pcmk_ipc_name(api, false), client, NULL);
             if (nodeid > 0) {
-                crm_xml_set_id(request, "%lu", (unsigned long) nodeid);
+                pcmk__xe_set_id(request, "%lu", (unsigned long) nodeid);
             }
             crm_xml_add(request, PCMK_XA_UNAME, node_name);
             break;

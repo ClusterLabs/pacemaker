@@ -373,8 +373,8 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         free(id);
 
         xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
-        crm_xml_set_id(xml_obj, "%s-attributes-%d",
-                       data->prefix, replica->offset);
+        pcmk__xe_set_id(xml_obj, "%s-attributes-%d",
+                        data->prefix, replica->offset);
 
         crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
         if(data->host_network) {
@@ -461,7 +461,7 @@ create_container_resource(pcmk_resource_t *parent,
     free(id);
 
     xml_obj = pcmk__xe_create(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
-    crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
     crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", PCMK_VALUE_TRUE);
@@ -1144,6 +1144,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_PRIMITIVE, NULL,
                                    NULL);
     if (xml_obj && valid_network(bundle_data)) {
+        const char *suffix = NULL;
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
@@ -1153,12 +1154,16 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          * part of the resource name, so that bundles don't restart in a rolling
          * upgrade. (It also avoids needing to change regression tests.)
          */
-        crm_xml_set_id(xml_resource, "%s-%s", bundle_data->prefix,
-                      (bundle_data->promoted_max? "master"
-                      : (const char *)xml_resource->name));
+        suffix = (const char *) xml_resource->name;
+        if (bundle_data->promoted_max > 0) {
+            suffix = "master";
+        }
+
+        pcmk__xe_set_id(xml_resource, "%s-%s", bundle_data->prefix, suffix);
 
         xml_set = pcmk__xe_create(xml_resource, PCMK_XE_META_ATTRIBUTES);
-        crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
+        pcmk__xe_set_id(xml_set, "%s-%s-meta",
+                        bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,
                               PCMK_META_ORDERED, PCMK_VALUE_TRUE);
