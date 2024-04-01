@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <glib.h>                   // guint, GHashTable
 #include <regex.h>                  // regmatch_t
+#include <libxml/tree.h>            // xmlNode
 #include <crm/common/iso8601.h>     // crm_time_t
 
 #ifdef __cplusplus
@@ -30,24 +31,24 @@ extern "C" {
 //!@{
 //! \deprecated For Pacemaker use only
 enum expression_type {
-    pcmk__subexpr_unknown   = 0,        // Unknown subexpression type
-    pcmk__subexpr_rule      = 1,        // Nested rule
-    pcmk__subexpr_attribute = 2,        // Node attribute expression
-    pcmk__subexpr_location  = 3,        // Node location expression
-    pcmk__subexpr_datetime  = 5,        // Date/time expression
-    pcmk__subexpr_resource  = 7,        // Resource agent expression
-    pcmk__subexpr_operation = 8,        // Operation expression
+    pcmk__condition_unknown   = 0,  // Unknown or invalid condition
+    pcmk__condition_rule      = 1,  // Nested rule
+    pcmk__condition_attribute = 2,  // Node attribute expression
+    pcmk__condition_location  = 3,  // Node location expression
+    pcmk__condition_datetime  = 5,  // Date/time expression
+    pcmk__condition_resource  = 7,  // Resource agent expression
+    pcmk__condition_operation = 8,  // Operation expression
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    not_expr        = pcmk__subexpr_unknown,
-    nested_rule     = pcmk__subexpr_rule,
-    attr_expr       = pcmk__subexpr_attribute,
-    loc_expr        = pcmk__subexpr_location,
+    not_expr        = pcmk__condition_unknown,
+    nested_rule     = pcmk__condition_rule,
+    attr_expr       = pcmk__condition_attribute,
+    loc_expr        = pcmk__condition_location,
     role_expr       = 4,
-    time_expr       = pcmk__subexpr_datetime,
+    time_expr       = pcmk__condition_datetime,
     version_expr    = 6,
-    rsc_expr        = pcmk__subexpr_resource,
-    op_expr         = pcmk__subexpr_operation,
+    rsc_expr        = pcmk__condition_resource,
+    op_expr         = pcmk__condition_operation,
 #endif
 };
 //!@}
@@ -100,6 +101,9 @@ typedef struct pcmk_rule_input {
     //! Number of entries in rsc_id_submatches
     int rsc_id_nmatches;
 } pcmk_rule_input_t;
+
+int pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                       crm_time_t *next_change);
 
 #ifdef __cplusplus
 }

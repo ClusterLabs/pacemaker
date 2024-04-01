@@ -19,13 +19,4 @@
 GList *pe_unpack_alerts(const xmlNode *alerts);
 void pe_free_alert_list(GList *alert_list);
 
-gboolean pe__eval_attr_expr(const xmlNode *expr,
-                            const pe_rule_eval_data_t *rule_data);
-gboolean pe__eval_op_expr(const xmlNode *expr,
-                          const pe_rule_eval_data_t *rule_data);
-gboolean pe__eval_role_expr(const xmlNode *expr,
-                            const pe_rule_eval_data_t *rule_data);
-gboolean pe__eval_rsc_expr(const xmlNode *expr,
-                           const pe_rule_eval_data_t *rule_data);
-
 #endif

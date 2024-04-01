@@ -27,45 +27,45 @@
 
 /*!
  * \internal
- * \brief Get the expression type corresponding to given expression XML
+ * \brief Get the condition type corresponding to given condition XML
  *
- * \param[in] expr  Rule expression XML
+ * \param[in] condition  Rule condition XML
  *
- * \return Expression type corresponding to \p expr
+ * \return Condition type corresponding to \p condition
  */
 enum expression_type
-pcmk__expression_type(const xmlNode *expr)
+pcmk__condition_type(const xmlNode *condition)
 {
     const char *name = NULL;
 
     // Expression types based on element name
 
-    if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
-        return pcmk__subexpr_datetime;
+    if (pcmk__xe_is(condition, PCMK_XE_DATE_EXPRESSION)) {
+        return pcmk__condition_datetime;
 
-    } else if (pcmk__xe_is(expr, PCMK_XE_RSC_EXPRESSION)) {
-        return pcmk__subexpr_resource;
+    } else if (pcmk__xe_is(condition, PCMK_XE_RSC_EXPRESSION)) {
+        return pcmk__condition_resource;
 
-    } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
-        return pcmk__subexpr_operation;
+    } else if (pcmk__xe_is(condition, PCMK_XE_OP_EXPRESSION)) {
+        return pcmk__condition_operation;
 
-    } else if (pcmk__xe_is(expr, PCMK_XE_RULE)) {
-        return pcmk__subexpr_rule;
+    } else if (pcmk__xe_is(condition, PCMK_XE_RULE)) {
+        return pcmk__condition_rule;
 
-    } else if (!pcmk__xe_is(expr, PCMK_XE_EXPRESSION)) {
-        return pcmk__subexpr_unknown;
+    } else if (!pcmk__xe_is(condition, PCMK_XE_EXPRESSION)) {
+        return pcmk__condition_unknown;
     }
 
     // Expression types based on node attribute name
 
-    name = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
+    name = crm_element_value(condition, PCMK_XA_ATTRIBUTE);
 
     if (pcmk__str_any_of(name, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID,
                          NULL)) {
-        return pcmk__subexpr_location;
+        return pcmk__condition_location;
     }
 
-    return pcmk__subexpr_attribute;
+    return pcmk__condition_attribute;
 }
 
 /*!
@@ -892,6 +892,29 @@ pcmk__parse_source(const char *source)
 
 /*!
  * \internal
+ * \brief Parse a boolean operator from a string
+ *
+ * \param[in] combine  String indicating boolean operator
+ *
+ * \return Enumeration value corresponding to \p combine
+ */
+enum pcmk__combine
+pcmk__parse_combine(const char *combine)
+{
+    if (pcmk__str_eq(combine, PCMK_VALUE_AND,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        return pcmk__combine_and;
+
+    } else if (pcmk__str_eq(combine, PCMK_VALUE_OR, pcmk__str_casei)) {
+        return pcmk__combine_or;
+
+    } else {
+        return pcmk__combine_unknown;
+    }
+}
+
+/*!
+ * \internal
  * \brief Get the result of a node attribute comparison for rule evaluation
  *
  * \param[in] actual      Actual node attribute value
@@ -1292,4 +1315,151 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
     crm_trace(PCMK_XE_OP_EXPRESSION " %s is satisfied (name %s, interval %s)",
               id, name, pcmk__readable_interval(rule_input->op_interval_ms));
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Evaluate a rule condition
+ *
+ * \param[in,out] condition    XML containing a rule condition (a subrule, or an
+ *                             expression of any type)
+ * \param[in]     rule_input   Values used to evaluate rule criteria
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the condition
+ *         passes, some other value if it does not)
+ */
+int
+pcmk__evaluate_condition(xmlNode *condition,
+                         const pcmk_rule_input_t *rule_input,
+                         crm_time_t *next_change)
+{
+
+    if ((condition == NULL) || (rule_input == NULL)) {
+        return EINVAL;
+    }
+
+    switch (pcmk__condition_type(condition)) {
+        case pcmk__condition_rule:
+            return pcmk_evaluate_rule(condition, rule_input, next_change);
+
+        case pcmk__condition_attribute:
+        case pcmk__condition_location:
+            return pcmk__evaluate_attr_expression(condition, rule_input);
+
+        case pcmk__condition_datetime:
+            {
+                int rc = pcmk__evaluate_date_expression(condition,
+                                                        rule_input->now,
+                                                        next_change);
+
+                return (rc == pcmk_rc_within_range)? pcmk_rc_ok : rc;
+            }
+
+        case pcmk__condition_resource:
+            return pcmk__evaluate_rsc_expression(condition, rule_input);
+
+        case pcmk__condition_operation:
+            return pcmk__evaluate_op_expression(condition, rule_input);
+
+        default: // Not possible with schema validation enabled
+            pcmk__config_err("Treating rule condition %s as not passing "
+                             "because %s is not a valid condition type",
+                             pcmk__s(pcmk__xe_id(condition), "without ID"),
+                             (const char *) condition->name);
+            return pcmk_rc_unpack_error;
+    }
+}
+
+/*!
+ * \brief Evaluate a single rule, including all its conditions
+ *
+ * \param[in,out] rule         XML containing a rule definition or its id-ref
+ * \param[in]     rule_input   Values used to evaluate rule criteria
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the rule is
+ *         satisfied, some other value if it is not)
+ */
+int
+pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                   crm_time_t *next_change)
+{
+    bool empty = true;
+    int rc = pcmk_rc_ok;
+    const char *id = NULL;
+    const char *value = NULL;
+    enum pcmk__combine combine = pcmk__combine_unknown;
+
+    if ((rule == NULL) || (rule_input == NULL)) {
+        return EINVAL;
+    }
+
+    rule = expand_idref(rule, NULL);
+    if (rule == NULL) {
+        // Not possible with schema validation enabled; message already logged
+        return pcmk_rc_unpack_error;
+    }
+
+    // Validate XML ID
+    id = pcmk__xe_id(rule);
+    if (pcmk__str_empty(id)) {
+        /* @COMPAT When we can break behavioral backward compatibility,
+         * fail the rule
+         */
+        pcmk__config_warn(PCMK_XE_RULE " has no " PCMK_XA_ID);
+        id = "without ID"; // for logging
+    }
+
+    value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
+    combine = pcmk__parse_combine(value);
+    switch (combine) {
+        case pcmk__combine_and:
+            // For "and", rc defaults to success (reset on failure below)
+            break;
+
+        case pcmk__combine_or:
+            // For "or", rc defaults to failure (reset on success below)
+            rc = pcmk_rc_op_unsatisfied;
+            break;
+
+        default:
+            /* @COMPAT When we can break behavioral backward compatibility,
+             * return pcmk_rc_unpack_error
+             */
+            pcmk__config_warn("Rule %s has invalid " PCMK_XA_BOOLEAN_OP
+                              " value '%s', using default '" PCMK_VALUE_AND "'",
+                              pcmk__xe_id(rule), value);
+            combine = pcmk__combine_and;
+            break;
+    }
+
+    // Evaluate each condition
+    for (xmlNode *condition = pcmk__xe_first_child(rule, NULL, NULL, NULL);
+         condition != NULL; condition = pcmk__xe_next(condition)) {
+
+        empty = false;
+        if (pcmk__evaluate_condition(condition, rule_input,
+                                     next_change) == pcmk_rc_ok) {
+            if (combine == pcmk__combine_or) {
+                rc = pcmk_rc_ok; // Any pass is final for "or"
+                break;
+            }
+        } else if (combine == pcmk__combine_and) {
+            rc = pcmk_rc_op_unsatisfied; // Any failure is final for "and"
+            break;
+        }
+    }
+
+    if (empty) { // Not possible with schema validation enabled
+        /* @COMPAT Currently, we don't actually ignore "or" rules because
+         * rc is initialized to failure above in that case. When we can break
+         * backward compatibility, reset rc to pcmk_rc_ok here.
+         */
+        pcmk__config_warn("Ignoring rule %s because it contains no conditions",
+                          id);
+    }
+
+    crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));
+    return rc;
 }

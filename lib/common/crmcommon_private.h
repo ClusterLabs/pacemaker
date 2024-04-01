@@ -374,6 +374,19 @@ int pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
 G_GNUC_INTERNAL
 int pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now);
 
+G_GNUC_INTERNAL
+int pcmk__evaluate_attr_expression(const xmlNode *expression,
+                                   const pcmk_rule_input_t *rule_input);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_rsc_expression(const xmlNode *expr,
+                                  const pcmk_rule_input_t *rule_input);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_op_expression(const xmlNode *expr,
+                                 const pcmk_rule_input_t *rule_input);
+
+
 /*
  * Utils
  */
