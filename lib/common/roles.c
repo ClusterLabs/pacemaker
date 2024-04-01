@@ -65,11 +65,23 @@ pcmk_parse_role(const char *role)
         return pcmk_role_stopped;
     } else if (pcmk__str_eq(role, PCMK_ROLE_STARTED, pcmk__str_casei)) {
         return pcmk_role_started;
-    } else if (pcmk__strcase_any_of(role, PCMK_ROLE_UNPROMOTED,
-                                    PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
+    } else if (pcmk__str_eq(role, PCMK__ROLE_UNPROMOTED_LEGACY, pcmk__str_casei)) {
+        pcmk__warn_once(pcmk__wo_slave_role,
+                        "Support for the " PCMK__ROLE_UNPROMOTED_LEGACY
+                        " role is deprecated and will be removed in a "
+                        "future release. Use " PCMK_ROLE_UNPROMOTED
+                        " instead.");
         return pcmk_role_unpromoted;
-    } else if (pcmk__strcase_any_of(role, PCMK_ROLE_PROMOTED,
-                                    PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
+    } else if (pcmk__str_eq(role, PCMK_ROLE_UNPROMOTED, pcmk__str_casei)) {
+        return pcmk_role_unpromoted;
+    } else if (pcmk__str_eq(role, PCMK__ROLE_PROMOTED_LEGACY, pcmk__str_casei)) {
+        pcmk__warn_once(pcmk__wo_master_role,
+                        "Support for the " PCMK__ROLE_PROMOTED_LEGACY
+                        " role is deprecated and will be removed in a "
+                        "future release. Use " PCMK_ROLE_PROMOTED
+                        " instead.");
+        return pcmk_role_promoted;
+    } else if (pcmk__str_eq(role, PCMK_ROLE_PROMOTED, pcmk__str_casei)) {
         return pcmk_role_promoted;
     }
     return pcmk_role_unknown; // Invalid role given
