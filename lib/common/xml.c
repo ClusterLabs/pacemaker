@@ -1200,26 +1200,6 @@ pcmk__xe_add_last_written(xmlNode *xe)
 }
 
 /*!
- * \brief Sanitize a string so it is usable as an XML ID
- *
- * \param[in,out] id  String to sanitize
- */
-void
-crm_xml_sanitize_id(char *id)
-{
-    char *c;
-
-    for (c = id; *c; ++c) {
-        /* @TODO Sanitize more comprehensively */
-        switch (*c) {
-            case ':':
-            case '#':
-                *c = '.';
-        }
-    }
-}
-
-/*!
  * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
@@ -2592,6 +2572,20 @@ xmlNode *
 expand_idref(xmlNode *input, xmlNode *top)
 {
     return pcmk__xe_resolve_idref(input, top);
+}
+
+void
+crm_xml_sanitize_id(char *id)
+{
+    char *c;
+
+    for (c = id; *c; ++c) {
+        switch (*c) {
+            case ':':
+            case '#':
+                *c = '.';
+        }
+    }
 }
 
 void
