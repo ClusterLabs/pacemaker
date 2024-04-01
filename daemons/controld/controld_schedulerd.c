@@ -431,8 +431,8 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
         xml = pcmk__xe_create(cluster_property_set, PCMK_XE_NVPAIR);
 
-        crm_xml_set_id(xml, "%s-%s",
-                       PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
+        pcmk__xe_set_id(xml, "%s-%s",
+                        PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);
         crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }

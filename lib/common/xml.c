@@ -951,6 +951,41 @@ pcmk__xml_sanitize_id(char *id)
 
 /*!
  * \internal
+ * \brief Set a formatted string as an XML element's ID
+ *
+ * If the formatted string would not be a valid ID, it's first sanitized by
+ * \c pcmk__xml_sanitize_id().
+ *
+ * \param[in,out] node    Node whose ID to set
+ * \param[in]     format  <tt>printf(3)</tt>-style format string
+ * \param[in]     ...     Arguments for \p format
+ */
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__xe_set_id(xmlNode *node, const char *format, ...)
+{
+    char *id = NULL;
+    va_list ap;
+
+    CRM_ASSERT(!pcmk__str_empty(format));
+
+    if (node == NULL) {
+        return;
+    }
+
+    va_start(ap, format);
+    CRM_ASSERT(vasprintf(&id, format, ap) >= 0);
+    va_end(ap);
+
+    if (!xmlValidateNameValue((pcmkXmlStr) id)) {
+        pcmk__xml_sanitize_id(id);
+    }
+    crm_xml_add(node, PCMK_XA_ID, id);
+    free(id);
+}
+
+/*!
+ * \internal
  * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
  * If \p node is the root of its document, free the entire document.
