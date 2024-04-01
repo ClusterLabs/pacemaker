@@ -1048,8 +1048,8 @@ merge_duplicates(remote_fencing_op_t *op)
         }
         if ((other->total_timeout > 0)
             && (now > (other->total_timeout + other->created))) {
-            crm_trace("%.8s not duplicate of %.8s: old (%ld vs. %ld + %ds)",
-                      op->id, other->id, now, other->created,
+            crm_trace("%.8s not duplicate of %.8s: old (%lld vs. %lld + %ds)",
+                      op->id, other->id, (long long)now, (long long)other->created,
                       other->total_timeout);
             continue;
         }
