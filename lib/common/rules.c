@@ -1488,9 +1488,20 @@ pcmk__evaluate_rules(xmlNode *xml, const pcmk_rule_input_t *rule_input,
 {
     // If there are no rules, pass by default
     int rc = pcmk_rc_ok;
+    bool have_rule = false;
 
     for (xmlNode *rule = pcmk__xe_first_child(xml, PCMK_XE_RULE, NULL, NULL);
          rule != NULL; rule = pcmk__xe_next_same(rule)) {
+
+        if (have_rule) {
+            pcmk__warn_once(pcmk__wo_multiple_rules,
+                            "Support for multiple top-level rules is "
+                            "deprecated (replace with a single rule containing "
+                            "the existing rules with " PCMK_XA_BOOLEAN_OP
+                            "set to " PCMK_VALUE_OR " instead)");
+        } else {
+            have_rule = true;
+        }
 
         rc = pcmk_evaluate_rule(rule, rule_input, next_change);
         if (rc == pcmk_rc_ok) {

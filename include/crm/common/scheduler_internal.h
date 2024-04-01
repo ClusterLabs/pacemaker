@@ -56,6 +56,7 @@ enum pcmk__sched_warnings {
     pcmk__wo_location_rules = (1 << 18),
     pcmk__wo_op_attr_expr   = (1 << 19),
     pcmk__wo_instance_defaults  = (1 << 20),
+    pcmk__wo_multiple_rules     = (1 << 21),
 };
 
 enum pcmk__check_parameters {
