@@ -330,12 +330,30 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
     return pcmk_rc_ok;
 }
 
+static void
+free_attr_update_data(gpointer data)
+{
+    attr_update_data_t *ud = data;
+
+    if (ud == NULL) {
+        return;
+    }
+
+    free(ud->attr_set_type);
+    free(ud->attr_set_id);
+    free(ud->attr_name);
+    free(ud->attr_value);
+    free(ud->given_rsc_id);
+    free(ud->found_attr_id);
+    free(ud);
+}
+
 static int
 update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_set, const char *attr_set_type,
                  const char *attr_id, const char *attr_name,
                  const char *attr_value, gboolean recursive, cib_t *cib,
-                 gboolean force)
+                 gboolean force, GList **results)
 {
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
@@ -418,13 +436,25 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
-            out->info(out, "Set '%s' option: "
-                      PCMK_XA_ID "=%s%s%s%s%s value=%s",
-                      lookup_id, found_attr_id,
-                      ((rsc_attr_set == NULL)? "" : " set="),
-                      pcmk__s(rsc_attr_set, ""),
-                      ((attr_name == NULL)? "" : " " PCMK_XA_NAME "="),
-                      pcmk__s(attr_name, ""), attr_value);
+            attr_update_data_t *ud = pcmk__assert_alloc(1, sizeof(attr_update_data_t));
+
+            if (attr_set_type == NULL) {
+                attr_set_type = (const char *) xml_search->parent->name;
+            }
+
+            if (rsc_attr_set == NULL) {
+                rsc_attr_set = crm_element_value(xml_search->parent, PCMK_XA_ID);
+            }
+
+            ud->attr_set_type = pcmk__str_copy(attr_set_type);
+            ud->attr_set_id = pcmk__str_copy(rsc_attr_set);
+            ud->attr_name = pcmk__str_copy(attr_name);
+            ud->attr_value = pcmk__str_copy(attr_value);
+            ud->given_rsc_id = pcmk__str_copy(lookup_id);
+            ud->found_attr_id = pcmk__str_copy(found_attr_id);
+            ud->rsc = rsc;
+
+            *results = g_list_append(*results, ud);
         }
 
         free_xml(xml_top);
@@ -456,7 +486,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                           attr_name, attr_value, cons->dependent->id);
                 update_attribute(cons->dependent, cons->dependent->id, NULL,
                                  attr_set_type, NULL, attr_name, attr_value,
-                                 recursive, cib, force);
+                                 recursive, cib, force, results);
             }
         }
     }
@@ -474,7 +504,9 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               cib_t *cib, gboolean force)
 {
     static bool need_init = true;
+    int rc = pcmk_rc_ok;
 
+    GList *results = NULL;
     pcmk__output_t *out = rsc->cluster->priv;
 
     /* If we were asked to update the attribute in a resource element (for
@@ -491,9 +523,20 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
     }
 
-    return update_attribute(rsc, requested_name, attr_set, attr_set_type,
-                            attr_id, attr_name, attr_value, recursive, cib,
-                            force);
+    rc = update_attribute(rsc, requested_name, attr_set, attr_set_type,
+                          attr_id, attr_name, attr_value, recursive, cib,
+                          force, &results);
+
+    if (rc == pcmk_rc_ok) {
+        if (results == NULL) {
+            return rc;
+        }
+
+        out->message(out, "attribute-changed-list", results);
+        g_list_free_full(results, free_attr_update_data);
+    }
+
+    return rc;
 }
 
 // \return Standard Pacemaker return code
