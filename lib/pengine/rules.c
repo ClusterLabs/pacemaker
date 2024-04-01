@@ -507,7 +507,7 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 enum expression_type
 find_expression_type(xmlNode *expr)
 {
-    return pcmk__expression_type(expr);
+    return pcmk__condition_type(expr);
 }
 
 char *

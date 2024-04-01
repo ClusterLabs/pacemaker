@@ -22,7 +22,7 @@ enum pcmk__combine {
     pcmk__combine_or,
 };
 
-enum expression_type pcmk__expression_type(const xmlNode *expr);
+enum expression_type pcmk__condition_type(const xmlNode *condition);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
 enum pcmk__combine pcmk__parse_combine(const char *combine);

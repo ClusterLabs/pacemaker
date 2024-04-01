@@ -135,7 +135,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * checking can't hurt.
      */
     CRM_ASSERT(match != NULL);
-    CRM_ASSERT(pcmk__expression_type(match) == pcmk__subexpr_datetime);
+    CRM_ASSERT(pcmk__condition_type(match) == pcmk__condition_datetime);
 
     rc = pcmk__evaluate_date_expression(match, scheduler->now, NULL);
     if (rc == pcmk_rc_undetermined) { // Malformed or missing

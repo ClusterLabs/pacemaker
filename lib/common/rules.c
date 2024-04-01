@@ -27,45 +27,45 @@
 
 /*!
  * \internal
- * \brief Get the expression type corresponding to given expression XML
+ * \brief Get the condition type corresponding to given condition XML
  *
- * \param[in] expr  Rule expression XML
+ * \param[in] condition  Rule condition XML
  *
- * \return Expression type corresponding to \p expr
+ * \return Condition type corresponding to \p condition
  */
 enum expression_type
-pcmk__expression_type(const xmlNode *expr)
+pcmk__condition_type(const xmlNode *condition)
 {
     const char *name = NULL;
 
     // Expression types based on element name
 
-    if (pcmk__xe_is(expr, PCMK_XE_DATE_EXPRESSION)) {
-        return pcmk__subexpr_datetime;
+    if (pcmk__xe_is(condition, PCMK_XE_DATE_EXPRESSION)) {
+        return pcmk__condition_datetime;
 
-    } else if (pcmk__xe_is(expr, PCMK_XE_RSC_EXPRESSION)) {
-        return pcmk__subexpr_resource;
+    } else if (pcmk__xe_is(condition, PCMK_XE_RSC_EXPRESSION)) {
+        return pcmk__condition_resource;
 
-    } else if (pcmk__xe_is(expr, PCMK_XE_OP_EXPRESSION)) {
-        return pcmk__subexpr_operation;
+    } else if (pcmk__xe_is(condition, PCMK_XE_OP_EXPRESSION)) {
+        return pcmk__condition_operation;
 
-    } else if (pcmk__xe_is(expr, PCMK_XE_RULE)) {
-        return pcmk__subexpr_rule;
+    } else if (pcmk__xe_is(condition, PCMK_XE_RULE)) {
+        return pcmk__condition_rule;
 
-    } else if (!pcmk__xe_is(expr, PCMK_XE_EXPRESSION)) {
-        return pcmk__subexpr_unknown;
+    } else if (!pcmk__xe_is(condition, PCMK_XE_EXPRESSION)) {
+        return pcmk__condition_unknown;
     }
 
     // Expression types based on node attribute name
 
-    name = crm_element_value(expr, PCMK_XA_ATTRIBUTE);
+    name = crm_element_value(condition, PCMK_XA_ATTRIBUTE);
 
     if (pcmk__str_any_of(name, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID,
                          NULL)) {
-        return pcmk__subexpr_location;
+        return pcmk__condition_location;
     }
 
-    return pcmk__subexpr_attribute;
+    return pcmk__condition_attribute;
 }
 
 /*!
@@ -1339,15 +1339,15 @@ pcmk__evaluate_condition(xmlNode *condition,
         return EINVAL;
     }
 
-    switch (pcmk__expression_type(condition)) {
-        case pcmk__subexpr_rule:
+    switch (pcmk__condition_type(condition)) {
+        case pcmk__condition_rule:
             return pcmk_evaluate_rule(condition, rule_input, next_change);
 
-        case pcmk__subexpr_attribute:
-        case pcmk__subexpr_location:
+        case pcmk__condition_attribute:
+        case pcmk__condition_location:
             return pcmk__evaluate_attr_expression(condition, rule_input);
 
-        case pcmk__subexpr_datetime:
+        case pcmk__condition_datetime:
             {
                 int rc = pcmk__evaluate_date_expression(condition,
                                                         rule_input->now,
@@ -1356,10 +1356,10 @@ pcmk__evaluate_condition(xmlNode *condition,
                 return (rc == pcmk_rc_within_range)? pcmk_rc_ok : rc;
             }
 
-        case pcmk__subexpr_resource:
+        case pcmk__condition_resource:
             return pcmk__evaluate_rsc_expression(condition, rule_input);
 
-        case pcmk__subexpr_operation:
+        case pcmk__condition_operation:
             return pcmk__evaluate_op_expression(condition, rule_input);
 
         default: // Not possible with schema validation enabled
