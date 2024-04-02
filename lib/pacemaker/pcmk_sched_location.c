@@ -234,7 +234,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 {
     const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *node = crm_element_value(xml_obj, PCMK_XE_NODE);
+    const char *node = crm_element_value(xml_obj, PCMK_XA_NODE);
     const char *discovery = crm_element_value(xml_obj,
                                               PCMK_XA_RESOURCE_DISCOVERY);
 
