@@ -339,6 +339,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
+    static bool need_init = true;
 
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, PCMK_XA_ID, top_id, NULL, NULL, NULL,
@@ -355,6 +356,12 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
     if (rc != pcmk_rc_ok) {
         return rc;
+    }
+
+    if (need_init) {
+        need_init = false;
+        pcmk__unpack_constraints(rsc->cluster);
+        pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
     }
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
@@ -436,14 +443,6 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             && pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_casei)) {
             GList *lpc = NULL;
-            static bool need_init = true;
-
-            if (need_init) {
-                need_init = false;
-                pcmk__unpack_constraints(rsc->cluster);
-                pe__clear_resource_flags_on_all(rsc->cluster,
-                                                pcmk_rsc_detect_loop);
-            }
 
             /* We want to set the attribute only on resources explicitly
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
