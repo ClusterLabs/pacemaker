@@ -3,39 +3,34 @@
 Utilization and Placement Strategy
 ----------------------------------
 
-Pacemaker decides where to place a resource according to the resource
-assignment scores on every node. The resource will be assigned to the
-node where the resource has the highest score.
+Pacemaker decides where a resource should run by assigning a score to every
+node, considering factors such as the resource's constraints and stickiness,
+then assigning the resource to the node with the highest score.
 
-If the resource assignment scores on all the nodes are equal, by the default
-placement strategy, Pacemaker will choose a node with the least number of
-assigned resources for balancing the load. If the number of resources on each
-node is equal, the first eligible node listed in the CIB will be chosen to run
-the resource.
+If more than one node has the highest score, Pacemaker by default chooses
+the one with the least number of assigned resources, or if that is also the
+same, the one listed first in the CIB. This results in simple load balancing.
 
-Often, in real-world situations, different resources use significantly
-different proportions of a node's capacities (memory, I/O, etc.).
-We cannot balance the load ideally just according to the number of resources
-assigned to a node. Besides, if resources are placed such that their combined
-requirements exceed the provided capacity, they may fail to start completely or
-run with degraded performance.
+Sometimes, simple load balancing is insufficient. Different resources can use
+significantly different amounts of a node's memory, CPU, and other capacities.
+Some combinations of resources may strain a node's capacity, causing them to
+fail or have degraded performance. Or, an administrator may prefer to
+concentrate resources rather than balance them, to minimize energy consumption
+by spare nodes.
 
-To take these factors into account, Pacemaker allows you to configure:
-
-#. The capacity a certain node provides.
-
-#. The capacity a certain resource requires.
-
-#. An overall strategy for placement of resources.
+Pacemaker offers flexibility by allowing you to configure *utilization
+attributes* specifying capacities that each node provides and each resource
+requires, as well as a *placement strategy*.
 
 Utilization attributes
 ######################
 
-To configure the capacity that a node provides or a resource requires,
-you can use *utilization attributes* in ``node`` and ``resource`` objects.
-You can name utilization attributes according to your preferences and define as
-many name/value pairs as your configuration needs. However, the attributes'
-values must be integers.
+You can define any number of utilization attributes to represent capacities of
+interest (CPU, memory, I/O bandwidth, etc.). Their values must be integers.
+
+The nature and units of the capacities are irrelevant to Pacemaker. It just
+makes sure that each node has sufficient capacity to run the resources assigned
+to it.
 
 .. topic:: Specifying CPU and RAM capacities of two nodes
 
@@ -77,16 +72,9 @@ values must be integers.
         </utilization>
       </primitive>
 
-A node is considered eligible for a resource if it has sufficient free
-capacity to satisfy the resource's requirements. The nature of the required
-or provided capacities is completely irrelevant to Pacemaker -- it just makes
-sure that all capacity requirements of a resource are satisfied before placing
-a resource to a node.
-
-Utilization attributes used on a node object can also be *transient* *(since 2.1.6)*.
-These attributes are added to a ``transient_attributes`` section for the node
-and are forgotten by the cluster when the node goes offline.  The ``attrd_updater``
-tool can be used to set these attributes.
+Utilization attributes for a node may be permanent or *(since 2.1.6)*
+transient. Permanent attributes persist after Pacemaker is restarted, while
+transient attributes do not.
 
 .. topic:: Transient utilization attribute for node cluster-1
 
@@ -98,98 +86,70 @@ tool can be used to set these attributes.
         </utilization>
       </transient_attributes>
 
+Utilization attributes may be configured only on primitive resources. Pacemaker
+will consider a collective resource's utilization based on the primitives it
+contains.
+
 .. note::
 
    Utilization is supported for bundles *(since 2.1.3)*, but only for bundles
-   with an inner primitive. Any resource utilization values should be specified
-   for the inner primitive, but any priority meta-attribute should be specified
-   for the outer bundle.
+   with an inner primitive.
 
 
 Placement Strategy
 ##################
 
-After you have configured the capacities your nodes provide and the
-capacities your resources require, you need to set the ``placement-strategy``
-in the global cluster options, otherwise the capacity configurations have
-*no effect*.
+The ``placement-strategy`` cluster option determines how utilization attributes
+are used. Its allowed values are:
 
-Four values are available for the ``placement-strategy``: 
+* ``default``: The cluster ignores utilization values, and places resources
+  according to (from highest to lowest precedence) assignment scores, the
+  number of resources already assigned to each node, and the order nodes are
+  listed in the CIB.
 
-* **default**
+* ``utilization``: The cluster uses the same method as the default strategy to
+  assign a resource to a node, but only nodes with sufficient free capacity to
+  meet the resource's requirements are eligible.
 
-   Utilization values are not taken into account at all.
-   Resources are assigned according to assignment scores. If scores are equal,
-   resources are evenly distributed across nodes.
+* ``balanced``: Only nodes with sufficient free capacity are eligible to run a
+  resource, and the cluster load-balances based on the sum of resource
+  utilization values rather than the number of resources.
 
-* **utilization**
+* ``minimal``: Only nodes with sufficient free capacity are eligible to run a
+  resource, and the cluster concentrates resources on as few nodes as possible.
 
-   Utilization values are taken into account *only* when deciding whether a node
-   is considered eligible (i.e. whether it has sufficient free capacity to satisfy
-   the resource's requirements). Load-balancing is still done based on the
-   number of resources assigned to a node. 
 
-* **balanced**
+To look at it another way, when deciding where to run a resource, the cluster
+starts by considering all nodes, then applies these criteria one by one until
+a single node remains:
 
-   Utilization values are taken into account when deciding whether a node
-   is eligible to serve a resource *and* when load-balancing, so an attempt is
-   made to spread the resources in a way that optimizes resource performance.
+* If ``placement-strategy`` is ``utilization``, ``balanced``, or ``minimal``,
+  consider only nodes that have sufficient spare capacities to meet the
+  resource's requirements.
 
-* **minimal**
+* Consider only nodes with the highest score for the resource. Scores take into
+  account factors such as the node's health; the resource's stickiness, failure
+  count on the node, and migration threshold; and constraints.
 
-   Utilization values are taken into account *only* when deciding whether a node
-   is eligible to serve a resource. For load-balancing, an attempt is made to
-   concentrate the resources on as few nodes as possible, thereby enabling
-   possible power savings on the remaining nodes. 
+* If ``placement-strategy`` is ``balanced``, consider only nodes with the most
+  free capacity.
 
-Set ``placement-strategy`` with ``crm_attribute``:
+* If ``placement-strategy`` is ``default``, ``utilization``, or ``balanced``,
+  consider only nodes with the least number of assigned resources.
 
-   .. code-block:: none
+* If more than one node is eligible after considering all other criteria,
+  choose the one listed first in the CIB.
 
-      # crm_attribute --name placement-strategy --update balanced
+How Multiple Capacities Combine
+###############################
 
-Now Pacemaker will ensure the load from your resources will be distributed
-evenly throughout the cluster, without the need for convoluted sets of
-colocation constraints.
+If only one type of utilization attribute has been defined, free capacity is a
+simple numeric comparison.
 
-Assignment Details
-##################
+If multiple utilization attributes have been defined, then the node that has
+the highest value in the most attribute types has the most free capacity.
 
-Which node is preferred to get consumed first when assigning resources?
-_______________________________________________________________________
-
-* The node with the highest node weight gets consumed first. Node weight
-  is a score maintained by the cluster to represent node health.
-
-* If multiple nodes have the same node weight:
-
- * If ``placement-strategy`` is ``default`` or ``utilization``,
-   the node that has the least number of assigned resources gets consumed first.
-
-   * If their numbers of assigned resources are equal,
-     the first eligible node listed in the CIB gets consumed first.
-
- * If ``placement-strategy`` is ``balanced``,
-   the node that has the most free capacity gets consumed first.
-
-   * If the free capacities of the nodes are equal,
-     the node that has the least number of assigned resources gets consumed first.
-
-     * If their numbers of assigned resources are equal,
-       the first eligible node listed in the CIB gets consumed first.
-
- * If ``placement-strategy`` is ``minimal``,
-   the first eligible node listed in the CIB gets consumed first.
-
-Which node has more free capacity?
-__________________________________
-
-If only one type of utilization attribute has been defined, free capacity
-is a simple numeric comparison.
-
-If multiple types of utilization attributes have been defined, then
-the node that is numerically highest in the the most attribute types
-has the most free capacity. For example:
+For example:
 
 * If ``nodeA`` has more free ``cpus``, and ``nodeB`` has more free ``memory``,
   then their free capacities are equal.
@@ -197,41 +157,46 @@ has the most free capacity. For example:
 * If ``nodeA`` has more free ``cpus``, while ``nodeB`` has more free ``memory``
   and ``storage``, then ``nodeB`` has more free capacity.
 
-Which resource is preferred to be assigned first?
-_________________________________________________
+Order of Resource Assignment
+############################
 
-* The resource that has the highest ``priority`` (see :ref:`resource_options`) gets
-  assigned first.
+When assigning resources to nodes, the cluster chooses the next one to assign
+by considering the following criteria one by one until a single resource is
+selected:
 
-* If their priorities are equal, check whether they are already running. The
-  resource that has the highest score on the node where it's running gets assigned
-  first, to prevent resource shuffling.
+* Assign the resource with the highest :ref:`priority <meta_priority>`.
 
-* If the scores above are equal or the resources are not running, the resource has
-  the highest score on the preferred node gets assigned first.
+* If any resources are already active, assign the one with the highest score on
+  its current node. This avoids unnecessary resource shuffling.
 
-* If the scores above are equal, the first runnable resource listed in the CIB
-  gets assigned first.
+* Assign the resource with the highest score on its preferred node.
 
-Limitations and Workarounds
-###########################
+* If more than one resource remains after considering all other criteria,
+  assign the one of them that is listed first in the CIB.
+
+.. note::
+
+   For bundles, only the priority set for the bundle itself matters. If the
+   bundle contains a primitive, the primitive's priority is ignored.
+
+Limitations
+###########
 
 The type of problem Pacemaker is dealing with here is known as the
-`knapsack problem <http://en.wikipedia.org/wiki/Knapsack_problem>`_ and falls into
-the `NP-complete <http://en.wikipedia.org/wiki/NP-complete>`_ category of computer
-science problems -- a fancy way of saying "it takes a really long time
-to solve".
+`knapsack problem <https://en.wikipedia.org/wiki/Knapsack_problem>`_ and falls
+into the `NP-complete <https://en.wikipedia.org/wiki/NP-completeness>`_
+category of computer science problems -- a fancy way of saying "it takes a
+really long time to solve".
 
-Clearly in a HA cluster, it's not acceptable to spend minutes, let alone hours
-or days, finding an optimal solution while services remain unavailable.
+In a high-availability cluster, it is unacceptable to spend minutes, let alone
+hours or days, finding an optimal solution while services are down.
 
-So instead of trying to solve the problem completely, Pacemaker uses a
-*best effort* algorithm for determining which node should host a particular
-service. This means it arrives at a solution much faster than traditional
-linear programming algorithms, but by doing so at the price of leaving some
-services stopped.
+Instead of trying to solve the problem completely, Pacemaker uses a "best
+effort" algorithm. This arrives at a quick solution, but at the cost of
+possibly leaving some resources stopped unnecessarily.
 
-In the contrived example at the start of this chapter:
+Using the example configuration at the start of this chapter, and the balanced
+placement strategy:
 
 * ``rsc-small`` would be assigned to ``node1``
 
@@ -239,26 +204,23 @@ In the contrived example at the start of this chapter:
 
 * ``rsc-large`` would remain inactive
 
-Which is not ideal.
-
-There are various approaches to dealing with the limitations of
-pacemaker's placement strategy:
+That is not ideal. There are various approaches to dealing with the limitations
+of Pacemaker's placement strategy:
 
 * **Ensure you have sufficient physical capacity.**
 
-   It might sound obvious, but if the physical capacity of your nodes is (close to)
-   maxed out by the cluster under normal conditions, then failover isn't going to
-   go well. Even without the utilization feature, you'll start hitting timeouts and
-   getting secondary failures.
+   It might sound obvious, but if the physical capacity of your nodes is maxed
+   out even under normal conditions, failover isn't going to go well. Even
+   without the utilization feature, you'll start hitting timeouts and getting
+   secondary failures.
 
-* **Build some buffer into the capabilities advertised by the nodes.**
+* **Build some buffer into the capacities advertised by the nodes.**
 
-   Advertise slightly more resources than we physically have, on the (usually valid)
-   assumption that a resource will not use 100% of the configured amount of
-   CPU, memory and so forth *all* the time. This practice is sometimes called *overcommit*.
+   Advertise slightly more resources than we physically have, on the (usually
+   valid) assumption that resources will not always use 100% of their
+   configured utilization. This practice is sometimes called *overcommitting*.
 
 * **Specify resource priorities.**
 
-   If the cluster is going to sacrifice services, it should be the ones you care
-   about (comparatively) the least. Ensure that resource priorities are properly set
-   so that your most important resources are scheduled first. 
+   If the cluster is going to sacrifice services, it should be the ones you
+   care about the least.
