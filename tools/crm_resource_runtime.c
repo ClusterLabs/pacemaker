@@ -326,29 +326,22 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
     return pcmk_rc_ok;
 }
 
-// \return Standard Pacemaker return code
-int
-cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
-                              const char *attr_set, const char *attr_set_type,
-                              const char *attr_id, const char *attr_name,
-                              const char *attr_value, gboolean recursive,
-                              cib_t *cib, int cib_options, gboolean force)
+static int
+update_attribute(pcmk_resource_t *rsc, const char *requested_name,
+                 const char *attr_set, const char *attr_set_type,
+                 const char *attr_id, const char *attr_name,
+                 const char *attr_value, gboolean recursive, cib_t *cib,
+                 int cib_options, gboolean force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
 
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
     const char *top_id = pe__const_top_resource(rsc, false)->id;
-    static bool need_init = true;
 
     if ((attr_id == NULL) && !force) {
         find_resource_attr(out, cib, PCMK_XA_ID, top_id, NULL, NULL, NULL,
                            attr_name, NULL);
-    }
-
-    if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        return update_element_attribute(out, rsc, cib, cib_options,
-                                        attr_name, attr_value);
     }
 
     rc = resources_with_attr(out, cib, rsc, requested_name, attr_set, attr_set_type,
@@ -356,12 +349,6 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
     if (rc != pcmk_rc_ok) {
         return rc;
-    }
-
-    if (need_init) {
-        need_init = false;
-        pcmk__unpack_constraints(rsc->cluster);
-        pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
     }
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
@@ -459,17 +446,47 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
                 crm_debug("Setting %s=%s for dependent resource %s",
                           attr_name, attr_value, cons->dependent->id);
-                cli_resource_update_attribute(cons->dependent,
-                                              cons->dependent->id, NULL,
-                                              attr_set_type, NULL,
-                                              attr_name, attr_value,
-                                              recursive, cib, cib_options,
-                                              force);
+                update_attribute(cons->dependent, cons->dependent->id, NULL,
+                                 attr_set_type, NULL, attr_name, attr_value,
+                                 recursive, cib, cib_options, force);
             }
         }
     }
+
     g_list_free(resources);
     return rc;
+}
+
+// \return Standard Pacemaker return code
+int
+cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
+                              const char *attr_set, const char *attr_set_type,
+                              const char *attr_id, const char *attr_name,
+                              const char *attr_value, gboolean recursive,
+                              cib_t *cib, int cib_options, gboolean force)
+{
+    static bool need_init = true;
+
+    pcmk__output_t *out = rsc->cluster->priv;
+
+    /* If we were asked to update the attribute in a resource element (for
+     * instance, <primitive class="ocf">) there's really not much we need to do.
+     */
+    if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+        return update_element_attribute(out, rsc, cib, cib_options,
+                                        attr_name, attr_value);
+    }
+
+    /* One time initialization - clear flags so we can detect loops */
+    if (need_init) {
+        need_init = false;
+        pcmk__unpack_constraints(rsc->cluster);
+        pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+    }
+
+    return update_attribute(rsc, requested_name, attr_set, attr_set_type,
+                            attr_id, attr_name, attr_value, recursive, cib,
+                            cib_options, force);
 }
 
 // \return Standard Pacemaker return code
