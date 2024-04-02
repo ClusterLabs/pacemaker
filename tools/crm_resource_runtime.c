@@ -248,8 +248,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
 
 static int
 update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
-                         cib_t *cib, int cib_options, const char *attr_name,
-                         const char *attr_value)
+                         cib_t *cib, const char *attr_name, const char *attr_value)
 {
     int rc = pcmk_rc_ok;
 
@@ -259,7 +258,7 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     crm_xml_add(rsc->xml, attr_name, attr_value);
 
-    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
+    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
@@ -331,7 +330,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_set, const char *attr_set_type,
                  const char *attr_id, const char *attr_name,
                  const char *attr_value, gboolean recursive, cib_t *cib,
-                 int cib_options, gboolean force)
+                 gboolean force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
@@ -408,7 +407,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         crm_log_xml_debug(xml_top, "Update");
 
-        rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_options);
+        rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: "
@@ -448,7 +447,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                           attr_name, attr_value, cons->dependent->id);
                 update_attribute(cons->dependent, cons->dependent->id, NULL,
                                  attr_set_type, NULL, attr_name, attr_value,
-                                 recursive, cib, cib_options, force);
+                                 recursive, cib, force);
             }
         }
     }
@@ -463,7 +462,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
                               const char *attr_value, gboolean recursive,
-                              cib_t *cib, int cib_options, gboolean force)
+                              cib_t *cib, gboolean force)
 {
     static bool need_init = true;
 
@@ -473,8 +472,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
      * instance, <primitive class="ocf">) there's really not much we need to do.
      */
     if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        return update_element_attribute(out, rsc, cib, cib_options,
-                                        attr_name, attr_value);
+        return update_element_attribute(out, rsc, cib, attr_name, attr_value);
     }
 
     /* One time initialization - clear flags so we can detect loops */
@@ -486,7 +484,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
     return update_attribute(rsc, requested_name, attr_set, attr_set_type,
                             attr_id, attr_name, attr_value, recursive, cib,
-                            cib_options, force);
+                            force);
 }
 
 // \return Standard Pacemaker return code
@@ -1625,7 +1623,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
-                                           cib_options, force);
+                                           force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
@@ -1705,8 +1703,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           orig_target_role, FALSE, cib,
-                                           cib_options, force);
+                                           orig_target_role, FALSE, cib, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
@@ -1789,7 +1786,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, cib_options, force);
+                                      FALSE, cib, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
