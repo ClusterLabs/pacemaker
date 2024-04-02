@@ -562,7 +562,7 @@ unpack_timeout(const char *value)
 {
     long long timeout_ms = crm_get_msec(value);
 
-    if (timeout_ms < 0) {
+    if (timeout_ms <= 0) {
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
     return (int) QB_MIN(timeout_ms, INT_MAX);
