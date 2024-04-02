@@ -3434,6 +3434,10 @@ for t in $tests; do
     suppress="$suppress under user that also gets guarded per ACLs on their"
     suppress="$suppress own right. Continuing since --force flag was provided."
 
+    # This giant sed replaces content expected to change for each run
+    # (timestamps, source file line numbers, etc.), build (configure options,
+    # version numbers, etc.), or platform (system messages, etc.).
+    #
     # last-rc-change= is always numeric in the CIB. However, for the crm_mon
     # test we also need to compare against the XML output of the crm_mon
     # program. There, these are shown as human readable strings (like the
@@ -3452,8 +3456,10 @@ for t in $tests; do
         -e 's/request=\".*\(crm_[a-zA-Z0-9]*\)/request=\"\1/' \
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/@crm_feature_set=[0-9.]*, //'\
-        -e 's/validate-with="[^"]*" //'\
         -e 's/\(<change-attr name="crm_feature_set" .* value="\)[0-9.]*"/\1"/' \
+        -e 's/validate-with="[^"]*" //'\
+        -e 's/\(@validate-with=pacemaker-\)[0-9.]*,/\1X,/' \
+        -e 's/\(<change-attr name="validate-with" .* value="pacemaker-\)[0-9.]*"/\1X"/' \
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
         -e 's/.*\(crm_time_parse_duration\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(crm_time_parse_period\)@.*\.c:[0-9][0-9]*)/\1/g' \
