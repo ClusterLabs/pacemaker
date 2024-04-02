@@ -52,20 +52,12 @@
   <define name="element-resource-extra.primitive-template">
     <zeroOrMore>
       <choice>
+        <ref name="element-instance_attributes"/>
         <element name="meta_attributes">
           <grammar>
             <include href="nvset-3.10.rng">
               <define name="element-nvset.name">
                 <parentRef name="primitive-template.meta_attributes.nvpair.name-unsupported"/>
-              </define>
-            </include>
-          </grammar>
-        </element>
-        <element name="instance_attributes">
-          <grammar>
-            <include href="nvset-3.10.rng">
-              <define name="element-nvset.rule">
-                <parentRef name="element-rule-node-allowed"/>
               </define>
             </include>
           </grammar>
@@ -305,17 +297,9 @@
   <define name="element-resource-extra">
     <zeroOrMore>
       <choice>
+        <ref name="element-instance_attributes"/>
         <element name="meta_attributes">
           <externalRef href="nvset-3.10.rng"/>
-        </element>
-        <element name="instance_attributes">
-          <grammar>
-            <include href="nvset-3.10.rng">
-              <define name="element-nvset.rule">
-                <parentRef name="element-rule-node-allowed"/>
-              </define>
-            </include>
-          </grammar>
         </element>
       </choice>
     </zeroOrMore>
@@ -340,6 +324,7 @@
   <define name="element-resource-extra.op">
     <zeroOrMore>
       <choice>
+        <ref name="element-instance_attributes"/>
         <element name="meta_attributes">
           <grammar>
             <include href="nvset-3.10.rng">
@@ -351,15 +336,6 @@
                @COMPAT: Support for node attribute expressions is deprecated
                here. We can just delete this define when we drop support.
               -->
-              <define name="element-nvset.rule">
-                <parentRef name="element-rule-node-allowed"/>
-              </define>
-            </include>
-          </grammar>
-        </element>
-        <element name="instance_attributes">
-          <grammar>
-            <include href="nvset-3.10.rng">
               <define name="element-nvset.rule">
                 <parentRef name="element-rule-node-allowed"/>
               </define>
@@ -453,5 +429,17 @@
         </choice>
       </attribute>
     </choice>
+  </define>
+
+  <define name="element-instance_attributes">
+     <element name="instance_attributes">
+       <grammar>
+         <include href="nvset-3.10.rng">
+           <define name="element-nvset.rule">
+             <parentRef name="element-rule-node-allowed"/>
+           </define>
+         </include>
+       </grammar>
+     </element>
   </define>
 </grammar>
