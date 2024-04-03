@@ -81,38 +81,58 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
  * \brief Inject a fictitious fail count into a scheduler input
  *
  * \param[in,out] out          Output object for displaying error messages
+ * \param[in,out] cib_conn     CIB connection
  * \param[in,out] cib_node     Node state XML to inject into
  * \param[in]     resource     ID of resource for fail count to inject
  * \param[in]     task         Action name for fail count to inject
  * \param[in]     interval_ms  Action interval (in milliseconds) for fail count
- * \param[in]     rc           Action result for fail count to inject (if 0, or
- *                             7 when interval_ms is 0, inject nothing)
+ * \param[in]     exit_status  Action result for fail count to inject (if
+ *                             \c PCMK_OCF_OK, or \c PCMK_OCF_NOT_RUNNING when
+ *                             \p interval_ms is 0, inject nothing)
  */
 void
-pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
+pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                        const char *resource, const char *task,
-                       guint interval_ms, int rc)
+                       guint interval_ms, int exit_status)
 {
-    if (rc == 0) {
+    char *name = NULL;
+    char *value = NULL;
+
+    int failcount = 0;
+    xmlNode *output = NULL;
+
+    CRM_CHECK((out != NULL) && (cib_conn != NULL) && (cib_node != NULL)
+              && (resource != NULL) && (task != NULL), return);
+
+    if ((exit_status == PCMK_OCF_OK)
+        || ((exit_status == PCMK_OCF_NOT_RUNNING) && (interval_ms == 0))) {
         return;
-
-    } else if ((rc == 7) && (interval_ms == 0)) {
-        return;
-
-    } else {
-        char *name = NULL;
-        char *now = pcmk__ttoa(time(NULL));
-
-        name = pcmk__failcount_name(resource, task, interval_ms);
-        inject_transient_attr(out, cib_node, name, "value++");
-        free(name);
-
-        name = pcmk__lastfailure_name(resource, task, interval_ms);
-        inject_transient_attr(out, cib_node, name, now);
-        free(name);
-
-        free(now);
     }
+
+    // Get current failcount and increment it
+    name = pcmk__failcount_name(resource, task, interval_ms);
+
+    if (cib__get_node_attrs(out, cib_conn, PCMK_XE_STATUS,
+                            pcmk__xe_id(cib_node), NULL, NULL, NULL, name,
+                            NULL, &output) == pcmk_rc_ok) {
+
+        if (crm_element_value_int(output, name, &failcount) != 0) {
+            failcount = 0;
+        }
+    }
+    value = pcmk__itoa(failcount + 1);
+    inject_transient_attr(out, cib_node, name, value);
+
+    free(name);
+    free(value);
+    free_xml(output);
+
+    name = pcmk__lastfailure_name(resource, task, interval_ms);
+    value = pcmk__ttoa(time(NULL));
+    inject_transient_attr(out, cib_node, name, value);
+
+    free(name);
+    free(value);
 }
 
 /*!
@@ -608,7 +628,8 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     cib_node = pcmk__inject_node(cib, node, NULL);
     CRM_ASSERT(cib_node != NULL);
 
-    pcmk__inject_failcount(out, cib_node, resource, task, interval_ms, outcome);
+    pcmk__inject_failcount(out, cib, cib_node, resource, task, interval_ms,
+                           outcome);
 
     cib_resource = pcmk__inject_resource_history(out, cib_node,
                                                  resource, resource,

@@ -637,7 +637,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                   action->id, op->rc);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = PCMK_SCORE_INFINITY;
-        pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
+        pcmk__inject_failcount(out, fake_cib, cib_node, match_name, op->op_type,
                                op->interval_ms, op->rc);
         break;
     }
