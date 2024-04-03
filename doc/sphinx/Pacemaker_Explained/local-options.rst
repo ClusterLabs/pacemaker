@@ -108,6 +108,15 @@ of the following types:
 
        port
      - Integer TCP port number (0 to 65535)
+   * - .. _range:
+
+       .. index::
+          pair: type; range
+
+       range
+     - A range may be a single nonnegative integer or a dash-separated range of
+       nonnegative integers. Either the first or last value may be omitted to
+       leave the range open-ended. Examples: ``0``, ``3-``, ``-5``, ``4-6``.
    * - .. _score:
 
        .. index::

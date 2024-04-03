@@ -262,9 +262,15 @@ Then instead of duplicating the rule for all your other resources, you can inste
 .. important::
 
    The cluster will insist that the ``rule`` exists somewhere.  Attempting
-   to add a reference to a non-existing rule will cause a validation
-   failure, as will attempting to remove a ``rule`` that is referenced
+   to add a reference to a nonexistent ``id`` will cause a validation failure,
+   as will attempting to remove a ``rule`` with an ``id`` that is referenced
    elsewhere.
+
+   Some rule syntax is allowed only in
+   :ref:`certain contexts <rule_conditions>`. Validation cannot ensure that the
+   referenced rule is allowed in the context of the rule containing ``id-ref``,
+   so such errors will be caught (and logged) only after the new configuration
+   is accepted. It is the administrator's reponsibility to check for these.
 
 The same principle applies for ``meta_attributes`` and
 ``instance_attributes`` as illustrated in the example below:
@@ -288,7 +294,7 @@ The same principle applies for ``meta_attributes`` and
            <op id="health-check" name="monitor" interval="30min"/>
          </operations>
       </primitive>
-      <primitive id="myOtherlRsc" class="ocf" type="Other" provider="me">
+      <primitive id="myOtherRsc" class="ocf" type="Other" provider="me">
          <instance_attributes id-ref="mySpecialRsc-attrs"/>
          <meta_attributes id-ref="mySpecialRsc-options"/>
          <operations id-ref="health-checks"/>

@@ -231,9 +231,6 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
 		optional, rsc->cluster)
 
-extern int pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
-                                     pcmk_scheduler_t *scheduler);
-
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
 

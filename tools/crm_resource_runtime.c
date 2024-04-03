@@ -9,11 +9,17 @@
 
 #include <crm_internal.h>
 
-#include <crm_resource.h>
+#include <stdio.h>
+#include <limits.h>
+#include <glib.h>
+#include <libxml/tree.h>
+
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
+
+#include <crm_resource.h>
 
 static GList *
 build_node_info_list(const pcmk_resource_t *rsc)
@@ -1066,7 +1072,7 @@ generate_resource_params(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, node, scheduler);
+    get_meta_attributes(meta, rsc, NULL, scheduler);
     if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
@@ -1311,11 +1317,11 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
  *
  * \return Maximum stop timeout for \p rsc (in milliseconds)
  */
-static int
+static guint
 max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
     long long result_ll;
-    int max_delay = 0;
+    guint max_delay = 0;
     xmlNode *config = NULL;
     GHashTable *meta = NULL;
 
@@ -1327,7 +1333,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter; iter = iter->next) {
             pcmk_resource_t *child = iter->data;
-            int delay = max_rsc_stop_timeout(child);
+            guint delay = max_rsc_stop_timeout(child);
 
             if (delay > max_delay) {
                 pcmk__rsc_trace(rsc,
@@ -1350,9 +1356,8 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
      */
     meta = pcmk__unpack_action_meta(rsc, NULL, PCMK_ACTION_STOP, 0, config);
     if ((pcmk__scan_ll(g_hash_table_lookup(meta, PCMK_META_TIMEOUT),
-                       &result_ll, -1LL) == pcmk_rc_ok)
-        && (result_ll >= 0) && (result_ll <= INT_MAX)) {
-        max_delay = (int) result_ll;
+                       &result_ll, -1LL) == pcmk_rc_ok) && (result_ll >= 0)) {
+        max_delay = (guint) QB_MIN(result_ll, UINT_MAX);
     }
     g_hash_table_destroy(meta);
 
@@ -1374,16 +1379,16 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
  *       throttling, or any demotions needed. It checks the stop timeout, even
  *       if the resources in question are actually being started.
  */
-static int
+static guint
 wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 {
-    int max_delay = 0;
+    guint max_delay = 0U;
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
         pcmk_resource_t *rsc = pe_find_resource(scheduler->resources,
                                                 (const char *) item->data);
-        int delay = max_rsc_stop_timeout(rsc);
+        guint delay = max_rsc_stop_timeout(rsc);
 
         if (delay > max_delay) {
             pcmk__rsc_trace(rsc,
@@ -1393,7 +1398,7 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
         }
     }
 
-    return (max_delay / 1000) + 5;
+    return (max_delay / 1000U) + 5U;
 }
 
 #define waiting_for_starts(d, r, h) ((d != NULL) || \
@@ -1425,15 +1430,15 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 int
 cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
-                     int timeout_ms, cib_t *cib, int cib_options,
+                     guint timeout_ms, cib_t *cib, int cib_options,
                      gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
     int before = 0;
-    int step_timeout_s = 0;
-    int sleep_interval = 2;
-    int timeout = timeout_ms / 1000;
+    guint step_timeout_s = 0;
+    guint sleep_interval = 2U;
+    guint timeout = timeout_ms / 1000U;
 
     bool stop_via_ban = false;
     char *rsc_id = NULL;
@@ -1605,7 +1610,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
-                crm_trace("%ds remaining", timeout);
+                crm_trace("%us remaining", timeout);
             }
             rc = update_dataset(cib, scheduler, FALSE);
             if(rc != pcmk_rc_ok) {
@@ -1834,17 +1839,22 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
  * \return Standard Pacemaker return code
  */
 int
-wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
+wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
     pcmk_scheduler_t *scheduler = NULL;
     xmlXPathObjectPtr search;
     int rc = pcmk_rc_ok;
     bool pending_unknown_state_resources;
-    int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
-    time_t expire_time = time(NULL) + timeout_s;
+    time_t expire_time = time(NULL);
     time_t time_diff;
     bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
     char *xpath = NULL;
+
+    if (timeout_ms == 0) {
+        expire_time += WAIT_DEFAULT_TIMEOUT_S;
+    } else {
+        expire_time += (timeout_ms + 999) / 1000;
+    }
 
     scheduler = pe_new_working_set();
     if (scheduler == NULL) {
@@ -1947,11 +1957,11 @@ get_action(const char *rsc_action) {
  * \param[in]     verbosity    Verbosity level
  */
 static void
-set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
+set_agent_environment(GHashTable *params, guint timeout_ms, int check_level,
                       int verbosity)
 {
     g_hash_table_insert(params, crm_meta_name(PCMK_META_TIMEOUT),
-                        crm_strdup_printf("%d", timeout_ms));
+                        crm_strdup_printf("%u", timeout_ms));
 
     pcmk__insert_dup(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
@@ -2002,8 +2012,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
                                  const char *rsc_type, const char *rsc_action,
                                  GHashTable *params, GHashTable *override_hash,
-                                 int timeout_ms, int resource_verbose, gboolean force,
-                                 int check_level)
+                                 guint timeout_ms, int resource_verbose,
+                                 gboolean force, int check_level)
 {
     const char *class = rsc_class;
     const char *action = get_action(rsc_action);
@@ -2011,7 +2021,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     svc_action_t *op = NULL;
 
     // If no timeout was provided, use the same default as the cluster
-    if (timeout_ms == 0) {
+    if (timeout_ms == 0U) {
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
@@ -2020,7 +2030,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
     op = services__create_resource_action(rsc_name? rsc_name : "test",
                                           rsc_class, rsc_prov, rsc_type, action,
-                                          0, timeout_ms, params, 0);
+                                          0, QB_MIN(timeout_ms, INT_MAX),
+                                          params, 0);
     if (op == NULL) {
         out->err(out, "Could not execute %s using %s%s%s:%s: %s",
                  action, rsc_class, (rsc_prov? ":" : ""),
@@ -2063,10 +2074,33 @@ done:
     return exit_code;
 }
 
+/*!
+ * \internal
+ * \brief Get the timeout the cluster would use for an action
+ *
+ * \param[in] rsc     Resource that action is for
+ * \param[in] action  Name of action
+ */
+static guint
+get_action_timeout(pcmk_resource_t *rsc, const char *action)
+{
+    long long timeout_ms = -1LL;
+    xmlNode *op = pcmk__find_action_config(rsc, action, 0, true);
+    GHashTable *meta = pcmk__unpack_action_meta(rsc, NULL, action, 0, op);
+
+    if ((pcmk__scan_ll(g_hash_table_lookup(meta, PCMK_META_TIMEOUT),
+                       &timeout_ms, -1LL) != pcmk_rc_ok)
+        || (timeout_ms <= 0LL)) {
+        timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
+    }
+    g_hash_table_destroy(meta);
+    return (guint) QB_MIN(timeout_ms, UINT_MAX);
+}
+
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t *cib, pcmk_scheduler_t *scheduler,
+                     guint timeout_ms, cib_t *cib, pcmk_scheduler_t *scheduler,
                      int resource_verbose, gboolean force, int check_level)
 {
     pcmk__output_t *out = scheduler->priv;
@@ -2115,9 +2149,8 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
     params = generate_resource_params(rsc, NULL /* @TODO use local node */,
                                       scheduler);
 
-    if (timeout_ms == 0) {
-        timeout_ms = pe_get_configured_timeout(rsc, get_action(rsc_action),
-                                               scheduler);
+    if (timeout_ms == 0U) {
+        timeout_ms = get_action_timeout(rsc, get_action(rsc_action));
     }
 
     rid = pcmk__is_anonymous_clone(rsc->parent)? requested_name : rsc->id;

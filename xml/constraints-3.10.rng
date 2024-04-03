@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    @COMPAT: The constraints-next schema is deprecated since 2.1.5 and will be
-    removed in a future release.
--->
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
@@ -46,6 +42,10 @@
           <externalRef href="score.rng"/>
           <attribute name="node"><text/></attribute>
         </group>
+        <!--
+         @COMPAT: When we can break backward compatibility, limit this to a
+         single rule
+         -->
         <oneOrMore>
           <grammar>
             <include href="rule-3.10.rng">
@@ -56,9 +56,12 @@
           </grammar>
         </oneOrMore>
       </choice>
+
+      <!-- @COMPAT: The lifetime element is deprecated -->
       <optional>
         <ref name="element-lifetime"/>
       </optional>
+
       <optional>
         <attribute name="resource-discovery">
           <ref name="attribute-discovery"/>
@@ -124,9 +127,12 @@
       <optional>
         <attribute name="influence"><text/></attribute>
       </optional>
+
+      <!-- @COMPAT: The lifetime element is deprecated -->
       <optional>
         <ref name="element-lifetime"/>
       </optional>
+
       <choice>
         <oneOrMore>
           <ref name="element-resource-set"/>
@@ -147,12 +153,6 @@
               <ref name="attribute-roles"/>
             </attribute>
           </optional>
-          <optional>
-            <attribute name="rsc-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="with-rsc-instance"><data type="integer"/></attribute>
-          </optional>
         </group>
       </choice>
     </element>
@@ -161,9 +161,12 @@
   <define name="element-order">
     <element name="rsc_order">
       <attribute name="id"><data type="ID"/></attribute>
+
+      <!-- @COMPAT: The lifetime element is deprecated -->
       <optional>
         <ref name="element-lifetime"/>
       </optional>
+
       <optional>
         <attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
@@ -194,12 +197,6 @@
             <attribute name="then-action">
               <ref name="attribute-actions"/>
             </attribute>
-          </optional>
-          <optional>
-            <attribute name="first-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="then-instance"><data type="integer"/></attribute>
           </optional>
         </group>
       </choice>
@@ -272,6 +269,7 @@
     </choice>
   </define>
 
+  <!-- @COMPAT: The lifetime element is deprecated -->
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>

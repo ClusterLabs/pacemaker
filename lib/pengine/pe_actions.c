@@ -562,7 +562,7 @@ unpack_timeout(const char *value)
 {
     long long timeout_ms = crm_get_msec(value);
 
-    if (timeout_ms < 0) {
+    if (timeout_ms <= 0) {
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
     return (int) QB_MIN(timeout_ms, INT_MAX);
@@ -719,7 +719,13 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     };
 
     pe_rule_eval_data_t rule_data = {
+        /* @COMPAT Support for node attribute expressions in operation
+         * meta-attributes (whether in the operation configuration or operation
+         * defaults) is deprecated. When we can break behavioral backward
+         * compatibility, drop this line.
+         */
         .node_hash = (node == NULL)? NULL : node->details->attrs,
+
         .now = rsc->cluster->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -1404,55 +1410,6 @@ pe_free_action(pcmk_action_t *action)
     free(action->uuid);
     free(action->node);
     free(action);
-}
-
-int
-pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
-                          pcmk_scheduler_t *scheduler)
-{
-    xmlNode *child = NULL;
-    GHashTable *action_meta = NULL;
-    const char *timeout_spec = NULL;
-    long long timeout_ms = 0;
-
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .now = scheduler->now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    for (child = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL, NULL);
-         child != NULL; child = pcmk__xe_next_same(child)) {
-
-        if (pcmk__str_eq(action, crm_element_value(child, PCMK_XA_NAME),
-                pcmk__str_casei)) {
-            timeout_spec = crm_element_value(child, PCMK_META_TIMEOUT);
-            break;
-        }
-    }
-
-    if (timeout_spec == NULL && scheduler->op_defaults) {
-        action_meta = pcmk__strkey_table(free, free);
-        pe__unpack_dataset_nvpairs(scheduler->op_defaults,
-                                   PCMK_XE_META_ATTRIBUTES, &rule_data,
-                                   action_meta, NULL, FALSE, scheduler);
-        timeout_spec = g_hash_table_lookup(action_meta, PCMK_META_TIMEOUT);
-    }
-
-    // @TODO check meta-attributes
-    // @TODO maybe use min-interval monitor timeout as default for monitors
-
-    timeout_ms = crm_get_msec(timeout_spec);
-    if (timeout_ms < 0) {
-        timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
-    }
-
-    if (action_meta != NULL) {
-        g_hash_table_destroy(action_meta);
-    }
-    return (int) QB_MIN(timeout_ms, INT_MAX);
 }
 
 enum action_tasks

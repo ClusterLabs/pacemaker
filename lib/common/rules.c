@@ -1071,7 +1071,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
      * regular expression submatches)
      */
     attr = crm_element_value(expression, PCMK_XA_ATTRIBUTE);
-    if (pcmk__str_empty(attr)) {
+    if (attr == NULL) {
         pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not passing "
                          "because " PCMK_XA_ATTRIBUTE " was not specified", id);
         return pcmk_rc_unpack_error;

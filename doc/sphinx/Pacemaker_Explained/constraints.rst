@@ -86,12 +86,12 @@ ___________________
        <http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04>`_
        extended regular expressions, with the addition of an initial ``!``
        indicating that resources *not* matching the pattern are selected. If
-       the regular expression contains submatches, and the constraint is
-       governed by a :ref:`rule <rules>`, the submatches can be referenced as
-       ``%1`` through ``%9`` in the rule's ``score-attribute`` or a rule
-       expression's ``attribute`` (see :ref:`s-rsc-pattern-rules`). A location
-       constraint must either have a ``rsc``, have a ``rsc-pattern``, or
-       contain at least one resource set.
+       the regular expression contains submatches, and the constraint contains
+       a :ref:`rule <rules>`, the submatches can be referenced as ``%1``
+       through ``%9`` in the rule's ``score-attribute`` or a rule expression's
+       ``attribute`` (see :ref:`s-rsc-pattern-rules`). A location constraint
+       must either have a ``rsc``, have a ``rsc-pattern``, or contain at least
+       one resource set.
    * - .. rsc_location_node:
        
        .. index::
@@ -131,15 +131,19 @@ ___________________
        role
      - :ref:`enumeration <enumeration>`
      - ``Started``
-     - The constraint applies only to resource instances in this role;
-       significant only for :ref:`promotable clones <s-resource-promotable>`.
-       Allowed values:
+     - This is significant only for
+       :ref:`promotable clones <s-resource-promotable>`, is allowed only if
+       ``rsc`` or ``rsc-pattern`` is set, and is ignored if the constraint
+       contains a rule. Allowed values:
        
-       * ``Started`` or ``Unpromoted``: any active role (a promoted instance
-         must start in the unpromoted role before being promoted, and must be
-         demoted to the unpromoted role before being stopped, so any location
-         constraint for unpromoted instances also affects promoted instances)
-       * ``Promoted``: the promoted role
+       * ``Started`` or ``Unpromoted``: The constraint affects the location of
+         all instances of the resource. (A promoted instance must start in the
+         unpromoted role before being promoted, so any location requirement for
+         unpromoted instances also affects promoted instances.)
+       * ``Promoted``: The constraint does not affect the location of
+         instances, but instead affects which of the instances will be
+         promoted.
+
    * - .. resource_discovery:
        
        .. index::
