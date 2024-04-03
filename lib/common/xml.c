@@ -486,33 +486,6 @@ copy_in_properties(xmlNode *target, const xmlNode *src)
 }
 
 /*!
- * \brief Parse integer assignment statements on this node and all its child
- *        nodes
- *
- * \param[in,out] target  Root XML node to be processed
- *
- * \note This function is recursive
- */
-void
-fix_plus_plus_recursive(xmlNode *target)
-{
-    /* TODO: Remove recursion and use xpath searches for value++ */
-    xmlNode *child = NULL;
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(target); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-        const char *p_value = pcmk__xml_attr_value(a);
-
-        expand_plus_plus(target, p_name, p_value);
-    }
-    for (child = pcmk__xe_first_child(target, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
-
-        fix_plus_plus_recursive(child);
-    }
-}
-
-/*!
  * \brief Update current XML attribute value per parsed integer assignment
           statement
  *
@@ -2654,6 +2627,25 @@ find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
     }
 
     return match_found;
+}
+
+void
+fix_plus_plus_recursive(xmlNode *target)
+{
+    /* TODO: Remove recursion and use xpath searches for value++ */
+    xmlNode *child = NULL;
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(target); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
+        const char *p_value = pcmk__xml_attr_value(a);
+
+        expand_plus_plus(target, p_name, p_value);
+    }
+    for (child = pcmk__xe_first_child(target, NULL, NULL, NULL); child != NULL;
+         child = pcmk__xe_next(child)) {
+
+        fix_plus_plus_recursive(child);
+    }
 }
 
 // LCOV_EXCL_STOP

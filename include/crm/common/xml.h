@@ -63,7 +63,6 @@ xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 void copy_in_properties(xmlNode *target, const xmlNode *src);
 
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
-void fix_plus_plus_recursive(xmlNode * target);
 
 
 /*
