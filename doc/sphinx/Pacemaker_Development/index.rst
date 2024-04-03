@@ -20,6 +20,7 @@ Table of Contents
 
    faq
    general
+   documentation
    python
    c
    components
