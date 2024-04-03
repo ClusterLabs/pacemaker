@@ -26,6 +26,7 @@ Table of Contents
    components
    helpers
    evolution
+   glossary
 
 Index
 -----
