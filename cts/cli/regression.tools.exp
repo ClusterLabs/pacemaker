@@ -7051,7 +7051,7 @@ Current cluster status:
 
 Performing Requested Modifications:
   * Injecting ping_monitor_10000@cluster02=1 into the configuration
-  * Injecting attribute fail-count-ping#monitor_10000=value++ into /node_state '2'
+  * Injecting attribute fail-count-ping#monitor_10000=1 into /node_state '2'
   * Injecting attribute last-failure-ping#monitor_10000= into /node_state '2'
 
 Transition Summary:
