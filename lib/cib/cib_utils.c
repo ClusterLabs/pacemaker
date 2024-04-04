@@ -688,7 +688,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(*op_msg, PCMK__XA_CIB_CALLDATA, data);
+        add_message_xml(*op_msg, PCMK__XE_CIB_CALLDATA, data);
     }
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
@@ -779,7 +779,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     if (msg != NULL) {
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        output = get_message_xml(msg, PCMK__XA_CIB_CALLDATA);
+        output = get_message_xml(msg, PCMK__XE_CIB_CALLDATA);
     }
 
     blob = cib__lookup_id(call_id);
