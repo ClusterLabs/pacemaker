@@ -500,7 +500,6 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
     crm_trace("Massaging CIB contents");
     pcmk__strip_xml_text(scratch);
-    fix_plus_plus_recursive(scratch);
 
     if (!make_copy) {
         /* At this point, patchset_cib is just the PCMK_XE_CIB tag and its
