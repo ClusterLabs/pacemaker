@@ -1352,7 +1352,7 @@ reconcile_output_format(pcmk__common_args_t *args)
         return;
     }
 
-    if (pcmk__str_eq(args->output_ty, "none", pcmk__str_none)) {
+    if (pcmk__str_eq(args->output_ty, PCMK_VALUE_NONE, pcmk__str_none)) {
         output_format = mon_output_none;
 
     } else if (pcmk__str_eq(args->output_ty, "html", pcmk__str_none)) {

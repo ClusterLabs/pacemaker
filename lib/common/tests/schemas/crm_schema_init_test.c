@@ -131,7 +131,7 @@ extra_schema_files(void **state) {
     /* This will one day be removed */
     assert_string_equal("pacemaker-next", get_schema_name(17));
 
-    assert_string_equal("none", get_schema_name(18));
+    assert_string_equal(PCMK_VALUE_NONE, get_schema_name(18));
 }
 
 PCMK__UNIT_TEST(setup, teardown,

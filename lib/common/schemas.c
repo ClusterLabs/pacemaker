@@ -451,12 +451,12 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
     const pcmk__schema_t *schema_b = b;
 
     if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
-        if (pcmk__str_eq(schema_b->name, "none", pcmk__str_none)) {
+        if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
             return -1;
         } else {
             return 1;
         }
-    } else if (pcmk__str_eq(schema_a->name, "none", pcmk__str_none)) {
+    } else if (pcmk__str_eq(schema_a->name, PCMK_VALUE_NONE, pcmk__str_none)) {
         return 1;
     } else if (pcmk__str_eq(schema_b->name, "pacemaker-next", pcmk__str_none)) {
         return -1;
