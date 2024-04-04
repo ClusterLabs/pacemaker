@@ -144,6 +144,7 @@ extra_schema_files(void **state)
     // @COMPAT pacemaker-next is deprecated since 2.1.5
     assert_schema("pacemaker-next", 17);
 
+    // @COMPAT none is deprecated since 2.1.8
     assert_schema(PCMK_VALUE_NONE, 18);
 }
 

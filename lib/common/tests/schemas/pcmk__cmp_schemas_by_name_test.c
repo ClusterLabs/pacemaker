@@ -31,6 +31,7 @@ teardown(void **state)
 }
 
 // NULL schema name defaults to the "none" schema
+// @COMPAT none is deprecated since 2.1.8
 
 static void
 unknown_is_lesser(void **state)
@@ -53,6 +54,7 @@ unknown_is_lesser(void **state)
                                           "pacemaker-0.7") > 0);
 }
 
+// @COMPAT none is deprecated since 2.1.8
 static void
 none_is_greater(void **state)
 {
@@ -75,6 +77,7 @@ none_is_greater(void **state)
 }
 
 // @COMPAT pacemaker-next is deprecated since 2.1.5
+// @COMPAT none is deprecated since 2.1.8
 static void
 next_is_before_none(void **state)
 {

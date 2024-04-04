@@ -62,8 +62,8 @@ xml_latest_schema_index(void)
      * so we have at least three schemas (one real schema, the "pacemaker-next"
      * schema, and the "none" schema).
      *
-     * @COMPAT: pacemaker-next is deprecated since 2.1.5.
-     * Update this when we drop that schema.
+     * @COMPAT: pacemaker-next is deprecated since 2.1.5 and none since 2.1.8.
+     * Update this when we drop those.
      */
     return g_list_length(known_schemas) - 3;
 }
@@ -429,7 +429,7 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
     const pcmk__schema_t *schema_a = a;
     const pcmk__schema_t *schema_b = b;
 
-    // @COMPAT pacemaker-next is deprecated since 2.1.5
+    // @COMPAT pacemaker-next is deprecated since 2.1.5 and none since 2.1.8
     if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
         if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
             return -1;
@@ -486,6 +486,7 @@ crm_schema_init(void)
         add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next", NULL,
                    NULL, FALSE);
 
+        // @COMPAT Deprecated since 2.1.8
         add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE, NULL,
                    NULL, FALSE);
 
@@ -1342,24 +1343,18 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         }
 
     } else {
+        // @COMPAT the none schema is deprecated since 2.1.8
         pcmk__schema_t *none_schema = NULL;
 
         entry = pcmk__get_schema(PCMK_VALUE_NONE);
         CRM_ASSERT((entry != NULL) && (entry->data != NULL));
 
         none_schema = entry->data;
-        if (orig_version >= none_schema->schema_index) {
-            // Schema validation is disabled
-            if (to_logs) {
-                pcmk__config_warn("Schema validation of configuration is "
-                                  "disabled (enabling is encouraged and "
-                                  "prevents common misconfigurations)");
-
-            } else {
-                fprintf(stderr, "Schema validation of configuration is "
-                                "disabled (enabling is encouraged and "
-                                "prevents common misconfigurations)\n");
-            }
+        if (!to_logs && (orig_version >= none_schema->schema_index)) {
+            fprintf(stderr, "Schema validation of configuration is "
+                            "disabled (support for " PCMK_XA_VALIDATE_WITH
+                            " set to \"" PCMK_VALUE_NONE "\" is deprecated"
+                            " and will be removed in a future release)\n");
         }
     }
 
@@ -1582,7 +1577,7 @@ pcmk__remote_schema_dir(void)
 void
 pcmk__warn_if_schema_deprecated(const char *schema)
 {
-    if (pcmk__strcase_any_of(schema, "pacemaker-next", NULL)) {
+    if (pcmk__strcase_any_of(schema, "pacemaker-next", PCMK_VALUE_NONE, NULL)) {
         pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
                           "deprecated and will be removed in a future release "
                           "without the possibility of upgrades (manually edit "
