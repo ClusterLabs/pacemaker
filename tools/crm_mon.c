@@ -2006,7 +2006,7 @@ crm_diff_update_element_v2(xmlNode *change, void *userdata)
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
-    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
     xmlNode *diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
@@ -2018,7 +2018,7 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
 {
     /* Process operation updates */
     xmlXPathObject *xpathObj = xpath_search(msg,
-                                            "//" PCMK__XA_CIB_UPDATE_RESULT
+                                            "//" PCMK__XE_CIB_UPDATE_RESULT
                                             "//" PCMK__XE_DIFF_ADDED
                                             "//" PCMK__XE_LRM_RSC_OP);
     int lpc = 0, max = numXpathResults(xpathObj);
@@ -2037,7 +2037,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     int rc = -1;
     static bool stale = FALSE;
     gboolean cib_updated = FALSE;
-    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT,
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
     xmlNode *diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 

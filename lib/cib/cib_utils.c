@@ -94,7 +94,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return pcmk_legacy2rc(rc);
     }
 
-    wrapper = pcmk__xe_first_child(msg, PCMK__XA_CIB_UPDATE_RESULT, NULL, NULL);
+    wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT, NULL, NULL);
     *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (*patchset == NULL) {
@@ -104,7 +104,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     return pcmk_rc_ok;
 }
 
-#define XPATH_DIFF_V1 "//" PCMK__XA_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
+#define XPATH_DIFF_V1 "//" PCMK__XE_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
 
 /*!
  * \internal
@@ -928,7 +928,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     CRM_ASSERT(output);
 
     crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
-    wrapper = pcmk__xe_first_child(event, PCMK__XA_CIB_UPDATE_RESULT, NULL,
+    wrapper = pcmk__xe_first_child(event, PCMK__XE_CIB_UPDATE_RESULT, NULL,
                                    NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
