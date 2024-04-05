@@ -132,7 +132,7 @@ attach_cib_generation(xmlNode *msg)
     xmlNode *generation = pcmk__xe_create(wrapper, PCMK__XE_GENERATION_TUPLE);
 
     if (the_cib != NULL) {
-        pcmk__xe_copy_attrs(generation, the_cib);
+        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
     }
 }
 

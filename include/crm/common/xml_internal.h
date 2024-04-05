@@ -15,6 +15,7 @@
  */
 
 #  include <stdlib.h>
+#  include <stdint.h>   // uint32_t
 #  include <stdio.h>
 #  include <string.h>
 
@@ -438,7 +439,7 @@ enum pcmk__xa_flags {
     pcmk__xaf_no_overwrite  = (1U << 0),
 };
 
-void pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src);
+void pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
 
 /*!
  * \internal

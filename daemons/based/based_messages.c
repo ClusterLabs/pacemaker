@@ -166,7 +166,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
                 const char *name = (const char *) the_cib->name;
                 xmlNode *shallow = pcmk__xe_create(wrapper, name);
 
-                pcmk__xe_copy_attrs(shallow, the_cib);
+                pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
             }
         );
     }

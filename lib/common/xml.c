@@ -493,16 +493,17 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
 
 /*!
  * \internal
- * \brief Copy XML attributes, expanding \c ++ and \c +=
+ * \brief Copy XML attributes from a source element to a target element
  *
- * This is similar to \c xmlCopyPropList() except that \c ++ and \c += are
- * expanded where appropriate. See \c expand_plus_plus() for details.
+ * This is similar to \c xmlCopyPropList() except that attributes are marked
+ * as dirty for change tracking purposes.
  *
  * \param[in,out] target  XML element to receive copied attributes from \p src
  * \param[in]     src     XML element whose attributes to copy to \p target
+ * \param[in]     flags   Group of <tt>enum pcmk__xa_flags</tt>
  */
 void
-pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
+pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 {
     CRM_CHECK((src != NULL) && (target != NULL), return);
 
@@ -512,6 +513,10 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src)
         const char *name = (const char *) attr->name;
         const char *value = pcmk__xml_attr_value(attr);
 
+        if (pcmk_is_set(flags, pcmk__xaf_no_overwrite)
+            && (crm_element_value(target, name) != NULL)) {
+            continue;
+        }
         expand_plus_plus(target, name, value);
     }
 }
@@ -1692,8 +1697,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
     if (as_diff == FALSE) {
-        /* So that expand_plus_plus() gets called */
-        pcmk__xe_copy_attrs(target, update);
+        pcmk__xe_copy_attrs(target, update, pcmk__xaf_none);
 
     } else {
         /* No need for expand_plus_plus(), just raw speed */

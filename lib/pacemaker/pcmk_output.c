@@ -2543,7 +2543,7 @@ add_ticket_element(xmlNode *node, void *userdata)
     xmlNode *ticket_node = NULL;
 
     ticket_node = pcmk__output_create_xml_node(out, PCMK_XE_TICKET, NULL);
-    pcmk__xe_copy_attrs(ticket_node, node);
+    pcmk__xe_copy_attrs(ticket_node, node, pcmk__xaf_none);
     return pcmk_rc_ok;
 }
 
