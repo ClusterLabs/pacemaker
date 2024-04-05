@@ -541,6 +541,9 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
                        int (*handler)(xmlNode *xml, void *userdata),
                        void *userdata);
 
+bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                            void *user_data);
+
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)
 {
