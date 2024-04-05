@@ -532,7 +532,6 @@ static int
 update_cib_object(xmlNode *parent, xmlNode *update)
 {
     int result = pcmk_ok;
-    const char *replace = NULL;
     const char *update_id = pcmk__xe_id(update);
 
     xmlNode *target = pcmk__xe_create(parent, (const char *) update->name);
@@ -544,38 +543,11 @@ update_cib_object(xmlNode *parent, xmlNode *update)
         crm_trace("Processing update for <%s>", update->name);
     }
 
-    // @COMPAT PCMK__XA__REPLACE is deprecated since 2.1.6
-    replace = crm_element_value(update, PCMK__XA_REPLACE);
-    if (replace != NULL) {
-        int last = 0;
-        int len = strlen(replace);
-
-        for (int lpc = 0; lpc <= len; ++lpc) {
-            if (replace[lpc] == ',' || replace[lpc] == 0) {
-                if (last != lpc) {
-                    char *replace_item = strndup(replace + last, lpc - last);
-                    xmlNode *remove = NULL;
-
-                    if (replace_item == NULL) {
-                        return -errno;
-                    }
-
-                    remove = pcmk__xe_first_child(target, replace_item, NULL,
-                                                  NULL);
-
-                    if (remove != NULL) {
-                        crm_trace("Replacing node <%s> in <%s>",
-                                  replace_item, target->name);
-                        free_xml(remove);
-                    }
-                    free(replace_item);
-                }
-                last = lpc + 1;
-            }
-        }
-        pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
-        pcmk__xe_remove_attr(target, PCMK__XA_REPLACE);
-    }
+    /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. When we can break
+     * behavioral backward compatibility, drop this and drop the definition of
+     * PCMK__XA_REPLACE.
+     */
+    pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
 
     copy_in_properties(target, update);
 
