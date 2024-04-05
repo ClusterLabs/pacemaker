@@ -71,10 +71,12 @@ pcmk__assert_validates(xmlNode *xml)
 }
 
 int
-pcmk__cib_test_setup_group(void **state)
+pcmk__xml_test_setup_group(void **state)
 {
-    /* This needs to be run before we attempt to read in a CIB or it will fail
-     * to validate.  There's no harm in doing this before all tests.
+    /* This needs to be run before we run unit tests that manipulate XML.
+     * Without it, document private data won't get created, which can cause
+     * segmentation faults or assertions in functions related to change
+     * tracking and ACLs. There's no harm in doing this before all tests.
      */
     crm_xml_init();
     return 0;

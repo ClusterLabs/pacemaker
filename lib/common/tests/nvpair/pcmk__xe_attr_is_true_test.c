@@ -44,7 +44,7 @@ attr_present(void **state)
     free_xml(node);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(empty_input),
                 cmocka_unit_test(attr_missing),
                 cmocka_unit_test(attr_present))

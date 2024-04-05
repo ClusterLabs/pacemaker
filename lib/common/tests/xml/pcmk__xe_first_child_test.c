@@ -99,7 +99,7 @@ find_attrA_matching(void **state) {
     free_xml(xml);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(bad_input),
                 cmocka_unit_test(not_found),
                 cmocka_unit_test(find_attrB),

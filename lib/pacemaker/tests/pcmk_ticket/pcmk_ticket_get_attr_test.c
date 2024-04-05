@@ -142,7 +142,7 @@ default_no_attribute(void **state)
     free_xml(xml);
 }
 
-PCMK__UNIT_TEST(pcmk__cib_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(attribute_exists, setup_test, teardown_test),

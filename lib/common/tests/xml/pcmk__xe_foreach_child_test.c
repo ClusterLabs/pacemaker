@@ -205,7 +205,7 @@ one_of_test(void **state) {
     free_xml(xml);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(bad_input),
                 cmocka_unit_test(name_given_test),
                 cmocka_unit_test(no_name_given_test),

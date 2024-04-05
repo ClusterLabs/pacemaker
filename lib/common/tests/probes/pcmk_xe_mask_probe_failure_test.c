@@ -327,7 +327,7 @@ check_values_test(void **state) {
     free_xml(node);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(op_is_not_probe_test),
                 cmocka_unit_test(op_does_not_have_right_values_test),
                 cmocka_unit_test(check_values_test))

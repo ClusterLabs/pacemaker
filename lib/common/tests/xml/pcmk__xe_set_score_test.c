@@ -236,7 +236,7 @@ assignment_result_is_too_large(void **state)
     assert_string_equal(new_value, "1000000");
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(value_is_name_plus_plus),
                 cmocka_unit_test(value_is_name_plus_equals_integer),
                 cmocka_unit_test(target_is_NULL),

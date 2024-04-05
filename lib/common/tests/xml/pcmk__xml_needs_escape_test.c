@@ -322,7 +322,7 @@ escape_utf8(void **state)
                                         pcmk__xml_escape_attr_pretty));
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(null_empty),
                 cmocka_unit_test(invalid_type),
                 cmocka_unit_test(escape_unchanged),

@@ -227,7 +227,7 @@ add_seconds(void **state)
     free_xml(xml);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(null_time_invalid),
                 cmocka_unit_test(null_xml_ok),
                 cmocka_unit_test(invalid_component),

@@ -44,6 +44,6 @@ copy_one(void **state)
     free_xml(target);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(null_args),
                 cmocka_unit_test(copy_one))
