@@ -246,8 +246,6 @@ void attrd_remove_client_from_waitlist(pcmk__client_t *client);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
 
-void attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest);
-
 extern gboolean stand_alone;
 
 #endif /* PACEMAKER_ATTRD__H */

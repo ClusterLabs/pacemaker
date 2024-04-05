@@ -578,7 +578,7 @@ attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
         for (xmlNode *child = pcmk__xe_first_child(xml, PCMK_XE_OP, NULL, NULL);
              child != NULL; child = pcmk__xe_next_same(child)) {
 
-            attrd_copy_xml_attributes(xml, child);
+            pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
             attrd_peer_update_one(peer, child, filter);
 
             if (attrd_request_has_sync_point(child)) {
