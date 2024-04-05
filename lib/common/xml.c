@@ -1220,31 +1220,6 @@ crm_xml_sanitize_id(char *id)
 }
 
 /*!
- * \brief Set the ID of an XML element using a format
- *
- * \param[in,out] xml  XML element
- * \param[in]     fmt  printf-style format
- * \param[in]     ...  any arguments required by format
- */
-void
-crm_xml_set_id(xmlNode *xml, const char *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *id = NULL;
-
-    /* equivalent to crm_strdup_printf() */
-    va_start(ap, format);
-    len = vasprintf(&id, format, ap);
-    va_end(ap);
-    CRM_ASSERT(len > 0);
-
-    crm_xml_sanitize_id(id);
-    crm_xml_add(xml, PCMK_XA_ID, id);
-    free(id);
-}
-
-/*!
  * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
@@ -2617,6 +2592,24 @@ xmlNode *
 expand_idref(xmlNode *input, xmlNode *top)
 {
     return pcmk__xe_resolve_idref(input, top);
+}
+
+void
+crm_xml_set_id(xmlNode *xml, const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *id = NULL;
+
+    /* equivalent to crm_strdup_printf() */
+    va_start(ap, format);
+    len = vasprintf(&id, format, ap);
+    va_end(ap);
+    CRM_ASSERT(len > 0);
+
+    crm_xml_sanitize_id(id);
+    crm_xml_add(xml, PCMK_XA_ID, id);
+    free(id);
 }
 
 // LCOV_EXCL_STOP

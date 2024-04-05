@@ -62,6 +62,9 @@ void free_xml(xmlNode *child);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *expand_idref(xmlNode *input, xmlNode *top);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
 #ifdef __cplusplus
 }
 #endif
