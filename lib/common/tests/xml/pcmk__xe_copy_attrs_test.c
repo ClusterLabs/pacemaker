@@ -14,49 +14,51 @@
 #include <glib.h>
 
 static void
-target_is_NULL(void **state)
+null_target(void **state)
 {
-    xmlNode *test_xml_1 = pcmk__xe_create(NULL, "test_xml_1");
-    xmlNode *test_xml_2 = NULL;
+    // This test dumps core via CRM_CHECK()
+    xmlNode *src = pcmk__xe_create(NULL, "test");
+    xmlNode *target = NULL;
 
-    pcmk__xe_set_props(test_xml_1, "test_prop", "test_value", NULL);
+    crm_xml_add(src, "attr", "value");
+    pcmk__xe_copy_attrs(target, src, pcmk__xaf_none);
 
-    pcmk__xe_copy_attrs(test_xml_2, test_xml_1, pcmk__xaf_none);
+    assert_ptr_equal(target, NULL);
 
-    assert_ptr_equal(test_xml_2, NULL);
+    free_xml(src);
 }
 
 static void
-src_is_NULL(void **state)
+null_source(void **state)
 {
-    xmlNode *test_xml_1 = NULL;
-    xmlNode *test_xml_2 = pcmk__xe_create(NULL, "test_xml_2");
+    // This test dumps core via CRM_CHECK()
+    xmlNode *src = NULL;
+    xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    pcmk__xe_copy_attrs(test_xml_2, test_xml_1, pcmk__xaf_none);
+    pcmk__xe_copy_attrs(target, src, pcmk__xaf_none);
 
-    assert_ptr_equal(test_xml_2->properties, NULL);
+    assert_ptr_equal(target->properties, NULL);
+
+    free_xml(target);
 }
 
 static void
-copying_is_successful(void **state)
+copy_one(void **state)
 {
-    const char *xml_1_value;
-    const char *xml_2_value;
+    xmlNode *src = pcmk__xe_create(NULL, "test");
+    xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    xmlNode *test_xml_1 = pcmk__xe_create(NULL, "test_xml_1");
-    xmlNode *test_xml_2 = pcmk__xe_create(NULL, "test_xml_2");
+    crm_xml_add(src, "attr", "value");
+    pcmk__xe_copy_attrs(target, src, pcmk__xaf_none);
 
-    pcmk__xe_set_props(test_xml_1, "test_prop", "test_value", NULL);
+    assert_string_equal(crm_element_value(src, "attr"),
+                        crm_element_value(target, "attr"));
 
-    pcmk__xe_copy_attrs(test_xml_2, test_xml_1, pcmk__xaf_none);
-
-    xml_1_value = crm_element_value(test_xml_1, "test_prop");
-    xml_2_value = crm_element_value(test_xml_2, "test_prop");
-
-    assert_string_equal(xml_1_value, xml_2_value);
+    free_xml(src);
+    free_xml(target);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test(target_is_NULL),
-                cmocka_unit_test(src_is_NULL),
-                cmocka_unit_test(copying_is_successful))
+                cmocka_unit_test(null_target),
+                cmocka_unit_test(null_source),
+                cmocka_unit_test(copy_one))
