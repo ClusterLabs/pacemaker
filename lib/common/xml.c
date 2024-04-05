@@ -645,6 +645,29 @@ pcmk__xe_remove_attr(xmlNode *element, const char *name)
 
 /*!
  * \internal
+ * \brief Remove a named attribute from an XML element
+ *
+ * This is a wrapper for \c pcmk__xe_remove_attr() for use with
+ * \c pcmk__xml_tree_foreach().
+ *
+ * \param[in,out] xml        XML element to remove an attribute from
+ * \param[in]     user_data  Name of attribute to remove
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+bool
+pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data)
+{
+    const char *name = user_data;
+
+    pcmk__xe_remove_attr(xml, name);
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Remove an XML element's attributes that match some criteria
  *
  * \param[in,out] element    XML element to modify

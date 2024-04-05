@@ -216,6 +216,7 @@ xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
 
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
+bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);

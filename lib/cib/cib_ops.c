@@ -632,6 +632,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     } else {
         crm_trace("Processing creation of <%s>", object_name);
     }
+
     return update_cib_object(parent, new_obj);
 }
 
