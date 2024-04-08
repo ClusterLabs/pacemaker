@@ -64,12 +64,12 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
 
 // Information about a block of nvpair elements
 typedef struct sorted_set_s {
-    const char *special_name;   // ID that should sort first
     xmlNode *attr_set;          // This block
 } sorted_set_t;
 
 typedef struct unpack_data_s {
     gboolean overwrite;
+    const char *special_name;   // Block ID that should sort first
     void *hash;
     crm_time_t *next_change;
     const pe_rule_eval_data_t *rule_data;
@@ -94,12 +94,12 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
         return -1;
     }
 
-    if (pcmk__str_eq(pcmk__xe_id(pair_a->attr_set), pair_a->special_name,
+    if (pcmk__str_eq(pcmk__xe_id(pair_a->attr_set), unpack_data->special_name,
                      pcmk__str_none)) {
         return -1;
 
-    } else if (pcmk__str_eq(pcmk__xe_id(pair_b->attr_set), pair_a->special_name,
-                            pcmk__str_none)) {
+    } else if (pcmk__str_eq(pcmk__xe_id(pair_b->attr_set),
+                            unpack_data->special_name, pcmk__str_none)) {
         return 1;
     }
 
@@ -203,13 +203,11 @@ unpack_attr_set(gpointer data, gpointer user_data)
  *
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only get blocks of this element
- * \param[in]     always_first  If not NULL, sort block with this ID as first
  *
  * \return List of sorted_set_t entries for nvpair blocks
  */
 static GList *
-make_pairs(const xmlNode *xml_obj, const char *set_name,
-           const char *always_first)
+make_pairs(const xmlNode *xml_obj, const char *set_name)
 {
     GList *unsorted = NULL;
 
@@ -228,7 +226,6 @@ make_pairs(const xmlNode *xml_obj, const char *set_name,
             }
 
             pair = pcmk__assert_alloc(1, sizeof(sorted_set_t));
-            pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
 
             unsorted = g_list_prepend(unsorted, pair);
@@ -255,10 +252,11 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(xml_obj, set_name, always_first);
+    GList *pairs = make_pairs(xml_obj, set_name);
 
     if (pairs) {
         unpack_data_t data = {
+            .special_name = always_first,
             .hash = hash,
             .overwrite = overwrite,
             .next_change = next_change,
