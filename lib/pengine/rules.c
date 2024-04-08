@@ -109,7 +109,7 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 }
 
 static void
-populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
+populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 {
     const char *name = NULL;
     const char *value = NULL;

@@ -28,7 +28,7 @@ typedef struct unpack_data_s {
     pcmk_rule_input_t rule_input;   // Data used to evaluate rules
 
     // Whether each block's values should overwrite any existing ones
-    gboolean overwrite;
+    bool overwrite;
 
     // If not NULL, this will be set to when rule evaluations will change next
     crm_time_t *next_change;
