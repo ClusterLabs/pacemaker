@@ -230,7 +230,7 @@ make_pairs(const xmlNode *xml_obj, const char *set_name,
             unsorted = g_list_prepend(unsorted, pair);
         }
     }
-    return g_list_sort(unsorted, sort_pairs);
+    return unsorted;
 }
 
 /*!
@@ -261,6 +261,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             .rule_data = rule_data
         };
 
+        pairs = g_list_sort(pairs, sort_pairs);
         g_list_foreach(pairs, unpack_attr_set, &data);
         g_list_free_full(pairs, free);
     }
