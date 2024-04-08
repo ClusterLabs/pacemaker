@@ -24,6 +24,9 @@ print_constraint(xmlNode *xml_obj, void *userdata)
     pcmk__output_t *out = scheduler->priv;
     xmlNode *lifetime = NULL;
     const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+    pcmk_rule_input_t rule_input = {
+        .now = scheduler->now,
+    };
 
     if (id == NULL) {
         return pcmk_rc_ok;
@@ -31,7 +34,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 
     // @COMPAT PCMK__XE_LIFETIME is deprecated
     lifetime = pcmk__xe_first_child(xml_obj, PCMK__XE_LIFETIME, NULL, NULL);
-    if (pe_evaluate_rules(lifetime, NULL, scheduler->now, NULL) == FALSE) {
+    if (pcmk__evaluate_rules(lifetime, &rule_input, NULL) != pcmk_rc_ok) {
         return pcmk_rc_ok;
     }
 

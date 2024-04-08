@@ -293,7 +293,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
             .rsc_id_nmatches = rsc_id_nmatches,
         };
 
-        /* This loop is logically parallel to pe_evaluate_rules(), except
+        /* This loop is logically parallel to pcmk__evaluate_rules(), except
          * instead of checking whether any rule is active, we set up location
          * constraints for each active rule.
          *

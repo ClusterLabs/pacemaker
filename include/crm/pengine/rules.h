@@ -20,9 +20,6 @@
 extern "C" {
 #endif
 
-gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
-                           crm_time_t *now, crm_time_t *next_change);
-
 void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                      const pe_rule_eval_data_t *rule_data, GHashTable *hash,
                      const char *always_first, gboolean overwrite,
@@ -32,9 +29,6 @@ void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
                        const char *set_name, GHashTable *node_hash,
                        GHashTable *hash, const char *always_first,
                        gboolean overwrite, crm_time_t *now,
-                       crm_time_t *next_change);
-
-gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
                        crm_time_t *next_change);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

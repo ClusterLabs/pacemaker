@@ -29,10 +29,15 @@
 static bool
 evaluate_lifetime(xmlNode *lifetime, pcmk_scheduler_t *scheduler)
 {
-    bool result = FALSE;
+    bool result = false;
     crm_time_t *next_change = crm_time_new_undefined();
+    pcmk_rule_input_t rule_input = {
+        .now = scheduler->now,
+    };
 
-    result = pe_evaluate_rules(lifetime, NULL, scheduler->now, next_change);
+    result = (pcmk__evaluate_rules(lifetime, &rule_input,
+                                   next_change) == pcmk_rc_ok);
+
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
