@@ -81,11 +81,11 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
         return -1;
     }
 
-    if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->special_name,
+    if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
                      pcmk__str_none)) {
         return -1;
 
-    } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->special_name,
+    } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
                             pcmk__str_none)) {
         return 1;
     }
@@ -235,7 +235,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     if (pairs) {
         pcmk__nvpair_unpack_t data = {
             .values = hash,
-            .special_name = always_first,
+            .first_id = always_first,
             .overwrite = overwrite,
             .next_change = next_change,
         };

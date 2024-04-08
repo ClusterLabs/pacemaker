@@ -24,7 +24,7 @@ extern "C" {
 // Data needed to sort XML blocks of name/value pairs
 typedef struct unpack_data_s {
     GHashTable *values;             // Where to put name/value pairs
-    const char *special_name;       // Block with this XML ID should sort first
+    const char *first_id;           // Block with this XML ID should sort first
     pcmk_rule_input_t rule_input;   // Data used to evaluate rules
 
     // Whether each block's values should overwrite any existing ones
