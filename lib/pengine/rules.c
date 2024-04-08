@@ -67,7 +67,7 @@ typedef struct unpack_data_s {
     const char *special_name;   // Block ID that should sort first
     void *hash;
     crm_time_t *next_change;
-    const pe_rule_eval_data_t *rule_data;
+    pcmk_rule_input_t rule_input;
 } unpack_data_t;
 
 static gint
@@ -177,11 +177,8 @@ unpack_attr_set(gpointer data, gpointer user_data)
 {
     xmlNode *pair = data;
     unpack_data_t *unpack_data = user_data;
-    pcmk_rule_input_t rule_input = { NULL, };
 
-    map_rule_input(&rule_input, unpack_data->rule_data);
-
-    if (pcmk__evaluate_rules(pair, &rule_input,
+    if (pcmk__evaluate_rules(pair, &(unpack_data->rule_input),
                              unpack_data->next_change) != pcmk_rc_ok) {
         return;
     }
@@ -249,8 +246,9 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             .hash = hash,
             .overwrite = overwrite,
             .next_change = next_change,
-            .rule_data = rule_data
         };
+
+        map_rule_input(&(data.rule_input), rule_data);
 
         pairs = g_list_sort_with_data(pairs, sort_pairs, &data);
         g_list_foreach(pairs, unpack_attr_set, &data);
