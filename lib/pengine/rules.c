@@ -62,20 +62,12 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-typedef struct unpack_data_s {
-    gboolean overwrite;
-    const char *special_name;   // Block ID that should sort first
-    void *hash;
-    crm_time_t *next_change;
-    pcmk_rule_input_t rule_input;
-} unpack_data_t;
-
 static gint
 sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 {
     const xmlNode *pair_a = a;
     const xmlNode *pair_b = b;
-    unpack_data_t *unpack_data = user_data;
+    pcmk__nvpair_unpack_t *unpack_data = user_data;
 
     const char *score = NULL;
     int score_a = 0;
@@ -176,7 +168,7 @@ static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
     xmlNode *pair = data;
-    unpack_data_t *unpack_data = user_data;
+    pcmk__nvpair_unpack_t *unpack_data = user_data;
 
     if (pcmk__evaluate_rules(pair, &(unpack_data->rule_input),
                              unpack_data->next_change) != pcmk_rc_ok) {
@@ -241,7 +233,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     GList *pairs = make_pairs(xml_obj, set_name);
 
     if (pairs) {
-        unpack_data_t data = {
+        pcmk__nvpair_unpack_t data = {
             .special_name = always_first,
             .hash = hash,
             .overwrite = overwrite,

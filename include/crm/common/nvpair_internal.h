@@ -10,11 +10,29 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 #define PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 
+#include <glib.h>                           // gboolean
+#include <libxml/tree.h>                    // xmlNode
+
+#include <crm/common/rules.h>               // pcmk_rule_input_t
+#include <crm/common/iso8601.h>             // crm_time_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq(), etc.
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Data needed to sort XML blocks of name/value pairs
+typedef struct unpack_data_s {
+    void *hash;                     // Where to put name/value pairs
+    const char *special_name;       // Block with this XML ID should sort first
+    pcmk_rule_input_t rule_input;   // Data used to evaluate rules
+
+    // Whether each block's values should overwrite any existing ones
+    gboolean overwrite;
+
+    // If not NULL, this will be set to when rule evaluations will change next
+    crm_time_t *next_change;
+} pcmk__nvpair_unpack_t;
 
 /*!
  * \internal
