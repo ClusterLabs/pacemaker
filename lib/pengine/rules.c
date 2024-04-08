@@ -65,7 +65,6 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
 // Information about a block of nvpair elements
 typedef struct sorted_set_s {
     int score;                  // This block's score for sorting
-    const char *name;           // This block's ID
     const char *special_name;   // ID that should sort first
     xmlNode *attr_set;          // This block
     gboolean overwrite;         // Whether existing values will be overwritten
@@ -85,10 +84,12 @@ sort_pairs(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    if (pcmk__str_eq(pair_a->name, pair_a->special_name, pcmk__str_casei)) {
+    if (pcmk__str_eq(pcmk__xe_id(pair_a->attr_set), pair_a->special_name,
+                     pcmk__str_none)) {
         return -1;
 
-    } else if (pcmk__str_eq(pair_b->name, pair_a->special_name, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(pcmk__xe_id(pair_b->attr_set), pair_a->special_name,
+                            pcmk__str_none)) {
         return 1;
     }
 
@@ -182,7 +183,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
     }
 
     crm_trace("Adding attributes from %s (score %d) %s overwrite",
-              pair->name, pair->score,
+              pcmk__xe_id(pair->attr_set), pair->score,
               (unpack_data->overwrite? "with" : "without"));
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
 }
@@ -219,7 +220,6 @@ make_pairs(const xmlNode *xml_obj, const char *set_name,
             }
 
             pair = pcmk__assert_alloc(1, sizeof(sorted_set_t));
-            pair->name = pcmk__xe_id(expanded_attr_set);
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
             pair->overwrite = overwrite;
