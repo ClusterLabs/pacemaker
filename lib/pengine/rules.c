@@ -105,7 +105,7 @@ sort_pairs(gconstpointer a, gconstpointer b)
 }
 
 static void
-populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlNode * top)
+populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 {
     const char *name = NULL;
     const char *value = NULL;
@@ -121,7 +121,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
          an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = expand_idref(an_attr, top);
+            xmlNode *ref_nvpair = expand_idref(an_attr, NULL);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
@@ -165,7 +165,6 @@ typedef struct unpack_data_s {
     void *hash;
     crm_time_t *next_change;
     const pe_rule_eval_data_t *rule_data;
-    xmlNode *top;
 } unpack_data_t;
 
 static void
@@ -185,14 +184,13 @@ unpack_attr_set(gpointer data, gpointer user_data)
     crm_trace("Adding attributes from %s (score %d) %s overwrite",
               pair->name, pair->score,
               (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
+    populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
 }
 
 /*!
  * \internal
  * \brief Create a sorted list of nvpair blocks
  *
- * \param[in,out] top           XML document root (used to expand id-ref's)
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only get blocks of this element
  * \param[in]     always_first  If not NULL, sort block with this ID as first
@@ -200,7 +198,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
  * \return List of sorted_set_t entries for nvpair blocks
  */
 static GList *
-make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
+make_pairs(const xmlNode *xml_obj, const char *set_name,
            const char *always_first, gboolean overwrite)
 {
     GList *unsorted = NULL;
@@ -214,7 +212,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
             const char *score = NULL;
             sorted_set_t *pair = NULL;
-            xmlNode *expanded_attr_set = expand_idref(attr_set, top);
+            xmlNode *expanded_attr_set = expand_idref(attr_set, NULL);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled
@@ -238,7 +236,7 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
- * \param[in,out] top           XML document root (used to expand id-ref's)
+ * \param[in,out] top           Ignored
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only use blocks of this element
  * \param[in]     rule_data     Matching parameters to use when unpacking
@@ -253,14 +251,13 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(top, xml_obj, set_name, always_first, overwrite);
+    GList *pairs = make_pairs(xml_obj, set_name, always_first, overwrite);
 
     if (pairs) {
         unpack_data_t data = {
             .hash = hash,
             .overwrite = overwrite,
             .next_change = next_change,
-            .top = top,
             .rule_data = rule_data
         };
 
@@ -272,7 +269,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
- * \param[in,out] top           XML document root (used to expand id-ref's)
+ * \param[in,out] top           Ignored
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      Element name to identify nvpair blocks
  * \param[in]     node_hash     Node attributes to use when evaluating rules
@@ -296,7 +293,7 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         .op_data = NULL
     };
 
-    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash,
+    pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash,
                     always_first, overwrite, next_change);
 }
 
@@ -463,7 +460,7 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
         .op_data = NULL
     };
 
-    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash, always_first,
+    pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash, always_first,
                     overwrite, NULL);
 }
 
