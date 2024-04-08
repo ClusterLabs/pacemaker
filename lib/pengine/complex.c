@@ -703,10 +703,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-#ifndef PCMK__COMPAT_2_0
-    warn_about_deprecated_classes(*rsc);
-#endif
-
     (*rsc)->meta = pcmk__strkey_table(free, free);
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     (*rsc)->known_on = pcmk__strkey_table(NULL, free);
@@ -719,6 +715,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     } else {
         (*rsc)->id = strdup(id);
     }
+
+#ifndef PCMK__COMPAT_2_0
+    warn_about_deprecated_classes(*rsc);
+#endif
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 
