@@ -177,7 +177,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
 
     crm_trace("Adding name/value pairs from %s %s overwrite",
               pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair, unpack_data->hash, unpack_data->overwrite);
+    populate_hash(pair, unpack_data->values, unpack_data->overwrite);
 }
 
 /*!
@@ -234,8 +234,8 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
     if (pairs) {
         pcmk__nvpair_unpack_t data = {
+            .values = hash,
             .special_name = always_first,
-            .hash = hash,
             .overwrite = overwrite,
             .next_change = next_change,
         };
