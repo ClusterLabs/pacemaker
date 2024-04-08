@@ -66,14 +66,22 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
 typedef struct sorted_set_s {
     const char *special_name;   // ID that should sort first
     xmlNode *attr_set;          // This block
-    gboolean overwrite;         // Whether existing values will be overwritten
 } sorted_set_t;
 
+typedef struct unpack_data_s {
+    gboolean overwrite;
+    void *hash;
+    crm_time_t *next_change;
+    const pe_rule_eval_data_t *rule_data;
+} unpack_data_t;
+
 static gint
-sort_pairs(gconstpointer a, gconstpointer b)
+sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 {
     const sorted_set_t *pair_a = a;
     const sorted_set_t *pair_b = b;
+    unpack_data_t *unpack_data = user_data;
+
     const char *score = NULL;
     int score_a = 0;
     int score_b = 0;
@@ -106,9 +114,9 @@ sort_pairs(gconstpointer a, gconstpointer b)
      * score first, so nothing else overwrites it.
      */
     if (score_a < score_b) {
-        return pair_a->overwrite? -1 : 1;
+        return unpack_data->overwrite? -1 : 1;
     } else if (score_a > score_b) {
-        return pair_a->overwrite? 1 : -1;
+        return unpack_data->overwrite? 1 : -1;
     }
     return 0;
 }
@@ -169,13 +177,6 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
     }
 }
 
-typedef struct unpack_data_s {
-    gboolean overwrite;
-    void *hash;
-    crm_time_t *next_change;
-    const pe_rule_eval_data_t *rule_data;
-} unpack_data_t;
-
 static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
@@ -208,7 +209,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
  */
 static GList *
 make_pairs(const xmlNode *xml_obj, const char *set_name,
-           const char *always_first, gboolean overwrite)
+           const char *always_first)
 {
     GList *unsorted = NULL;
 
@@ -229,7 +230,6 @@ make_pairs(const xmlNode *xml_obj, const char *set_name,
             pair = pcmk__assert_alloc(1, sizeof(sorted_set_t));
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
-            pair->overwrite = overwrite;
 
             unsorted = g_list_prepend(unsorted, pair);
         }
@@ -255,7 +255,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(xml_obj, set_name, always_first, overwrite);
+    GList *pairs = make_pairs(xml_obj, set_name, always_first);
 
     if (pairs) {
         unpack_data_t data = {
@@ -265,7 +265,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
             .rule_data = rule_data
         };
 
-        pairs = g_list_sort(pairs, sort_pairs);
+        pairs = g_list_sort_with_data(pairs, sort_pairs, &data);
         g_list_foreach(pairs, unpack_attr_set, &data);
         g_list_free_full(pairs, free);
     }
