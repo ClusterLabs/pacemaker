@@ -64,7 +64,6 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
 
 // Information about a block of nvpair elements
 typedef struct sorted_set_s {
-    int score;                  // This block's score for sorting
     const char *special_name;   // ID that should sort first
     xmlNode *attr_set;          // This block
     gboolean overwrite;         // Whether existing values will be overwritten
@@ -75,6 +74,9 @@ sort_pairs(gconstpointer a, gconstpointer b)
 {
     const sorted_set_t *pair_a = a;
     const sorted_set_t *pair_b = b;
+    const char *score = NULL;
+    int score_a = 0;
+    int score_b = 0;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -93,13 +95,19 @@ sort_pairs(gconstpointer a, gconstpointer b)
         return 1;
     }
 
+    score = crm_element_value(pair_a->attr_set, PCMK_XA_SCORE);
+    score_a = char2score(score);
+
+    score = crm_element_value(pair_b->attr_set, PCMK_XA_SCORE);
+    score_b = char2score(score);
+
     /* If we're overwriting values, we want lowest score first, so the highest
      * score is processed last; if we're not overwriting values, we want highest
      * score first, so nothing else overwrites it.
      */
-    if (pair_a->score < pair_b->score) {
+    if (score_a < score_b) {
         return pair_a->overwrite? -1 : 1;
-    } else if (pair_a->score > pair_b->score) {
+    } else if (score_a > score_b) {
         return pair_a->overwrite? 1 : -1;
     }
     return 0;
@@ -182,8 +190,8 @@ unpack_attr_set(gpointer data, gpointer user_data)
         return;
     }
 
-    crm_trace("Adding attributes from %s (score %d) %s overwrite",
-              pcmk__xe_id(pair->attr_set), pair->score,
+    crm_trace("Adding name/value pairs from %s %s overwrite",
+              pcmk__xe_id(pair->attr_set),
               (unpack_data->overwrite? "with" : "without"));
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
 }
@@ -211,7 +219,6 @@ make_pairs(const xmlNode *xml_obj, const char *set_name,
          attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            const char *score = NULL;
             sorted_set_t *pair = NULL;
             xmlNode *expanded_attr_set = expand_idref(attr_set, NULL);
 
@@ -223,9 +230,6 @@ make_pairs(const xmlNode *xml_obj, const char *set_name,
             pair->special_name = always_first;
             pair->attr_set = expanded_attr_set;
             pair->overwrite = overwrite;
-
-            score = crm_element_value(expanded_attr_set, PCMK_XA_SCORE);
-            pair->score = char2score(score);
 
             unsorted = g_list_prepend(unsorted, pair);
         }
