@@ -62,11 +62,6 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-// Information about a block of nvpair elements
-typedef struct sorted_set_s {
-    xmlNode *attr_set;          // This block
-} sorted_set_t;
-
 typedef struct unpack_data_s {
     gboolean overwrite;
     const char *special_name;   // Block ID that should sort first
@@ -78,8 +73,8 @@ typedef struct unpack_data_s {
 static gint
 sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 {
-    const sorted_set_t *pair_a = a;
-    const sorted_set_t *pair_b = b;
+    const xmlNode *pair_a = a;
+    const xmlNode *pair_b = b;
     unpack_data_t *unpack_data = user_data;
 
     const char *score = NULL;
@@ -94,19 +89,19 @@ sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
         return -1;
     }
 
-    if (pcmk__str_eq(pcmk__xe_id(pair_a->attr_set), unpack_data->special_name,
+    if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->special_name,
                      pcmk__str_none)) {
         return -1;
 
-    } else if (pcmk__str_eq(pcmk__xe_id(pair_b->attr_set),
-                            unpack_data->special_name, pcmk__str_none)) {
+    } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->special_name,
+                            pcmk__str_none)) {
         return 1;
     }
 
-    score = crm_element_value(pair_a->attr_set, PCMK_XA_SCORE);
+    score = crm_element_value(pair_a, PCMK_XA_SCORE);
     score_a = char2score(score);
 
-    score = crm_element_value(pair_b->attr_set, PCMK_XA_SCORE);
+    score = crm_element_value(pair_b, PCMK_XA_SCORE);
     score_b = char2score(score);
 
     /* If we're overwriting values, we want lowest score first, so the highest
@@ -180,21 +175,20 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
-    sorted_set_t *pair = data;
+    xmlNode *pair = data;
     unpack_data_t *unpack_data = user_data;
     pcmk_rule_input_t rule_input = { NULL, };
 
     map_rule_input(&rule_input, unpack_data->rule_data);
 
-    if (pcmk__evaluate_rules(pair->attr_set, &rule_input,
+    if (pcmk__evaluate_rules(pair, &rule_input,
                              unpack_data->next_change) != pcmk_rc_ok) {
         return;
     }
 
     crm_trace("Adding name/value pairs from %s %s overwrite",
-              pcmk__xe_id(pair->attr_set),
-              (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite);
+              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
+    populate_hash(pair, unpack_data->hash, unpack_data->overwrite);
 }
 
 /*!
@@ -204,7 +198,7 @@ unpack_attr_set(gpointer data, gpointer user_data)
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only get blocks of this element
  *
- * \return List of sorted_set_t entries for nvpair blocks
+ * \return List of XML blocks of name/value pairs
  */
 static GList *
 make_pairs(const xmlNode *xml_obj, const char *set_name)
@@ -218,17 +212,12 @@ make_pairs(const xmlNode *xml_obj, const char *set_name)
          attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            sorted_set_t *pair = NULL;
             xmlNode *expanded_attr_set = expand_idref(attr_set, NULL);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled
             }
-
-            pair = pcmk__assert_alloc(1, sizeof(sorted_set_t));
-            pair->attr_set = expanded_attr_set;
-
-            unsorted = g_list_prepend(unsorted, pair);
+            unsorted = g_list_prepend(unsorted, expanded_attr_set);
         }
     }
     return unsorted;
@@ -265,7 +254,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
         pairs = g_list_sort_with_data(pairs, sort_pairs, &data);
         g_list_foreach(pairs, unpack_attr_set, &data);
-        g_list_free_full(pairs, free);
+        g_list_free(pairs);
     }
 }
 
