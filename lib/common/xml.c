@@ -847,6 +847,61 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
 
 /*!
  * \internal
+ * \brief Check whether the first character of a string is an XML NameChar
+ *
+ * See https://www.w3.org/TR/xml/#NT-NameChar.
+ *
+ * This is almost identical to libxml2's \c xmlIsDocNameChar(), but they don't
+ * expose it as part of the public API.
+ *
+ * \param[in]  utf8  UTF-8 encoded string
+ * \param[out] len   Where to store size in bytes of first character in \p utf8
+ *
+ * \return \c true if \p utf8 begins with a valid XML NameChar, or \c false
+ *         otherwise
+ */
+bool
+pcmk__xml_is_name_char(const char *utf8, int *len)
+{
+    int c = 0;
+
+    // See comment regarding len in pcmk__xml_is_name_start_char()
+    *len = 4;
+
+    // Note: xmlGetUTF8Char() assumes a 32-bit int
+    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+
+    if (c < 0) {
+        crm_err("Invalid UTF-8 character 0x%X", c);
+        return false;
+    }
+
+    return ((c >= 'a') && (c <= 'z'))
+           || ((c >= 'A') && (c <= 'Z'))
+           || ((c >= '0') && (c <= '9'))
+           || (c == '_')
+           || (c == ':')
+           || (c == '-')
+           || (c == '.')
+           || (c == 0xB7)
+           || ((c >= 0xC0) && (c <= 0xD6))
+           || ((c >= 0xD8) && (c <= 0xF6))
+           || ((c >= 0xF8) && (c <= 0x2FF))
+           || ((c >= 0x300) && (c <= 0x36F))
+           || ((c >= 0x370) && (c <= 0x37D))
+           || ((c >= 0x37F) && (c <= 0x1FFF))
+           || ((c >= 0x200C) && (c <= 0x200D))
+           || ((c >= 0x203F) && (c <= 0x2040))
+           || ((c >= 0x2070) && (c <= 0x218F))
+           || ((c >= 0x2C00) && (c <= 0x2FEF))
+           || ((c >= 0x3001) && (c <= 0xD7FF))
+           || ((c >= 0xF900) && (c <= 0xFDCF))
+           || ((c >= 0xFDF0) && (c <= 0xFFFD))
+           || ((c >= 0x10000) && (c <= 0xEFFFF));
+}
+
+/*!
+ * \internal
  * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
  * If \p node is the root of its document, free the entire document.

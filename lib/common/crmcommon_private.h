@@ -137,6 +137,9 @@ int pcmk__xe_set_score(xmlNode *target, const char *name, const char *value);
 G_GNUC_INTERNAL
 bool pcmk__xml_is_name_start_char(const char *utf8, int *len);
 
+G_GNUC_INTERNAL
+bool pcmk__xml_is_name_char(const char *utf8, int *len);
+
 /*
  * Date/times
  */
