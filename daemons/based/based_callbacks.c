@@ -1012,7 +1012,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
             CRM_ASSERT(digest != NULL);
         }
 
-        wrapper = pcmk__xe_create(msg, PCMK__XA_CIB_UPDATE_DIFF);
+        wrapper = pcmk__xe_create(msg, PCMK__XE_CIB_UPDATE_DIFF);
         pcmk__xml_copy(wrapper, result_diff);
 
         crm_log_xml_explicit(msg, "copy");
@@ -1321,7 +1321,7 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
                 const char *wrapper_name = PCMK__XE_CIB_CALLDATA;
 
                 if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-                    wrapper_name = PCMK__XA_CIB_UPDATE_DIFF;
+                    wrapper_name = PCMK__XE_CIB_UPDATE_DIFF;
                 }
                 wrapper = pcmk__xe_first_child(request, wrapper_name, NULL,
                                                NULL);
