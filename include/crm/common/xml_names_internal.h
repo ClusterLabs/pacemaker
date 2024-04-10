@@ -33,7 +33,6 @@ extern "C" {
 #define PCMK__XE_DIV                    "div"
 #define PCMK__XE_DOWNED                 "downed"
 #define PCMK__XE_EXIT_NOTIFICATION      "exit-notification"
-#define PCMK__XE_FAILED                 "failed"
 #define PCMK__XE_FAILED_UPDATE          "failed_update"
 #define PCMK__XE_GENERATION_TUPLE       "generation_tuple"
 #define PCMK__XE_LRM                    "lrm"
@@ -95,6 +94,9 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_REMOVED           "diff-removed"
+
+// @COMPAT Deprecated since 2.1.8
+#define PCMK__XE_FAILED                 "failed"
 
 // @COMPAT Deprecated since 1.0.8 (commit 4cb100f)
 #define PCMK__XE_LIFETIME               "lifetime"

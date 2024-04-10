@@ -631,6 +631,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
                                   answer);
     }
 
+    // @COMPAT Deprecated since 2.1.8
     failed = pcmk__xe_create(NULL, PCMK__XE_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);
