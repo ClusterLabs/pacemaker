@@ -250,7 +250,7 @@ Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pace
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
-   1 <cib epoch="4" num_updates="0" admin_epoch="0">
+   1 <cib epoch="5" num_updates="0" admin_epoch="0">
    2   <configuration>
    3     <crm_config/>
    4     <nodes/>
