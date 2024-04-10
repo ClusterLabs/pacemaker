@@ -4,12 +4,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -46,7 +47,7 @@ Active Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -242,9 +243,12 @@ Active Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output
@@ -254,6 +258,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -481,33 +486,34 @@ Active Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output without the node section
 =#=#=#= Begin test: Text output with only the node section =#=#=#=
-Cluster Summary:
-
-Node List:
-  * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
-=#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
-* Passed: crm_mon        - Text output with only the node section
+(log_assertion_as@utils.c:275) 	error: text_increment_list: Triggered fatal assertion at output_text.c:250 : tail != NULL
+cts/cts-cli: line 152: 1430218 Aborted                 (core dumped) crm_mon -1 --exclude=all --include=nodes
+CIB syntax has errors (for details, run crm_verify -LV)
+=#=#=#= End test: Text output with only the node section - Interrupted by signal (134) =#=#=#=
+* Failed (rc=134): crm_mon        - Text output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
 Cluster Summary:
   * Stack: corosync
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -596,7 +602,6 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
-  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output
 =#=#=#= Begin test: Complete text output with detail =#=#=#=
@@ -605,7 +610,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -614,7 +619,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -722,7 +727,6 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
-  * not-on-cluster1	prevents dummy from running on cluster01 (1)
 =#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output with detail
 =#=#=#= Begin test: Complete brief text output =#=#=#=
@@ -731,13 +735,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
@@ -826,7 +830,6 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
-  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output
 =#=#=#= Begin test: Complete text output grouped by node =#=#=#=
@@ -835,7 +838,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -864,7 +867,7 @@ Node List:
   * GuestNode httpd-bundle-1: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-2: online:
+  * GuestNode httpd-bundle-2: OFFLINE:
     * Resources:
 
 Node Attributes:
@@ -936,7 +939,6 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
-  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output grouped by node
 =#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
@@ -945,7 +947,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1046,7 +1048,6 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
-  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node
 =#=#=#= Begin test: XML output grouped by node =#=#=#=
@@ -1123,7 +1124,7 @@ Negative Location Constraints:
         <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
       </resource>
     </node>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="inactive-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="true" failed="false" failure_ignored="false" target_role="stopped">
@@ -1297,9 +1298,12 @@ Negative Location Constraints:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output grouped by node
@@ -1309,7 +1313,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1360,7 +1364,6 @@ Operations:
       * (3) monitor: interval="30000ms"
 
 Negative Location Constraints:
-  * not-on-cluster1	prevents dummy from running on cluster01
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by node
@@ -1485,9 +1488,12 @@ Negative Location Constraints:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by node
@@ -1497,7 +1503,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1554,7 +1560,6 @@ Operations:
       * (3) monitor: interval="30000ms"
 
 Negative Location Constraints:
-  * not-on-cluster1	prevents dummy from running on cluster01
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
@@ -1691,9 +1696,12 @@ Negative Location Constraints:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by tag
@@ -1703,13 +1711,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1744,7 +1752,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1768,7 +1776,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by resource tag - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by resource tag
@@ -1778,6 +1790,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1809,9 +1822,12 @@ Active Resources:
   </resources>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by node that doesn't exist
@@ -1821,12 +1837,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -1858,6 +1875,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1891,13 +1909,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1932,7 +1950,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1956,7 +1974,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by primitive resource
@@ -1966,13 +1988,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2010,7 +2032,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <group id="exim-group" number_resources="2" maintenance="false" managed="true" disabled="false">
@@ -2041,7 +2063,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by group resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by group resource
@@ -2051,13 +2077,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2092,7 +2118,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <group id="exim-group" number_resources="1" maintenance="false" managed="true" disabled="false">
@@ -2117,7 +2143,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by group resource member - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by group resource member
@@ -2127,13 +2157,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2173,7 +2203,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -2208,7 +2238,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by clone resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by clone resource
@@ -2218,13 +2252,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2264,7 +2298,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -2299,7 +2333,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by clone resource instance
@@ -2309,7 +2347,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2318,7 +2356,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2358,7 +2396,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -2390,7 +2428,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by exact clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by exact clone resource instance
@@ -2400,12 +2442,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * No active resources
@@ -2427,7 +2470,7 @@ Active Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources/>
   <node_attributes>
@@ -2440,7 +2483,11 @@ Active Resources:
     </node>
   </node_attributes>
   <node_history/>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by resource that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by resource that doesn't exist
@@ -2450,12 +2497,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
@@ -2471,12 +2519,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2501,7 +2550,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2590,7 +2639,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by inactive bundle resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by inactive bundle resource
@@ -2600,12 +2653,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2629,7 +2683,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2689,7 +2743,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled IP address resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundled IP address resource
@@ -2699,12 +2757,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2728,7 +2787,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2786,7 +2845,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled container - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundled container
@@ -2796,12 +2859,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2825,7 +2889,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2885,7 +2949,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundle connection - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundle connection
@@ -2895,12 +2963,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2928,7 +2997,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" maintenance="false" managed="true" failed="false">
@@ -2996,7 +3065,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundled primitive resource
@@ -3006,7 +3079,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3015,7 +3088,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3058,7 +3131,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3106,7 +3179,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by clone name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by clone name in cloned group
@@ -3116,7 +3193,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3125,7 +3202,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3168,7 +3245,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3216,7 +3293,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by group name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by group name in cloned group
@@ -3226,7 +3307,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3235,7 +3316,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3276,7 +3357,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3310,7 +3391,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by exact group instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by exact group instance name in cloned group
@@ -3320,7 +3405,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3329,7 +3414,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3372,7 +3457,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3420,7 +3505,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by primitive name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by primitive name in cloned group
@@ -3430,7 +3519,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3439,7 +3528,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: online
+  * GuestNode httpd-bundle-2@: OFFLINE
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3480,7 +3569,7 @@ Operations:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3514,7 +3603,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by exact primitive instance name in cloned group
@@ -3526,6 +3619,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3704,7 +3798,11 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
   <failures>
     <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="complete" queued="0" exec="33" interval="0" task="monitor"/>
   </failures>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of partially active resources
@@ -3716,6 +3814,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3760,7 +3859,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3852,6 +3951,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3873,6 +3973,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3896,6 +3997,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3916,6 +4018,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3941,7 +4044,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax is valid
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -4036,6 +4139,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -4124,7 +4228,11 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: Text output of partially active resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, filtered by node
@@ -4134,6 +4242,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 2 nodes configured
   * 3 resource instances configured
 
@@ -4188,7 +4297,11 @@ Active Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of active unmanaged resource on offline node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of active unmanaged resource on offline node
@@ -4198,6 +4311,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 2 nodes configured
   * 3 resource instances configured
 
@@ -4220,6 +4334,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 2 nodes configured
   * 3 resource instances configured
 
@@ -4242,6 +4357,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -4297,7 +4413,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="true" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="true" managed="false" disabled="false" failed="false" failure_ignored="false">
@@ -4493,9 +4609,12 @@ Full List of Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of all resources with maintenance-mode enabled
@@ -4505,6 +4624,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -4512,7 +4632,7 @@ Node List:
   * Node cluster02: maintenance
   * GuestNode httpd-bundle-1: maintenance
   * Online: [ cluster01 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-2 ]
+  * GuestOnline: [ httpd-bundle-0 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -4557,7 +4677,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -4754,9 +4874,12 @@ Full List of Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of all resources with maintenance enabled for a node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of all resources with maintenance enabled for a node
@@ -4766,6 +4889,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -4818,7 +4942,7 @@ Full List of Resources:
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="true" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="true" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" maintenance="true" managed="false" disabled="false" failed="false" failure_ignored="false">
@@ -5014,9 +5138,12 @@ Full List of Resources:
   </node_history>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of all resources with maintenance meta attribute true - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of all resources with maintenance meta attribute true
@@ -5026,6 +5153,7 @@ Cluster Summary:
   * Current DC: cent7-host2 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 10 resource instances configured
 
@@ -5050,6 +5178,7 @@ Cluster Summary:
   * Current DC: cent7-host2 (3232262829) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 4 nodes configured
   * 10 resource instances configured
 

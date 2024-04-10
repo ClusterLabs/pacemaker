@@ -53,6 +53,7 @@ Cluster Summary:
   * Current DC: cluster01 (1) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 4 resource instances configured
 
@@ -60,7 +61,7 @@ Node List:
   * Node cluster01 (1): online, feature set 3.15.1
   * Node cluster02 (2): online, feature set 3.15.1
   * Node cluster03 (3): OFFLINE
-  * GuestNode guest01-0@: online
+  * GuestNode guest01-0@: OFFLINE
   * RemoteNode remote01 (4): OFFLINE
 
 Active Resources:
@@ -82,7 +83,7 @@ Active Resources:
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member"/>
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member"/>
     <node name="cluster03" id="3" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="member"/>
-    <node name="guest01-0" id="guest01-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
+    <node name="guest01-0" id="guest01-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
     <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
   </nodes>
   <resources>
@@ -96,7 +97,11 @@ Active Resources:
     </bundle>
   </resources>
   <node_history/>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, no mixed status - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, no mixed status
@@ -152,6 +157,7 @@ Cluster Summary:
   * Current DC: cluster01 (1) (version) - MIXED-VERSION partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 4 resource instances configured
 
@@ -159,7 +165,7 @@ Node List:
   * Node cluster01 (1): online, feature set 3.15.1
   * Node cluster02 (2): online, feature set 3.15.0
   * Node cluster03 (3): OFFLINE
-  * GuestNode guest01-0@: online
+  * GuestNode guest01-0@: OFFLINE
   * RemoteNode remote01 (4): OFFLINE
 
 Active Resources:
@@ -181,7 +187,7 @@ Active Resources:
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member"/>
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.0" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member"/>
     <node name="cluster03" id="3" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="member"/>
-    <node name="guest01-0" id="guest01-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
+    <node name="guest01-0" id="guest01-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
     <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
   </nodes>
   <resources>
@@ -195,7 +201,11 @@ Active Resources:
     </bundle>
   </resources>
   <node_history/>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, mixed status - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, mixed status

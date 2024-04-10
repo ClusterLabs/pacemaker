@@ -451,7 +451,6 @@ cluster_summary(pcmk__output_t *out, va_list args) {
                      scheduler->localhost, last_written, user, client, origin);
     }
 
-    PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
     out->message(out, "cluster-verify", scheduler, section_opts);
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
@@ -529,8 +528,8 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
                      scheduler->localhost, last_written, user, client, origin);
     }
 
-    PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
     out->message(out, "cluster-verify", scheduler, section_opts);
+    
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");

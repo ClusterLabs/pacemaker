@@ -1938,9 +1938,6 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
 
-    pcmk__output_t *verify_out;
-    int verify_rc;
-
     out->message(out, "cluster-summary", scheduler, pcmkd_state, section_opts,
                  show_opts);
 
@@ -1999,21 +1996,6 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
-    }
-
-
-    /* If there are verification errors, always print a statement about that, even if not requested */
-
-    pcmk__output_new(&verify_out, "none", NULL, NULL);
-    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
-    pcmk__output_free(verify_out);
-
-    if (verify_rc == pcmk_rc_ok) {
-        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
-            out->info(out, "CIB syntax is valid");
-        }
-    } else {
-        out->info(out, "CIB syntax has errors (for details, run crm_verify -LV).");
     }
 
     return pcmk_rc_ok;
@@ -2488,28 +2470,38 @@ ticket_constraints_default(pcmk__output_t *out, va_list args)
 PCMK__OUTPUT_ARGS("cluster-verify", "pcmk_scheduler_t *", "int")
 static int
 cluster_verify_text(pcmk__output_t *out, va_list args) {
-
-    /* If there are verification errors, always print a statement about that, even if not requested */
-    
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
     int section_opts = va_arg(args, int);
 
     pcmk__output_t *verify_out;
     int verify_rc;
+    int rc = pcmk_rc_ok;
+
+    (void)(verify_rc);
+    (void)(section_opts);
 
     pcmk__output_new(&verify_out, "none", NULL, NULL);
+
+    scheduler = pe_new_working_set();
+    scheduler->priv = verify_out;
+
     verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+
+    pe_free_working_set(scheduler);
     pcmk__output_free(verify_out);
 
     if (verify_rc == pcmk_rc_ok) {
         if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
             out->list_item(out, NULL, "CIB syntax is valid");
         }
     } else {
+        /* If there are verification errors, always print a statement about that, even if not requested */
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->list_item(out, NULL, "CIB syntax has errors (for details, run crm_verify -LV)");
     }
 
-    return pcmk_rc_ok;
+    return rc;
 }
 
 static int
@@ -2604,12 +2596,19 @@ static int
 cluster_verify_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
     int section_opts = va_arg(args, int);
+    int rc = pcmk_rc_ok;
 
     if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
+        scheduler = pe_new_working_set();
+        scheduler->priv = out;
+
         pcmk__verify(scheduler, out, scheduler->input);
+
+        pe_free_working_set(scheduler);
     }
 
-    return pcmk_rc_ok;
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("ticket-state", "xmlNode *")
