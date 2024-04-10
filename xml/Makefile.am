@@ -254,7 +254,8 @@ pacemaker-%.rng: $(CIB_build_copies) best-match.sh Makefile.am
 # Dynamically generated CIB schema listing all pacemaker versions
 #
 # @COMPAT none, pacemaker-0.6, pacemaker-0.7, pacemaker-1.1, and
-# transitional-0.6 are deprecated since 2.1.8
+# transitional-0.6 are deprecated since 2.1.8, as is validate-with being
+# optional
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@

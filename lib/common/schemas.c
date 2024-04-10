@@ -658,6 +658,7 @@ crm_schema_cleanup(void)
 GList *
 pcmk__get_schema(const char *name)
 {
+    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     if (name == NULL) {
         name = PCMK_VALUE_NONE;
     }
@@ -763,6 +764,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
     pcmk__warn_if_schema_deprecated(validation);
 
+    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     if (validation == NULL) {
         bool valid = false;
 
@@ -1162,6 +1164,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     entry = get_configured_schema(*xml);
     if (entry == NULL) {
+        // @COMPAT Not specifying a schema name is deprecated since 2.1.8
         entry = known_schemas;
     } else {
         original_schema = entry->data;
@@ -1246,7 +1249,10 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 {
     bool rc = true;
     char *original_schema_name = NULL;
+
+    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     const char *effective_original_name = "the first";
+
     int orig_version = -1;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
     GList *entry = NULL;
@@ -1577,11 +1583,12 @@ pcmk__remote_schema_dir(void)
 void
 pcmk__warn_if_schema_deprecated(const char *schema)
 {
-    if (pcmk__strcase_any_of(schema, "pacemaker-next", PCMK_VALUE_NONE, NULL)) {
+    if ((schema == NULL) ||
+        pcmk__strcase_any_of(schema, "pacemaker-next", PCMK_VALUE_NONE, NULL)) {
         pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
                           "deprecated and will be removed in a future release "
                           "without the possibility of upgrades (manually edit "
-                          "to use a supported schema)", schema);
+                          "to use a supported schema)", pcmk__s(schema, ""));
     }
 }
 
