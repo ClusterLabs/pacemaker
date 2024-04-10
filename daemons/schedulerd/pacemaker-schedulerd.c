@@ -46,8 +46,8 @@ pcmk__supported_format_t formats[] = {
 
 void pengine_shutdown(int nsig);
 
-/* @COMPAT Deprecated since 2.1.8; use pcmk_cluster_list_options() or
- * crm_attribute --list-options instead of querying daemon metadata.
+/* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
+ * crm_attribute --list-options=cluster instead of querying daemon metadata.
  */
 static int
 scheduler_metadata(pcmk__output_t *out)

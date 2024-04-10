@@ -379,7 +379,12 @@ pcmk__output_get_log_level(const pcmk__output_t *out)
  *
  * This does nothing if the output object is not of log format.
  *
- * \param[in,out] out  Output object
+ * \param[in,out] out        Output object
+ * \param[in]     log_level  Log level constant (\c LOG_ERR, etc.) to use
+ *
+ * \note \c LOG_INFO is used by default for new \c pcmk__output_t objects.
+ * \note Almost all formatted output messages respect this setting. However,
+ *       <tt>out->err</tt> always logs at \c LOG_ERR.
  */
 void
 pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level)

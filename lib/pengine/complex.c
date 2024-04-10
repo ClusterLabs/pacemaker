@@ -277,7 +277,7 @@ template_op_key(xmlNode * op)
     char *key = NULL;
 
     if ((role == NULL)
-        || pcmk__strcase_any_of(role, PCMK__ROLE_STARTED, PCMK__ROLE_UNPROMOTED,
+        || pcmk__strcase_any_of(role, PCMK_ROLE_STARTED, PCMK_ROLE_UNPROMOTED,
                                 PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
         role = PCMK__ROLE_UNKNOWN;
     }
@@ -829,7 +829,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
-    if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_STOP_ONLY, pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_stop;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
                         (*rsc)->id);
@@ -839,19 +839,22 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: block",
                         (*rsc)->id);
 
-    } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_STOP_UNEXPECTED,
+                            pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
         pcmk__rsc_trace(*rsc,
                         "%s multiple running resource recovery: "
                         "stop unexpected instances",
                         (*rsc)->id);
 
-    } else { // "stop_start"
-        if (!pcmk__str_eq(value, "stop_start",
+    } else { // PCMK_VALUE_STOP_START
+        if (!pcmk__str_eq(value, PCMK_VALUE_STOP_START,
                           pcmk__str_casei|pcmk__str_null_matches)) {
             pcmk__config_warn("%s is not a valid value for "
                               PCMK_META_MULTIPLE_ACTIVE
-                              ", using default of \"stop_start\"", value);
+                              ", using default of "
+                              "\"" PCMK_VALUE_STOP_START "\"",
+                              value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
         pcmk__rsc_trace(*rsc,

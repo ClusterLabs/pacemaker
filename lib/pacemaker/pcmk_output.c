@@ -1126,8 +1126,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         g_list_free(possible_matches);
     } else if (pcmk_is_set(rsc->flags, pcmk_rsc_stop_unexpected)) {
         /* The resource is multiply active with PCMK_META_MULTIPLE_ACTIVE set to
-         * stop_unexpected, and not stopping on its current node, but it should
-         * be stopping elsewhere.
+         * PCMK_VALUE_STOP_UNEXPECTED, and not stopping on its current node, but
+         * it should be stopping elsewhere.
          */
         possible_matches = pe__resource_actions(rsc, NULL, PCMK_ACTION_STOP,
                                                 false);

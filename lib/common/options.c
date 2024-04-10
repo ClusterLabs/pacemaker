@@ -43,7 +43,7 @@ pcmk__cli_help(char cmd)
  * Option metadata
  */
 
-static pcmk__cluster_option_t cluster_options[] = {
+static const pcmk__cluster_option_t cluster_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
      * flags,
@@ -51,7 +51,7 @@ static pcmk__cluster_option_t cluster_options[] = {
      * long description
      */
     {
-        PCMK_OPT_DC_VERSION, NULL, "string", NULL,
+        PCMK_OPT_DC_VERSION, NULL, PCMK_VALUE_VERSION, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("Pacemaker version on cluster node elected Designated Controller "
@@ -60,14 +60,14 @@ static pcmk__cluster_option_t cluster_options[] = {
             "built from. Used for diagnostic purposes."),
     },
     {
-        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, "string", NULL,
+        PCMK_OPT_CLUSTER_INFRASTRUCTURE, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld|pcmk__opt_generated,
         N_("The messaging layer on which Pacemaker is currently running"),
         N_("Used for informational and diagnostic purposes."),
     },
     {
-        PCMK_OPT_CLUSTER_NAME, NULL, "string", NULL,
+        PCMK_OPT_CLUSTER_NAME, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_controld,
         N_("An arbitrary name for the cluster"),
@@ -77,7 +77,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "by higher-level tools and resource agents."),
     },
     {
-        PCMK_OPT_DC_DEADTIME, NULL, "time", NULL,
+        PCMK_OPT_DC_DEADTIME, NULL, PCMK_VALUE_DURATION, NULL,
         "20s", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("How long to wait for a response from other nodes during start-up"),
@@ -85,7 +85,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "network and the type of switches used."),
     },
     {
-        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, "time", NULL,
+        PCMK_OPT_CLUSTER_RECHECK_INTERVAL, NULL, PCMK_VALUE_DURATION, NULL,
         "15min", pcmk__valid_interval_spec,
         pcmk__opt_controld,
         N_("Polling interval to recheck cluster state and evaluate rules "
@@ -100,7 +100,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "(for example, \"5min\")."),
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, "select",
+        PCMK_OPT_FENCE_REACTION, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
         PCMK_VALUE_STOP, NULL,
         pcmk__opt_controld,
@@ -113,7 +113,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "node, falling back to stop on failure."),
     },
     {
-        PCMK_OPT_ELECTION_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_ELECTION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "2min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Declare an election failed if it is not decided within this much "
@@ -122,7 +122,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_ESCALATION, NULL, PCMK_VALUE_DURATION, NULL,
         "20min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Exit immediately if shutdown does not complete within this much "
@@ -131,8 +131,8 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout", "time",
-            NULL,
+        PCMK_OPT_JOIN_INTEGRATION_TIMEOUT, "crmd-integration-timeout",
+            PCMK_VALUE_DURATION, NULL,
         "3min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -141,7 +141,7 @@ static pcmk__cluster_option_t cluster_options[] = {
     },
     {
         PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, "crmd-finalization-timeout",
-            "time", NULL,
+            PCMK_VALUE_DURATION, NULL,
         "30min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("If you need to adjust this value, it probably indicates "
@@ -149,7 +149,8 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", "time", NULL,
+        PCMK_OPT_TRANSITION_DELAY, "crmd-transition-delay", PCMK_VALUE_DURATION,
+            NULL,
         "0s", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
         N_("Enabling this option will slow down cluster recovery under all "
@@ -159,7 +160,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "the order in which ping updates arrive."),
     },
     {
-        PCMK_OPT_NO_QUORUM_POLICY, NULL, "select",
+        PCMK_OPT_NO_QUORUM_POLICY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_FREEZE ", " PCMK_VALUE_IGNORE
                 ", " PCMK_VALUE_DEMOTE ", " PCMK_VALUE_FENCE_LEGACY,
         PCMK_VALUE_STOP, pcmk__valid_no_quorum_policy,
@@ -168,7 +169,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_SHUTDOWN_LOCK, NULL, "boolean", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to lock resources to a cleanly shut down node"),
@@ -182,7 +183,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "release."),
     },
     {
-        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
+        PCMK_OPT_SHUTDOWN_LOCK_LIMIT, NULL, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Do not lock resources to a cleanly shut down node longer than "
@@ -193,21 +194,21 @@ static pcmk__cluster_option_t cluster_options[] = {
             "rejoined."),
     },
     {
-        PCMK_OPT_ENABLE_ACL, NULL, "boolean", NULL,
+        PCMK_OPT_ENABLE_ACL, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_based,
         N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL,
     },
     {
-        PCMK_OPT_SYMMETRIC_CLUSTER, NULL, "boolean", NULL,
+        PCMK_OPT_SYMMETRIC_CLUSTER, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether resources can run on any node by default"),
         NULL,
     },
     {
-        PCMK_OPT_MAINTENANCE_MODE, NULL, "boolean", NULL,
+        PCMK_OPT_MAINTENANCE_MODE, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should refrain from monitoring, starting, and "
@@ -215,7 +216,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_START_FAILURE_IS_FATAL, NULL, "boolean", NULL,
+        PCMK_OPT_START_FAILURE_IS_FATAL, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether a start failure should prevent a resource from being "
@@ -225,7 +226,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, "boolean", NULL,
+        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should check for active resources during "
@@ -235,7 +236,7 @@ static pcmk__cluster_option_t cluster_options[] = {
 
     // Fencing-related options
     {
-        PCMK_OPT_STONITH_ENABLED, NULL, "boolean", NULL,
+        PCMK_OPT_STONITH_ENABLED, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether nodes may be fenced as part of recovery"),
@@ -245,7 +246,8 @@ static pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_STONITH_ACTION, NULL, "select", "reboot, off, poweroff",
+        PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
+            PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF ", " PCMK__ACTION_POWEROFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
         N_("Action to send to fence device when a node needs to be fenced "
@@ -253,7 +255,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STONITH_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_STONITH_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
@@ -261,7 +263,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_HAVE_WATCHDOG, NULL, "boolean", NULL,
+        PCMK_OPT_HAVE_WATCHDOG, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_generated,
         N_("Whether watchdog integration is enabled"),
@@ -283,7 +285,7 @@ static pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
@@ -305,7 +307,7 @@ static pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, "integer", NULL,
+        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_SCORE, NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
@@ -313,14 +315,14 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CONCURRENT_FENCING, NULL, "boolean", NULL,
+        PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Allow performing fencing operations in parallel"),
         NULL,
     },
     {
-        PCMK_OPT_STARTUP_FENCING, NULL, "boolean", NULL,
+        PCMK_OPT_STARTUP_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether to fence unseen nodes at start-up"),
@@ -328,7 +330,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, "time", NULL,
+        PCMK_OPT_PRIORITY_FENCING_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Apply fencing delay targeting the lost nodes with the highest "
@@ -347,7 +349,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "fencing delay is disabled."),
     },
     {
-        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
+        PCMK_OPT_NODE_PENDING_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "0", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for a node that has joined the cluster to join "
@@ -359,7 +361,7 @@ static pcmk__cluster_option_t cluster_options[] = {
            "2 hours."),
     },
     {
-        PCMK_OPT_CLUSTER_DELAY, NULL, "time", NULL,
+        PCMK_OPT_CLUSTER_DELAY, NULL, PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("Maximum time for node-to-node communication"),
@@ -372,7 +374,7 @@ static pcmk__cluster_option_t cluster_options[] = {
 
     // Limits
     {
-        PCMK_OPT_LOAD_THRESHOLD, NULL, "percentage", NULL,
+        PCMK_OPT_LOAD_THRESHOLD, NULL, PCMK_VALUE_PERCENTAGE, NULL,
         "80%", pcmk__valid_percentage,
         pcmk__opt_controld,
         N_("Maximum amount of system load that should be used by cluster "
@@ -381,7 +383,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "system resources used (currently CPU) approaches this limit"),
     },
     {
-        PCMK_OPT_NODE_ACTION_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_NODE_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_controld,
         N_("Maximum number of jobs that can be scheduled per node (defaults to "
@@ -389,7 +391,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_BATCH_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_BATCH_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Maximum number of jobs that the cluster may execute in parallel "
@@ -400,7 +402,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "high load."),
     },
     {
-        PCMK_OPT_MIGRATION_LIMIT, NULL, "integer", NULL,
+        PCMK_OPT_MIGRATION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "-1", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of live migration actions that the cluster is allowed "
@@ -408,7 +410,18 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, "integer", NULL,
+        /* @TODO This is actually ignored if not strictly positive. We should
+         * overhaul value types in Pacemaker Explained. There are lots of
+         * inaccurate ranges (assumptions of 32-bit width, "nonnegative" when
+         * positive is required, etc.).
+         *
+         * Maybe a single integer type with the allowed range specified would be
+         * better.
+         *
+         * Drop the PCMK_VALUE_NONNEGATIVE_INTEGER constant if we do this before
+         * a release.
+         */
+        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
         "500", pcmk__valid_positive_int,
         pcmk__opt_based,
         N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
@@ -419,14 +432,14 @@ static pcmk__cluster_option_t cluster_options[] = {
 
     // Orphans and stopping
     {
-        PCMK_OPT_STOP_ALL_RESOURCES, NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ALL_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether the cluster should stop all active resources"),
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to stop resources that were removed from the "
@@ -434,7 +447,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, "boolean", NULL,
+        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to cancel recurring actions removed from the "
@@ -442,7 +455,7 @@ static pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK__OPT_REMOVE_AFTER_STOP, NULL, "boolean", NULL,
+        PCMK__OPT_REMOVE_AFTER_STOP, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to remove stopped resources from the executor"),
@@ -452,21 +465,21 @@ static pcmk__cluster_option_t cluster_options[] = {
 
     // Storing inputs
     {
-        PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, "integer", NULL,
+        PCMK_OPT_PE_ERROR_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
         "-1", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in errors to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
-        PCMK_OPT_PE_WARN_SERIES_MAX, NULL, "integer", NULL,
+        PCMK_OPT_PE_WARN_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
         "5000", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs resulting in warnings to save"),
         N_("Zero to disable, -1 to store unlimited."),
     },
     {
-        PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, "integer", NULL,
+        PCMK_OPT_PE_INPUT_SERIES_MAX, NULL, PCMK_VALUE_INTEGER, NULL,
         "4000", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The number of scheduler inputs without errors or warnings to save"),
@@ -475,7 +488,7 @@ static pcmk__cluster_option_t cluster_options[] = {
 
     // Node health
     {
-        PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, "select",
+        PCMK_OPT_NODE_HEALTH_STRATEGY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_NONE ", " PCMK_VALUE_MIGRATE_ON_RED ", "
                 PCMK_VALUE_ONLY_GREEN ", " PCMK_VALUE_PROGRESSIVE ", "
                 PCMK_VALUE_CUSTOM,
@@ -487,7 +500,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "\"green\".")
     },
     {
-        PCMK_OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_BASE, NULL, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("Base health score assigned to a node"),
@@ -495,7 +508,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_GREEN, NULL, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -504,7 +517,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_YELLOW, NULL, PCMK_VALUE_SCORE, NULL,
         "0", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -513,7 +526,7 @@ static pcmk__cluster_option_t cluster_options[] = {
             "\"progressive\"."),
     },
     {
-        PCMK_OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
+        PCMK_OPT_NODE_HEALTH_RED, NULL, PCMK_VALUE_SCORE, NULL,
         "-INFINITY", pcmk__valid_int,
         pcmk__opt_schedulerd,
         N_("The score to use for a node health attribute whose value is "
@@ -524,7 +537,7 @@ static pcmk__cluster_option_t cluster_options[] = {
 
     // Placement strategy
     {
-        PCMK_OPT_PLACEMENT_STRATEGY, NULL, "select",
+        PCMK_OPT_PLACEMENT_STRATEGY, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_DEFAULT ", " PCMK_VALUE_UTILIZATION ", "
                 PCMK_VALUE_MINIMAL ", " PCMK_VALUE_BALANCED,
         PCMK_VALUE_DEFAULT, pcmk__valid_placement_strategy,
@@ -536,6 +549,524 @@ static pcmk__cluster_option_t cluster_options[] = {
     { NULL, },
 };
 
+static const pcmk__cluster_option_t fencing_params[] = {
+    /* name, old name, type, allowed values,
+     * default value, validator,
+     * flags,
+     * short description,
+     * long description
+     */
+    {
+        PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
+        "port", NULL,
+        pcmk__opt_advanced,
+        N_("An alternate parameter to supply instead of 'port'"),
+        N_("Some devices do not support the standard 'port' parameter or may "
+            "provide additional ones. Use this to specify an alternate, device-"
+            "specific, parameter that should indicate the machine to be "
+            "fenced. A value of \"none\" can be used to tell the cluster not "
+            "to supply any additional parameters."),
+    },
+    {
+        PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("A mapping of node names to port numbers for devices that do not "
+            "support node names."),
+        N_("For example, \"node1:1;node2:2,3\" would tell the cluster to use "
+            "port 1 for node1 and ports 2 and 3 for node2."),
+    },
+    {
+        PCMK_STONITH_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Nodes targeted by this device"),
+        N_("Comma-separated list of nodes that can be targeted by this device "
+           "(for example, \"node1,node2,node3\"). If pcmk_host_check is "
+           "\"static-list\", either this or pcmk_host_map must be set."),
+    },
+    {
+        PCMK_STONITH_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
+            PCMK_VALUE_DYNAMIC_LIST ", " PCMK_VALUE_STATIC_LIST ", "
+            PCMK_VALUE_STATUS ", " PCMK_VALUE_NONE,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("How to determine which nodes can be targeted by the device"),
+        N_("Use \"dynamic-list\" to query the device via the 'list' command; "
+            "\"static-list\" to check the pcmk_host_list attribute; "
+            "\"status\" to query the device via the 'status' command; or "
+            "\"none\" to assume every device can fence every node. "
+            "The default value is \"static-list\" if pcmk_host_map or "
+            "pcmk_host_list is set; otherwise \"dynamic-list\" if the device "
+            "supports the list operation; otherwise \"status\" if the device "
+            "supports the status operation; otherwise \"none\""),
+    },
+    {
+        PCMK_STONITH_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
+        "0s", NULL,
+        pcmk__opt_none,
+        N_("Enable a delay of no more than the time specified before executing "
+            "fencing actions."),
+        N_("Enable a delay of no more than the time specified before executing "
+            "fencing actions. Pacemaker derives the overall delay by taking "
+            "the value of pcmk_delay_base and adding a random delay value such "
+            "that the sum is kept below this maximum."),
+    },
+    {
+        PCMK_STONITH_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
+        "0s", NULL,
+        pcmk__opt_none,
+        N_("Enable a base delay for fencing actions and specify base delay "
+            "value."),
+        N_("This enables a static delay for fencing actions, which can help "
+            "avoid \"death matches\" where two nodes try to fence each other "
+            "at the same time. If pcmk_delay_max is also used, a random delay "
+            "will be added such that the total delay is kept below that value. "
+            "This can be set to a single time value to apply to any node "
+            "targeted by this device (useful if a separate device is "
+            "configured for each target), or to a node map (for example, "
+            "\"node1:1s;node2:5\") to set a different value for each target."),
+    },
+    {
+        PCMK_STONITH_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        "1", NULL,
+        pcmk__opt_none,
+        N_("The maximum number of actions can be performed in parallel on this "
+            "device"),
+        N_("Cluster property concurrent-fencing=\"true\" needs to be "
+            "configured first. Then use this to specify the maximum number of "
+            "actions can be performed in parallel on this device. A value of "
+            "-1 means an unlimited number of actions can be performed in "
+            "parallel."),
+    },
+    {
+        "pcmk_reboot_action", NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_ACTION_REBOOT, NULL,
+        pcmk__opt_advanced,
+        N_("An alternate command to run instead of 'reboot'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'reboot' action."),
+    },
+    {
+        "pcmk_reboot_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_advanced,
+        N_("Specify an alternate timeout to use for 'reboot' actions instead "
+            "of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'reboot' actions."),
+    },
+    {
+        "pcmk_reboot_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "2", NULL,
+        pcmk__opt_advanced,
+        N_("The maximum number of times to try the 'reboot' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'reboot' action before giving up."),
+    },
+    {
+        "pcmk_off_action", NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_ACTION_OFF, NULL,
+        pcmk__opt_advanced,
+        N_("An alternate command to run instead of 'off'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'off' action."),
+    },
+    {
+        "pcmk_off_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_advanced,
+        N_("Specify an alternate timeout to use for 'off' actions instead of "
+            "stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'off' actions."),
+    },
+    {
+        "pcmk_off_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "2", NULL,
+        pcmk__opt_advanced,
+        N_("The maximum number of times to try the 'off' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'off' action before giving up."),
+    },
+    {
+        "pcmk_on_action", NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_ACTION_ON, NULL,
+        pcmk__opt_advanced,
+        N_("An alternate command to run instead of 'on'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'on' action."),
+    },
+    {
+        "pcmk_on_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_advanced,
+        N_("Specify an alternate timeout to use for 'on' actions instead of "
+            "stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'on' actions."),
+    },
+    {
+        "pcmk_on_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "2", NULL,
+        pcmk__opt_advanced,
+        N_("The maximum number of times to try the 'on' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'on' action before giving up."),
+    },
+    {
+        "pcmk_list_action", NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_ACTION_LIST, NULL,
+        pcmk__opt_advanced,
+        N_("An alternate command to run instead of 'list'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'list' action."),
+    },
+    {
+        "pcmk_list_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_advanced,
+        N_("Specify an alternate timeout to use for 'list' actions instead of "
+            "stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'list' actions."),
+    },
+    {
+        "pcmk_list_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "2", NULL,
+        pcmk__opt_advanced,
+        N_("The maximum number of times to try the 'list' command within the "
+            "timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'list' action before giving up."),
+    },
+    {
+        "pcmk_monitor_action", NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_ACTION_MONITOR, NULL,
+        pcmk__opt_advanced,
+        N_("An alternate command to run instead of 'monitor'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'monitor' action."),
+    },
+    {
+        "pcmk_monitor_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_advanced,
+        N_("Specify an alternate timeout to use for 'monitor' actions instead "
+            "of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'monitor' actions."),
+    },
+    {
+        "pcmk_monitor_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "2", NULL,
+        pcmk__opt_advanced,
+        N_("The maximum number of times to try the 'monitor' command within "
+            "the timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'monitor' action before giving up."),
+    },
+    {
+        "pcmk_status_action", NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_ACTION_STATUS, NULL,
+        pcmk__opt_advanced,
+        N_("An alternate command to run instead of 'status'"),
+        N_("Some devices do not support the standard commands or may provide "
+            "additional ones. Use this to specify an alternate, device-"
+            "specific, command that implements the 'status' action."),
+    },
+    {
+        "pcmk_status_timeout", NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_advanced,
+        N_("Specify an alternate timeout to use for 'status' actions instead "
+            "of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal. "
+            "Use this to specify an alternate, device-specific, timeout for "
+            "'status' actions."),
+    },
+    {
+        "pcmk_status_retries", NULL, PCMK_VALUE_INTEGER, NULL,
+        "2", NULL,
+        pcmk__opt_advanced,
+        N_("The maximum number of times to try the 'status' command within "
+            "the timeout period"),
+        N_("Some devices do not support multiple connections. Operations may "
+            "\"fail\" if the device is busy with another task. In that case, "
+            "Pacemaker will automatically retry the operation if there is time "
+            "remaining. Use this option to alter the number of times Pacemaker "
+            "tries a 'status' action before giving up."),
+    },
+
+    { NULL, },
+};
+
+static const pcmk__cluster_option_t primitive_meta[] = {
+    /* name, old name, type, allowed values,
+     * default value, validator,
+     * flags,
+     * short description,
+     * long description
+     */
+    {
+        PCMK_META_PRIORITY, NULL, PCMK_VALUE_SCORE, NULL,
+        "0", NULL,
+        pcmk__opt_none,
+        N_("Resource assignment priority"),
+        N_("If not all resources can be active, the cluster will stop "
+            "lower-priority resources in order to keep higher-priority ones "
+            "active."),
+    },
+    {
+        PCMK_META_CRITICAL, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_TRUE, NULL,
+        pcmk__opt_none,
+        N_("Default value for influence in colocation constraints"),
+        N_("Use this value as the default for influence in all colocation "
+            "constraints involving this resource, as well as in the implicit "
+            "colocation constraints created if this resource is in a group."),
+    },
+    {
+        PCMK_META_TARGET_ROLE, NULL, PCMK_VALUE_SELECT,
+            PCMK_ROLE_STOPPED ", " PCMK_ROLE_STARTED ", "
+            PCMK_ROLE_UNPROMOTED ", " PCMK_ROLE_PROMOTED,
+        PCMK_ROLE_STARTED, NULL,
+        pcmk__opt_none,
+        N_("State the cluster should attempt to keep this resource in"),
+        N_("\"Stopped\" forces the resource to be stopped. "
+            "\"Started\" allows the resource to be started (and in the case of "
+            "promotable clone resources, promoted if appropriate). "
+            "\"Unpromoted\" allows the resource to be started, but only in the "
+            "unpromoted role if the resource is promotable. "
+            "\"Promoted\" is equivalent to \"Started\"."),
+    },
+    {
+        PCMK_META_IS_MANAGED, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_TRUE, NULL,
+        pcmk__opt_none,
+        N_("Whether the cluster is allowed to actively change the resource's "
+            "state"),
+        N_("If false, the cluster will not start, stop, promote, or demote the "
+            "resource on any node. Recurring actions for the resource are "
+            "unaffected. If true, a true value for the maintenance-mode "
+            "cluster option, the maintenance node attribute, or the "
+            "maintenance resource meta-attribute overrides this."),
+    },
+    {
+        PCMK_META_MAINTENANCE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_FALSE, NULL,
+        pcmk__opt_none,
+        N_("If true, the cluster will not schedule any actions involving the "
+            "resource"),
+        N_("If true, the cluster will not start, stop, promote, or demote the "
+            "resource on any node, and will pause any recurring monitors "
+            "(except those specifying role as \"Stopped\"). If false, a true "
+            "value for the maintenance-mode cluster option or maintenance node "
+            "attribute overrides this."),
+    },
+    {
+        PCMK_META_RESOURCE_STICKINESS, NULL, PCMK_VALUE_SCORE, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Score to add to the current node when a resource is already "
+            "active"),
+        N_("Score to add to the current node when a resource is already "
+            "active. This allows running resources to stay where they are, "
+            "even if they would be placed elsewhere if they were being started "
+            "from a stopped state. "
+            "The default is 1 for individual clone instances, and 0 for all "
+            "other resources."),
+    },
+    {
+        PCMK_META_REQUIRES, NULL, PCMK_VALUE_SELECT,
+            PCMK_VALUE_NOTHING ", " PCMK_VALUE_QUORUM ", "
+            PCMK_VALUE_FENCING ", " PCMK_VALUE_UNFENCING,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Conditions under which the resource can be started"),
+        N_("Conditions under which the resource can be started. "
+            "\"nothing\" means the cluster can always start this resource. "
+            "\"quorum\" means the cluster can start this resource only if a "
+            "majority of the configured nodes are active. "
+            "\"fencing\" means the cluster can start this resource only if a "
+            "majority of the configured nodes are active and any failed or "
+            "unknown nodes have been fenced. "
+            "\"unfencing\" means the cluster can start this resource only if "
+            "a majority of the configured nodes are active and any failed or "
+            "unknown nodes have been fenced, and only on nodes that have been "
+            "unfenced. "
+            "The default is \"quorum\" for resources with a class of stonith; "
+            "otherwise, \"unfencing\" if unfencing is active in the cluster; "
+            "otherwise, \"fencing\" if the stonith-enabled cluster option is "
+            "true; "
+            "otherwise, \"quorum\"."),
+    },
+    {
+        PCMK_META_MIGRATION_THRESHOLD, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_VALUE_INFINITY, NULL,
+        pcmk__opt_none,
+        N_("Number of failures on a node before the resource becomes "
+            "ineligible to run there."),
+        N_("Number of failures that may occur for this resource on a node, "
+            "before that node is marked ineligible to host this resource. A "
+            "value of 0 indicates that this feature is disabled (the node will "
+            "never be marked ineligible). By contrast, the cluster treats "
+            "\"INFINITY\" (the default) as a very large but finite number. "
+            "This option has an effect only if the failed operation specifies "
+            "its on-fail attribute as \"restart\" (the default), and "
+            "additionally for failed start operations, if the "
+            "start-failure-is-fatal cluster property is set to false."),
+    },
+    {
+        PCMK_META_FAILURE_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        "0", NULL,
+        pcmk__opt_none,
+        N_("Number of seconds before acting as if a failure had not occurred"),
+        N_("Number of seconds after a failed action for this resource before "
+            "acting as if the failure had not occurred, and potentially "
+            "allowing the resource back to the node on which it failed. "
+            "A value of 0 indicates that this feature is disabled."),
+    },
+    {
+        PCMK_META_MULTIPLE_ACTIVE, NULL, PCMK_VALUE_SELECT,
+            PCMK_VALUE_BLOCK ", " PCMK_VALUE_STOP_ONLY ", "
+            PCMK_VALUE_STOP_START ", " PCMK_VALUE_STOP_UNEXPECTED,
+        PCMK_VALUE_STOP_START, NULL,
+        pcmk__opt_none,
+        N_("What to do if the cluster finds the resource active on more than "
+            "one node"),
+        N_("What to do if the cluster finds the resource active on more than "
+            "one node. "
+            "\"block\" means to mark the resource as unmanaged. "
+            "\"stop_only\" means to stop all active instances of this resource "
+            "and leave them stopped. "
+            "\"stop_start\" means to stop all active instances of this "
+            "resource and start the resource in one location only. "
+            "\"stop_unexpected\" means to stop all active instances of this "
+            "resource except where the resource should be active. (This should "
+            "be used only when extra instances are not expected to disrupt "
+            "existing instances, and the resource agent's monitor of an "
+            "existing instance is capable of detecting any problems that could "
+            "be caused. Note that any resources ordered after this one will "
+            "still need to be restarted.)"),
+    },
+    {
+        PCMK_META_ALLOW_MIGRATE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Whether the cluster should try to \"live migrate\" this resource "
+            "when it needs to be moved"),
+        N_("Whether the cluster should try to \"live migrate\" this resource "
+            "when it needs to be moved. "
+            "The default is true for ocf:pacemaker:remote resources, and false "
+            "otherwise."),
+    },
+    {
+        PCMK_META_ALLOW_UNHEALTHY_NODES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_FALSE, NULL,
+        pcmk__opt_none,
+        N_("Whether the resource should be allowed to run on a node even if "
+            "the node's health score would otherwise prevent it"),
+        NULL,
+    },
+    {
+        PCMK_META_CONTAINER_ATTRIBUTE_TARGET, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Where to check user-defined node attributes"),
+        N_("Whether to check user-defined node attributes on the physical host "
+            "where a container is running or on the local node. This is "
+            "usually set for a bundle resource and inherited by the bundle's "
+            "primitive resource. "
+            "A value of \"host\" means to check user-defined node attributes "
+            "on the underlying physical host. Any other value means to check "
+            "user-defined node attributes on the local node (for a bundled "
+            "primitive resource, this is the bundle node)."),
+    },
+    {
+        PCMK_META_REMOTE_NODE, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("Name of the Pacemaker Remote guest node this resource is "
+            "associated with, if any"),
+        N_("Name of the Pacemaker Remote guest node this resource is "
+            "associated with, if any. If specified, this both enables the "
+            "resource as a guest node and defines the unique name used to "
+            "identify the guest node. The guest must be configured to run the "
+            "Pacemaker Remote daemon when it is started. "
+            "WARNING: This value cannot overlap with any resource or node "
+            "IDs."),
+    },
+    {
+        PCMK_META_REMOTE_ADDR, NULL, PCMK_VALUE_STRING, NULL,
+        NULL, NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, the IP address or hostname used to "
+            "connect to the guest via Pacemaker Remote"),
+        N_("If remote-node is specified, the IP address or hostname used to "
+            "connect to the guest via Pacemaker Remote. The Pacemaker Remote "
+            "daemon on the guest must be configured to accept connections on "
+            "this address. "
+            "The default is the value of the remote-node meta-attribute."),
+    },
+    {
+        PCMK_META_REMOTE_PORT, NULL, PCMK_VALUE_PORT, NULL,
+        "3121", NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, port on the guest used for its "
+            "Pacemaker Remote connection"),
+        N_("If remote-node is specified, the port on the guest used for its "
+            "Pacemaker Remote connection. The Pacemaker Remote daemon on the "
+            "guest must be configured to listen on this port."),
+    },
+    {
+        PCMK_META_REMOTE_CONNECT_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
+        "60s", NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, how long before a pending Pacemaker "
+            "Remote guest connection times out."),
+        NULL,
+    },
+    {
+        PCMK_META_REMOTE_ALLOW_MIGRATE, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_TRUE, NULL,
+        pcmk__opt_none,
+        N_("If remote-node is specified, this acts as the allow-migrate "
+            "meta-attribute for the implicit remote connection resource "
+            "(ocf:pacemaker:remote)."),
+        NULL,
+    },
+
+    { NULL, },
+};
 
 /*
  * Environment variable option handling
@@ -786,43 +1317,6 @@ pcmk__valid_percentage(const char *value)
 
 /*!
  * \internal
- * \brief Check whether a string represents a valid script
- *
- * Valid values include \c /dev/null and paths of executable regular files
- *
- * \param[in] value  String to validate
- *
- * \return \c true if \p value is a valid script, or \c false otherwise
- */
-bool
-pcmk__valid_script(const char *value)
-{
-    struct stat st;
-
-    if (pcmk__str_eq(value, "/dev/null", pcmk__str_none)) {
-        return true;
-    }
-
-    if (stat(value, &st) != 0) {
-        crm_err("Script %s does not exist", value);
-        return false;
-    }
-
-    if (S_ISREG(st.st_mode) == 0) {
-        crm_err("Script %s is not a regular file", value);
-        return false;
-    }
-
-    if ((st.st_mode & (S_IXUSR | S_IXGRP)) == 0) {
-        crm_err("Script %s is not executable", value);
-        return false;
-    }
-
-    return true;
-}
-
-/*!
- * \internal
  * \brief Check whether a string represents a valid placement strategy
  *
  * \param[in] value  String to validate
@@ -958,6 +1452,56 @@ pcmk__output_cluster_options(pcmk__output_t *out, const char *name,
 
 /*!
  * \internal
+ * \brief Output primitive resource meta-attributes as OCF-like XML
+ *
+ * \param[in,out] out         Output object
+ * \param[in]     name        Fake resource agent name for the option list
+ * \param[in]     desc_short  Short description of the option list
+ * \param[in]     desc_long   Long description of the option list
+ * \param[in]     all         If \c true, output all options; otherwise, exclude
+ *                            advanced and deprecated options. This is always
+ *                            treated as true for XML output objects.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__output_primitive_meta(pcmk__output_t *out, const char *name,
+                            const char *desc_short, const char *desc_long,
+                            bool all)
+{
+    return out->message(out, "option-list", name, desc_short, desc_long,
+                        pcmk__opt_none, primitive_meta, all);
+}
+
+/*!
+ * \internal
+ * \brief Output fence device common parameter metadata as OCF-like XML
+ *
+ * These are parameters that are available for all fencing resources, regardless
+ * of type. They are processed by Pacemaker, rather than by the fence agent or
+ * the fencing library.
+ *
+ * \param[in,out] out         Output object
+ * \param[in]     name        Fake resource agent name for the option list
+ * \param[in]     desc_short  Short description of the option list
+ * \param[in]     desc_long   Long description of the option list
+ * \param[in]     all         If \c true, output all options; otherwise, exclude
+ *                            advanced and deprecated options. This is always
+ *                            treated as true for XML output objects.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__output_fencing_params(pcmk__output_t *out, const char *name,
+                          const char *desc_short, const char *desc_long,
+                          bool all)
+{
+    return out->message(out, "option-list", name, desc_short, desc_long,
+                        pcmk__opt_none, fencing_params, all);
+}
+
+/*!
+ * \internal
  * \brief Output a list of cluster options for a daemon
  *
  * \brief[in,out] out         Output object
@@ -981,13 +1525,19 @@ pcmk__daemon_metadata(pcmk__output_t *out, const char *name,
     GString *metadata_s = NULL;
 
     int rc = pcmk__output_new(&tmp_out, "xml", "/dev/null", NULL);
+
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
     pcmk__output_set_legacy_xml(tmp_out);
-    pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
-                                 (uint32_t) filter, true);
+
+    if (filter == pcmk__opt_fencing) {
+        pcmk__output_fencing_params(tmp_out, name, desc_short, desc_long, true);
+    } else {
+        pcmk__output_cluster_options(tmp_out, name, desc_short, desc_long,
+                                     (uint32_t) filter, true);
+    }
 
     tmp_out->finish(tmp_out, CRM_EX_OK, false, (void **) &top);
     metadata = pcmk__xe_first_child(top, PCMK_XE_RESOURCE_AGENT, NULL, NULL);

@@ -498,7 +498,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             name = crm_element_value(operation, PCMK_XA_NAME);
             role = crm_element_value(operation, PCMK_XA_ROLE);
             if (!pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
-                || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+                || !pcmk__strcase_any_of(role, PCMK_ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL)) {
                 continue;
             }
@@ -545,7 +545,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         if (!pcmk__str_eq(name, PCMK_ACTION_PROMOTE, pcmk__str_none)
             && ((interval_ms == 0U)
                 || !pcmk__str_eq(name, PCMK_ACTION_MONITOR, pcmk__str_none)
-                || !pcmk__strcase_any_of(role, PCMK__ROLE_PROMOTED,
+                || !pcmk__strcase_any_of(role, PCMK_ROLE_PROMOTED,
                                          PCMK__ROLE_PROMOTED_LEGACY, NULL))) {
 
             pcmk__config_err("Resetting '" PCMK_META_ON_FAIL "' for %s %s "

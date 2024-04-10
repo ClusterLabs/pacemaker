@@ -62,3 +62,92 @@ pcmk_list_cluster_options(xmlNode **xml, bool all)
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief List common fencing resource parameters
+ *
+ * These are parameters that are available for all fencing resources, regardless
+ * of type. They are processed by Pacemaker, rather than by the fence agent or
+ * the fencing library.
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__list_fencing_params(pcmk__output_t *out, bool all)
+{
+    const char *name = "fence-attributes";
+    const char *desc_short = "Fencing resource common parameters";
+    const char *desc_long = NULL;
+
+    desc_long = "Special parameters that are available for all fencing "
+                "resources, regardless of type. They are processed by "
+                "Pacemaker, rather than by the fence agent or the fencing "
+                "library.";
+
+    return pcmk__output_fencing_params(out, name, desc_short, desc_long, all);
+}
+
+// Documented in header
+int
+pcmk_list_fencing_params(xmlNode **xml, bool all)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__list_fencing_params(out, all);
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief List meta-attributes applicable to primitive resources as OCF-like XML
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__list_primitive_meta(pcmk__output_t *out, bool all)
+{
+    const char *name = "primitive-meta";
+    const char *desc_short = "Primitive meta-attributes";
+    const char *desc_long = "Meta-attributes applicable to primitive resources";
+
+    return pcmk__output_primitive_meta(out, name, desc_short, desc_long, all);
+}
+
+// Documented in header
+int
+pcmk_list_primitive_meta(xmlNode **xml, bool all)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__list_primitive_meta(out, all);
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    return rc;
+}

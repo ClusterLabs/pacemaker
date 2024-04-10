@@ -412,12 +412,39 @@ int pcmk_list_standards(xmlNodePtr *xml);
  * These are options that affect the entire cluster.
  *
  * \param[in,out] xml  The destination for the result, as an XML tree
+ * \param[in]     all  If \c true, include advanced and deprecated options
+ *                     (currently always treated as true)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_cluster_options(xmlNode **xml, bool all);
+
+/*!
+ * \brief List common fencing resource parameters
+ *
+ * These are parameters that are available for all fencing resources, regardless
+ * of type. They are processed by Pacemaker, rather than by the fence agent or
+ * the fencing library.
+ *
+ * \param[in,out] xml  The destination for the result, as an XML tree
+ * \param[in]     all  If \c true, include advanced and deprecated options
+ *                     (currently always treated as true)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_fencing_params(xmlNode **xml, bool all);
+
+/*!
+ * \internal
+ * \brief List meta-attributes applicable to primitive resources as OCF-like XML
+ *
+ * \param[in,out] out  Output object
  * \param[in]     all  If \c true, include advanced and deprecated options (this
  *                     is always treated as true for XML output objects)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_list_cluster_options(xmlNode **xml, bool all);
+int pcmk_list_primitive_meta(xmlNode **xml, bool all);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
