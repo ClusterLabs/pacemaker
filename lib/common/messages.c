@@ -77,7 +77,9 @@ create_request_adv(const char *task, xmlNode *msg_data,
     }
 
     if (msg_data != NULL) {
-        add_message_xml(request, PCMK__XE_CRM_XML, msg_data);
+        xmlNode *wrapper = pcmk__xe_create(request, PCMK__XE_CRM_XML);
+
+        pcmk__xml_copy(wrapper, msg_data);
     }
     free(reference);
     free(true_from);
@@ -146,27 +148,12 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
     }
 
     if (xml_response_data != NULL) {
-        add_message_xml(reply, PCMK__XE_CRM_XML, xml_response_data);
+        xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CRM_XML);
+
+        pcmk__xml_copy(wrapper, xml_response_data);
     }
 
     return reply;
-}
-
-xmlNode *
-get_message_xml(const xmlNode *msg, const char *field)
-{
-    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
-
-    return pcmk__xe_first_child(child, NULL, NULL, NULL);
-}
-
-gboolean
-add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
-{
-    xmlNode *holder = pcmk__xe_create(msg, field);
-
-    pcmk__xml_copy(holder, xml);
-    return TRUE;
 }
 
 /*!
@@ -293,3 +280,28 @@ pcmk__reset_request(pcmk__request_t *request)
 
     pcmk__reset_result(&(request->result));
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+gboolean
+add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
+{
+    xmlNode *holder = pcmk__xe_create(msg, field);
+
+    pcmk__xml_copy(holder, xml);
+    return TRUE;
+}
+
+xmlNode *
+get_message_xml(const xmlNode *msg, const char *field)
+{
+    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
+
+    return pcmk__xe_first_child(child, NULL, NULL, NULL);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

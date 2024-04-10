@@ -149,7 +149,11 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
     const char *session = crm_element_value(xml, PCMK__XA_LRMD_IPC_SESSION);
     const char *msg_type = crm_element_value(xml, PCMK__XA_LRMD_IPC_OP);
-    xmlNode *msg = get_message_xml(xml, PCMK__XE_LRMD_IPC_MSG);
+
+    xmlNode *wrapper = pcmk__xe_first_child(xml, PCMK__XE_LRMD_IPC_MSG, NULL,
+                                            NULL);
+    xmlNode *msg = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
     pcmk__client_t *ipc_client;
     int rc = pcmk_rc_ok;
 
@@ -225,6 +229,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
     pcmk__client_t *ipc_proxy = pcmk__find_client_by_id(client->userdata);
+    xmlNode *wrapper = NULL;
     xmlNode *request = NULL;
     xmlNode *msg = NULL;
 
@@ -270,11 +275,13 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add(msg, PCMK__XA_LRMD_IPC_USER, client->user);
     crm_xml_add_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, id);
     crm_xml_add_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, flags);
-    add_message_xml(msg, PCMK__XE_LRMD_IPC_MSG, request);
-    lrmd_server_send_notify(ipc_proxy, msg);
-    free_xml(request);
-    free_xml(msg);
 
+    wrapper = pcmk__xe_create(msg, PCMK__XE_LRMD_IPC_MSG);
+    xmlAddChild(wrapper, request);
+
+    lrmd_server_send_notify(ipc_proxy, msg);
+
+    free_xml(msg);
     return 0;
 }
 

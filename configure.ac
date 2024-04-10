@@ -1225,6 +1225,25 @@ AM_CONDITIONAL([WRAPPABLE_UNAME], [test x"$WRAPPABLE_UNAME" = x"yes"])
 cc_restore_flags
 
 dnl ========================================================================
+dnl Byte size
+dnl ========================================================================
+
+# Compile-time assert hack
+# https://jonjagger.blogspot.com/2017/07/compile-time-assertions-in-c.html
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <limits.h>]],
+                                   [[
+                                        switch (0) {
+                                            case 0:
+                                            case (CHAR_BIT == 8):
+                                                break;
+                                        }
+                                   ]])],
+                  [],
+                  [AC_MSG_FAILURE(m4_normalize([Pacemaker is not supported on
+                                                platforms where char is not 8
+                                                bits]))])
+
+dnl ========================================================================
 dnl Structures
 dnl ========================================================================
 

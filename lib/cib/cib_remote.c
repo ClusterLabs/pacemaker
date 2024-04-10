@@ -189,7 +189,9 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         /* do nothing more */
 
     } else if (!(call_options & cib_discard_reply)) {
-        xmlNode *tmp = get_message_xml(op_reply, PCMK__XA_CIB_CALLDATA);
+        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
+                                                NULL, NULL);
+        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         if (tmp == NULL) {
             crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);

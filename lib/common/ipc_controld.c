@@ -196,6 +196,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     struct controld_api_private_s *private = api->api_data;
     crm_exit_t status = CRM_EX_OK;
+    xmlNode *wrapper = NULL;
     xmlNode *msg_data = NULL;
     const char *value = NULL;
     pcmk_controld_api_reply_t reply_data = {
@@ -247,7 +248,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
     reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
-    msg_data = get_message_xml(reply, PCMK__XE_CRM_XML);
+
+    wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
+    msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (!strcmp(value, CRM_OP_REPROBE)) {
         reply_data.reply_type = pcmk_controld_reply_reprobe;

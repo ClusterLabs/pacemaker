@@ -42,21 +42,21 @@ stonith_send_broadcast_history(xmlNode *history,
                                const char *target)
 {
     xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
-    xmlNode *data = pcmk__xe_create(NULL, __func__);
+    xmlNode *wrapper = pcmk__xe_create(bcast, PCMK__XE_ST_CALLDATA);
+    xmlNode *call_data = pcmk__xe_create(wrapper, __func__);
 
-    if (target) {
-        crm_xml_add(data, PCMK__XA_ST_TARGET, target);
-    }
     crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
     crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
     crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
 
-    pcmk__xml_copy(data, history);
-    add_message_xml(bcast, PCMK__XA_ST_CALLDATA, data);
+    pcmk__xml_copy(call_data, history);
+    if (target != NULL) {
+        crm_xml_add(call_data, PCMK__XA_ST_TARGET, target);
+    }
+
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
 
-    free_xml(data);
     free_xml(bcast);
 }
 

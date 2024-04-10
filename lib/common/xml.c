@@ -104,21 +104,26 @@ pcmk__mark_xml_node_dirty(xmlNode *xml)
     set_parent_flag(xml, pcmk__xf_dirty);
 }
 
-// Clear flags on XML node and its children
-static void
-reset_xml_node_flags(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Clear flags on an XML node
+ *
+ * \param[in,out] xml        XML node whose flags to reset
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+reset_xml_node_flags(xmlNode *xml, void *user_data)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (nodepriv) {
-        nodepriv->flags = 0;
+    if (nodepriv != NULL) {
+        nodepriv->flags = pcmk__xf_none;
     }
-
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        reset_xml_node_flags(cIter);
-    }
+    return true;
 }
 
 // Set xpf_created flag on XML node and any children
@@ -325,21 +330,23 @@ pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
     return position;
 }
 
-// Remove all attributes marked as deleted from an XML node
-static void
-accept_attr_deletions(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Remove all attributes marked as deleted from an XML node
+ *
+ * \param[in,out] xml        XML node whose deleted attributes to remove
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+accept_attr_deletions(xmlNode *xml, void *user_data)
 {
-    // Clear XML node's flags
-    ((xml_node_private_t *) xml->_private)->flags = pcmk__xf_none;
-
-    // Remove this XML node's attributes that were marked as deleted
+    reset_xml_node_flags(xml, NULL);
     pcmk__xe_remove_matching_attrs(xml, pcmk__marked_as_deleted, NULL);
-
-    // Recursively do the same for this XML node's children
-    for (xmlNodePtr cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        accept_attr_deletions(cIter);
-    }
+    return true;
 }
 
 /*!
@@ -389,7 +396,7 @@ xml_accept_changes(xmlNode * xml)
     }
 
     docpriv->flags = pcmk__xf_none;
-    accept_attr_deletions(top);
+    pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
 }
 
 /*!
@@ -946,74 +953,6 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
 
 /*!
  * \internal
- * \brief Get consecutive bytes encoding non-ASCII UTF-8 characters
- *
- * \param[in] text  String to check
- *
- * \return Number of non-ASCII UTF-8 bytes at the beginning of \p text
- */
-static size_t
-utf8_bytes(const char *text)
-{
-    // Total number of consecutive bytes containing UTF-8 characters
-    size_t c_bytes = 0;
-
-    if (text == NULL) {
-        return 0;
-    }
-
-    /* UTF-8 uses one to four 8-bit bytes per character. The first byte
-     * indicates the width of the character. A byte beginning with a '0' bit is
-     * a one-byte ASCII character.
-     *
-     * A C byte is 8 bits on most systems, but this is not guaranteed.
-     *
-     * Count until we find an ASCII character or an invalid byte. Check bytes
-     * aligned with the C byte boundary.
-     */
-    for (const uint8_t *utf8_byte = (const uint8_t *) text;
-         (*utf8_byte & 0x80) != 0;
-         utf8_byte = (const uint8_t *) (text + c_bytes)) {
-
-        size_t utf8_bits = 0;
-
-        if ((*utf8_byte & 0xf0) == 0xf0) {
-            // Four-byte character (first byte: 11110xxx)
-            utf8_bits = 32;
-
-        } else if ((*utf8_byte & 0xe0) == 0xe0) {
-            // Three-byte character (first byte: 1110xxxx)
-            utf8_bits = 24;
-
-        } else if ((*utf8_byte & 0xc0) == 0xc0) {
-            // Two-byte character (first byte: 110xxxxx)
-            utf8_bits = 16;
-
-        } else {
-            crm_warn("Found invalid UTF-8 character %.2x",
-                     (unsigned char) *utf8_byte);
-            return c_bytes;
-        }
-
-        c_bytes += utf8_bits / CHAR_BIT;
-
-#if (CHAR_BIT != 8) // Coverity complains about dead code without this CPP guard
-        if ((utf8_bits % CHAR_BIT) > 0) {
-            c_bytes++;
-        }
-#endif  // CHAR_BIT != 8
-    }
-
-    for (int i = 0; i < c_bytes; i++) {
-        // Sanity-check that we haven't passed end of string as "non-ASCII"
-        CRM_ASSERT(text[i] != '\0');
-    }
-
-    return c_bytes;
-}
-
-/*!
- * \internal
  * \brief Check whether a string has XML special characters that must be escaped
  *
  * See \c pcmk__xml_escape() and \c pcmk__xml_escape_type for more details.
@@ -1032,14 +971,6 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
     }
 
     while (*text != '\0') {
-        // Don't escape any non-ASCII characters
-        size_t ubytes = utf8_bytes(text);
-
-        if (ubytes > 0) {
-            text += ubytes;
-            continue;
-        }
-
         switch (type) {
             case pcmk__xml_escape_text:
                 switch (*text) {
@@ -1051,7 +982,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                     case '\t':
                         break;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             return true;
                         }
                         break;
@@ -1066,7 +997,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                     case '"':
                         return true;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             return true;
                         }
                         break;
@@ -1090,7 +1021,7 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
                 break;
         }
 
-        text++;
+        text = g_utf8_next_char(text);
     }
     return false;
 }
@@ -1126,11 +1057,11 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 
     while (*text != '\0') {
         // Don't escape any non-ASCII characters
-        size_t ubytes = utf8_bytes(text);
+        if ((*text & 0x80) != 0) {
+            size_t bytes = g_utf8_next_char(text) - text;
 
-        if (ubytes > 0) {
-            g_string_append_len(copy, text, ubytes);
-            text += ubytes;
+            g_string_append_len(copy, text, bytes);
+            text += bytes;
             continue;
         }
 
@@ -1151,7 +1082,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                         g_string_append_c(copy, *text);
                         break;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             g_string_append_printf(copy, "&#x%.2X;", *text);
                         } else {
                             g_string_append_c(copy, *text);
@@ -1175,7 +1106,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                         g_string_append(copy, PCMK__XML_ENTITY_QUOT);
                         break;
                     default:
-                        if (!isprint(*text)) {
+                        if (g_ascii_iscntrl(*text)) {
                             g_string_append_printf(copy, "&#x%.2X;", *text);
                         } else {
                             g_string_append_c(copy, *text);
@@ -1209,7 +1140,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
                 break;
         }
 
-        text++;
+        text = g_utf8_next_char(text);
     }
     return g_string_free(copy, FALSE);
 }
@@ -1440,7 +1371,7 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     xmlNode *candidate = pcmk__xml_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
-    reset_xml_node_flags(candidate);
+    pcmk__xml_tree_foreach(candidate, reset_xml_node_flags, NULL);
 
     // Check whether ACLs allow the deletion
     pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
@@ -1480,7 +1411,6 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
 static void
 mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 {
-    xmlNode *cIter = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     CRM_CHECK(new_xml != NULL, return);
@@ -1502,11 +1432,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     xml_diff_attrs(old_xml, new_xml);
 
     // Check for differences in the original children
-    for (cIter = pcmk__xml_first_child(old_xml); cIter != NULL; ) {
-        xmlNode *old_child = cIter;
-        xmlNode *new_child = pcmk__xml_match(new_xml, cIter, true);
+    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
+         old_child = pcmk__xml_next(old_child)) {
 
-        cIter = pcmk__xml_next(cIter);
+        xmlNode *new_child = pcmk__xml_match(new_xml, old_child, true);
+
         if(new_child) {
             mark_xml_changes(old_child, new_child, TRUE);
 
@@ -1516,11 +1446,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     }
 
     // Check for moved or created children
-    for (cIter = pcmk__xml_first_child(new_xml); cIter != NULL; ) {
-        xmlNode *new_child = cIter;
-        xmlNode *old_child = pcmk__xml_match(old_xml, cIter, true);
+    for (xmlNode *new_child = pcmk__xml_first_child(new_xml); new_child != NULL;
+         new_child = pcmk__xml_next(new_child)) {
 
-        cIter = pcmk__xml_next(cIter);
+        xmlNode *old_child = pcmk__xml_match(old_xml, new_child, true);
+
         if(old_child == NULL) {
             // This is a newly created child
             nodepriv = new_child->_private;
@@ -1843,7 +1773,7 @@ replace_node(xmlNode *old, xmlNode *new)
     pcmk__mem_assert(new);
 
     // May be unnecessary but avoids slight changes to some test outputs
-    reset_xml_node_flags(new);
+    pcmk__xml_tree_foreach(new, reset_xml_node_flags, NULL);
 
     old = xmlReplaceNode(old, new);
 

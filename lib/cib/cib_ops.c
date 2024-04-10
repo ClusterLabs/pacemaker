@@ -529,114 +529,63 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 }
 
 static int
-update_cib_object(xmlNode * parent, xmlNode * update)
+update_cib_object(xmlNode *parent, xmlNode *update)
 {
     int result = pcmk_ok;
-    xmlNode *target = NULL;
-    xmlNode *a_child = NULL;
-    const char *replace = NULL;
-    const char *object_id = NULL;
-    const char *object_name = NULL;
+    const char *update_id = pcmk__xe_id(update);
 
-    CRM_CHECK(update != NULL, return -EINVAL);
-    CRM_CHECK(parent != NULL, return -EINVAL);
+    xmlNode *target = pcmk__xe_create(parent, (const char *) update->name);
 
-    object_name = (const char *) update->name;
-    CRM_CHECK(object_name != NULL, return -EINVAL);
-
-    object_id = pcmk__xe_id(update);
-    crm_trace("Processing update for <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
-              pcmk__s(object_id, ""),
-              ((object_id == NULL)? "" : "'"));
-
-    if (object_id == NULL) {
-        /*  placeholder object */
-        target = pcmk__xe_first_child(parent, object_name, NULL, NULL);
-
+    if (update_id != NULL) {
+        crm_trace("Processing update for <%s " PCMK_XA_ID "='%s'>",
+                  update->name, update_id);
     } else {
-        target = pcmk__xe_first_child(parent, object_name, PCMK_XA_ID,
-                                      object_id);
+        crm_trace("Processing update for <%s>", update->name);
     }
 
-    if (target == NULL) {
-        target = pcmk__xe_create(parent, object_name);
-    }
-
-    crm_trace("Found node <%s%s%s%s> to update", object_name,
-              ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
-              pcmk__s(object_id, ""),
-              ((object_id == NULL)? "" : "'"));
-
-    // @COMPAT PCMK__XA__REPLACE is deprecated since 2.1.6
-    replace = crm_element_value(update, PCMK__XA_REPLACE);
-    if (replace != NULL) {
-        int last = 0;
-        int len = strlen(replace);
-
-        for (int lpc = 0; lpc <= len; ++lpc) {
-            if (replace[lpc] == ',' || replace[lpc] == 0) {
-                if (last != lpc) {
-                    char *replace_item = strndup(replace + last, lpc - last);
-                    xmlNode *remove = NULL;
-
-                    if (replace_item == NULL) {
-                        return -errno;
-                    }
-
-                    remove = pcmk__xe_first_child(target, replace_item, NULL,
-                                                  NULL);
-
-                    if (remove != NULL) {
-                        crm_trace("Replacing node <%s> in <%s>",
-                                  replace_item, target->name);
-                        free_xml(remove);
-                    }
-                    free(replace_item);
-                }
-                last = lpc + 1;
-            }
-        }
-        pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
-        pcmk__xe_remove_attr(target, PCMK__XA_REPLACE);
-    }
+    /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. When we can break
+     * behavioral backward compatibility, drop this and drop the definition of
+     * PCMK__XA_REPLACE.
+     */
+    pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
 
     copy_in_properties(target, update);
 
     if (xml_acl_denied(target)) {
         crm_notice("Cannot update <%s " PCMK_XA_ID "=%s>",
-                   pcmk__s(object_name, "<null>"),
-                   pcmk__s(object_id, "<null>"));
+                   update->name, pcmk__s(update_id, "<null>"));
         return -EACCES;
     }
 
-    crm_trace("Processing children of <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
-              pcmk__s(object_id, ""),
-              ((object_id == NULL)? "" : "'"));
+    if (update_id != NULL) {
+        crm_trace("Processing children of <%s " PCMK_XA_ID "='%s'>",
+                  update->name, update_id);
+    } else {
+        crm_trace("Processing children of <%s>", update->name);
+    }
 
-    for (a_child = pcmk__xml_first_child(update); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
+    for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
+         child = pcmk__xml_next(child)) {
 
-        const char *child_id = pcmk__xe_id(a_child);
+        const char *child_id = pcmk__xe_id(child);
         int tmp_result = 0;
 
         if (child_id != NULL) {
             crm_trace("Updating child <%s " PCMK_XA_ID "='%s'>",
-                      a_child->name, child_id);
+                      child->name, child_id);
         } else {
-            crm_trace("Updating child <%s>", a_child->name);
+            crm_trace("Updating child <%s>", child->name);
         }
 
-        tmp_result = update_cib_object(target, a_child);
+        tmp_result = update_cib_object(target, child);
 
         /*  only the first error is likely to be interesting */
         if (tmp_result != pcmk_ok) {
             if (child_id != NULL) {
                 crm_err("Error updating child <%s " PCMK_XA_ID "='%s'>",
-                        a_child->name, child_id);
+                        child->name, child_id);
             } else {
-                crm_err("Error updating child <%s>", a_child->name);
+                crm_err("Error updating child <%s>", child->name);
             }
 
             if (result == pcmk_ok) {
@@ -645,10 +594,12 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         }
     }
 
-    crm_trace("Finished handling update for <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
-              pcmk__s(object_id, ""),
-              ((object_id == NULL)? "" : "'"));
+    if (update_id != NULL) {
+        crm_trace("Finished handling update for <%s " PCMK_XA_ID "='%s'>",
+                  update->name, update_id);
+    } else {
+        crm_trace("Finished handling update for <%s>", update->name);
+    }
 
     return result;
 }
@@ -658,7 +609,6 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
 {
     const char *object_name = NULL;
     const char *object_id = NULL;
-    xmlNode *equiv_node = NULL;
 
     if ((parent == NULL) || (new_obj == NULL)) {
         return -EINVAL;
@@ -670,22 +620,18 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     }
 
     object_id = pcmk__xe_id(new_obj);
-
-    crm_trace("Processing creation of <%s%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " " PCMK_XA_ID "='"),
-              pcmk__s(object_id, ""),
-              ((object_id == NULL)? "" : "'"));
-
-    if (object_id == NULL) {
-        equiv_node = pcmk__xe_first_child(parent, object_name, NULL, NULL);
-    } else {
-        equiv_node = pcmk__xe_first_child(parent, object_name, PCMK_XA_ID,
-                                          object_id);
-    }
-    if (equiv_node != NULL) {
+    if (pcmk__xe_first_child(parent, object_name,
+                             ((object_id != NULL)? PCMK_XA_ID : NULL),
+                             object_id)) {
         return -EEXIST;
     }
 
+    if (object_id != NULL) {
+        crm_trace("Processing creation of <%s " PCMK_XA_ID "='%s'>",
+                  object_name, object_id);
+    } else {
+        crm_trace("Processing creation of <%s>", object_name);
+    }
     return update_cib_object(parent, new_obj);
 }
 

@@ -168,8 +168,10 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     crm_xml_add_int(reply, PCMK__XA_CIB_RC, rc);
 
     if (call_data != NULL) {
+        xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CIB_CALLDATA);
+
         crm_trace("Attaching reply output");
-        add_message_xml(reply, PCMK__XA_CIB_CALLDATA, call_data);
+        pcmk__xml_copy(wrapper, call_data);
     }
 
     crm_log_xml_explicit(reply, "cib:reply");
@@ -424,7 +426,10 @@ process_ping_reply(xmlNode *reply)
     uint64_t seq = 0;
     const char *host = crm_element_value(reply, PCMK__XA_SRC);
 
-    xmlNode *pong = get_message_xml(reply, PCMK__XA_CIB_CALLDATA);
+    xmlNode *wrapper = pcmk__xe_first_child(reply, PCMK__XE_CIB_CALLDATA, NULL,
+                                            NULL);
+    xmlNode *pong = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
     const char *seq_s = crm_element_value(pong, PCMK__XA_CIB_PING_ID);
     const char *digest = crm_element_value(pong, PCMK__XA_DIGEST);
 
@@ -460,7 +465,10 @@ process_ping_reply(xmlNode *reply)
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *remote_cib = get_message_xml(pong, PCMK__XA_CIB_CALLDATA);
+            xmlNode *wrapper = pcmk__xe_first_child(pong, PCMK__XE_CIB_CALLDATA,
+                                                    NULL, NULL);
+            xmlNode *remote_cib = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
             const char *admin_epoch_s = NULL;
             const char *epoch_s = NULL;
             const char *num_updates_s = NULL;
@@ -981,6 +989,8 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         const char *digest = NULL;
         int format = 1;
 
+        xmlNode *wrapper = NULL;
+
         CRM_LOG_ASSERT(result_diff != NULL);
         digest = crm_element_value(result_diff, PCMK__XA_DIGEST);
         crm_element_value_int(result_diff, PCMK_XA_FORMAT, &format);
@@ -1002,7 +1012,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
             CRM_ASSERT(digest != NULL);
         }
 
-        add_message_xml(msg, PCMK__XA_CIB_UPDATE_DIFF, result_diff);
+        wrapper = pcmk__xe_create(msg, PCMK__XA_CIB_UPDATE_DIFF);
+        pcmk__xml_copy(wrapper, result_diff);
+
         crm_log_xml_explicit(msg, "copy");
         return send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
 
@@ -1298,21 +1310,29 @@ static xmlNode *
 prepare_input(const xmlNode *request, enum cib__op_type type,
               const char **section)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *input = NULL;
 
     *section = NULL;
 
     switch (type) {
         case cib__op_apply_patch:
-            if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-                input = get_message_xml(request, PCMK__XA_CIB_UPDATE_DIFF);
-            } else {
-                input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
+            {
+                const char *wrapper_name = PCMK__XE_CIB_CALLDATA;
+
+                if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
+                    wrapper_name = PCMK__XA_CIB_UPDATE_DIFF;
+                }
+                wrapper = pcmk__xe_first_child(request, wrapper_name, NULL,
+                                               NULL);
+                input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
             }
             break;
 
         default:
-            input = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
+            wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA, NULL,
+                                           NULL);
+            input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
             *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
             break;
     }

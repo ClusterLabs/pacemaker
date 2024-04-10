@@ -102,7 +102,9 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     rc = pcmk_ok;
     crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
-        xmlNode *tmp = get_message_xml(op_reply, PCMK__XA_CIB_CALLDATA);
+        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
+                                                NULL, NULL);
+        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         crm_trace("Synchronous reply %d received", reply_id);
         if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {

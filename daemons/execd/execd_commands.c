@@ -1904,7 +1904,11 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
         if (allowed) {
-            xmlNode *data = get_message_xml(request, PCMK__XE_LRMD_CALLDATA);
+            xmlNode *wrapper = pcmk__xe_first_child(request,
+                                                    PCMK__XE_LRMD_CALLDATA,
+                                                    NULL, NULL);
+            xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
             const char *timeout = NULL;
 
             CRM_LOG_ASSERT(data != NULL);

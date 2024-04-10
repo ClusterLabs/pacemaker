@@ -21,6 +21,7 @@
 #  include <crm/crm.h>  /* transitively imports qblog.h */
 #  include <crm/common/output_internal.h>
 #  include <crm/common/xml_io_internal.h>
+#  include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 
 #  include <libxml/relaxng.h>
 
@@ -557,5 +558,18 @@ void pcmk__sort_schemas(void);
 
 // @COMPAT Remove when v1 patchsets are removed
 xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
+
+// @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
+static inline const char *
+pcmk__map_element_name(const xmlNode *xml)
+{
+    if (xml == NULL) {
+        return NULL;
+    } else if (pcmk__xe_is(xml, PCMK__XE_PROMOTABLE_LEGACY)) {
+        return PCMK_XE_CLONE;
+    } else {
+        return (const char *) xml->name;
+    }
+}
 
 #endif // PCMK__XML_INTERNAL__H

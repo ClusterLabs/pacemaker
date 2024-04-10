@@ -55,7 +55,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Tickets Attributes - Added/Updated */
     xpathObj =
         xpath_search(diff,
-                     "//" PCMK__XA_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_ADDED
                      "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
@@ -71,7 +71,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Tickets Attributes - Removed */
     xpathObj =
         xpath_search(diff,
-                     "//" PCMK__XA_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_REMOVED
                      "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
@@ -86,7 +86,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Transient Attributes - Removed */
     xpathObj =
         xpath_search(diff,
-                     "//" PCMK__XA_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_REMOVED
                      "//" PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (numXpathResults(xpathObj) > 0) {
@@ -101,7 +101,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     // Check for PCMK__XE_LRM_RESOURCE entries
     xpathObj = xpath_search(diff,
-                            "//" PCMK__XA_CIB_UPDATE_RESULT
+                            "//" PCMK__XE_CIB_UPDATE_RESULT
                             "//" PCMK__XE_DIFF_ADDED
                             "//" PCMK__XE_LRM_RESOURCE);
     max = numXpathResults(xpathObj);
@@ -140,7 +140,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     /* Process operation updates */
     xpathObj =
         xpath_search(diff,
-                     "//" PCMK__XA_CIB_UPDATE_RESULT
+                     "//" PCMK__XE_CIB_UPDATE_RESULT
                      "//" PCMK__XE_DIFF_ADDED
                      "//" PCMK__XE_LRM_RSC_OP);
     max = numXpathResults(xpathObj);
@@ -542,6 +542,7 @@ te_update_diff_v2(xmlNode *diff)
 void
 te_update_diff(const char *event, xmlNode * msg)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *diff = NULL;
     const char *op = NULL;
     int rc = -EINVAL;
@@ -570,7 +571,9 @@ te_update_diff(const char *event, xmlNode * msg)
     }
 
     op = crm_element_value(msg, PCMK__XA_CIB_OP);
-    diff = get_message_xml(msg, PCMK__XA_CIB_UPDATE_RESULT);
+
+    wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT, NULL, NULL);
+    diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,

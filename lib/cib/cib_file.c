@@ -220,7 +220,9 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     int call_options = cib_none;
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
-    xmlNode *data = get_message_xml(request, PCMK__XA_CIB_CALLDATA);
+    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
+                                            NULL, NULL);
+    xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     bool changed = false;
     bool read_only = false;

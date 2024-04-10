@@ -142,6 +142,8 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
+    xmlNode *wrapper = NULL;
+
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
@@ -149,21 +151,25 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     crm_xml_add(*answer, PCMK__XA_DIGEST, digest);
     crm_xml_add(*answer, PCMK__XA_CIB_PING_ID, seq);
 
-    pcmk__if_tracing(
-        {
-            // Append additional detail so the receiver can log the differences
-            add_message_xml(*answer, PCMK__XA_CIB_CALLDATA, the_cib);
-        },
-        if (the_cib != NULL) {
-            // Always include at least the version details
-            xmlNode *shallow = pcmk__xe_create(NULL,
-                                               (const char *) the_cib->name);
+    wrapper = pcmk__xe_create(*answer, PCMK__XE_CIB_CALLDATA);
 
-            copy_in_properties(shallow, the_cib);
-            add_message_xml(*answer, PCMK__XA_CIB_CALLDATA, shallow);
-            free_xml(shallow);
-        }
-    );
+    if (the_cib != NULL) {
+        pcmk__if_tracing(
+            {
+                /* Append additional detail so the receiver can log the
+                 * differences
+                 */
+                pcmk__xml_copy(wrapper, the_cib);
+            },
+            {
+                // Always include at least the version details
+                const char *name = (const char *) the_cib->name;
+                xmlNode *shallow = pcmk__xe_create(wrapper, name);
+
+                copy_in_properties(shallow, the_cib);
+            }
+        );
+    }
 
     crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
@@ -420,6 +426,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     crm_node_t *peer = NULL;
     xmlNode *replace_request = NULL;
+    xmlNode *wrapper = NULL;
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
     CRM_CHECK(all || (host != NULL), return -EINVAL);
@@ -446,7 +453,8 @@ sync_our_cib(xmlNode * request, gboolean all)
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
     crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
-    add_message_xml(replace_request, PCMK__XA_CIB_CALLDATA, the_cib);
+    wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);
+    pcmk__xml_copy(wrapper, the_cib);
 
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
@@ -491,14 +499,17 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
                     xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
                     xmlNode **answer)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
+
     const char *after_ver = NULL;
     GList *schemas = NULL;
     GList *already_included = NULL;
 
     *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
-    data = get_message_xml(req, PCMK__XA_CIB_CALLDATA);
+    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     if (data == NULL) {
         crm_warn("No data specified in request");
         return -EPROTO;

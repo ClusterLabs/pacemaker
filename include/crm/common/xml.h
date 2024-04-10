@@ -39,9 +39,6 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
-xmlNode *get_message_xml(const xmlNode *msg, const char *field);
-
 /*
  * \brief xmlCopyPropList ACLs-sensitive replacement expading i++ notation
  *
@@ -69,19 +66,6 @@ void expand_plus_plus(xmlNode * target, const char *name, const char *value);
  * Searching & Modifying
  */
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-
-static inline const char *
-crm_map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (strcmp((const char *) xml->name, "master") == 0) {
-        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
-}
 
 char *calculate_on_disk_digest(xmlNode * local_cib);
 char *calculate_operation_digest(xmlNode * local_cib, const char *version);
