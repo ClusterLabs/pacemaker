@@ -204,7 +204,7 @@
 ## Distro-specific configuration choices
 
 ### Use 2.0-style output when other distro packages don't support current output
-%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} <= 8 )
+%if ( 0%{?fedora} && 0%{?fedora} <=35 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
 %global compat20 --enable-compat-2.0
 %endif
 
@@ -412,6 +412,11 @@ Requires(pre): %{pkgname_shadow_utils}
 Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
 Conflicts:     sbd < 1.4.0
+%if ( 0%{?fedora} && 0%{?fedora} <=35 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
+Conflicts:     pcs >= 0.11
+%else
+Conflicts:     pcs < 0.11
+%endif
 
 %description -n %{pkgname_pcmk_libs}
 Pacemaker is an advanced, scalable High-Availability cluster resource
