@@ -593,7 +593,6 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                     (is_default? " (default)" : ""));
 }
 
-#ifndef PCMK__COMPAT_2_0
 static void
 warn_about_deprecated_classes(pcmk_resource_t *rsc)
 {
@@ -612,7 +611,6 @@ warn_about_deprecated_classes(pcmk_resource_t *rsc)
                         rsc->id);
     }
 }
-#endif
 
 /*!
  * \internal
@@ -716,9 +714,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         (*rsc)->id = strdup(id);
     }
 
-#ifndef PCMK__COMPAT_2_0
     warn_about_deprecated_classes(*rsc);
-#endif
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 
