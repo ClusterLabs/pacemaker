@@ -7,4 +7,5 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-SUBDIRS = pcmk_resource
+SUBDIRS = pcmk_resource \
+	  pcmk_ticket

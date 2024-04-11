@@ -478,44 +478,6 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     return cib_resource;
 }
 
-static int
-find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
-                  xmlNode **ticket_state_xml)
-{
-    int rc = pcmk_ok;
-    xmlNode *xml_search = NULL;
-
-    GString *xpath = g_string_sized_new(256);
-
-    CRM_ASSERT(ticket_state_xml != NULL);
-    *ticket_state_xml = NULL;
-
-    g_string_append(xpath,
-                    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
-
-    if (ticket_id) {
-        pcmk__g_strcat(xpath,
-                       "/" PCMK__XE_TICKET_STATE
-                       "[@" PCMK_XA_ID "=\"", ticket_id, "\"]", NULL);
-    }
-    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
-                              cib_sync_call|cib_scope_local|cib_xpath);
-    g_string_free(xpath, TRUE);
-
-    if (rc != pcmk_ok) {
-        return rc;
-    }
-
-    crm_log_xml_debug(xml_search, "Match");
-    if ((xml_search->children != NULL) && (ticket_id != NULL)) {
-        out->err(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s",
-                 ticket_id);
-    }
-    *ticket_state_xml = xml_search;
-
-    return rc;
-}
-
 /*!
  * \internal
  * \brief Inject a ticket attribute into ticket state
@@ -537,8 +499,13 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
     xmlNode *ticket_state_xml = NULL;
 
     // Check for an existing ticket state entry
-    rc = find_ticket_state(out, cib, ticket_id, &ticket_state_xml);
-    rc = pcmk_legacy2rc(rc);
+    rc = pcmk__get_ticket_state(cib, ticket_id, &ticket_state_xml);
+
+    if (rc == pcmk_rc_duplicate_id) {
+        out->err(out, "Multiple " PCMK__XE_TICKET_STATE "s match ticket_id=%s",
+                 ticket_id);
+        rc = pcmk_rc_ok;
+    }
 
     if (rc == pcmk_rc_ok) { // Ticket state found, use it
         crm_debug("Injecting attribute into existing ticket state %s",

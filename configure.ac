@@ -2196,6 +2196,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker/Makefile                              \
                 lib/pacemaker/tests/Makefile                        \
                 lib/pacemaker/tests/pcmk_resource/Makefile          \
+                lib/pacemaker/tests/pcmk_ticket/Makefile            \
                 lib/pacemaker.pc                                    \
                 lib/pacemaker-cib.pc                                \
                 lib/pacemaker-cluster.pc                            \

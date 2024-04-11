@@ -446,6 +446,104 @@ int pcmk_list_fencing_params(xmlNode **xml, bool all);
  */
 int pcmk_list_primitive_meta(xmlNode **xml, bool all);
 
+/*!
+ * \brief Return constraints that apply to the given ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find constraint for, or \c NULL for
+ *                              all ticket constraints
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
+
+
+/*!
+ * \brief Delete a ticket's state from the local cluster site
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     ticket_id Ticket to delete
+ * \param[in]     force     If \c true, delete the ticket even if it has
+ *                          been granted
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
+
+/*!
+ * \brief Return the value of a ticket's attribute
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find attribute value for
+ * \param[in]     attr_name     Attribute's name to find value for
+ * \param[in]     attr_default  If either the ticket or the attribute do not
+ *                              exist, use this as the value in \p xml
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+                         const char *attr_name, const char *attr_default);
+
+/*!
+ * \brief Return information about the given ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find info value for, or \c NULL for
+ *                              all tickets
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
+
+/*!
+ * \brief Remove the given attribute(s) from a ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to remove attributes from
+ * \param[in]     attr_delete   A list of attribute names
+ * \param[in]     force         Attempting to remove the granted attribute of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete,
+                            bool force);
+
+/*!
+ * \brief Set the given attribute(s) on a ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to set attributes on
+ * \param[in]     attr_set      A hash table of attributes, where keys are the
+ *                              attribute names and the values are the attribute
+ *                              values
+ * \param[in]     force         Attempting to change the granted status of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
+ *       ticket will be created with the given attributes.
+ */
+int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
+                         bool force);
+
+/*!
+ * \brief Return a ticket's state XML
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find state for, or \c NULL for all
+ *                              tickets
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If \p ticket_id is not \c NULL and more than one ticket exists with
+ *       that ID, this function returns \c pcmk_rc_duplicate_id.
+ */
+int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!
