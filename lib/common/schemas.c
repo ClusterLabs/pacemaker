@@ -780,9 +780,12 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 }
 
 gboolean
-pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
+pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
+                   xmlRelaxNGValidityErrorFunc error_handler,
+                   void *error_handler_context)
 {
-    int version = 0;
+    GList *entry = NULL;
+    pcmk__schema_t *schema = NULL;
 
     CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
 
@@ -793,24 +796,20 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation, xmlRelaxNGValidity
     if (validation == NULL) {
         bool valid = FALSE;
 
-        for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-            pcmk__schema_t *schema = iter->data;
-
+        for (entry = known_schemas; entry != NULL; entry = entry->next) {
+            schema = entry->data;
             if (validate_with(xml_blob, schema, NULL, NULL)) {
                 valid = TRUE;
                 crm_xml_add(xml_blob, PCMK_XA_VALIDATE_WITH, schema->name);
                 crm_info("XML validated against %s", schema->name);
             }
         }
-
         return valid;
     }
 
-    version = get_schema_version(validation);
-    if (strcmp(validation, PCMK_VALUE_NONE) == 0) {
-        return TRUE;
-    } else if (version < g_list_length(known_schemas)) {
-        pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
+    entry = pcmk__get_schema(validation);
+    if (entry != NULL) {
+        schema = entry->data;
         return validate_with(xml_blob, schema, error_handler,
                              error_handler_context);
     }
