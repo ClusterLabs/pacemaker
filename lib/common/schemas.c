@@ -227,7 +227,6 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
            const char *transform_enter, bool transform_onleave)
 {
     pcmk__schema_t *schema = NULL;
-    int last = g_list_length(known_schemas);
 
     schema = pcmk__assert_alloc(1, sizeof(pcmk__schema_t));
 
@@ -250,15 +249,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
         schema->transform_enter = pcmk__str_copy(transform_enter);
     }
 
-    known_schemas = g_list_append(known_schemas, schema);
-
-    if (schema->transform != NULL) {
-        crm_debug("Added supported schema %d: %s (upgrades with %s.xsl)",
-                  last, schema->name, schema->transform);
-
-    } else {
-        crm_debug("Added supported schema %d: %s", last, schema->name);
-    }
+    known_schemas = g_list_prepend(known_schemas, schema);
 }
 
 /*!
@@ -481,6 +472,7 @@ crm_schema_init(void)
     const char *remote_schema_dir = pcmk__remote_schema_dir();
     char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
     const pcmk__schema_version_t zero = SCHEMA_ZERO;
+    int schema_index = 0;
 
     wrap_libxslt(false);
 
@@ -494,10 +486,24 @@ crm_schema_init(void)
     add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE,
                NULL, NULL, FALSE);
 
-    /* This shouldn't be strictly necessary, but we'll do it here just in case
-     * there's anything in PCMK__REMOTE_SCHEMA_DIR that messes up the order.
+    /* add_schema() prepends items to the list, so in the simple case, this just
+     * reverses the list. However if there were any remote schemas, sorting is
+     * necessary.
      */
     pcmk__sort_schemas();
+
+    // Now log the final result
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        pcmk__schema_t *schema = iter->data;
+
+        if (schema->transform == NULL) {
+            crm_debug("Loaded schema %d: %s", schema_index, schema->name);
+        } else {
+            crm_debug("Loaded schema %d: %s (upgrades with %s.xsl)",
+                      schema_index, schema->name, schema->transform);
+        }
+        schema_index++;
+    }
 }
 
 static gboolean
@@ -1595,24 +1601,4 @@ pcmk__remote_schema_dir(void)
     }
 
     return dir;
-}
-
-void
-pcmk__log_known_schemas(void)
-{
-    int lpc = 0;
-
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        pcmk__schema_t *schema = iter->data;
-
-        if (schema->transform != NULL) {
-            crm_debug("known_schemas[%d] => %s (upgrades with %s.xsl)",
-                      lpc, schema->name, schema->transform);
-
-        } else {
-            crm_debug("known_schemas[%d] => %s", lpc, schema->name);
-        }
-
-        lpc++;
-    }
 }
