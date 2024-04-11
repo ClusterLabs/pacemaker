@@ -234,6 +234,7 @@ add_schema(enum pcmk__schema_validator validator, const pcmk__schema_version_t *
     schema->version.v[0] = version->v[0];
     schema->version.v[1] = version->v[1];
     schema->transform_onleave = transform_onleave;
+    // schema->schema_index is set after all schemas are loaded and sorted
 
     if (version->v[0] || version->v[1]) {
         schema->name = schema_strdup_printf("pacemaker-", *version, "");
@@ -492,7 +493,7 @@ crm_schema_init(void)
      */
     pcmk__sort_schemas();
 
-    // Now log the final result
+    // Now set the schema indexes and log the final result
     for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
         pcmk__schema_t *schema = iter->data;
 
@@ -502,7 +503,7 @@ crm_schema_init(void)
             crm_debug("Loaded schema %d: %s (upgrades with %s.xsl)",
                       schema_index, schema->name, schema->transform);
         }
-        schema_index++;
+        schema->schema_index = schema_index++;
     }
 }
 
