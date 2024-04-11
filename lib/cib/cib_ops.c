@@ -529,82 +529,6 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 }
 
 static int
-update_cib_object(xmlNode *parent, xmlNode *update)
-{
-    int result = pcmk_ok;
-    const char *update_id = pcmk__xe_id(update);
-
-    xmlNode *target = pcmk__xe_create(parent, (const char *) update->name);
-
-    if (update_id != NULL) {
-        crm_trace("Processing update for <%s " PCMK_XA_ID "='%s'>",
-                  update->name, update_id);
-    } else {
-        crm_trace("Processing update for <%s>", update->name);
-    }
-
-    /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. When we can break
-     * behavioral backward compatibility, drop this and drop the definition of
-     * PCMK__XA_REPLACE.
-     */
-    pcmk__xe_remove_attr(update, PCMK__XA_REPLACE);
-
-    copy_in_properties(target, update);
-
-    if (xml_acl_denied(target)) {
-        crm_notice("Cannot update <%s " PCMK_XA_ID "=%s>",
-                   update->name, pcmk__s(update_id, "<null>"));
-        return -EACCES;
-    }
-
-    if (update_id != NULL) {
-        crm_trace("Processing children of <%s " PCMK_XA_ID "='%s'>",
-                  update->name, update_id);
-    } else {
-        crm_trace("Processing children of <%s>", update->name);
-    }
-
-    for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
-         child = pcmk__xml_next(child)) {
-
-        const char *child_id = pcmk__xe_id(child);
-        int tmp_result = 0;
-
-        if (child_id != NULL) {
-            crm_trace("Updating child <%s " PCMK_XA_ID "='%s'>",
-                      child->name, child_id);
-        } else {
-            crm_trace("Updating child <%s>", child->name);
-        }
-
-        tmp_result = update_cib_object(target, child);
-
-        /*  only the first error is likely to be interesting */
-        if (tmp_result != pcmk_ok) {
-            if (child_id != NULL) {
-                crm_err("Error updating child <%s " PCMK_XA_ID "='%s'>",
-                        child->name, child_id);
-            } else {
-                crm_err("Error updating child <%s>", child->name);
-            }
-
-            if (result == pcmk_ok) {
-                result = tmp_result;
-            }
-        }
-    }
-
-    if (update_id != NULL) {
-        crm_trace("Finished handling update for <%s " PCMK_XA_ID "='%s'>",
-                  update->name, update_id);
-    } else {
-        crm_trace("Finished handling update for <%s>", update->name);
-    }
-
-    return result;
-}
-
-static int
 add_cib_object(xmlNode * parent, xmlNode * new_obj)
 {
     const char *object_name = NULL;
@@ -632,7 +556,20 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     } else {
         crm_trace("Processing creation of <%s>", object_name);
     }
-    return update_cib_object(parent, new_obj);
+
+    /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. Due to a legacy use
+     * case, PCMK__XA_REPLACE has special meaning and should not be included in
+     * the newly created object until we can break behavioral backward
+     * compatibility.
+     *
+     * At a compatibility break, drop this and drop the definition of
+     * PCMK__XA_REPLACE. Treat it like any other attribute.
+     */
+    pcmk__xml_tree_foreach(new_obj, pcmk__xe_remove_attr_cb,
+                           (void *) PCMK__XA_REPLACE);
+
+    pcmk__xml_copy(parent, new_obj);
+    return pcmk_ok;
 }
 
 static bool
@@ -694,6 +631,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
                                   answer);
     }
 
+    // @COMPAT Deprecated since 2.1.8
     failed = pcmk__xe_create(NULL, PCMK__XE_FAILED);
 
     update_section = pcmk_find_cib_element(*result_cib, section);

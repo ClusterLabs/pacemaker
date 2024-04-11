@@ -73,14 +73,10 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
-                            void *user_data);
-
-G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-void pcmk__mark_xml_created(xmlNode *xml);
+void pcmk__xml_mark_created(xmlNode *xml);
 
 G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml,

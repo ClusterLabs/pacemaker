@@ -175,6 +175,11 @@ typedef struct cib_api_operations_s {
                       int call_options);
     int (*upgrade) (cib_t *cib, int call_options);
     int (*bump_epoch) (cib_t *cib, int call_options);
+
+    /*!
+     * The \c <failed> element in the reply to a failed creation call is
+     * deprecated since 2.1.8.
+     */
     int (*create) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
     int (*modify) (cib_t *cib, const char *section, xmlNode *data,
