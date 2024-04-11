@@ -519,6 +519,8 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
     xmlNode *result = NULL;
     bool use_pattern = options.attr_pattern != NULL;
 
+    cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
+
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {
         struct update_data_s ud = { out, cib, is_remote_node };

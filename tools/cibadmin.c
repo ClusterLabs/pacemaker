@@ -759,6 +759,11 @@ main(int argc, char **argv)
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         goto done;
+
+    } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
+                            pcmk__str_none)) {
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_score_update);
     }
 
     rc = do_init();

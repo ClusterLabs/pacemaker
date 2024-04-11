@@ -458,6 +458,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     xmlNode *obj_root = NULL;
+    uint32_t flags = pcmk__xaf_none;
 
     crm_trace("Processing \"%s\" event", op);
 
@@ -490,8 +491,11 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
     CRM_CHECK(obj_root != NULL, return -EINVAL);
 
-    if (pcmk__xe_update_match(obj_root, input,
-                              pcmk__xaf_score_update) != pcmk_rc_ok) {
+    if (pcmk_is_set(options, cib_score_update)) {
+        flags |= pcmk__xaf_score_update;
+    }
+
+    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
         if (options & cib_can_create) {
             pcmk__xml_copy(obj_root, input);
         } else {
@@ -822,7 +826,11 @@ cib_process_xpath(const char *op, int options, const char *section,
             }
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
-            const uint32_t flags = pcmk__xaf_score_update;
+            uint32_t flags = pcmk__xaf_none;
+
+            if (pcmk_is_set(options, cib_score_update)) {
+                flags |= pcmk__xaf_score_update;
+            }
 
             if (pcmk__xe_update_match(match, input, flags) != pcmk_rc_ok) {
                 rc = -ENXIO;
