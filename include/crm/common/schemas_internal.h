@@ -22,6 +22,7 @@ GList *pcmk__schema_files_later_than(const char *name);
 void pcmk__build_schema_xml_node(xmlNode *parent, const char *name,
                                  GList **already_included);
 const char *pcmk__remote_schema_dir(void);
+GList *pcmk__get_schema(const char *name);
 gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                             xmlRelaxNGValidityErrorFunc error_handler,
                             void *error_handler_context);

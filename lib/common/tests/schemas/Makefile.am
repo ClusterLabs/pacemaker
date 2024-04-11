@@ -1,5 +1,5 @@
 #
-# Copyright 2023 the Pacemaker project contributors
+# Copyright 2023-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,6 +19,7 @@ SHARED_SCHEMA_TESTS =	crm_schema_init_test			\
 			get_schema_name_test			\
 			get_schema_version_test			\
 			pcmk__build_schema_xml_node_test	\
+			pcmk__get_schema_test 			\
 			pcmk__schema_files_later_than_test
 
 # This test has its own schema directory

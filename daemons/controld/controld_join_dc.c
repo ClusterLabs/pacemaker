@@ -475,11 +475,11 @@ do_dc_join_filter_offer(long long action,
         const char *validation = crm_element_value(generation,
                                                    PCMK_XA_VALIDATE_WITH);
 
-        if (get_schema_version(validation) < 0) {
+        if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
                     "generation) due to unknown schema version %s "
                     CRM_XS " ref=%s",
-                    join_id, join_from, validation, ref);
+                    join_id, join_from, pcmk__s(validation, "(missing)"), ref);
             ack_nack_bool = FALSE;
 
         } else {
@@ -497,11 +497,12 @@ do_dc_join_filter_offer(long long action,
         const char *validation = crm_element_value(generation,
                                                    PCMK_XA_VALIDATE_WITH);
 
-        if (get_schema_version(validation) < 0) {
+        if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
                     "generation than current best from %s) due to unknown "
                     "schema version %s " CRM_XS " ref=%s",
-                    join_id, join_from, max_generation_from, validation, ref);
+                    join_id, join_from, max_generation_from,
+                    pcmk__s(validation, "(missing)"), ref);
             ack_nack_bool = FALSE;
 
         } else {

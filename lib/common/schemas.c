@@ -641,6 +641,30 @@ crm_schema_cleanup(void)
     wrap_libxslt(true);
 }
 
+/*!
+ * \internal
+ * \brief Get schema list entry corresponding to a schema name
+ *
+ * \param[in] name  Name of schema to get
+ *
+ * \return Schema list entry corresponding to \p name, or NULL if unknown
+ */
+GList *
+pcmk__get_schema(const char *name)
+{
+    if (name == NULL) {
+        name = PCMK_VALUE_NONE;
+    }
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        pcmk__schema_t *schema = iter->data;
+
+        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
+            return iter;
+        }
+    }
+    return NULL;
+}
+
 static gboolean
 validate_with(xmlNode *xml, pcmk__schema_t *schema, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
 {
