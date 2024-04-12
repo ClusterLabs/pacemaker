@@ -62,20 +62,16 @@ map_rule_input(pcmk_rule_input_t *new, const pe_rule_eval_data_t *old)
     }
 }
 
-// Information about a block of nvpair elements
-typedef struct sorted_set_s {
-    int score;                  // This block's score for sorting
-    const char *name;           // This block's ID
-    const char *special_name;   // ID that should sort first
-    xmlNode *attr_set;          // This block
-    gboolean overwrite;         // Whether existing values will be overwritten
-} sorted_set_t;
-
 static gint
-sort_pairs(gconstpointer a, gconstpointer b)
+sort_pairs(gconstpointer a, gconstpointer b, gpointer user_data)
 {
-    const sorted_set_t *pair_a = a;
-    const sorted_set_t *pair_b = b;
+    const xmlNode *pair_a = a;
+    const xmlNode *pair_b = b;
+    pcmk__nvpair_unpack_t *unpack_data = user_data;
+
+    const char *score = NULL;
+    int score_a = 0;
+    int score_b = 0;
 
     if (a == NULL && b == NULL) {
         return 0;
@@ -85,27 +81,35 @@ sort_pairs(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    if (pcmk__str_eq(pair_a->name, pair_a->special_name, pcmk__str_casei)) {
+    if (pcmk__str_eq(pcmk__xe_id(pair_a), unpack_data->first_id,
+                     pcmk__str_none)) {
         return -1;
 
-    } else if (pcmk__str_eq(pair_b->name, pair_a->special_name, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(pcmk__xe_id(pair_b), unpack_data->first_id,
+                            pcmk__str_none)) {
         return 1;
     }
+
+    score = crm_element_value(pair_a, PCMK_XA_SCORE);
+    score_a = char2score(score);
+
+    score = crm_element_value(pair_b, PCMK_XA_SCORE);
+    score_b = char2score(score);
 
     /* If we're overwriting values, we want lowest score first, so the highest
      * score is processed last; if we're not overwriting values, we want highest
      * score first, so nothing else overwrites it.
      */
-    if (pair_a->score < pair_b->score) {
-        return pair_a->overwrite? -1 : 1;
-    } else if (pair_a->score > pair_b->score) {
-        return pair_a->overwrite? 1 : -1;
+    if (score_a < score_b) {
+        return unpack_data->overwrite? -1 : 1;
+    } else if (score_a > score_b) {
+        return unpack_data->overwrite? 1 : -1;
     }
     return 0;
 }
 
 static void
-populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlNode * top)
+populate_hash(xmlNode *nvpair_list, GHashTable *hash, bool overwrite)
 {
     const char *name = NULL;
     const char *value = NULL;
@@ -121,7 +125,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
          an_attr != NULL; an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__xe_is(an_attr, PCMK_XE_NVPAIR)) {
-            xmlNode *ref_nvpair = expand_idref(an_attr, top);
+            xmlNode *ref_nvpair = expand_idref(an_attr, NULL);
 
             name = crm_element_value(an_attr, PCMK_XA_NAME);
             if ((name == NULL) && (ref_nvpair != NULL)) {
@@ -160,48 +164,33 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
-typedef struct unpack_data_s {
-    gboolean overwrite;
-    void *hash;
-    crm_time_t *next_change;
-    const pe_rule_eval_data_t *rule_data;
-    xmlNode *top;
-} unpack_data_t;
-
 static void
 unpack_attr_set(gpointer data, gpointer user_data)
 {
-    sorted_set_t *pair = data;
-    unpack_data_t *unpack_data = user_data;
-    pcmk_rule_input_t rule_input = { NULL, };
+    xmlNode *pair = data;
+    pcmk__nvpair_unpack_t *unpack_data = user_data;
 
-    map_rule_input(&rule_input, unpack_data->rule_data);
-
-    if (pcmk__evaluate_rules(pair->attr_set, &rule_input,
+    if (pcmk__evaluate_rules(pair, &(unpack_data->rule_input),
                              unpack_data->next_change) != pcmk_rc_ok) {
         return;
     }
 
-    crm_trace("Adding attributes from %s (score %d) %s overwrite",
-              pair->name, pair->score,
-              (unpack_data->overwrite? "with" : "without"));
-    populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
+    crm_trace("Adding name/value pairs from %s %s overwrite",
+              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
+    populate_hash(pair, unpack_data->values, unpack_data->overwrite);
 }
 
 /*!
  * \internal
  * \brief Create a sorted list of nvpair blocks
  *
- * \param[in,out] top           XML document root (used to expand id-ref's)
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only get blocks of this element
- * \param[in]     always_first  If not NULL, sort block with this ID as first
  *
- * \return List of sorted_set_t entries for nvpair blocks
+ * \return List of XML blocks of name/value pairs
  */
 static GList *
-make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
-           const char *always_first, gboolean overwrite)
+make_pairs(const xmlNode *xml_obj, const char *set_name)
 {
     GList *unsorted = NULL;
 
@@ -212,33 +201,21 @@ make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
          attr_set != NULL; attr_set = pcmk__xe_next(attr_set)) {
 
         if ((set_name == NULL) || pcmk__xe_is(attr_set, set_name)) {
-            const char *score = NULL;
-            sorted_set_t *pair = NULL;
-            xmlNode *expanded_attr_set = expand_idref(attr_set, top);
+            xmlNode *expanded_attr_set = expand_idref(attr_set, NULL);
 
             if (expanded_attr_set == NULL) {
                 continue; // Not possible with schema validation enabled
             }
-
-            pair = pcmk__assert_alloc(1, sizeof(sorted_set_t));
-            pair->name = pcmk__xe_id(expanded_attr_set);
-            pair->special_name = always_first;
-            pair->attr_set = expanded_attr_set;
-            pair->overwrite = overwrite;
-
-            score = crm_element_value(expanded_attr_set, PCMK_XA_SCORE);
-            pair->score = char2score(score);
-
-            unsorted = g_list_prepend(unsorted, pair);
+            unsorted = g_list_prepend(unsorted, expanded_attr_set);
         }
     }
-    return g_list_sort(unsorted, sort_pairs);
+    return unsorted;
 }
 
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
- * \param[in,out] top           XML document root (used to expand id-ref's)
+ * \param[in,out] top           Ignored
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only use blocks of this element
  * \param[in]     rule_data     Matching parameters to use when unpacking
@@ -253,26 +230,28 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = make_pairs(top, xml_obj, set_name, always_first, overwrite);
+    GList *pairs = make_pairs(xml_obj, set_name);
 
     if (pairs) {
-        unpack_data_t data = {
-            .hash = hash,
+        pcmk__nvpair_unpack_t data = {
+            .values = hash,
+            .first_id = always_first,
             .overwrite = overwrite,
             .next_change = next_change,
-            .top = top,
-            .rule_data = rule_data
         };
 
+        map_rule_input(&(data.rule_input), rule_data);
+
+        pairs = g_list_sort_with_data(pairs, sort_pairs, &data);
         g_list_foreach(pairs, unpack_attr_set, &data);
-        g_list_free_full(pairs, free);
+        g_list_free(pairs);
     }
 }
 
 /*!
  * \brief Extract nvpair blocks contained by an XML element into a hash table
  *
- * \param[in,out] top           XML document root (used to expand id-ref's)
+ * \param[in,out] top           Ignored
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      Element name to identify nvpair blocks
  * \param[in]     node_hash     Node attributes to use when evaluating rules
@@ -296,7 +275,7 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         .op_data = NULL
     };
 
-    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash,
+    pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash,
                     always_first, overwrite, next_change);
 }
 
@@ -463,7 +442,7 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
         .op_data = NULL
     };
 
-    pe_eval_nvpairs(top, xml_obj, set_name, &rule_data, hash, always_first,
+    pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash, always_first,
                     overwrite, NULL);
 }
 
