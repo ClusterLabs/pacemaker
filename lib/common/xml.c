@@ -1630,76 +1630,108 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
 
 /*!
  * \internal
- * \brief Make one XML tree match another (in children and attributes)
+ * \brief Merge one XML tree into another
+ *
+ * Here, "merge" means:
+ * 1. Copy attribute values from \p update to the target, overwriting in case of
+ *    conflict.
+ * 2. Descend through \p update and the target in parallel. At each level, for
+ *    each child of \p update, look for a matching child of the target.
+ *    a. For each child, if a match is found, go to step 1, recursively merging
+ *       the child of \p update into the child of the target.
+ *    b. Otherwise, copy the child of \p update as a child of the target.
+ *
+ * A match is defined as the first child of the same type within the target,
+ * with:
+ * * the \c PCMK_XA_ID attribute matching, if set in \p update; otherwise,
+ * * the \c PCMK_XA_ID_REF attribute matching, if set in \p update
+ *
+ * This function does not delete any elements or attributes from the target. It
+ * may add elements or overwrite attributes, as described above.
  *
  * \param[in,out] parent   If \p target is NULL and this is not, add or update
  *                         child of this XML node that matches \p update
  * \param[in,out] target   If not NULL, update this XML
- * \param[in]     update   Make the desired XML match this (must not be NULL)
- * \param[in]     as_diff  If false, expand "++" when making attributes match
+ * \param[in]     update   Make the desired XML match this (must not be \c NULL)
+ * \param[in]     as_diff  If false, expand \c "++" when making attributes match
  *
- * \note At least one of \p parent and \p target must be non-NULL
+ * \note At least one of \p parent and \p target must be non-<tt>NULL</tt>.
+ * \note This function is recursive. For the top-level call, \p parent is
+ *       \c NULL and \p target is not \c NULL. For recursive calls, \p target is
+ *       \c NULL and \p parent is not \c NULL.
  */
 void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                  bool as_diff)
 {
-    xmlNode *a_child = NULL;
-    const char *object_name = NULL,
-               *object_href = NULL,
-               *object_href_val = NULL;
+    // @COMPAT Refactor further and staticize after v1 patchset deprecation
+    const char *update_name = NULL;
+    const char *update_id_attr = NULL;
+    const char *update_id_val = NULL;
+    char *trace_s = NULL;
 
-    crm_log_xml_trace(update, "update:");
-    crm_log_xml_trace(target, "target:");
+    crm_log_xml_trace(update, "update");
+    crm_log_xml_trace(target, "target");
 
-    CRM_CHECK(update != NULL, return);
+    CRM_CHECK(update != NULL, goto done);
 
     if (update->type == XML_COMMENT_NODE) {
         pcmk__xc_update(parent, target, update);
-        return;
+        goto done;
     }
 
-    object_name = (const char *) update->name;
-    object_href_val = pcmk__xe_id(update);
-    if (object_href_val != NULL) {
-        object_href = PCMK_XA_ID;
-    } else {
-        object_href_val = crm_element_value(update, PCMK_XA_ID_REF);
-        object_href = (object_href_val == NULL)? NULL : PCMK_XA_ID_REF;
-    }
+    update_name = (const char *) update->name;
 
-    CRM_CHECK(object_name != NULL, return);
-    CRM_CHECK(target != NULL || parent != NULL, return);
+    CRM_CHECK(update_name != NULL, goto done);
+    CRM_CHECK((target != NULL) || (parent != NULL), goto done);
 
-    if (target == NULL) {
-        target = pcmk__xe_first_child(parent, object_name,
-                                      object_href, object_href_val);
-    }
-
-    if (target == NULL) {
-        target = pcmk__xe_create(parent, object_name);
-        crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
-                  object_href ? " " : "",
-                  object_href ? object_href : "",
-                  object_href ? "=" : "",
-                  object_href ? object_href_val : "");
+    update_id_val = pcmk__xe_id(update);
+    if (update_id_val != NULL) {
+        update_id_attr = PCMK_XA_ID;
 
     } else {
-        crm_trace("Found node <%s%s%s%s%s/> to update",
-                  pcmk__s(object_name, "<null>"),
-                  object_href ? " " : "",
-                  object_href ? object_href : "",
-                  object_href ? "=" : "",
-                  object_href ? object_href_val : "");
+        update_id_val = crm_element_value(update, PCMK_XA_ID_REF);
+        if (update_id_val != NULL) {
+            update_id_attr = PCMK_XA_ID_REF;
+        }
+    }
+
+    pcmk__if_tracing(
+        {
+            if (update_id_attr != NULL) {
+                trace_s = crm_strdup_printf("<%s %s=%s/>",
+                                            update_name, update_id_attr,
+                                            update_id_val);
+            } else {
+                trace_s = crm_strdup_printf("<%s/>", update_name);
+            }
+        },
+        {}
+    );
+
+    if (target == NULL) {
+        // Recursive call
+        target = pcmk__xe_first_child(parent, update_name, update_id_attr,
+                                      update_id_val);
+    }
+
+    if (target == NULL) {
+        // Recursive call with no existing matching child
+        target = pcmk__xe_create(parent, update_name);
+        crm_trace("Added %s", pcmk__s(trace_s, update_name));
+
+    } else {
+        // Either recursive call with match, or top-level call
+        crm_trace("Found node %s to update", pcmk__s(trace_s, update_name));
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
-    if (as_diff == FALSE) {
+    if (!as_diff) {
         pcmk__xe_copy_attrs(target, update, pcmk__xaf_none);
 
     } else {
-        // No need for pcmk__xe_set_score(), so use faster method
+        // Preserve order of attributes. Don't use pcmk__xe_copy_attrs().
         for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
              a = a->next) {
             const char *p_value = pcmk__xml_attr_value(a);
@@ -1710,22 +1742,17 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         }
     }
 
-    for (a_child = pcmk__xml_first_child(update); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
-        crm_trace("Updating child <%s%s%s%s%s/>",
-                  pcmk__s(object_name, "<null>"),
-                  object_href ? " " : "",
-                  object_href ? object_href : "",
-                  object_href ? "=" : "",
-                  object_href ? object_href_val : "");
-        pcmk__xml_update(target, NULL, a_child, as_diff);
+    for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        crm_trace("Updating child of %s", pcmk__s(trace_s, update_name));
+        pcmk__xml_update(target, NULL, child, as_diff);
     }
 
-    crm_trace("Finished with <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
-              object_href ? " " : "",
-              object_href ? object_href : "",
-              object_href ? "=" : "",
-              object_href ? object_href_val : "");
+    crm_trace("Finished with %s", pcmk__s(trace_s, update_name));
+
+done:
+    free(trace_s);
 }
 
 /*!
@@ -1935,9 +1962,11 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
  * \internal
  * \brief Update one XML subtree with another if the two match
  *
- * "Update" means to make a target subtree match a source subtree in children
- * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c pcmk__xe_set_score()).
+ * "Update" means to merge a source subtree into a target subtree (see
+ * \c pcmk__xml_update()).
+ *
+ * \c "++" and \c "+=" in attribute values are expanded where appropriate (see
+ * \c pcmk__xe_set_score()).
  *
  * A match is defined as follows:
  * * \p xml and \p user_data are both element nodes of the same type.
@@ -1979,9 +2008,11 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
  * \internal
  * \brief Search an XML tree depth-first and update the first matching element
  *
- * "Update" means to make a target subtree match a source subtree in children
- * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c pcmk__xe_set_score()).
+ * "Update" means to merge a source subtree into a target subtree (see
+ * \c pcmk__xml_update()).
+ *
+ * \c "++" and \c "+=" in attribute values are expanded where appropriate (see
+ * \c pcmk__xe_set_score()).
  *
  * A match with a node \c node is defined as follows:
  * * \c node and \p update are both element nodes of the same type.
