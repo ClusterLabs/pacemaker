@@ -255,7 +255,7 @@ Revised Cluster Status:
 =#=#=#= End test: Make resulting CIB valid, although without validate-with attribute - OK (0) =#=#=#=
 * Passed: cibadmin       - Make resulting CIB valid, although without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with valid CIB, but without validate-with attribute =#=#=#=
-Schema validation of configuration is disabled (enabling is encouraged and prevents common misconfigurations)
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -348,7 +348,7 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 =#=#=#= End test: Make resulting CIB invalid, and without validate-with attribute - OK (0) =#=#=#=
 * Passed: cibadmin       - Make resulting CIB invalid, and without validate-with attribute
 =#=#=#= Begin test: Run crm_simulate with invalid CIB, also without validate-with attribute =#=#=#=
-Schema validation of configuration is disabled (enabling is encouraged and prevents common misconfigurations)
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 validity.bad.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
