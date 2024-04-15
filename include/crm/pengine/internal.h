@@ -242,9 +242,6 @@ gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
 
-pcmk_resource_t *find_clone_instance(const pcmk_resource_t *rsc,
-                                     const char *sub_id);
-
 extern void destroy_ticket(gpointer data);
 pcmk__ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 

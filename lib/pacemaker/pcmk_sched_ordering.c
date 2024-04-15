@@ -229,22 +229,16 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  *
  * \param[in] xml            Ordering XML
  * \param[in] resource_attr  XML attribute name for resource ID
- * \param[in] instance_attr  XML attribute name for instance number.
- *                           This option is deprecated and will be removed in a
- *                           future release.
  * \param[in] scheduler      Scheduler data
  *
  * \return Resource corresponding to \p id, or NULL if none
  */
 static pcmk_resource_t *
 get_ordering_resource(const xmlNode *xml, const char *resource_attr,
-                      const char *instance_attr,
                       const pcmk_scheduler_t *scheduler)
 {
-    // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
     pcmk_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(xml, resource_attr);
-    const char *instance_id = crm_element_value(xml, instance_attr);
 
     if (rsc_id == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without %s",
@@ -259,26 +253,6 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
         return NULL;
     }
 
-    if (instance_id != NULL) {
-        pcmk__warn_once(pcmk__wo_order_inst,
-                        "Support for " PCMK__XA_FIRST_INSTANCE " and "
-                        PCMK__XA_THEN_INSTANCE " is deprecated and will be "
-                        "removed in a future release.");
-
-        if (!pcmk__is_clone(rsc)) {
-            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                             "is not a clone but instance '%s' was requested",
-                             pcmk__xe_id(xml), rsc_id, instance_id);
-            return NULL;
-        }
-        rsc = find_clone_instance(rsc, instance_id);
-        if (rsc == NULL) {
-            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                             "does not have an instance '%s'",
-                             pcmk__xe_id(xml), rsc_id, instance_id);
-            return NULL;
-        }
-    }
     return rsc;
 }
 
@@ -453,14 +427,12 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    rsc_first = get_ordering_resource(xml_obj, PCMK_XA_FIRST,
-                                      PCMK__XA_FIRST_INSTANCE, scheduler);
+    rsc_first = get_ordering_resource(xml_obj, PCMK_XA_FIRST, scheduler);
     if (rsc_first == NULL) {
         return;
     }
 
-    rsc_then = get_ordering_resource(xml_obj, PCMK_XA_THEN,
-                                     PCMK__XA_THEN_INSTANCE, scheduler);
+    rsc_then = get_ordering_resource(xml_obj, PCMK_XA_THEN, scheduler);
     if (rsc_then == NULL) {
         return;
     }

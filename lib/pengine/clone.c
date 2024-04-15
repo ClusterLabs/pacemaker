@@ -219,24 +219,6 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
 }
 
 pcmk_resource_t *
-find_clone_instance(const pcmk_resource_t *rsc, const char *sub_id)
-{
-    char *child_id = NULL;
-    pcmk_resource_t *child = NULL;
-    const char *child_base = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
-    child_base = pcmk__xe_id(clone_data->xml_obj_child);
-    child_id = crm_strdup_printf("%s:%s", child_base, sub_id);
-    child = pe_find_resource(rsc->priv->children, child_id);
-
-    free(child_id);
-    return child;
-}
-
-pcmk_resource_t *
 pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     gboolean as_orphan = FALSE;

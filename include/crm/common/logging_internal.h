@@ -34,8 +34,6 @@ enum pcmk__warnings {
     pcmk__wo_neg_threshold  = (1 << 6),
     pcmk__wo_remove_after   = (1 << 7),
     pcmk__wo_ping_node      = (1 << 8),
-    pcmk__wo_order_inst     = (1 << 9),
-    pcmk__wo_coloc_inst     = (1 << 10),
     pcmk__wo_group_order    = (1 << 11),
     pcmk__wo_group_coloc    = (1 << 12),
     pcmk__wo_upstart        = (1 << 13),

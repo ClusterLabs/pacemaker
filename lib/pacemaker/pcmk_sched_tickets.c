@@ -290,16 +290,7 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     const char *state = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
 
-    // @COMPAT: Deprecated since 2.1.5
-    const char *instance = crm_element_value(xml_obj, PCMK__XA_RSC_INSTANCE);
-
     pcmk_resource_t *rsc = NULL;
-
-    if (instance != NULL) {
-        pcmk__warn_once(pcmk__wo_coloc_inst,
-                        "Support for " PCMK__XA_RSC_INSTANCE " is deprecated "
-                        "and will be removed in a future release");
-    }
 
     CRM_CHECK(xml_obj != NULL, return);
 
@@ -337,22 +328,6 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, rsc_id);
         return;
-
-    } else if ((instance != NULL) && !pcmk__is_clone(rsc)) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, rsc_id, instance);
-        return;
-    }
-
-    if (instance != NULL) {
-        rsc = find_clone_instance(rsc, instance);
-        if (rsc == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, rsc_id, instance);
-            return;
-        }
     }
 
     rsc_ticket_new(id, rsc, ticket, state, loss_policy);
