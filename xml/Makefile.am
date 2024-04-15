@@ -216,9 +216,7 @@ pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
 
 # Dynamically generated CIB schema listing all pacemaker versions
 #
-# @COMPAT none, pacemaker-0.6, pacemaker-0.7, pacemaker-1.1, and
-# transitional-0.6 are deprecated since 2.1.8, as is validate-with being
-# optional
+# @COMPAT none is deprecated since 2.1.8, as is validate-with being optional
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
@@ -228,10 +226,6 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '      <attribute name="validate-with">' >> $@
 	$(AM_V_at)echo '        <choice>' >> $@
 	$(AM_V_at)echo '          <value>none</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-0.6</value>' >> $@
-	$(AM_V_at)echo '          <value>transitional-0.6</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-0.7</value>' >> $@
-	$(AM_V_at)echo '          <value>pacemaker-1.1</value>' >> $@
 	$(AM_V_at)for rng in $(CIB_versions); do echo "          <value>pacemaker-$$rng</value>" >> $@; done
 	$(AM_V_at)echo '        </choice>' >> $@
 	$(AM_V_at)echo '      </attribute>' >> $@
