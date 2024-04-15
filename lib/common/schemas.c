@@ -777,14 +777,17 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
 
     entry = pcmk__get_schema(validation);
-    if (entry != NULL) {
-        schema = entry->data;
-        return validate_with(xml_blob, schema, error_handler,
-                             error_handler_context);
+    if (entry == NULL) {
+        pcmk__config_err("Cannot validate CIB with " PCMK_XA_VALIDATE_WITH
+                         " set to an unknown schema such as '%s' (manually"
+                         " edit to use a known schema)",
+                         validation);
+        return false;
     }
 
-    crm_err("Unknown validator: %s", validation);
-    return false;
+    schema = entry->data;
+    return validate_with(xml_blob, schema, error_handler,
+                         error_handler_context);
 }
 
 /*!

@@ -44,7 +44,9 @@ unknown_is_lesser(void **state)
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.1", NULL) < 0);
     assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-0.0") > 0);
 
-    // @COMPAT pacemaker-next is deprecated since 2.1.5
+    /* @COMPAT pacemaker-next is deprecated since 2.1.5,
+     * and pacemaker-0.6 and pacemaker-0.7 since 2.1.8
+     */
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-0.6",
                                           "pacemaker-next") < 0);
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
