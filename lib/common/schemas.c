@@ -429,6 +429,7 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
     const pcmk__schema_t *schema_a = a;
     const pcmk__schema_t *schema_b = b;
 
+    // @COMPAT pacemaker-next is deprecated since 2.1.5
     if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
         if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
             return -1;
@@ -717,11 +718,6 @@ validate_with(xmlNode *xml, pcmk__schema_t *schema,
         return true;
     }
 
-    if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
-        crm_warn("The pacemaker-next schema is deprecated and will be removed "
-                 "in a future release.");
-    }
-
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
                                    schema->name);
 
@@ -764,6 +760,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
+    pcmk__warn_if_schema_deprecated(validation);
 
     if (validation == NULL) {
         bool valid = false;
@@ -1109,6 +1106,7 @@ get_configured_schema(const xmlNode *xml)
 {
     const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
 
+    pcmk__warn_if_schema_deprecated(schema_name);
     if (schema_name == NULL) {
         return NULL;
     }
@@ -1250,6 +1248,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
     GList *entry = NULL;
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
+    pcmk__warn_if_schema_deprecated(original_schema_name);
     entry = pcmk__get_schema(original_schema_name);
     if (entry != NULL) {
         pcmk__schema_t *original_schema = entry->data;
@@ -1569,6 +1568,23 @@ pcmk__remote_schema_dir(void)
     }
 
     return dir;
+}
+
+/*!
+ * \internal
+ * \brief Warn if a given validation schema is deprecated
+ *
+ * \param[in] Schema name to check
+ */
+void
+pcmk__warn_if_schema_deprecated(const char *schema)
+{
+    if (pcmk__strcase_any_of(schema, "pacemaker-next", NULL)) {
+        pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
+                          "deprecated and will be removed in a future release "
+                          "without the possibility of upgrades (manually edit "
+                          "to use a supported schema)", schema);
+    }
 }
 
 // Deprecated functions kept only for backward API compatibility
