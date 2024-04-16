@@ -1026,6 +1026,15 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
         value = crm_element_value(xml_obj, PCMK__XA_PROMOTED_MAX_LEGACY);
+
+        if (value != NULL) {
+            pcmk__warn_once(pcmk__wo_bundle_master,
+                            "Support for the " PCMK__XA_PROMOTED_MAX_LEGACY
+                            " attribute (such as in %s) is deprecated and "
+                            "will be removed in a future release. Use "
+                            PCMK_XA_PROMOTED_MAX " instead.",
+                            rsc->id);
+        }
     }
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 

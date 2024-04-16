@@ -447,9 +447,12 @@ detect_promotable(pcmk_resource_t *rsc)
 
     // @COMPAT deprecated since 2.0.0
     if (pcmk__xe_is(rsc->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
-        /* @TODO in some future version, pcmk__warn_once() here,
-         *       then drop support in even later version
-         */
+        pcmk__warn_once(pcmk__wo_master_element,
+                        "Support for <" PCMK__XE_PROMOTABLE_LEGACY "> (such "
+                        "as in %s) is deprecated and will be removed in a "
+                        "future release. Use <" PCMK_XE_CLONE "> with a "
+                        PCMK_META_PROMOTABLE " meta-attribute instead.",
+                        rsc->id);
         pcmk__insert_dup(rsc->meta, PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
         return TRUE;
     }
