@@ -1193,9 +1193,11 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     xmlNode *xml = NULL;
     char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
-    int lpc = 0, match = -1, rc = pcmk_ok;
+    int lpc = 0, rc = pcmk_ok;
     int local_best = 0;
     int next = -1;  /* -1 denotes "inactive" value */
+    GList *entry = NULL;
+    pcmk__schema_t *original_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
 
@@ -1211,23 +1213,28 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     value = crm_element_value_copy(xml, PCMK_XA_VALIDATE_WITH);
 
     if (value != NULL) {
-        match = get_schema_version(value);
-        if (match >= max_stable_schemas) {
-            // No higher version is available
-            free(value);
-            if (best != NULL) {
-                *best = match;
+        entry = pcmk__get_schema(value);
+        if (entry == NULL) {
+            crm_debug("Updating unknown validation schema '%s'", value);
+        } else {
+            original_schema = entry->data;
+            lpc = original_schema->schema_index;
+            if (lpc >= max_stable_schemas) {
+                // No higher version is available
+                free(value);
+                if (best != NULL) {
+                    *best = original_schema->schema_index;
+                }
+                return pcmk_ok;
             }
-            return pcmk_ok;
-        }
-
-        lpc = match;
-        if (lpc >= 0 && transform == FALSE) {
-            local_best = lpc++;
-
-        } else if (lpc < 0) {
-            crm_debug("Unknown validation schema");
-            lpc = 0;
+            /* If we might transform the XML, it has to validate against its
+             * current schema, so start with that. If we're staying within the
+             * same major version, it's not strictly required, so start with the
+             * next highest schema.
+             */
+            if (!transform) {
+                local_best = lpc++;
+            }
         }
     }
 
@@ -1324,7 +1331,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
     }
 
-    if ((local_best > 0) && (local_best > match)) {
+    if ((local_best > 0)
+        && ((original_schema == NULL)
+            || (local_best > original_schema->schema_index))) {
         pcmk__schema_t *best_schema = g_list_nth_data(known_schemas,
                                                       local_best);
 
