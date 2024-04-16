@@ -16,7 +16,7 @@ valid(void **state) {
     assert_int_equal(pcmk__parse_health_strategy(NULL),
                      pcmk__health_strategy_none);
 
-    assert_int_equal(pcmk__parse_health_strategy("none"),
+    assert_int_equal(pcmk__parse_health_strategy(PCMK_VALUE_NONE),
                      pcmk__health_strategy_none);
 
     assert_int_equal(pcmk__parse_health_strategy("NONE"),

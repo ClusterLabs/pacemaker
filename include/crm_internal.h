@@ -41,6 +41,7 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
 #  include <crm/common/scheduler_internal.h>
+#  include <crm/common/schemas_internal.h>
 #  include <crm/common/xml_internal.h>
 #  include <crm/common/xml_io_internal.h>
 #  include <crm/common/xml_names_internal.h>

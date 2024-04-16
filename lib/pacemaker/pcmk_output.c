@@ -2624,7 +2624,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
     { "profile", "default", profile_default, },
     { "profile", "xml", profile_xml },
-    { "result-code", "none", result_code_none },
+    { "result-code", PCMK_VALUE_NONE, result_code_none },
     { "result-code", "text", result_code_text },
     { "result-code", "xml", result_code_xml },
     { "rsc-action", "default", rsc_action_default },

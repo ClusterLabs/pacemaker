@@ -29,36 +29,6 @@
 extern "C" {
 #endif
 
-/* Some warnings are too noisy when logged every time a give function is called
- * (for example, using a deprecated feature). As an alternative, we allow
- * warnings to be logged once per scheduler sequence (transition). Each of those
- * warnings needs a flag defined here.
- */
-enum pcmk__sched_warnings {
-    pcmk__wo_blind          = (1 << 0),
-    pcmk__wo_restart_type   = (1 << 1),
-    pcmk__wo_role_after     = (1 << 2),
-    pcmk__wo_poweroff       = (1 << 3),
-    pcmk__wo_require_all    = (1 << 4),
-    pcmk__wo_order_score    = (1 << 5),
-    pcmk__wo_neg_threshold  = (1 << 6),
-    pcmk__wo_remove_after   = (1 << 7),
-    pcmk__wo_ping_node      = (1 << 8),
-    pcmk__wo_order_inst     = (1 << 9),
-    pcmk__wo_coloc_inst     = (1 << 10),
-    pcmk__wo_group_order    = (1 << 11),
-    pcmk__wo_group_coloc    = (1 << 12),
-    pcmk__wo_upstart        = (1 << 13),
-    pcmk__wo_nagios         = (1 << 14),
-    pcmk__wo_set_ordering   = (1 << 15),
-    pcmk__wo_rdisc_enabled  = (1 << 16),
-    pcmk__wo_rkt            = (1 << 17),
-    pcmk__wo_location_rules = (1 << 18),
-    pcmk__wo_op_attr_expr   = (1 << 19),
-    pcmk__wo_instance_defaults  = (1 << 20),
-    pcmk__wo_multiple_rules     = (1 << 21),
-};
-
 enum pcmk__check_parameters {
     /* Clear fail count if parameters changed for un-expired start or monitor
      * last_failure.
@@ -71,7 +41,7 @@ enum pcmk__check_parameters {
     pcmk__check_active,
 };
 
-// Group of enum pcmk__sched_warnings flags for warnings we want to log once
+// Group of enum pcmk__warnings flags for warnings we want to log once
 extern uint32_t pcmk__warnings;
 
 /*!
@@ -124,28 +94,6 @@ extern uint32_t pcmk__warnings;
 #define pcmk__sched_warn(fmt...) do {   \
         was_processing_warning = TRUE;  \
         crm_warn(fmt);                  \
-    } while (0)
-
-/*!
- * \internal
- * \brief Log a warning once per scheduler run
- *
- * \param[in] wo_flag  enum pcmk__sched_warnings value for this warning
- * \param[in] fmt...   printf(3)-style format and arguments
- */
-#define pcmk__warn_once(wo_flag, fmt...) do {                           \
-        if (!pcmk_is_set(pcmk__warnings, wo_flag)) {                    \
-            if (wo_flag == pcmk__wo_blind) {                            \
-                crm_warn(fmt);                                          \
-            } else {                                                    \
-                pcmk__config_warn(fmt);                                 \
-            }                                                           \
-            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,     \
-                                                LOG_TRACE,              \
-                                                "Warn-once", "logging", \
-                                                pcmk__warnings,         \
-                                                (wo_flag), #wo_flag);   \
-        }                                                               \
     } while (0)
 
 /*!

@@ -15,7 +15,7 @@
 
 static void
 valid_strategy(void **state) {
-    assert_true(pcmk__validate_health_strategy("none"));
+    assert_true(pcmk__validate_health_strategy(PCMK_VALUE_NONE));
     assert_true(pcmk__validate_health_strategy("None"));
     assert_true(pcmk__validate_health_strategy("NONE"));
     assert_true(pcmk__validate_health_strategy("NoNe"));

@@ -551,15 +551,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
-
-gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
-                            xmlRelaxNGValidityErrorFunc error_handler, 
-                            void *error_handler_context);
-
-void pcmk__log_known_schemas(void);
-const char *pcmk__remote_schema_dir(void);
-void pcmk__sort_schemas(void);
-
 // @COMPAT Remove when v1 patchsets are removed
 xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
 
