@@ -1193,9 +1193,10 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     xmlNode *xml = NULL;
     char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
-    int lpc = 0, rc = pcmk_ok;
+    int rc = pcmk_ok;
     int local_best = 0;
     GList *entry = NULL;
+    pcmk__schema_t *current_schema = NULL;
     pcmk__schema_t *original_schema = NULL;
     pcmk__schema_t *next_higher_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
@@ -1212,14 +1213,18 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     xml = *xml_blob;
     value = crm_element_value_copy(xml, PCMK_XA_VALIDATE_WITH);
 
-    if (value != NULL) {
+    // entry now tracks current_schema
+
+    if (value == NULL) {
+        entry = NULL;
+    } else {
         entry = pcmk__get_schema(value);
         if (entry == NULL) {
             crm_debug("Updating unknown validation schema '%s'", value);
         } else {
             original_schema = entry->data;
-            lpc = original_schema->schema_index;
-            if (lpc >= max_stable_schemas) {
+            current_schema = original_schema;
+            if (original_schema->schema_index >= max_stable_schemas) {
                 // No higher version is available
                 free(value);
                 if (best != NULL) {
@@ -1227,90 +1232,101 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                 }
                 return pcmk_ok;
             }
+
             /* If we might transform the XML, it has to validate against its
              * current schema, so start with that. If we're staying within the
              * same major version, it's not strictly required, so start with the
              * next highest schema.
              */
             if (!transform) {
-                local_best = lpc++;
+                entry = entry->next;
+                current_schema = entry->data;
+                local_best = current_schema->schema_index;
             }
         }
     }
+    if (entry == NULL) {
+        entry = known_schemas;
+        current_schema = entry->data;
+    }
 
-    while (lpc <= max_stable_schemas) {
-        /* FIXME: This will cause us to walk the known_schemas list every time
-         * this loop iterates, which is not ideal.  However, for now it's a lot
-         * easier than trying to get all the loop indices we're using here
-         * sorted out and working correctly.
-         */
-        pcmk__schema_t *schema = g_list_nth_data(known_schemas, lpc);
+    while (current_schema->schema_index <= max_stable_schemas) {
         xmlNode *upgrade = NULL;
 
         crm_debug("Testing '%s' validation (%d of %d)",
-                  pcmk__s(schema->name, "<unset>"), lpc, max_stable_schemas);
+                  current_schema->name, current_schema->schema_index,
+                  max_stable_schemas);
 
-        if (validate_with(xml, schema, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
+        if (!validate_with(xml, current_schema, error_handler,
+                           GUINT_TO_POINTER(LOG_ERR))) {
             if (next_higher_schema != NULL) {
                 crm_info("Configuration not valid for schema: %s",
-                         schema->name);
+                         current_schema->name);
                 next_higher_schema = NULL;
             } else {
-                crm_trace("%s validation failed", pcmk__s(schema->name, "<unset>"));
+                crm_trace("%s validation failed", current_schema->name);
             }
             if (local_best > 0) {
                 /* we've satisfied the validation, no need to check further */
                 break;
             }
             rc = -pcmk_err_schema_validation;
-            lpc++; // Try again with the next higher schema
+
+            // Try again with the next higher schema
+            entry = entry->next;
+            current_schema = entry->data;
             continue;
         }
 
         if (next_higher_schema != NULL) {
-            crm_debug("Configuration valid for schema: %s", schema->name);
+            crm_debug("Configuration valid for schema: %s",
+                      current_schema->name);
             next_higher_schema = NULL;
         }
         rc = pcmk_ok;
-        local_best = lpc;
+
+        local_best = current_schema->schema_index;
 
         if (!transform) {
             /* Validation with this schema succeeded. We are not doing
              * transforms, so try the next schema using the same XML.
              */
-            lpc++;
+            entry = entry->next;
+            current_schema = entry->data;
             continue;
         }
 
-        if (lpc == max_stable_schemas) {
+        if (current_schema->schema_index == max_stable_schemas) {
             break;
         }
-        if ((max > 0) && (lpc == max)) {
-            crm_trace("Upgrade limit %d (%s) reached", max, schema->name);
+        if ((max > 0) && (current_schema->schema_index == max)) {
+            crm_trace("Upgrade limit %d (%s) reached",
+                      max, current_schema->name);
             break;
         }
 
-        next_higher_schema = g_list_nth_data(known_schemas, lpc + 1);
-        CRM_ASSERT(next_higher_schema != NULL);
+        next_higher_schema = entry->next->data;
 
-        if ((schema->transform == NULL)
+        if ((current_schema->transform == NULL)
             || validate_with_silent(xml, next_higher_schema)) {
             /* The next schema either doesn't require a transform, or validates
              * successfully even without doing the transform. We can skip the
              * transform and use it with the same XML in the next iteration.
              */
             crm_debug("%s-style configuration is also valid for %s",
-                       schema->name, next_higher_schema->name);
-            lpc = next_higher_schema->schema_index;
+                       current_schema->name, next_higher_schema->name);
+            entry = entry->next;
+            current_schema = entry->data;
             continue;
         }
 
-        upgrade = apply_upgrade(xml, lpc, to_logs);
+        upgrade = apply_upgrade(xml, current_schema->schema_index, to_logs);
         if (upgrade == NULL) {
             rc = -pcmk_err_transform_failed;
         } else {
-            lpc = next_higher_schema->schema_index;
-            local_best = next_higher_schema->schema_index;
+            entry = entry->next;
+            current_schema = entry->data;
+            local_best = current_schema->schema_index;
             free_xml(xml);
             xml = upgrade;
         }
@@ -1320,7 +1336,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
              * schemas are unlikely to validate, but try anyway until we
              * run out of options.
              */
-            lpc++;
+            entry = entry->next;
+            current_schema = entry->data;
         }
     }
 
