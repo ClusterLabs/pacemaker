@@ -665,6 +665,37 @@ pcmk__get_schema(const char *name)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Compare two schema version numbers given the schema names
+ *
+ * \param[in] schema1  Name of first schema to compare
+ * \param[in] schema2  Name of second schema to compare
+ *
+ * \return Standard comparison result (negative integer if \p schema1 has the
+ *         lower version number, positive integer if \p schema1 has the higher
+ *         version number, of 0 if the version numbers are equal)
+ */
+int
+pcmk__cmp_schemas_by_name(const char *schema1_name, const char *schema2_name)
+{
+    GList *entry1 = pcmk__get_schema(schema1_name);
+    GList *entry2 = pcmk__get_schema(schema2_name);
+
+    if (entry1 == NULL) {
+        return (entry2 == NULL)? 0 : -1;
+
+    } else if (entry2 == NULL) {
+        return 1;
+
+    } else {
+        pcmk__schema_t *schema1 = entry1->data;
+        pcmk__schema_t *schema2 = entry2->data;
+
+        return schema1->schema_index - schema2->schema_index;
+    }
+}
+
 static gboolean
 validate_with(xmlNode *xml, pcmk__schema_t *schema, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
 {

@@ -15,7 +15,8 @@ CFLAGS += -DPCMK__TEST_SCHEMA_DIR='"$(abs_builddir)/schemas"'
 # Add "_test" to the end of all test program names to simplify .gitignore.
 
 # These tests share a schema subdirectory
-SHARED_SCHEMA_TESTS =	crm_schema_init_test			\
+SHARED_SCHEMA_TESTS =	pcmk__cmp_schemas_by_name_test		\
+			crm_schema_init_test			\
 			get_schema_name_test			\
 			get_schema_version_test			\
 			pcmk__build_schema_xml_node_test	\

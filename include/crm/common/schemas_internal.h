@@ -23,6 +23,8 @@ void pcmk__build_schema_xml_node(xmlNode *parent, const char *name,
                                  GList **already_included);
 const char *pcmk__remote_schema_dir(void);
 GList *pcmk__get_schema(const char *name);
+int pcmk__cmp_schemas_by_name(const char *schema1_name,
+                              const char *schema2_name);
 gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                             xmlRelaxNGValidityErrorFunc error_handler,
                             void *error_handler_context);
