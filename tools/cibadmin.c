@@ -806,11 +806,10 @@ main(int argc, char **argv)
         if (rc == pcmk_rc_schema_validation) {
             if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
                 xmlNode *obj = NULL;
-                int version = 0;
 
                 if (the_cib->cmds->query(the_cib, NULL, &obj,
                                          options.cmd_options) == pcmk_ok) {
-                    update_validation(&obj, &version, 0, TRUE, FALSE);
+                    update_validation(&obj, NULL, 0, TRUE, FALSE);
                 }
                 free_xml(obj);
 

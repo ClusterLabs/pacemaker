@@ -1053,6 +1053,22 @@ get_schema_version(const char *name)
 }
 
 /* set which validation to use */
+/*!
+ * \brief Update CIB XML to latest schema that validates it
+ *
+ * \param[in,out] xml_blob   XML to update (may be freed and replaced after
+ *                           being transformed)
+ * \param[out]    best       If not NULL, set to schema index of latest schema
+ *                           that validates \p xml_blob
+ * \param[in]     max        If positive, do not update \p xml_blob to any
+ *                           schema past this index
+ * \param[in]     transform  If false, do not update \p xml_blob to any schema
+ *                           that requires an XSL transform
+ * \param[in]     to_logs    If false, certain validation errors will be sent to
+ *                           stderr rather than logged
+ *
+ * \return Legacy Pacemaker return code
+ */
 int
 update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                   gboolean to_logs)
@@ -1061,12 +1077,14 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
+    int local_best = 0;
     int next = -1;  /* -1 denotes "inactive" value */
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
 
-    CRM_CHECK(best != NULL, return -EINVAL);
-    *best = 0;
+    if (best != NULL) {
+        *best = 0;
+    }
 
     CRM_CHECK((xml_blob != NULL) && (*xml_blob != NULL)
               && ((*xml_blob)->doc != NULL),
@@ -1080,7 +1098,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         lpc = match;
         if (lpc >= 0 && transform == FALSE) {
-            *best = lpc++;
+            local_best = lpc++;
 
         } else if (lpc < 0) {
             crm_debug("Unknown validation schema");
@@ -1089,9 +1107,11 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     }
 
     if (match >= max_stable_schemas) {
-        /* nothing to do */
+        // No higher version is available
         free(value);
-        *best = match;
+        if (best != NULL) {
+            *best = match;
+        }
         return pcmk_ok;
     }
 
@@ -1114,7 +1134,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             } else {
                 crm_trace("%s validation failed", pcmk__s(schema->name, "<unset>"));
             }
-            if (*best) {
+            if (local_best > 0) {
                 /* we've satisfied the validation, no need to check further */
                 break;
             }
@@ -1129,7 +1149,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
 
         if (rc == pcmk_ok) {
-            *best = lpc;
+            local_best = lpc;
         }
 
         if (rc == pcmk_ok && transform) {
@@ -1177,7 +1197,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                                          GUINT_TO_POINTER(LOG_ERR))) {
                     crm_info("Transformation %s.xsl successful", schema->transform);
                     lpc = next;
-                    *best = next;
+                    local_best = next;
                     free_xml(xml);
                     xml = upgrade;
                     rc = pcmk_ok;
@@ -1199,8 +1219,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
     }
 
-    if (*best > match && *best) {
-        pcmk__schema_t *best_schema = g_list_nth_data(known_schemas, *best);
+    if ((local_best > 0) && (local_best > match)) {
+        pcmk__schema_t *best_schema = g_list_nth_data(known_schemas,
+                                                      local_best);
 
         crm_info("%s the configuration from %s to %s",
                    transform?"Transformed":"Upgraded", pcmk__s(value, "<none>"),
@@ -1210,6 +1231,10 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     *xml_blob = xml;
     free(value);
+
+    if (best != NULL) {
+        *best = local_best;
+    }
     return rc;
 }
 
