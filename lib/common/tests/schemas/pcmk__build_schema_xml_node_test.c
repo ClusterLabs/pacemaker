@@ -30,14 +30,16 @@ const char *rngs2[] = { "pacemaker-2.0.rng", "status-1.0.rng", "tags-1.3.rng",
 const char *rngs3[] = { "pacemaker-2.1.rng", "constraints-2.1.rng", NULL };
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
     crm_schema_init();
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     crm_schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;

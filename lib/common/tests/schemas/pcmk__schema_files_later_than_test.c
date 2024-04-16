@@ -15,14 +15,16 @@
 #include <glib.h>
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
     crm_schema_init();
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     crm_schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;
