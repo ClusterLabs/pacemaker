@@ -1195,9 +1195,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, rc = pcmk_ok;
     int local_best = 0;
-    int next = -1;  /* -1 denotes "inactive" value */
     GList *entry = NULL;
     pcmk__schema_t *original_schema = NULL;
+    pcmk__schema_t *next_higher_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
 
@@ -1245,17 +1245,16 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
          * sorted out and working correctly.
          */
         pcmk__schema_t *schema = g_list_nth_data(known_schemas, lpc);
-        pcmk__schema_t *next_schema = NULL;
         xmlNode *upgrade = NULL;
 
         crm_debug("Testing '%s' validation (%d of %d)",
                   pcmk__s(schema->name, "<unset>"), lpc, max_stable_schemas);
 
         if (validate_with(xml, schema, error_handler, GUINT_TO_POINTER(LOG_ERR)) == FALSE) {
-            if (next != -1) {
+            if (next_higher_schema != NULL) {
                 crm_info("Configuration not valid for schema: %s",
                          schema->name);
-                next = -1;
+                next_higher_schema = NULL;
             } else {
                 crm_trace("%s validation failed", pcmk__s(schema->name, "<unset>"));
             }
@@ -1268,9 +1267,9 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             continue;
         }
 
-        if (next != -1) {
+        if (next_higher_schema != NULL) {
             crm_debug("Configuration valid for schema: %s", schema->name);
-            next = -1;
+            next_higher_schema = NULL;
         }
         rc = pcmk_ok;
         local_best = lpc;
@@ -1283,32 +1282,26 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             continue;
         }
 
-        next = lpc+1;
-
-        if (next > max_stable_schemas) {
-            /* There is no next version */
-            crm_trace("Stopping at %s", schema->name);
+        if (lpc == max_stable_schemas) {
+            break;
+        }
+        if ((max > 0) && (lpc == max)) {
+            crm_trace("Upgrade limit %d (%s) reached", max, schema->name);
             break;
         }
 
-        if (max > 0 && (lpc == max || next > max)) {
-            crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                      schema->name, lpc, next, max);
-            break;
-        }
-
-        next_schema = g_list_nth_data(known_schemas, next);
-        CRM_ASSERT(next_schema != NULL);
+        next_higher_schema = g_list_nth_data(known_schemas, lpc + 1);
+        CRM_ASSERT(next_higher_schema != NULL);
 
         if ((schema->transform == NULL)
-            || validate_with_silent(xml, next_schema)) {
+            || validate_with_silent(xml, next_higher_schema)) {
             /* The next schema either doesn't require a transform, or validates
              * successfully even without doing the transform. We can skip the
              * transform and use it with the same XML in the next iteration.
              */
             crm_debug("%s-style configuration is also valid for %s",
-                       schema->name, next_schema->name);
-            lpc = next;
+                       schema->name, next_higher_schema->name);
+            lpc = next_higher_schema->schema_index;
             continue;
         }
 
@@ -1316,12 +1309,12 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         if (upgrade == NULL) {
             rc = -pcmk_err_transform_failed;
         } else {
-            lpc = next;
-            local_best = next;
+            lpc = next_higher_schema->schema_index;
+            local_best = next_higher_schema->schema_index;
             free_xml(xml);
             xml = upgrade;
         }
-        next = -1;
+        next_higher_schema = NULL;
         if (rc != pcmk_ok) {
             /* The transform failed, so this schema can't be used. Later
              * schemas are unlikely to validate, but try anyway until we
