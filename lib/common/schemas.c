@@ -1147,12 +1147,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             next = -1;
         }
         rc = pcmk_ok;
-
-        if (rc == pcmk_ok) {
-            local_best = lpc;
-        }
-
-        if (rc == pcmk_ok && transform) {
+        local_best = lpc;
+        if (transform) {
             xmlNode *upgrade = NULL;
             pcmk__schema_t *next_schema = NULL;
             next = lpc+1;
