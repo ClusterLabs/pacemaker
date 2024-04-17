@@ -1138,14 +1138,15 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                 break;
             }
             rc = -pcmk_err_schema_validation;
-
-        } else {
-            if (next != -1) {
-                crm_debug("Configuration valid for schema: %s", schema->name);
-                next = -1;
-            }
-            rc = pcmk_ok;
+            lpc++; // Try again with the next higher schema
+            continue;
         }
+
+        if (next != -1) {
+            crm_debug("Configuration valid for schema: %s", schema->name);
+            next = -1;
+        }
+        rc = pcmk_ok;
 
         if (rc == pcmk_ok) {
             local_best = lpc;
