@@ -1176,51 +1176,49 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         next_schema = g_list_nth_data(known_schemas, next);
         CRM_ASSERT(next_schema != NULL);
 
-        if (schema->transform == NULL
-                   /* possibly avoid transforming when readily valid
-                      (in general more restricted when crossing the major
-                      version boundary, as X.0 "transitional" version is
-                      expected to be more strict than it's successors that
-                      may re-allow constructs from previous major line) */
-                   || validate_with_silent(xml, next_schema)) {
+        if ((schema->transform == NULL)
+            || validate_with_silent(xml, next_schema)) {
+            /* The next schema either doesn't require a transform, or validates
+             * successfully even without doing the transform. We can skip the
+             * transform and use it with the same XML in the next iteration.
+             */
             crm_debug("%s-style configuration is also valid for %s",
                        schema->name, next_schema->name);
-
             lpc = next;
+            continue;
+        }
+
+        crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
+                   schema->name, next_schema->name, schema->transform);
+
+        upgrade = apply_upgrade(xml, schema, to_logs);
+        if (upgrade == NULL) {
+            crm_err("Transformation %s.xsl failed", schema->transform);
+            rc = -pcmk_err_transform_failed;
+
+        } else if (validate_with(upgrade, next_schema, error_handler,
+                                 GUINT_TO_POINTER(LOG_ERR))) {
+            crm_info("Transformation %s.xsl successful", schema->transform);
+            lpc = next;
+            local_best = next;
+            free_xml(xml);
+            xml = upgrade;
+            rc = pcmk_ok;
 
         } else {
-            crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
-                       schema->name, next_schema->name, schema->transform);
-
-            upgrade = apply_upgrade(xml, schema, to_logs);
-            if (upgrade == NULL) {
-                crm_err("Transformation %s.xsl failed", schema->transform);
-                rc = -pcmk_err_transform_failed;
-
-            } else if (validate_with(upgrade, next_schema, error_handler,
-                                     GUINT_TO_POINTER(LOG_ERR))) {
-                crm_info("Transformation %s.xsl successful", schema->transform);
-                lpc = next;
-                local_best = next;
-                free_xml(xml);
-                xml = upgrade;
-                rc = pcmk_ok;
-
-            } else {
-                crm_err("Transformation %s.xsl did not produce a valid configuration",
-                        schema->transform);
-                crm_log_xml_info(upgrade, "transform:bad");
-                free_xml(upgrade);
-                rc = -pcmk_err_schema_validation;
-            }
-            next = -1;
-            if (rc != pcmk_ok) {
-                /* The transform failed, so this schema can't be used. Later
-                 * schemas are unlikely to validate, but try anyway until we
-                 * run out of options.
-                 */
-                lpc++;
-            }
+            crm_err("Transformation %s.xsl did not produce a valid configuration",
+                    schema->transform);
+            crm_log_xml_info(upgrade, "transform:bad");
+            free_xml(upgrade);
+            rc = -pcmk_err_schema_validation;
+        }
+        next = -1;
+        if (rc != pcmk_ok) {
+            /* The transform failed, so this schema can't be used. Later
+             * schemas are unlikely to validate, but try anyway until we
+             * run out of options.
+             */
+            lpc++;
         }
     }
 
