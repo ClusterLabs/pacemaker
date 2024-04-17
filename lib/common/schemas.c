@@ -1213,6 +1213,10 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     xml = *xml_blob;
     value = crm_element_value_copy(xml, PCMK_XA_VALIDATE_WITH);
 
+    if ((max < 1) || (max > max_stable_schemas)) {
+        max = max_stable_schemas;
+    }
+
     // entry now tracks current_schema
 
     if (value == NULL) {
@@ -1224,7 +1228,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         } else {
             original_schema = entry->data;
             current_schema = original_schema;
-            if (original_schema->schema_index >= max_stable_schemas) {
+            if (original_schema->schema_index >= max) {
                 // No higher version is available
                 free(value);
                 if (best != NULL) {
@@ -1250,12 +1254,11 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         current_schema = entry->data;
     }
 
-    while (current_schema->schema_index <= max_stable_schemas) {
+    while (current_schema->schema_index <= max) {
         xmlNode *upgrade = NULL;
 
         crm_debug("Testing '%s' validation (%d of %d)",
-                  current_schema->name, current_schema->schema_index,
-                  max_stable_schemas);
+                  current_schema->name, current_schema->schema_index, max);
 
         if (!validate_with(xml, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
@@ -1296,13 +1299,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             continue;
         }
 
-        if (current_schema->schema_index == max_stable_schemas) {
-            break;
-        }
-        if ((max > 0) && (current_schema->schema_index == max)) {
-            crm_trace("Upgrade limit %d (%s) reached",
-                      max, current_schema->name);
-            break;
+        if (current_schema->schema_index == max) {
+            break; // No further transformations possible
         }
 
         next_higher_schema = entry->next->data;
