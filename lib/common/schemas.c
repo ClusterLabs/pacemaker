@@ -1121,6 +1121,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
          * sorted out and working correctly.
          */
         pcmk__schema_t *schema = g_list_nth_data(known_schemas, lpc);
+        pcmk__schema_t *next_schema = NULL;
+        xmlNode *upgrade = NULL;
 
         crm_debug("Testing '%s' validation (%d of %d)",
                   pcmk__s(schema->name, "<unset>"), lpc, max_stable_schemas);
@@ -1148,77 +1150,77 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
         rc = pcmk_ok;
         local_best = lpc;
-        if (transform) {
-            xmlNode *upgrade = NULL;
-            pcmk__schema_t *next_schema = NULL;
-            next = lpc+1;
 
-            if (next > max_stable_schemas) {
-                /* There is no next version */
-                crm_trace("Stopping at %s", schema->name);
-                break;
-            }
-
-            if (max > 0 && (lpc == max || next > max)) {
-                crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                          schema->name, lpc, next, max);
-                break;
-            }
-
-            next_schema = g_list_nth_data(known_schemas, next);
-            CRM_ASSERT(next_schema != NULL);
-
-            if (schema->transform == NULL
-                       /* possibly avoid transforming when readily valid
-                          (in general more restricted when crossing the major
-                          version boundary, as X.0 "transitional" version is
-                          expected to be more strict than it's successors that
-                          may re-allow constructs from previous major line) */
-                       || validate_with_silent(xml, next_schema)) {
-                crm_debug("%s-style configuration is also valid for %s",
-                           schema->name, next_schema->name);
-
-                lpc = next;
-
-            } else {
-                crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
-                           schema->name, next_schema->name, schema->transform);
-
-                upgrade = apply_upgrade(xml, schema, to_logs);
-                if (upgrade == NULL) {
-                    crm_err("Transformation %s.xsl failed", schema->transform);
-                    rc = -pcmk_err_transform_failed;
-
-                } else if (validate_with(upgrade, next_schema, error_handler,
-                                         GUINT_TO_POINTER(LOG_ERR))) {
-                    crm_info("Transformation %s.xsl successful", schema->transform);
-                    lpc = next;
-                    local_best = next;
-                    free_xml(xml);
-                    xml = upgrade;
-                    rc = pcmk_ok;
-
-                } else {
-                    crm_err("Transformation %s.xsl did not produce a valid configuration",
-                            schema->transform);
-                    crm_log_xml_info(upgrade, "transform:bad");
-                    free_xml(upgrade);
-                    rc = -pcmk_err_schema_validation;
-                }
-                next = -1;
-                if (rc != pcmk_ok) {
-                    /* The transform failed, so this schema can't be used. Later
-                     * schemas are unlikely to validate, but try anyway until we
-                     * run out of options.
-                     */
-                    lpc++;
-                }
-            }
-        } else {
+        if (!transform) {
             /* Validation with this schema succeeded. We are not doing
              * transforms, so try the next schema using the same XML.
              */
             lpc++;
+            continue;
+        }
+
+        next = lpc+1;
+
+        if (next > max_stable_schemas) {
+            /* There is no next version */
+            crm_trace("Stopping at %s", schema->name);
+            break;
+        }
+
+        if (max > 0 && (lpc == max || next > max)) {
+            crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
+                      schema->name, lpc, next, max);
+            break;
+        }
+
+        next_schema = g_list_nth_data(known_schemas, next);
+        CRM_ASSERT(next_schema != NULL);
+
+        if (schema->transform == NULL
+                   /* possibly avoid transforming when readily valid
+                      (in general more restricted when crossing the major
+                      version boundary, as X.0 "transitional" version is
+                      expected to be more strict than it's successors that
+                      may re-allow constructs from previous major line) */
+                   || validate_with_silent(xml, next_schema)) {
+            crm_debug("%s-style configuration is also valid for %s",
+                       schema->name, next_schema->name);
+
+            lpc = next;
+
+        } else {
+            crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
+                       schema->name, next_schema->name, schema->transform);
+
+            upgrade = apply_upgrade(xml, schema, to_logs);
+            if (upgrade == NULL) {
+                crm_err("Transformation %s.xsl failed", schema->transform);
+                rc = -pcmk_err_transform_failed;
+
+            } else if (validate_with(upgrade, next_schema, error_handler,
+                                     GUINT_TO_POINTER(LOG_ERR))) {
+                crm_info("Transformation %s.xsl successful", schema->transform);
+                lpc = next;
+                local_best = next;
+                free_xml(xml);
+                xml = upgrade;
+                rc = pcmk_ok;
+
+            } else {
+                crm_err("Transformation %s.xsl did not produce a valid configuration",
+                        schema->transform);
+                crm_log_xml_info(upgrade, "transform:bad");
+                free_xml(upgrade);
+                rc = -pcmk_err_schema_validation;
+            }
+            next = -1;
+            if (rc != pcmk_ok) {
+                /* The transform failed, so this schema can't be used. Later
+                 * schemas are unlikely to validate, but try anyway until we
+                 * run out of options.
+                 */
+                lpc++;
+            }
         }
     }
 
