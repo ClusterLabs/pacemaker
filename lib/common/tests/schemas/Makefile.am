@@ -51,7 +51,7 @@ $(FIND_X_0_SCHEMA_TEST): setup-find_x_0-schema-dir
 #                          This will glob more than we need, but the extra ones
 #                          won't get in the way.
 
-LINK_SOURCES =	$(abs_top_builddir)/xml/pacemaker-next.rng	\
+LINK_FILES =	$(abs_top_builddir)/xml/pacemaker-next.rng	\
 		$(abs_top_builddir)/xml/upgrade-*.xsl
 ROOT_RNGS = 	$(shell ls -1v $(abs_top_builddir)/xml/pacemaker-[0-9]*.rng | head -15)
 INCLUDED_RNGS = $(shell ls -1 $(top_srcdir)/xml/*.rng | grep -v pacemaker-[0-9])
@@ -61,7 +61,7 @@ INCLUDED_RNGS = $(shell ls -1 $(top_srcdir)/xml/*.rng | grep -v pacemaker-[0-9])
 setup-schema-dir:
 	$(MKDIR_P) schemas
 	( cd schemas ; \
-	  ln -sf $(LINK_SOURCES) . ; \
+	  ln -sf $(LINK_FILES) . ; \
 	  for f in $(ROOT_RNGS); do \
 		ln -sf $$f $$(basename $$f); \
 	  done ; \
@@ -75,7 +75,7 @@ setup-schema-dir:
 setup-find_x_0-schema-dir:
 	$(MKDIR_P) schemas/find_x_0
 	( cd schemas/find_x_0 ; \
-	  ln -sf $(LINK_SOURCES) . ; \
+	  ln -sf $(LINK_FILES) . ; \
 	  for f in $(ROOT_RNGS); do \
 		ln -sf $$f $$(basename $$f); \
 	  done ; \
