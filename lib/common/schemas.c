@@ -1206,11 +1206,18 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                     rc = -pcmk_err_schema_validation;
                 }
                 next = -1;
+                if (rc != pcmk_ok) {
+                    /* The transform failed, so this schema can't be used. Later
+                     * schemas are unlikely to validate, but try anyway until we
+                     * run out of options.
+                     */
+                    lpc++;
+                }
             }
-        }
-
-        if (transform == FALSE || rc != pcmk_ok) {
-            /* we need some progress! */
+        } else {
+            /* Validation with this schema succeeded. We are not doing
+             * transforms, so try the next schema using the same XML.
+             */
             lpc++;
         }
     }
