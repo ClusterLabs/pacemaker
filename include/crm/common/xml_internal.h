@@ -425,6 +425,19 @@ xmlNode *pcmk__xe_next_same(const xmlNode *node);
 void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
 
+/*!
+ * \internal
+ * \enum pcmk__xa_flags
+ * \brief Flags for operations affecting XML attributes
+ */
+enum pcmk__xa_flags {
+    //! Flag has no effect
+    pcmk__xaf_none          = 0U,
+
+    //! Don't overwrite existing values
+    pcmk__xaf_no_overwrite  = (1U << 0),
+};
+
 void pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src);
 
 /*!
