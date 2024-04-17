@@ -1095,6 +1095,14 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     if (value != NULL) {
         match = get_schema_version(value);
+        if (match >= max_stable_schemas) {
+            // No higher version is available
+            free(value);
+            if (best != NULL) {
+                *best = match;
+            }
+            return pcmk_ok;
+        }
 
         lpc = match;
         if (lpc >= 0 && transform == FALSE) {
@@ -1104,15 +1112,6 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             crm_debug("Unknown validation schema");
             lpc = 0;
         }
-    }
-
-    if (match >= max_stable_schemas) {
-        // No higher version is available
-        free(value);
-        if (best != NULL) {
-            *best = match;
-        }
-        return pcmk_ok;
     }
 
     while (lpc <= max_stable_schemas) {
