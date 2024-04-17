@@ -366,7 +366,8 @@ meta_data() {
 <resource-agent name="o2cb" version="@VERSION@">
   <version>1.0</version>
   <longdesc lang="en">
-This Resource Agent controls the userspace daemon needed by OCFS2.
+This Resource Agent controls the userspace daemon needed by OCFS2.  This agent
+is deprecated and will be removed in Pacemaker 3.0.0.
   </longdesc>
   <shortdesc lang="en">OCFS2 daemon resource agent</shortdesc>
   <parameters>
