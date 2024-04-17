@@ -55,22 +55,21 @@ xml_log(int priority, const char *fmt, ...)
 }
 
 static int
-xml_latest_schema_index(GList *schemas)
+xml_latest_schema_index(void)
 {
-    // @COMPAT: pacemaker-next is deprecated since 2.1.5
-    // FIXME: This function assumes at least three schemas have been added
-    // before it has been called for the first time, which is only the case
-    // if we are not unit testing.
-#if defined(PCMK__UNIT_TESTING)
-    return g_list_length(schemas) - 1; // index from 0
-#else
-    return g_list_length(schemas) - 3; // index from 0, ignore "pacemaker-next"/"none"
-#endif
+    /* This function assumes that crm_schema_init() has been called beforehand,
+     * so we have at least three schemas (one real schema, the "pacemaker-next"
+     * schema, and the "none" schema).
+     *
+     * @COMPAT: pacemaker-next is deprecated since 2.1.5.
+     * Update this when we drop that schema.
+     */
+    return g_list_length(known_schemas) - 3;
 }
 
 /* Return the index of the most recent X.0 schema. */
 int
-pcmk__find_x_0_schema_index(GList *schemas)
+pcmk__find_x_0_schema_index(void)
 {
     /* We can't just use best to determine whether we've found the index
      * or not.  What if we have a very long list of schemas all in the
@@ -96,32 +95,22 @@ pcmk__find_x_0_schema_index(GList *schemas)
         return best;
     }
 
-    CRM_ASSERT(schemas != NULL);
+    CRM_ASSERT(known_schemas != NULL);
 
     /* Get the most recent schema so we can look at its version number. */
-    best = xml_latest_schema_index(schemas);
-    best_node = g_list_nth(schemas, best);
+    best = xml_latest_schema_index();
+    best_node = g_list_nth(known_schemas, best);
     best_schema = best_node->data;
 
-    /* If we are unit testing, we don't add the pacemaker-next/none schemas
-     * to the list because we're not using the standard schema adding
-     * functions.  Thus, a singleton list means we're done.
+    /* The "pacemaker-next" and "none" schemas are added to the real schemas,
+     * so a list of length three actually only has one useful schema.
      *
-     * On the other hand, if we are running as usually, we have those two
-     * schemas added to the list.  A list of length three actually only has
-     * one useful schema.  So we're still done.
-     *
-     * @COMPAT Change this when we stop adding those schemas.
+     * @COMPAT pacemaker-next is deprecated since 2.1.5.
+     * Update this when we drop that schema.
      */
-#if defined(PCMK__UNIT_TESTING)
-    if (pcmk__list_of_1(schemas)) {
+    if (g_list_length(known_schemas) == 3) {
         goto done;
     }
-#else
-    if (g_list_length(schemas) == 3) {
-        goto done;
-    }
-#endif
 
     /* Start comparing the list from the node before the best schema (there's
      * no point in comparing something to itself).  Then, 'i' is an index
@@ -161,7 +150,7 @@ done:
 const char *
 xml_latest_schema(void)
 {
-    return get_schema_name(xml_latest_schema_index(known_schemas));
+    return get_schema_name(xml_latest_schema_index());
 }
 
 static inline bool
@@ -1070,7 +1059,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 {
     xmlNode *xml = NULL;
     char *value = NULL;
-    int max_stable_schemas = xml_latest_schema_index(known_schemas);
+    int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
     int next = -1;  /* -1 denotes "inactive" value */
     xmlRelaxNGValidityErrorFunc error_handler = 
@@ -1233,7 +1222,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
     int version = get_schema_version(value);
     int orig_version = version;
-    int min_version = pcmk__find_x_0_schema_index(known_schemas);
+    int min_version = pcmk__find_x_0_schema_index();
 
     if (version < min_version) {
         // Current configuration schema is not acceptable, try to update
@@ -1295,7 +1284,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             free_xml(*xml);
             *xml = converted;
 
-            if (version < xml_latest_schema_index(known_schemas)) {
+            if (version < xml_latest_schema_index()) {
                 if (to_logs) {
                     pcmk__config_warn("Configuration with schema %s was "
                                       "internally upgraded to acceptable (but "
@@ -1355,7 +1344,7 @@ pcmk__schema_files_later_than(const char *name)
         return lst;
     }
 
-    for (GList *iter = g_list_nth(known_schemas, xml_latest_schema_index(known_schemas));
+    for (GList *iter = g_list_nth(known_schemas, xml_latest_schema_index());
          iter != NULL; iter = iter->prev) {
         pcmk__schema_t *schema = iter->data;
         char *s = NULL;

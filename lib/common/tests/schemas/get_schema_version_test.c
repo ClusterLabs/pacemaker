@@ -14,22 +14,24 @@
 #include <crm/common/xml_internal.h>
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
     crm_schema_init();
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     crm_schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;
 }
 
 static void
-bad_input(void **state) {
-    assert_int_equal(16, get_schema_version(NULL));
+bad_input(void **state)
+{
     assert_int_equal(-1, get_schema_version(""));
     assert_int_equal(-1, get_schema_version("blahblah"));
     assert_int_equal(-1, get_schema_version("pacemaker-2.47"));
@@ -37,7 +39,8 @@ bad_input(void **state) {
 }
 
 static void
-typical_usage(void **state) {
+typical_usage(void **state)
+{
     assert_int_equal(0, get_schema_version("pacemaker-1.0"));
     assert_int_equal(0, get_schema_version("PACEMAKER-1.0"));
     assert_int_equal(1, get_schema_version("pacemaker-1.2"));
@@ -46,6 +49,13 @@ typical_usage(void **state) {
     assert_int_equal(8, get_schema_version("pacemaker-2.5"));
     assert_int_equal(14, get_schema_version("pacemaker-3.0"));
     assert_int_equal(14, get_schema_version("paceMAKER-3.0"));
+
+    // @COMPAT pacemaker-next is deprecated since 2.1.5
+    assert_int_equal(15, get_schema_version("pacemaker-next"));
+
+    assert_int_equal(16, get_schema_version("none"));
+    assert_int_equal(16, get_schema_version("NONE"));
+    assert_int_equal(16, get_schema_version(NULL)); // defaults to "none"
 }
 
 PCMK__UNIT_TEST(setup, teardown,

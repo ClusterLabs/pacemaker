@@ -16,16 +16,11 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 
-/* crm_schema_init is best tested by writing tests for all the other public
- * functions it calls.  However, it's useful to have a test to make sure
- * incorporating a second directory of schema files (like may be seen on
- * Pacemaker Remote nodes) works.
- */
-
 static char *remote_schema_dir = NULL;
 
 static int
-symlink_schema(const char *tmpdir, const char *target_file, const char *link_file) {
+symlink_schema(const char *tmpdir, const char *target_file, const char *link_file)
+{
     int rc = 0;
     char *oldpath = NULL;
     char *newpath = NULL;
@@ -47,12 +42,14 @@ rm_files(const char *pathname, const struct stat *sbuf, int type, struct FTW *ft
 }
 
 static int
-rmtree(const char *dir) {
+rmtree(const char *dir)
+{
     return nftw(dir, rm_files, 10, FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
 }
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     char *dir = NULL;
 
     /* Create a directory to hold additional schema files.  These don't need
@@ -96,7 +93,8 @@ setup(void **state) {
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     int rc = 0;
     char *f = NULL;
 
@@ -112,7 +110,8 @@ teardown(void **state) {
 }
 
 static void
-extra_schema_files(void **state) {
+extra_schema_files(void **state)
+{
     crm_schema_init();
 
     pcmk__log_known_schemas();
@@ -128,7 +127,7 @@ extra_schema_files(void **state) {
     assert_string_equal("pacemaker-3.1", get_schema_name(15));
     assert_string_equal("pacemaker-3.2", get_schema_name(16));
 
-    /* This will one day be removed */
+    // @COMPAT pacemaker-next is deprecated since 2.1.5
     assert_string_equal("pacemaker-next", get_schema_name(17));
 
     assert_string_equal(PCMK_VALUE_NONE, get_schema_name(18));

@@ -13,16 +13,24 @@ include $(top_srcdir)/mk/unittest.mk
 CFLAGS += -DPCMK__TEST_SCHEMA_DIR='"$(abs_builddir)/schemas"'
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = crm_schema_init_test 			\
-		 get_schema_name_test 			\
-		 get_schema_version_test 		\
-		 pcmk__build_schema_xml_node_test 	\
-		 pcmk__schema_files_later_than_test 	\
-		 pcmk__find_x_0_schema_index_test
+
+# These tests share a schema subdirectory
+SHARED_SCHEMA_TESTS =	crm_schema_init_test			\
+			get_schema_name_test			\
+			get_schema_version_test			\
+			pcmk__build_schema_xml_node_test	\
+			pcmk__schema_files_later_than_test
+
+# This test has its own schema directory
+FIND_X_0_SCHEMA_TEST =	pcmk__find_x_0_schema_index_test
+
+check_PROGRAMS =	$(SHARED_SCHEMA_TESTS) $(FIND_X_0_SCHEMA_TEST)
 
 TESTS = $(check_PROGRAMS)
 
-$(TESTS): setup-schema-dir
+$(SHARED_SCHEMA_TESTS): setup-schema-dir
+
+$(FIND_X_0_SCHEMA_TEST): setup-find_x_0-schema-dir
 
 # Set up a temporary schemas/ directory containing only some of the full set of
 # pacemaker schema files.  This lets us know exactly how many schemas are present,
@@ -42,16 +50,36 @@ $(TESTS): setup-schema-dir
 #                          pacemaker-*rng files, so we need them for tests.
 #                          This will glob more than we need, but the extra ones
 #                          won't get in the way.
+
+LINK_SOURCES =	$(abs_top_builddir)/xml/pacemaker-next.rng	\
+		$(abs_top_builddir)/xml/upgrade-*.xsl
+ROOT_RNGS = 	$(shell ls -1v $(abs_top_builddir)/xml/pacemaker-[0-9]*.rng | head -15)
+INCLUDED_RNGS = $(shell ls -1 $(top_srcdir)/xml/*.rng | grep -v pacemaker-[0-9])
+
+# Most tests share a common, read-only schema directory
 .PHONY: setup-schema-dir
 setup-schema-dir:
 	$(MKDIR_P) schemas
 	( cd schemas ; \
-	  ln -sf $(abs_top_builddir)/xml/pacemaker-next.rng . ; \
-	  ln -sf $(abs_top_builddir)/xml/upgrade-*.xsl . ; \
-	  for f in $(shell ls -1v $(abs_top_builddir)/xml/pacemaker-[0-9]*.rng | head -15); do \
+	  ln -sf $(LINK_SOURCES) . ; \
+	  for f in $(ROOT_RNGS); do \
 		ln -sf $$f $$(basename $$f); \
 	  done ; \
-	  for f in $(shell ls -1 $(top_srcdir)/xml/*.rng | grep -v pacemaker); do \
+	  for f in $(INCLUDED_RNGS); do \
+		ln -sf ../$$f $$(basename $$f); \
+	  done )
+
+# pcmk__find_x_0_schema_index_test moves schema files around, so it needs its
+# own directory, otherwise other tests run in parallel could fail.
+.PHONY: setup-find_x_0-schema-dir
+setup-find_x_0-schema-dir:
+	$(MKDIR_P) schemas/find_x_0
+	( cd schemas/find_x_0 ; \
+	  ln -sf $(LINK_SOURCES) . ; \
+	  for f in $(ROOT_RNGS); do \
+		ln -sf $$f $$(basename $$f); \
+	  done ; \
+	  for f in $(INCLUDED_RNGS); do \
 		ln -sf ../$$f $$(basename $$f); \
 	  done )
 
