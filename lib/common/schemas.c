@@ -1169,6 +1169,25 @@ get_schema_version(const char *name)
     return -1;
 }
 
+/*!
+ * \internal
+ * \brief Get the schema list entry corresponding to XML configuration
+ *
+ * \param[in] xml  CIB XML to check
+ *
+ * \return List entry of schema configured in \p xml
+ */
+static GList *
+get_configured_schema(const xmlNode *xml)
+{
+    const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
+
+    if (schema_name == NULL) {
+        return NULL;
+    }
+    return pcmk__get_schema(schema_name);
+}
+
 /* set which validation to use */
 /*!
  * \brief Update CIB XML to latest schema that validates it
@@ -1191,7 +1210,6 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                   gboolean to_logs)
 {
     xmlNode *xml = NULL;
-    char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
     int rc = pcmk_ok;
     int local_best = 0;
@@ -1211,7 +1229,6 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
               return -EINVAL);
 
     xml = *xml_blob;
-    value = crm_element_value_copy(xml, PCMK_XA_VALIDATE_WITH);
 
     if ((max < 1) || (max > max_stable_schemas)) {
         max = max_stable_schemas;
@@ -1219,39 +1236,31 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     // entry now tracks current_schema
 
-    if (value == NULL) {
-        entry = NULL;
-    } else {
-        entry = pcmk__get_schema(value);
-        if (entry == NULL) {
-            crm_debug("Updating unknown validation schema '%s'", value);
-        } else {
-            original_schema = entry->data;
-            current_schema = original_schema;
-            if (original_schema->schema_index >= max) {
-                // No higher version is available
-                free(value);
-                if (best != NULL) {
-                    *best = original_schema->schema_index;
-                }
-                return pcmk_ok;
-            }
-
-            /* If we might transform the XML, it has to validate against its
-             * current schema, so start with that. If we're staying within the
-             * same major version, it's not strictly required, so start with the
-             * next highest schema.
-             */
-            if (!transform) {
-                entry = entry->next;
-                current_schema = entry->data;
-                local_best = current_schema->schema_index;
-            }
-        }
-    }
+    entry = get_configured_schema(xml);
     if (entry == NULL) {
         entry = known_schemas;
         current_schema = entry->data;
+    } else {
+        original_schema = entry->data;
+        current_schema = original_schema;
+        if (original_schema->schema_index >= max) {
+            // No higher version is available
+            if (best != NULL) {
+                *best = original_schema->schema_index;
+            }
+            return pcmk_ok;
+        }
+
+        /* If we might transform the XML, it has to validate against its
+         * current schema, so start with that. If we're staying within the
+         * same major version, it's not strictly required, so start with the
+         * next highest schema.
+         */
+        if (!transform) {
+            entry = entry->next;
+            current_schema = entry->data;
+            local_best = current_schema->schema_index;
+        }
     }
 
     while (current_schema->schema_index <= max) {
@@ -1345,14 +1354,12 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         pcmk__schema_t *best_schema = g_list_nth_data(known_schemas,
                                                       local_best);
 
-        crm_info("%s the configuration from %s to %s",
-                   transform?"Transformed":"Upgraded", pcmk__s(value, "<none>"),
-                   best_schema->name);
+        crm_info("%s the configuration schema to %s",
+                 (transform? "Transformed" : "Upgraded"), best_schema->name);
         crm_xml_add(xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
 
     *xml_blob = xml;
-    free(value);
 
     if (best != NULL) {
         *best = local_best;
