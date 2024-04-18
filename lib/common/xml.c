@@ -1659,7 +1659,8 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  * \param[in,out] target   If not NULL, update this XML
  * \param[in]     update   Make the desired XML match this (must not be \c NULL)
  * \param[in]     flags    Group of <tt>enum pcmk__xa_flags</tt>
- * \param[in]     as_diff  If false, expand \c "++" when making attributes match
+ * \param[in]     as_diff  If \c true, preserve order of attributes (deprecated
+ *                         since 2.0.5)
  *
  * \note At least one of \p parent and \p target must be non-<tt>NULL</tt>.
  * \note This function is recursive. For the top-level call, \p parent is
@@ -1670,7 +1671,10 @@ void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                  uint32_t flags, bool as_diff)
 {
-    // @COMPAT Refactor further and staticize after v1 patchset deprecation
+    /* @COMPAT Refactor further and staticize after v1 patchset deprecation.
+     *
+     * @COMPAT Drop as_diff argument when apply_xml_diff() is dropped.
+     */
     const char *update_name = NULL;
     const char *update_id_attr = NULL;
     const char *update_id_val = NULL;
