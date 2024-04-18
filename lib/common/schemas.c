@@ -1250,17 +1250,6 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             }
             return pcmk_ok;
         }
-
-        /* If we might transform the XML, it has to validate against its
-         * current schema, so start with that. If we're staying within the
-         * same major version, it's not strictly required, so start with the
-         * next highest schema.
-         */
-        if (!transform) {
-            entry = entry->next;
-            current_schema = entry->data;
-            local_best = current_schema->schema_index;
-        }
     }
 
     while (current_schema->schema_index <= max) {
