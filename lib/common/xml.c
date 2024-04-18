@@ -593,7 +593,12 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
             && (crm_element_value(target, name) != NULL)) {
             continue;
         }
-        pcmk__xe_set_score(target, name, value);
+
+        if (pcmk_is_set(flags, pcmk__xaf_score_update)) {
+            pcmk__xe_set_score(target, name, value);
+        } else {
+            crm_xml_add(target, name, value);
+        }
     }
 }
 
@@ -1728,7 +1733,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
     if (!as_diff) {
-        pcmk__xe_copy_attrs(target, update, pcmk__xaf_none);
+        pcmk__xe_copy_attrs(target, update, pcmk__xaf_score_update);
 
     } else {
         // Preserve order of attributes. Don't use pcmk__xe_copy_attrs().
