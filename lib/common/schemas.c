@@ -1192,24 +1192,23 @@ get_configured_schema(const xmlNode *xml)
 /*!
  * \brief Update CIB XML to latest schema that validates it
  *
- * \param[in,out] xml_blob   XML to update (may be freed and replaced after
+ * \param[in,out] xml        XML to update (may be freed and replaced after
  *                           being transformed)
  * \param[out]    best       If not NULL, set to schema index of latest schema
- *                           that validates \p xml_blob
- * \param[in]     max        If positive, do not update \p xml_blob to any
- *                           schema past this index
- * \param[in]     transform  If false, do not update \p xml_blob to any schema
- *                           that requires an XSL transform
+ *                           that validates \p xml
+ * \param[in]     max        If positive, do not update \p xml to any schema
+ *                           past this index
+ * \param[in]     transform  If false, do not update \p xml to any schema that
+ *                           requires an XSL transform
  * \param[in]     to_logs    If false, certain validation errors will be sent to
  *                           stderr rather than logged
  *
  * \return Legacy Pacemaker return code
  */
 int
-update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
+update_validation(xmlNode **xml, int *best, int max, gboolean transform,
                   gboolean to_logs)
 {
-    xmlNode *xml = NULL;
     int max_stable_schemas = xml_latest_schema_index();
     int rc = pcmk_ok;
     int local_best = 0;
@@ -1223,17 +1222,14 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         *best = 0;
     }
 
-    CRM_CHECK((xml_blob != NULL) && (*xml_blob != NULL)
-              && ((*xml_blob)->doc != NULL),
+    CRM_CHECK((xml != NULL) && (*xml != NULL) && ((*xml)->doc != NULL),
               return -EINVAL);
-
-    xml = *xml_blob;
 
     if ((max < 1) || (max > max_stable_schemas)) {
         max = max_stable_schemas;
     }
 
-    entry = get_configured_schema(xml);
+    entry = get_configured_schema(*xml);
     if (entry == NULL) {
         entry = known_schemas;
     } else {
@@ -1257,7 +1253,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         crm_debug("Testing '%s' validation (%d of %d)",
                   current_schema->name, current_schema->schema_index, max);
 
-        if (!validate_with(xml, current_schema, error_handler,
+        if (!validate_with(*xml, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
             if (next_higher_schema != NULL) {
                 crm_info("Configuration not valid for schema: %s",
@@ -1297,7 +1293,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         next_higher_schema = entry->next->data;
 
         if ((current_schema->transform == NULL)
-            || validate_with_silent(xml, next_higher_schema)) {
+            || validate_with_silent(*xml, next_higher_schema)) {
             /* The next schema either doesn't require a transform, or validates
              * successfully even without doing the transform. We can skip the
              * transform and use it with the same XML in the next iteration.
@@ -1307,7 +1303,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             continue;
         }
 
-        upgrade = apply_upgrade(xml, current_schema->schema_index, to_logs);
+        upgrade = apply_upgrade(*xml, current_schema->schema_index, to_logs);
         if (upgrade == NULL) {
             /* The transform failed, so this schema can't be used. Later
              * schemas are unlikely to validate, but try anyway until we
@@ -1316,8 +1312,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             rc = -pcmk_err_transform_failed;
         } else {
             local_best = current_schema->schema_index;
-            free_xml(xml);
-            xml = upgrade;
+            free_xml(*xml);
+            *xml = upgrade;
         }
         next_higher_schema = NULL;
     }
@@ -1330,10 +1326,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         crm_info("%s the configuration schema to %s",
                  (transform? "Transformed" : "Upgraded"), best_schema->name);
-        crm_xml_add(xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
+        crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
-
-    *xml_blob = xml;
 
     if (best != NULL) {
         *best = local_best;
