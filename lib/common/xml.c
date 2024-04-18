@@ -1964,6 +1964,12 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
     return ENXIO;
 }
 
+//! User data for \c update_xe_if_matching()
+struct update_data {
+    xmlNode *update;    //!< Update source
+    uint32_t flags;     //!< Group of <tt>enum pcmk__xa_flags</tt>
+};
+
 /*!
  * \internal
  * \brief Update one XML subtree with another if the two match
@@ -1971,26 +1977,25 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
  * "Update" means to merge a source subtree into a target subtree (see
  * \c pcmk__xml_update()).
  *
- * \c "++" and \c "+=" in attribute values are expanded where appropriate (see
- * \c pcmk__xe_set_score()).
- *
  * A match is defined as follows:
- * * \p xml and \p user_data are both element nodes of the same type.
- * * \p xml and \p user_data have the same \c PCMK_XA_ID attribute value, or
- *   \c PCMK_XA_ID is unset in both
+ * * \p xml and \p user_data->update are both element nodes of the same type.
+ * * \p xml and \p user_data->update have the same \c PCMK_XA_ID attribute
+ *   value, or \c PCMK_XA_ID is unset in both
  *
- * \param[in,out] xml        XML subtree to update with \p user_data upon match
- * \param[in]     user_data  XML to update \p xml with upon match
+ * \param[in,out] xml        XML subtree to update with \p user_data->update
+ *                           upon match
+ * \param[in]     user_data  <tt>struct update_data</tt> object
  *
  * \return \c true to continue traversing the tree, or \c false to stop (because
- *         \p xml was updated by \p user_data)
+ *         \p xml was updated by \p user_data->update)
  *
  * \note This is compatible with \c pcmk__xml_tree_foreach().
  */
 static bool
 update_xe_if_matching(xmlNode *xml, void *user_data)
 {
-    xmlNode *update = user_data;
+    struct update_data *data = user_data;
+    xmlNode *update = data->update;
 
     if (!pcmk__xe_is(update, (const char *) xml->name)) {
         // No match: either not both elements, or different element types
@@ -2004,7 +2009,7 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
 
     crm_log_xml_trace(xml, "update-match");
     crm_log_xml_trace(update, "update-with");
-    pcmk__xml_update(NULL, xml, update, pcmk__xaf_score_update, false);
+    pcmk__xml_update(NULL, xml, update, data->flags, false);
 
     // Found a match and replaced it; stop traversing tree
     return false;
@@ -2017,22 +2022,20 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
  * "Update" means to merge a source subtree into a target subtree (see
  * \c pcmk__xml_update()).
  *
- * \c "++" and \c "+=" in attribute values are expanded where appropriate (see
- * \c pcmk__xe_set_score()).
- *
  * A match with a node \c node is defined as follows:
  * * \c node and \p update are both element nodes of the same type.
- * * \c node and \p user_data have the same \c PCMK_XA_ID attribute value, or
+ * * \c node and \p update have the same \c PCMK_XA_ID attribute value, or
  *   \c PCMK_XA_ID is unset in both
  *
  * \param[in,out] xml     XML tree to search
  * \param[in]     update  XML to update a matching element with
+ * \param[in]     flags   Group of <tt>enum pcmk__xa_flags</tt>
  *
  * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
  *         successful update and an error code otherwise)
  */
 int
-pcmk__xe_update_match(xmlNode *xml, xmlNode *update)
+pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags)
 {
     /* @COMPAT In pcmk__xe_delete_match() and pcmk__xe_replace_match(), we
      * compare IDs only if the equivalent of the update argument has an ID.
@@ -2041,9 +2044,14 @@ pcmk__xe_update_match(xmlNode *xml, xmlNode *update)
      *
      * Perhaps we should align the behavior at a major version release.
      */
+    struct update_data data = {
+        .update = update,
+        .flags = flags,
+    };
+
     CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
 
-    if (!pcmk__xml_tree_foreach(xml, update_xe_if_matching, update)) {
+    if (!pcmk__xml_tree_foreach(xml, update_xe_if_matching, &data)) {
         // Found and updated an element
         return pcmk_rc_ok;
     }
@@ -2615,7 +2623,8 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
 gboolean
 update_xml_child(xmlNode *child, xmlNode *to_update)
 {
-    return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
+    return pcmk__xe_update_match(child, to_update,
+                                 pcmk__xaf_score_update) == pcmk_rc_ok;
 }
 
 int
