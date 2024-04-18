@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdarg.h>
-#include <stdint.h>
+#include <stdint.h>                     // uint32_t
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1658,6 +1658,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  *                         child of this XML node that matches \p update
  * \param[in,out] target   If not NULL, update this XML
  * \param[in]     update   Make the desired XML match this (must not be \c NULL)
+ * \param[in]     flags    Group of <tt>enum pcmk__xa_flags</tt>
  * \param[in]     as_diff  If false, expand \c "++" when making attributes match
  *
  * \note At least one of \p parent and \p target must be non-<tt>NULL</tt>.
@@ -1667,7 +1668,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  */
 void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
-                 bool as_diff)
+                 uint32_t flags, bool as_diff)
 {
     // @COMPAT Refactor further and staticize after v1 patchset deprecation
     const char *update_name = NULL;
@@ -1733,7 +1734,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
     if (!as_diff) {
-        pcmk__xe_copy_attrs(target, update, pcmk__xaf_score_update);
+        pcmk__xe_copy_attrs(target, update, flags);
 
     } else {
         // Preserve order of attributes. Don't use pcmk__xe_copy_attrs().
@@ -1751,7 +1752,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
          child = pcmk__xml_next(child)) {
 
         crm_trace("Updating child of %s", pcmk__s(trace_s, update_name));
-        pcmk__xml_update(target, NULL, child, as_diff);
+        pcmk__xml_update(target, NULL, child, flags, as_diff);
     }
 
     crm_trace("Finished with %s", pcmk__s(trace_s, update_name));
@@ -2003,7 +2004,7 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
 
     crm_log_xml_trace(xml, "update-match");
     crm_log_xml_trace(update, "update-with");
-    pcmk__xml_update(NULL, xml, update, false);
+    pcmk__xml_update(NULL, xml, update, pcmk__xaf_score_update, false);
 
     // Found a match and replaced it; stop traversing tree
     return false;

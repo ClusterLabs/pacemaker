@@ -1522,7 +1522,8 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
              child_diff = pcmk__xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, result = FALSE);
             if (root_nodes_seen == 0) {
-                pcmk__xml_update(NULL, *new_xml, child_diff, true);
+                pcmk__xml_update(NULL, *new_xml, child_diff, pcmk__xaf_none,
+                                 true);
             }
             root_nodes_seen++;
         }

@@ -88,7 +88,7 @@ xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
 
 G_GNUC_INTERNAL
 void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
-                      bool as_diff);
+                      uint32_t flags, bool as_diff);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment,
