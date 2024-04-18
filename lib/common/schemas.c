@@ -1003,8 +1003,13 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     const xmlNode *xml = original_xml;
     xmlNode *upgrade = NULL;
     xmlNode *final = NULL;
+    xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
     CRM_ASSERT((schema != NULL) && (upgraded_schema != NULL));
+
+    if (to_logs) {
+        error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
+    }
 
     transform_onleave = schema->transform_onleave;
     if (schema->transform_enter != NULL) {
@@ -1053,6 +1058,23 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
         free(transform_leave);
     }
 
+    if (final == NULL) {
+        return NULL;
+    }
+
+    // Ensure result validates with its new schema
+    if (!validate_with(final, upgraded_schema, error_handler,
+                       GUINT_TO_POINTER(LOG_ERR))) {
+        crm_err("Schema upgrade from %s to %s failed: "
+                "XSL transform %s produced an invalid configuration",
+                schema->name, upgraded_schema->name, schema->transform);
+        crm_log_xml_debug(final, "bad-transform-result");
+        free_xml(final);
+        return NULL;
+    }
+
+    crm_info("Schema upgrade from %s to %s succeeded",
+             schema->name, upgraded_schema->name);
     return final;
 }
 
@@ -1224,24 +1246,12 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
         upgrade = apply_upgrade(xml, lpc, to_logs);
         if (upgrade == NULL) {
-            crm_err("Transformation %s.xsl failed", schema->transform);
             rc = -pcmk_err_transform_failed;
-
-        } else if (validate_with(upgrade, next_schema, error_handler,
-                                 GUINT_TO_POINTER(LOG_ERR))) {
-            crm_info("Transformation %s.xsl successful", schema->transform);
+        } else {
             lpc = next;
             local_best = next;
             free_xml(xml);
             xml = upgrade;
-            rc = pcmk_ok;
-
-        } else {
-            crm_err("Transformation %s.xsl did not produce a valid configuration",
-                    schema->transform);
-            crm_log_xml_info(upgrade, "transform:bad");
-            free_xml(upgrade);
-            rc = -pcmk_err_schema_validation;
         }
         next = -1;
         if (rc != pcmk_ok) {
