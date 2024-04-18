@@ -926,8 +926,20 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
     va_end(ap);
 }
 
+/*!
+ * \internal
+ * \brief Apply a single XSL transformation to given XML
+ *
+ * \param[in] xml        XML to transform
+ * \param[in] transform  XSL name
+ * \param[in] to_logs    If false, certain validation errors will be sent to
+ *                       stderr rather than logged
+ *
+ * \return Transformed XML on success, otherwise NULL
+ */
 static xmlNode *
-apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
+apply_transformation(const xmlNode *xml, const char *transform,
+                     gboolean to_logs)
 {
     char *xform = NULL;
     xmlNode *out = NULL;
@@ -966,15 +978,27 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
 /*!
  * \internal
- * \brief Possibly full enter->upgrade->leave trip per internal bookkeeping.
+ * \brief Perform all transformations needed to upgrade XML to next schema
  *
- * \note Only emits warnings about enter/leave phases in case of issues.
+ * A schema upgrade can require up to three XSL transformations: an "enter"
+ * transform, the main upgrade transform, and a "leave" transform. Perform
+ * all needed transforms to upgrade given XML to the next schema.
+ *
+ * \param[in] original_xml  XML to transform
+ * \param[in] schema_index  Index of schema that successfully validates
+ *                          \p original_xml
+ * \param[in] to_logs       If false, certain validation errors will be sent to
+ *                          stderr rather than logged
+ *
+ * \return XML result of schema transforms if successful, otherwise NULL
  */
 static xmlNode *
-apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
+apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
 {
+    pcmk__schema_t *schema = g_list_nth_data(known_schemas, schema_index);
     bool transform_onleave = schema->transform_onleave;
     char *transform_leave;
+    const xmlNode *xml = original_xml;
     xmlNode *upgrade = NULL,
             *final = NULL;
 
@@ -986,15 +1010,14 @@ apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
             crm_warn("Upgrade-enter transformation %s.xsl failed",
                      schema->transform_enter);
             transform_onleave = FALSE;
+        } else {
+            xml = upgrade;
         }
-    }
-    if (upgrade == NULL) {
-        upgrade = xml;
     }
 
     crm_debug("Upgrading %s-style configuration, main phase with %s.xsl",
               schema->name, schema->transform);
-    final = apply_transformation(upgrade, schema->transform, to_logs);
+    final = apply_transformation(xml, schema->transform, to_logs);
     if (upgrade != xml) {
         free_xml(upgrade);
         upgrade = NULL;
@@ -1191,7 +1214,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
                    schema->name, next_schema->name, schema->transform);
 
-        upgrade = apply_upgrade(xml, schema, to_logs);
+        upgrade = apply_upgrade(xml, lpc, to_logs);
         if (upgrade == NULL) {
             crm_err("Transformation %s.xsl failed", schema->transform);
             rc = -pcmk_err_transform_failed;
