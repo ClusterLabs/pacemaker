@@ -1214,7 +1214,6 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     int rc = pcmk_ok;
     int local_best = 0;
     GList *entry = NULL;
-    pcmk__schema_t *current_schema = NULL;
     pcmk__schema_t *original_schema = NULL;
     pcmk__schema_t *next_higher_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
@@ -1234,17 +1233,12 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         max = max_stable_schemas;
     }
 
-    // entry now tracks current_schema
-
     entry = get_configured_schema(xml);
     if (entry == NULL) {
         entry = known_schemas;
-        current_schema = entry->data;
     } else {
         original_schema = entry->data;
-        current_schema = original_schema;
         if (original_schema->schema_index >= max) {
-            // No higher version is available
             if (best != NULL) {
                 *best = original_schema->schema_index;
             }
@@ -1252,8 +1246,13 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
         }
     }
 
-    while (current_schema->schema_index <= max) {
+    for (; entry != NULL; entry = entry->next) {
+        pcmk__schema_t *current_schema = entry->data;
         xmlNode *upgrade = NULL;
+
+        if (current_schema->schema_index > max) {
+            break;
+        }
 
         crm_debug("Testing '%s' validation (%d of %d)",
                   current_schema->name, current_schema->schema_index, max);
@@ -1272,11 +1271,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                 break;
             }
             rc = -pcmk_err_schema_validation;
-
-            // Try again with the next higher schema
-            entry = entry->next;
-            current_schema = entry->data;
-            continue;
+            continue; // Try again with the next higher schema
         }
 
         if (next_higher_schema != NULL) {
@@ -1292,8 +1287,6 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             /* Validation with this schema succeeded. We are not doing
              * transforms, so try the next schema using the same XML.
              */
-            entry = entry->next;
-            current_schema = entry->data;
             continue;
         }
 
@@ -1311,30 +1304,22 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
              */
             crm_debug("%s-style configuration is also valid for %s",
                        current_schema->name, next_higher_schema->name);
-            entry = entry->next;
-            current_schema = entry->data;
             continue;
         }
 
         upgrade = apply_upgrade(xml, current_schema->schema_index, to_logs);
         if (upgrade == NULL) {
+            /* The transform failed, so this schema can't be used. Later
+             * schemas are unlikely to validate, but try anyway until we
+             * run out of options.
+             */
             rc = -pcmk_err_transform_failed;
         } else {
-            entry = entry->next;
-            current_schema = entry->data;
             local_best = current_schema->schema_index;
             free_xml(xml);
             xml = upgrade;
         }
         next_higher_schema = NULL;
-        if (rc != pcmk_ok) {
-            /* The transform failed, so this schema can't be used. Later
-             * schemas are unlikely to validate, but try anyway until we
-             * run out of options.
-             */
-            entry = entry->next;
-            current_schema = entry->data;
-        }
     }
 
     if ((local_best > 0)
