@@ -437,6 +437,12 @@ enum pcmk__xa_flags {
 
     //! Don't overwrite existing values
     pcmk__xaf_no_overwrite  = (1U << 0),
+
+    /*!
+     * Treat values as score updates where possible (see
+     * \c pcmk__xe_set_score())
+     */
+    pcmk__xaf_score_update  = (1U << 1),
 };
 
 void pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
