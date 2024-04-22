@@ -222,7 +222,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             current_version = get_schema_version(value);
         }
 
-        rc = update_validation(&scratch, &new_version, 0, TRUE, TRUE);
+        rc = pcmk__update_schema(&scratch, &new_version, 0, TRUE, TRUE);
         if (new_version > current_version) {
             xmlNode *up = pcmk__xe_create(NULL, __func__);
 

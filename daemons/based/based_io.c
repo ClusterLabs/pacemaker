@@ -310,7 +310,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     } else if (validation == NULL) {
         int version = 0;
 
-        update_validation(&root, &version, 0, FALSE, FALSE);
+        pcmk__update_schema(&root, &version, 0, FALSE, FALSE);
         if (version > 0) {
             crm_notice("Enabling %s validation on"
                        " the existing (sane) configuration", get_schema_name(version));

@@ -1188,7 +1188,6 @@ get_configured_schema(const xmlNode *xml)
     return pcmk__get_schema(schema_name);
 }
 
-/* set which validation to use */
 /*!
  * \brief Update CIB XML to latest schema that validates it
  *
@@ -1206,8 +1205,8 @@ get_configured_schema(const xmlNode *xml)
  * \return Legacy Pacemaker return code
  */
 int
-update_validation(xmlNode **xml, int *best, int max, gboolean transform,
-                  gboolean to_logs)
+pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
+                    gboolean to_logs)
 {
     int max_stable_schemas = xml_latest_schema_index();
     int rc = pcmk_ok;
@@ -1321,7 +1320,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         xmlNode *converted = NULL;
 
         converted = pcmk__xml_copy(NULL, *xml);
-        update_validation(&converted, &version, 0, TRUE, to_logs);
+        pcmk__update_schema(&converted, &version, 0, TRUE, to_logs);
 
         value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);
         if (version < min_version) {
@@ -1619,3 +1618,20 @@ pcmk__remote_schema_dir(void)
 
     return dir;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/schemas_compat.h>
+
+int
+update_validation(xmlNode **xml, int *best, int max, gboolean transform,
+                  gboolean to_logs)
+{
+    int rc = pcmk__update_schema(xml, best, max, transform, to_logs);
+
+    return rc;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

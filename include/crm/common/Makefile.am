@@ -38,6 +38,7 @@ header_HEADERS = acl.h 			\
 		 scheduler.h		\
 		 scheduler_types.h	\
 		 schemas.h		\
+		 schemas_compat.h	\
 		 scores.h		\
 		 scores_compat.h	\
 		 tags.h			\
