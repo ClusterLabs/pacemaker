@@ -577,11 +577,13 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
  * \param[in,out] target  XML element to receive copied attributes from \p src
  * \param[in]     src     XML element whose attributes to copy to \p target
  * \param[in]     flags   Group of <tt>enum pcmk__xa_flags</tt>
+ *
+ * \return Standard Pacemaker return code
  */
-void
+int
 pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 {
-    CRM_CHECK((src != NULL) && (target != NULL), return);
+    CRM_CHECK((src != NULL) && (target != NULL), return EINVAL);
 
     for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
          attr = attr->next) {
@@ -600,6 +602,8 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
             crm_xml_add(target, name, value);
         }
     }
+
+    return pcmk_rc_ok;
 }
 
 /*!
