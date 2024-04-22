@@ -1205,8 +1205,8 @@ get_configured_schema(const xmlNode *xml)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
-                    gboolean to_logs)
+pcmk__update_schema(xmlNode **xml, int *best, int max, bool transform,
+                    bool to_logs)
 {
     int max_stable_schemas = xml_latest_schema_index();
     int rc = pcmk_rc_ok;
@@ -1320,7 +1320,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         xmlNode *converted = NULL;
 
         converted = pcmk__xml_copy(NULL, *xml);
-        pcmk__update_schema(&converted, &version, 0, TRUE, to_logs);
+        pcmk__update_schema(&converted, &version, 0, true, to_logs);
 
         value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);
         if (version < min_version) {
