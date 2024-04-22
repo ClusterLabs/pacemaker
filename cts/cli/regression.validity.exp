@@ -38,76 +38,76 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (enum violation) =#=#=#=
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-1.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-1.2 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-1.3 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-1.3 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.0 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.0 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.1 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.1 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.2 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.3 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.3 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.4 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.4 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.5 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.5 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.6 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.6 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.7 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.7 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.8 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.8 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.9 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.9 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-2.10 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.10 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.0 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.0 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.1 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.1 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.2 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.3 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.3 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.4 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.4 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.5 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.5 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.6 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.6 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.7 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.7 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.8 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.8 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.9 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
-update_validation 	debug: Schema pacemaker-3.10 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
 Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.10
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
@@ -147,55 +147,55 @@ Call failed: Update does not conform to the configured schema
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-1.0 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-1.0 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-1.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-1.2 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-1.3 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-1.3 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.0 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.0 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.1 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.1 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.2 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.3 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.3 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.4 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.4 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.5 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.5 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.6 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.6 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.7 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.7 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.8 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.8 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.9 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.9 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-2.10 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-2.10 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.0 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.0 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.1 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.1 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.2 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.3 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.3 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.4 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.4 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.5 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.5 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.6 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.6 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.7 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.7 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.8 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.8 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.9 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
-update_validation 	debug: Schema pacemaker-3.10 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
 Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.10
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
@@ -236,31 +236,31 @@ Call failed: Update does not conform to the configured schema
 * Passed: cibadmin       - Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)
 =#=#=#= Begin test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) =#=#=#=
 element tags: Relax-NG validity error : Element configuration has extra content: tags
-update_validation 	debug: Schema pacemaker-1.2 does not validate
-update_validation 	debug: Schema pacemaker-1.3 validates
-update_validation 	debug: Schema pacemaker-2.0 validates
-update_validation 	debug: Schema pacemaker-2.1 validates
-update_validation 	debug: Schema pacemaker-2.2 validates
-update_validation 	debug: Schema pacemaker-2.3 validates
-update_validation 	debug: Schema pacemaker-2.4 validates
-update_validation 	debug: Schema pacemaker-2.5 validates
-update_validation 	debug: Schema pacemaker-2.6 validates
-update_validation 	debug: Schema pacemaker-2.7 validates
-update_validation 	debug: Schema pacemaker-2.8 validates
-update_validation 	debug: Schema pacemaker-2.9 validates
-update_validation 	debug: Schema pacemaker-2.10 validates
-update_validation 	debug: Schema pacemaker-3.0 validates
-update_validation 	debug: Schema pacemaker-3.1 validates
-update_validation 	debug: Schema pacemaker-3.2 validates
-update_validation 	debug: Schema pacemaker-3.3 validates
-update_validation 	debug: Schema pacemaker-3.4 validates
-update_validation 	debug: Schema pacemaker-3.5 validates
-update_validation 	debug: Schema pacemaker-3.6 validates
-update_validation 	debug: Schema pacemaker-3.7 validates
-update_validation 	debug: Schema pacemaker-3.8 validates
-update_validation 	debug: Schema pacemaker-3.9 validates
-update_validation 	debug: Schema pacemaker-3.10 validates
-update_validation 	info: Transformed the configuration schema to pacemaker-3.10
+pcmk__update_schema 	debug: Schema pacemaker-1.2 does not validate
+pcmk__update_schema 	debug: Schema pacemaker-1.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.0 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.1 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.4 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.5 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.6 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.7 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.8 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.9 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.10 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.0 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.1 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.4 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.5 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.6 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.7 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.8 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.9 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.10 validates
+pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.10
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
