@@ -1097,6 +1097,28 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 {
     int c;
     gboolean config_mode = FALSE;
+    gboolean rc = G_SOURCE_CONTINUE;
+
+    /* If the attached pty device (pseudo-terminal) has been closed/deleted,
+     * the condition (G_IO_IN | G_IO_ERR | G_IO_HUP) occurs.
+     * Exit with an error, otherwise the process would persist in the
+     * background and significantly raise the CPU usage.
+     */
+    if ((condition & G_IO_ERR) && (condition & G_IO_HUP)) {
+        rc = G_SOURCE_REMOVE;
+        clean_up(CRM_EX_IOERR);
+    }
+
+    /* The connection/fd has been closed. Refresh the screen and remove this
+     * event source hence ignore stdin.
+     */
+    if (condition & (G_IO_HUP | G_IO_NVAL)) {
+        rc = G_SOURCE_REMOVE;
+    }
+
+    if ((condition & G_IO_IN) == 0) {
+        return rc;
+    }
 
     while (1) {
 
@@ -1203,7 +1225,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 refresh:
     refresh_after_event(FALSE, TRUE);
 
-    return TRUE;
+    return rc;
 }
 #endif  // CURSES_ENABLED
 
@@ -1739,7 +1761,8 @@ main(int argc, char **argv)
             ncurses_winch_handler = NULL;
 
         io_channel = g_io_channel_unix_new(STDIN_FILENO);
-        g_io_add_watch(io_channel, G_IO_IN, detect_user_input, NULL);
+        g_io_add_watch(io_channel, (G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL),
+                       detect_user_input, NULL);
     }
 #endif
 
@@ -1750,10 +1773,6 @@ main(int argc, char **argv)
 
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
-
-    if (io_channel != NULL) {
-        g_io_channel_shutdown(io_channel, TRUE, NULL);
-    }
 
     crm_info("Exiting %s", crm_system_name);
 
@@ -2235,6 +2254,10 @@ clean_up(crm_exit_t exit_code)
     /* Quitting crm_mon is much more complicated than it ought to be. */
 
     /* (1) Close connections, free things, etc. */
+    if (io_channel != NULL) {
+        g_io_channel_shutdown(io_channel, TRUE, NULL);
+    }
+
     cib__clean_up_connection(&cib);
     stonith_api_delete(st);
     free(options.neg_location_prefix);
