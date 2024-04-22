@@ -116,6 +116,7 @@ struct {
     char *opt_list;
     gboolean all;
     bool promotion_score;
+    gboolean score_update;
 } options = {
     .command = attr_cmd_query,
 };
@@ -309,6 +310,35 @@ static GOptionEntry addl_entries[] = {
       INDENT "Valid values: crm_config, rsc_defaults, op_defaults, tickets",
       "SECTION"
     },
+
+    { "score", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.score_update,
+      "Treat new attribute values as atomic score updates where possible\n"
+      INDENT "(with --update/-v, when running against a CIB file or updating\n"
+      INDENT "an attribute outside the " PCMK_XE_STATUS " section; enabled\n"
+      INDENT "by default if --promotion/-p is specified)\n\n"
+
+      INDENT "This currently happens by default and cannot be disabled, but\n"
+      INDENT "this default behavior will soon be deprecated (except when\n"
+      INDENT "--promotion/-p is set). Set this flag if this behavior is\n"
+      INDENT "desired.\n\n"
+
+      INDENT "This option takes effect when updating XML attributes. For an\n"
+      INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
+      INDENT "\"name+=X\" for some score X, the new value is set as follows:\n"
+      INDENT " * If attribute \"name\" is not already set to some value in\n"
+      INDENT "   the element being updated, the new value is set as a literal\n"
+      INDENT "   string.\n"
+      INDENT " * If the new value is \"name++\", then the attribute is set to\n"
+      INDENT "   its existing value (parsed as a score) plus 1.\n"
+      INDENT " * If the new value is \"name+=X\" for some score X, then the\n"
+      INDENT "   attribute is set to its existing value plus X, where the\n"
+      INDENT "   existing value and X are parsed and added as scores.\n\n"
+
+      INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
+      INDENT "Refer to Pacemaker Explained and to the char2score() function\n"
+      INDENT "for more details on scores, including how they're parsed and\n"
+      INDENT "added.",
+      NULL },
 
     { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
       "Wait for some event to occur before returning.  Values are 'no' (wait\n"
@@ -531,7 +561,12 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
     xmlNode *result = NULL;
     bool use_pattern = options.attr_pattern != NULL;
 
-    cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
+    if (options.score_update || options.promotion_score) {
+        cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
+    } else {
+        // @TODO Warn!
+        cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
+    }
 
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {

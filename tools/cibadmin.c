@@ -52,6 +52,7 @@ static struct {
     gboolean get_node_path;
     gboolean local;
     gboolean no_children;
+    gboolean score_update;
     gboolean sync_call;
 
     /* @COMPAT: For "-!" version option. Not advertised nor marked as
@@ -387,6 +388,32 @@ static GOptionEntry addl_entries[] = {
       INDENT "                'namespace', or 'auto' (use default value)\n"
       INDENT "Default value: 'auto'",
       "[value]" },
+
+    { "score", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.score_update,
+      "Treat new attribute values as atomic score updates where possible "
+      "(with --modify/-M)\n\n"
+
+      INDENT "This currently happens by default and cannot be disabled, but\n"
+      INDENT "this default behavior will soon be deprecated. Set this flag\n"
+      INDENT "if this behavior is desired.\n\n"
+
+      INDENT "This option takes effect when updating XML attributes. For an\n"
+      INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
+      INDENT "\"name+=X\" for some score X, the new value is set as follows:\n"
+      INDENT " * If attribute \"name\" is not already set to some value in\n"
+      INDENT "   the element being updated, the new value is set as a literal\n"
+      INDENT "   string.\n"
+      INDENT " * If the new value is \"name++\", then the attribute is set to\n"
+      INDENT "   its existing value (parsed as a score) plus 1.\n"
+      INDENT " * If the new value is \"name+=X\" for some score X, then the\n"
+      INDENT "   attribute is set to its existing value plus X, where the\n"
+      INDENT "   existing value and X are parsed and added as scores.\n\n"
+
+      INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
+      INDENT "Refer to Pacemaker Explained and to the char2score() function\n"
+      INDENT "for more details on scores, including how they're parsed and\n"
+      INDENT "added.",
+      NULL },
 
     { "allow-create", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.allow_create,
@@ -762,8 +789,14 @@ main(int argc, char **argv)
 
     } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
                             pcmk__str_none)) {
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_score_update);
+        if (options.score_update) {
+            cib__set_call_options(options.cmd_options, crm_system_name,
+                                  cib_score_update);
+        } else {
+            // @TODO Warn!
+            cib__set_call_options(options.cmd_options, crm_system_name,
+                                  cib_score_update);
+        }
     }
 
     rc = do_init();
