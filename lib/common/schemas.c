@@ -1214,7 +1214,6 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
     int local_best = 0;
     GList *entry = NULL;
     pcmk__schema_t *original_schema = NULL;
-    pcmk__schema_t *next_higher_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
 
@@ -1250,18 +1249,9 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
             break;
         }
 
-        crm_debug("Testing '%s' validation (%d of %d)",
-                  current_schema->name, current_schema->schema_index, max);
-
         if (!validate_with(*xml, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
-            if (next_higher_schema != NULL) {
-                crm_info("Configuration not valid for schema: %s",
-                         current_schema->name);
-                next_higher_schema = NULL;
-            } else {
-                crm_trace("%s validation failed", current_schema->name);
-            }
+            crm_debug("Schema %s does not validate", current_schema->name);
             if (local_best > 0) {
                 /* we've satisfied the validation, no need to check further */
                 break;
@@ -1270,11 +1260,7 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
             continue; // Try again with the next higher schema
         }
 
-        if (next_higher_schema != NULL) {
-            crm_debug("Configuration valid for schema: %s",
-                      current_schema->name);
-            next_higher_schema = NULL;
-        }
+        crm_debug("Schema %s validates", current_schema->name);
         rc = pcmk_ok;
 
         local_best = current_schema->schema_index;
@@ -1290,16 +1276,12 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
             break; // No further transformations possible
         }
 
-        next_higher_schema = entry->next->data;
-
         if ((current_schema->transform == NULL)
-            || validate_with_silent(*xml, next_higher_schema)) {
+            || validate_with_silent(*xml, entry->next->data)) {
             /* The next schema either doesn't require a transform, or validates
              * successfully even without doing the transform. We can skip the
              * transform and use it with the same XML in the next iteration.
              */
-            crm_debug("%s-style configuration is also valid for %s",
-                       current_schema->name, next_higher_schema->name);
             continue;
         }
 
@@ -1315,7 +1297,6 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
             free_xml(*xml);
             *xml = upgrade;
         }
-        next_higher_schema = NULL;
     }
 
     if ((local_best > 0)
