@@ -1193,8 +1193,6 @@ get_configured_schema(const xmlNode *xml)
  *
  * \param[in,out] xml        XML to update (may be freed and replaced after
  *                           being transformed)
- * \param[out]    best       If not NULL, set to schema index of latest schema
- *                           that validates \p xml
  * \param[in]     max        If positive, do not update \p xml to any schema
  *                           past this index
  * \param[in]     transform  If false, do not update \p xml to any schema that
@@ -1205,8 +1203,7 @@ get_configured_schema(const xmlNode *xml)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__update_schema(xmlNode **xml, int *best, int max, bool transform,
-                    bool to_logs)
+pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs)
 {
     int max_stable_schemas = xml_latest_schema_index();
     int rc = pcmk_rc_ok;
@@ -1215,10 +1212,6 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, bool transform,
     pcmk__schema_t *original_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
-
-    if (best != NULL) {
-        *best = 0;
-    }
 
     CRM_CHECK((xml != NULL) && (*xml != NULL) && ((*xml)->doc != NULL),
               return EINVAL);
@@ -1233,9 +1226,6 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, bool transform,
     } else {
         original_schema = entry->data;
         if (original_schema->schema_index >= max) {
-            if (best != NULL) {
-                *best = original_schema->schema_index;
-            }
             return pcmk_rc_ok;
         }
     }
@@ -1297,9 +1287,6 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, bool transform,
                      best_schema->name);
             crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
         }
-        if (best != NULL) {
-            *best = best_schema->schema_index;
-        }
     }
     return rc;
 }
@@ -1308,21 +1295,28 @@ gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
-    const char *value = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
-    char *const orig_value = strdup(value == NULL ? "(none)" : value);
-
-    int version = get_schema_version(value);
-    int orig_version = version;
+    char *original_schema_name = NULL;
+    int version = 0;
+    int orig_version = 0;
     int min_version = pcmk__find_x_0_schema_index();
 
+    original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
+    version = get_schema_version(original_schema_name);
+    orig_version = version;
     if (version < min_version) {
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
+        const char *new_schema_name = NULL;
 
         converted = pcmk__xml_copy(NULL, *xml);
-        pcmk__update_schema(&converted, &version, 0, true, to_logs);
+        if (pcmk__update_schema(&converted, 0, true, to_logs) == pcmk_rc_ok) {
+            new_schema_name = crm_element_value(converted,
+                                                PCMK_XA_VALIDATE_WITH);
+            version = get_schema_version(new_schema_name);
+        } else {
+            version = 0;
+        }
 
-        value = crm_element_value(converted, PCMK_XA_VALIDATE_WITH);
         if (version < min_version) {
             // Updated configuration schema is still not acceptable
 
@@ -1330,19 +1324,19 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                 // We couldn't validate any schema at all
                 if (to_logs) {
                     pcmk__config_err("Cannot upgrade configuration (claiming "
-                                     "schema %s) to at least %s because it "
+                                     "%s schema) to at least %s because it "
                                      "does not validate with any schema from "
                                      "%s to %s",
-                                     orig_value,
+                                     pcmk__s(original_schema_name, "no"),
                                      get_schema_name(min_version),
                                      get_schema_name(orig_version),
                                      xml_latest_schema());
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
-                                    "schema %s) to at least %s because it "
+                                    "%s schema) to at least %s because it "
                                     "does not validate with any schema from "
                                     "%s to %s\n",
-                                    orig_value,
+                                    pcmk__s(original_schema_name, "no"),
                                     get_schema_name(min_version),
                                     get_schema_name(orig_version),
                                     xml_latest_schema());
@@ -1351,18 +1345,18 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                 // We updated configuration successfully, but still too low
                 if (to_logs) {
                     pcmk__config_err("Cannot upgrade configuration (claiming "
-                                     "schema %s) to at least %s because it "
+                                     "%s schema) to at least %s because it "
                                      "would not upgrade past %s",
-                                     orig_value,
+                                     pcmk__s(original_schema_name, "no"),
                                      get_schema_name(min_version),
-                                     pcmk__s(value, "unspecified version"));
+                                     pcmk__s(new_schema_name, "unspecified version"));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
-                                    "schema %s) to at least %s because it "
+                                    "%s schema) to at least %s because it "
                                     "would not upgrade past %s\n",
-                                    orig_value,
+                                    pcmk__s(original_schema_name, "no"),
                                     get_schema_name(min_version),
-                                    pcmk__s(value, "unspecified version"));
+                                    pcmk__s(new_schema_name, "unspecified version"));
                 }
             }
 
@@ -1377,16 +1371,18 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 
             if (version < xml_latest_schema_index()) {
                 if (to_logs) {
-                    pcmk__config_warn("Configuration with schema %s was "
+                    pcmk__config_warn("Configuration with %s schema was "
                                       "internally upgraded to acceptable (but "
                                       "not most recent) %s",
-                                      orig_value, get_schema_name(version));
+                                      pcmk__s(original_schema_name, "no"),
+                                      get_schema_name(version));
                 }
             } else {
                 if (to_logs) {
-                    crm_info("Configuration with schema %s was internally "
+                    crm_info("Configuration with %s schema was internally "
                              "upgraded to latest version %s",
-                             orig_value, get_schema_name(version));
+                             pcmk__s(original_schema_name, "no"),
+                             get_schema_name(version));
                 }
             }
         }
@@ -1409,7 +1405,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         *best_version = version;
     }
 
-    free(orig_value);
+    free(original_schema_name);
     return rc;
 }
 
@@ -1628,7 +1624,17 @@ int
 update_validation(xmlNode **xml, int *best, int max, gboolean transform,
                   gboolean to_logs)
 {
-    int rc = pcmk__update_schema(xml, best, max, transform, to_logs);
+    int rc = pcmk__update_schema(xml, max, transform, to_logs);
+
+    if ((best != NULL) && (xml != NULL) && (rc == pcmk_rc_ok)) {
+        const char *schema_name = crm_element_value(*xml,
+                                                    PCMK_XA_VALIDATE_WITH);
+        GList *schema_entry = pcmk__get_schema(schema_name);
+
+        if (schema_entry != NULL) {
+            *best = ((pcmk__schema_t *)(schema_entry->data))->schema_index;
+        }
+    }
 
     return pcmk_rc2legacy(rc);
 }

@@ -308,12 +308,11 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         cib_status = -pcmk_err_schema_validation;
 
     } else if (validation == NULL) {
-        int version = 0;
-
-        pcmk__update_schema(&root, &version, 0, false, false);
-        if (version > 0) {
+        pcmk__update_schema(&root, 0, false, false);
+        validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
+        if (validation != NULL) {
             crm_notice("Enabling %s validation on"
-                       " the existing (sane) configuration", get_schema_name(version));
+                       " the existing (sane) configuration", validation);
         } else {
             crm_err("CIB does not validate with any known schema");
             cib_status = -pcmk_err_schema_validation;

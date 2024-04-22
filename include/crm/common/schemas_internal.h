@@ -28,7 +28,6 @@ int pcmk__cmp_schemas_by_name(const char *schema1_name,
 gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                             xmlRelaxNGValidityErrorFunc error_handler,
                             void *error_handler_context);
-int pcmk__update_schema(xmlNode **xml, int *best, int max, bool transform,
-                        bool to_logs);
+int pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs);
 
 #endif // PCMK__SCHEMAS_INTERNAL__H
