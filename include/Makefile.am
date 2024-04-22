@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,11 +13,11 @@ MAINTAINERCLEANFILES    = Makefile.in \
 noinst_HEADERS	        = config.h 		\
 			  crm_internal.h	\
 			  doxygen.h		\
-			  pacemaker.h 		\
 			  pacemaker-internal.h	\
 			  portability.h 	\
 			  gettext.h
-pkginclude_HEADERS	= crm_config.h
+pkginclude_HEADERS	= crm_config.h 		\
+			  pacemaker.h
 
 SUBDIRS                 =  crm pcmki
 
