@@ -1211,8 +1211,8 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
 {
     int max_stable_schemas = xml_latest_schema_index();
     int rc = pcmk_ok;
-    int local_best = 0;
     GList *entry = NULL;
+    pcmk__schema_t *best_schema = NULL;
     pcmk__schema_t *original_schema = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
@@ -1252,7 +1252,7 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
         if (!validate_with(*xml, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
             crm_debug("Schema %s does not validate", current_schema->name);
-            if (local_best > 0) {
+            if (best_schema != NULL) {
                 /* we've satisfied the validation, no need to check further */
                 break;
             }
@@ -1262,7 +1262,7 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
 
         crm_debug("Schema %s validates", current_schema->name);
         rc = pcmk_ok;
-        local_best = current_schema->schema_index;
+        best_schema = current_schema;
         if (current_schema->schema_index == max) {
             break; // No further transformations possible
         }
@@ -1284,25 +1284,23 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
              */
             rc = -pcmk_err_transform_failed;
         } else {
-            local_best = current_schema->schema_index;
+            best_schema = current_schema;
             free_xml(*xml);
             *xml = upgrade;
         }
     }
 
-    if ((local_best > 0)
-        && ((original_schema == NULL)
-            || (local_best > original_schema->schema_index))) {
-        pcmk__schema_t *best_schema = g_list_nth_data(known_schemas,
-                                                      local_best);
-
-        crm_info("%s the configuration schema to %s",
-                 (transform? "Transformed" : "Upgraded"), best_schema->name);
-        crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
-    }
-
-    if (best != NULL) {
-        *best = local_best;
+    if (best_schema != NULL) {
+        if ((original_schema == NULL)
+            || (best_schema->schema_index > original_schema->schema_index)) {
+            crm_info("%s the configuration schema to %s",
+                     (transform? "Transformed" : "Upgraded"),
+                     best_schema->name);
+            crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
+        }
+        if (best != NULL) {
+            *best = best_schema->schema_index;
+        }
     }
     return rc;
 }
