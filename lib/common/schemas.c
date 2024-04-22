@@ -1262,25 +1262,16 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
 
         crm_debug("Schema %s validates", current_schema->name);
         rc = pcmk_ok;
-
         local_best = current_schema->schema_index;
-
-        if (!transform) {
-            /* Validation with this schema succeeded. We are not doing
-             * transforms, so try the next schema using the same XML.
-             */
-            continue;
-        }
-
         if (current_schema->schema_index == max) {
             break; // No further transformations possible
         }
 
-        if ((current_schema->transform == NULL)
+        if (!transform || (current_schema->transform == NULL)
             || validate_with_silent(*xml, entry->next->data)) {
-            /* The next schema either doesn't require a transform, or validates
-             * successfully even without doing the transform. We can skip the
-             * transform and use it with the same XML in the next iteration.
+            /* The next schema either doesn't require a transform or validates
+             * successfully even without the transform. Skip the transform and
+             * try the next schema with the same XML.
              */
             continue;
         }
