@@ -1202,14 +1202,14 @@ get_configured_schema(const xmlNode *xml)
  * \param[in]     to_logs    If false, certain validation errors will be sent to
  *                           stderr rather than logged
  *
- * \return Legacy Pacemaker return code
+ * \return Standard Pacemaker return code
  */
 int
 pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
                     gboolean to_logs)
 {
     int max_stable_schemas = xml_latest_schema_index();
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GList *entry = NULL;
     pcmk__schema_t *best_schema = NULL;
     pcmk__schema_t *original_schema = NULL;
@@ -1221,7 +1221,7 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
     }
 
     CRM_CHECK((xml != NULL) && (*xml != NULL) && ((*xml)->doc != NULL),
-              return -EINVAL);
+              return EINVAL);
 
     if ((max < 1) || (max > max_stable_schemas)) {
         max = max_stable_schemas;
@@ -1236,7 +1236,7 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
             if (best != NULL) {
                 *best = original_schema->schema_index;
             }
-            return pcmk_ok;
+            return pcmk_rc_ok;
         }
     }
 
@@ -1255,12 +1255,12 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
                 /* we've satisfied the validation, no need to check further */
                 break;
             }
-            rc = -pcmk_err_schema_validation;
+            rc = pcmk_rc_schema_validation;
             continue; // Try again with the next higher schema
         }
 
         crm_debug("Schema %s validates", current_schema->name);
-        rc = pcmk_ok;
+        rc = pcmk_rc_ok;
         best_schema = current_schema;
         if (current_schema->schema_index == max) {
             break; // No further transformations possible
@@ -1281,7 +1281,7 @@ pcmk__update_schema(xmlNode **xml, int *best, int max, gboolean transform,
              * schemas are unlikely to validate, but try anyway until we
              * run out of options.
              */
-            rc = -pcmk_err_transform_failed;
+            rc = pcmk_rc_transform_failed;
         } else {
             best_schema = current_schema;
             free_xml(*xml);
@@ -1630,7 +1630,7 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
 {
     int rc = pcmk__update_schema(xml, best, max, transform, to_logs);
 
-    return rc;
+    return pcmk_rc2legacy(rc);
 }
 
 // LCOV_EXCL_STOP

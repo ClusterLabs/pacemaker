@@ -281,6 +281,7 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
 
     rc = pcmk__update_schema(result_cib, &new_version, max_version, TRUE,
                              !(options & cib_verbose));
+    rc = pcmk_rc2legacy(rc);
     if (new_version > current_version) {
         update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
         update_counter(*result_cib, PCMK_XA_EPOCH, true);
