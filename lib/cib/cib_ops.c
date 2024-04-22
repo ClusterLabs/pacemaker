@@ -262,20 +262,15 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
                     xmlNode ** answer)
 {
     int rc = 0;
-    int max_version = 0;
-    const char *max = crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX);
+    const char *max_schema = crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
 
     *answer = NULL;
-    crm_trace("Processing \"%s\" event with max=%s", op, max);
-
-    if (max) {
-        max_version = get_schema_version(max);
-    }
+    crm_trace("Processing \"%s\" event with max=%s", op, max_schema);
 
     original_schema = crm_element_value(existing_cib, PCMK_XA_VALIDATE_WITH);
-    rc = pcmk__update_schema(result_cib, max_version, true,
+    rc = pcmk__update_schema(result_cib, max_schema, true,
                              !pcmk_is_set(options, cib_verbose));
     rc = pcmk_rc2legacy(rc);
     new_schema = crm_element_value(*result_cib, PCMK_XA_VALIDATE_WITH);

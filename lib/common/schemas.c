@@ -1191,21 +1191,23 @@ get_configured_schema(const xmlNode *xml)
 /*!
  * \brief Update CIB XML to latest schema that validates it
  *
- * \param[in,out] xml        XML to update (may be freed and replaced after
- *                           being transformed)
- * \param[in]     max        If positive, do not update \p xml to any schema
- *                           past this index
- * \param[in]     transform  If false, do not update \p xml to any schema that
- *                           requires an XSL transform
- * \param[in]     to_logs    If false, certain validation errors will be sent to
- *                           stderr rather than logged
+ * \param[in,out] xml              XML to update (may be freed and replaced
+ *                                 after being transformed)
+ * \param[in]     max_schema_name  If not NULL, do not update \p xml to any
+ *                                 schema later than this one
+ * \param[in]     transform        If false, do not update \p xml to any schema
+ *                                 that requires an XSL transform
+ * \param[in]     to_logs          If false, certain validation errors will be
+ *                                 sent to stderr rather than logged
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs)
+pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
+                    bool to_logs)
 {
     int max_stable_schemas = xml_latest_schema_index();
+    int max_schema_index = 0;
     int rc = pcmk_rc_ok;
     GList *entry = NULL;
     pcmk__schema_t *best_schema = NULL;
@@ -1216,8 +1218,17 @@ pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs)
     CRM_CHECK((xml != NULL) && (*xml != NULL) && ((*xml)->doc != NULL),
               return EINVAL);
 
-    if ((max < 1) || (max > max_stable_schemas)) {
-        max = max_stable_schemas;
+    if (max_schema_name != NULL) {
+        GList *max_entry = pcmk__get_schema(max_schema_name);
+
+        if (max_entry != NULL) {
+            pcmk__schema_t *max_schema = max_entry->data;
+
+            max_schema_index = max_schema->schema_index;
+        }
+    }
+    if ((max_schema_index < 1) || (max_schema_index > max_stable_schemas)) {
+        max_schema_index = max_stable_schemas;
     }
 
     entry = get_configured_schema(*xml);
@@ -1225,7 +1236,7 @@ pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs)
         entry = known_schemas;
     } else {
         original_schema = entry->data;
-        if (original_schema->schema_index >= max) {
+        if (original_schema->schema_index >= max_schema_index) {
             return pcmk_rc_ok;
         }
     }
@@ -1234,7 +1245,7 @@ pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs)
         pcmk__schema_t *current_schema = entry->data;
         xmlNode *upgrade = NULL;
 
-        if (current_schema->schema_index > max) {
+        if (current_schema->schema_index > max_schema_index) {
             break;
         }
 
@@ -1252,7 +1263,7 @@ pcmk__update_schema(xmlNode **xml, int max, bool transform, bool to_logs)
         crm_debug("Schema %s validates", current_schema->name);
         rc = pcmk_rc_ok;
         best_schema = current_schema;
-        if (current_schema->schema_index == max) {
+        if (current_schema->schema_index == max_schema_index) {
             break; // No further transformations possible
         }
 
@@ -1309,7 +1320,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         const char *new_schema_name = NULL;
 
         converted = pcmk__xml_copy(NULL, *xml);
-        if (pcmk__update_schema(&converted, 0, true, to_logs) == pcmk_rc_ok) {
+        if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
             new_schema_name = crm_element_value(converted,
                                                 PCMK_XA_VALIDATE_WITH);
             version = get_schema_version(new_schema_name);
@@ -1624,7 +1635,7 @@ int
 update_validation(xmlNode **xml, int *best, int max, gboolean transform,
                   gboolean to_logs)
 {
-    int rc = pcmk__update_schema(xml, max, transform, to_logs);
+    int rc = pcmk__update_schema(xml, get_schema_name(max), transform, to_logs);
 
     if ((best != NULL) && (xml != NULL) && (rc == pcmk_rc_ok)) {
         const char *schema_name = crm_element_value(*xml,

@@ -308,7 +308,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         cib_status = -pcmk_err_schema_validation;
 
     } else if (validation == NULL) {
-        pcmk__update_schema(&root, 0, false, false);
+        pcmk__update_schema(&root, NULL, false, false);
         validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
         if (validation != NULL) {
             crm_notice("Enabling %s validation on"

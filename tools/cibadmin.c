@@ -809,7 +809,7 @@ main(int argc, char **argv)
 
                 if (the_cib->cmds->query(the_cib, NULL, &obj,
                                          options.cmd_options) == pcmk_ok) {
-                    pcmk__update_schema(&obj, 0, true, false);
+                    pcmk__update_schema(&obj, NULL, true, false);
                 }
                 free_xml(obj);
 
