@@ -108,7 +108,7 @@ pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.10
+Cannot upgrade configuration (claiming pacemaker-1.2 schema) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.10
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
@@ -196,7 +196,7 @@ element cib: Relax-NG validity error : Invalid attribute validate-with for eleme
 pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.10
+Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.10
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
