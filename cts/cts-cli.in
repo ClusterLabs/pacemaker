@@ -3519,7 +3519,6 @@ for t in $tests; do
         -e 's|^/tmp/cts-cli\.ta_outfile\.[^ ]* fails to validate|/tmp/cts-cli.ta_outfile fails to validate|' \
         -e 's|^/tmp/cts-cli\.xmllint_outfile\.[^:]*:|/tmp/cts-cli.xmllint_outfile:|' \
         -e 's/^Entity: line [0-9][0-9]*: //'\
-        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
