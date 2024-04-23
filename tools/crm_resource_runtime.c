@@ -1192,7 +1192,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
-    if (!pcmk__update_configured_schema(xml, FALSE)) {
+    if (!pcmk__update_configured_schema(xml, false)) {
         return ENOKEY;
     }
     scheduler->input = *xml;

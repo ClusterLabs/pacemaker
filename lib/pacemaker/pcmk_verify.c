@@ -70,7 +70,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_obje
         rc = pcmk_rc_schema_validation;
         goto verify_done;
 
-    } else if (!pcmk__update_configured_schema(&cib_object, FALSE)) {
+    } else if (!pcmk__update_configured_schema(&cib_object, false)) {
         crm_config_error = TRUE;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"
                  "Please manually update the configuration to conform to the %s syntax.",

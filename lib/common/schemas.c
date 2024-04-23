@@ -1231,12 +1231,12 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
  * \param[in]     to_logs  If false, certain validation errors will be
  *                         sent to stderr rather than logged
  *
- * \return TRUE if XML was successfully updated, otherwise FALSE
+ * \return true if XML was successfully updated, otherwise false
  */
-gboolean
-pcmk__update_configured_schema(xmlNode **xml, gboolean to_logs)
+bool
+pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 {
-    gboolean rc = TRUE;
+    bool rc = true;
     char *original_schema_name = NULL;
     const char *effective_original_name = "the first";
     int orig_version = -1;
@@ -1310,7 +1310,7 @@ pcmk__update_configured_schema(xmlNode **xml, gboolean to_logs)
 
             free_xml(converted);
             converted = NULL;
-            rc = FALSE;
+            rc = false;
 
         } else {
             // Updated configuration schema is acceptable
@@ -1696,7 +1696,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
-    gboolean rc = pcmk__update_configured_schema(xml, to_logs);
+    bool rc = pcmk__update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
         const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
@@ -1710,7 +1710,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             *best_version = (schema == NULL)? -1 : schema->schema_index;
         }
     }
-    return rc;
+    return rc? TRUE: FALSE;
 }
 
 // LCOV_EXCL_STOP
