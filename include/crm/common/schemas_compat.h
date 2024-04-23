@@ -45,6 +45,9 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation,
 //! \deprecated Do not use
 gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
+//! \deprecated Do not use
+gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
+
 #ifdef __cplusplus
 }
 #endif

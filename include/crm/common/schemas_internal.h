@@ -30,6 +30,7 @@ bool pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                         xmlRelaxNGValidityErrorFunc error_handler,
                         void *error_handler_context);
 bool pcmk__configured_schema_validates(xmlNode *xml);
+gboolean pcmk__update_configured_schema(xmlNode **xml, gboolean to_logs);
 int pcmk__update_schema(xmlNode **xml, const char *max_schema_name,
                         bool transform, bool to_logs);
 

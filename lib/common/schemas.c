@@ -1223,8 +1223,18 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Update XML from its configured schema to the latest major series
+ *
+ * \param[in,out] xml      XML to update
+ * \param[in]     to_logs  If false, certain validation errors will be
+ *                         sent to stderr rather than logged
+ *
+ * \return TRUE if XML was successfully updated, otherwise FALSE
+ */
 gboolean
-cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
+pcmk__update_configured_schema(xmlNode **xml, gboolean to_logs)
 {
     gboolean rc = TRUE;
     char *original_schema_name = NULL;
@@ -1321,9 +1331,6 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                          pcmk__s(original_schema_name, "no"),
                          schema->name);
             }
-            if (best_version != NULL) {
-                *best_version = schema->schema_index;
-            }
         }
 
     } else {
@@ -1345,9 +1352,6 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                 "disabled (enabling is encouraged and "
                                 "prevents common misconfigurations)\n");
             }
-        }
-        if (best_version != NULL) {
-            *best_version = orig_version;
         }
     }
 
@@ -1687,6 +1691,26 @@ validate_xml_verbose(const xmlNode *xml_blob)
     free(filename);
 
     return rc? TRUE : FALSE;
+}
+
+gboolean
+cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
+{
+    gboolean rc = pcmk__update_configured_schema(xml, to_logs);
+
+    if (best_version != NULL) {
+        const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
+
+        if (name == NULL) {
+            *best_version = -1;
+        } else {
+            GList *entry = pcmk__get_schema(name);
+            pcmk__schema_t *schema = (entry == NULL)? NULL : entry->data;
+
+            *best_version = (schema == NULL)? -1 : schema->schema_index;
+        }
+    }
+    return rc;
 }
 
 // LCOV_EXCL_STOP

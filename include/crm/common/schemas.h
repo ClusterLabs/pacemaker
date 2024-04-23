@@ -13,8 +13,6 @@
 #include <glib.h>           // gboolean
 #include <libxml/tree.h>    // xmlNode
 
-gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/schemas_compat.h>
 #endif
