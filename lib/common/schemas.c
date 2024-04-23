@@ -745,65 +745,6 @@ validate_with_silent(xmlNode *xml, pcmk__schema_t *schema)
     return rc;
 }
 
-static void
-dump_file(const char *filename)
-{
-
-    FILE *fp = NULL;
-    int ch, line = 0;
-
-    CRM_CHECK(filename != NULL, return);
-
-    fp = fopen(filename, "r");
-    if (fp == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
-        return;
-    }
-
-    fprintf(stderr, "%4d ", ++line);
-    do {
-        ch = getc(fp);
-        if (ch == EOF) {
-            putc('\n', stderr);
-            break;
-        } else if (ch == '\n') {
-            fprintf(stderr, "\n%4d ", ++line);
-        } else {
-            putc(ch, stderr);
-        }
-    } while (1);
-
-    fclose(fp);
-}
-
-gboolean
-validate_xml_verbose(const xmlNode *xml_blob)
-{
-    int fd = 0;
-    xmlDoc *doc = NULL;
-    xmlNode *xml = NULL;
-    gboolean rc = FALSE;
-    char *filename = NULL;
-
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-    fd = mkstemp(filename);
-    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
-
-    dump_file(filename);
-
-    doc = xmlReadFile(filename, NULL, 0);
-    xml = xmlDocGetRootElement(doc);
-    rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
-    free_xml(xml);
-
-    unlink(filename);
-    free(filename);
-
-    return rc? TRUE : FALSE;
-}
-
 bool
 pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                    xmlRelaxNGValidityErrorFunc error_handler,
@@ -1670,6 +1611,65 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
     bool rc = pcmk__validate_xml(xml_blob, validation,
                                  to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
                                  GUINT_TO_POINTER(LOG_ERR));
+    return rc? TRUE : FALSE;
+}
+
+static void
+dump_file(const char *filename)
+{
+
+    FILE *fp = NULL;
+    int ch, line = 0;
+
+    CRM_CHECK(filename != NULL, return);
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
+        return;
+    }
+
+    fprintf(stderr, "%4d ", ++line);
+    do {
+        ch = getc(fp);
+        if (ch == EOF) {
+            putc('\n', stderr);
+            break;
+        } else if (ch == '\n') {
+            fprintf(stderr, "\n%4d ", ++line);
+        } else {
+            putc(ch, stderr);
+        }
+    } while (1);
+
+    fclose(fp);
+}
+
+gboolean
+validate_xml_verbose(const xmlNode *xml_blob)
+{
+    int fd = 0;
+    xmlDoc *doc = NULL;
+    xmlNode *xml = NULL;
+    gboolean rc = FALSE;
+    char *filename = NULL;
+
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
+
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+    fd = mkstemp(filename);
+    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
+
+    dump_file(filename);
+
+    doc = xmlReadFile(filename, NULL, 0);
+    xml = xmlDocGetRootElement(doc);
+    rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
+    free_xml(xml);
+
+    unlink(filename);
+    free(filename);
+
     return rc? TRUE : FALSE;
 }
 

@@ -258,7 +258,8 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     }
 
     if (rc == -pcmk_err_schema_validation) {
-        validate_xml_verbose(result_cib);
+        // Show validation errors to stderr
+        pcmk__validate_xml(result_cib, NULL, NULL, NULL);
 
     } else if ((rc == pcmk_ok) && !read_only) {
         pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);

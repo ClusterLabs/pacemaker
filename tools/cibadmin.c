@@ -814,7 +814,8 @@ main(int argc, char **argv)
                 free_xml(obj);
 
             } else if (output) {
-                validate_xml_verbose(output);
+                // Show validation errors to stderr
+                pcmk__validate_xml(output, NULL, NULL, NULL);
             }
         }
         exit_code = pcmk_rc2exitc(rc);

@@ -36,6 +36,9 @@ int update_validation(xmlNode **xml_blob, int *best, int max,
 gboolean validate_xml(xmlNode *xml_blob, const char *validation,
                       gboolean to_logs);
 
+//! \deprecated Do not use
+gboolean validate_xml_verbose(const xmlNode *xml_blob);
+
 #ifdef __cplusplus
 }
 #endif
