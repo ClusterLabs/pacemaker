@@ -1236,6 +1236,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
     gboolean rc = TRUE;
     char *original_schema_name = NULL;
+    const char *effective_original_name = "the first";
     int version = 0;
     int orig_version = 0;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
@@ -1248,6 +1249,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     } else {
         pcmk__schema_t *original_schema = entry->data;
 
+        effective_original_name = original_schema->name;
         version = original_schema->schema_index;
     }
     orig_version = version;
@@ -1282,16 +1284,14 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                      "does not validate with any schema from "
                                      "%s to the latest",
                                      pcmk__s(original_schema_name, "no"),
-                                     x_0_schema->name,
-                                     get_schema_name(orig_version));
+                                     x_0_schema->name, effective_original_name);
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "does not validate with any schema from "
                                     "%s to the latest\n",
                                     pcmk__s(original_schema_name, "no"),
-                                    x_0_schema->name,
-                                    get_schema_name(orig_version));
+                                    x_0_schema->name, effective_original_name);
                 }
             } else {
                 // We updated configuration successfully, but still too low
