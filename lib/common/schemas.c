@@ -1098,28 +1098,6 @@ get_schema_name(int version)
     return (schema != NULL)? schema->name : "unknown";
 }
 
-int
-get_schema_version(const char *name)
-{
-    int lpc = 0;
-
-    if (name == NULL) {
-        name = PCMK_VALUE_NONE;
-    }
-
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        pcmk__schema_t *schema = iter->data;
-
-        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
-            return lpc;
-        }
-
-        lpc++;
-    }
-
-    return -1;
-}
-
 /*!
  * \internal
  * \brief Get the schema list entry corresponding to XML configuration
@@ -1261,10 +1239,19 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     int version = 0;
     int orig_version = 0;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
+    GList *entry = NULL;
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
-    version = get_schema_version(original_schema_name);
+    entry = pcmk__get_schema(original_schema_name);
+    if (entry == NULL) {
+        version = -1;
+    } else {
+        pcmk__schema_t *original_schema = entry->data;
+
+        version = original_schema->schema_index;
+    }
     orig_version = version;
+
     if (version < x_0_schema->schema_index) {
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
@@ -1274,7 +1261,12 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
             new_schema_name = crm_element_value(converted,
                                                 PCMK_XA_VALIDATE_WITH);
-            version = get_schema_version(new_schema_name);
+            entry = pcmk__get_schema(new_schema_name);
+            if (entry == NULL) {
+                version = -1;
+            } else {
+                version = ((pcmk__schema_t *)(entry->data))->schema_index;
+            }
         } else {
             version = 0;
         }
@@ -1347,17 +1339,25 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             }
         }
 
-    } else if (version >= get_schema_version(PCMK_VALUE_NONE)) {
-        // Schema validation is disabled
-        if (to_logs) {
-            pcmk__config_warn("Schema validation of configuration is disabled "
-                              "(enabling is encouraged and prevents common "
-                              "misconfigurations)");
+    } else {
+        pcmk__schema_t *none_schema = NULL;
 
-        } else {
-            fprintf(stderr, "Schema validation of configuration is disabled "
-                            "(enabling is encouraged and prevents common "
-                            "misconfigurations)\n");
+        entry = pcmk__get_schema(PCMK_VALUE_NONE);
+        CRM_ASSERT((entry != NULL) && (entry->data != NULL));
+
+        none_schema = entry->data;
+        if (version >= none_schema->schema_index) {
+            // Schema validation is disabled
+            if (to_logs) {
+                pcmk__config_warn("Schema validation of configuration is "
+                                  "disabled (enabling is encouraged and "
+                                  "prevents common misconfigurations)");
+
+            } else {
+                fprintf(stderr, "Schema validation of configuration is "
+                                "disabled (enabling is encouraged and "
+                                "prevents common misconfigurations)\n");
+            }
         }
     }
 
@@ -1584,6 +1584,28 @@ const char *
 xml_latest_schema(void)
 {
     return pcmk__highest_schema_name();
+}
+
+int
+get_schema_version(const char *name)
+{
+    int lpc = 0;
+
+    if (name == NULL) {
+        name = PCMK_VALUE_NONE;
+    }
+
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        pcmk__schema_t *schema = iter->data;
+
+        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
+            return lpc;
+        }
+
+        lpc++;
+    }
+
+    return -1;
 }
 
 int

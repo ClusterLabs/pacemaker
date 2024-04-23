@@ -18,7 +18,6 @@ CFLAGS += -DPCMK__TEST_SCHEMA_DIR='"$(abs_builddir)/schemas"'
 SHARED_SCHEMA_TESTS =	pcmk__cmp_schemas_by_name_test		\
 			crm_schema_init_test			\
 			get_schema_name_test			\
-			get_schema_version_test			\
 			pcmk__build_schema_xml_node_test	\
 			pcmk__get_schema_test 			\
 			pcmk__schema_files_later_than_test

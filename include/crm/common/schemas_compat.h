@@ -29,6 +29,9 @@ extern "C" {
 const char *xml_latest_schema(void);
 
 //! \deprecated Do not use
+int get_schema_version(const char *name);
+
+//! \deprecated Do not use
 int update_validation(xmlNode **xml_blob, int *best, int max,
                       gboolean transform, gboolean to_logs);
 
