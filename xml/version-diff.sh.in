@@ -8,53 +8,57 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-# diff fails with ec=2 if no predecessor is found;
-# this uses '=' GNU extension to sed, if that's not available,
-# one can use: hline=`echo "$${p}" | grep -Fn "$${hunk}" | cut -d: -f1`;
-# XXX: use line information from hunk to avoid "not detected" for ambiguity
-for p in $*; do
-    set $(echo "$p" | tr '-' ' ')
-    echo "### *-$2.rng vs. predecessor"
+version_diff() {
+    # diff fails with ec=2 if no predecessor is found;
+    # this uses '=' GNU extension to sed, if that's not available,
+    # one can use: hline=`echo "$${p}" | grep -Fn "$${hunk}" | cut -d: -f1`;
+    # XXX: use line information from hunk to avoid "not detected" for ambiguity
+    for p in $*; do
+        set $(echo "$p" | tr '-' ' ')
+        echo "### *-$2.rng vs. predecessor"
 
-    for v in *-"$2".rng; do
-        echo "#### $v vs. predecessor"
+        for v in *-"$2".rng; do
+            echo "#### $v vs. predecessor"
 
-        b=$(echo "$v" | cut -d- -f1)
-        old=$(./rng-helper match "$b" "$1")
-        p=$(diff -u "$old" "$v" 2>/dev/null)
+            b=$(echo "$v" | cut -d- -f1)
+            old=$(./rng-helper match "$b" "$1")
+            p=$(diff -u "$old" "$v" 2>/dev/null)
 
-        case $? in
-            1)
-                echo "$p" | sed -n -e '/^@@ /!d;=;p' -e ':l;n;/^\([- ]\|+.*<[^ />]\+\([^/>]\+="ID\|>$$\)\)/bl;s/^[+ ]\(.*\)/\1/p' |
-                while read -r hline; do
-                    if read -r h; then
-                        read -r i
-                    else
-                        break
-                    fi
+            case $? in
+                1)
+                    echo "$p" | sed -n -e '/^@@ /!d;=;p' -e ':l;n;/^\([- ]\|+.*<[^ />]\+\([^/>]\+="ID\|>$$\)\)/bl;s/^[+ ]\(.*\)/\1/p' |
+                    while read -r hline; do
+                        if read -r h; then
+                            read -r i
+                        else
+                            break
+                        fi
 
-                    iline=$(grep -Fn "$i" "$v" | cut -d: -f1)
+                        iline=$(grep -Fn "$i" "$v" | cut -d: -f1)
 
-                    if [ "$(echo "$iline" | wc -l)" = "1" ]; then
-                        ctxt=$({ sed -n -e "1,$((iline - 1))p" "$v"
-                                 echo "<inject id=\"GOAL\"/>$i"
-                                 sed -n -e "$((iline + 1)),$ p" "$v"
-                               } | xsltproc --param skip 1 context-of.xsl -)
-                    else
-                        ctxt="(not detected)"
-                    fi
+                        if [ "$(echo "$iline" | wc -l)" = "1" ]; then
+                            ctxt=$({ sed -n -e "1,$((iline - 1))p" "$v"
+                                     echo "<inject id=\"GOAL\"/>$i"
+                                     sed -n -e "$((iline + 1)),$ p" "$v"
+                                   } | xsltproc --param skip 1 context-of.xsl -)
+                        else
+                            ctxt="(not detected)"
+                        fi
 
-                    echo "$p" | sed -n -e "$((hline - 2)),$hline!d" -e '/^\(+++\|---\)/p'
-                    echo "$h context: $ctxt"
-                    echo "$p" | sed -n -e "1,${hline}d" -e '/^\(---\|@@ \)/be;p;d;:e;n;be'
-                done
+                        echo "$p" | sed -n -e "$((hline - 2)),$hline!d" -e '/^\(+++\|---\)/p'
+                        echo "$h context: $ctxt"
+                        echo "$p" | sed -n -e "1,${hline}d" -e '/^\(---\|@@ \)/be;p;d;:e;n;be'
+                    done
 
-                ;;
+                    ;;
 
-            2)
-                echo "##### $v has no predecessor"
-                ;;
+                2)
+                    echo "##### $v has no predecessor"
+                    ;;
 
-        esac
+            esac
+        done
     done
-done
+}
+
+version_diff "$@"
