@@ -504,16 +504,17 @@ crm_schema_init(void)
     }
 }
 
-static gboolean
-validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, void *error_handler_context, const char *relaxng_file,
+static bool
+validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
+                      void *error_handler_context, const char *relaxng_file,
                       relaxng_ctx_cache_t **cached_ctx)
 {
     int rc = 0;
-    gboolean valid = TRUE;
+    bool valid = true;
     relaxng_ctx_cache_t *ctx = NULL;
 
-    CRM_CHECK(doc != NULL, return FALSE);
-    CRM_CHECK(relaxng_file != NULL, return FALSE);
+    CRM_CHECK(doc != NULL, return false);
+    CRM_CHECK(relaxng_file != NULL, return false);
 
     if (cached_ctx && *cached_ctx) {
         ctx = *cached_ctx;
@@ -560,7 +561,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
 
     rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
     if (rc > 0) {
-        valid = FALSE;
+        valid = false;
 
     } else if (rc < 0) {
         crm_err("Internal libxml error during validation");
@@ -693,19 +694,21 @@ pcmk__cmp_schemas_by_name(const char *schema1_name, const char *schema2_name)
     }
 }
 
-static gboolean
-validate_with(xmlNode *xml, pcmk__schema_t *schema, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
+static bool
+validate_with(xmlNode *xml, pcmk__schema_t *schema,
+              xmlRelaxNGValidityErrorFunc error_handler,
+              void *error_handler_context)
 {
-    gboolean valid = FALSE;
+    bool valid = false;
     char *file = NULL;
     relaxng_ctx_cache_t **cache = NULL;
 
     if (schema == NULL) {
-        return FALSE;
+        return false;
     }
 
     if (schema->validator == pcmk__schema_validator_none) {
-        return TRUE;
+        return true;
     }
 
     if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
@@ -798,16 +801,19 @@ validate_xml_verbose(const xmlNode *xml_blob)
     unlink(filename);
     free(filename);
 
-    return rc;
+    return rc? TRUE : FALSE;
 }
 
 gboolean
 validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
 {
-    return pcmk__validate_xml(xml_blob, validation, to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL, GUINT_TO_POINTER(LOG_ERR));
+    bool rc = pcmk__validate_xml(xml_blob, validation,
+                                 to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
+                                 GUINT_TO_POINTER(LOG_ERR));
+    return rc? TRUE : FALSE;
 }
 
-gboolean
+bool
 pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                    xmlRelaxNGValidityErrorFunc error_handler,
                    void *error_handler_context)
@@ -815,19 +821,19 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     GList *entry = NULL;
     pcmk__schema_t *schema = NULL;
 
-    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
+    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return false);
 
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
 
     if (validation == NULL) {
-        bool valid = FALSE;
+        bool valid = false;
 
         for (entry = known_schemas; entry != NULL; entry = entry->next) {
             schema = entry->data;
             if (validate_with(xml_blob, schema, NULL, NULL)) {
-                valid = TRUE;
+                valid = true;
                 crm_xml_add(xml_blob, PCMK_XA_VALIDATE_WITH, schema->name);
                 crm_info("XML validated against %s", schema->name);
             }
@@ -843,7 +849,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
 
     crm_err("Unknown validator: %s", validation);
-    return FALSE;
+    return false;
 }
 
 /* With this arrangement, an attempt to identify the message severity
