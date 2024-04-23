@@ -115,10 +115,9 @@ struct {
     gchar *type;
     char *opt_list;
     gboolean all;
-    gboolean promotion_score;
+    bool promotion_score;
 } options = {
     .command = attr_cmd_query,
-    .promotion_score = FALSE
 };
 
 #define INDENT "                               "
@@ -139,10 +138,23 @@ delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
+attr_name_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+             GError **error)
+{
+    options.promotion_score = false;
+
+    if (options.attr_name != NULL) {
+        g_free(options.attr_name);
+    }
+    options.attr_name = g_strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
 promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     char *score_name = NULL;
 
-    options.promotion_score = TRUE;
+    options.promotion_score = true;
 
     if (options.attr_name) {
         g_free(options.attr_name);
@@ -218,7 +230,7 @@ static GOptionEntry selecting_entries[] = {
       "XML_ID"
     },
 
-    { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
+    { "name", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, attr_name_cb,
       "Operate on attribute or option with this name.  For queries, this\n"
       INDENT "is optional, in which case all matching attributes will be\n"
       INDENT "returned.",
@@ -326,7 +338,7 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
-    { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_name,
+    { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, attr_name_cb,
       NULL, NULL
     },
 
