@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2016-2023 the Pacemaker project contributors
+# Copyright 2016-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,7 +20,7 @@ for p in $*; do
         echo "#### $v vs. predecessor"
 
         b=$(echo "$v" | cut -d- -f1)
-        old=$(./best-match.sh "$b" "$1")
+        old=$(./rng-helper "$b" "$1")
         p=$(diff -u "$old" "$v" 2>/dev/null)
 
         case $? in
