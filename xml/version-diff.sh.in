@@ -20,7 +20,7 @@ for p in $*; do
         echo "#### $v vs. predecessor"
 
         b=$(echo "$v" | cut -d- -f1)
-        old=$(./rng-helper "$b" "$1")
+        old=$(./rng-helper match "$b" "$1")
         p=$(diff -u "$old" "$v" 2>/dev/null)
 
         case $? in

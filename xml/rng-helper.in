@@ -8,29 +8,6 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-# Find the (sub-)schema that best matches a desired version.
-#
-# Version numbers are assumed to be in the format X.Y,
-# where X and Y are integers, and Y is no more than 3 digits,
-# or the special value "next".
-
-# (Sub-)schema name (e.g. "resources")
-base="$1"; shift
-
-# Desired version (e.g. "1.0" or "next")
-target="$1"; shift
-
-# If not empty, append the best match as an XML externalRef to this file
-# (otherwise, just echo the best match). Using readlink allows building
-# from a different directory.
-destination="$(readlink -f "$1")"; shift
-
-# Arbitrary text to print before XML (generally spaces to indent)
-prefix="$1"; shift
-
-# Allow building from a different directory
-cd "$(dirname $0)"
-
 list_candidates() {
     ls -1 "${1}.rng" "${1}"-[0-9]*.rng "${1}"-next.rng 2>/dev/null
 }
@@ -65,7 +42,25 @@ int_version() {
     echo "$1" | awk -F. '{ printf("%d%03d\n", $1,$2); }';
 }
 
+# Find the (sub-)schema that best matches a desired version.
+#
+# Version numbers are assumed to be in the format X.Y,
+# where X and Y are integers, and Y is no more than 3 digits,
+# or the special value "next".
 best_match() {
+    # (Sub-)schema name (e.g. "resources")
+    local base="$1"
+
+    # Desired version (e.g. "1.0" or "next")
+    local target="$2"
+
+    # If not empty, append the best match as an XML externalRef to this file
+    # (otherwise, just echo the best match).
+    local destination="$3"
+
+    # Arbitrary text to print before XML (generally spaces to indent)
+    local prefix="$4"
+
     best="0.0"
     for rng in $(list_candidates "${base}"); do
         case ${rng} in
@@ -105,4 +100,17 @@ best_match() {
     return 1
 }
 
-best_match
+# Allow building RNGs from a different directory
+cd "$(dirname $0)"
+
+case "$1" in
+    match)
+        # Using readlink allows building from a different directory
+        best_match "$2" "$3" "$(readlink -f "$4")" "$5"
+        ;;
+
+    *)
+        echo "Invalid command: $1"
+        exit 1
+        ;;
+esac
