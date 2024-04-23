@@ -67,6 +67,25 @@ xml_latest_schema_index(void)
     return g_list_length(known_schemas) - 3;
 }
 
+/*!
+ * \internal
+ * \brief Return the schema entry of the highest-versioned schema
+ *
+ * \return Schema entry of highest-versioned schema (or NULL on error)
+ */
+static GList *
+get_highest_schema(void)
+{
+    /* The highest numerically versioned schema is the one before pacemaker-next
+     *
+     * @COMPAT pacemaker-next is deprecated since 2.1.5
+     */
+    GList *entry = pcmk__get_schema("pacemaker-next");
+
+    CRM_ASSERT((entry != NULL) && (entry->prev != NULL));
+    return entry->prev;
+}
+
 /* Return the index of the most recent X.0 schema. */
 int
 pcmk__find_x_0_schema_index(void)
@@ -88,19 +107,14 @@ pcmk__find_x_0_schema_index(void)
     static int best = 0;
 #endif
     int i;
-    GList *best_node = NULL;
-    pcmk__schema_t *best_schema = NULL;
+
+    GList *best_node = get_highest_schema();
+    pcmk__schema_t *best_schema = best_node->data;
 
     if (found) {
         return best;
     }
-
-    CRM_ASSERT(known_schemas != NULL);
-
-    /* Get the most recent schema so we can look at its version number. */
-    best = xml_latest_schema_index();
-    best_node = g_list_nth(known_schemas, best);
-    best_schema = best_node->data;
+    best = best_schema->schema_index;
 
     /* The "pacemaker-next" and "none" schemas are added to the real schemas,
      * so a list of length three actually only has one useful schema.
