@@ -1237,46 +1237,40 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     gboolean rc = TRUE;
     char *original_schema_name = NULL;
     const char *effective_original_name = "the first";
-    int version = 0;
-    int orig_version = 0;
+    int orig_version = -1;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
     GList *entry = NULL;
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
     entry = pcmk__get_schema(original_schema_name);
-    if (entry == NULL) {
-        version = -1;
-    } else {
+    if (entry != NULL) {
         pcmk__schema_t *original_schema = entry->data;
 
         effective_original_name = original_schema->name;
-        version = original_schema->schema_index;
+        orig_version = original_schema->schema_index;
     }
-    orig_version = version;
 
-    if (version < x_0_schema->schema_index) {
+    if (orig_version < x_0_schema->schema_index) {
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
         const char *new_schema_name = NULL;
+        pcmk__schema_t *schema = NULL;
 
+        entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
         if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
             new_schema_name = crm_element_value(converted,
                                                 PCMK_XA_VALIDATE_WITH);
             entry = pcmk__get_schema(new_schema_name);
-            if (entry == NULL) {
-                version = -1;
-            } else {
-                version = ((pcmk__schema_t *)(entry->data))->schema_index;
-            }
-        } else {
-            version = 0;
         }
+        schema = (entry == NULL)? NULL : entry->data;
 
-        if (version < x_0_schema->schema_index) {
+        if ((schema == NULL)
+            || (schema->schema_index < x_0_schema->schema_index)) {
             // Updated configuration schema is still not acceptable
 
-            if (version < orig_version || orig_version == -1) {
+            if ((orig_version == -1) || (schema == NULL)
+                || (schema->schema_index < orig_version)) {
                 // We couldn't validate any schema at all
                 if (to_logs) {
                     pcmk__config_err("Cannot upgrade configuration (claiming "
@@ -1321,21 +1315,22 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             free_xml(*xml);
             *xml = converted;
 
-            if (version < xml_latest_schema_index()) {
+            if (schema->schema_index < xml_latest_schema_index()) {
                 if (to_logs) {
                     pcmk__config_warn("Configuration with %s schema was "
                                       "internally upgraded to acceptable (but "
                                       "not most recent) %s",
                                       pcmk__s(original_schema_name, "no"),
-                                      get_schema_name(version));
+                                      schema->name);
                 }
-            } else {
-                if (to_logs) {
-                    crm_info("Configuration with %s schema was internally "
-                             "upgraded to latest version %s",
-                             pcmk__s(original_schema_name, "no"),
-                             get_schema_name(version));
-                }
+            } else if (to_logs) {
+                crm_info("Configuration with %s schema was internally "
+                         "upgraded to latest version %s",
+                         pcmk__s(original_schema_name, "no"),
+                         schema->name);
+            }
+            if (best_version != NULL) {
+                *best_version = schema->schema_index;
             }
         }
 
@@ -1346,7 +1341,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
         CRM_ASSERT((entry != NULL) && (entry->data != NULL));
 
         none_schema = entry->data;
-        if (version >= none_schema->schema_index) {
+        if (orig_version >= none_schema->schema_index) {
             // Schema validation is disabled
             if (to_logs) {
                 pcmk__config_warn("Schema validation of configuration is "
@@ -1359,10 +1354,9 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                 "prevents common misconfigurations)\n");
             }
         }
-    }
-
-    if (best_version) {
-        *best_version = version;
+        if (best_version != NULL) {
+            *best_version = orig_version;
+        }
     }
 
     free(original_schema_name);
