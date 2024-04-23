@@ -24,7 +24,6 @@
 
 #  include <crm/crm.h>
 #  include <crm/common/nvpair.h>
-#  include <crm/common/schemas.h>
 #  include <crm/common/xml_io.h>
 #  include <crm/common/xml_names.h>
 

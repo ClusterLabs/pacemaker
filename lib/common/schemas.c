@@ -1568,7 +1568,7 @@ pcmk__remote_schema_dir(void)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
-#include <crm/common/schemas_compat.h>
+#include <crm/common/xml_compat.h>
 
 const char *
 xml_latest_schema(void)
