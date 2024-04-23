@@ -130,16 +130,6 @@ pcmk__find_x_0_schema_index(void)
     }
     best = best_schema->schema_index;
 
-    /* The "pacemaker-next" and "none" schemas are added to the real schemas,
-     * so a list of length three actually only has one useful schema.
-     *
-     * @COMPAT pacemaker-next is deprecated since 2.1.5.
-     * Update this when we drop that schema.
-     */
-    if (g_list_length(known_schemas) == 3) {
-        goto done;
-    }
-
     /* Start comparing the list from the node before the best schema (there's
      * no point in comparing something to itself).  Then, 'i' is an index
      * starting at the best schema and will always point at the node after
@@ -157,20 +147,19 @@ pcmk__find_x_0_schema_index(void)
          */
         if (schema->version.v[0] < best_schema->version.v[0]) {
             best = i;
-            goto done;
+            break;
 
         /* We're out of list to examine.  This probably means there was only
          * one major version series, so return index 0.
          */
         } else if (iter->prev == NULL) {
             best = 0;
-            goto done;
+            break;
         }
 
         i--;
     }
 
-done:
     found = true;
     return best;
 }
