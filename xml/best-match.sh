@@ -65,41 +65,44 @@ int_version() {
     echo "$1" | awk -F. '{ printf("%d%03d\n", $1,$2); }';
 }
 
-best="0.0"
-for rng in $(list_candidates "${base}"); do
-    case ${rng} in
-        ${base}-${target}.rng)
-            # We found exactly what was requested
-            best=${target}
-            break
-            ;;
-        *-next.rng)
-            # "Next" schemas cannot be a best match unless directly requested
-            ;;
-        *)
-            v=$(version_from_filename "${rng}")
-	    if [ $(int_version "${v}") -gt $(int_version "${best}") ]; then
-                # This version beats the previous best match
+best_match() {
+    best="0.0"
+    for rng in $(list_candidates "${base}"); do
+        case ${rng} in
+            ${base}-${target}.rng)
+                # We found exactly what was requested
+                best=${target}
+                break
+                ;;
+            *-next.rng)
+                # "Next" schemas cannot be a best match unless directly requested
+                ;;
+            *)
+                v=$(version_from_filename "${rng}")
+	        if [ $(int_version "${v}") -gt $(int_version "${best}") ]; then
+                    # This version beats the previous best match
 
-                if [ "${target}" = "next" ]; then
-                    best=${v}
-                elif [ $(int_version "${v}") -lt $(int_version "${target}") ]; then
-                    # This value is best only if it's still less than the target
-                    best=${v}
+                    if [ "${target}" = "next" ]; then
+                        best=${v}
+                    elif [ $(int_version "${v}") -lt $(int_version "${target}") ]; then
+                        # This value is best only if it's still less than the target
+                        best=${v}
+                    fi
                 fi
-            fi
-            ;;
-    esac
-done
+                ;;
+        esac
+    done
 
-if [ "$best" != "0.0" ]; then
-    found=$(filename_from_version "$best" "$base")
-    if [ -z "$destination" ]; then
-        echo "$(basename $found)"
-    else
-        echo "${prefix}<externalRef href=\"$(basename $found)\"/>" >> "$destination"
+    if [ "$best" != "0.0" ]; then
+        found=$(filename_from_version "$best" "$base")
+        if [ -z "$destination" ]; then
+            echo "$(basename $found)"
+        else
+            echo "${prefix}<externalRef href=\"$(basename $found)\"/>" >> "$destination"
+        fi
+        return 0
     fi
-    exit 0
-fi
+    return 1
+}
 
-exit 1
+best_match
