@@ -219,24 +219,8 @@ pacemaker.rng: pacemaker-$(CIB_max).rng
 	$(AM_V_SCHEMA)cp $(top_builddir)/xml/$< $@
 
 pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
-	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
-	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
-	$(AM_V_at)echo '  <start>' >> $@
-	$(AM_V_at)echo '    <element name="cib">' >> $@
-	$(AM_V_at)$(builddir)/rng-helper match cib $(*) $(@) "      "
-	$(AM_V_at)echo '      <element name="configuration">' >> $@
-	$(AM_V_at)echo '        <interleave>' >> $@
-	$(AM_V_at)for rng in $(CIB_cfg_base); do $(builddir)/rng-helper match $$rng $(*) $(@) "          " || :; done
-	$(AM_V_at)echo '        </interleave>' >> $@
-	$(AM_V_at)echo '      </element>' >> $@
-	$(AM_V_at)echo '      <optional>' >> $@
-	$(AM_V_at)echo '        <element name="status">' >> $@
-	$(AM_V_at)$(builddir)/rng-helper match status $(*) $(@) "          "
-	$(AM_V_at)echo '        </element>' >> $@
-	$(AM_V_at)echo '      </optional>' >> $@
-	$(AM_V_at)echo '    </element>' >> $@
-	$(AM_V_at)echo '  </start>' >> $@
-	$(AM_V_SCHEMA)echo '</grammar>' >> $@
+	$(AM_V_SCHEMA)$(builddir)/rng-helper build_cib_rng "$@" "$*" \
+		$(CIB_cfg_base)
 
 # Dynamically generated CIB schema listing all pacemaker versions
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am

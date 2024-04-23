@@ -170,14 +170,49 @@ build_api_rng() {
         <choice>
 EOF
     for RNG in "$@"; do
-        best_match "api/$RNG" "$VERSION" "$FILENAME" "          " || :
+        best_match "api/$RNG" "$VERSION" "$FILENAME" "          "
     done
     cat <<EOF >>"$FILENAME"
         </choice>
       </optional>
 EOF
-    best_match api/status "$VERSION" "$FILENAME" "      " || :
+    best_match api/status "$VERSION" "$FILENAME" "      "
     cat <<EOF >>"$FILENAME"
+    </element>
+  </start>
+</grammar>
+EOF
+}
+
+build_cib_rng() {
+    local FILENAME="$1"
+    local VERSION="$2"
+
+    shift 2
+    cat <<EOF >"$FILENAME"
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="cib">
+EOF
+    best_match cib "$VERSION" "$FILENAME" "      "
+    cat <<EOF >>"$FILENAME"
+      <element name="configuration">
+        <interleave>
+EOF
+    for RNG in "$@"; do
+        best_match "$RNG" "$VERSION" "$FILENAME" "          "
+    done
+    cat <<EOF >>"$FILENAME"
+        </interleave>
+      </element>
+      <optional>
+        <element name="status">
+EOF
+    best_match status "$VERSION" "$FILENAME" "          "
+    cat <<EOF >>"$FILENAME"
+        </element>
+      </optional>
     </element>
   </start>
 </grammar>
@@ -200,6 +235,10 @@ case "$1" in
 
     build_api_rng)
         build_api_rng "$2" "$3" "${@:4}"
+        ;;
+
+    build_cib_rng)
+        build_cib_rng "$2" "$3" "${@:4}"
         ;;
 
     *)
