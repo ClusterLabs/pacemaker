@@ -804,15 +804,6 @@ validate_xml_verbose(const xmlNode *xml_blob)
     return rc? TRUE : FALSE;
 }
 
-gboolean
-validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
-{
-    bool rc = pcmk__validate_xml(xml_blob, validation,
-                                 to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
-                                 GUINT_TO_POINTER(LOG_ERR));
-    return rc? TRUE : FALSE;
-}
-
 bool
 pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                    xmlRelaxNGValidityErrorFunc error_handler,
@@ -850,6 +841,22 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
 
     crm_err("Unknown validator: %s", validation);
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Validate XML using its configured schema (and send errors to logs)
+ *
+ * \param[in] xml  XML to validate
+ *
+ * \return true if XML validates, otherwise false
+ */
+bool
+pcmk__configured_schema_validates(xmlNode *xml)
+{
+    return pcmk__validate_xml(xml, NULL,
+                              (xmlRelaxNGValidityErrorFunc) xml_log,
+                              GUINT_TO_POINTER(LOG_ERR));
 }
 
 /* With this arrangement, an attempt to identify the message severity
@@ -1655,6 +1662,15 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
     }
 
     return pcmk_rc2legacy(rc);
+}
+
+gboolean
+validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
+{
+    bool rc = pcmk__validate_xml(xml_blob, validation,
+                                 to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
+                                 GUINT_TO_POINTER(LOG_ERR));
+    return rc? TRUE : FALSE;
 }
 
 // LCOV_EXCL_STOP

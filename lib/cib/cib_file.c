@@ -395,7 +395,7 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Validate XML against its specified schema */
-    if (validate_xml(root, NULL, TRUE) == FALSE) {
+    if (!pcmk__configured_schema_validates(root)) {
         const char *schema = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
 
         crm_err("CIB does not validate against %s, or that schema is unknown", schema);

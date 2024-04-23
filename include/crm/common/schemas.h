@@ -13,8 +13,6 @@
 #include <glib.h>           // gboolean
 #include <libxml/tree.h>    // xmlNode
 
-gboolean validate_xml(xmlNode *xml_blob, const char *validation,
-                      gboolean to_logs);
 gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
 int get_schema_version(const char *name);
