@@ -59,15 +59,21 @@ known_schema(void **state)
 {
     assert_schema(NULL, 16); // defaults to "none"
     assert_schema("pacemaker-1.0", 0);
-    assert_schema("PACEMAKER-1.0", 0);
     assert_schema("pacemaker-1.2", 1);
     assert_schema("pacemaker-2.0", 3);
-    assert_schema("pAcEmAkEr-2.0", 3);
     assert_schema("pacemaker-2.5", 8);
     assert_schema("pacemaker-3.0", 14);
+}
+
+static void
+case_insensitive(void **state)
+{
+    assert_schema("PACEMAKER-1.0", 0);
+    assert_schema("pAcEmAkEr-2.0", 3);
     assert_schema("paceMAKER-3.0", 14);
 }
 
 PCMK__UNIT_TEST(setup, teardown,
                 cmocka_unit_test(unknown_schema),
-                cmocka_unit_test(known_schema));
+                cmocka_unit_test(known_schema),
+                cmocka_unit_test(case_insensitive));

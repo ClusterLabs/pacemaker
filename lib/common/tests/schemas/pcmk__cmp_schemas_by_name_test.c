@@ -91,8 +91,20 @@ known_numeric(void **state)
                                           "pacemaker-2.0") < 0);
 }
 
+static void
+case_insensitive(void **state)
+{
+    assert_true(pcmk__cmp_schemas_by_name("Pacemaker-1.0",
+                                          "pacemaker-1.0") == 0);
+    assert_true(pcmk__cmp_schemas_by_name("PACEMAKER-1.2",
+                                          "pacemaker-1.0") > 0);
+    assert_true(pcmk__cmp_schemas_by_name("PaceMaker-1.2",
+                                          "pacemaker-2.0") < 0);
+}
+
 PCMK__UNIT_TEST(setup, teardown,
                 cmocka_unit_test(unknown_is_lesser),
                 cmocka_unit_test(none_is_greater),
                 cmocka_unit_test(next_is_before_none),
-                cmocka_unit_test(known_numeric));
+                cmocka_unit_test(known_numeric),
+                cmocka_unit_test(case_insensitive));
