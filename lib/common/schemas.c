@@ -926,8 +926,20 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
     va_end(ap);
 }
 
+/*!
+ * \internal
+ * \brief Apply a single XSL transformation to given XML
+ *
+ * \param[in] xml        XML to transform
+ * \param[in] transform  XSL name
+ * \param[in] to_logs    If false, certain validation errors will be sent to
+ *                       stderr rather than logged
+ *
+ * \return Transformed XML on success, otherwise NULL
+ */
 static xmlNode *
-apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
+apply_transformation(const xmlNode *xml, const char *transform,
+                     gboolean to_logs)
 {
     char *xform = NULL;
     xmlNode *out = NULL;
@@ -966,52 +978,79 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
 /*!
  * \internal
- * \brief Possibly full enter->upgrade->leave trip per internal bookkeeping.
+ * \brief Perform all transformations needed to upgrade XML to next schema
  *
- * \note Only emits warnings about enter/leave phases in case of issues.
+ * A schema upgrade can require up to three XSL transformations: an "enter"
+ * transform, the main upgrade transform, and a "leave" transform. Perform
+ * all needed transforms to upgrade given XML to the next schema.
+ *
+ * \param[in] original_xml  XML to transform
+ * \param[in] schema_index  Index of schema that successfully validates
+ *                          \p original_xml
+ * \param[in] to_logs       If false, certain validation errors will be sent to
+ *                          stderr rather than logged
+ *
+ * \return XML result of schema transforms if successful, otherwise NULL
  */
 static xmlNode *
-apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
+apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
 {
-    bool transform_onleave = schema->transform_onleave;
+    pcmk__schema_t *schema = g_list_nth_data(known_schemas, schema_index);
+    pcmk__schema_t *upgraded_schema = g_list_nth_data(known_schemas,
+                                                      schema_index + 1);
+    bool transform_onleave = false;
     char *transform_leave;
-    xmlNode *upgrade = NULL,
-            *final = NULL;
+    const xmlNode *xml = original_xml;
+    xmlNode *upgrade = NULL;
+    xmlNode *final = NULL;
+    xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
-    if (schema->transform_enter) {
-        crm_debug("Upgrading %s-style configuration, pre-upgrade phase with %s.xsl",
-                  schema->name, schema->transform_enter);
+    CRM_ASSERT((schema != NULL) && (upgraded_schema != NULL));
+
+    if (to_logs) {
+        error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
+    }
+
+    transform_onleave = schema->transform_onleave;
+    if (schema->transform_enter != NULL) {
+        crm_debug("Upgrading schema from %s to %s: "
+                  "applying pre-upgrade XSL transform %s",
+                  schema->name, upgraded_schema->name, schema->transform_enter);
         upgrade = apply_transformation(xml, schema->transform_enter, to_logs);
         if (upgrade == NULL) {
-            crm_warn("Upgrade-enter transformation %s.xsl failed",
+            crm_warn("Pre-upgrade XSL transform %s failed, "
+                     "will skip post-upgrade transform",
                      schema->transform_enter);
             transform_onleave = FALSE;
+        } else {
+            xml = upgrade;
         }
     }
-    if (upgrade == NULL) {
-        upgrade = xml;
-    }
 
-    crm_debug("Upgrading %s-style configuration, main phase with %s.xsl",
-              schema->name, schema->transform);
-    final = apply_transformation(upgrade, schema->transform, to_logs);
+
+    crm_debug("Upgrading schema from %s to %s: "
+              "applying upgrade XSL transform %s",
+              schema->name, upgraded_schema->name, schema->transform);
+    final = apply_transformation(xml, schema->transform, to_logs);
     if (upgrade != xml) {
         free_xml(upgrade);
         upgrade = NULL;
     }
 
-    if (final != NULL && transform_onleave) {
+    if ((final != NULL) && transform_onleave) {
         upgrade = final;
         /* following condition ensured in add_schema_by_version */
         CRM_ASSERT(schema->transform_enter != NULL);
         transform_leave = strdup(schema->transform_enter);
         /* enter -> leave */
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
-        crm_debug("Upgrading %s-style configuration, post-upgrade phase with %s.xsl",
-                  schema->name, transform_leave);
+        crm_debug("Upgrading schema from %s to %s: "
+                  "applying post-upgrade XSL transform %s",
+                  schema->name, upgraded_schema->name, transform_leave);
         final = apply_transformation(upgrade, transform_leave, to_logs);
         if (final == NULL) {
-            crm_warn("Upgrade-leave transformation %s.xsl failed", transform_leave);
+            crm_warn("Ignoring failure of post-upgrade XSL transform %s",
+                     transform_leave);
             final = upgrade;
         } else {
             free_xml(upgrade);
@@ -1019,6 +1058,23 @@ apply_upgrade(xmlNode *xml, const pcmk__schema_t *schema, gboolean to_logs)
         free(transform_leave);
     }
 
+    if (final == NULL) {
+        return NULL;
+    }
+
+    // Ensure result validates with its new schema
+    if (!validate_with(final, upgraded_schema, error_handler,
+                       GUINT_TO_POINTER(LOG_ERR))) {
+        crm_err("Schema upgrade from %s to %s failed: "
+                "XSL transform %s produced an invalid configuration",
+                schema->name, upgraded_schema->name, schema->transform);
+        crm_log_xml_debug(final, "bad-transform-result");
+        free_xml(final);
+        return NULL;
+    }
+
+    crm_info("Schema upgrade from %s to %s succeeded",
+             schema->name, upgraded_schema->name);
     return final;
 }
 
@@ -1053,6 +1109,22 @@ get_schema_version(const char *name)
 }
 
 /* set which validation to use */
+/*!
+ * \brief Update CIB XML to latest schema that validates it
+ *
+ * \param[in,out] xml_blob   XML to update (may be freed and replaced after
+ *                           being transformed)
+ * \param[out]    best       If not NULL, set to schema index of latest schema
+ *                           that validates \p xml_blob
+ * \param[in]     max        If positive, do not update \p xml_blob to any
+ *                           schema past this index
+ * \param[in]     transform  If false, do not update \p xml_blob to any schema
+ *                           that requires an XSL transform
+ * \param[in]     to_logs    If false, certain validation errors will be sent to
+ *                           stderr rather than logged
+ *
+ * \return Legacy Pacemaker return code
+ */
 int
 update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                   gboolean to_logs)
@@ -1061,12 +1133,14 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
     char *value = NULL;
     int max_stable_schemas = xml_latest_schema_index();
     int lpc = 0, match = -1, rc = pcmk_ok;
+    int local_best = 0;
     int next = -1;  /* -1 denotes "inactive" value */
     xmlRelaxNGValidityErrorFunc error_handler = 
         to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
 
-    CRM_CHECK(best != NULL, return -EINVAL);
-    *best = 0;
+    if (best != NULL) {
+        *best = 0;
+    }
 
     CRM_CHECK((xml_blob != NULL) && (*xml_blob != NULL)
               && ((*xml_blob)->doc != NULL),
@@ -1077,22 +1151,23 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     if (value != NULL) {
         match = get_schema_version(value);
+        if (match >= max_stable_schemas) {
+            // No higher version is available
+            free(value);
+            if (best != NULL) {
+                *best = match;
+            }
+            return pcmk_ok;
+        }
 
         lpc = match;
         if (lpc >= 0 && transform == FALSE) {
-            *best = lpc++;
+            local_best = lpc++;
 
         } else if (lpc < 0) {
             crm_debug("Unknown validation schema");
             lpc = 0;
         }
-    }
-
-    if (match >= max_stable_schemas) {
-        /* nothing to do */
-        free(value);
-        *best = match;
-        return pcmk_ok;
     }
 
     while (lpc <= max_stable_schemas) {
@@ -1102,6 +1177,8 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
          * sorted out and working correctly.
          */
         pcmk__schema_t *schema = g_list_nth_data(known_schemas, lpc);
+        pcmk__schema_t *next_schema = NULL;
+        xmlNode *upgrade = NULL;
 
         crm_debug("Testing '%s' validation (%d of %d)",
                   pcmk__s(schema->name, "<unset>"), lpc, max_stable_schemas);
@@ -1114,93 +1191,81 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             } else {
                 crm_trace("%s validation failed", pcmk__s(schema->name, "<unset>"));
             }
-            if (*best) {
+            if (local_best > 0) {
                 /* we've satisfied the validation, no need to check further */
                 break;
             }
             rc = -pcmk_err_schema_validation;
+            lpc++; // Try again with the next higher schema
+            continue;
+        }
 
+        if (next != -1) {
+            crm_debug("Configuration valid for schema: %s", schema->name);
+            next = -1;
+        }
+        rc = pcmk_ok;
+        local_best = lpc;
+
+        if (!transform) {
+            /* Validation with this schema succeeded. We are not doing
+             * transforms, so try the next schema using the same XML.
+             */
+            lpc++;
+            continue;
+        }
+
+        next = lpc+1;
+
+        if (next > max_stable_schemas) {
+            /* There is no next version */
+            crm_trace("Stopping at %s", schema->name);
+            break;
+        }
+
+        if (max > 0 && (lpc == max || next > max)) {
+            crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
+                      schema->name, lpc, next, max);
+            break;
+        }
+
+        next_schema = g_list_nth_data(known_schemas, next);
+        CRM_ASSERT(next_schema != NULL);
+
+        if ((schema->transform == NULL)
+            || validate_with_silent(xml, next_schema)) {
+            /* The next schema either doesn't require a transform, or validates
+             * successfully even without doing the transform. We can skip the
+             * transform and use it with the same XML in the next iteration.
+             */
+            crm_debug("%s-style configuration is also valid for %s",
+                       schema->name, next_schema->name);
+            lpc = next;
+            continue;
+        }
+
+        upgrade = apply_upgrade(xml, lpc, to_logs);
+        if (upgrade == NULL) {
+            rc = -pcmk_err_transform_failed;
         } else {
-            if (next != -1) {
-                crm_debug("Configuration valid for schema: %s", schema->name);
-                next = -1;
-            }
-            rc = pcmk_ok;
+            lpc = next;
+            local_best = next;
+            free_xml(xml);
+            xml = upgrade;
         }
-
-        if (rc == pcmk_ok) {
-            *best = lpc;
-        }
-
-        if (rc == pcmk_ok && transform) {
-            xmlNode *upgrade = NULL;
-            pcmk__schema_t *next_schema = NULL;
-            next = lpc+1;
-
-            if (next > max_stable_schemas) {
-                /* There is no next version */
-                crm_trace("Stopping at %s", schema->name);
-                break;
-            }
-
-            if (max > 0 && (lpc == max || next > max)) {
-                crm_trace("Upgrade limit reached at %s (lpc=%d, next=%d, max=%d)",
-                          schema->name, lpc, next, max);
-                break;
-            }
-
-            next_schema = g_list_nth_data(known_schemas, next);
-            CRM_ASSERT(next_schema != NULL);
-
-            if (schema->transform == NULL
-                       /* possibly avoid transforming when readily valid
-                          (in general more restricted when crossing the major
-                          version boundary, as X.0 "transitional" version is
-                          expected to be more strict than it's successors that
-                          may re-allow constructs from previous major line) */
-                       || validate_with_silent(xml, next_schema)) {
-                crm_debug("%s-style configuration is also valid for %s",
-                           schema->name, next_schema->name);
-
-                lpc = next;
-
-            } else {
-                crm_debug("Upgrading %s-style configuration to %s with %s.xsl",
-                           schema->name, next_schema->name, schema->transform);
-
-                upgrade = apply_upgrade(xml, schema, to_logs);
-                if (upgrade == NULL) {
-                    crm_err("Transformation %s.xsl failed", schema->transform);
-                    rc = -pcmk_err_transform_failed;
-
-                } else if (validate_with(upgrade, next_schema, error_handler,
-                                         GUINT_TO_POINTER(LOG_ERR))) {
-                    crm_info("Transformation %s.xsl successful", schema->transform);
-                    lpc = next;
-                    *best = next;
-                    free_xml(xml);
-                    xml = upgrade;
-                    rc = pcmk_ok;
-
-                } else {
-                    crm_err("Transformation %s.xsl did not produce a valid configuration",
-                            schema->transform);
-                    crm_log_xml_info(upgrade, "transform:bad");
-                    free_xml(upgrade);
-                    rc = -pcmk_err_schema_validation;
-                }
-                next = -1;
-            }
-        }
-
-        if (transform == FALSE || rc != pcmk_ok) {
-            /* we need some progress! */
+        next = -1;
+        if (rc != pcmk_ok) {
+            /* The transform failed, so this schema can't be used. Later
+             * schemas are unlikely to validate, but try anyway until we
+             * run out of options.
+             */
             lpc++;
         }
     }
 
-    if (*best > match && *best) {
-        pcmk__schema_t *best_schema = g_list_nth_data(known_schemas, *best);
+    if ((local_best > 0) && (local_best > match)) {
+        pcmk__schema_t *best_schema = g_list_nth_data(known_schemas,
+                                                      local_best);
 
         crm_info("%s the configuration from %s to %s",
                    transform?"Transformed":"Upgraded", pcmk__s(value, "<none>"),
@@ -1210,6 +1275,10 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
 
     *xml_blob = xml;
     free(value);
+
+    if (best != NULL) {
+        *best = local_best;
+    }
     return rc;
 }
 

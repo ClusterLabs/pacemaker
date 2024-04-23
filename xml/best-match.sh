@@ -1,11 +1,18 @@
 #!/bin/sh
 #
+# Copyright 2014-2024 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
 # Find the (sub-)schema that best matches a desired version.
 #
 # Version numbers are assumed to be in the format X.Y,
 # where X and Y are integers, and Y is no more than 3 digits,
 # or the special value "next".
-#
 
 # (Sub-)schema name (e.g. "resources")
 base="$1"; shift
@@ -25,7 +32,7 @@ prefix="$1"; shift
 cd "$(dirname $0)"
 
 list_candidates() {
-    ls -1 "${1}.rng" "${1}"-[0-9]*.rng 2>/dev/null
+    ls -1 "${1}.rng" "${1}"-[0-9]*.rng "${1}"-next.rng 2>/dev/null
 }
 
 version_from_filename() {
