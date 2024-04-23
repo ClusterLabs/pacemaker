@@ -166,7 +166,7 @@ element cib: Relax-NG validity error : Invalid attribute validate-with for eleme
 pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from unknown to the latest
+Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from the first to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
