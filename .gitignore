@@ -161,6 +161,7 @@ configure
 /tools/pcmk_simtimes
 /tools/report.collector
 /tools/report.common
+/xml/rng-helper
 /xml/version-diff.sh
 
 # Compiled targets and intermediary files

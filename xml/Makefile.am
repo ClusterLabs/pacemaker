@@ -204,10 +204,10 @@ api/api-result-%.rng: $(API_build_copies) rng-helper Makefile.am
 	$(AM_V_at)echo '      <attribute name="request"> <text /> </attribute>' >> $@
 	$(AM_V_at)echo '      <optional>' >> $@
 	$(AM_V_at)echo '        <choice>' >> $@
-	$(AM_V_at)for rng in $(API_request_base); do $(srcdir)/rng-helper api/$$rng $(*) $(@) "          " || :; done
+	$(AM_V_at)for rng in $(API_request_base); do $(builddir)/rng-helper api/$$rng $(*) $(@) "          " || :; done
 	$(AM_V_at)echo '        </choice>' >> $@
 	$(AM_V_at)echo '      </optional>' >> $@
-	$(AM_V_at)$(srcdir)/rng-helper api/status $(*) $(@) "      " || :
+	$(AM_V_at)$(builddir)/rng-helper api/status $(*) $(@) "      " || :
 	$(AM_V_at)echo '    </element>' >> $@
 	$(AM_V_at)echo '  </start>' >> $@
 	$(AM_V_SCHEMA)echo '</grammar>' >> $@
@@ -236,15 +236,15 @@ pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
 	$(AM_V_at)echo '  <start>' >> $@
 	$(AM_V_at)echo '    <element name="cib">' >> $@
-	$(AM_V_at)$(srcdir)/rng-helper cib $(*) $(@) "      "
+	$(AM_V_at)$(builddir)/rng-helper cib $(*) $(@) "      "
 	$(AM_V_at)echo '      <element name="configuration">' >> $@
 	$(AM_V_at)echo '        <interleave>' >> $@
-	$(AM_V_at)for rng in $(CIB_cfg_base); do $(srcdir)/rng-helper $$rng $(*) $(@) "          " || :; done
+	$(AM_V_at)for rng in $(CIB_cfg_base); do $(builddir)/rng-helper $$rng $(*) $(@) "          " || :; done
 	$(AM_V_at)echo '        </interleave>' >> $@
 	$(AM_V_at)echo '      </element>' >> $@
 	$(AM_V_at)echo '      <optional>' >> $@
 	$(AM_V_at)echo '        <element name="status">' >> $@
-	$(AM_V_at)$(srcdir)/rng-helper status $(*) $(@) "          "
+	$(AM_V_at)$(builddir)/rng-helper status $(*) $(@) "          "
 	$(AM_V_at)echo '        </element>' >> $@
 	$(AM_V_at)echo '      </optional>' >> $@
 	$(AM_V_at)echo '    </element>' >> $@
