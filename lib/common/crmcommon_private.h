@@ -413,7 +413,7 @@ typedef struct {
 } pcmk__schema_t;
 
 G_GNUC_INTERNAL
-int pcmk__find_x_0_schema_index(void);
+GList *pcmk__find_x_0_schema(void);
 
 
 #endif  // CRMCOMMON_PRIVATE__H

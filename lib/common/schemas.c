@@ -100,68 +100,54 @@ pcmk__highest_schema_name(void)
     return ((pcmk__schema_t *)(entry->data))->name;
 }
 
-/* Return the index of the most recent X.0 schema. */
-int
-pcmk__find_x_0_schema_index(void)
+/*!
+ * \internal
+ * \brief Find first entry of highest major schema version series
+ *
+ * \return Schema entry of first schema with highest major version
+ */
+GList *
+pcmk__find_x_0_schema(void)
 {
-    /* We can't just use best to determine whether we've found the index
-     * or not.  What if we have a very long list of schemas all in the
-     * same major version series?  We'd return 0 for that, which means
-     * we would still run this function every time.
-     */
 #if defined(PCMK__UNIT_TESTING)
-    /* If we're unit testing, these can't be static because they'll stick
-     * around from one test run to the next.  They need to be cleared out
+    /* If we're unit testing, this can't be static because it'll stick
+     * around from one test run to the next. It needs to be cleared out
      * every time.
      */
-    bool found = false;
-    int best = 0;
+    GList *x_0_entry = NULL;
 #else
-    static bool found = false;
-    static int best = 0;
+    static GList *x_0_entry = NULL;
 #endif
-    int i;
 
-    GList *best_node = get_highest_schema();
-    pcmk__schema_t *best_schema = best_node->data;
+    pcmk__schema_t *highest_schema = NULL;
 
-    if (found) {
-        return best;
+    if (x_0_entry != NULL) {
+        return x_0_entry;
     }
-    best = best_schema->schema_index;
+    x_0_entry = get_highest_schema();
+    highest_schema = x_0_entry->data;
 
-    /* Start comparing the list from the node before the best schema (there's
-     * no point in comparing something to itself).  Then, 'i' is an index
-     * starting at the best schema and will always point at the node after
-     * 'iter'.  This makes it the value we want to return when we find what
-     * we're looking for.
-     */
-    i = best;
-
-    for (GList *iter = best_node->prev; iter != NULL; iter = iter->prev) {
+    for (GList *iter = x_0_entry->prev; iter != NULL; iter = iter->prev) {
         pcmk__schema_t *schema = iter->data;
 
         /* We've found a schema in an older major version series.  Return
          * the index of the first one in the same major version series as
-         * the best schema.
+         * the highest schema.
          */
-        if (schema->version.v[0] < best_schema->version.v[0]) {
-            best = i;
-            break;
-
-        /* We're out of list to examine.  This probably means there was only
-         * one major version series, so return index 0.
-         */
-        } else if (iter->prev == NULL) {
-            best = 0;
+        if (schema->version.v[0] < highest_schema->version.v[0]) {
+            x_0_entry = iter->next;
             break;
         }
 
-        i--;
+        /* We're out of list to examine.  This probably means there was only
+         * one major version series, so return the first schema entry.
+         */
+        if (iter->prev == NULL) {
+            x_0_entry = known_schemas->data;
+            break;
+        }
     }
-
-    found = true;
-    return best;
+    return x_0_entry;
 }
 
 static inline bool
@@ -1320,12 +1306,12 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     char *original_schema_name = NULL;
     int version = 0;
     int orig_version = 0;
-    int min_version = pcmk__find_x_0_schema_index();
+    pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
     version = get_schema_version(original_schema_name);
     orig_version = version;
-    if (version < min_version) {
+    if (version < x_0_schema->schema_index) {
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
         const char *new_schema_name = NULL;
@@ -1339,7 +1325,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             version = 0;
         }
 
-        if (version < min_version) {
+        if (version < x_0_schema->schema_index) {
             // Updated configuration schema is still not acceptable
 
             if (version < orig_version || orig_version == -1) {
@@ -1350,7 +1336,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                      "does not validate with any schema from "
                                      "%s to the latest",
                                      pcmk__s(original_schema_name, "no"),
-                                     get_schema_name(min_version),
+                                     x_0_schema->name,
                                      get_schema_name(orig_version));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
@@ -1358,7 +1344,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                     "does not validate with any schema from "
                                     "%s to the latest\n",
                                     pcmk__s(original_schema_name, "no"),
-                                    get_schema_name(min_version),
+                                    x_0_schema->name,
                                     get_schema_name(orig_version));
                 }
             } else {
@@ -1368,14 +1354,14 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                      "%s schema) to at least %s because it "
                                      "would not upgrade past %s",
                                      pcmk__s(original_schema_name, "no"),
-                                     get_schema_name(min_version),
+                                     x_0_schema->name,
                                      pcmk__s(new_schema_name, "unspecified version"));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "would not upgrade past %s\n",
                                     pcmk__s(original_schema_name, "no"),
-                                    get_schema_name(min_version),
+                                    x_0_schema->name,
                                     pcmk__s(new_schema_name, "unspecified version"));
                 }
             }
