@@ -523,7 +523,7 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
      * means the client is fully up-to-date.  Return a properly formatted reply
      * with no schemas.
      */
-    if (pcmk__str_eq(after_ver, xml_latest_schema(), pcmk__str_none)) {
+    if (pcmk__str_eq(after_ver, pcmk__highest_schema_name(), pcmk__str_none)) {
         return pcmk_ok;
     }
 

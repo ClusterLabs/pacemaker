@@ -231,7 +231,7 @@ createEmptyCib(int cib_epoch)
 
     cib_root = pcmk__xe_create(NULL, PCMK_XE_CIB);
     crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, xml_latest_schema());
+    crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
 
     crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
     crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);

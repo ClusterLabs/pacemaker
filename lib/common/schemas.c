@@ -86,6 +86,20 @@ get_highest_schema(void)
     return entry->prev;
 }
 
+/*!
+ * \internal
+ * \brief Return the name of the highest-versioned schema
+ *
+ * \return Name of highest-versioned schema (or NULL on error)
+ */
+const char *
+pcmk__highest_schema_name(void)
+{
+    GList *entry = get_highest_schema();
+
+    return ((pcmk__schema_t *)(entry->data))->name;
+}
+
 /* Return the index of the most recent X.0 schema. */
 int
 pcmk__find_x_0_schema_index(void)
@@ -159,12 +173,6 @@ pcmk__find_x_0_schema_index(void)
 done:
     found = true;
     return best;
-}
-
-const char *
-xml_latest_schema(void)
-{
-    return get_schema_name(xml_latest_schema_index());
 }
 
 static inline bool
@@ -1351,20 +1359,18 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                     pcmk__config_err("Cannot upgrade configuration (claiming "
                                      "%s schema) to at least %s because it "
                                      "does not validate with any schema from "
-                                     "%s to %s",
+                                     "%s to the latest",
                                      pcmk__s(original_schema_name, "no"),
                                      get_schema_name(min_version),
-                                     get_schema_name(orig_version),
-                                     xml_latest_schema());
+                                     get_schema_name(orig_version));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "does not validate with any schema from "
-                                    "%s to %s\n",
+                                    "%s to the latest\n",
                                     pcmk__s(original_schema_name, "no"),
                                     get_schema_name(min_version),
-                                    get_schema_name(orig_version),
-                                    xml_latest_schema());
+                                    get_schema_name(orig_version));
                 }
             } else {
                 // We updated configuration successfully, but still too low
@@ -1644,6 +1650,12 @@ pcmk__remote_schema_dir(void)
 // LCOV_EXCL_START
 
 #include <crm/common/schemas_compat.h>
+
+const char *
+xml_latest_schema(void)
+{
+    return pcmk__highest_schema_name();
+}
 
 int
 update_validation(xmlNode **xml, int *best, int max, gboolean transform,

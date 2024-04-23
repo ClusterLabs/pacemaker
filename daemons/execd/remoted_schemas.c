@@ -147,7 +147,8 @@ get_schema_files(void)
         _exit(pcmk_rc2exitc(rc));
     }
 
-    rc = cib->cmds->fetch_schemas(cib, &reply, xml_latest_schema(), cib_sync_call);
+    rc = cib->cmds->fetch_schemas(cib, &reply, pcmk__highest_schema_name(),
+                                  cib_sync_call);
     if (rc != pcmk_ok) {
         crm_err("Could not get schema files: %s", pcmk_strerror(rc));
         rc = pcmk_legacy2rc(rc);
@@ -251,8 +252,8 @@ remoted_request_cib_schema_files(void)
      * known_schemas, but there's no opposite operation for add_schema().
      *
      * Instead, unload all the schemas.  This means we'll also forget about all
-     * the installed schemas as well, which means that xml_latest_schema() will
-     * fail.  So we need to load the base schemas right now.
+     * installed schemas as well, which means that pcmk__highest_schema_name()
+     * would fail. So we need to load the base schemas right now.
      */
     clean_up_extra_schema_files();
     crm_schema_cleanup();

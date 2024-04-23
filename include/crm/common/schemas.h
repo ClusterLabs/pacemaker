@@ -19,7 +19,6 @@ gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
 int get_schema_version(const char *name);
 const char *get_schema_name(int version);
-const char *xml_latest_schema(void);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
