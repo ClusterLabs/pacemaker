@@ -196,21 +196,8 @@ api/api-result.rng: api/api-result-$(API_max).rng
 	$(AM_V_SCHEMA)cp $(top_builddir)/xml/$< $@
 
 api/api-result-%.rng: $(API_build_copies) rng-helper Makefile.am
-	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
-	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
-	$(AM_V_at)echo '  <start>' >> $@
-	$(AM_V_at)echo '    <element name="pacemaker-result">' >> $@
-	$(AM_V_at)echo '      <attribute name="api-version"> <text /> </attribute>' >> $@
-	$(AM_V_at)echo '      <attribute name="request"> <text /> </attribute>' >> $@
-	$(AM_V_at)echo '      <optional>' >> $@
-	$(AM_V_at)echo '        <choice>' >> $@
-	$(AM_V_at)for rng in $(API_request_base); do $(builddir)/rng-helper match api/$$rng $(*) $(@) "          " || :; done
-	$(AM_V_at)echo '        </choice>' >> $@
-	$(AM_V_at)echo '      </optional>' >> $@
-	$(AM_V_at)$(builddir)/rng-helper match api/status $(*) $(@) "      " || :
-	$(AM_V_at)echo '    </element>' >> $@
-	$(AM_V_at)echo '  </start>' >> $@
-	$(AM_V_SCHEMA)echo '</grammar>' >> $@
+	$(AM_V_SCHEMA)$(builddir)/rng-helper build_api_rng "$@" "$*" \
+		$(API_request_base)
 
 crm_mon.rng: api/crm_mon-$(MON_max).rng
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@

@@ -153,6 +153,37 @@ version_diff() {
     done
 }
 
+build_api_rng() {
+    local FILENAME="$1"
+    local VERSION="$2"
+
+    shift 2
+
+    cat <<EOF >"$FILENAME"
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="pacemaker-result">
+      <attribute name="api-version"> <text /> </attribute>
+      <attribute name="request"> <text /> </attribute>
+      <optional>
+        <choice>
+EOF
+    for RNG in "$@"; do
+        best_match "api/$RNG" "$VERSION" "$FILENAME" "          " || :
+    done
+    cat <<EOF >>"$FILENAME"
+        </choice>
+      </optional>
+EOF
+    best_match api/status "$VERSION" "$FILENAME" "      " || :
+    cat <<EOF >>"$FILENAME"
+    </element>
+  </start>
+</grammar>
+EOF
+}
+
 # Allow building RNGs from a different directory
 cd "$(dirname $0)"
 
@@ -165,6 +196,10 @@ case "$1" in
     diff)
         shift
         version_diff "$@"
+        ;;
+
+    build_api_rng)
+        build_api_rng "$2" "$3" "${@:4}"
         ;;
 
     *)
