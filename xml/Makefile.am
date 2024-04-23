@@ -279,12 +279,12 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 .PHONY: diff
 diff: rng-helper
 	@echo "#  Comparing changes in + since $(CIB_max)"
-	@./version-diff.sh ${CIB_version_pairs_last}
+	@$(builddir)/rng-helper diff ${CIB_version_pairs_last}
 
 .PHONY: fulldiff
 fulldiff: rng-helper
 	@echo "#  Comparing all changes across all the subsequent increments"
-	@./version-diff.sh ${CIB_version_pairs}
+	@$(builddir)/rng-helper diff ${CIB_version_pairs}
 
 CLEANFILES = $(API_generated) \
 	     $(CIB_generated) \

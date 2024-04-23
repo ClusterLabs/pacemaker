@@ -162,7 +162,6 @@ configure
 /tools/report.collector
 /tools/report.common
 /xml/rng-helper
-/xml/version-diff.sh
 
 # Compiled targets and intermediary files
 *.o
@@ -353,4 +352,5 @@ pacemaker_*.info
 /tools/cluster-init
 /test-driver
 /xml/crm.dtd
+/xml/version-diff.sh
 ylwrap

@@ -2113,8 +2113,7 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [tools/crm_standby],
                   [tools/cibsecret],
                   [tools/pcmk_simtimes],
-                  [xml/rng-helper],
-                  [xml/version-diff.sh])
+                  [xml/rng-helper])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
