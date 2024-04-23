@@ -15,6 +15,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
+#include "crmcommon_private.h"
 
 static char *remote_schema_dir = NULL;
 
@@ -110,6 +111,21 @@ teardown(void **state)
 }
 
 static void
+assert_schema(const char *schema_name, int schema_index)
+{
+    GList *entry = NULL;
+    pcmk__schema_t *schema = NULL;
+
+    entry = pcmk__get_schema(schema_name);
+    assert_non_null(entry);
+
+    schema = entry->data;
+    assert_non_null(schema);
+
+    assert_int_equal(schema_index, schema->schema_index);
+}
+
+static void
 extra_schema_files(void **state)
 {
     crm_schema_init();
@@ -118,17 +134,17 @@ extra_schema_files(void **state)
      * (including the new schemas we loaded from a second directory) is in
      * the right order.
      */
-    assert_string_equal("pacemaker-1.0", get_schema_name(0));
-    assert_string_equal("pacemaker-1.2", get_schema_name(1));
-    assert_string_equal("pacemaker-2.0", get_schema_name(3));
-    assert_string_equal("pacemaker-3.0", get_schema_name(14));
-    assert_string_equal("pacemaker-3.1", get_schema_name(15));
-    assert_string_equal("pacemaker-3.2", get_schema_name(16));
+    assert_schema("pacemaker-1.0", 0);
+    assert_schema("pacemaker-1.2", 1);
+    assert_schema("pacemaker-2.0", 3);
+    assert_schema("pacemaker-3.0", 14);
+    assert_schema("pacemaker-3.1", 15);
+    assert_schema("pacemaker-3.2", 16);
 
     // @COMPAT pacemaker-next is deprecated since 2.1.5
-    assert_string_equal("pacemaker-next", get_schema_name(17));
+    assert_schema("pacemaker-next", 17);
 
-    assert_string_equal(PCMK_VALUE_NONE, get_schema_name(18));
+    assert_schema(PCMK_VALUE_NONE, 18);
 }
 
 PCMK__UNIT_TEST(setup, teardown,

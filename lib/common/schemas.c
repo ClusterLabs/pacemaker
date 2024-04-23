@@ -1090,14 +1090,6 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     return final;
 }
 
-const char *
-get_schema_name(int version)
-{
-    pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
-
-    return (schema != NULL)? schema->name : "unknown";
-}
-
 /*!
  * \internal
  * \brief Get the schema list entry corresponding to XML configuration
@@ -1578,6 +1570,14 @@ const char *
 xml_latest_schema(void)
 {
     return pcmk__highest_schema_name();
+}
+
+const char *
+get_schema_name(int version)
+{
+    pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
+
+    return (schema != NULL)? schema->name : "unknown";
 }
 
 int

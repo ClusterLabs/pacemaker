@@ -29,6 +29,9 @@ extern "C" {
 const char *xml_latest_schema(void);
 
 //! \deprecated Do not use
+const char *get_schema_name(int version);
+
+//! \deprecated Do not use
 int get_schema_version(const char *name);
 
 //! \deprecated Do not use
