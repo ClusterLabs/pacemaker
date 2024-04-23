@@ -350,7 +350,7 @@ profile_file(const char *xml_file, long long repeat,
         return;
     }
 
-    if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
         free_xml(cib_object);
         return;
     }

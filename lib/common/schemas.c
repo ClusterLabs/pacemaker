@@ -792,7 +792,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 
     doc = xmlReadFile(filename, NULL, 0);
     xml = xmlDocGetRootElement(doc);
-    rc = validate_xml(xml, NULL, FALSE);
+    rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
     free_xml(xml);
 
     unlink(filename);

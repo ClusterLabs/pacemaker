@@ -374,7 +374,7 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         return pcmk_rc_transform_failed;
     }
 
-    if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
         free_xml(cib_object);
         return pcmk_rc_schema_validation;
     }
