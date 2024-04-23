@@ -21,19 +21,21 @@
  *
  * The attribute name is hard-coded as \c "X".
  *
- * \param[in] initial    Initial value
- * \param[in] new        Value to set
- * \param[in] reference  Expected attribute value after update
+ * \param[in] initial        Initial value
+ * \param[in] new            Value to set
+ * \param[in] reference_val  Expected attribute value after update
+ * \param[in] reference_rc   Expected return code from \c pcmk__xe_set_score()
  */
 static void
-assert_set_score(const char *initial, const char *new, const char *reference)
+assert_set_score(const char *initial, const char *new,
+                 const char *reference_val, int reference_rc)
 {
     const char *name = "X";
     xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
 
     crm_xml_add(test_xml, name, initial);
-    pcmk__xe_set_score(test_xml, name, new);
-    assert_string_equal(crm_element_value(test_xml, name), reference);
+    assert_int_equal(pcmk__xe_set_score(test_xml, name, new), reference_rc);
+    assert_string_equal(crm_element_value(test_xml, name), reference_val);
 
     free_xml(test_xml);
 }
@@ -41,13 +43,13 @@ assert_set_score(const char *initial, const char *new, const char *reference)
 static void
 value_is_name_plus_plus(void **state)
 {
-    assert_set_score("5", "X++", "6");
+    assert_set_score("5", "X++", "6", pcmk_rc_ok);
 }
 
 static void
 value_is_name_plus_equals_integer(void **state)
 {
-    assert_set_score("5", "X+=2", "7");
+    assert_set_score("5", "X+=2", "7", pcmk_rc_ok);
 }
 
 // NULL input
@@ -56,7 +58,7 @@ static void
 target_is_NULL(void **state)
 {
     // Dumps core via CRM_CHECK()
-    pcmk__xe_set_score(NULL, "X", "X++");
+    assert_int_equal(pcmk__xe_set_score(NULL, "X", "X++"), EINVAL);
 }
 
 static void
@@ -67,8 +69,7 @@ name_is_NULL(void **state)
     crm_xml_add(test_xml, "X", "5");
 
     // Dumps core via CRM_CHECK()
-    pcmk__xe_set_score(test_xml, NULL, "X++");
-
+    assert_int_equal(pcmk__xe_set_score(test_xml, NULL, "X++"), EINVAL);
     assert_string_equal(crm_element_value(test_xml, "X"), "5");
 
     free_xml(test_xml);
@@ -77,7 +78,7 @@ name_is_NULL(void **state)
 static void
 value_is_NULL(void **state)
 {
-    assert_set_score("5", NULL, "5");
+    assert_set_score("5", NULL, "5", pcmk_rc_ok);
 }
 
 // the value input doesn't start with the name input
@@ -85,13 +86,13 @@ value_is_NULL(void **state)
 static void
 value_is_wrong_name(void **state)
 {
-    assert_set_score("5", "Y++", "Y++");
+    assert_set_score("5", "Y++", "Y++", pcmk_rc_ok);
 }
 
 static void
 value_is_only_an_integer(void **state)
 {
-    assert_set_score("5", "2", "2");
+    assert_set_score("5", "2", "2", pcmk_rc_ok);
 }
 
 // non-integers
@@ -99,55 +100,55 @@ value_is_only_an_integer(void **state)
 static void
 variable_is_initialized_to_be_non_numeric(void **state)
 {
-    assert_set_score("hello", "X++", "1");
+    assert_set_score("hello", "X++", "1", pcmk_rc_ok);
 }
 
 static void
 variable_is_initialized_to_be_non_numeric_2(void **state)
 {
-    assert_set_score("hello", "X+=2", "2");
+    assert_set_score("hello", "X+=2", "2", pcmk_rc_ok);
 }
 
 static void
 variable_is_initialized_to_be_numeric_and_decimal_point_containing(void **state)
 {
-    assert_set_score("5.01", "X++", "6");
+    assert_set_score("5.01", "X++", "6", pcmk_rc_ok);
 }
 
 static void
 variable_is_initialized_to_be_numeric_and_decimal_point_containing_2(void **state)
 {
-    assert_set_score("5.50", "X++", "6");
+    assert_set_score("5.50", "X++", "6", pcmk_rc_ok);
 }
 
 static void
 variable_is_initialized_to_be_numeric_and_decimal_point_containing_3(void **state)
 {
-    assert_set_score("5.99", "X++", "6");
+    assert_set_score("5.99", "X++", "6", pcmk_rc_ok);
 }
 
 static void
 value_is_non_numeric(void **state)
 {
-    assert_set_score("5", "X+=hello", "5");
+    assert_set_score("5", "X+=hello", "5", pcmk_rc_ok);
 }
 
 static void
 value_is_numeric_and_decimal_point_containing(void **state)
 {
-    assert_set_score("5", "X+=2.01", "7");
+    assert_set_score("5", "X+=2.01", "7", pcmk_rc_ok);
 }
 
 static void
 value_is_numeric_and_decimal_point_containing_2(void **state)
 {
-    assert_set_score("5", "X+=1.50", "6");
+    assert_set_score("5", "X+=1.50", "6", pcmk_rc_ok);
 }
 
 static void
 value_is_numeric_and_decimal_point_containing_3(void **state)
 {
-    assert_set_score("5", "X+=1.99", "6");
+    assert_set_score("5", "X+=1.99", "6", pcmk_rc_ok);
 }
 
 // undefined input
@@ -155,7 +156,7 @@ value_is_numeric_and_decimal_point_containing_3(void **state)
 static void
 name_is_undefined(void **state)
 {
-    assert_set_score(NULL, "X++", "X++");
+    assert_set_score(NULL, "X++", "X++", pcmk_rc_ok);
 }
 
 // large input
@@ -163,7 +164,7 @@ name_is_undefined(void **state)
 static void
 assignment_result_is_too_large(void **state)
 {
-    assert_set_score("5", "X+=100000000000", "1000000");
+    assert_set_score("5", "X+=100000000000", "1000000", pcmk_rc_ok);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
