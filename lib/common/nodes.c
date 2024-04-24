@@ -44,6 +44,25 @@ pcmk_node_is_pending(const pcmk_node_t *node)
     return (node != NULL) && node->details->pending;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is clean
+ *
+ * Check whether a node is clean. A node is clean if it is a cluster node or
+ * remote node that has been seen by the cluster at least once, or the
+ * startup-fencing cluster option is false; and the node, and its host if a
+ * guest or bundle node, are not scheduled to be fenced.
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is clean, otherwise false
+ */
+bool
+pcmk_node_is_clean(const pcmk_node_t *node)
+{
+    return (node != NULL) && !(node->details->unclean);
+}
+
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {
