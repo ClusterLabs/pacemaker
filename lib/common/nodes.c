@@ -91,6 +91,38 @@ pcmk_node_is_in_maintenance(const pcmk_node_t *node)
     return (node != NULL) && node->details->maintenance;
 }
 
+/*!
+ * \internal
+ * \brief Call a function for each resource active on a node
+ *
+ * Call a caller-supplied function with a caller-supplied argument for each
+ * resource that is active on a given node. If the function returns false, this
+ * function will return immediately without processing any remaining resources.
+ *
+ * \param[in] node  Node to check
+ *
+ * \return Result of last call of \p fn (or false if none)
+ */
+bool
+pcmk_foreach_active_resource(pcmk_node_t *node,
+                             bool (*fn)(pcmk_resource_t *, void *),
+                             void *user_data)
+{
+    bool result = false;
+
+    if ((node != NULL) && (fn != NULL)) {
+        for (GList *item = node->details->running_rsc; item != NULL;
+             item = item->next) {
+
+            result = fn((pcmk_resource_t *) item->data, user_data);
+            if (!result) {
+                break;
+            }
+        }
+    }
+    return result;
+}
+
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {

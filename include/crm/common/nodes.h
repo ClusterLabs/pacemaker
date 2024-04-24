@@ -146,6 +146,9 @@ bool pcmk_node_is_clean(const pcmk_node_t *node);
 bool pcmk_node_is_shutting_down(const pcmk_node_t *node);
 bool pcmk_node_is_in_maintenance(const pcmk_node_t *node);
 
+bool pcmk_foreach_active_resource(pcmk_node_t *node,
+                                  bool (*fn)(pcmk_resource_t *, void *),
+                                  void *user_data);
 /*!
  * \internal
  * \brief Return a string suitable for logging as a node name
