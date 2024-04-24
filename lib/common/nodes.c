@@ -77,6 +77,20 @@ pcmk_node_is_shutting_down(const pcmk_node_t *node)
     return (node != NULL) && node->details->shutdown;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is in maintenance mode
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is in maintenance mode, otherwise false
+ */
+bool
+pcmk_node_is_in_maintenance(const pcmk_node_t *node)
+{
+    return (node != NULL) && node->details->maintenance;
+}
+
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {
