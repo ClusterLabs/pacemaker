@@ -775,9 +775,13 @@ main(int argc, char **argv)
     }
 
     rc = do_work(input, &output);
-    if (rc > 0) {
-        /* wait for the reply by creating a mainloop and running it until
-         * the callbacks are invoked...
+    if (!pcmk_is_set(options.cmd_options, cib_sync_call)
+        && (the_cib->variant != cib_file)
+        && (rc >= 0)) {
+        /* For async call, positive rc is the call ID (file always synchronous).
+         *
+         * Wait for the reply by creating a mainloop and running it until the
+         * callbacks are invoked.
          */
         request_id = rc;
 
@@ -793,32 +797,36 @@ main(int argc, char **argv)
         crm_info("Starting mainloop");
         g_main_loop_run(mainloop);
 
-    } else if ((rc == -pcmk_err_schema_unchanged)
-               && (strcmp(options.cib_action,
-                          PCMK__CIB_REQUEST_UPGRADE) == 0)) {
-        report_schema_unchanged();
-
-    } else if (rc < 0) {
+    } else {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
-        if (rc == pcmk_rc_schema_validation) {
-            if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
-                xmlNode *obj = NULL;
+        if ((rc == pcmk_rc_schema_unchanged)
+            && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
 
-                if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                         options.cmd_options) == pcmk_ok) {
-                    pcmk__update_schema(&obj, NULL, true, false);
+            report_schema_unchanged();
+
+        } else if (rc != pcmk_rc_ok) {
+            crm_err("Call failed: %s", pcmk_rc_str(rc));
+            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
+
+            if (rc == pcmk_rc_schema_validation) {
+                if (strcmp(options.cib_action,
+                           PCMK__CIB_REQUEST_UPGRADE) == 0) {
+                    xmlNode *obj = NULL;
+
+                    if (the_cib->cmds->query(the_cib, NULL, &obj,
+                                             options.cmd_options) == pcmk_ok) {
+                        pcmk__update_schema(&obj, NULL, true, false);
+                    }
+                    free_xml(obj);
+
+                } else if (output != NULL) {
+                    // Show validation errors to stderr
+                    pcmk__validate_xml(output, NULL, NULL, NULL);
                 }
-                free_xml(obj);
-
-            } else if (output) {
-                // Show validation errors to stderr
-                pcmk__validate_xml(output, NULL, NULL, NULL);
             }
         }
-        exit_code = pcmk_rc2exitc(rc);
     }
 
     if ((output != NULL)
