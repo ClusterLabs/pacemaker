@@ -2943,7 +2943,7 @@ function test_validity() {
 
     create_shadow_cib --create-empty pacemaker-1.2
     orig_trace_fns="$PCMK_trace_functions"
-    export PCMK_trace_functions=apply_upgrade,update_validation
+    export PCMK_trace_functions=apply_upgrade,pcmk__update_schema
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -3016,7 +3016,7 @@ test_upgrade() {
 
     create_shadow_cib --create-empty pacemaker-2.10
     orig_trace_fns="$PCMK_trace_functions"
-    export PCMK_trace_functions=apply_upgrade,update_validation
+    export PCMK_trace_functions=apply_upgrade,pcmk__update_schema
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -3508,7 +3508,7 @@ for t in $tests; do
         -e 's/.*\(parse_date\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(pcmk__.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
-        -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(pcmk__update_schema\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(cluster_status\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e "s/ last-rc-change=['\"][-+A-Za-z0-9: ]*['\"],\{0,1\}//" \
@@ -3519,7 +3519,6 @@ for t in $tests; do
         -e 's|^/tmp/cts-cli\.ta_outfile\.[^ ]* fails to validate|/tmp/cts-cli.ta_outfile fails to validate|' \
         -e 's|^/tmp/cts-cli\.xmllint_outfile\.[^:]*:|/tmp/cts-cli.xmllint_outfile:|' \
         -e 's/^Entity: line [0-9][0-9]*: //'\
-        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \

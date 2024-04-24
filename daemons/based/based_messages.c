@@ -207,23 +207,22 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             op, options, section, req, input, existing_cib, result_cib, answer);
 
     } else {
-        int new_version = 0;
-        int current_version = 0;
         xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);
         const char *host = crm_element_value(req, PCMK__XA_SRC);
-        const char *value = crm_element_value(existing_cib,
-                                              PCMK_XA_VALIDATE_WITH);
+        const char *original_schema = NULL;
+        const char *new_schema = NULL;
         const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
         const char *call_opts = crm_element_value(req, PCMK__XA_CIB_CALLOPT);
         const char *call_id = crm_element_value(req, PCMK__XA_CIB_CALLID);
 
         crm_trace("Processing \"%s\" event", op);
-        if (value != NULL) {
-            current_version = get_schema_version(value);
-        }
+        original_schema = crm_element_value(existing_cib,
+                                            PCMK_XA_VALIDATE_WITH);
+        rc = pcmk__update_schema(&scratch, NULL, true, true);
+        rc = pcmk_rc2legacy(rc);
+        new_schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
-        rc = update_validation(&scratch, &new_version, 0, TRUE, TRUE);
-        if (new_version > current_version) {
+        if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
             xmlNode *up = pcmk__xe_create(NULL, __func__);
 
             rc = pcmk_ok;
@@ -231,8 +230,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
             crm_xml_add(up, PCMK__XA_T, PCMK__VALUE_CIB);
             crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-            crm_xml_add(up, PCMK__XA_CIB_SCHEMA_MAX,
-                        get_schema_name(new_version));
+            crm_xml_add(up, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
             crm_xml_add(up, PCMK__XA_CIB_DELEGATED_FROM, host);
             crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
