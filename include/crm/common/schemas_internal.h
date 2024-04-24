@@ -21,8 +21,10 @@ void pcmk__sort_schemas(void);
 GList *pcmk__schema_files_later_than(const char *name);
 void pcmk__build_schema_xml_node(xmlNode *parent, const char *name,
                                  GList **already_included);
-void pcmk__log_known_schemas(void);
 const char *pcmk__remote_schema_dir(void);
+GList *pcmk__get_schema(const char *name);
+int pcmk__cmp_schemas_by_name(const char *schema1_name,
+                              const char *schema2_name);
 gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                             xmlRelaxNGValidityErrorFunc error_handler,
                             void *error_handler_context);

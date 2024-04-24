@@ -203,7 +203,7 @@ int
 pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
                                xmlDoc **acl_evaled_doc)
 {
-    int ret, version;
+    int ret;
     xmlNode *target, *comment;
     const char *validation;
 
@@ -222,11 +222,11 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     }
 
     // @COMPAT xmlDocGetRootElement() requires non-const in libxml2 < 2.9.2
-
     validation = crm_element_value(xmlDocGetRootElement((xmlDoc *) cib_doc),
                                    PCMK_XA_VALIDATE_WITH);
-    version = get_schema_version(validation);
-    if (get_schema_version(PCMK__COMPAT_ACL_2_MIN_INCL) > version) {
+
+    if (pcmk__cmp_schemas_by_name(PCMK__COMPAT_ACL_2_MIN_INCL,
+                                  validation) > 0) {
         return pcmk_rc_schema_validation;
     }
 

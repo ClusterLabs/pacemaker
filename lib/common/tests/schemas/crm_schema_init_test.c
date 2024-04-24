@@ -114,8 +114,6 @@ extra_schema_files(void **state)
 {
     crm_schema_init();
 
-    pcmk__log_known_schemas();
-
     /* Just iterate through the list of schemas and make sure everything
      * (including the new schemas we loaded from a second directory) is in
      * the right order.

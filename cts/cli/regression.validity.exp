@@ -170,7 +170,6 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
-update_validation 	debug: Unknown validation schema
 update_validation 	debug: Testing 'pacemaker-1.0' validation (0 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 update_validation 	trace: pacemaker-1.0 validation failed
@@ -355,8 +354,7 @@ update_validation 	debug: Configuration valid for schema: pacemaker-3.9
 update_validation 	debug: pacemaker-3.9-style configuration is also valid for pacemaker-3.10
 update_validation 	debug: Testing 'pacemaker-3.10' validation (24 of X)
 update_validation 	debug: Configuration valid for schema: pacemaker-3.10
-update_validation 	trace: Stopping at pacemaker-3.10
-update_validation 	info: Transformed the configuration from pacemaker-1.2 to pacemaker-3.10
+update_validation 	info: Transformed the configuration schema to pacemaker-3.10
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity

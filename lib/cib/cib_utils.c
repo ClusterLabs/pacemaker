@@ -588,40 +588,31 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
         pcmk__xe_add_last_written(scratch);
-        if (schema) {
-            static int minimum_schema = 0;
-            int current_schema = get_schema_version(schema);
 
-            if (minimum_schema == 0) {
-                minimum_schema = get_schema_version("pacemaker-1.2");
+        /* Make values of origin, client, and user in scratch match
+         * the ones in req (if the schema allows the attributes)
+         */
+        if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") >= 0) {
+            const char *origin = crm_element_value(req, PCMK__XA_SRC);
+            const char *client = crm_element_value(req,
+                                                   PCMK__XA_CIB_CLIENTNAME);
+
+            if (origin != NULL) {
+                crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
+            } else {
+                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
             }
 
-            /* Does the CIB support the "update-*" attributes... */
-            if (current_schema >= minimum_schema) {
-                /* Ensure values of origin, client, and user in scratch match
-                 * the values in req
-                 */
-                const char *origin = crm_element_value(req, PCMK__XA_SRC);
-                const char *client = crm_element_value(req,
-                                                       PCMK__XA_CIB_CLIENTNAME);
+            if (client != NULL) {
+                crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
+            } else {
+                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
+            }
 
-                if (origin != NULL) {
-                    crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
-                } else {
-                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
-                }
-
-                if (client != NULL) {
-                    crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
-                } else {
-                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
-                }
-
-                if (user != NULL) {
-                    crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
-                } else {
-                    pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
-                }
+            if (user != NULL) {
+                crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
+            } else {
+                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
             }
         }
     }

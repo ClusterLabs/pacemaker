@@ -402,6 +402,7 @@ enum pcmk__schema_validator {
 };
 
 typedef struct {
+    int schema_index;
     char *name;
     char *transform;
     void *cache;
