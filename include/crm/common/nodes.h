@@ -143,6 +143,7 @@ struct pe_node_s {
 bool pcmk_node_is_online(const pcmk_node_t *node);
 bool pcmk_node_is_pending(const pcmk_node_t *node);
 bool pcmk_node_is_clean(const pcmk_node_t *node);
+bool pcmk_node_is_shutting_down(const pcmk_node_t *node);
 
 /*!
  * \internal

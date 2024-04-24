@@ -63,6 +63,20 @@ pcmk_node_is_clean(const pcmk_node_t *node)
     return (node != NULL) && !(node->details->unclean);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is shutting down
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is shutting down, otherwise false
+ */
+bool
+pcmk_node_is_shutting_down(const pcmk_node_t *node)
+{
+    return (node != NULL) && node->details->shutdown;
+}
+
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {

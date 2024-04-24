@@ -14,6 +14,7 @@ include $(top_srcdir)/mk/unittest.mk
 check_PROGRAMS = pcmk_node_is_clean_test		\
 		 pcmk_node_is_online_test		\
 		 pcmk_node_is_pending_test		\
+		 pcmk_node_is_shutting_down_test	\
 		 pcmk__xe_add_node_test
 
 TESTS = $(check_PROGRAMS)
