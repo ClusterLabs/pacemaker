@@ -26,6 +26,24 @@ pcmk_node_is_online(const pcmk_node_t *node)
     return (node != NULL) && node->details->online;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is pending
+ *
+ * Check whether a node is pending. A node is pending if it is a member of the
+ * cluster but not the controller group, which means it is in the process of
+ * either joining or leaving the cluster.
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is pending, otherwise false
+ */
+bool
+pcmk_node_is_pending(const pcmk_node_t *node)
+{
+    return (node != NULL) && node->details->pending;
+}
+
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
 {
