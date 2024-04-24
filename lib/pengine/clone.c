@@ -898,7 +898,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE, 10,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE,
                                           PCMK_XA_ID, rsc->id,
                                           PCMK_XA_MULTI_STATE, multi_state,
                                           PCMK_XA_UNIQUE, unique,
@@ -908,7 +908,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                                           PCMK_XA_FAILED, failed,
                                           PCMK_XA_FAILURE_IGNORED, ignored,
                                           PCMK_XA_TARGET_ROLE, target_role,
-                                          PCMK_XA_DESCRIPTION, desc);
+                                          PCMK_XA_DESCRIPTION, desc,
+                                          NULL);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 

@@ -1549,7 +1549,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
             desc = pe__resource_description(rsc, show_opts);
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE, 8,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE,
                                           PCMK_XA_ID, rsc->id,
                                           PCMK_XA_TYPE, type,
                                           PCMK_XA_IMAGE, bundle_data->image,
@@ -1557,13 +1557,15 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
                                           PCMK_XA_MAINTENANCE, maintenance,
                                           PCMK_XA_MANAGED, managed,
                                           PCMK_XA_FAILED, failed,
-                                          PCMK_XA_DESCRIPTION, desc);
+                                          PCMK_XA_DESCRIPTION, desc,
+                                          NULL);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA, 1,
-                                      PCMK_XA_ID, id);
+        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA,
+                                      PCMK_XA_ID, id,
+                                      NULL);
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
 

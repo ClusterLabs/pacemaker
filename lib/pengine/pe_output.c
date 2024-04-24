@@ -607,11 +607,11 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 }
 
 int
-pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
-                         , size_t pairs_count, ...)
+pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name,
+                         ...)
 {
     xmlNodePtr xml_node = NULL;
-    va_list args;
+    va_list pairs;
 
     CRM_ASSERT(tag_name != NULL);
 
@@ -619,15 +619,9 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     CRM_ASSERT(xml_node != NULL);
     xml_node = pcmk__xe_create(xml_node, tag_name);
 
-    va_start(args, pairs_count);
-    while(pairs_count--) {
-        const char *param_name = va_arg(args, const char *);
-        const char *param_value = va_arg(args, const char *);
-        if (param_name && param_value) {
-            crm_xml_add(xml_node, param_name, param_value);
-        }
-    };
-    va_end(args);
+    va_start(pairs, tag_name);
+    pcmk__xe_set_propv(xml_node, pairs);
+    va_end(pairs);
 
     if (is_list) {
         pcmk__output_xml_push_parent(out, xml_node);
@@ -2067,7 +2061,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         char *resources_running = pcmk__itoa(length);
         const char *node_type = node_type_str(node->details->type);
 
-        pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE, 15,
+        pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
                                  PCMK_XA_NAME, node->details->uname,
                                  PCMK_XA_ID, node->details->id,
                                  PCMK_XA_ONLINE, online,
@@ -2082,7 +2076,8 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  PCMK_XA_EXPECTED_UP, expected_up,
                                  PCMK_XA_IS_DC, is_dc,
                                  PCMK_XA_RESOURCES_RUNNING, resources_running,
-                                 PCMK_XA_TYPE, node_type);
+                                 PCMK_XA_TYPE, node_type,
+                                 NULL);
 
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);

@@ -374,13 +374,14 @@ pe__group_xml(pcmk__output_t *out, va_list args)
             const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
             const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP, 5,
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP,
                                           PCMK_XA_ID, rsc->id,
                                           PCMK_XA_NUMBER_RESOURCES, count,
                                           PCMK_XA_MAINTENANCE, maintenance,
                                           PCMK_XA_MANAGED, managed,
                                           PCMK_XA_DISABLED, disabled,
-                                          PCMK_XA_DESCRIPTION, desc);
+                                          PCMK_XA_DESCRIPTION, desc,
+                                          NULL);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
