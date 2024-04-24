@@ -9,7 +9,22 @@
 
 #include <crm_internal.h>
 
+#include <libxml/tree.h>        // xmlNode
 #include <crm/common/nvpair.h>
+
+/*!
+ * \internal
+ * \brief Check whether a node is online
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is online, otherwise false
+ */
+bool
+pcmk_node_is_online(const pcmk_node_t *node)
+{
+    return (node != NULL) && node->details->online;
+}
 
 void
 pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)

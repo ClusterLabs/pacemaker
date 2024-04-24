@@ -140,6 +140,8 @@ struct pe_node_s {
     int rsc_discover_mode;              //!< Probe mode (enum pe_discover_e)
 };
 
+bool pcmk_node_is_online(const pcmk_node_t *node);
+
 /*!
  * \internal
  * \brief Return a string suitable for logging as a node name

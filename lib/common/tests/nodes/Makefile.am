@@ -11,6 +11,7 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__xe_add_node_test
+check_PROGRAMS = pcmk_node_is_online_test		\
+		 pcmk__xe_add_node_test
 
 TESTS = $(check_PROGRAMS)
