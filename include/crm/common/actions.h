@@ -76,75 +76,52 @@ extern "C" {
 #define PCMK_ACTION_STOPPED             "stopped"
 #define PCMK_ACTION_VALIDATE_ALL        "validate-all"
 
-//! Possible actions (including some pseudo-actions)
+// Possible actions (including some pseudo-actions)
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum action_tasks {
-    pcmk_action_unspecified = 0,    //!< Unspecified or unknown action
-    pcmk_action_monitor,            //!< Monitor
+    pcmk_action_unspecified = 0,    // Unspecified or unknown action
+    pcmk_action_monitor,            // Monitor
 
     // Each "completed" action must be the regular action plus 1
 
-    pcmk_action_stop,               //!< Stop
-    pcmk_action_stopped,            //!< Stop completed
+    pcmk_action_stop,               // Stop
+    pcmk_action_stopped,            // Stop completed
 
-    pcmk_action_start,              //!< Start
-    pcmk_action_started,            //!< Start completed
+    pcmk_action_start,              // Start
+    pcmk_action_started,            // Start completed
 
-    pcmk_action_notify,             //!< Notify
-    pcmk_action_notified,           //!< Notify completed
+    pcmk_action_notify,             // Notify
+    pcmk_action_notified,           // Notify completed
 
-    pcmk_action_promote,            //!< Promote
-    pcmk_action_promoted,           //!< Promoted
+    pcmk_action_promote,            // Promote
+    pcmk_action_promoted,           // Promoted
 
-    pcmk_action_demote,             //!< Demote
-    pcmk_action_demoted,            //!< Demoted
+    pcmk_action_demote,             // Demote
+    pcmk_action_demoted,            // Demoted
 
-    pcmk_action_shutdown,           //!< Shut down node
-    pcmk_action_fence,              //!< Fence node
+    pcmk_action_shutdown,           // Shut down node
+    pcmk_action_fence,              // Fence node
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_action_unspecified instead
     no_action               = pcmk_action_unspecified,
-
-    //! \deprecated Use pcmk_action_monitor instead
     monitor_rsc             = pcmk_action_monitor,
-
-    //! \deprecated Use pcmk_action_stop instead
     stop_rsc                = pcmk_action_stop,
-
-    //! \deprecated Use pcmk_action_stopped instead
     stopped_rsc             = pcmk_action_stopped,
-
-    //! \deprecated Use pcmk_action_start instead
     start_rsc               = pcmk_action_start,
-
-    //! \deprecated Use pcmk_action_started instead
     started_rsc             = pcmk_action_started,
-
-    //! \deprecated Use pcmk_action_notify instead
     action_notify           = pcmk_action_notify,
-
-    //! \deprecated Use pcmk_action_notified instead
     action_notified         = pcmk_action_notified,
-
-    //! \deprecated Use pcmk_action_promote instead
     action_promote          = pcmk_action_promote,
-
-    //! \deprecated Use pcmk_action_promoted instead
     action_promoted         = pcmk_action_promoted,
-
-    //! \deprecated Use pcmk_action_demote instead
     action_demote           = pcmk_action_demote,
-
-    //! \deprecated Use pcmk_action_demoted instead
     action_demoted          = pcmk_action_demoted,
-
-    //! \deprecated Use pcmk_action_shutdown instead
     shutdown_crm            = pcmk_action_shutdown,
-
-    //! \deprecated Use pcmk_action_fence instead
     stonith_node            = pcmk_action_fence,
 #endif
 };
+//!@}
 
 //! Possible responses to a resource action failure
 enum action_fail_response {
