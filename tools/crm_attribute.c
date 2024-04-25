@@ -318,9 +318,9 @@ static GOptionEntry addl_entries[] = {
       INDENT "by default if --promotion/-p is specified)\n\n"
 
       INDENT "This currently happens by default and cannot be disabled, but\n"
-      INDENT "this default behavior will soon be deprecated (except when\n"
-      INDENT "--promotion/-p is set). Set this flag if this behavior is\n"
-      INDENT "desired.\n\n"
+      INDENT "this default behavior is deprecated and will be removed in a\n"
+      INDENT "future release (exception: this will remain the default with\n"
+      INDENT "--promotion/-p). Set this flag if this behavior is desired.\n\n"
 
       INDENT "This option takes effect when updating XML attributes. For an\n"
       INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
@@ -505,10 +505,6 @@ command_delete(pcmk__output_t *out, cib_t *cib)
 
         rc = pcmk__xe_foreach_child(result, NULL, delete_attr_on_node, &dd);
 
-        if (rc != pcmk_rc_ok) {
-            goto done_deleting;
-        }
-
     } else {
         rc = cib__delete_node_attr(out, cib, cib_opts, options.type, options.dest_node,
                                    options.set_type, options.set_name, options.attr_id,
@@ -561,12 +557,10 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
     xmlNode *result = NULL;
     bool use_pattern = options.attr_pattern != NULL;
 
-    if (options.score_update || options.promotion_score) {
-        cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
-    } else {
-        // @TODO Warn!
-        cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
-    }
+    /* @COMPAT When we drop default support for expansion in crm_attribute,
+     * guard with `if (options.score_update)`
+     */
+    cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
 
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {
@@ -581,10 +575,6 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
         }
 
         rc = pcmk__xe_foreach_child(result, NULL, update_attr_on_node, &ud);
-
-        if (rc != pcmk_rc_ok) {
-            goto done_updating;
-        }
 
     } else {
         rc = cib__update_node_attr(out, cib, cib_opts, options.type,
