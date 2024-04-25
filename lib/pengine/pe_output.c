@@ -2061,23 +2061,28 @@ node_xml(pcmk__output_t *out, va_list args) {
         char *resources_running = pcmk__itoa(length);
         const char *node_type = node_type_str(node->details->type);
 
-        pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
-                                 PCMK_XA_NAME, node->details->uname,
-                                 PCMK_XA_ID, node->details->id,
-                                 PCMK_XA_ONLINE, online,
-                                 PCMK_XA_STANDBY, standby,
-                                 PCMK_XA_STANDBY_ONFAIL, standby_onfail,
-                                 PCMK_XA_MAINTENANCE, maintenance,
-                                 PCMK_XA_PENDING, pending,
-                                 PCMK_XA_UNCLEAN, unclean,
-                                 PCMK_XA_HEALTH, health,
-                                 PCMK_XA_FEATURE_SET, feature_set,
-                                 PCMK_XA_SHUTDOWN, shutdown,
-                                 PCMK_XA_EXPECTED_UP, expected_up,
-                                 PCMK_XA_IS_DC, is_dc,
-                                 PCMK_XA_RESOURCES_RUNNING, resources_running,
-                                 PCMK_XA_TYPE, node_type,
-                                 NULL);
+        int rc = pcmk_rc_ok;
+
+        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
+                                      PCMK_XA_NAME, node->details->uname,
+                                      PCMK_XA_ID, node->details->id,
+                                      PCMK_XA_ONLINE, online,
+                                      PCMK_XA_STANDBY, standby,
+                                      PCMK_XA_STANDBY_ONFAIL, standby_onfail,
+                                      PCMK_XA_MAINTENANCE, maintenance,
+                                      PCMK_XA_PENDING, pending,
+                                      PCMK_XA_UNCLEAN, unclean,
+                                      PCMK_XA_HEALTH, health,
+                                      PCMK_XA_FEATURE_SET, feature_set,
+                                      PCMK_XA_SHUTDOWN, shutdown,
+                                      PCMK_XA_EXPECTED_UP, expected_up,
+                                      PCMK_XA_IS_DC, is_dc,
+                                      PCMK_XA_RESOURCES_RUNNING, resources_running,
+                                      PCMK_XA_TYPE, node_type,
+                                      NULL);
+
+        free(resources_running);
+        CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
@@ -2096,8 +2101,6 @@ node_xml(pcmk__output_t *out, va_list args) {
                              rsc, only_node, only_rsc);
             }
         }
-
-        free(resources_running);
 
         out->end_list(out);
     } else {
