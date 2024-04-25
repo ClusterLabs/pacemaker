@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,25 +23,6 @@
 #include <libxml/tree.h>          // xmlNode
 
 #include <crm/pengine/status.h>   // pcmk_action_t, pcmk_resource_t, etc.
-
-/*!
- * \internal
- * \deprecated This macro will be removed in a future release
- */
-#  define status_print(fmt, args...)           \
-   if(options & pe_print_html) {           \
-       FILE *stream = print_data;      \
-       fprintf(stream, fmt, ##args);       \
-   } else if(options & pe_print_printf || options & pe_print_ncurses) {      \
-       FILE *stream = print_data;      \
-       fprintf(stream, fmt, ##args);       \
-   } else if(options & pe_print_xml) {     \
-       FILE *stream = print_data;      \
-       fprintf(stream, fmt, ##args);       \
-   } else if(options & pe_print_log) {     \
-       int log_level = *(int*)print_data;  \
-       do_crm_log(log_level, fmt, ##args); \
-   }
 
 typedef struct notify_data_s {
     GSList *keys;               // Environment variable name/value pairs
