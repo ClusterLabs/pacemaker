@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -245,6 +245,8 @@ struct pe_working_set_s {
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 //!@}
+
+int pcmk_set_scheduler_cib(pcmk_scheduler_t *scheduler, xmlNode *cib);
 
 #ifdef __cplusplus
 }
