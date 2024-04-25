@@ -47,23 +47,22 @@ enum node_type { // Possible node types
 };
 //!@}
 
-//! When to probe a resource on a node (as specified in location constraints)
+// When to probe a resource on a node (as specified in location constraints)
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum pe_discover_e {
-    pcmk_probe_always       = 0,    //! Always probe resource on node
-    pcmk_probe_never        = 1,    //! Never probe resource on node
-    pcmk_probe_exclusive    = 2,    //! Probe only on designated nodes
+    pcmk_probe_always       = 0,    // Always probe resource on node
+    pcmk_probe_never        = 1,    // Never probe resource on node
+    pcmk_probe_exclusive    = 2,    // Probe only on designated nodes
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_probe_always instead
     pe_discover_always      = pcmk_probe_always,
-
-    //! \deprecated Use pcmk_probe_never instead
     pe_discover_never       = pcmk_probe_never,
-
-    //! \deprecated Use pcmk_probe_exclusive instead
     pe_discover_exclusive   = pcmk_probe_exclusive,
 #endif
 };
+//!@}
 
 //! Basic node information (all node objects for the same node share this)
 struct pe_node_shared_s {
