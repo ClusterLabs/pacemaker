@@ -59,29 +59,29 @@ static int
 xml_latest_schema_index(void)
 {
     /* This function assumes that pcmk__schema_init() has been called
-     * beforehand, so we have at least three schemas (one real schema, the
-     * "pacemaker-next" schema, and the "none" schema).
+     * beforehand, so we have at least two schemas (one real schema and the
+     * "none" schema).
      *
-     * @COMPAT: pacemaker-next is deprecated since 2.1.5 and none since 2.1.8.
-     * Update this when we drop those.
+     * @COMPAT: The "none" schema is deprecated since 2.1.8.
+     * Update this when we drop that schema.
      */
-    return g_list_length(known_schemas) - 3;
+    return g_list_length(known_schemas) - 2;
 }
 
 /*!
  * \internal
  * \brief Return the schema entry of the highest-versioned schema
  *
- * \return Schema entry of highest-versioned schema (or NULL on error)
+ * \return Schema entry of highest-versioned schema
  */
 static GList *
 get_highest_schema(void)
 {
-    /* The highest numerically versioned schema is the one before pacemaker-next
+    /* The highest numerically versioned schema is the one before none
      *
-     * @COMPAT pacemaker-next is deprecated since 2.1.5
+     * @COMPAT none is deprecated since 2.1.8
      */
-    GList *entry = pcmk__get_schema("pacemaker-next");
+    GList *entry = pcmk__get_schema("none");
 
     CRM_ASSERT((entry != NULL) && (entry->prev != NULL));
     return entry->prev;
@@ -417,16 +417,10 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
     const pcmk__schema_t *schema_a = a;
     const pcmk__schema_t *schema_b = b;
 
-    // @COMPAT pacemaker-next is deprecated since 2.1.5 and none since 2.1.8
-    if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
-        if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
-            return -1;
-        } else {
-            return 1;
-        }
-    } else if (pcmk__str_eq(schema_a->name, PCMK_VALUE_NONE, pcmk__str_none)) {
+    // @COMPAT The "none" schema is deprecated since 2.1.8
+    if (pcmk__str_eq(schema_a->name, PCMK_VALUE_NONE, pcmk__str_none)) {
         return 1;
-    } else if (pcmk__str_eq(schema_b->name, "pacemaker-next", pcmk__str_none)) {
+    } else if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
         return -1;
     } else {
         return schema_cmp(schema_a->version, schema_b->version);
@@ -436,7 +430,7 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
 /*!
  * \internal
  * \brief Sort the list of known schemas such that all pacemaker-X.Y are in
- *        version order, then pacemaker-next, then none
+ *        version order, then "none"
  *
  * This function should be called whenever additional schemas are loaded using
  * \c pcmk__load_schemas_from_dir(), after the initial sets in
@@ -471,9 +465,6 @@ pcmk__schema_init(void)
         pcmk__load_schemas_from_dir(base);
         pcmk__load_schemas_from_dir(remote_schema_dir);
         free(base);
-
-        // @COMPAT: Deprecated since 2.1.5
-        add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next", NULL);
 
         // @COMPAT Deprecated since 2.1.8
         add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE, NULL);
@@ -1518,8 +1509,8 @@ pcmk__remote_schema_dir(void)
 void
 pcmk__warn_if_schema_deprecated(const char *schema)
 {
-    if ((schema == NULL) ||
-        pcmk__strcase_any_of(schema, "pacemaker-next", PCMK_VALUE_NONE, NULL)) {
+    if (pcmk__str_eq(schema, PCMK_VALUE_NONE,
+                     pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
                           "deprecated and will be removed in a future release "
                           "without the possibility of upgrades (manually edit "
