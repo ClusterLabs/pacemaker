@@ -394,8 +394,8 @@ static GOptionEntry addl_entries[] = {
       "(with --modify/-M)\n\n"
 
       INDENT "This currently happens by default and cannot be disabled, but\n"
-      INDENT "this default behavior will soon be deprecated. Set this flag\n"
-      INDENT "if this behavior is desired.\n\n"
+      INDENT "this default behavior is deprecated and will be removed in a\n"
+      INDENT "future release. Set this flag if this behavior is desired.\n\n"
 
       INDENT "This option takes effect when updating XML attributes. For an\n"
       INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
@@ -789,14 +789,11 @@ main(int argc, char **argv)
 
     } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
                             pcmk__str_none)) {
-        if (options.score_update) {
-            cib__set_call_options(options.cmd_options, crm_system_name,
-                                  cib_score_update);
-        } else {
-            // @TODO Warn!
-            cib__set_call_options(options.cmd_options, crm_system_name,
-                                  cib_score_update);
-        }
+        /* @COMPAT When we drop default support for expansion in cibadmin, guard
+         * with `if (options.score_update)`
+         */
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_score_update);
     }
 
     rc = do_init();
