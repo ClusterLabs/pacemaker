@@ -23,6 +23,20 @@ gboolean was_processing_warning = FALSE;
 
 /*!
  * \internal
+ * \brief Get the Designated Controller node from scheduler data
+ *
+ * \param[in] scheduler  Scheduler data
+ *
+ * \return Designated Controller node from scheduler data, or NULL if none
+ */
+pcmk_node_t *
+pcmk_get_dc(const pcmk_scheduler_t *scheduler)
+{
+    return (scheduler == NULL)? NULL : scheduler->dc_node;
+}
+
+/*!
+ * \internal
  * \brief Set CIB XML as scheduler input in scheduler data
  *
  * \param[out] scheduler  Scheduler data
