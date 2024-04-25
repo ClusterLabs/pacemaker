@@ -2181,6 +2181,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/output/Makefile                    \
                 lib/common/tests/probes/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
+                lib/common/tests/resources/Makefile                 \
                 lib/common/tests/results/Makefile                   \
                 lib/common/tests/rules/Makefile                     \
                 lib/common/tests/schemas/Makefile                   \

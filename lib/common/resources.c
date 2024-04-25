@@ -9,8 +9,24 @@
 
 #include <crm_internal.h>
 
+#include <stdio.h>      // NULL
+
 #include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
+
+/*!
+ * \internal
+ * \brief Get a resource's ID
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return ID of \p rsc (or NULL if \p rsc is NULL)
+ */
+const char *
+pcmk_resource_id(const pcmk_resource_t *rsc)
+{
+    return (rsc == NULL)? NULL : rsc->id;
+}
 
 /*!
  * \brief Get readable description of a multiply-active recovery type

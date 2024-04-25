@@ -22,6 +22,7 @@ SUBDIRS = \
 	options		\
 	output 		\
 	probes 		\
+	resources	\
 	results		\
 	rules		\
 	schemas		\
