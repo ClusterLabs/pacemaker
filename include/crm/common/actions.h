@@ -123,7 +123,10 @@ enum action_tasks {
 };
 //!@}
 
-//! Possible responses to a resource action failure
+// Possible responses to a resource action failure
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum action_fail_response {
     /* The order is (partially) significant here; the values from
      * pcmk_on_fail_ignore through pcmk_on_fail_fence_node are in order of
@@ -138,33 +141,33 @@ enum action_fail_response {
      */
 
     // @TODO Define as 10
-    pcmk_on_fail_ignore             = 0,    //!< Act as if failure didn't happen
+    pcmk_on_fail_ignore             = 0,    // Act as if failure didn't happen
 
     // @TODO Define as 30
-    pcmk_on_fail_restart            = 1,    //!< Restart resource
+    pcmk_on_fail_restart            = 1,    // Restart resource
 
     // @TODO Define as 60
-    pcmk_on_fail_ban                = 2,    //!< Ban resource from current node
+    pcmk_on_fail_ban                = 2,    // Ban resource from current node
 
     // @TODO Define as 70
-    pcmk_on_fail_block              = 3,    //!< Treat resource as unmanaged
+    pcmk_on_fail_block              = 3,    // Treat resource as unmanaged
 
     // @TODO Define as 80
-    pcmk_on_fail_stop               = 4,    //!< Stop resource and leave stopped
+    pcmk_on_fail_stop               = 4,    // Stop resource and leave stopped
 
     // @TODO Define as 90
-    pcmk_on_fail_standby_node       = 5,    //!< Put resource's node in standby
+    pcmk_on_fail_standby_node       = 5,    // Put resource's node in standby
 
     // @TODO Define as 100
-    pcmk_on_fail_fence_node         = 6,    //!< Fence resource's node
+    pcmk_on_fail_fence_node         = 6,    // Fence resource's node
 
     // @COMPAT Values below here are out of desired order for API compatibility
 
     // @TODO Define as 50
-    pcmk_on_fail_restart_container  = 7,    //!< Restart resource's container
+    pcmk_on_fail_restart_container  = 7,    // Restart resource's container
 
     // @TODO Define as 40
-    /*!
+    /*
      * Fence the remote node created by the resource if fencing is enabled,
      * otherwise attempt to restart the resource (used internally for some
      * remote connection failures).
@@ -172,40 +175,22 @@ enum action_fail_response {
     pcmk_on_fail_reset_remote       = 8,
 
     // @TODO Define as 20
-    pcmk_on_fail_demote             = 9,    //!< Demote if promotable, else stop
+    pcmk_on_fail_demote             = 9,    // Demote if promotable, else stop
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
-
-    //! \deprecated Use pcmk_on_fail_restart instead
     action_fail_recover             = pcmk_on_fail_restart,
-
-    //! \deprecated Use pcmk_on_fail_ban instead
     action_fail_migrate             = pcmk_on_fail_ban,
-
-    //! \deprecated Use pcmk_on_fail_block instead
     action_fail_block               = pcmk_on_fail_block,
-
-    //! \deprecated Use pcmk_on_fail_stop instead
     action_fail_stop                = pcmk_on_fail_stop,
-
-    //! \deprecated Use pcmk_on_fail_standby_node instead
     action_fail_standby             = pcmk_on_fail_standby_node,
-
-    //! \deprecated Use pcmk_on_fail_fence_node instead
     action_fail_fence               = pcmk_on_fail_fence_node,
-
-    //! \deprecated Use pcmk_on_fail_restart_container instead
     action_fail_restart_container   = pcmk_on_fail_restart_container,
-
-    //! \deprecated Use pcmk_on_fail_reset_remote instead
     action_fail_reset_remote        = pcmk_on_fail_reset_remote,
-
-    //! \deprecated Use pcmk_on_fail_demote instead
     action_fail_demote              = pcmk_on_fail_demote,
 #endif
 };
+//!@}
 
 //! Action scheduling flags
 enum pe_action_flags {
