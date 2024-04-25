@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdio.h>      // NULL
+#include <stdbool.h>    // bool, false
 
 #include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
@@ -26,6 +27,20 @@ const char *
 pcmk_resource_id(const pcmk_resource_t *rsc)
 {
     return (rsc == NULL)? NULL : rsc->id;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource is managed by the cluster
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is managed, otherwise false
+ */
+bool
+pcmk_resource_is_managed(const pcmk_resource_t *rsc)
+{
+    return (rsc == NULL)? false : pcmk_is_set(rsc->flags, pcmk_rsc_managed);
 }
 
 /*!

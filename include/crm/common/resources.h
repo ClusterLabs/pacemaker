@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_RESOURCES__H
 #  define PCMK__CRM_COMMON_RESOURCES__H
 
+#include <stdbool.h>                    // bool
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode
 #include <glib.h>                       // gboolean, guint, GList, GHashTable
@@ -499,6 +500,7 @@ struct pe_resource_s {
 };
 
 const char *pcmk_resource_id(const pcmk_resource_t *rsc);
+bool pcmk_resource_is_managed(const pcmk_resource_t *rsc);
 
 const char *pcmk_multiply_active_text(enum rsc_recovery_type recovery);
 
