@@ -17,14 +17,12 @@ CFLAGS += -DPCMK__TEST_SCHEMA_DIR='"$(abs_builddir)/schemas"'
 # These tests share a schema subdirectory
 SHARED_SCHEMA_TESTS =	pcmk__cmp_schemas_by_name_test		\
 			crm_schema_init_test			\
-			get_schema_name_test			\
-			get_schema_version_test			\
 			pcmk__build_schema_xml_node_test	\
 			pcmk__get_schema_test 			\
 			pcmk__schema_files_later_than_test
 
 # This test has its own schema directory
-FIND_X_0_SCHEMA_TEST =	pcmk__find_x_0_schema_index_test
+FIND_X_0_SCHEMA_TEST =	pcmk__find_x_0_schema_test
 
 check_PROGRAMS =	$(SHARED_SCHEMA_TESTS) $(FIND_X_0_SCHEMA_TEST)
 
@@ -71,7 +69,7 @@ setup-schema-dir:
 		ln -sf ../$$f $$(basename $$f); \
 	  done )
 
-# pcmk__find_x_0_schema_index_test moves schema files around, so it needs its
+# pcmk__find_x_0_schema_test moves schema files around, so it needs its
 # own directory, otherwise other tests run in parallel could fail.
 .PHONY: setup-find_x_0-schema-dir
 setup-find_x_0-schema-dir:

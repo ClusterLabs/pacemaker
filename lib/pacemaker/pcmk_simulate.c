@@ -345,12 +345,12 @@ profile_file(const char *xml_file, long long repeat,
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
+    if (!pcmk__update_configured_schema(&cib_object, false)) {
         free_xml(cib_object);
         return;
     }
 
-    if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
         free_xml(cib_object);
         return;
     }

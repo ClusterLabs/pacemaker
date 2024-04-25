@@ -67,90 +67,87 @@ xml_latest_schema_index(void)
     return g_list_length(known_schemas) - 3;
 }
 
-/* Return the index of the most recent X.0 schema. */
-int
-pcmk__find_x_0_schema_index(void)
+/*!
+ * \internal
+ * \brief Return the schema entry of the highest-versioned schema
+ *
+ * \return Schema entry of highest-versioned schema (or NULL on error)
+ */
+static GList *
+get_highest_schema(void)
 {
-    /* We can't just use best to determine whether we've found the index
-     * or not.  What if we have a very long list of schemas all in the
-     * same major version series?  We'd return 0 for that, which means
-     * we would still run this function every time.
+    /* The highest numerically versioned schema is the one before pacemaker-next
+     *
+     * @COMPAT pacemaker-next is deprecated since 2.1.5
      */
+    GList *entry = pcmk__get_schema("pacemaker-next");
+
+    CRM_ASSERT((entry != NULL) && (entry->prev != NULL));
+    return entry->prev;
+}
+
+/*!
+ * \internal
+ * \brief Return the name of the highest-versioned schema
+ *
+ * \return Name of highest-versioned schema (or NULL on error)
+ */
+const char *
+pcmk__highest_schema_name(void)
+{
+    GList *entry = get_highest_schema();
+
+    return ((pcmk__schema_t *)(entry->data))->name;
+}
+
+/*!
+ * \internal
+ * \brief Find first entry of highest major schema version series
+ *
+ * \return Schema entry of first schema with highest major version
+ */
+GList *
+pcmk__find_x_0_schema(void)
+{
 #if defined(PCMK__UNIT_TESTING)
-    /* If we're unit testing, these can't be static because they'll stick
-     * around from one test run to the next.  They need to be cleared out
+    /* If we're unit testing, this can't be static because it'll stick
+     * around from one test run to the next. It needs to be cleared out
      * every time.
      */
-    bool found = false;
-    int best = 0;
+    GList *x_0_entry = NULL;
 #else
-    static bool found = false;
-    static int best = 0;
+    static GList *x_0_entry = NULL;
 #endif
-    int i;
-    GList *best_node = NULL;
-    pcmk__schema_t *best_schema = NULL;
 
-    if (found) {
-        return best;
+    pcmk__schema_t *highest_schema = NULL;
+
+    if (x_0_entry != NULL) {
+        return x_0_entry;
     }
+    x_0_entry = get_highest_schema();
+    highest_schema = x_0_entry->data;
 
-    CRM_ASSERT(known_schemas != NULL);
-
-    /* Get the most recent schema so we can look at its version number. */
-    best = xml_latest_schema_index();
-    best_node = g_list_nth(known_schemas, best);
-    best_schema = best_node->data;
-
-    /* The "pacemaker-next" and "none" schemas are added to the real schemas,
-     * so a list of length three actually only has one useful schema.
-     *
-     * @COMPAT pacemaker-next is deprecated since 2.1.5.
-     * Update this when we drop that schema.
-     */
-    if (g_list_length(known_schemas) == 3) {
-        goto done;
-    }
-
-    /* Start comparing the list from the node before the best schema (there's
-     * no point in comparing something to itself).  Then, 'i' is an index
-     * starting at the best schema and will always point at the node after
-     * 'iter'.  This makes it the value we want to return when we find what
-     * we're looking for.
-     */
-    i = best;
-
-    for (GList *iter = best_node->prev; iter != NULL; iter = iter->prev) {
+    for (GList *iter = x_0_entry->prev; iter != NULL; iter = iter->prev) {
         pcmk__schema_t *schema = iter->data;
 
         /* We've found a schema in an older major version series.  Return
          * the index of the first one in the same major version series as
-         * the best schema.
+         * the highest schema.
          */
-        if (schema->version.v[0] < best_schema->version.v[0]) {
-            best = i;
-            goto done;
-
-        /* We're out of list to examine.  This probably means there was only
-         * one major version series, so return index 0.
-         */
-        } else if (iter->prev == NULL) {
-            best = 0;
-            goto done;
+        if (schema->version.v[0] < highest_schema->version.v[0]) {
+            x_0_entry = iter->next;
+            break;
         }
 
-        i--;
+        /* We're out of list to examine.  This probably means there was only
+         * one major version series, so return the first schema entry.
+         */
+        if (iter->prev == NULL) {
+            x_0_entry = known_schemas->data;
+            break;
+        }
     }
-
-done:
-    found = true;
-    return best;
-}
-
-const char *
-xml_latest_schema(void)
-{
-    return get_schema_name(xml_latest_schema_index());
+    return x_0_entry;
 }
 
 static inline bool
@@ -507,16 +504,17 @@ crm_schema_init(void)
     }
 }
 
-static gboolean
-validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, void *error_handler_context, const char *relaxng_file,
+static bool
+validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
+                      void *error_handler_context, const char *relaxng_file,
                       relaxng_ctx_cache_t **cached_ctx)
 {
     int rc = 0;
-    gboolean valid = TRUE;
+    bool valid = true;
     relaxng_ctx_cache_t *ctx = NULL;
 
-    CRM_CHECK(doc != NULL, return FALSE);
-    CRM_CHECK(relaxng_file != NULL, return FALSE);
+    CRM_CHECK(doc != NULL, return false);
+    CRM_CHECK(relaxng_file != NULL, return false);
 
     if (cached_ctx && *cached_ctx) {
         ctx = *cached_ctx;
@@ -563,7 +561,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler, 
 
     rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
     if (rc > 0) {
-        valid = FALSE;
+        valid = false;
 
     } else if (rc < 0) {
         crm_err("Internal libxml error during validation");
@@ -696,19 +694,21 @@ pcmk__cmp_schemas_by_name(const char *schema1_name, const char *schema2_name)
     }
 }
 
-static gboolean
-validate_with(xmlNode *xml, pcmk__schema_t *schema, xmlRelaxNGValidityErrorFunc error_handler, void* error_handler_context)
+static bool
+validate_with(xmlNode *xml, pcmk__schema_t *schema,
+              xmlRelaxNGValidityErrorFunc error_handler,
+              void *error_handler_context)
 {
-    gboolean valid = FALSE;
+    bool valid = false;
     char *file = NULL;
     relaxng_ctx_cache_t **cache = NULL;
 
     if (schema == NULL) {
-        return FALSE;
+        return false;
     }
 
     if (schema->validator == pcmk__schema_validator_none) {
-        return TRUE;
+        return true;
     }
 
     if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
@@ -745,72 +745,7 @@ validate_with_silent(xmlNode *xml, pcmk__schema_t *schema)
     return rc;
 }
 
-static void
-dump_file(const char *filename)
-{
-
-    FILE *fp = NULL;
-    int ch, line = 0;
-
-    CRM_CHECK(filename != NULL, return);
-
-    fp = fopen(filename, "r");
-    if (fp == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
-        return;
-    }
-
-    fprintf(stderr, "%4d ", ++line);
-    do {
-        ch = getc(fp);
-        if (ch == EOF) {
-            putc('\n', stderr);
-            break;
-        } else if (ch == '\n') {
-            fprintf(stderr, "\n%4d ", ++line);
-        } else {
-            putc(ch, stderr);
-        }
-    } while (1);
-
-    fclose(fp);
-}
-
-gboolean
-validate_xml_verbose(const xmlNode *xml_blob)
-{
-    int fd = 0;
-    xmlDoc *doc = NULL;
-    xmlNode *xml = NULL;
-    gboolean rc = FALSE;
-    char *filename = NULL;
-
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-    fd = mkstemp(filename);
-    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
-
-    dump_file(filename);
-
-    doc = xmlReadFile(filename, NULL, 0);
-    xml = xmlDocGetRootElement(doc);
-    rc = validate_xml(xml, NULL, FALSE);
-    free_xml(xml);
-
-    unlink(filename);
-    free(filename);
-
-    return rc;
-}
-
-gboolean
-validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
-{
-    return pcmk__validate_xml(xml_blob, validation, to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL, GUINT_TO_POINTER(LOG_ERR));
-}
-
-gboolean
+bool
 pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                    xmlRelaxNGValidityErrorFunc error_handler,
                    void *error_handler_context)
@@ -818,19 +753,19 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     GList *entry = NULL;
     pcmk__schema_t *schema = NULL;
 
-    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return FALSE);
+    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return false);
 
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
 
     if (validation == NULL) {
-        bool valid = FALSE;
+        bool valid = false;
 
         for (entry = known_schemas; entry != NULL; entry = entry->next) {
             schema = entry->data;
             if (validate_with(xml_blob, schema, NULL, NULL)) {
-                valid = TRUE;
+                valid = true;
                 crm_xml_add(xml_blob, PCMK_XA_VALIDATE_WITH, schema->name);
                 crm_info("XML validated against %s", schema->name);
             }
@@ -846,7 +781,23 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
 
     crm_err("Unknown validator: %s", validation);
-    return FALSE;
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Validate XML using its configured schema (and send errors to logs)
+ *
+ * \param[in] xml  XML to validate
+ *
+ * \return true if XML validates, otherwise false
+ */
+bool
+pcmk__configured_schema_validates(xmlNode *xml)
+{
+    return pcmk__validate_xml(xml, NULL,
+                              (xmlRelaxNGValidityErrorFunc) xml_log,
+                              GUINT_TO_POINTER(LOG_ERR));
 }
 
 /* With this arrangement, an attempt to identify the message severity
@@ -1139,36 +1090,6 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
     return final;
 }
 
-const char *
-get_schema_name(int version)
-{
-    pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
-
-    return (schema != NULL)? schema->name : "unknown";
-}
-
-int
-get_schema_version(const char *name)
-{
-    int lpc = 0;
-
-    if (name == NULL) {
-        name = PCMK_VALUE_NONE;
-    }
-
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        pcmk__schema_t *schema = iter->data;
-
-        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
-            return lpc;
-        }
-
-        lpc++;
-    }
-
-    return -1;
-}
-
 /*!
  * \internal
  * \brief Get the schema list entry corresponding to XML configuration
@@ -1302,55 +1223,71 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
     return rc;
 }
 
-gboolean
-cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
+/*!
+ * \internal
+ * \brief Update XML from its configured schema to the latest major series
+ *
+ * \param[in,out] xml      XML to update
+ * \param[in]     to_logs  If false, certain validation errors will be
+ *                         sent to stderr rather than logged
+ *
+ * \return true if XML was successfully updated, otherwise false
+ */
+bool
+pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 {
-    gboolean rc = TRUE;
+    bool rc = true;
     char *original_schema_name = NULL;
-    int version = 0;
-    int orig_version = 0;
-    int min_version = pcmk__find_x_0_schema_index();
+    const char *effective_original_name = "the first";
+    int orig_version = -1;
+    pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
+    GList *entry = NULL;
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
-    version = get_schema_version(original_schema_name);
-    orig_version = version;
-    if (version < min_version) {
+    entry = pcmk__get_schema(original_schema_name);
+    if (entry != NULL) {
+        pcmk__schema_t *original_schema = entry->data;
+
+        effective_original_name = original_schema->name;
+        orig_version = original_schema->schema_index;
+    }
+
+    if (orig_version < x_0_schema->schema_index) {
         // Current configuration schema is not acceptable, try to update
         xmlNode *converted = NULL;
         const char *new_schema_name = NULL;
+        pcmk__schema_t *schema = NULL;
 
+        entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
         if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
             new_schema_name = crm_element_value(converted,
                                                 PCMK_XA_VALIDATE_WITH);
-            version = get_schema_version(new_schema_name);
-        } else {
-            version = 0;
+            entry = pcmk__get_schema(new_schema_name);
         }
+        schema = (entry == NULL)? NULL : entry->data;
 
-        if (version < min_version) {
+        if ((schema == NULL)
+            || (schema->schema_index < x_0_schema->schema_index)) {
             // Updated configuration schema is still not acceptable
 
-            if (version < orig_version || orig_version == -1) {
+            if ((orig_version == -1) || (schema == NULL)
+                || (schema->schema_index < orig_version)) {
                 // We couldn't validate any schema at all
                 if (to_logs) {
                     pcmk__config_err("Cannot upgrade configuration (claiming "
                                      "%s schema) to at least %s because it "
                                      "does not validate with any schema from "
-                                     "%s to %s",
+                                     "%s to the latest",
                                      pcmk__s(original_schema_name, "no"),
-                                     get_schema_name(min_version),
-                                     get_schema_name(orig_version),
-                                     xml_latest_schema());
+                                     x_0_schema->name, effective_original_name);
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "does not validate with any schema from "
-                                    "%s to %s\n",
+                                    "%s to the latest\n",
                                     pcmk__s(original_schema_name, "no"),
-                                    get_schema_name(min_version),
-                                    get_schema_name(orig_version),
-                                    xml_latest_schema());
+                                    x_0_schema->name, effective_original_name);
                 }
             } else {
                 // We updated configuration successfully, but still too low
@@ -1359,61 +1296,63 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                      "%s schema) to at least %s because it "
                                      "would not upgrade past %s",
                                      pcmk__s(original_schema_name, "no"),
-                                     get_schema_name(min_version),
+                                     x_0_schema->name,
                                      pcmk__s(new_schema_name, "unspecified version"));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "%s schema) to at least %s because it "
                                     "would not upgrade past %s\n",
                                     pcmk__s(original_schema_name, "no"),
-                                    get_schema_name(min_version),
+                                    x_0_schema->name,
                                     pcmk__s(new_schema_name, "unspecified version"));
                 }
             }
 
             free_xml(converted);
             converted = NULL;
-            rc = FALSE;
+            rc = false;
 
         } else {
             // Updated configuration schema is acceptable
             free_xml(*xml);
             *xml = converted;
 
-            if (version < xml_latest_schema_index()) {
+            if (schema->schema_index < xml_latest_schema_index()) {
                 if (to_logs) {
                     pcmk__config_warn("Configuration with %s schema was "
                                       "internally upgraded to acceptable (but "
                                       "not most recent) %s",
                                       pcmk__s(original_schema_name, "no"),
-                                      get_schema_name(version));
+                                      schema->name);
                 }
-            } else {
-                if (to_logs) {
-                    crm_info("Configuration with %s schema was internally "
-                             "upgraded to latest version %s",
-                             pcmk__s(original_schema_name, "no"),
-                             get_schema_name(version));
-                }
+            } else if (to_logs) {
+                crm_info("Configuration with %s schema was internally "
+                         "upgraded to latest version %s",
+                         pcmk__s(original_schema_name, "no"),
+                         schema->name);
             }
         }
 
-    } else if (version >= get_schema_version(PCMK_VALUE_NONE)) {
-        // Schema validation is disabled
-        if (to_logs) {
-            pcmk__config_warn("Schema validation of configuration is disabled "
-                              "(enabling is encouraged and prevents common "
-                              "misconfigurations)");
+    } else {
+        pcmk__schema_t *none_schema = NULL;
 
-        } else {
-            fprintf(stderr, "Schema validation of configuration is disabled "
-                            "(enabling is encouraged and prevents common "
-                            "misconfigurations)\n");
+        entry = pcmk__get_schema(PCMK_VALUE_NONE);
+        CRM_ASSERT((entry != NULL) && (entry->data != NULL));
+
+        none_schema = entry->data;
+        if (orig_version >= none_schema->schema_index) {
+            // Schema validation is disabled
+            if (to_logs) {
+                pcmk__config_warn("Schema validation of configuration is "
+                                  "disabled (enabling is encouraged and "
+                                  "prevents common misconfigurations)");
+
+            } else {
+                fprintf(stderr, "Schema validation of configuration is "
+                                "disabled (enabling is encouraged and "
+                                "prevents common misconfigurations)\n");
+            }
         }
-    }
-
-    if (best_version) {
-        *best_version = version;
     }
 
     free(original_schema_name);
@@ -1629,7 +1568,43 @@ pcmk__remote_schema_dir(void)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
-#include <crm/common/schemas_compat.h>
+#include <crm/common/xml_compat.h>
+
+const char *
+xml_latest_schema(void)
+{
+    return pcmk__highest_schema_name();
+}
+
+const char *
+get_schema_name(int version)
+{
+    pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
+
+    return (schema != NULL)? schema->name : "unknown";
+}
+
+int
+get_schema_version(const char *name)
+{
+    int lpc = 0;
+
+    if (name == NULL) {
+        name = PCMK_VALUE_NONE;
+    }
+
+    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+        pcmk__schema_t *schema = iter->data;
+
+        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
+            return lpc;
+        }
+
+        lpc++;
+    }
+
+    return -1;
+}
 
 int
 update_validation(xmlNode **xml, int *best, int max, gboolean transform,
@@ -1648,6 +1623,94 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
     }
 
     return pcmk_rc2legacy(rc);
+}
+
+gboolean
+validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
+{
+    bool rc = pcmk__validate_xml(xml_blob, validation,
+                                 to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
+                                 GUINT_TO_POINTER(LOG_ERR));
+    return rc? TRUE : FALSE;
+}
+
+static void
+dump_file(const char *filename)
+{
+
+    FILE *fp = NULL;
+    int ch, line = 0;
+
+    CRM_CHECK(filename != NULL, return);
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
+        return;
+    }
+
+    fprintf(stderr, "%4d ", ++line);
+    do {
+        ch = getc(fp);
+        if (ch == EOF) {
+            putc('\n', stderr);
+            break;
+        } else if (ch == '\n') {
+            fprintf(stderr, "\n%4d ", ++line);
+        } else {
+            putc(ch, stderr);
+        }
+    } while (1);
+
+    fclose(fp);
+}
+
+gboolean
+validate_xml_verbose(const xmlNode *xml_blob)
+{
+    int fd = 0;
+    xmlDoc *doc = NULL;
+    xmlNode *xml = NULL;
+    gboolean rc = FALSE;
+    char *filename = NULL;
+
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
+
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+    fd = mkstemp(filename);
+    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
+
+    dump_file(filename);
+
+    doc = xmlReadFile(filename, NULL, 0);
+    xml = xmlDocGetRootElement(doc);
+    rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
+    free_xml(xml);
+
+    unlink(filename);
+    free(filename);
+
+    return rc? TRUE : FALSE;
+}
+
+gboolean
+cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
+{
+    bool rc = pcmk__update_configured_schema(xml, to_logs);
+
+    if (best_version != NULL) {
+        const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
+
+        if (name == NULL) {
+            *best_version = -1;
+        } else {
+            GList *entry = pcmk__get_schema(name);
+            pcmk__schema_t *schema = (entry == NULL)? NULL : entry->data;
+
+            *best_version = (schema == NULL)? -1 : schema->schema_index;
+        }
+    }
+    return rc? TRUE: FALSE;
 }
 
 // LCOV_EXCL_STOP

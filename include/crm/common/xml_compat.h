@@ -147,6 +147,29 @@ gboolean add_message_xml(xmlNode *msg, const char *field, xmlNode *xml);
 xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 
 //! \deprecated Do not use
+const char *xml_latest_schema(void);
+
+//! \deprecated Do not use
+const char *get_schema_name(int version);
+
+//! \deprecated Do not use
+int get_schema_version(const char *name);
+
+//! \deprecated Do not use
+int update_validation(xmlNode **xml_blob, int *best, int max,
+                      gboolean transform, gboolean to_logs);
+
+//! \deprecated Do not use
+gboolean validate_xml(xmlNode *xml_blob, const char *validation,
+                      gboolean to_logs);
+
+//! \deprecated Do not use
+gboolean validate_xml_verbose(const xmlNode *xml_blob);
+
+//! \deprecated Do not use
+gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
+
+//! \deprecated Do not use
 static inline const char *
 crm_map_element_name(const xmlNode *xml)
 {

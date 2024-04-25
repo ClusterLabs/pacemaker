@@ -461,7 +461,7 @@ generate_params(void)
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-    if (!cli_config_update(&cib_xml_copy, NULL, FALSE)) {
+    if (!pcmk__update_configured_schema(&cib_xml_copy, false)) {
         crm_err("Could not update CIB");
         return pcmk_rc_cib_corrupt;
     }

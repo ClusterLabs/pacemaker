@@ -2,21 +2,6 @@ Created new pacemaker configuration
 A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
-   1 <cib epoch="5" num_updates="0" admin_epoch="0">
-   2   <configuration>
-   3     <crm_config/>
-   4     <nodes/>
-   5     <resources>
-   6       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-   7       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-   8     </resources>
-   9     <constraints>
-  10       <rsc_order id="ord_1-2" first="dummy1" first-action="break" then="dummy2"/>
-  11     </constraints>
-  12   </configuration>
-  13   <status/>
-  14 </cib>
-  15 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">
@@ -108,25 +93,10 @@ pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming pacemaker-1.2 schema) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to pacemaker-3.10
+Cannot upgrade configuration (claiming pacemaker-1.2 schema) to at least pacemaker-3.0 because it does not validate with any schema from pacemaker-1.2 to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
-   1 <cib epoch="4" num_updates="1" admin_epoch="0">
-   2   <configuration>
-   3     <crm_config/>
-   4     <nodes/>
-   5     <resources>
-   6       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-   7       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-   8     </resources>
-   9     <constraints>
-  10       <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
-  11     </constraints>
-  12   </configuration>
-  13   <status/>
-  14 </cib>
-  15 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">
@@ -196,26 +166,10 @@ element cib: Relax-NG validity error : Invalid attribute validate-with for eleme
 pcmk__update_schema 	debug: Schema pacemaker-3.9 does not validate
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 pcmk__update_schema 	debug: Schema pacemaker-3.10 does not validate
-Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from unknown to pacemaker-3.10
+Cannot upgrade configuration (claiming pacemaker-9999.0 schema) to at least pacemaker-3.0 because it does not validate with any schema from the first to the latest
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
-   1 <cib epoch="5" num_updates="0" admin_epoch="0">
-   2   <configuration>
-   3     <crm_config/>
-   4     <nodes/>
-   5     <resources>
-   6       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
-   7       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
-   8     </resources>
-   9     <constraints>
-  10       <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
-  11     </constraints>
-  12     <tags/>
-  13   </configuration>
-  14   <status/>
-  15 </cib>
-  16 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">

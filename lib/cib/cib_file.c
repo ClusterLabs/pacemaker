@@ -258,7 +258,8 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     }
 
     if (rc == -pcmk_err_schema_validation) {
-        validate_xml_verbose(result_cib);
+        // Show validation errors to stderr
+        pcmk__validate_xml(result_cib, NULL, NULL, NULL);
 
     } else if ((rc == pcmk_ok) && !read_only) {
         pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
@@ -395,7 +396,7 @@ load_file_cib(const char *filename, xmlNode **output)
     }
 
     /* Validate XML against its specified schema */
-    if (validate_xml(root, NULL, TRUE) == FALSE) {
+    if (!pcmk__configured_schema_validates(root)) {
         const char *schema = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
 
         crm_err("CIB does not validate against %s, or that schema is unknown", schema);

@@ -302,7 +302,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
-    if (validate_xml(root, NULL, TRUE) == FALSE) {
+    if (!pcmk__configured_schema_validates(root)) {
         crm_err("CIB does not validate with %s",
                 pcmk__s(validation, "no schema specified"));
         cib_status = -pcmk_err_schema_validation;

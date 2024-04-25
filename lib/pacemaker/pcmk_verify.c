@@ -64,16 +64,17 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out, xmlNode *cib_obje
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    if (pcmk__validate_xml(cib_object, NULL, (xmlRelaxNGValidityErrorFunc) out->err, out) == FALSE) {
+    if (!pcmk__validate_xml(cib_object, NULL,
+                            (xmlRelaxNGValidityErrorFunc) out->err, out)) {
         crm_config_error = TRUE;
         rc = pcmk_rc_schema_validation;
         goto verify_done;
 
-    } else if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
+    } else if (!pcmk__update_configured_schema(&cib_object, false)) {
         crm_config_error = TRUE;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"
                  "Please manually update the configuration to conform to the %s syntax.",
-                 xml_latest_schema());
+                 pcmk__highest_schema_name());
         rc = pcmk_rc_schema_validation;
         goto verify_done;
     }

@@ -430,7 +430,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (!cli_config_update(&cib_xml_copy, NULL, FALSE)) {
+    if (!pcmk__update_configured_schema(&cib_xml_copy, false)) {
         exit_code = CRM_EX_CONFIG;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Could not update local CIB to latest schema version");
