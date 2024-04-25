@@ -382,6 +382,8 @@ struct pe_action_s {
 //! \deprecated Do not use (public access will be removed in a future release)
 const char *pcmk_action_text(enum action_tasks action);
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 enum action_tasks pcmk_parse_action(const char *action_name);
 
 // @COMPAT Make this internal when we can break API backward compatibility
