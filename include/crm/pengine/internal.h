@@ -301,9 +301,6 @@ void pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler,
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
-//! \deprecated This function will be removed in a future release
-void print_rscs_brief(GList *rsc_list, const char * pre_text, long options,
-                      void * print_data, gboolean print_all);
 int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
 void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                    const char *reason, bool priority_delay);
