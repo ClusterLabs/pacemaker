@@ -1014,7 +1014,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         locked_to = rsc->lock_node->details->uname;
     }
 
-    rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE, 15,
+    rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE,
                                   PCMK_XA_ID, rsc_printable_id(rsc),
                                   PCMK_XA_RESOURCE_AGENT, ra_name,
                                   PCMK_XA_ROLE, rsc_state,
@@ -1029,7 +1029,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                   PCMK_XA_NODES_RUNNING_ON, nodes_running_on,
                                   PCMK_XA_PENDING, pending,
                                   PCMK_XA_LOCKED_TO, locked_to,
-                                  PCMK_XA_DESCRIPTION, desc);
+                                  PCMK_XA_DESCRIPTION, desc,
+                                  NULL);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);
@@ -1041,10 +1042,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
             const char *cached = pcmk__btoa(node->details->online);
 
-            rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE, 3,
+            rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
                                           PCMK_XA_NAME, node->details->uname,
                                           PCMK_XA_ID, node->details->id,
-                                          PCMK_XA_CACHED, cached);
+                                          PCMK_XA_CACHED, cached,
+                                          NULL);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
     }
