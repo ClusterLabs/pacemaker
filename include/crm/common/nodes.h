@@ -145,16 +145,20 @@ struct pe_node_shared_s {
 };
 //!@}
 
-//! Implementation of pcmk_node_t
+// Implementation of pcmk_node_t
+// @COMPAT Make contents internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 struct pe_node_s {
-    int weight;         //!< Node score for a given resource
-    gboolean fixed;     //!< \deprecated Do not use
-    int count;          //!< Counter reused by assignment and promotion code
-    struct pe_node_shared_s *details;   //!< Basic node information
+    int weight;         // Node score for a given resource
+    gboolean fixed;     // \deprecated Do not use
+    int count;          // Counter reused by assignment and promotion code
+    struct pe_node_shared_s *details;   // Basic node information
 
     // @COMPAT This should be enum pe_discover_e
-    int rsc_discover_mode;              //!< Probe mode (enum pe_discover_e)
+    int rsc_discover_mode;              // Probe mode (enum pe_discover_e)
 };
+//!@}
 
 bool pcmk_node_is_online(const pcmk_node_t *node);
 bool pcmk_node_is_pending(const pcmk_node_t *node);
