@@ -32,20 +32,20 @@ extern "C" {
 #define PCMK_NODE_ATTR_TERMINATE            "terminate"
 
 
-//! Possible node types
-enum node_type {
-    pcmk_node_variant_cluster  = 1,     //!< Cluster layer node
-    pcmk_node_variant_remote   = 2,     //!< Pacemaker Remote node
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
+enum node_type { // Possible node types
+    pcmk_node_variant_cluster  = 1,     // Cluster layer node
+    pcmk_node_variant_remote   = 2,     // Pacemaker Remote node
 
-    node_ping   = 0,      //!< \deprecated Do not use
+    node_ping   = 0,                    // deprecated
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_node_variant_cluster instead
     node_member = pcmk_node_variant_cluster,
-
-    //! \deprecated Use pcmk_node_variant_remote instead
     node_remote = pcmk_node_variant_remote,
 #endif
 };
+//!@}
 
 //! When to probe a resource on a node (as specified in location constraints)
 enum pe_discover_e {
