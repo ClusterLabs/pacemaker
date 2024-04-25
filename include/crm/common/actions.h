@@ -192,36 +192,39 @@ enum action_fail_response {
 };
 //!@}
 
-//! Action scheduling flags
+// Action scheduling flags
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum pe_action_flags {
-    //! No action flags set (compare with equality rather than bit set)
+    // No action flags set (compare with equality rather than bit set)
     pcmk_no_action_flags            = 0,
 
-    //! Whether action does not require invoking an agent
+    // Whether action does not require invoking an agent
     pcmk_action_pseudo              = (1 << 0),
 
-    //! Whether action is runnable
+    // Whether action is runnable
     pcmk_action_runnable            = (1 << 1),
 
-    //! Whether action should not be executed
+    // Whether action should not be executed
     pcmk_action_optional            = (1 << 2),
 
-    //! Whether action should be added to transition graph even if optional
+    // Whether action should be added to transition graph even if optional
     pcmk_action_always_in_graph     = (1 << 3),
 
-    //! Whether operation-specific instance attributes have been unpacked yet
+    // Whether operation-specific instance attributes have been unpacked yet
     pcmk_action_attrs_evaluated     = (1 << 4),
 
-    //! Whether action is allowed to be part of a live migration
+    // Whether action is allowed to be part of a live migration
     pcmk_action_migratable           = (1 << 7),
 
-    //! Whether action has been added to transition graph
+    // Whether action has been added to transition graph
     pcmk_action_added_to_graph       = (1 << 8),
 
-    //! Whether action is a stop to abort a dangling migration
+    // Whether action is a stop to abort a dangling migration
     pcmk_action_migration_abort      = (1 << 11),
 
-    /*!
+    /*
      * Whether action is an ordering point for minimum required instances
      * (used to implement ordering after clones with \c PCMK_META_CLONE_MIN
      * configured, and ordered sets with \c PCMK_XA_REQUIRE_ALL set to
@@ -229,68 +232,38 @@ enum pe_action_flags {
      */
     pcmk_action_min_runnable         = (1 << 12),
 
-    //! Whether action is recurring monitor that must be rescheduled if active
+    // Whether action is recurring monitor that must be rescheduled if active
     pcmk_action_reschedule           = (1 << 13),
 
-    //! Whether action has already been processed by a recursive procedure
+    // Whether action has already been processed by a recursive procedure
     pcmk_action_detect_loop          = (1 << 14),
 
-    //! Whether action's inputs have been de-duplicated yet
+    // Whether action's inputs have been de-duplicated yet
     pcmk_action_inputs_deduplicated  = (1 << 15),
 
-    //! Whether action can be executed on DC rather than own node
+    // Whether action can be executed on DC rather than own node
     pcmk_action_on_dc                = (1 << 16),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
-
-    //! \deprecated Use pcmk_action_runnable instead
     pe_action_runnable              = pcmk_action_runnable,
-
-    //! \deprecated Use pcmk_action_optional instead
     pe_action_optional              = pcmk_action_optional,
-
-    //! \deprecated Use pcmk_action_always_in_graph instead
     pe_action_print_always          = pcmk_action_always_in_graph,
-
-    //! \deprecated Use pcmk_action_attrs_evaluated instead
     pe_action_have_node_attrs       = pcmk_action_attrs_evaluated,
-
-    //! \deprecated Do not use
     pe_action_implied_by_stonith    = (1 << 6),
-
-    //! \deprecated Use pcmk_action_migratable instead
     pe_action_migrate_runnable      = pcmk_action_migratable,
-
-    //! \deprecated Use pcmk_action_added_to_graph instead
     pe_action_dumped                = pcmk_action_added_to_graph,
-
-    //! \deprecated Do not use
     pe_action_processed             = (1 << 9),
-
-    //! \deprecated Do not use
     pe_action_clear                 = (1 << 10),
-
-    //! \deprecated Use pcmk_action_migration_abort instead
     pe_action_dangle                = pcmk_action_migration_abort,
-
-    //! \deprecated Use pcmk_action_min_runnable instead
     pe_action_requires_any          = pcmk_action_min_runnable,
-
-    //! \deprecated Use pcmk_action_reschedule instead
     pe_action_reschedule            = pcmk_action_reschedule,
-
-    //! \deprecated Use pcmk_action_detect_loop instead
     pe_action_tracking              = pcmk_action_detect_loop,
-
-    //! \deprecated Use pcmk_action_inputs_deduplicated instead
     pe_action_dedup                 = pcmk_action_inputs_deduplicated,
-
-    //! \deprecated Use pcmk_action_on_dc instead
     pe_action_dc                    = pcmk_action_on_dc,
 #endif
 };
+//!@}
 
 /* @COMPAT enum pe_link_state and enum pe_ordering are currently needed for
  * struct pe_action_wrapper_s (which is public) but should be removed at an
