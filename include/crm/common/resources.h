@@ -266,9 +266,12 @@ enum pe_print_options {
 //! This type should be considered internal to Pacemaker
 typedef struct resource_alloc_functions_s pcmk_assignment_methods_t;
 
-//! Resource object methods
+// Resource object methods
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct resource_object_functions_s {
-    /*!
+    /*
      * \brief Parse variant-specific resource XML from CIB into struct members
      *
      * \param[in,out] rsc        Partially unpacked resource
@@ -278,7 +281,7 @@ typedef struct resource_object_functions_s {
      */
     gboolean (*unpack)(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
 
-    /*!
+    /*
      * \brief Search for a resource ID in a resource and its children
      *
      * \param[in] rsc      Search this resource and its children
@@ -291,7 +294,7 @@ typedef struct resource_object_functions_s {
     pcmk_resource_t *(*find_rsc)(pcmk_resource_t *rsc, const char *search,
                                  const pcmk_node_t *node, int flags);
 
-    /*!
+    /*
      * \brief Get value of a resource instance attribute
      *
      * \param[in,out] rsc        Resource to check
@@ -306,11 +309,11 @@ typedef struct resource_object_functions_s {
     char *(*parameter)(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                        const char *name, pcmk_scheduler_t *scheduler);
 
-    //! \deprecated Do not use
+    // \deprecated Do not use
     void (*print)(pcmk_resource_t *rsc, const char *pre_text, long options,
                   void *print_data);
 
-    /*!
+    /*
      * \brief Check whether a resource is active
      *
      * \param[in] rsc  Resource to check
@@ -320,7 +323,7 @@ typedef struct resource_object_functions_s {
      */
     gboolean (*active)(pcmk_resource_t *rsc, gboolean all);
 
-    /*!
+    /*
      * \brief Get resource's current or assigned role
      *
      * \param[in] rsc      Resource to check
@@ -330,7 +333,7 @@ typedef struct resource_object_functions_s {
      */
     enum rsc_role_e (*state)(const pcmk_resource_t *rsc, gboolean current);
 
-    /*!
+    /*
      * \brief List nodes where a resource (or any of its children) is
      *
      * \param[in]  rsc      Resource to check
@@ -343,14 +346,14 @@ typedef struct resource_object_functions_s {
     pcmk_node_t *(*location)(const pcmk_resource_t *rsc, GList **list,
                              int current);
 
-    /*!
+    /*
      * \brief Free all memory used by a resource
      *
      * \param[in,out] rsc  Resource to free
      */
     void (*free)(pcmk_resource_t *rsc);
 
-    /*!
+    /*
      * \brief Increment cluster's instance counts for a resource
      *
      * Given a resource, increment its cluster's ninstances, disabled_resources,
@@ -360,7 +363,7 @@ typedef struct resource_object_functions_s {
      */
     void (*count)(pcmk_resource_t *rsc);
 
-    /*!
+    /*
      * \brief Check whether a given resource is in a list of resources
      *
      * \param[in] rsc           Resource ID to check for
@@ -373,7 +376,7 @@ typedef struct resource_object_functions_s {
     gboolean (*is_filtered)(const pcmk_resource_t *rsc, GList *only_rsc,
                             gboolean check_parent);
 
-    /*!
+    /*
      * \brief Find a node (and optionally count all) where resource is active
      *
      * \param[in]  rsc          Resource to check
@@ -389,7 +392,7 @@ typedef struct resource_object_functions_s {
                                 unsigned int *count_all,
                                 unsigned int *count_clean);
 
-    /*!
+    /*
      * \brief Get maximum resource instances per node
      *
      * \param[in] rsc  Resource to check
@@ -398,6 +401,7 @@ typedef struct resource_object_functions_s {
      */
     unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
 } pcmk_rsc_methods_t;
+//!@}
 
 //! Implementation of pcmk_resource_t
 struct pe_resource_s {
