@@ -64,69 +64,86 @@ enum pe_discover_e {
 };
 //!@}
 
-//! Basic node information (all node objects for the same node share this)
+// Basic node information (all node objects for the same node share this)
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 struct pe_node_shared_s {
-    const char *id;             //!< Node ID at the cluster layer
-    const char *uname;          //!< Node name in cluster
-    enum node_type type;        //!< Node variant
+    const char *id;             // Node ID at the cluster layer
+    const char *uname;          // Node name in cluster
+    enum node_type type;        // Node variant
 
     // @TODO Convert these into a flag group
-    gboolean online;            //!< Whether online
-    gboolean standby;           //!< Whether in standby mode
-    gboolean standby_onfail;    //!< Whether in standby mode due to on-fail
-    gboolean pending;           //!< Whether controller membership is pending
-    gboolean unclean;           //!< Whether node requires fencing
-    gboolean unseen;            //!< Whether node has never joined cluster
-    gboolean shutdown;          //!< Whether shutting down
-    gboolean expected_up;       //!< Whether expected join state is member
-    gboolean is_dc;             //!< Whether node is cluster's DC
-    gboolean maintenance;       //!< Whether in maintenance mode
-    gboolean rsc_discovery_enabled; //!< Whether probes are allowed on node
 
-    /*!
+    //! \deprecated Call pcmk_node_is_online() instead
+    gboolean online;            // Whether online
+
+    gboolean standby;           // Whether in standby mode
+    gboolean standby_onfail;    // Whether in standby mode due to on-fail
+
+    //! \deprecated Call pcmk_node_is_pending() instead
+    gboolean pending;           // Whether controller membership is pending
+
+    //! \deprecated Call !pcmk_node_is_clean() instead
+    gboolean unclean;           // Whether node requires fencing
+
+    gboolean unseen;            // Whether node has never joined cluster
+
+    //! \deprecated Call pcmk_node_is_shutting_down() instead
+    gboolean shutdown;          // Whether shutting down
+    gboolean expected_up;       // Whether expected join state is member
+    gboolean is_dc;             // Whether node is cluster's DC
+
+    //! \deprecated Call pcmk_node_is_in_maintenance() instead
+    gboolean maintenance;       // Whether in maintenance mode
+
+    gboolean rsc_discovery_enabled; // Whether probes are allowed on node
+
+    /*
      * Whether this is a guest node whose guest resource must be recovered or a
      * remote node that must be fenced
      */
     gboolean remote_requires_reset;
 
-    /*!
+    /*
      * Whether this is a Pacemaker Remote node that was fenced since it was last
      * connected by the cluster
      */
     gboolean remote_was_fenced;
 
-    /*!
+    /*
      * Whether this is a Pacemaker Remote node previously marked in its
      * node state as being in maintenance mode
      */
     gboolean remote_maintenance;
 
-    gboolean unpacked;              //!< Whether node history has been unpacked
+    gboolean unpacked;              // Whether node history has been unpacked
 
-    /*!
+    /*
      * Number of resources active on this node (valid after CIB status section
      * has been unpacked, as long as pcmk_sched_no_counts was not set)
      */
     int num_resources;
 
-    //! Remote connection resource for node, if it is a Pacemaker Remote node
+    // Remote connection resource for node, if it is a Pacemaker Remote node
     pcmk_resource_t *remote_rsc;
 
-    GList *running_rsc;             //!< List of resources active on node
-    GList *allocated_rsc;           //!< List of resources assigned to node
-    GHashTable *attrs;              //!< Node attributes
-    GHashTable *utilization;        //!< Node utilization attributes
-    GHashTable *digest_cache;       //!< Cache of calculated resource digests
+    GList *running_rsc;             // List of resources active on node
+    GList *allocated_rsc;           // List of resources assigned to node
+    GHashTable *attrs;              // Node attributes
+    GHashTable *utilization;        // Node utilization attributes
+    GHashTable *digest_cache;       // Cache of calculated resource digests
 
-    /*!
+    /*
      * Sum of priorities of all resources active on node and on any guest nodes
      * connected to this node, with +1 for promoted instances (used to compare
      * nodes for PCMK_OPT_PRIORITY_FENCING_DELAY)
      */
     int priority;
 
-    pcmk_scheduler_t *data_set;     //!< Cluster that node is part of
+    pcmk_scheduler_t *data_set;     // Cluster that node is part of
 };
+//!@}
 
 //! Implementation of pcmk_node_t
 struct pe_node_s {
