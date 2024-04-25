@@ -323,40 +323,43 @@ struct pe_action_wrapper_s {
 };
 //!@}
 
-//! Implementation of pcmk_action_t
+// Implementation of pcmk_action_t
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 struct pe_action_s {
-    int id;                 //!< Counter to identify action
+    int id;                 // Counter to identify action
 
-    /*!
+    /*
      * When the controller aborts a transition graph, it sets an abort priority.
      * If this priority is higher, the action will still be executed anyway.
      * Pseudo-actions are always allowed, so this is irrelevant for them.
      */
     int priority;
 
-    pcmk_resource_t *rsc;   //!< Resource to apply action to, if any
-    pcmk_node_t *node;      //!< Node to execute action on, if any
-    xmlNode *op_entry;      //!< Action XML configuration, if any
-    char *task;             //!< Action name
-    char *uuid;             //!< Action key
-    char *cancel_task;      //!< If task is "cancel", the action being cancelled
-    char *reason;           //!< Readable description of why action is needed
+    pcmk_resource_t *rsc;   // Resource to apply action to, if any
+    pcmk_node_t *node;      // Node to execute action on, if any
+    xmlNode *op_entry;      // Action XML configuration, if any
+    char *task;             // Action name
+    char *uuid;             // Action key
+    char *cancel_task;      // If task is "cancel", the action being cancelled
+    char *reason;           // Readable description of why action is needed
 
     //@ COMPAT Change to uint32_t at a compatibility break
-    enum pe_action_flags flags;         //!< Group of enum pe_action_flags
+    enum pe_action_flags flags;         // Group of enum pe_action_flags
 
-    enum rsc_start_requirement needs;   //!< Prerequisite for recovery
-    enum action_fail_response on_fail;  //!< Response to failure
-    enum rsc_role_e fail_role;          //!< Resource role if action fails
-    GHashTable *meta;                   //!< Meta-attributes relevant to action
-    GHashTable *extra;                  //!< Action-specific instance attributes
+    enum rsc_start_requirement needs;   // Prerequisite for recovery
+    enum action_fail_response on_fail;  // Response to failure
+    enum rsc_role_e fail_role;          // Resource role if action fails
+    GHashTable *meta;                   // Meta-attributes relevant to action
+    GHashTable *extra;                  // Action-specific instance attributes
 
     /* Current count of runnable instance actions for "first" action in an
      * ordering dependency with pcmk__ar_min_runnable set.
      */
-    int runnable_before;                //!< For Pacemaker use only
+    int runnable_before;                // For Pacemaker use only
 
-    /*!
+    /*
      * Number of instance actions for "first" action in an ordering dependency
      * with pcmk__ar_min_runnable set that must be runnable before this action
      * can be runnable.
@@ -364,15 +367,16 @@ struct pe_action_s {
     int required_runnable_before;
 
     // Actions in a relation with this one (as pcmk__related_action_t *)
-    GList *actions_before;  //!< For Pacemaker use only
-    GList *actions_after;   //!< For Pacemaker use only
+    GList *actions_before;
+    GList *actions_after;
 
     /* This is intended to hold data that varies by the type of action, but is
      * not currently used. Some of the above fields could be moved here except
      * for API backward compatibility.
      */
-    void *action_details;               //!< For Pacemaker use only
+    void *action_details;
 };
+//!@}
 
 const char *pcmk_action_text(enum action_tasks action);
 enum action_tasks pcmk_parse_action(const char *action_name);
