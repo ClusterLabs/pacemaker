@@ -380,6 +380,9 @@ struct pe_action_s {
 
 const char *pcmk_action_text(enum action_tasks action);
 enum action_tasks pcmk_parse_action(const char *action_name);
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 const char *pcmk_on_fail_text(enum action_fail_response on_fail);
 
 // For parsing various action-related string specifications
