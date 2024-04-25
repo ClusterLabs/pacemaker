@@ -247,6 +247,8 @@ extern gboolean was_processing_warning;
 //!@}
 
 pcmk_node_t *pcmk_get_dc(const pcmk_scheduler_t *scheduler);
+enum pe_quorum_policy pcmk_get_no_quorum_policy(const pcmk_scheduler_t
+                                                *scheduler);
 
 int pcmk_set_scheduler_cib(pcmk_scheduler_t *scheduler, xmlNode *cib);
 

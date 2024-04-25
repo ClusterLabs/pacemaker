@@ -37,6 +37,23 @@ pcmk_get_dc(const pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
+ * \brief Get the no quorum policy from scheduler data
+ *
+ * \param[in] scheduler  Scheduler data
+ *
+ * \return No quorum policy from scheduler data
+ */
+enum pe_quorum_policy
+pcmk_get_no_quorum_policy(const pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return pcmk_no_quorum_stop; // The default
+    }
+    return scheduler->no_quorum_policy;
+}
+
+/*!
+ * \internal
  * \brief Set CIB XML as scheduler input in scheduler data
  *
  * \param[out] scheduler  Scheduler data
