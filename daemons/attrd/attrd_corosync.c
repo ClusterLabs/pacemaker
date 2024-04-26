@@ -408,6 +408,8 @@ broadcast_unseen_local_values(void)
 int
 attrd_cluster_connect(void)
 {
+    int rc = pcmk_rc_ok;
+
     attrd_cluster = pcmk_cluster_new();
 
     attrd_cluster->destroy = attrd_cpg_destroy;
@@ -416,9 +418,11 @@ attrd_cluster_connect(void)
 
     crm_set_status_callback(&attrd_peer_change_cb);
 
-    if (crm_cluster_connect(attrd_cluster) == FALSE) {
+    rc = pcmk_cluster_connect(attrd_cluster);
+    rc = pcmk_rc2legacy(rc);
+    if (rc != pcmk_ok) {
         crm_err("Cluster connection failed");
-        return -ENOTCONN;
+        return rc;
     }
     return pcmk_ok;
 }

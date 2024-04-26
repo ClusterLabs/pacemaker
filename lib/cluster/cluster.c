@@ -65,6 +65,39 @@ crm_peer_uuid(crm_node_t *peer)
 }
 
 /*!
+ * \internal
+ * \brief Connect to the cluster layer
+ *
+ * \param[in,out] cluster  Initialized cluster object to connect
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_cluster_connect(crm_cluster_t *cluster)
+{
+    enum cluster_type_e type = get_cluster_type();
+
+    crm_notice("Connecting to %s cluster infrastructure",
+               name_for_cluster_type(type));
+
+    switch (type) {
+        case pcmk_cluster_corosync:
+#if SUPPORT_COROSYNC
+            crm_peer_init();
+            return pcmk__corosync_connect(cluster);
+#else
+            break;
+#endif // SUPPORT_COROSYNC
+        default:
+            break;
+    }
+
+    crm_err("Failed to connect to unsupported cluster type %s",
+            name_for_cluster_type(type));
+    return EPROTONOSUPPORT;
+}
+
+/*!
  * \brief Connect to the cluster layer
  *
  * \param[in,out] Initialized cluster object to connect
@@ -74,22 +107,7 @@ crm_peer_uuid(crm_node_t *peer)
 gboolean
 crm_cluster_connect(crm_cluster_t *cluster)
 {
-    enum cluster_type_e type = get_cluster_type();
-
-    crm_notice("Connecting to %s cluster infrastructure",
-               name_for_cluster_type(type));
-    switch (type) {
-        case pcmk_cluster_corosync:
-#if SUPPORT_COROSYNC
-            crm_peer_init();
-            return pcmk__corosync_connect(cluster) == pcmk_rc_ok;
-#else
-            break;
-#endif // SUPPORT_COROSYNC
-        default:
-            break;
-    }
-    return FALSE;
+    return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
 }
 
 /*!

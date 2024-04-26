@@ -631,7 +631,7 @@ main(int argc, char **argv)
 
         crm_set_status_callback(&st_peer_update_callback);
 
-        if (crm_cluster_connect(cluster) == FALSE) {
+        if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
             exit_code = CRM_EX_FATAL;
             crm_crit("Cannot sign in to the cluster... terminating");
             goto done;
