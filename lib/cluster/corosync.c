@@ -445,38 +445,42 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \internal
  * \brief Connect to Corosync cluster layer
  *
- * \param[in,out] cluster   Initialized cluster object to connect
+ * \param[in,out] cluster  Initialized cluster object to connect
+ *
+ * \return Standard Pacemaker return code
  */
-gboolean
+int
 pcmk__corosync_connect(crm_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
     enum cluster_type_e stack = get_cluster_type();
+    int rc = pcmk_rc_ok;
 
     crm_peer_init();
 
     if (stack != pcmk_cluster_corosync) {
         crm_err("Invalid cluster type: %s " CRM_XS " stack=%d",
                 name_for_cluster_type(stack), stack);
-        return FALSE;
+        return EINVAL;
     }
 
-    if (pcmk__cpg_connect(cluster) != pcmk_rc_ok) {
+    rc = pcmk__cpg_connect(cluster);
+    if (rc != pcmk_rc_ok) {
         // Error message was logged by pcmk__cpg_connect()
-        return FALSE;
+        return rc;
     }
     crm_info("Connection to %s established", name_for_cluster_type(stack));
 
     cluster->nodeid = get_local_nodeid(0);
     if (cluster->nodeid == 0) {
         crm_err("Could not determine local node ID");
-        return FALSE;
+        return ENXIO;
     }
 
     cluster->uname = get_node_name(0);
     if (cluster->uname == NULL) {
         crm_err("Could not determine local node name");
-        return FALSE;
+        return ENXIO;
     }
 
     // Ensure local node always exists in peer cache
@@ -484,7 +488,7 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
                           pcmk__node_search_cluster);
     cluster->uuid = pcmk__corosync_uuid(peer);
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!

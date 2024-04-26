@@ -35,7 +35,7 @@ char *pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle,
                           uint32_t nodeid);
 
 G_GNUC_INTERNAL
-gboolean pcmk__corosync_connect(crm_cluster_t *cluster);
+int pcmk__corosync_connect(crm_cluster_t *cluster);
 
 G_GNUC_INTERNAL
 void pcmk__corosync_disconnect(crm_cluster_t *cluster);

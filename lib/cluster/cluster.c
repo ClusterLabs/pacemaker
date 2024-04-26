@@ -82,7 +82,7 @@ crm_cluster_connect(crm_cluster_t *cluster)
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
             crm_peer_init();
-            return pcmk__corosync_connect(cluster);
+            return pcmk__corosync_connect(cluster) == pcmk_rc_ok;
 #else
             break;
 #endif // SUPPORT_COROSYNC
