@@ -461,8 +461,8 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
         return FALSE;
     }
 
-    if (!cluster_connect_cpg(cluster)) {
-        // Error message was logged by cluster_connect_cpg()
+    if (pcmk__cpg_connect(cluster) != pcmk_rc_ok) {
+        // Error message was logged by pcmk__cpg_connect()
         return FALSE;
     }
     crm_info("Connection to %s established", name_for_cluster_type(stack));

@@ -780,12 +780,12 @@ pcmk_cpg_membership(cpg_handle_t handle,
 /*!
  * \brief Connect to Corosync CPG
  *
- * \param[in,out] cluster  Cluster object
+ * \param[in,out] cluster  Initialized cluster object to connect
  *
- * \return TRUE on success, otherwise FALSE
+ * \return Standard Pacemaker return code
  */
-gboolean
-cluster_connect_cpg(crm_cluster_t *cluster)
+int
+pcmk__cpg_connect(crm_cluster_t *cluster)
 {
     cs_error_t rc;
     int fd = -1;
@@ -873,12 +873,26 @@ cluster_connect_cpg(crm_cluster_t *cluster)
   bail:
     if (rc != CS_OK) {
         cpg_finalize(handle);
-        return FALSE;
+        // @TODO Map rc to more specific Pacemaker return code
+        return ENOTCONN;
     }
 
     peer = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster);
     crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
-    return TRUE;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \brief Connect to Corosync CPG
+ *
+ * \param[in,out] cluster  Cluster object
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
+gboolean
+cluster_connect_cpg(crm_cluster_t *cluster)
+{
+    return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
 }
 
 /*!
