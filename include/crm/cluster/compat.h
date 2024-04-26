@@ -49,6 +49,13 @@ int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
 // \deprecated Use crm_xml_add(xml, attr, crm_peer_uuid(node)) instead
 void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 
+#if SUPPORT_COROSYNC
+
+// \deprecated Do not use
+gboolean cluster_connect_cpg(crm_cluster_t *cluster);
+
+#endif  // SUPPORT_COROSYNC
+
 #ifdef __cplusplus
 }
 #endif

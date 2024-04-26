@@ -883,19 +883,6 @@ pcmk__cpg_connect(crm_cluster_t *cluster)
 }
 
 /*!
- * \brief Connect to Corosync CPG
- *
- * \param[in,out] cluster  Cluster object
- *
- * \return TRUE on success, otherwise FALSE
- */
-gboolean
-cluster_connect_cpg(crm_cluster_t *cluster)
-{
-    return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
-}
-
-/*!
  * \internal
  * \brief Send an XML message via Corosync CPG
  *
@@ -1106,3 +1093,24 @@ text2msg_type(const char *text)
     }
     return type;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+/*!
+ * \brief Connect to Corosync CPG
+ *
+ * \param[in,out] cluster  Cluster object
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
+gboolean
+cluster_connect_cpg(crm_cluster_t *cluster)
+{
+    return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
