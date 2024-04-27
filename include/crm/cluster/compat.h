@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_CLUSTER_COMPAT__H
 #  define PCMK__CRM_CLUSTER_COMPAT__H
 
+#include <inttypes.h>       // uint32_t
+
 #include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
 
@@ -84,6 +86,9 @@ gboolean crm_is_peer_active(const crm_node_t *node);
 
 // \deprecated Do not use
 guint crm_active_peers(void);
+
+// \deprecated Do not use
+guint reap_crm_member(uint32_t id, const char *name);
 
 #ifdef __cplusplus
 }

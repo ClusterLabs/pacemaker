@@ -151,8 +151,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
 
-guint reap_crm_member(uint32_t id, const char *name);
-
 #  if SUPPORT_COROSYNC
 uint32_t get_local_nodeid(cpg_handle_t handle);
 

@@ -478,50 +478,6 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
     free(criterion);
 }
 
-/*!
- * \brief Remove all peer cache entries matching a node ID and/or uname
- *
- * \param[in] id    ID of node to remove (or 0 to ignore)
- * \param[in] name  Uname of node to remove (or NULL to ignore)
- *
- * \return Number of cache entries removed
- *
- * \note The caller must be careful not to use \p name after calling this
- *       function if it might be a pointer into the cache entry being removed.
- */
-guint
-reap_crm_member(uint32_t id, const char *name)
-{
-    int matches = 0;
-    crm_node_t search = { 0, };
-
-    if (crm_peer_cache == NULL) {
-        crm_trace("Membership cache not initialized, ignoring purge request");
-        return 0;
-    }
-
-    search.id = id;
-    search.uname = pcmk__str_copy(name);
-    matches = g_hash_table_foreach_remove(crm_peer_cache,
-                                          should_forget_cluster_node, &search);
-    if(matches) {
-        crm_notice("Purged %d peer%s with " PCMK_XA_ID
-                   "=%u%s%s from the membership cache",
-                   matches, pcmk__plural_s(matches), search.id,
-                   (search.uname? " and/or uname=" : ""),
-                   (search.uname? search.uname : ""));
-
-    } else {
-        crm_info("No peers with " PCMK_XA_ID
-                 "=%u%s%s to purge from the membership cache",
-                 search.id, (search.uname? " and/or uname=" : ""),
-                 (search.uname? search.uname : ""));
-    }
-
-    free(search.uname);
-    return matches;
-}
-
 static void
 count_peer(gpointer key, gpointer value, gpointer user_data)
 {
@@ -1543,6 +1499,39 @@ guint
 crm_active_peers(void)
 {
     return pcmk__cluster_num_active_nodes();
+}
+
+guint
+reap_crm_member(uint32_t id, const char *name)
+{
+    int matches = 0;
+    crm_node_t search = { 0, };
+
+    if (crm_peer_cache == NULL) {
+        crm_trace("Membership cache not initialized, ignoring purge request");
+        return 0;
+    }
+
+    search.id = id;
+    search.uname = pcmk__str_copy(name);
+    matches = g_hash_table_foreach_remove(crm_peer_cache,
+                                          should_forget_cluster_node, &search);
+    if(matches) {
+        crm_notice("Purged %d peer%s with " PCMK_XA_ID
+                   "=%u%s%s from the membership cache",
+                   matches, pcmk__plural_s(matches), search.id,
+                   (search.uname? " and/or uname=" : ""),
+                   (search.uname? search.uname : ""));
+
+    } else {
+        crm_info("No peers with " PCMK_XA_ID
+                 "=%u%s%s to purge from the membership cache",
+                 search.id, (search.uname? " and/or uname=" : ""),
+                 (search.uname? search.uname : ""));
+    }
+
+    free(search.uname);
+    return matches;
 }
 
 // LCOV_EXCL_STOP
