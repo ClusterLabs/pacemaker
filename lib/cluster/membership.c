@@ -47,7 +47,7 @@ GHashTable *crm_peer_cache = NULL;
  * so it would be a good idea to merge them one day.
  *
  * libcluster provides two avenues for populating the cache:
- * pcmk__cluster_lookup_remote_node() and crm_remote_peer_cache_remove()
+ * pcmk__cluster_lookup_remote_node() and pcmk__cluster_forget_remote_node()
  * directly manage it, while refresh_remote_nodes() populates it via the CIB.
  */
 GHashTable *crm_remote_peer_cache = NULL;
@@ -179,6 +179,27 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
 }
 
 /*!
+ * \internal
+ * \brief Remove a node from the Pacemaker Remote node cache
+ *
+ * \param[in] node_name  Name of node to remove from cache
+ *
+ * \note The caller must be careful not to use \p node_name after calling this
+ *       function if it might be a pointer into the cache entry being removed.
+ */
+void
+pcmk__cluster_forget_remote_node(const char *node_name)
+{
+    /* Do a lookup first, because node_name could be a pointer within the entry
+     * being removed -- we can't log it *after* removing it.
+     */
+    if (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL) {
+        crm_trace("Removing %s from Pacemaker Remote node cache", node_name);
+        g_hash_table_remove(crm_remote_peer_cache, node_name);
+    }
+}
+
+/*!
  * \brief Remove a node from the Pacemaker Remote node cache
  *
  * \param[in] node_name  Name of node to remove from cache
@@ -189,13 +210,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
 void
 crm_remote_peer_cache_remove(const char *node_name)
 {
-    /* Do a lookup first, because node_name could be a pointer within the entry
-     * being removed -- we can't log it *after* removing it.
-     */
-    if (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL) {
-        crm_trace("Removing %s from Pacemaker Remote node cache", node_name);
-        g_hash_table_remove(crm_remote_peer_cache, node_name);
-    }
+    pcmk__cluster_forget_remote_node(node_name);
 }
 
 /*!

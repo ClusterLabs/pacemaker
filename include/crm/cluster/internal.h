@@ -144,6 +144,7 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
 unsigned int pcmk__cluster_num_remote_nodes(void);
 
 crm_node_t *pcmk__cluster_lookup_remote_node(const char *node_name);
+void pcmk__cluster_forget_remote_node(const char *node_name);
 crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
                                      uint32_t flags);
 crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,

@@ -438,7 +438,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
                  * so if the connection migrated elsewhere and we aren't DC,
                  * un-cache the node, so we don't have stale info
                  */
-                crm_remote_peer_cache_remove(cmd->rsc_id);
+                pcmk__cluster_forget_remote_node(cmd->rsc_id);
             }
         }
     }
