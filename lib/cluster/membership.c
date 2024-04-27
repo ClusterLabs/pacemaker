@@ -327,25 +327,45 @@ refresh_remote_nodes(xmlNode *cib)
     g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is an active cluster node
+ *
+ * Remote nodes are never considered active. This guarantees that they can never
+ * become DC.
+ *
+ * \param[in] node  Node to check
+ *
+ * \return \c true if the node is an active cluster node, or \c false otherwise
+ */
+bool
+pcmk__cluster_is_node_active(const crm_node_t *node)
+{
+    const enum cluster_type_e type = get_cluster_type();
+
+    if ((node == NULL) || pcmk_is_set(node->flags, crm_remote_node)) {
+        return false;
+    }
+
+    switch (type) {
+        case pcmk_cluster_corosync:
+#if SUPPORT_COROSYNC
+            return crm_is_corosync_peer_active(node);
+#else
+            break;
+#endif  // SUPPORT_COROSYNC
+        default:
+            break;
+    }
+
+    crm_err("Unhandled cluster type: %s", name_for_cluster_type(type));
+    return false;
+}
+
 gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
-    if(node == NULL) {
-        return FALSE;
-    }
-
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
-        /* remote nodes are never considered active members. This
-         * guarantees they will never be considered for DC membership.*/
-        return FALSE;
-    }
-#if SUPPORT_COROSYNC
-    if (is_corosync_cluster()) {
-        return crm_is_corosync_peer_active(node);
-    }
-#endif
-    crm_err("Unhandled cluster type: %s", name_for_cluster_type(get_cluster_type()));
-    return FALSE;
+    return pcmk__cluster_is_node_active(node);
 }
 
 static gboolean
@@ -363,7 +383,7 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     } else if (search->id == 0 && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
         return FALSE;
 
-    } else if (crm_is_peer_active(value) == FALSE) {
+    } else if (!pcmk__cluster_is_node_active(value)) {
         crm_info("Removing node with name %s and " PCMK_XA_ID
                  " %u from membership cache",
                  (node->uname? node->uname : "unknown"), node->id);
@@ -421,7 +441,7 @@ count_peer(gpointer key, gpointer value, gpointer user_data)
     guint *count = user_data;
     crm_node_t *node = value;
 
-    if (crm_is_peer_active(node)) {
+    if (pcmk__cluster_is_node_active(node)) {
         *count = *count + 1;
     }
 }
@@ -762,7 +782,7 @@ remove_conflicting_peer(crm_node_t *node)
             && existing_node->uname != NULL
             && strcasecmp(existing_node->uname, node->uname) == 0) {
 
-            if (crm_is_peer_active(existing_node)) {
+            if (pcmk__cluster_is_node_active(existing_node)) {
                 continue;
             }
 
