@@ -324,17 +324,6 @@ refresh_remote_nodes(xmlNode *cib)
     g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
 }
 
-/*!
- * \brief Repopulate the remote peer cache based on CIB XML
- *
- * \param[in] xmlNode  CIB XML to parse
- */
-void
-crm_remote_peer_cache_refresh(xmlNode *cib)
-{
-    refresh_remote_nodes(cib);
-}
-
 gboolean
 crm_is_peer_active(const crm_node_t * node)
 {
@@ -1405,6 +1394,12 @@ crm_remote_peer_cache_size(void)
     unsigned int count = pcmk__cluster_num_remote_nodes();
 
     return QB_MIN(count, INT_MAX);
+}
+
+void
+crm_remote_peer_cache_refresh(xmlNode *cib)
+{
+    refresh_remote_nodes(cib);
 }
 
 // LCOV_EXCL_STOP

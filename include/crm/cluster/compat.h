@@ -68,6 +68,9 @@ void crm_cluster_disconnect(crm_cluster_t *cluster);
 // \deprecated Do not use
 int crm_remote_peer_cache_size(void);
 
+// \deprecated Do not use
+void crm_remote_peer_cache_refresh(xmlNode *cib);
+
 #ifdef __cplusplus
 }
 #endif
