@@ -151,8 +151,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
 
-void crm_remote_peer_cache_remove(const char *node_name);
-
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);
 guint reap_crm_member(uint32_t id, const char *name);

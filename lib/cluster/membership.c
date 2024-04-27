@@ -200,20 +200,6 @@ pcmk__cluster_forget_remote_node(const char *node_name)
 }
 
 /*!
- * \brief Remove a node from the Pacemaker Remote node cache
- *
- * \param[in] node_name  Name of node to remove from cache
- *
- * \note The caller must be careful not to use \p node_name after calling this
- *       function if it might be a pointer into the cache entry being removed.
- */
-void
-crm_remote_peer_cache_remove(const char *node_name)
-{
-    pcmk__cluster_forget_remote_node(node_name);
-}
-
-/*!
  * \internal
  * \brief Return node status based on a CIB status entry
  *
@@ -1423,6 +1409,12 @@ crm_node_t *
 crm_remote_peer_get(const char *node_name)
 {
     return pcmk__cluster_lookup_remote_node(node_name);
+}
+
+void
+crm_remote_peer_cache_remove(const char *node_name)
+{
+    pcmk__cluster_forget_remote_node(node_name);
 }
 
 // LCOV_EXCL_STOP
