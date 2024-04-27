@@ -297,7 +297,7 @@ remote_node_up(const char *node_name)
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
 
     /* Ensure node is in the remote peer cache with member status */
-    node = crm_remote_peer_get(node_name);
+    node = pcmk__cluster_lookup_remote_node(node_name);
     CRM_CHECK(node != NULL, return);
 
     purge_remote_node_attrs(call_opt, node);
@@ -380,7 +380,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     }
 
     /* Ensure node is in the remote peer cache with lost state */
-    node = crm_remote_peer_get(node_name);
+    node = pcmk__cluster_lookup_remote_node(node_name);
     CRM_CHECK(node != NULL, return);
     pcmk__update_peer_state(__func__, node, CRM_NODE_LOST, 0);
 
@@ -420,7 +420,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
          * it hasn't been tracking the remote node, and other code relies on
          * the cache to distinguish remote nodes from unseen cluster nodes.
          */
-        crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
+        crm_node_t *node = pcmk__cluster_lookup_remote_node(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
         pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
@@ -1392,7 +1392,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     crm_node_t *node;
 
     call_opt = crmd_cib_smart_opt();
-    node = crm_remote_peer_get(lrm_state->node_name);
+    node = pcmk__cluster_lookup_remote_node(lrm_state->node_name);
     CRM_CHECK(node != NULL, return);
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_none, update,

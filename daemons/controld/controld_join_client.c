@@ -228,7 +228,7 @@ update_conn_host_cache(xmlNode *node, void *userdata)
     const char *conn_host = crm_element_value(node, PCMK__XA_CONNECTION_HOST);
     const char *state = crm_element_value(node, PCMK__XA_NODE_STATE);
 
-    crm_node_t *remote_peer = crm_remote_peer_get(remote);
+    crm_node_t *remote_peer = pcmk__cluster_lookup_remote_node(remote);
 
     if (remote_peer == NULL) {
         return pcmk_rc_ok;

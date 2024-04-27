@@ -47,8 +47,8 @@ GHashTable *crm_peer_cache = NULL;
  * so it would be a good idea to merge them one day.
  *
  * libcluster provides two avenues for populating the cache:
- * crm_remote_peer_get() and crm_remote_peer_cache_remove() directly manage it,
- * while refresh_remote_nodes() populates it via the CIB.
+ * pcmk__cluster_lookup_remote_node() and crm_remote_peer_cache_remove()
+ * directly manage it, while refresh_remote_nodes() populates it via the CIB.
  */
 GHashTable *crm_remote_peer_cache = NULL;
 
@@ -100,20 +100,22 @@ pcmk__cluster_num_remote_nodes(void)
 }
 
 /*!
- * \brief Get a remote node peer cache entry, creating it if necessary
+ * \internal
+ * \brief Get a remote node cache entry, creating it if necessary
  *
  * \param[in] node_name  Name of remote node
  *
- * \return Cache entry for node on success, NULL (and set errno) otherwise
+ * \return Cache entry for node on success, or \c NULL (and set \c errno)
+ *         otherwise
  *
- * \note When creating a new entry, this will leave the node state undetermined,
- *       so the caller should also call pcmk__update_peer_state() if the state
+ * \note When creating a new entry, this will leave the node state undetermined.
+ *       The caller should also call \c pcmk__update_peer_state() if the state
  *       is known.
  * \note Because this can add and remove cache entries, callers should not
  *       assume any previously obtained cache entry pointers remain valid.
  */
 crm_node_t *
-crm_remote_peer_get(const char *node_name)
+pcmk__cluster_lookup_remote_node(const char *node_name)
 {
     crm_node_t *node;
     char *node_name_copy = NULL;
@@ -174,6 +176,25 @@ crm_remote_peer_get(const char *node_name)
     update_peer_uname(node, node_name);
     free(node_name_copy);
     return node;
+}
+
+/*!
+ * \brief Get a remote node peer cache entry, creating it if necessary
+ *
+ * \param[in] node_name  Name of remote node
+ *
+ * \return Cache entry for node on success, NULL (and set errno) otherwise
+ *
+ * \note When creating a new entry, this will leave the node state undetermined,
+ *       so the caller should also call pcmk__update_peer_state() if the state
+ *       is known.
+ * \note Because this can add and remove cache entries, callers should not
+ *       assume any previously obtained cache entry pointers remain valid.
+ */
+crm_node_t *
+crm_remote_peer_get(const char *node_name)
+{
+    return pcmk__cluster_lookup_remote_node(node_name);
 }
 
 /*!
@@ -253,7 +274,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 
     if (node == NULL) {
         /* Node is not in cache, so add a new entry for it */
-        node = crm_remote_peer_get(remote);
+        node = pcmk__cluster_lookup_remote_node(remote);
         CRM_ASSERT(node);
         if (state) {
             pcmk__update_peer_state(__func__, node, state, 0);

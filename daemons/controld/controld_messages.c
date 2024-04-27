@@ -785,7 +785,7 @@ handle_remote_state(const xmlNode *msg)
 
     CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
-    remote_peer = crm_remote_peer_get(remote_uname);
+    remote_peer = pcmk__cluster_lookup_remote_node(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
     pcmk__update_peer_state(__func__, remote_peer,
