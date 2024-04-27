@@ -13,6 +13,7 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <inttypes.h>                   // PRIu32
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -141,7 +142,7 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
             return NULL;
         }
         node_name = node_name_copy;
-        reap_crm_member(0, node_name);
+        pcmk__cluster_forget_cluster_node(0, node_name);
     }
 
     /* Return existing cache entry if one exists */
@@ -415,6 +416,69 @@ should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
 }
 
 /*!
+ * \internal
+ * \brief Remove one or more inactive nodes from the cluster node cache
+ *
+ * All inactive nodes matching \p id and \p node_name as described in
+ * \c should_forget_cluster_node documentation are removed from the cache.
+ *
+ * If \p id is 0 and \p node_name is \c NULL, all inactive nodes are removed
+ * from the cache regardless of ID and name. This differs from clearing the
+ * cache, in that entries for active nodes are preserved.
+ *
+ * \param[in] id         ID of node to remove from cache (0 to ignore)
+ * \param[in] node_name  Name of node to remove from cache (ignored if \p id is
+ *                       nonzero)
+ *
+ * \note \p node_name is not modified directly, but it will be freed if it's a
+ *       pointer into a cache entry that is removed.
+ */
+void
+pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
+{
+    crm_node_t search = { 0, };
+    char *criterion = NULL; // For logging
+    guint matches = 0;
+
+    if (crm_peer_cache == NULL) {
+        crm_trace("Membership cache not initialized, ignoring removal request");
+        return;
+    }
+
+    search.id = id;
+    search.uname = pcmk__str_copy(node_name);   // May log after original freed
+
+    if (id > 0) {
+        criterion = crm_strdup_printf(PCMK_XA_ID "=%" PRIu32, id);
+
+    } else if (node_name != NULL) {
+        criterion = crm_strdup_printf(PCMK_XA_UNAME "=%s", node_name);
+    }
+
+    matches = g_hash_table_foreach_remove(crm_peer_cache,
+                                          should_forget_cluster_node, &search);
+    if (matches > 0) {
+        if (criterion != NULL) {
+            crm_notice("Removed %u inactive node%s with %s from the membership "
+                       "cache",
+                       matches, pcmk__plural_s(matches), criterion);
+        } else {
+            crm_notice("Removed all (%u) inactive cluster nodes from the "
+                       "membership cache",
+                       matches);
+        }
+
+    } else {
+        crm_info("No inactive cluster nodes%s%s to remove from the membership "
+                 "cache",
+                 ((criterion != NULL)? " with" : ""), pcmk__s(criterion, ""));
+    }
+
+    free(search.uname);
+    free(criterion);
+}
+
+/*!
  * \brief Remove all peer cache entries matching a node ID and/or uname
  *
  * \param[in] id    ID of node to remove (or 0 to ignore)
@@ -673,7 +737,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
         g_hash_table_remove(crm_remote_peer_cache, node_name);
     }
 
-    reap_crm_member(node_id, node_name);
+    pcmk__cluster_forget_cluster_node(node_id, node_name);
     free(node_name_copy);
 }
 
@@ -1219,7 +1283,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
                 g_hash_table_iter_remove(iter);
 
             } else {
-                reap_crm_member(node->id, node->uname);
+                pcmk__cluster_forget_cluster_node(node->id, node->uname);
             }
             node = NULL;
         }

@@ -1162,7 +1162,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             free_xml(msg);
 
         } else {
-            reap_crm_member(id, name);
+            pcmk__cluster_forget_cluster_node(id, name);
 
             /* If we're forgetting this node, also forget any failures to fence
              * it, so we don't carry that over to any node added later with the
