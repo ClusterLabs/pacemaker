@@ -94,16 +94,7 @@ static void crm_cs_flush(gpointer data);
 void
 cluster_disconnect_cpg(crm_cluster_t *cluster)
 {
-    pcmk_cpg_handle = 0;
-    if (cluster->cpg_handle) {
-        crm_trace("Disconnecting CPG");
-        cpg_leave(cluster->cpg_handle, &cluster->group);
-        cpg_finalize(cluster->cpg_handle);
-        cluster->cpg_handle = 0;
-
-    } else {
-        crm_info("No CPG connection");
-    }
+    pcmk__cpg_disconnect(cluster);
 }
 
 /*!
@@ -880,6 +871,27 @@ pcmk__cpg_connect(crm_cluster_t *cluster)
     peer = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster);
     crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Disconnect from Corosync CPG
+ *
+ * \param[in,out] cluster  Cluster object to disconnect
+ */
+void
+pcmk__cpg_disconnect(crm_cluster_t *cluster)
+{
+    pcmk_cpg_handle = 0;
+    if (cluster->cpg_handle != 0) {
+        crm_trace("Disconnecting CPG");
+        cpg_leave(cluster->cpg_handle, &cluster->group);
+        cpg_finalize(cluster->cpg_handle);
+        cluster->cpg_handle = 0;
+
+    } else {
+        crm_info("No CPG connection");
+    }
 }
 
 /*!

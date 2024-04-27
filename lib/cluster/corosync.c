@@ -217,13 +217,14 @@ bail:
  * \internal
  * \brief Disconnect from Corosync cluster
  *
- * \param[in,out] cluster  Cluster connection to disconnect
+ * \param[in,out] cluster  Cluster object to disconnect
  */
 void
 pcmk__corosync_disconnect(crm_cluster_t *cluster)
 {
-    cluster_disconnect_cpg(cluster);
-    if (pcmk_quorum_handle) {
+    pcmk__cpg_disconnect(cluster);
+
+    if (pcmk_quorum_handle != 0) {
         quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
     }

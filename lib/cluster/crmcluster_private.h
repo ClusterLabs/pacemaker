@@ -44,6 +44,9 @@ G_GNUC_INTERNAL
 int pcmk__cpg_connect(crm_cluster_t *cluster);
 
 G_GNUC_INTERNAL
+void pcmk__cpg_disconnect(crm_cluster_t *cluster);
+
+G_GNUC_INTERNAL
 bool pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
                         enum crm_ais_msg_types dest);
 
