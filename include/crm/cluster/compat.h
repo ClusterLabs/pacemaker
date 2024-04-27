@@ -10,7 +10,9 @@
 #ifndef PCMK__CRM_CLUSTER_COMPAT__H
 #  define PCMK__CRM_CLUSTER_COMPAT__H
 
+#include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
+
 #include <crm/cluster.h>    // crm_node_t
 
 #ifdef __cplusplus
@@ -76,6 +78,9 @@ crm_node_t *crm_remote_peer_get(const char *node_name);
 
 // \deprecated Do not use
 void crm_remote_peer_cache_remove(const char *node_name);
+
+// \deprecated Do not use
+gboolean crm_is_peer_active(const crm_node_t *node);
 
 #ifdef __cplusplus
 }
