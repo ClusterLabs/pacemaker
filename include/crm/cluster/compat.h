@@ -65,6 +65,9 @@ gboolean crm_cluster_connect(crm_cluster_t *cluster);
 // \deprecated Use \c pcmk_cluster_disconnect() instead
 void crm_cluster_disconnect(crm_cluster_t *cluster);
 
+// \deprecated Do not use
+int crm_remote_peer_cache_size(void);
+
 #ifdef __cplusplus
 }
 #endif

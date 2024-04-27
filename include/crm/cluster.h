@@ -151,8 +151,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
 
-int crm_remote_peer_cache_size(void);
-
 /* Initialize and refresh the remote peer cache from a cib config */
 void crm_remote_peer_cache_refresh(xmlNode *cib);
 crm_node_t *crm_remote_peer_get(const char *node_name);
