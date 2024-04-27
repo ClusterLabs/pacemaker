@@ -84,13 +84,27 @@ static gboolean crm_autoreap  = TRUE;
 static void update_peer_uname(crm_node_t *node, const char *uname);
 static crm_node_t *find_known_node(const char *id, const char *uname);
 
+/*!
+ * \internal
+ * \brief Get the number of Pacemaker Remote nodes that have been seen
+ *
+ * \return Number of cached Pacemaker Remote nodes
+ */
+unsigned int
+pcmk__cluster_num_remote_nodes(void)
+{
+    if (crm_remote_peer_cache == NULL) {
+        return 0U;
+    }
+    return g_hash_table_size(crm_remote_peer_cache);
+}
+
 int
 crm_remote_peer_cache_size(void)
 {
-    if (crm_remote_peer_cache == NULL) {
-        return 0;
-    }
-    return g_hash_table_size(crm_remote_peer_cache);
+    unsigned int count = pcmk__cluster_num_remote_nodes();
+
+    return QB_MIN(count, INT_MAX);
 }
 
 /*!
@@ -468,7 +482,8 @@ crm_peer_destroy(void)
     }
 
     if (crm_remote_peer_cache != NULL) {
-        crm_trace("Destroying remote peer cache with %d members", g_hash_table_size(crm_remote_peer_cache));
+        crm_trace("Destroying remote peer cache with %d members",
+                  pcmk__cluster_num_remote_nodes());
         g_hash_table_destroy(crm_remote_peer_cache);
         crm_remote_peer_cache = NULL;
     }

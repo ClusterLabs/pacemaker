@@ -907,7 +907,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          * node hosts each to the ACK message.  This keeps new controllers in
          * sync with what has already happened.
          */
-        if (crm_remote_peer_cache_size() != 0) {
+        if (pcmk__cluster_num_remote_nodes() > 0) {
             GHashTableIter iter;
             crm_node_t *node = NULL;
             xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);

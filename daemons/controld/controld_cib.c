@@ -225,12 +225,9 @@ cib_op_timeout(void)
                   env_timeout, (env? env : "none"));
     }
 
-    calculated_timeout = 1 + crm_active_peers();
-    if (crm_remote_peer_cache) {
-        calculated_timeout += g_hash_table_size(crm_remote_peer_cache);
-    }
-    calculated_timeout *= 10;
-
+    calculated_timeout = 10U * (1U
+                                + crm_active_peers()
+                                + pcmk__cluster_num_remote_nodes());
     calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
     crm_trace("Calculated timeout: %us", calculated_timeout);
 
