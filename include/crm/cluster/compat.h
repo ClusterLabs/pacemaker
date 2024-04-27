@@ -56,6 +56,9 @@ gboolean cluster_connect_cpg(crm_cluster_t *cluster);
 
 #endif  // SUPPORT_COROSYNC
 
+// \deprecated Use \c pcmk_cluster_connect() instead
+gboolean crm_cluster_connect(crm_cluster_t *cluster);
+
 #ifdef __cplusplus
 }
 #endif

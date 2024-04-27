@@ -98,19 +98,6 @@ pcmk_cluster_connect(crm_cluster_t *cluster)
 }
 
 /*!
- * \brief Connect to the cluster layer
- *
- * \param[in,out] Initialized cluster object to connect
- *
- * \return TRUE on success, otherwise FALSE
- */
-gboolean
-crm_cluster_connect(crm_cluster_t *cluster)
-{
-    return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
-}
-
-/*!
  * \brief Disconnect from the cluster layer
  *
  * \param[in,out] cluster  Cluster object to disconnect
@@ -416,6 +403,12 @@ void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
     crm_xml_add(xml, attr, crm_peer_uuid(node));
+}
+
+gboolean
+crm_cluster_connect(crm_cluster_t *cluster)
+{
+    return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP
