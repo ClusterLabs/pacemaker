@@ -71,6 +71,9 @@ int crm_remote_peer_cache_size(void);
 // \deprecated Do not use
 void crm_remote_peer_cache_refresh(xmlNode *cib);
 
+// \deprecated Do not use
+crm_node_t *crm_remote_peer_get(const char *node_name);
+
 #ifdef __cplusplus
 }
 #endif

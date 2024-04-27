@@ -179,25 +179,6 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
 }
 
 /*!
- * \brief Get a remote node peer cache entry, creating it if necessary
- *
- * \param[in] node_name  Name of remote node
- *
- * \return Cache entry for node on success, NULL (and set errno) otherwise
- *
- * \note When creating a new entry, this will leave the node state undetermined,
- *       so the caller should also call pcmk__update_peer_state() if the state
- *       is known.
- * \note Because this can add and remove cache entries, callers should not
- *       assume any previously obtained cache entry pointers remain valid.
- */
-crm_node_t *
-crm_remote_peer_get(const char *node_name)
-{
-    return pcmk__cluster_lookup_remote_node(node_name);
-}
-
-/*!
  * \brief Remove a node from the Pacemaker Remote node cache
  *
  * \param[in] node_name  Name of node to remove from cache
@@ -1421,6 +1402,12 @@ void
 crm_remote_peer_cache_refresh(xmlNode *cib)
 {
     refresh_remote_nodes(cib);
+}
+
+crm_node_t *
+crm_remote_peer_get(const char *node_name)
+{
+    return pcmk__cluster_lookup_remote_node(node_name);
 }
 
 // LCOV_EXCL_STOP
