@@ -226,7 +226,7 @@ cib_op_timeout(void)
     }
 
     calculated_timeout = 10U * (1U
-                                + crm_active_peers()
+                                + pcmk__cluster_num_active_nodes()
                                 + pcmk__cluster_num_remote_nodes());
     calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
     crm_trace("Calculated timeout: %us", calculated_timeout);

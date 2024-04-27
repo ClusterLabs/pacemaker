@@ -356,7 +356,7 @@ election_check(election_t *e)
     }
 
     voted_size = g_hash_table_size(e->voted);
-    num_members = crm_active_peers();
+    num_members = pcmk__cluster_num_active_nodes();
 
     /* in the case of #voted > #members, it is better to
      *   wait for the timeout and give the cluster time to

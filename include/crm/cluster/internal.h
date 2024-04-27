@@ -142,6 +142,7 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                    void (*destroy) (gpointer));
 
 bool pcmk__cluster_is_node_active(const crm_node_t *node);
+unsigned int pcmk__cluster_num_active_nodes(void);
 unsigned int pcmk__cluster_num_remote_nodes(void);
 crm_node_t *pcmk__cluster_lookup_remote_node(const char *node_name);
 void pcmk__cluster_forget_remote_node(const char *node_name);

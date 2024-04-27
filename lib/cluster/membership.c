@@ -432,7 +432,7 @@ reap_crm_member(uint32_t id, const char *name)
 static void
 count_peer(gpointer key, gpointer value, gpointer user_data)
 {
-    guint *count = user_data;
+    unsigned int *count = user_data;
     crm_node_t *node = value;
 
     if (pcmk__cluster_is_node_active(node)) {
@@ -440,15 +440,30 @@ count_peer(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-guint
-crm_active_peers(void)
+/*!
+ * \internal
+ * \brief Get the number of active cluster nodes that have been seen
+ *
+ * Remote nodes are never considered active. This guarantees that they can never
+ * become DC.
+ *
+ * \return Number of active nodes in the cluster node cache
+ */
+unsigned int
+pcmk__cluster_num_active_nodes(void)
 {
-    guint count = 0;
+    unsigned int count = 0;
 
-    if (crm_peer_cache) {
+    if (crm_peer_cache != NULL) {
         g_hash_table_foreach(crm_peer_cache, count_peer, &count);
     }
     return count;
+}
+
+guint
+crm_active_peers(void)
+{
+    return pcmk__cluster_num_active_nodes();
 }
 
 static void

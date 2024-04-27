@@ -1624,7 +1624,7 @@ initiate_exit(void)
     int active = 0;
     xmlNode *leaving = NULL;
 
-    active = crm_active_peers();
+    active = pcmk__cluster_num_active_nodes();
     if (active < 2) { // This is the last active node
         terminate_cib(__func__, 0);
         return;
