@@ -601,8 +601,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              * hosted any guest nodes, and call remote_node_down() for them.
              * Unfortunately, the controller doesn't have a simple, reliable way
              * to map hosts to guests. It might be possible to track this in the
-             * peer cache via crm_remote_peer_cache_refresh(). For now, we rely
-             * on the scheduler creating fence pseudo-events for the guests.
+             * peer cache via refresh_remote_nodes(). For now, we rely on the
+             * scheduler creating fence pseudo-events for the guests.
              */
 
             if (!pcmk__str_eq(client, te_client_id, pcmk__str_casei)) {

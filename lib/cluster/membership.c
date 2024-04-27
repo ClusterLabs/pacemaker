@@ -48,7 +48,7 @@ GHashTable *crm_peer_cache = NULL;
  *
  * libcluster provides two avenues for populating the cache:
  * crm_remote_peer_get() and crm_remote_peer_cache_remove() directly manage it,
- * while crm_remote_peer_cache_refresh() populates it via the CIB.
+ * while refresh_remote_nodes() populates it via the CIB.
  */
 GHashTable *crm_remote_peer_cache = NULL;
 
@@ -281,12 +281,13 @@ is_dirty(gpointer key, gpointer value, gpointer user_data)
 }
 
 /*!
- * \brief Repopulate the remote peer cache based on CIB XML
+ * \internal
+ * \brief Repopulate the remote node cache based on CIB XML
  *
- * \param[in] xmlNode  CIB XML to parse
+ * \param[in] cib  CIB XML to parse
  */
-void
-crm_remote_peer_cache_refresh(xmlNode *cib)
+static void
+refresh_remote_nodes(xmlNode *cib)
 {
     struct refresh_data data;
 
@@ -321,6 +322,17 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
 
     /* Remove all old cache entries that weren't seen in the CIB */
     g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
+}
+
+/*!
+ * \brief Repopulate the remote peer cache based on CIB XML
+ *
+ * \param[in] xmlNode  CIB XML to parse
+ */
+void
+crm_remote_peer_cache_refresh(xmlNode *cib)
+{
+    refresh_remote_nodes(cib);
 }
 
 gboolean
@@ -1154,7 +1166,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
             && !pcmk_is_set(node->flags, crm_remote_node)) {
             /* We only autoreap from the peer cache, not the remote peer cache,
              * because the latter should be managed only by
-             * crm_remote_peer_cache_refresh().
+             * refresh_remote_nodes().
              */
             if(iter) {
                 crm_notice("Purged 1 peer with " PCMK_XA_ID
@@ -1354,7 +1366,7 @@ refresh_known_node_cache(xmlNode *cib)
 void
 pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 {
-    crm_remote_peer_cache_refresh(cib);
+    refresh_remote_nodes(cib);
     refresh_known_node_cache(cib);
 }
 
