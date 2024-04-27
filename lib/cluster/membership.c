@@ -362,28 +362,56 @@ pcmk__cluster_is_node_active(const crm_node_t *node)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Check if a node's entry should be removed from the cluster node cache
+ *
+ * A node should be removed from the cache if it's inactive and matches another
+ * \c crm_node_t (the search object). The node is considered a mismatch if any
+ * of the following are true:
+ * * The search object is \c NULL.
+ * * The search object has an ID set and the cached node's ID does not match it.
+ * * The search object does not have an ID set, and the cached node's name does
+ *   not match the search node's name. (If both names are \c NULL, it's a
+ *   match.)
+ *
+ * Otherwise, the node is considered a match.
+ *
+ * Note that if the search object has both an ID and a name set, the name is
+ * ignored for matching purposes.
+ *
+ * \param[in] key        Ignored
+ * \param[in] value      \c crm_node_t object from cluster node cache
+ * \param[in] user_data  \c crm_node_t object to match against (search object)
+ *
+ * \return \c TRUE if the node entry should be removed from \c crm_peer_cache,
+ *         or \c FALSE otherwise
+ */
 static gboolean
-crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
+should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
     crm_node_t *search = user_data;
 
     if (search == NULL) {
         return FALSE;
-
-    } else if (search->id && node->id != search->id) {
-        return FALSE;
-
-    } else if (search->id == 0 && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
-        return FALSE;
-
-    } else if (!pcmk__cluster_is_node_active(value)) {
-        crm_info("Removing node with name %s and " PCMK_XA_ID
-                 " %u from membership cache",
-                 (node->uname? node->uname : "unknown"), node->id);
-        return TRUE;
     }
-    return FALSE;
+    if ((search->id != 0) && (node->id != search->id)) {
+        return FALSE;
+    }
+    if ((search->id == 0)
+        && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
+        // @TODO Consider name even if ID is set?
+        return FALSE;
+    }
+    if (pcmk__cluster_is_node_active(value)) {
+        return FALSE;
+    }
+
+    crm_info("Removing node with name %s and " PCMK_XA_ID " %u from membership "
+             "cache",
+             pcmk__s(node->uname, "(unknown)"), node->id);
+    return TRUE;
 }
 
 /*!
@@ -410,7 +438,8 @@ reap_crm_member(uint32_t id, const char *name)
 
     search.id = id;
     search.uname = pcmk__str_copy(name);
-    matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
+    matches = g_hash_table_foreach_remove(crm_peer_cache,
+                                          should_forget_cluster_node, &search);
     if(matches) {
         crm_notice("Purged %d peer%s with " PCMK_XA_ID
                    "=%u%s%s from the membership cache",
