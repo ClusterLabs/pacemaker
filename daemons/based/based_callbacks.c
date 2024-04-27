@@ -1747,14 +1747,14 @@ terminate_cib(const char *caller, int fast)
          * peer caches).
          */
         if (fast == 0) {
-            crm_cluster_disconnect(crm_cluster);
+            pcmk_cluster_disconnect(crm_cluster);
         }
         g_main_loop_quit(mainloop);
 
     } else {
         /* Quit via clean exit. Even the peer status callback can disconnect
          * here, because we're not returning control to the caller. */
-        crm_cluster_disconnect(crm_cluster);
+        pcmk_cluster_disconnect(crm_cluster);
         pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
         crm_exit(CRM_EX_OK);
     }

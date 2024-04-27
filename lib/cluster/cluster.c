@@ -101,24 +101,44 @@ pcmk_cluster_connect(crm_cluster_t *cluster)
  * \brief Disconnect from the cluster layer
  *
  * \param[in,out] cluster  Cluster object to disconnect
+ *
+ * \return Standard Pacemaker return code
  */
-void
-crm_cluster_disconnect(crm_cluster_t *cluster)
+int
+pcmk_cluster_disconnect(crm_cluster_t *cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
     crm_info("Disconnecting from %s cluster infrastructure",
              name_for_cluster_type(type));
+
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
             crm_peer_destroy();
             pcmk__corosync_disconnect(cluster);
-#endif // SUPPORT_COROSYNC
+            return pcmk_rc_ok;
+#else
             break;
+#endif // SUPPORT_COROSYNC
         default:
             break;
     }
+
+    crm_err("Failed to disconnect from unsupported cluster type %s",
+            name_for_cluster_type(type));
+    return EPROTONOSUPPORT;
+}
+
+/*!
+ * \brief Disconnect from the cluster layer
+ *
+ * \param[in,out] cluster  Cluster object to disconnect
+ */
+void
+crm_cluster_disconnect(crm_cluster_t *cluster)
+{
+    pcmk_cluster_disconnect(cluster);
 }
 
 /*!

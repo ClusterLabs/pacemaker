@@ -284,7 +284,7 @@ main(int argc, char **argv)
     /* If main loop returned, clean up and exit. We disconnect in case
      * terminate_cib() was called with fast=-1.
      */
-    crm_cluster_disconnect(crm_cluster);
+    pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
 
 done:

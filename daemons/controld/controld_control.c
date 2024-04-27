@@ -48,7 +48,7 @@ do_ha_control(long long action,
     }
 
     if (action & A_HA_DISCONNECT) {
-        crm_cluster_disconnect(cluster);
+        pcmk_cluster_disconnect(cluster);
         crm_info("Disconnected from the cluster");
 
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);

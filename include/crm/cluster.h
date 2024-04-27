@@ -125,6 +125,7 @@ typedef struct crm_cluster_s {
 } crm_cluster_t;
 
 int pcmk_cluster_connect(crm_cluster_t *cluster);
+int pcmk_cluster_disconnect(crm_cluster_t *cluster);
 void crm_cluster_disconnect(crm_cluster_t *cluster);
 
 crm_cluster_t *pcmk_cluster_new(void);
