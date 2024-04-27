@@ -131,17 +131,6 @@ pcmk_cluster_disconnect(crm_cluster_t *cluster)
 }
 
 /*!
- * \brief Disconnect from the cluster layer
- *
- * \param[in,out] cluster  Cluster object to disconnect
- */
-void
-crm_cluster_disconnect(crm_cluster_t *cluster)
-{
-    pcmk_cluster_disconnect(cluster);
-}
-
-/*!
  * \brief Allocate a new \p crm_cluster_t object
  *
  * \return A newly allocated \p crm_cluster_t object (guaranteed not \c NULL)
@@ -429,6 +418,12 @@ gboolean
 crm_cluster_connect(crm_cluster_t *cluster)
 {
     return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
+}
+
+void
+crm_cluster_disconnect(crm_cluster_t *cluster)
+{
+    pcmk_cluster_disconnect(cluster);
 }
 
 // LCOV_EXCL_STOP

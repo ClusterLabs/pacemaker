@@ -62,6 +62,9 @@ void cluster_disconnect_cpg(crm_cluster_t *cluster);
 // \deprecated Use \c pcmk_cluster_connect() instead
 gboolean crm_cluster_connect(crm_cluster_t *cluster);
 
+// \deprecated Use \c pcmk_cluster_disconnect() instead
+void crm_cluster_disconnect(crm_cluster_t *cluster);
+
 #ifdef __cplusplus
 }
 #endif
