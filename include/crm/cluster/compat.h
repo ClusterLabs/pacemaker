@@ -54,6 +54,9 @@ void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 // \deprecated Do not use
 gboolean cluster_connect_cpg(crm_cluster_t *cluster);
 
+// \deprecated Do not use
+void cluster_disconnect_cpg(crm_cluster_t *cluster);
+
 #endif  // SUPPORT_COROSYNC
 
 // \deprecated Use \c pcmk_cluster_connect() instead

@@ -87,17 +87,6 @@ static void crm_cs_flush(gpointer data);
     } while (counter < max)
 
 /*!
- * \brief Disconnect from Corosync CPG
- *
- * \param[in,out] cluster  Cluster to disconnect
- */
-void
-cluster_disconnect_cpg(crm_cluster_t *cluster)
-{
-    pcmk__cpg_disconnect(cluster);
-}
-
-/*!
  * \brief Get the local Corosync node ID (via CPG)
  *
  * \param[in] handle  CPG connection to use (or 0 to use new connection)
@@ -1122,6 +1111,12 @@ gboolean
 cluster_connect_cpg(crm_cluster_t *cluster)
 {
     return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
+}
+
+void
+cluster_disconnect_cpg(crm_cluster_t *cluster)
+{
+    pcmk__cpg_disconnect(cluster);
 }
 
 // LCOV_EXCL_STOP
