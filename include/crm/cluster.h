@@ -214,13 +214,20 @@ enum crm_ais_msg_types text2msg_type(const char *text);
 void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
 void crm_set_autoreap(gboolean autoreap);
 
+/*!
+ * \enum pcmk_cluster_layer
+ * \brief Types of cluster layer
+ */
+enum pcmk_cluster_layer {
+    pcmk_cluster_layer_unknown  = 1,    //!< Unknown cluster layer
+    pcmk_cluster_layer_invalid  = 2,    //!< Invalid cluster layer
+    pcmk_cluster_layer_corosync = 32,   //!< Corosync Cluster Engine
+};
+
 enum cluster_type_e {
-    pcmk_cluster_unknown     = 0x0001,
-    pcmk_cluster_invalid     = 0x0002,
-    // 0x0004 was heartbeat
-    // 0x0010 was corosync 1 with plugin
-    pcmk_cluster_corosync    = 0x0020,
-    // 0x0040 was corosync 1 with CMAN
+    pcmk_cluster_unknown    = pcmk_cluster_layer_unknown,
+    pcmk_cluster_invalid    = pcmk_cluster_layer_invalid,
+    pcmk_cluster_corosync   = pcmk_cluster_layer_corosync,
 };
 
 enum cluster_type_e get_cluster_type(void);
