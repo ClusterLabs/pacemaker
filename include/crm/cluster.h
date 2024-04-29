@@ -43,6 +43,9 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_join_phase {
     /* @COMPAT: crm_join_nack_quiet can be replaced by crm_node_t:user_data
      *          at a compatibility break.
@@ -57,6 +60,7 @@ enum crm_join_phase {
     crm_join_finalized  = 3,
     crm_join_confirmed  = 4,
 };
+//!@}
 
 enum crm_node_flags {
     /* node is not a cluster node and should not be considered for cluster membership */
