@@ -2128,6 +2128,14 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+#define KV_PAIR(k, v) do { \
+    if (legacy) { \
+        pcmk__g_strcat(s, k "=", pcmk__s(v, ""), " ", NULL); \
+    } else { \
+        pcmk__g_strcat(s, k "=\"", pcmk__s(v, ""), "\"", NULL); \
+    } \
+} while (0)
+
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
                   "const char *", "const char *", "bool", "bool")
 static int
@@ -2169,33 +2177,17 @@ attribute_default(pcmk__output_t *out, va_list args)
     }
 
     if (!pcmk__str_empty(scope)) {
-        if (legacy) {
-            pcmk__g_strcat(s, PCMK_XA_SCOPE "=", scope, " ", NULL);
-        } else {
-            pcmk__g_strcat(s, PCMK_XA_SCOPE "=\"", scope, "\" ", NULL);
-        }
+        KV_PAIR(PCMK_XA_SCOPE, scope);
     }
 
     if (!pcmk__str_empty(instance)) {
-        if (legacy) {
-            pcmk__g_strcat(s, PCMK_XA_ID "=", instance, " ", NULL);
-        } else {
-            pcmk__g_strcat(s, PCMK_XA_ID "=\"", instance, "\" ", NULL);
-        }
+        KV_PAIR(PCMK_XA_ID, instance);
     }
 
-    if (legacy) {
-        pcmk__g_strcat(s, PCMK_XA_NAME "=", pcmk__s(name, ""), " ", NULL);
-    } else {
-        pcmk__g_strcat(s, PCMK_XA_NAME "=\"", pcmk__s(name, ""), "\" ", NULL);
-    }
+    KV_PAIR(PCMK_XA_NAME, name);
 
     if (!pcmk__str_empty(host)) {
-        if (legacy) {
-            pcmk__g_strcat(s, PCMK_XA_HOST "=", host, " ", NULL);
-        } else {
-            pcmk__g_strcat(s, PCMK_XA_HOST "=\"", host, "\" ", NULL);
-        }
+        KV_PAIR(PCMK_XA_HOST, host);
     }
 
     if (legacy) {
