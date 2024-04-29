@@ -252,6 +252,9 @@ enum pe_quorum_policy pcmk_get_no_quorum_policy(const pcmk_scheduler_t
 
 int pcmk_set_scheduler_cib(pcmk_scheduler_t *scheduler, xmlNode *cib);
 
+pcmk_node_t *pcmk_find_node(const pcmk_scheduler_t *scheduler,
+                            const char *node_name);
+
 #ifdef __cplusplus
 }
 #endif

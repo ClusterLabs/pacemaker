@@ -27,7 +27,7 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use
+//! \deprecated Use pcmk_find_node() with scheduler object instead
 pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);
 
 //! \deprecated Compare variant directly instead

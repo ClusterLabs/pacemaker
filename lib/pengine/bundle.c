@@ -734,7 +734,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pcmk__find_node_in_list(parent->cluster->nodes, uname);
+        node = pcmk_find_node(parent->cluster, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
                                   PCMK_VALUE_MINUS_INFINITY, parent->cluster);

@@ -95,8 +95,7 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
-            pcmk_node_t *guest_node = pcmk__find_node_in_list(scheduler->nodes,
-                                                              rsc->id);
+            pcmk_node_t *guest_node = pcmk_find_node(scheduler, rsc->id);
 
             if (guest_node) {
                 (*helper)(guest_node, user_data);

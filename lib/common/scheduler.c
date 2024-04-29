@@ -72,3 +72,21 @@ pcmk_set_scheduler_cib(pcmk_scheduler_t *scheduler, xmlNode *cib)
     scheduler->input = cib;
     return pcmk_rc_ok;
 }
+
+/*!
+ * \brief Find a node by name in scheduler data
+ *
+ * \param[in] scheduler  Scheduler data
+ * \param[in] node_name  Name of node to find
+ *
+ * \return Node from scheduler data that matches \p node_name if any,
+ *         otherwise NULL
+ */
+pcmk_node_t *
+pcmk_find_node(const pcmk_scheduler_t *scheduler, const char *node_name)
+{
+    if ((scheduler == NULL) || (node_name == NULL)) {
+        return NULL;
+    }
+    return pcmk__find_node_in_list(scheduler->nodes, node_name);
+}

@@ -345,8 +345,8 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
 static void
 remote_connection_assigned(const pcmk_resource_t *connection)
 {
-    pcmk_node_t *remote_node = pcmk__find_node_in_list(connection->cluster->nodes,
-                                                       connection->id);
+    pcmk_node_t *remote_node = pcmk_find_node(connection->cluster,
+                                              connection->id);
 
     CRM_CHECK(remote_node != NULL, return);
 

@@ -558,7 +558,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     }
 
     {
-        pcmk_node_t *node = pcmk__find_node_in_list(scheduler->nodes, host_uname);
+        pcmk_node_t *node = pcmk_find_node(scheduler, host_uname);
 
         if (node == NULL) {
             out->err(out, "Node %s not found", host_uname);
@@ -822,7 +822,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return pcmk_rc_ok;
     }
 
-    node = pcmk__find_node_in_list(scheduler->nodes, host_uname);
+    node = pcmk_find_node(scheduler, host_uname);
 
     if (node == NULL) {
         out->err(out, "Unable to clean up %s because node %s not found",
@@ -882,7 +882,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     }
 
     if (node_name) {
-        pcmk_node_t *node = pcmk__find_node_in_list(scheduler->nodes, node_name);
+        pcmk_node_t *node = pcmk_find_node(scheduler, node_name);
 
         if (node == NULL) {
             out->err(out, "Unknown node: %s", node_name);
@@ -2173,7 +2173,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
     pcmk_node_t *current = NULL;
-    pcmk_node_t *dest = pcmk__find_node_in_list(scheduler->nodes, host_name);
+    pcmk_node_t *dest = pcmk_find_node(scheduler, host_name);
     bool cur_is_dest = false;
 
     if (dest == NULL) {
