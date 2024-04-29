@@ -1365,8 +1365,8 @@ Revised Cluster Status:
 =#=#=#= End test: Create second node attribute - OK (0) =#=#=#=
 * Passed: crm_attribute  - Create second node attribute
 =#=#=#= Begin test: Query node attributes by pattern =#=#=#=
-scope=nodes  name=ram value=1024M
-scope=nodes  name=rattr value=XYZ
+scope=nodes name=ram value=1024M
+scope=nodes name=rattr value=XYZ
 =#=#=#= End test: Query node attributes by pattern - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query node attributes by pattern
 =#=#=#= Begin test: Update node attributes by pattern =#=#=#=
@@ -1548,8 +1548,8 @@ Current cluster status:
 =#=#=#= End test: Set a second transient node attribute - OK (0) =#=#=#=
 * Passed: crm_attribute  - Set a second transient node attribute
 =#=#=#= Begin test: Query transient node attributes by pattern =#=#=#=
-scope=status  name=fail-count-foo value=3
-scope=status  name=fail-count-bar value=5
+scope=status name=fail-count-foo value=3
+scope=status name=fail-count-bar value=5
 =#=#=#= End test: Query transient node attributes by pattern - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query transient node attributes by pattern
 =#=#=#= Begin test: Update transient node attributes by pattern =#=#=#=
@@ -1661,7 +1661,7 @@ crm_attribute: Error: must specify attribute name or pattern to delete
 =#=#=#= End test: Set a utilization node attribute - OK (0) =#=#=#=
 * Passed: crm_attribute  - Set a utilization node attribute
 =#=#=#= Begin test: Query utilization node attribute =#=#=#=
-scope=nodes  name=cpu value=1
+scope=nodes name=cpu value=1
 =#=#=#= End test: Query utilization node attribute - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query utilization node attribute
 =#=#=#= Begin test: Digest calculation =#=#=#=
@@ -1736,7 +1736,7 @@ Call failed: Update was older than existing configuration
 =#=#=#= End test: Replace operation should fail - Update was older than existing configuration (103) =#=#=#=
 * Passed: cibadmin       - Replace operation should fail
 =#=#=#= Begin test: Default standby value =#=#=#=
-scope=status  name=standby value=off
+scope=status name=standby value=off
 =#=#=#= Current cib after: Default standby value =#=#=#=
 <cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1808,7 +1808,7 @@ scope=status  name=standby value=off
 =#=#=#= End test: Set standby status - OK (0) =#=#=#=
 * Passed: crm_standby    - Set standby status
 =#=#=#= Begin test: Query standby value =#=#=#=
-scope=nodes  name=standby value=true
+scope=nodes name=standby value=true
 =#=#=#= Current cib after: Query standby value =#=#=#=
 <cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
@@ -8237,7 +8237,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Update a nonexistent promotable score attribute (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute  - Update a nonexistent promotable score attribute (XML)
 =#=#=#= Begin test: Query after updating a nonexistent promotable score attribute =#=#=#=
-scope=status  name=master-promotable-rsc value=1
+scope=status name=master-promotable-rsc value=1
 =#=#=#= End test: Query after updating a nonexistent promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query after updating a nonexistent promotable score attribute
 =#=#=#= Begin test: Query after updating a nonexistent promotable score attribute (XML) =#=#=#=
@@ -8257,7 +8257,7 @@ scope=status  name=master-promotable-rsc value=1
 =#=#=#= End test: Update an existing promotable score attribute (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute  - Update an existing promotable score attribute (XML)
 =#=#=#= Begin test: Query after updating an existing promotable score attribute =#=#=#=
-scope=status  name=master-promotable-rsc value=5
+scope=status name=master-promotable-rsc value=5
 =#=#=#= End test: Query after updating an existing promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query after updating an existing promotable score attribute
 =#=#=#= Begin test: Query after updating an existing promotable score attribute (XML) =#=#=#=
@@ -8301,7 +8301,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Update a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute  - Update a promotable score attribute to -INFINITY (XML)
 =#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY =#=#=#=
-scope=status  name=master-promotable-rsc value=-INFINITY
+scope=status name=master-promotable-rsc value=-INFINITY
 =#=#=#= End test: Query after updating a promotable score attribute to -INFINITY - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY
 =#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY (XML) =#=#=#=
@@ -8312,7 +8312,7 @@ scope=status  name=master-promotable-rsc value=-INFINITY
 =#=#=#= End test: Query after updating a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
 * Passed: crm_attribute  - Query after updating a promotable score attribute to -INFINITY (XML)
 =#=#=#= Begin test: Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string =#=#=#=
-scope=status  name=master-promotable-rsc value=-INFINITY
+scope=status name=master-promotable-rsc value=-INFINITY
 =#=#=#= End test: Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string - OK (0) =#=#=#=
 * Passed: crm_attribute  - Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string
 =#=#=#= Begin test: Return usage error if both -p and OCF_RESOURCE_INSTANCE are empty strings =#=#=#=
