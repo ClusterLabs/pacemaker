@@ -2129,7 +2129,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *")
+                  "const char *", "const char *", "bool")
 static int
 attribute_default(pcmk__output_t *out, va_list args)
 {
@@ -2138,10 +2138,20 @@ attribute_default(pcmk__output_t *out, va_list args)
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
     const char *host = va_arg(args, const char *);
+    bool quiet = va_arg(args, int);
 
     gchar *value_esc = NULL;
+    GString *s = NULL;
 
-    GString *s = g_string_sized_new(50);
+    if (quiet) {
+        if (value != NULL) {
+            out->info(out, "%s", value);
+        }
+
+        return pcmk_rc_ok;
+    }
+
+    s = g_string_sized_new(50);
 
     if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr_pretty)) {
         value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr_pretty);
@@ -2172,7 +2182,7 @@ attribute_default(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *")
+                  "const char *", "const char *", "bool")
 static int
 attribute_xml(pcmk__output_t *out, va_list args)
 {
@@ -2181,6 +2191,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
     const char *host = va_arg(args, const char *);
+    bool quiet G_GNUC_UNUSED = va_arg(args, int);
 
     xmlNodePtr node = NULL;
 

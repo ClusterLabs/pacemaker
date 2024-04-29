@@ -53,7 +53,7 @@ crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *")
+                  "const char *", "const char *", "bool")
 static int
 attribute_text(pcmk__output_t *out, va_list args)
 {
@@ -62,6 +62,7 @@ attribute_text(pcmk__output_t *out, va_list args)
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
     const char *host G_GNUC_UNUSED = va_arg(args, const char *);
+    bool quiet = va_arg(args, int);
 
     gchar *value_esc = NULL;
 
@@ -70,7 +71,7 @@ attribute_text(pcmk__output_t *out, va_list args)
         value = value_esc;
     }
 
-    if (out->quiet) {
+    if (quiet) {
         if (value != NULL) {
             pcmk__formatted_printf(out, "%s\n", value);
         }
@@ -572,7 +573,8 @@ output_one_attribute(xmlNode *node, void *userdata)
         return pcmk_rc_ok;
     }
 
-    od->out->message(od->out, "attribute", type, attr_id, name, value, host);
+    od->out->message(od->out, "attribute", type, attr_id, name, value, host,
+                     od->out->quiet);
     od->did_output = true;
     crm_info("Read %s='%s' %s%s",
              pcmk__s(name, "<null>"), pcmk__s(value, ""),
@@ -613,7 +615,7 @@ command_query(pcmk__output_t *out, cib_t *cib)
         const char *dest_uname = options.dest_uname;
 
         out->message(out, "attribute", type, attr_id, attr_name, attr_default,
-                     dest_uname);
+                     dest_uname, out->quiet);
         rc = pcmk_rc_ok;
 
     } else if (rc != pcmk_rc_ok) {
