@@ -52,52 +52,10 @@ GError *error = NULL;
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
-PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "bool", "bool")
-static int
-attribute_text(pcmk__output_t *out, va_list args)
-{
-    const char *scope = va_arg(args, const char *);
-    const char *instance = va_arg(args, const char *);
-    const char *name = va_arg(args, const char *);
-    const char *value = va_arg(args, const char *);
-    const char *host G_GNUC_UNUSED = va_arg(args, const char *);
-    bool quiet = va_arg(args, int);
-    bool legacy G_GNUC_UNUSED = va_arg(args, int);
-
-    gchar *value_esc = NULL;
-
-    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr_pretty)) {
-        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr_pretty);
-        value = value_esc;
-    }
-
-    if (quiet) {
-        if (value != NULL) {
-            pcmk__formatted_printf(out, "%s\n", value);
-        }
-    } else {
-        out->info(out, "%s%s %s%s %s%s value=%s",
-                  scope ? "scope=" : "", scope ? scope : "",
-                  instance ? "id=" : "", instance ? instance : "",
-                  name ? "name=" : "", name ? name : "",
-                  pcmk__s(value, "(null)"));
-    }
-
-    g_free(value_esc);
-    return pcmk_rc_ok;
-}
-
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
-static pcmk__message_entry_t fmt_functions[] = {
-    { "attribute", "text", attribute_text },
-
     { NULL, NULL, NULL }
 };
 
@@ -795,7 +753,6 @@ main(int argc, char **argv)
     }
 
     pcmk__register_lib_messages(out);
-    pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
         out->version(out, false);
