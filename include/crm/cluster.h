@@ -191,11 +191,15 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
 const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_status_type {
     crm_status_uname,
     crm_status_nstate,
     crm_status_processes,
 };
+//!@}
 
 enum crm_ais_msg_types text2msg_type(const char *text);
 void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
