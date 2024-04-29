@@ -398,7 +398,7 @@ print_attrd_values(pcmk__output_t *out, const GList *reply)
         const pcmk__attrd_query_pair_t *pair = iter->data;
 
         out->message(out, "attribute", NULL, NULL, pair->name, pair->value,
-                     pair->node, false);
+                     pair->node, false, false);
         printed_values = true;
     }
 }

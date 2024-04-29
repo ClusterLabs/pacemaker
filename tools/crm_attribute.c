@@ -53,7 +53,7 @@ crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "bool")
+                  "const char *", "const char *", "bool", "bool")
 static int
 attribute_text(pcmk__output_t *out, va_list args)
 {
@@ -63,6 +63,7 @@ attribute_text(pcmk__output_t *out, va_list args)
     const char *value = va_arg(args, const char *);
     const char *host G_GNUC_UNUSED = va_arg(args, const char *);
     bool quiet = va_arg(args, int);
+    bool legacy G_GNUC_UNUSED = va_arg(args, int);
 
     gchar *value_esc = NULL;
 
@@ -80,7 +81,7 @@ attribute_text(pcmk__output_t *out, va_list args)
                   scope ? "scope=" : "", scope ? scope : "",
                   instance ? "id=" : "", instance ? instance : "",
                   name ? "name=" : "", name ? name : "",
-                  value ? value : "(null)");
+                  pcmk__s(value, "(null)"));
     }
 
     g_free(value_esc);
@@ -573,7 +574,7 @@ output_one_attribute(xmlNode *node, void *userdata)
     }
 
     od->out->message(od->out, "attribute", type, attr_id, name, value, NULL,
-                     od->out->quiet);
+                     od->out->quiet, true);
     od->did_output = true;
     crm_info("Read %s='%s' %s%s",
              pcmk__s(name, "<null>"), pcmk__s(value, ""),
@@ -613,7 +614,7 @@ command_query(pcmk__output_t *out, cib_t *cib)
         const char *attr_default = options.attr_default;
 
         out->message(out, "attribute", type, attr_id, attr_name, attr_default,
-                     NULL, out->quiet);
+                     NULL, out->quiet, true);
         rc = pcmk_rc_ok;
 
     } else if (rc != pcmk_rc_ok) {
