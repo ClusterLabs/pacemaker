@@ -466,7 +466,7 @@ pe_find_node_any(const GList *nodes, const char *id, const char *uname)
         match = pe_find_node_id(nodes, id);
     }
     if ((match == NULL) && (uname != NULL)) {
-        match = pe_find_node(nodes, uname);
+        match = pcmk__find_node_in_list(nodes, uname);
     }
     return match;
 }
@@ -496,6 +496,11 @@ pe_find_node_id(const GList *nodes, const char *id)
     return NULL;
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/pengine/status_compat.h>
+
 /*!
  * \brief Find a node by name in a list of nodes
  *
@@ -507,12 +512,8 @@ pe_find_node_id(const GList *nodes, const char *id)
 pcmk_node_t *
 pe_find_node(const GList *nodes, const char *node_name)
 {
-    for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iter->data;
-
-        if (pcmk__str_eq(node->details->uname, node_name, pcmk__str_casei)) {
-            return node;
-        }
-    }
-    return NULL;
+    return pcmk__find_node_in_list(nodes, node_name);
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API

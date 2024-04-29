@@ -459,7 +459,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 {
     pcmk_node_t *new_node = NULL;
 
-    if (pe_find_node(scheduler->nodes, uname) != NULL) {
+    if (pcmk__find_node_in_list(scheduler->nodes, uname) != NULL) {
         pcmk__config_warn("More than one node entry has name '%s'", uname);
     }
 
@@ -664,7 +664,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
     }
 
     if (scheduler->localhost
-        && (pe_find_node(scheduler->nodes, scheduler->localhost) == NULL)) {
+        && (pcmk__find_node_in_list(scheduler->nodes, scheduler->localhost) == NULL)) {
         crm_info("Creating a fake local node");
         pe_create_node(scheduler->localhost, scheduler->localhost, NULL, 0,
                        scheduler);
@@ -719,10 +719,11 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
          */
         if (xml_contains_remote_node(xml_obj)) {
             new_node_id = pcmk__xe_id(xml_obj);
-            /* The "pe_find_node" check is here to make sure we don't iterate over
-             * an expanded node that has already been added to the node list. */
+            /* The pcmk__find_node_in_list() check ensures we don't iterate over
+             * an expanded node that has already been added to the node list
+             */
             if (new_node_id
-                && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
+                && (pcmk__find_node_in_list(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found remote node %s defined by resource %s",
                           new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
@@ -742,7 +743,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
             new_node_id = expand_remote_rsc_meta(xml_obj, xml_resources,
                                                  scheduler);
             if (new_node_id
-                && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
+                && (pcmk__find_node_in_list(scheduler->nodes, new_node_id) == NULL)) {
                 crm_trace("Found guest node %s in resource %s",
                           new_node_id, pcmk__xe_id(xml_obj));
                 pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
@@ -763,7 +764,7 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                                                      scheduler);
 
                 if (new_node_id
-                    && (pe_find_node(scheduler->nodes, new_node_id) == NULL)) {
+                    && (pcmk__find_node_in_list(scheduler->nodes, new_node_id) == NULL)) {
                     crm_trace("Found guest node %s in resource %s inside group %s",
                               new_node_id, pcmk__xe_id(xml_obj2),
                               pcmk__xe_id(xml_obj));
@@ -798,7 +799,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
         return;
     }
 
-    remote_node = pe_find_node(scheduler->nodes, new_rsc->id);
+    remote_node = pcmk__find_node_in_list(scheduler->nodes, new_rsc->id);
     CRM_CHECK(remote_node != NULL, return);
 
     pcmk__rsc_trace(new_rsc, "Linking remote connection resource %s to %s",
@@ -1974,7 +1975,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         pcmk_node_t *node;
 
         crm_debug("Detected orphaned remote node %s", rsc_id);
-        node = pe_find_node(scheduler->nodes, rsc_id);
+        node = pcmk__find_node_in_list(scheduler->nodes, rsc_id);
         if (node == NULL) {
             node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, NULL,
                                   scheduler);
@@ -2426,7 +2427,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
-                    tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
+                    tmpnode = pcmk__find_node_in_list(rsc->cluster->nodes, rsc->id);
                 }
                 if (pcmk__is_remote_node(tmpnode)
                     && !(tmpnode->details->remote_was_fenced)) {
@@ -2456,7 +2457,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
     if (pcmk_is_set(rsc->flags, pcmk_rsc_failed) && rsc->is_remote_node) {
-        tmpnode = pe_find_node(rsc->cluster->nodes, rsc->id);
+        tmpnode = pcmk__find_node_in_list(rsc->cluster->nodes, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
         }
@@ -3304,7 +3305,7 @@ unpack_migrate_to_success(struct action_history *history)
      */
     history->rsc->role = pcmk_role_started;
 
-    target_node = pe_find_node(history->rsc->cluster->nodes, target);
+    target_node = pcmk__find_node_in_list(history->rsc->cluster->nodes, target);
     active_on_target = !target_newer_state && (target_node != NULL)
                        && target_node->details->online;
 
@@ -3333,8 +3334,8 @@ unpack_migrate_to_success(struct action_history *history)
     }
 
     if (active_on_target) {
-        pcmk_node_t *source_node = pe_find_node(history->rsc->cluster->nodes,
-                                                source);
+        pcmk_node_t *source_node = pcmk__find_node_in_list(history->rsc->cluster->nodes,
+                                                           source);
 
         native_add_running(history->rsc, target_node, history->rsc->cluster,
                            FALSE);
@@ -3402,8 +3403,8 @@ unpack_migrate_to_failure(struct action_history *history)
          * active there.
          * (if it is up).
          */
-        pcmk_node_t *target_node = pe_find_node(history->rsc->cluster->nodes,
-                                                target);
+        pcmk_node_t *target_node = pcmk__find_node_in_list(history->rsc->cluster->nodes,
+                                                           target);
 
         if (target_node && target_node->details->online) {
             native_add_running(history->rsc, target_node, history->rsc->cluster,
@@ -3468,8 +3469,8 @@ unpack_migrate_from_failure(struct action_history *history)
         /* The resource has no newer state on the source, so assume it's still
          * active there (if it is up).
          */
-        pcmk_node_t *source_node = pe_find_node(history->rsc->cluster->nodes,
-                                                source);
+        pcmk_node_t *source_node = pcmk__find_node_in_list(history->rsc->cluster->nodes,
+                                                           source);
 
         if (source_node && source_node->details->online) {
             native_add_running(history->rsc, source_node, history->rsc->cluster,
@@ -4140,7 +4141,8 @@ static void
 order_after_remote_fencing(pcmk_action_t *action, pcmk_resource_t *remote_conn,
                            pcmk_scheduler_t *scheduler)
 {
-    pcmk_node_t *remote_node = pe_find_node(scheduler->nodes, remote_conn->id);
+    pcmk_node_t *remote_node = pcmk__find_node_in_list(scheduler->nodes,
+                                                       remote_conn->id);
 
     if (remote_node) {
         pcmk_action_t *fence = pe_fence_op(remote_node, NULL, TRUE, NULL,
@@ -4179,7 +4181,8 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
         && (interval_ms != 0)
         && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
-        pcmk_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
+        pcmk_node_t *remote_node = pcmk__find_node_in_list(rsc->cluster->nodes,
+                                                           rsc->id);
 
         if (remote_node && !remote_node->details->remote_was_fenced) {
             if (is_last_failure) {
@@ -4738,7 +4741,7 @@ process_pending_action(struct action_history *history,
 
         migrate_target = crm_element_value(history->xml,
                                            PCMK__META_MIGRATE_TARGET);
-        target = pe_find_node(history->rsc->cluster->nodes, migrate_target);
+        target = pcmk__find_node_in_list(history->rsc->cluster->nodes, migrate_target);
         if (target != NULL) {
             stop_action(history->rsc, target, FALSE);
         }
@@ -5123,7 +5126,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 continue;
             }
 
-            this_node = pe_find_node(scheduler->nodes, uname);
+            this_node = pcmk__find_node_in_list(scheduler->nodes, uname);
             if(this_node == NULL) {
                 CRM_LOG_ASSERT(this_node != NULL);
                 continue;

@@ -136,3 +136,28 @@ pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
         crm_xml_add_int(xml, PCMK__XA_ATTR_HOST_ID, nodeid);
     }
 }
+
+/*!
+ * \internal
+ * \brief Find a node by name in a list of nodes
+ *
+ * \param[in] nodes      List of nodes (as pcmk_node_t*)
+ * \param[in] node_name  Name of node to find
+ *
+ * \return Node from \p nodes that matches \p node_name if any, otherwise NULL
+ */
+pcmk_node_t *
+pcmk__find_node_in_list(const GList *nodes, const char *node_name)
+{
+    if (node_name != NULL) {
+        for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
+            pcmk_node_t *node = (pcmk_node_t *) iter->data;
+
+            if (pcmk__str_eq(node->details->uname, node_name,
+                             pcmk__str_casei)) {
+                return node;
+            }
+        }
+    }
+    return NULL;
+}

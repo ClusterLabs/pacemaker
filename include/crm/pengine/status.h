@@ -38,7 +38,6 @@ void pe_reset_working_set(pcmk_scheduler_t *scheduler);
 pcmk_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
 pcmk_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id,
                                              enum pe_find flags);
-pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);
 pcmk_node_t *pe_find_node_id(const GList *node_list, const char *id);
 pcmk_node_t *pe_find_node_any(const GList *node_list, const char *id,
                             const char *node_name);

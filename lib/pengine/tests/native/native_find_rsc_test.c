@@ -50,9 +50,9 @@ setup(void **state) {
     cluster_status(scheduler);
 
     /* Get references to the cluster nodes so we don't have to find them repeatedly. */
-    cluster01 = pe_find_node(scheduler->nodes, "cluster01");
-    cluster02 = pe_find_node(scheduler->nodes, "cluster02");
-    httpd_bundle_0 = pe_find_node(scheduler->nodes, "httpd-bundle-0");
+    cluster01 = pcmk__find_node_in_list(scheduler->nodes, "cluster01");
+    cluster02 = pcmk__find_node_in_list(scheduler->nodes, "cluster02");
+    httpd_bundle_0 = pcmk__find_node_in_list(scheduler->nodes, "httpd-bundle-0");
 
     /* Get references to several resources we use frequently. */
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {

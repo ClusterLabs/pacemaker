@@ -27,6 +27,9 @@ extern "C" {
  *             release.
  */
 
+//! \deprecated Do not use
+pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);
+
 //! \deprecated Compare variant directly instead
 static inline bool
 pe_rsc_is_clone(const pcmk_resource_t *rsc)

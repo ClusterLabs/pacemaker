@@ -815,7 +815,7 @@ pe__build_node_name_list(pcmk_scheduler_t *scheduler, const char *s)
          */
         nodes = g_list_prepend(nodes, strdup("*"));
     } else {
-        pcmk_node_t *node = pe_find_node(scheduler->nodes, s);
+        pcmk_node_t *node = pcmk__find_node_in_list(scheduler->nodes, s);
 
         if (node) {
             /* The given string was a valid uname for a node.  Return a
