@@ -779,10 +779,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_IS_MANAGED);
-    if ((value != NULL)
-        && !pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-
-        if (crm_is_true(value)) {
+    if (value != NULL) {
+        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting " PCMK_META_IS_MANAGED
+                              " to the explicit value '" PCMK_VALUE_DEFAULT
+                              "' is deprecated and will be removed in a "
+                              "future release (just leave it unset)");
+        } else if (crm_is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
         } else {
             pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
@@ -862,26 +866,40 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_RESOURCE_STICKINESS);
-    if ((value != NULL)
-        && !pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-
-        (*rsc)->stickiness = char2score(value);
+    if (value != NULL) {
+        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting "
+                              PCMK_META_RESOURCE_STICKINESS
+                              " to the explicit value '" PCMK_VALUE_DEFAULT
+                              "' is deprecated and will be removed in a "
+                              "future release (just leave it unset)");
+        } else {
+            (*rsc)->stickiness = char2score(value);
+        }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MIGRATION_THRESHOLD);
-    if ((value != NULL)
-        && !pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
-
-        (*rsc)->migration_threshold = char2score(value);
-        if ((*rsc)->migration_threshold < 0) {
-            /* @TODO We use 1 here to preserve previous behavior, but this
-             * should probably use the default (INFINITY) or 0 (to disable)
-             * instead.
-             */
-            pcmk__warn_once(pcmk__wo_neg_threshold,
-                            PCMK_META_MIGRATION_THRESHOLD
-                            " must be non-negative, using 1 instead");
-            (*rsc)->migration_threshold = 1;
+    if (value != NULL) {
+        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting "
+                              PCMK_META_MIGRATION_THRESHOLD
+                              " to the explicit value '" PCMK_VALUE_DEFAULT
+                              "' is deprecated and will be removed in a "
+                              "future release (just leave it unset)");
+        } else {
+            (*rsc)->migration_threshold = char2score(value);
+            if ((*rsc)->migration_threshold < 0) {
+                /* @COMPAT We use 1 here to preserve previous behavior, but this
+                 * should probably use the default (INFINITY) or 0 (to disable)
+                 * instead.
+                 */
+                pcmk__warn_once(pcmk__wo_neg_threshold,
+                                PCMK_META_MIGRATION_THRESHOLD
+                                " must be non-negative, using 1 instead");
+                (*rsc)->migration_threshold = 1;
+            }
         }
     }
 
