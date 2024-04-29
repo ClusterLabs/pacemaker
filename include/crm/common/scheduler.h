@@ -170,68 +170,78 @@ enum pcmk_scheduler_flags {
     pcmk_sched_validate_only            = (1ULL << 27),
 };
 
-//! Implementation of pcmk_scheduler_t
+// Implementation of pcmk_scheduler_t
+// @COMPAT Make contents internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 struct pe_working_set_s {
     // Be careful about when each piece of information is available and final
 
-    xmlNode *input;                 //!< CIB XML
-    crm_time_t *now;                //!< Current time for evaluation purposes
-    char *dc_uuid;                  //!< Node ID of designated controller
-    pcmk_node_t *dc_node;           //!< Node object for DC
-    const char *stonith_action;     //!< Default fencing action
-    const char *placement_strategy; //!< Value of placement-strategy property
+    //! \deprecated To set scheduler iput, use pcmk_set_scheduler_cib() instead
+    xmlNode *input;                 // CIB XML
+
+    crm_time_t *now;                // Current time for evaluation purposes
+    char *dc_uuid;                  // Node ID of designated controller
+
+    //! \deprecated Call pcmk_get_dc() instead
+    pcmk_node_t *dc_node;           // Node object for DC
+
+    const char *stonith_action;     // Default fencing action
+    const char *placement_strategy; // Value of placement-strategy property
 
     // @COMPAT Change to uint64_t at a compatibility break
-    unsigned long long flags;       //!< Group of enum pcmk_scheduler_flags
+    //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
+    unsigned long long flags;       // Group of enum pcmk_scheduler_flags
 
-    int stonith_timeout;            //!< Value of stonith-timeout property
-    enum pe_quorum_policy no_quorum_policy; //!< Response to loss of quorum
-    GHashTable *config_hash;        //!< Cluster properties
+    int stonith_timeout;            // Value of stonith-timeout property
+    enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
+    GHashTable *config_hash;        // Cluster properties
 
-    //!< Ticket constraints unpacked from ticket state
+    // Ticket constraints unpacked from ticket state
     GHashTable *tickets;
 
-    //! Actions for which there can be only one (such as "fence node X")
+    // Actions for which there can be only one (such as "fence node X")
     GHashTable *singletons;
 
-    GList *nodes;                   //!< Nodes in cluster
-    GList *resources;               //!< Resources in cluster
-    GList *placement_constraints;   //!< Location constraints
-    GList *ordering_constraints;    //!< Ordering constraints
-    GList *colocation_constraints;  //!< Colocation constraints
+    GList *nodes;                   // Nodes in cluster
+    GList *resources;               // Resources in cluster
+    GList *placement_constraints;   // Location constraints
+    GList *ordering_constraints;    // Ordering constraints
+    GList *colocation_constraints;  // Colocation constraints
 
-    //!< Ticket constraints unpacked by libpacemaker
+    // Ticket constraints unpacked by libpacemaker
     GList *ticket_constraints;
 
-    GList *actions;                 //!< Scheduled actions
-    xmlNode *failed;                //!< History entries of failed actions
-    xmlNode *op_defaults;           //!< Configured operation defaults
-    xmlNode *rsc_defaults;          //!< Configured resource defaults
-    int num_synapse;                //!< Number of transition graph synapses
-    int max_valid_nodes;            //!< \deprecated Do not use
-    int order_id;                   //!< ID to use for next created ordering
-    int action_id;                  //!< ID to use for next created action
-    xmlNode *graph;                 //!< Transition graph
-    GHashTable *template_rsc_sets;  //!< Mappings of template ID to resource ID
+    GList *actions;                 // Scheduled actions
+    xmlNode *failed;                // History entries of failed actions
+    xmlNode *op_defaults;           // Configured operation defaults
+    xmlNode *rsc_defaults;          // Configured resource defaults
+    int num_synapse;                // Number of transition graph synapses
+    int max_valid_nodes;            // \deprecated Do not use
+    int order_id;                   // ID to use for next created ordering
+    int action_id;                  // ID to use for next created action
+    xmlNode *graph;                 // Transition graph
+    GHashTable *template_rsc_sets;  // Mappings of template ID to resource ID
 
     // @COMPAT Replace this with a fencer variable (only place it's used)
-    const char *localhost;          //!< \deprecated Do not use
+    const char *localhost;          // \deprecated Do not use
 
-    GHashTable *tags;               //!< Configuration tags (ID -> pcmk_tag_t *)
-    int blocked_resources;          //!< Number of blocked resources in cluster
-    int disabled_resources;         //!< Number of disabled resources in cluster
-    GList *param_check;             //!< History entries that need to be checked
-    GList *stop_needed;             //!< Containers that need stop actions
-    time_t recheck_by;              //!< Hint to controller when to reschedule
-    int ninstances;                 //!< Total number of resource instances
-    guint shutdown_lock;            //!< How long to lock resources (seconds)
-    int priority_fencing_delay;     //!< Priority fencing delay
+    GHashTable *tags;               // Configuration tags (ID -> pcmk_tag_t *)
+    int blocked_resources;          // Number of blocked resources in cluster
+    int disabled_resources;         // Number of disabled resources in cluster
+    GList *param_check;             // History entries that need to be checked
+    GList *stop_needed;             // Containers that need stop actions
+    time_t recheck_by;              // Hint to controller when to reschedule
+    int ninstances;                 // Total number of resource instances
+    guint shutdown_lock;            // How long to lock resources (seconds)
+    int priority_fencing_delay;     // Priority fencing delay
 
     // pcmk__output_t *
-    void *priv;                     //!< For Pacemaker use only
+    void *priv;                     // For Pacemaker use only
 
-    guint node_pending_timeout;     //!< Pending join times out after this (ms)
+    guint node_pending_timeout;     // Pending join times out after this (ms)
 };
+//!@}
 
 /* Whether the scheduler input currently being processed has warnings or errors
  *
