@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_RESOURCES__H
 #  define PCMK__CRM_COMMON_RESOURCES__H
 
+#include <stdbool.h>                    // bool
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode
 #include <glib.h>                       // gboolean, guint, GList, GHashTable
@@ -262,12 +263,15 @@ enum pe_print_options {
 //!@}
 
 // Resource assignment methods (implementation defined by libpacemaker)
-//! This type should be considered internal to Pacemaker
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct resource_alloc_functions_s pcmk_assignment_methods_t;
 
-//! Resource object methods
+// Resource object methods
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct resource_object_functions_s {
-    /*!
+    /*
      * \brief Parse variant-specific resource XML from CIB into struct members
      *
      * \param[in,out] rsc        Partially unpacked resource
@@ -277,7 +281,7 @@ typedef struct resource_object_functions_s {
      */
     gboolean (*unpack)(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler);
 
-    /*!
+    /*
      * \brief Search for a resource ID in a resource and its children
      *
      * \param[in] rsc      Search this resource and its children
@@ -290,7 +294,7 @@ typedef struct resource_object_functions_s {
     pcmk_resource_t *(*find_rsc)(pcmk_resource_t *rsc, const char *search,
                                  const pcmk_node_t *node, int flags);
 
-    /*!
+    /*
      * \brief Get value of a resource instance attribute
      *
      * \param[in,out] rsc        Resource to check
@@ -305,11 +309,11 @@ typedef struct resource_object_functions_s {
     char *(*parameter)(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                        const char *name, pcmk_scheduler_t *scheduler);
 
-    //! \deprecated Do not use
+    // \deprecated Do not use
     void (*print)(pcmk_resource_t *rsc, const char *pre_text, long options,
                   void *print_data);
 
-    /*!
+    /*
      * \brief Check whether a resource is active
      *
      * \param[in] rsc  Resource to check
@@ -319,7 +323,7 @@ typedef struct resource_object_functions_s {
      */
     gboolean (*active)(pcmk_resource_t *rsc, gboolean all);
 
-    /*!
+    /*
      * \brief Get resource's current or assigned role
      *
      * \param[in] rsc      Resource to check
@@ -329,7 +333,7 @@ typedef struct resource_object_functions_s {
      */
     enum rsc_role_e (*state)(const pcmk_resource_t *rsc, gboolean current);
 
-    /*!
+    /*
      * \brief List nodes where a resource (or any of its children) is
      *
      * \param[in]  rsc      Resource to check
@@ -342,14 +346,14 @@ typedef struct resource_object_functions_s {
     pcmk_node_t *(*location)(const pcmk_resource_t *rsc, GList **list,
                              int current);
 
-    /*!
+    /*
      * \brief Free all memory used by a resource
      *
      * \param[in,out] rsc  Resource to free
      */
     void (*free)(pcmk_resource_t *rsc);
 
-    /*!
+    /*
      * \brief Increment cluster's instance counts for a resource
      *
      * Given a resource, increment its cluster's ninstances, disabled_resources,
@@ -359,7 +363,7 @@ typedef struct resource_object_functions_s {
      */
     void (*count)(pcmk_resource_t *rsc);
 
-    /*!
+    /*
      * \brief Check whether a given resource is in a list of resources
      *
      * \param[in] rsc           Resource ID to check for
@@ -372,7 +376,7 @@ typedef struct resource_object_functions_s {
     gboolean (*is_filtered)(const pcmk_resource_t *rsc, GList *only_rsc,
                             gboolean check_parent);
 
-    /*!
+    /*
      * \brief Find a node (and optionally count all) where resource is active
      *
      * \param[in]  rsc          Resource to check
@@ -388,7 +392,7 @@ typedef struct resource_object_functions_s {
                                 unsigned int *count_all,
                                 unsigned int *count_clean);
 
-    /*!
+    /*
      * \brief Get maximum resource instances per node
      *
      * \param[in] rsc  Resource to check
@@ -397,43 +401,51 @@ typedef struct resource_object_functions_s {
      */
     unsigned int (*max_per_node)(const pcmk_resource_t *rsc);
 } pcmk_rsc_methods_t;
+//!@}
 
-//! Implementation of pcmk_resource_t
+// Implementation of pcmk_resource_t
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 struct pe_resource_s {
-    char *id;                           //!< Resource ID in configuration
-    char *clone_name;                   //!< Resource instance ID in history
+    //! \deprecated Call pcmk_resource_id() instead
+    char *id;                           // Resource ID in configuration
 
-    //! Resource configuration (possibly expanded from template)
+    char *clone_name;                   // Resource instance ID in history
+
+    // Resource configuration (possibly expanded from template)
     xmlNode *xml;
 
-    //! Original resource configuration, if using template
+    // Original resource configuration, if using template
     xmlNode *orig_xml;
 
-    //! Configuration of resource operations (possibly expanded from template)
+    // Configuration of resource operations (possibly expanded from template)
     xmlNode *ops_xml;
 
-    pcmk_scheduler_t *cluster;          //!< Cluster that resource is part of
-    pcmk_resource_t *parent;            //!< Resource's parent resource, if any
-    enum pe_obj_types variant;          //!< Resource variant
-    void *variant_opaque;               //!< Variant-specific (and private) data
-    pcmk_rsc_methods_t *fns;            //!< Resource object methods
-    pcmk_assignment_methods_t *cmds;    //!< Resource assignment methods
+    pcmk_scheduler_t *cluster;          // Cluster that resource is part of
+    pcmk_resource_t *parent;            // Resource's parent resource, if any
+    enum pe_obj_types variant;          // Resource variant
+    void *variant_opaque;               // Variant-specific (and private) data
+    pcmk_rsc_methods_t *fns;            // Resource object methods
+    pcmk_assignment_methods_t *cmds;    // Resource assignment methods
 
-    enum rsc_recovery_type recovery_type;   //!< How to recover if failed
+    enum rsc_recovery_type recovery_type;   // How to recover if failed
 
-    enum pe_restart restart_type;   //!< \deprecated Do not use
-    int priority;                   //!< Configured priority
-    int stickiness;                 //!< Extra preference for current node
-    int sort_index;                 //!< Promotion score on assigned node
-    int failure_timeout;            //!< Failure timeout
-    int migration_threshold;        //!< Migration threshold
-    guint remote_reconnect_ms;      //!< Retry interval for remote connections
-    char *pending_task;             //!< Pending action in history, if any
-    unsigned long long flags;       //!< Group of enum pcmk_rsc_flags
+    enum pe_restart restart_type;   // \deprecated Do not use
+    int priority;                   // Configured priority
+    int stickiness;                 // Extra preference for current node
+    int sort_index;                 // Promotion score on assigned node
+    int failure_timeout;            // Failure timeout
+    int migration_threshold;        // Migration threshold
+    guint remote_reconnect_ms;      // Retry interval for remote connections
+    char *pending_task;             // Pending action in history, if any
+
+    //! \deprecated Call pcmk_resource_is_managed() instead
+    unsigned long long flags;       // Group of enum pcmk_rsc_flags
 
     // @TODO Merge these into flags
-    gboolean is_remote_node;        //!< Whether this is a remote connection
-    gboolean exclusive_discover;    //!< Whether exclusive probing is enabled
+    gboolean is_remote_node;        // Whether this is a remote connection
+    gboolean exclusive_discover;    // Whether exclusive probing is enabled
 
     /* Pay special attention to whether you want to use rsc_cons_lhs and
      * rsc_cons directly, which include only colocations explicitly involving
@@ -442,54 +454,51 @@ struct pe_resource_s {
      * colocations involving the resource's ancestors as well.
      */
 
-    //!@{
-    //! This field should be treated as internal to Pacemaker
     GList *rsc_cons_lhs;      // Colocations of other resources with this one
     GList *rsc_cons;          // Colocations of this resource with others
     GList *rsc_location;      // Location constraints for resource
     GList *actions;           // Actions scheduled for resource
     GList *rsc_tickets;       // Ticket constraints for resource
-    //!@}
 
-    pcmk_node_t *allocated_to;  //!< Node resource is assigned to
+    pcmk_node_t *allocated_to;  // Node resource is assigned to
 
-    //! The destination node, if migrate_to completed but migrate_from has not
+    // The destination node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_target;
 
-    //! The source node, if migrate_to completed but migrate_from has not
+    // The source node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_source;
 
-    //! Nodes where resource may be active
+    // Nodes where resource may be active
     GList *running_on;
 
-    //! Nodes where resource has been probed (key is node ID, not name)
+    // Nodes where resource has been probed (key is node ID, not name)
     GHashTable *known_on;
 
-    //! Nodes where resource may run (key is node ID, not name)
+    // Nodes where resource may run (key is node ID, not name)
     GHashTable *allowed_nodes;
 
-    enum rsc_role_e role;           //!< Resource's current role
-    enum rsc_role_e next_role;      //!< Resource's scheduled next role
+    enum rsc_role_e role;           // Resource's current role
+    enum rsc_role_e next_role;      // Resource's scheduled next role
 
-    GHashTable *meta;               //!< Resource's meta-attributes
-    GHashTable *parameters;         //!< \deprecated Use pe_rsc_params() instead
-    GHashTable *utilization;        //!< Resource's utilization attributes
+    GHashTable *meta;               // Resource's meta-attributes
+    GHashTable *parameters;         // \deprecated Use pe_rsc_params() instead
+    GHashTable *utilization;        // Resource's utilization attributes
 
-    GList *children;                //!< Resource's child resources, if any
+    GList *children;                // Resource's child resources, if any
 
     // Source nodes where stop is needed after migrate_from and migrate_to
     GList *dangling_migrations;
 
-    pcmk_resource_t *container;     //!< Resource containing this one, if any
-    GList *fillers;                 //!< Resources contained by this one, if any
+    pcmk_resource_t *container;     // Resource containing this one, if any
+    GList *fillers;                 // Resources contained by this one, if any
 
     // @COMPAT These should be made const at next API compatibility break
-    pcmk_node_t *pending_node;      //!< Node on which pending_task is happening
-    pcmk_node_t *lock_node;         //!< Resource shutdown-locked to this node
+    pcmk_node_t *pending_node;      // Node on which pending_task is happening
+    pcmk_node_t *lock_node;         // Resource shutdown-locked to this node
 
-    time_t lock_time;               //!< When shutdown lock started
+    time_t lock_time;               // When shutdown lock started
 
-    /*!
+    /*
      * Resource parameters may have node-attribute-based rules, which means the
      * values can vary by node. This table has node names as keys and parameter
      * name/value tables as values. Use pe_rsc_params() to get the table for a
@@ -497,6 +506,10 @@ struct pe_resource_s {
      */
     GHashTable *parameter_cache;
 };
+//!@}
+
+const char *pcmk_resource_id(const pcmk_resource_t *rsc);
+bool pcmk_resource_is_managed(const pcmk_resource_t *rsc);
 
 const char *pcmk_multiply_active_text(enum rsc_recovery_type recovery);
 
