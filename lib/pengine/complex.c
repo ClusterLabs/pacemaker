@@ -122,11 +122,14 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
     GHashTable *table = user_data;
 
-    CRM_CHECK(table != NULL, return);
-    if ((key != NULL)
-        && !pcmk__str_eq((const char *) value, "#default",
-                         pcmk__str_casei|pcmk__str_null_matches)
-        && (g_hash_table_lookup(table, key) == NULL)) {
+    CRM_CHECK((key != NULL) && (table != NULL), return);
+    if (pcmk__str_eq((const char *) value, "#default", pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting meta-attributes (such as %s) to "
+                          "the explicit value '#default' is deprecated and "
+                          "will be removed in a future release",
+                          (const char *) key);
+    } else if ((value != NULL) && (g_hash_table_lookup(table, key) == NULL)) {
         pcmk__insert_dup(table, (const char *) key, (const char *) value);
     }
 }
