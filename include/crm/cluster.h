@@ -62,13 +62,19 @@ enum crm_join_phase {
 };
 //!@}
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_node_flags {
-    /* node is not a cluster node and should not be considered for cluster membership */
-    crm_remote_node          = 0x0001,
+    /* Node is not a cluster node and should not be considered for cluster
+     * membership
+     */
+    crm_remote_node = (1U << 0),
 
-    /* node's cache entry is dirty */
-    crm_node_dirty           = 0x0010,
+    // Node's cache entry is dirty
+    crm_node_dirty  = (1U << 1),
 };
+//!@}
 
 typedef struct crm_peer_node_s {
     char *uname;                // Node name as known to cluster
