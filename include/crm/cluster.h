@@ -44,6 +44,8 @@ extern unsigned long long crm_peer_seq;
 //! \deprecated Do not use (public access will be removed in a future release)
 #define CRM_NODE_LOST      "lost"
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 #define CRM_NODE_MEMBER    "member"
 
 // @COMPAT Make this internal when we can break API backward compatibility
@@ -158,6 +160,9 @@ enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_ais_msg_types {
     crm_msg_none     = 0,
     crm_msg_ais      = 1,
@@ -170,6 +175,7 @@ enum crm_ais_msg_types {
     crm_msg_pe       = 8,
     crm_msg_stonith_ng = 9,
 };
+//!@}
 
 gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
