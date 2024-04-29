@@ -74,6 +74,23 @@ pcmk_set_scheduler_cib(pcmk_scheduler_t *scheduler, xmlNode *cib)
 }
 
 /*!
+ * \internal
+ * \brief Check whether cluster has quorum
+ *
+ * \param[in] scheduler  Scheduler data
+ *
+ * \return true if cluster has quorum, otherwise false
+ */
+bool
+pcmk_has_quorum(const pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return false;
+    }
+    return pcmk_is_set(scheduler->flags, pcmk_sched_quorate);
+}
+
+/*!
  * \brief Find a node by name in scheduler data
  *
  * \param[in] scheduler  Scheduler data
