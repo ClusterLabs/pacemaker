@@ -24,6 +24,8 @@ extern "C" {
 #    include <corosync/cpg.h>
 #  endif
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 extern gboolean crm_have_quorum;
 
 // @COMPAT Make this internal when we can break API backward compatibility
