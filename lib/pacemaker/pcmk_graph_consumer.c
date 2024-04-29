@@ -610,12 +610,10 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
             pcmk__clear_graph_action_flags(action, pcmk__graph_action_can_fail);
         }
 
-#ifndef PCMK__COMPAT_2_0
         if (pcmk_is_set(action->flags, pcmk__graph_action_can_fail)) {
             crm_warn("Support for the " PCMK__META_CAN_FAIL " meta-attribute "
                      "is deprecated and will be removed in a future release");
         }
-#endif
     }
 
     crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
