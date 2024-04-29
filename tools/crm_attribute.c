@@ -564,7 +564,6 @@ output_one_attribute(xmlNode *node, void *userdata)
 
     const char *name = crm_element_value(node, PCMK_XA_NAME);
     const char *value = crm_element_value(node, PCMK_XA_VALUE);
-    const char *host = crm_element_value(node, PCMK__XA_ATTR_HOST);
 
     const char *type = options.type;
     const char *attr_id = options.attr_id;
@@ -573,7 +572,7 @@ output_one_attribute(xmlNode *node, void *userdata)
         return pcmk_rc_ok;
     }
 
-    od->out->message(od->out, "attribute", type, attr_id, name, value, host,
+    od->out->message(od->out, "attribute", type, attr_id, name, value, NULL,
                      od->out->quiet);
     od->did_output = true;
     crm_info("Read %s='%s' %s%s",
@@ -612,10 +611,9 @@ command_query(pcmk__output_t *out, cib_t *cib)
         const char *attr_id = options.attr_id;
         const char *attr_name = options.attr_name;
         const char *attr_default = options.attr_default;
-        const char *dest_uname = options.dest_uname;
 
         out->message(out, "attribute", type, attr_id, attr_name, attr_default,
-                     dest_uname, out->quiet);
+                     NULL, out->quiet);
         rc = pcmk_rc_ok;
 
     } else if (rc != pcmk_rc_ok) {
