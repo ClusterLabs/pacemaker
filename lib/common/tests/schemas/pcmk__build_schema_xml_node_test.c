@@ -34,6 +34,7 @@ setup(void **state)
 {
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
     crm_schema_init();
+    pcmk__xml_test_setup_group(state);
     return 0;
 }
 

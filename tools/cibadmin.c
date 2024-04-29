@@ -52,6 +52,7 @@ static struct {
     gboolean get_node_path;
     gboolean local;
     gboolean no_children;
+    gboolean score_update;
     gboolean sync_call;
 
     /* @COMPAT: For "-!" version option. Not advertised nor marked as
@@ -387,6 +388,32 @@ static GOptionEntry addl_entries[] = {
       INDENT "                'namespace', or 'auto' (use default value)\n"
       INDENT "Default value: 'auto'",
       "[value]" },
+
+    { "score", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.score_update,
+      "Treat new attribute values as atomic score updates where possible "
+      "(with --modify/-M)\n\n"
+
+      INDENT "This currently happens by default and cannot be disabled, but\n"
+      INDENT "this default behavior is deprecated and will be removed in a\n"
+      INDENT "future release. Set this flag if this behavior is desired.\n\n"
+
+      INDENT "This option takes effect when updating XML attributes. For an\n"
+      INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
+      INDENT "\"name+=X\" for some score X, the new value is set as follows:\n"
+      INDENT " * If attribute \"name\" is not already set to some value in\n"
+      INDENT "   the element being updated, the new value is set as a literal\n"
+      INDENT "   string.\n"
+      INDENT " * If the new value is \"name++\", then the attribute is set to\n"
+      INDENT "   its existing value (parsed as a score) plus 1.\n"
+      INDENT " * If the new value is \"name+=X\" for some score X, then the\n"
+      INDENT "   attribute is set to its existing value plus X, where the\n"
+      INDENT "   existing value and X are parsed and added as scores.\n\n"
+
+      INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
+      INDENT "Refer to Pacemaker Explained and to the char2score() function\n"
+      INDENT "for more details on scores, including how they're parsed and\n"
+      INDENT "added.",
+      NULL },
 
     { "allow-create", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.allow_create,
@@ -759,6 +786,14 @@ main(int argc, char **argv)
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         goto done;
+
+    } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
+                            pcmk__str_none)) {
+        /* @COMPAT When we drop default support for expansion in cibadmin, guard
+         * with `if (options.score_update)`
+         */
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_score_update);
     }
 
     rc = do_init();
@@ -775,9 +810,13 @@ main(int argc, char **argv)
     }
 
     rc = do_work(input, &output);
-    if (rc > 0) {
-        /* wait for the reply by creating a mainloop and running it until
-         * the callbacks are invoked...
+    if (!pcmk_is_set(options.cmd_options, cib_sync_call)
+        && (the_cib->variant != cib_file)
+        && (rc >= 0)) {
+        /* For async call, positive rc is the call ID (file always synchronous).
+         *
+         * Wait for the reply by creating a mainloop and running it until the
+         * callbacks are invoked.
          */
         request_id = rc;
 
@@ -793,32 +832,36 @@ main(int argc, char **argv)
         crm_info("Starting mainloop");
         g_main_loop_run(mainloop);
 
-    } else if ((rc == -pcmk_err_schema_unchanged)
-               && (strcmp(options.cib_action,
-                          PCMK__CIB_REQUEST_UPGRADE) == 0)) {
-        report_schema_unchanged();
-
-    } else if (rc < 0) {
+    } else {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
-        if (rc == pcmk_rc_schema_validation) {
-            if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
-                xmlNode *obj = NULL;
+        if ((rc == pcmk_rc_schema_unchanged)
+            && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
 
-                if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                         options.cmd_options) == pcmk_ok) {
-                    pcmk__update_schema(&obj, NULL, true, false);
+            report_schema_unchanged();
+
+        } else if (rc != pcmk_rc_ok) {
+            crm_err("Call failed: %s", pcmk_rc_str(rc));
+            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
+
+            if (rc == pcmk_rc_schema_validation) {
+                if (strcmp(options.cib_action,
+                           PCMK__CIB_REQUEST_UPGRADE) == 0) {
+                    xmlNode *obj = NULL;
+
+                    if (the_cib->cmds->query(the_cib, NULL, &obj,
+                                             options.cmd_options) == pcmk_ok) {
+                        pcmk__update_schema(&obj, NULL, true, false);
+                    }
+                    free_xml(obj);
+
+                } else if (output != NULL) {
+                    // Show validation errors to stderr
+                    pcmk__validate_xml(output, NULL, NULL, NULL);
                 }
-                free_xml(obj);
-
-            } else if (output) {
-                // Show validation errors to stderr
-                pcmk__validate_xml(output, NULL, NULL, NULL);
             }
         }
-        exit_code = pcmk_rc2exitc(rc);
     }
 
     if ((output != NULL)

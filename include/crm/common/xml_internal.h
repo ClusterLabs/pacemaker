@@ -15,6 +15,7 @@
  */
 
 #  include <stdlib.h>
+#  include <stdint.h>   // uint32_t
 #  include <stdio.h>
 #  include <string.h>
 
@@ -222,7 +223,7 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     void *user_data);
 int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
 int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
-int pcmk__xe_update_match(xmlNode *xml, xmlNode *update);
+int pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags);
 
 GString *pcmk__element_xpath(const xmlNode *xml);
 
@@ -424,6 +425,27 @@ xmlNode *pcmk__xe_next_same(const xmlNode *node);
 
 void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
+
+/*!
+ * \internal
+ * \enum pcmk__xa_flags
+ * \brief Flags for operations affecting XML attributes
+ */
+enum pcmk__xa_flags {
+    //! Flag has no effect
+    pcmk__xaf_none          = 0U,
+
+    //! Don't overwrite existing values
+    pcmk__xaf_no_overwrite  = (1U << 0),
+
+    /*!
+     * Treat values as score updates where possible (see
+     * \c pcmk__xe_set_score())
+     */
+    pcmk__xaf_score_update  = (1U << 1),
+};
+
+int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
 
 /*!
  * \internal

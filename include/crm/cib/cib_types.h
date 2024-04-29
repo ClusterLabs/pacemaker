@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -98,6 +98,28 @@ enum cib_call_options {
      * transactions.
      */
     cib_transaction     = (1 << 10),
+
+    /*!
+     * \brief Treat new attribute values as atomic score updates where possible
+     *
+     * This option takes effect when updating XML attributes. For an attribute
+     * named \c "name", if the new value is \c "name++" or \c "name+=X" for some
+     * score \c X, the new value is set as follows:
+     * * If attribute \c "name" is not already set to some value in the element
+     *   being updated, the new value is set as a literal string.
+     * * If the new value is \c "name++", then the attribute is set to its
+     *   existing value (parsed as a score) plus 1.
+     * * If the new value is \c "name+=X" for some score \c X, then the
+     *   attribute is set to its existing value plus \c X, where the existing
+     *   value and \c X are parsed and added as scores.
+     *
+     * Scores are integer values capped at \c INFINITY and \c -INFINITY. Refer
+     * to Pacemaker Explained and to the \c char2score() function for more
+     * details on scores, including how they're parsed and added.
+     *
+     * Note: This is implemented only for modify operations.
+     */
+    cib_score_update    = (1 << 11),
 
     cib_sync_call       = (1 << 12),
     cib_no_mtime        = (1 << 13),

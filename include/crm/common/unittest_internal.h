@@ -52,8 +52,7 @@ void pcmk__assert_validates(xmlNode *xml);
 
 /*!
  * \internal
- * \brief Perform setup for a group of unit tests that will eventually access
- *        a CIB.
+ * \brief Perform setup for a group of unit tests that will manipulate XML
  *
  * This function is suitable for being passed as the first argument to the
  * \c PCMK__UNIT_TEST macro.
@@ -61,7 +60,7 @@ void pcmk__assert_validates(xmlNode *xml);
  * \param[in] state     The cmocka state object, currently unused by this
  *                      function
  */
-int pcmk__cib_test_setup_group(void **state);
+int pcmk__xml_test_setup_group(void **state);
 
 /*!
  * \internal

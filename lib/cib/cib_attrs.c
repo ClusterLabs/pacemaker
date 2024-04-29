@@ -133,14 +133,14 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL,
                          (const char *) xpath->str, NULL, &xml_search,
                          cib_sync_call|cib_scope_local|cib_xpath, user_name);
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
                   attr_name, section, pcmk__s(node_uuid, "<null>"),
                   pcmk__s(set_name, "<null>"), (const char *) xpath->str,
                   pcmk_rc_str(rc));
     } else {
-        rc = pcmk_rc_ok;
         crm_log_xml_debug(xml_search, "Match");
     }
 
@@ -318,15 +318,20 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     crm_log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
                          NULL, call_options, user_name);
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
 
+    if (!pcmk_is_set(call_options, cib_sync_call) && (cib->variant != cib_file)
+        && (rc >= 0)) {
+        // For async call, positive rc is the call ID (file always synchronous)
+        rc = pcmk_rc_ok;
+    } else {
+        rc = pcmk_legacy2rc(rc);
+    }
+
+    if (rc != pcmk_rc_ok) {
         out->err(out, "Error setting %s=%s (section=%s, set=%s): %s",
                  attr_name, attr_value, section, pcmk__s(set_name, "<null>"),
                  pcmk_rc_str(rc));
         crm_log_xml_info(xml_top, "Update");
-    } else {
-        rc = pcmk_rc_ok;
     }
 
     free(local_set_name);
@@ -394,16 +399,21 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, xml_obj,
                          NULL, options, user_name);
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
-    } else {
+
+    if (!pcmk_is_set(options, cib_sync_call) && (cib->variant != cib_file)
+        && (rc >= 0)) {
+        // For async call, positive rc is the call ID (file always synchronous)
         rc = pcmk_rc_ok;
+    } else {
+        rc = pcmk_legacy2rc(rc);
+    }
+
+    if (rc == pcmk_rc_ok) {
         out->info(out, "Deleted %s %s: id=%s%s%s%s%s",
                   section, node_uuid ? "attribute" : "option", local_attr_id,
                   set_name ? " set=" : "", set_name ? set_name : "",
                   attr_name ? " name=" : "", attr_name ? attr_name : "");
     }
-
     free(local_attr_id);
     free_xml(xml_obj);
     return rc;

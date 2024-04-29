@@ -266,10 +266,10 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
                 crm_trace("Matched %s with %s", attr, regex);
                 matched = true;
 
-                /* Copy all the attributes from the parent over, but remove the
-                 * regex and replace it with the name.
+                /* Copy all the non-conflicting attributes from the parent over,
+                 * but remove the regex and replace it with the name.
                  */
-                attrd_copy_xml_attributes(xml, child);
+                pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
                 pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
                 crm_xml_add(child, PCMK__XA_ATTR_NAME, attr);
             }

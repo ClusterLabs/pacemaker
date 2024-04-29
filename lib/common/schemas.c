@@ -39,6 +39,7 @@ typedef struct {
 } relaxng_ctx_cache_t;
 
 static GList *known_schemas = NULL;
+static bool initialized = false;
 static bool silent_logging = FALSE;
 
 static void G_GNUC_PRINTF(2, 3)
@@ -467,40 +468,44 @@ pcmk__sort_schemas(void)
 void
 crm_schema_init(void)
 {
-    const char *remote_schema_dir = pcmk__remote_schema_dir();
-    char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
-    const pcmk__schema_version_t zero = SCHEMA_ZERO;
-    int schema_index = 0;
+    if (!initialized) {
+        const char *remote_schema_dir = pcmk__remote_schema_dir();
+        char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
+        const pcmk__schema_version_t zero = SCHEMA_ZERO;
+        int schema_index = 0;
 
-    wrap_libxslt(false);
+        initialized = true;
 
-    pcmk__load_schemas_from_dir(base);
-    pcmk__load_schemas_from_dir(remote_schema_dir);
+        wrap_libxslt(false);
 
-    // @COMPAT: Deprecated since 2.1.5
-    add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next",
-               NULL, NULL, FALSE);
+        pcmk__load_schemas_from_dir(base);
+        pcmk__load_schemas_from_dir(remote_schema_dir);
 
-    add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE,
-               NULL, NULL, FALSE);
+        // @COMPAT: Deprecated since 2.1.5
+        add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next", NULL,
+                   NULL, FALSE);
 
-    /* add_schema() prepends items to the list, so in the simple case, this just
-     * reverses the list. However if there were any remote schemas, sorting is
-     * necessary.
-     */
-    pcmk__sort_schemas();
+        add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE, NULL,
+                   NULL, FALSE);
 
-    // Now set the schema indexes and log the final result
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        pcmk__schema_t *schema = iter->data;
+        /* add_schema() prepends items to the list, so in the simple case, this
+         * just reverses the list. However if there were any remote schemas,
+         * sorting is necessary.
+         */
+        pcmk__sort_schemas();
 
-        if (schema->transform == NULL) {
-            crm_debug("Loaded schema %d: %s", schema_index, schema->name);
-        } else {
-            crm_debug("Loaded schema %d: %s (upgrades with %s.xsl)",
-                      schema_index, schema->name, schema->transform);
+        // Now set the schema indexes and log the final result
+        for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
+            pcmk__schema_t *schema = iter->data;
+
+            if (schema->transform == NULL) {
+                crm_debug("Loaded schema %d: %s", schema_index, schema->name);
+            } else {
+                crm_debug("Loaded schema %d: %s (upgrades with %s.xsl)",
+                          schema_index, schema->name, schema->transform);
+            }
+            schema->schema_index = schema_index++;
         }
-        schema->schema_index = schema_index++;
     }
 }
 
@@ -635,6 +640,7 @@ crm_schema_cleanup(void)
 {
     g_list_free_full(known_schemas, free_schema);
     known_schemas = NULL;
+    initialized = false;
 
     wrap_libxslt(true);
 }

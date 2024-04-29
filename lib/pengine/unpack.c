@@ -1962,7 +1962,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     pcmk_resource_t *rsc = NULL;
     xmlNode *xml_rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
-    copy_in_properties(xml_rsc, rsc_entry);
+    pcmk__xe_copy_attrs(xml_rsc, rsc_entry, pcmk__xaf_none);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 

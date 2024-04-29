@@ -937,7 +937,7 @@ crm_attribute: Error performing operation: No such device or address
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="5"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -948,14 +948,230 @@ crm_attribute: Error performing operation: No such device or address
 </cib>
 =#=#=#= End test: Configure something before erasing - OK (0) =#=#=#=
 * Passed: crm_attribute  - Configure something before erasing
-=#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
-cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
-=#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+=#=#=#= Begin test: Test '++' XML attribute update syntax =#=#=#=
+=#=#=#= Current cib after: Test '++' XML attribute update syntax =#=#=#=
+<cib epoch="2" num_updates="1" admin_epoch="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="5"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '++' XML attribute update syntax - OK (0) =#=#=#=
+* Passed: cibadmin       - Test '++' XML attribute update syntax
+=#=#=#= Begin test: Test '+=' XML attribute update syntax =#=#=#=
+=#=#=#= Current cib after: Test '+=' XML attribute update syntax =#=#=#=
+<cib epoch="2" num_updates="2" admin_epoch="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="5"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '+=' XML attribute update syntax - OK (0) =#=#=#=
+* Passed: cibadmin       - Test '+=' XML attribute update syntax
+=#=#=#= Begin test: Test '++' nvpair value update syntax =#=#=#=
+=#=#=#= Current cib after: Test '++' nvpair value update syntax =#=#=#=
+<cib epoch="3" num_updates="0" admin_epoch="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="6"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '++' nvpair value update syntax - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '++' nvpair value update syntax
+=#=#=#= Begin test: Test '++' nvpair value update syntax (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value++ --score --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Test '++' nvpair value update syntax (XML) =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="7"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '++' nvpair value update syntax (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '++' nvpair value update syntax (XML)
+=#=#=#= Begin test: Test '+=' nvpair value update syntax =#=#=#=
+=#=#=#= Current cib after: Test '+=' nvpair value update syntax =#=#=#=
+<cib epoch="5" num_updates="0" admin_epoch="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="9"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '+=' nvpair value update syntax - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '+=' nvpair value update syntax
+=#=#=#= Begin test: Test '+=' nvpair value update syntax (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value+=2 --score --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Test '+=' nvpair value update syntax (XML) =#=#=#=
+<cib epoch="6" num_updates="0" admin_epoch="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="11"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '+=' nvpair value update syntax (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '+=' nvpair value update syntax (XML)
+=#=#=#= Begin test: Test '++' XML attribute update syntax (--score not set) =#=#=#=
+=#=#=#= Current cib after: Test '++' XML attribute update syntax (--score not set) =#=#=#=
+<cib epoch="6" num_updates="1" admin_epoch="4">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="11"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '++' XML attribute update syntax (--score not set) - OK (0) =#=#=#=
+* Passed: cibadmin       - Test '++' XML attribute update syntax (--score not set)
+=#=#=#= Begin test: Test '+=' XML attribute update syntax (--score not set) =#=#=#=
+=#=#=#= Current cib after: Test '+=' XML attribute update syntax (--score not set) =#=#=#=
+<cib epoch="6" num_updates="2" admin_epoch="6">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="11"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '+=' XML attribute update syntax (--score not set) - OK (0) =#=#=#=
+* Passed: cibadmin       - Test '+=' XML attribute update syntax (--score not set)
+=#=#=#= Begin test: Test '++' nvpair value update syntax (--score not set) =#=#=#=
+=#=#=#= Current cib after: Test '++' nvpair value update syntax (--score not set) =#=#=#=
+<cib epoch="7" num_updates="0" admin_epoch="6">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="12"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '++' nvpair value update syntax (--score not set) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '++' nvpair value update syntax (--score not set)
+=#=#=#= Begin test: Test '++' nvpair value update syntax (--score not set) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value++ --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Test '++' nvpair value update syntax (--score not set) (XML) =#=#=#=
+<cib epoch="8" num_updates="0" admin_epoch="6">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="13"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '++' nvpair value update syntax (--score not set) (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '++' nvpair value update syntax (--score not set) (XML)
+=#=#=#= Begin test: Test '+=' nvpair value update syntax (--score not set) =#=#=#=
+=#=#=#= Current cib after: Test '+=' nvpair value update syntax (--score not set) =#=#=#=
+<cib epoch="9" num_updates="0" admin_epoch="6">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="15"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '+=' nvpair value update syntax (--score not set) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '+=' nvpair value update syntax (--score not set)
+=#=#=#= Begin test: Test '+=' nvpair value update syntax (--score not set) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value+=2 --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Test '+=' nvpair value update syntax (--score not set) (XML) =#=#=#=
+<cib epoch="10" num_updates="0" admin_epoch="6">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="17"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Test '+=' nvpair value update syntax (--score not set) (XML) - OK (0) =#=#=#=
+* Passed: crm_attribute  - Test '+=' nvpair value update syntax (--score not set) (XML)
+=#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
+cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
+=#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
+<cib epoch="10" num_updates="0" admin_epoch="6">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-test_attr" name="test_attr" value="17"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>

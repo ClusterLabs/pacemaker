@@ -195,7 +195,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
         xmlNode *shallow = pcmk__xe_create(*answer,
                                            (const char *) obj_root->name);
 
-        copy_in_properties(shallow, obj_root);
+        pcmk__xe_copy_attrs(shallow, obj_root, pcmk__xaf_none);
         *answer = shallow;
 
     } else {
@@ -249,7 +249,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
         free_xml(*result_cib);
     }
     *result_cib = createEmptyCib(0);
-    copy_in_properties(*result_cib, existing_cib);
+    pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
     update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
     *answer = NULL;
 
@@ -458,6 +458,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
                    xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
     xmlNode *obj_root = NULL;
+    uint32_t flags = pcmk__xaf_none;
 
     crm_trace("Processing \"%s\" event", op);
 
@@ -490,7 +491,11 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
     CRM_CHECK(obj_root != NULL, return -EINVAL);
 
-    if (pcmk__xe_update_match(obj_root, input) != pcmk_rc_ok) {
+    if (pcmk_is_set(options, cib_score_update)) {
+        flags |= pcmk__xaf_score_update;
+    }
+
+    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
         if (options & cib_can_create) {
             pcmk__xml_copy(obj_root, input);
         } else {
@@ -821,7 +826,13 @@ cib_process_xpath(const char *op, int options, const char *section,
             }
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
-            if (pcmk__xe_update_match(match, input) != pcmk_rc_ok) {
+            uint32_t flags = pcmk__xaf_none;
+
+            if (pcmk_is_set(options, cib_score_update)) {
+                flags |= pcmk__xaf_score_update;
+            }
+
+            if (pcmk__xe_update_match(match, input, flags) != pcmk_rc_ok) {
                 rc = -ENXIO;
             } else if ((options & cib_multiple) == 0) {
                 break;
@@ -837,7 +848,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 xmlNode *shallow = pcmk__xe_create(*answer,
                                                    (const char *) match->name);
 
-                copy_in_properties(shallow, match);
+                pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
 
                 if (*answer == NULL) {
                     *answer = shallow;

@@ -27,5 +27,5 @@ set_attr(void **state)
     free_xml(node);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(set_attr))

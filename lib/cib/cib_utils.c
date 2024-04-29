@@ -414,7 +414,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
         // Make a copy of the top-level element to store version details
         top = pcmk__xe_create(NULL, (const char *) scratch->name);
-        copy_in_properties(top, scratch);
+        pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
         patchset_cib = top;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -1042,7 +1042,7 @@ cib_get_generation(cib_t * cib)
 
     cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
     if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
+        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
         free_xml(the_cib);
     }
 

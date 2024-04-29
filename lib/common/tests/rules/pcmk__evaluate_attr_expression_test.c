@@ -777,7 +777,7 @@ value_missing_eq_ok(void **state)
 
 #define expr_test(f) cmocka_unit_test_setup_teardown(f, setup, teardown)
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(null_invalid),
                 expr_test(id_missing),
                 expr_test(attr_missing),

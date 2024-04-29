@@ -115,10 +115,10 @@ struct {
     gchar *type;
     char *opt_list;
     gboolean all;
-    gboolean promotion_score;
+    bool promotion_score;
+    gboolean score_update;
 } options = {
     .command = attr_cmd_query,
-    .promotion_score = FALSE
 };
 
 #define INDENT "                               "
@@ -139,10 +139,23 @@ delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
+attr_name_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+             GError **error)
+{
+    options.promotion_score = false;
+
+    if (options.attr_name != NULL) {
+        g_free(options.attr_name);
+    }
+    options.attr_name = g_strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
 promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     char *score_name = NULL;
 
-    options.promotion_score = TRUE;
+    options.promotion_score = true;
 
     if (options.attr_name) {
         g_free(options.attr_name);
@@ -218,7 +231,7 @@ static GOptionEntry selecting_entries[] = {
       "XML_ID"
     },
 
-    { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
+    { "name", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, attr_name_cb,
       "Operate on attribute or option with this name.  For queries, this\n"
       INDENT "is optional, in which case all matching attributes will be\n"
       INDENT "returned.",
@@ -298,6 +311,35 @@ static GOptionEntry addl_entries[] = {
       "SECTION"
     },
 
+    { "score", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.score_update,
+      "Treat new attribute values as atomic score updates where possible\n"
+      INDENT "(with --update/-v, when running against a CIB file or updating\n"
+      INDENT "an attribute outside the " PCMK_XE_STATUS " section; enabled\n"
+      INDENT "by default if --promotion/-p is specified)\n\n"
+
+      INDENT "This currently happens by default and cannot be disabled, but\n"
+      INDENT "this default behavior is deprecated and will be removed in a\n"
+      INDENT "future release (exception: this will remain the default with\n"
+      INDENT "--promotion/-p). Set this flag if this behavior is desired.\n\n"
+
+      INDENT "This option takes effect when updating XML attributes. For an\n"
+      INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
+      INDENT "\"name+=X\" for some score X, the new value is set as follows:\n"
+      INDENT " * If attribute \"name\" is not already set to some value in\n"
+      INDENT "   the element being updated, the new value is set as a literal\n"
+      INDENT "   string.\n"
+      INDENT " * If the new value is \"name++\", then the attribute is set to\n"
+      INDENT "   its existing value (parsed as a score) plus 1.\n"
+      INDENT " * If the new value is \"name+=X\" for some score X, then the\n"
+      INDENT "   attribute is set to its existing value plus X, where the\n"
+      INDENT "   existing value and X are parsed and added as scores.\n\n"
+
+      INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
+      INDENT "Refer to Pacemaker Explained and to the char2score() function\n"
+      INDENT "for more details on scores, including how they're parsed and\n"
+      INDENT "added.",
+      NULL },
+
     { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
       "Wait for some event to occur before returning.  Values are 'no' (wait\n"
       INDENT "only for the attribute daemon to acknowledge the request),\n"
@@ -326,7 +368,7 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
-    { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_name,
+    { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, attr_name_cb,
       NULL, NULL
     },
 
@@ -463,10 +505,6 @@ command_delete(pcmk__output_t *out, cib_t *cib)
 
         rc = pcmk__xe_foreach_child(result, NULL, delete_attr_on_node, &dd);
 
-        if (rc != pcmk_rc_ok) {
-            goto done_deleting;
-        }
-
     } else {
         rc = cib__delete_node_attr(out, cib, cib_opts, options.type, options.dest_node,
                                    options.set_type, options.set_name, options.attr_id,
@@ -519,6 +557,11 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
     xmlNode *result = NULL;
     bool use_pattern = options.attr_pattern != NULL;
 
+    /* @COMPAT When we drop default support for expansion in crm_attribute,
+     * guard with `if (options.score_update)`
+     */
+    cib__set_call_options(cib_opts, crm_system_name, cib_score_update);
+
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {
         struct update_data_s ud = { out, cib, is_remote_node };
@@ -532,10 +575,6 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
         }
 
         rc = pcmk__xe_foreach_child(result, NULL, update_attr_on_node, &ud);
-
-        if (rc != pcmk_rc_ok) {
-            goto done_updating;
-        }
 
     } else {
         rc = cib__update_node_attr(out, cib, cib_opts, options.type,

@@ -841,7 +841,55 @@ function test_tools() {
     test_assert $CRM_EX_NOSUCH 0
 
     desc="Configure something before erasing"
-    cmd="crm_attribute -n cluster-delay -v 60s"
+    cmd="crm_attribute -n test_attr -v 5"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' XML attribute update syntax"
+    cmd="cibadmin -M --score --xml-text='<cib admin_epoch=\"admin_epoch++\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' XML attribute update syntax"
+    cmd="cibadmin -M --score --xml-text='<cib admin_epoch=\"admin_epoch+=2\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax"
+    cmd="crm_attribute -n test_attr -v 'value++' --score"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax (XML)"
+    cmd="crm_attribute -n test_attr -v 'value++' --score --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax"
+    cmd="crm_attribute -n test_attr -v 'value+=2' --score"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax (XML)"
+    cmd="crm_attribute -n test_attr -v 'value+=2' --score --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' XML attribute update syntax (--score not set)"
+    cmd="cibadmin -M --xml-text='<cib admin_epoch=\"admin_epoch++\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' XML attribute update syntax (--score not set)"
+    cmd="cibadmin -M --xml-text='<cib admin_epoch=\"admin_epoch+=2\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax (--score not set)"
+    cmd="crm_attribute -n test_attr -v 'value++'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax (--score not set) (XML)"
+    cmd="crm_attribute -n test_attr -v 'value++' --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax (--score not set)"
+    cmd="crm_attribute -n test_attr -v 'value+=2'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax (--score not set) (XML)"
+    cmd="crm_attribute -n test_attr -v 'value+=2' --output-as=xml"
     test_assert $CRM_EX_OK
 
     desc="Require --force for CIB erasure"

@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdarg.h>
-#include <stdint.h>
+#include <stdint.h>                     // uint32_t
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -491,106 +491,119 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
     return NULL;
 }
 
-void
-copy_in_properties(xmlNode *target, const xmlNode *src)
-{
-    if (src == NULL) {
-        crm_warn("No node to copy properties from");
-
-    } else if (target == NULL) {
-        crm_err("No node to copy properties into");
-
-    } else {
-        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-            const char *p_name = (const char *) a->name;
-            const char *p_value = pcmk__xml_attr_value(a);
-
-            expand_plus_plus(target, p_name, p_value);
-            if (xml_acl_denied(target)) {
-                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
-                return;
-            }
-        }
-    }
-
-    return;
-}
-
 /*!
- * \brief Update current XML attribute value per parsed integer assignment
-          statement
+ * \internal
+ * \brief Set an XML attribute, expanding \c ++ and \c += where appropriate
  *
- * \param[in,out]   target  an XML node, containing a XML attribute that is
- *                          initialized to some numeric value, to be processed
- * \param[in]       name    name of the XML attribute, e.g. X, whose value
- *                          should be updated
- * \param[in]       value   assignment statement, e.g. "X++" or
- *                          "X+=5", to be applied to the initialized value.
+ * If \p target already has an attribute named \p name set to an integer value
+ * and \p value is an addition assignment expression on \p name, then expand
+ * \p value to an integer and set attribute \p name to the expanded value in
+ * \p target.
  *
- * \note The original XML attribute value is treated as 0 if non-numeric and
- *       truncated to be an integer if decimal-point-containing.
- * \note The final XML attribute value is truncated to not exceed 1000000.
- * \note Undefined behavior if unexpected input.
+ * Otherwise, set attribute \p name on \p target using the literal \p value.
+ *
+ * The original attribute value in \p target and the number in an assignment
+ * expression in \p value are parsed and added as scores (that is, their values
+ * are capped at \c INFINITY and \c -INFINITY). For more details, refer to
+ * \c char2score().
+ *
+ * For example, suppose \p target has an attribute named \c "X" with value
+ * \c "5", and that \p name is \c "X".
+ * * If \p value is \c "X++", the new value of \c "X" in \p target is \c "6".
+ * * If \p value is \c "X+=3", the new value of \c "X" in \p target is \c "8".
+ * * If \p value is \c "val", the new value of \c "X" in \p target is \c "val".
+ * * If \p value is \c "Y++", the new value of \c "X" in \p target is \c "Y++".
+ *
+ * \param[in,out] target  XML node whose attribute to set
+ * \param[in]     name    Name of the attribute to set
+ * \param[in]     value   New value of attribute to set
+ *
+ * \return Standard Pacemaker return code (specifically, \c EINVAL on invalid
+ *         argument, or \c pcmk_rc_ok otherwise)
  */
-void
-expand_plus_plus(xmlNode * target, const char *name, const char *value)
+int
+pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
 {
-    int offset = 1;
-    int name_len = 0;
-    int int_value = 0;
-    int value_len = 0;
-
     const char *old_value = NULL;
 
-    if (target == NULL || value == NULL || name == NULL) {
-        return;
+    CRM_CHECK((target != NULL) && (name != NULL), return EINVAL);
+
+    if (value == NULL) {
+        return pcmk_rc_ok;
     }
 
     old_value = crm_element_value(target, name);
 
-    if (old_value == NULL) {
-        /* if no previous value, set unexpanded */
-        goto set_unexpanded;
+    // If no previous value, skip to default case and set the value unexpanded.
+    if (old_value != NULL) {
+        const char *n = name;
+        const char *v = value;
 
-    } else if (strstr(value, name) != value) {
-        goto set_unexpanded;
+        // Stop at first character that differs between name and value
+        for (; (*n == *v) && (*n != '\0'); n++, v++);
+
+        // If value begins with name followed by a "++" or "+="
+        if ((*n == '\0')
+            && (*v++ == '+')
+            && ((*v == '+') || (*v == '='))) {
+
+            // If we're expanding ourselves, no previous value was set; use 0
+            int old_value_i = (old_value != value)? char2score(old_value) : 0;
+
+            /* value="X++": new value of X is old_value + 1
+             * value="X+=Y": new value of X is old_value + Y (for some number Y)
+             */
+            int add = (*v == '+')? 1 : char2score(++v);
+
+            crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
+            return pcmk_rc_ok;
+        }
     }
 
-    name_len = strlen(name);
-    value_len = strlen(value);
-    if (value_len < (name_len + 2)
-        || value[name_len] != '+' || (value[name_len + 1] != '+' && value[name_len + 1] != '=')) {
-        goto set_unexpanded;
-    }
-
-    /* if we are expanding ourselves,
-     * then no previous value was set and leave int_value as 0
-     */
+    // Default case: set the attribute unexpanded (with value treated literally)
     if (old_value != value) {
-        int_value = char2score(old_value);
+        crm_xml_add(target, name, value);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Copy XML attributes from a source element to a target element
+ *
+ * This is similar to \c xmlCopyPropList() except that attributes are marked
+ * as dirty for change tracking purposes.
+ *
+ * \param[in,out] target  XML element to receive copied attributes from \p src
+ * \param[in]     src     XML element whose attributes to copy to \p target
+ * \param[in]     flags   Group of <tt>enum pcmk__xa_flags</tt>
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
+{
+    CRM_CHECK((src != NULL) && (target != NULL), return EINVAL);
+
+    for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
+         attr = attr->next) {
+
+        const char *name = (const char *) attr->name;
+        const char *value = pcmk__xml_attr_value(attr);
+
+        if (pcmk_is_set(flags, pcmk__xaf_no_overwrite)
+            && (crm_element_value(target, name) != NULL)) {
+            continue;
+        }
+
+        if (pcmk_is_set(flags, pcmk__xaf_score_update)) {
+            pcmk__xe_set_score(target, name, value);
+        } else {
+            crm_xml_add(target, name, value);
+        }
     }
 
-    if (value[name_len + 1] != '+') {
-        const char *offset_s = value + (name_len + 2);
-
-        offset = char2score(offset_s);
-    }
-    int_value += offset;
-
-    if (int_value > PCMK_SCORE_INFINITY) {
-        int_value = PCMK_SCORE_INFINITY;
-    }
-
-    crm_xml_add_int(target, name, int_value);
-    return;
-
-  set_unexpanded:
-    if (old_value == value) {
-        /* the old value is already set, nothing to do */
-        return;
-    }
-    crm_xml_add(target, name, value);
-    return;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1626,77 +1639,113 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
 
 /*!
  * \internal
- * \brief Make one XML tree match another (in children and attributes)
+ * \brief Merge one XML tree into another
+ *
+ * Here, "merge" means:
+ * 1. Copy attribute values from \p update to the target, overwriting in case of
+ *    conflict.
+ * 2. Descend through \p update and the target in parallel. At each level, for
+ *    each child of \p update, look for a matching child of the target.
+ *    a. For each child, if a match is found, go to step 1, recursively merging
+ *       the child of \p update into the child of the target.
+ *    b. Otherwise, copy the child of \p update as a child of the target.
+ *
+ * A match is defined as the first child of the same type within the target,
+ * with:
+ * * the \c PCMK_XA_ID attribute matching, if set in \p update; otherwise,
+ * * the \c PCMK_XA_ID_REF attribute matching, if set in \p update
+ *
+ * This function does not delete any elements or attributes from the target. It
+ * may add elements or overwrite attributes, as described above.
  *
  * \param[in,out] parent   If \p target is NULL and this is not, add or update
  *                         child of this XML node that matches \p update
  * \param[in,out] target   If not NULL, update this XML
- * \param[in]     update   Make the desired XML match this (must not be NULL)
- * \param[in]     as_diff  If false, expand "++" when making attributes match
+ * \param[in]     update   Make the desired XML match this (must not be \c NULL)
+ * \param[in]     flags    Group of <tt>enum pcmk__xa_flags</tt>
+ * \param[in]     as_diff  If \c true, preserve order of attributes (deprecated
+ *                         since 2.0.5)
  *
- * \note At least one of \p parent and \p target must be non-NULL
+ * \note At least one of \p parent and \p target must be non-<tt>NULL</tt>.
+ * \note This function is recursive. For the top-level call, \p parent is
+ *       \c NULL and \p target is not \c NULL. For recursive calls, \p target is
+ *       \c NULL and \p parent is not \c NULL.
  */
 void
 pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
-                 bool as_diff)
+                 uint32_t flags, bool as_diff)
 {
-    xmlNode *a_child = NULL;
-    const char *object_name = NULL,
-               *object_href = NULL,
-               *object_href_val = NULL;
+    /* @COMPAT Refactor further and staticize after v1 patchset deprecation.
+     *
+     * @COMPAT Drop as_diff argument when apply_xml_diff() is dropped.
+     */
+    const char *update_name = NULL;
+    const char *update_id_attr = NULL;
+    const char *update_id_val = NULL;
+    char *trace_s = NULL;
 
-    crm_log_xml_trace(update, "update:");
-    crm_log_xml_trace(target, "target:");
+    crm_log_xml_trace(update, "update");
+    crm_log_xml_trace(target, "target");
 
-    CRM_CHECK(update != NULL, return);
+    CRM_CHECK(update != NULL, goto done);
 
     if (update->type == XML_COMMENT_NODE) {
         pcmk__xc_update(parent, target, update);
-        return;
+        goto done;
     }
 
-    object_name = (const char *) update->name;
-    object_href_val = pcmk__xe_id(update);
-    if (object_href_val != NULL) {
-        object_href = PCMK_XA_ID;
-    } else {
-        object_href_val = crm_element_value(update, PCMK_XA_ID_REF);
-        object_href = (object_href_val == NULL)? NULL : PCMK_XA_ID_REF;
-    }
+    update_name = (const char *) update->name;
 
-    CRM_CHECK(object_name != NULL, return);
-    CRM_CHECK(target != NULL || parent != NULL, return);
+    CRM_CHECK(update_name != NULL, goto done);
+    CRM_CHECK((target != NULL) || (parent != NULL), goto done);
 
-    if (target == NULL) {
-        target = pcmk__xe_first_child(parent, object_name,
-                                      object_href, object_href_val);
-    }
-
-    if (target == NULL) {
-        target = pcmk__xe_create(parent, object_name);
-        crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
-                  object_href ? " " : "",
-                  object_href ? object_href : "",
-                  object_href ? "=" : "",
-                  object_href ? object_href_val : "");
+    update_id_val = pcmk__xe_id(update);
+    if (update_id_val != NULL) {
+        update_id_attr = PCMK_XA_ID;
 
     } else {
-        crm_trace("Found node <%s%s%s%s%s/> to update",
-                  pcmk__s(object_name, "<null>"),
-                  object_href ? " " : "",
-                  object_href ? object_href : "",
-                  object_href ? "=" : "",
-                  object_href ? object_href_val : "");
+        update_id_val = crm_element_value(update, PCMK_XA_ID_REF);
+        if (update_id_val != NULL) {
+            update_id_attr = PCMK_XA_ID_REF;
+        }
+    }
+
+    pcmk__if_tracing(
+        {
+            if (update_id_attr != NULL) {
+                trace_s = crm_strdup_printf("<%s %s=%s/>",
+                                            update_name, update_id_attr,
+                                            update_id_val);
+            } else {
+                trace_s = crm_strdup_printf("<%s/>", update_name);
+            }
+        },
+        {}
+    );
+
+    if (target == NULL) {
+        // Recursive call
+        target = pcmk__xe_first_child(parent, update_name, update_id_attr,
+                                      update_id_val);
+    }
+
+    if (target == NULL) {
+        // Recursive call with no existing matching child
+        target = pcmk__xe_create(parent, update_name);
+        crm_trace("Added %s", pcmk__s(trace_s, update_name));
+
+    } else {
+        // Either recursive call with match, or top-level call
+        crm_trace("Found node %s to update", pcmk__s(trace_s, update_name));
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
 
-    if (as_diff == FALSE) {
-        /* So that expand_plus_plus() gets called */
-        copy_in_properties(target, update);
+    if (!as_diff) {
+        pcmk__xe_copy_attrs(target, update, flags);
 
     } else {
-        /* No need for expand_plus_plus(), just raw speed */
+        // Preserve order of attributes. Don't use pcmk__xe_copy_attrs().
         for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
              a = a->next) {
             const char *p_value = pcmk__xml_attr_value(a);
@@ -1707,22 +1756,17 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         }
     }
 
-    for (a_child = pcmk__xml_first_child(update); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
-        crm_trace("Updating child <%s%s%s%s%s/>",
-                  pcmk__s(object_name, "<null>"),
-                  object_href ? " " : "",
-                  object_href ? object_href : "",
-                  object_href ? "=" : "",
-                  object_href ? object_href_val : "");
-        pcmk__xml_update(target, NULL, a_child, as_diff);
+    for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        crm_trace("Updating child of %s", pcmk__s(trace_s, update_name));
+        pcmk__xml_update(target, NULL, child, flags, as_diff);
     }
 
-    crm_trace("Finished with <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
-              object_href ? " " : "",
-              object_href ? object_href : "",
-              object_href ? "=" : "",
-              object_href ? object_href_val : "");
+    crm_trace("Finished with %s", pcmk__s(trace_s, update_name));
+
+done:
+    free(trace_s);
 }
 
 /*!
@@ -1928,31 +1972,38 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
     return ENXIO;
 }
 
+//! User data for \c update_xe_if_matching()
+struct update_data {
+    xmlNode *update;    //!< Update source
+    uint32_t flags;     //!< Group of <tt>enum pcmk__xa_flags</tt>
+};
+
 /*!
  * \internal
  * \brief Update one XML subtree with another if the two match
  *
- * "Update" means to make a target subtree match a source subtree in children
- * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c expand_plus_plus()).
+ * "Update" means to merge a source subtree into a target subtree (see
+ * \c pcmk__xml_update()).
  *
  * A match is defined as follows:
- * * \p xml and \p user_data are both element nodes of the same type.
- * * \p xml and \p user_data have the same \c PCMK_XA_ID attribute value, or
- *   \c PCMK_XA_ID is unset in both
+ * * \p xml and \p user_data->update are both element nodes of the same type.
+ * * \p xml and \p user_data->update have the same \c PCMK_XA_ID attribute
+ *   value, or \c PCMK_XA_ID is unset in both
  *
- * \param[in,out] xml        XML subtree to update with \p user_data upon match
- * \param[in]     user_data  XML to update \p xml with upon match
+ * \param[in,out] xml        XML subtree to update with \p user_data->update
+ *                           upon match
+ * \param[in]     user_data  <tt>struct update_data</tt> object
  *
  * \return \c true to continue traversing the tree, or \c false to stop (because
- *         \p xml was updated by \p user_data)
+ *         \p xml was updated by \p user_data->update)
  *
  * \note This is compatible with \c pcmk__xml_tree_foreach().
  */
 static bool
 update_xe_if_matching(xmlNode *xml, void *user_data)
 {
-    xmlNode *update = user_data;
+    struct update_data *data = user_data;
+    xmlNode *update = data->update;
 
     if (!pcmk__xe_is(update, (const char *) xml->name)) {
         // No match: either not both elements, or different element types
@@ -1966,7 +2017,7 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
 
     crm_log_xml_trace(xml, "update-match");
     crm_log_xml_trace(update, "update-with");
-    pcmk__xml_update(NULL, xml, update, false);
+    pcmk__xml_update(NULL, xml, update, data->flags, false);
 
     // Found a match and replaced it; stop traversing tree
     return false;
@@ -1976,23 +2027,23 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
  * \internal
  * \brief Search an XML tree depth-first and update the first matching element
  *
- * "Update" means to make a target subtree match a source subtree in children
- * and attributes, recursively. \c "++" and \c "+=" in attribute values are
- * expanded where appropriate (see \c expand_plus_plus()).
+ * "Update" means to merge a source subtree into a target subtree (see
+ * \c pcmk__xml_update()).
  *
  * A match with a node \c node is defined as follows:
  * * \c node and \p update are both element nodes of the same type.
- * * \c node and \p user_data have the same \c PCMK_XA_ID attribute value, or
+ * * \c node and \p update have the same \c PCMK_XA_ID attribute value, or
  *   \c PCMK_XA_ID is unset in both
  *
  * \param[in,out] xml     XML tree to search
  * \param[in]     update  XML to update a matching element with
+ * \param[in]     flags   Group of <tt>enum pcmk__xa_flags</tt>
  *
  * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok on
  *         successful update and an error code otherwise)
  */
 int
-pcmk__xe_update_match(xmlNode *xml, xmlNode *update)
+pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags)
 {
     /* @COMPAT In pcmk__xe_delete_match() and pcmk__xe_replace_match(), we
      * compare IDs only if the equivalent of the update argument has an ID.
@@ -2001,9 +2052,14 @@ pcmk__xe_update_match(xmlNode *xml, xmlNode *update)
      *
      * Perhaps we should align the behavior at a major version release.
      */
+    struct update_data data = {
+        .update = update,
+        .flags = flags,
+    };
+
     CRM_CHECK((xml != NULL) && (update != NULL), return EINVAL);
 
-    if (!pcmk__xml_tree_foreach(xml, update_xe_if_matching, update)) {
+    if (!pcmk__xml_tree_foreach(xml, update_xe_if_matching, &data)) {
         // Found and updated an element
         return pcmk_rc_ok;
     }
@@ -2575,7 +2631,8 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
 gboolean
 update_xml_child(xmlNode *child, xmlNode *to_update)
 {
-    return pcmk__xe_update_match(child, to_update) == pcmk_rc_ok;
+    return pcmk__xe_update_match(child, to_update,
+                                 pcmk__xaf_score_update) == pcmk_rc_ok;
 }
 
 int
@@ -2631,6 +2688,35 @@ fix_plus_plus_recursive(xmlNode *target)
 
         fix_plus_plus_recursive(child);
     }
+}
+
+void
+copy_in_properties(xmlNode *target, const xmlNode *src)
+{
+    if (src == NULL) {
+        crm_warn("No node to copy properties from");
+
+    } else if (target == NULL) {
+        crm_err("No node to copy properties into");
+
+    } else {
+        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
+            const char *p_name = (const char *) a->name;
+            const char *p_value = pcmk__xml_attr_value(a);
+
+            expand_plus_plus(target, p_name, p_value);
+            if (xml_acl_denied(target)) {
+                crm_trace("Cannot copy %s=%s to %s", p_name, p_value, target->name);
+                return;
+            }
+        }
+    }
+}
+
+void
+expand_plus_plus(xmlNode * target, const char *name, const char *value)
+{
+    pcmk__xe_set_score(target, name, value);
 }
 
 // LCOV_EXCL_STOP
