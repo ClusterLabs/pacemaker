@@ -455,15 +455,14 @@ int
 pcmk__corosync_connect(crm_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
-    const enum pcmk_cluster_layer cluster_layer =
-        (enum pcmk_cluster_layer) get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
 
     crm_peer_init();
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
-        crm_err("Invalid cluster type: %s " CRM_XS " cluster_layer=%d",
+        crm_err("Invalid cluster layer: %s " CRM_XS " cluster_layer=%d",
                 cluster_layer_s, cluster_layer);
         return EINVAL;
     }

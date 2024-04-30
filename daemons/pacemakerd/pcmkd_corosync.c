@@ -320,7 +320,7 @@ pacemakerd_read_config(void)
         return FALSE;
     }
 
-    cluster_layer = (enum pcmk_cluster_layer) get_cluster_type();
+    cluster_layer = pcmk_get_cluster_layer();
     cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {

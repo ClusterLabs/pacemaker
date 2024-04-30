@@ -342,8 +342,7 @@ refresh_remote_nodes(xmlNode *cib)
 bool
 pcmk__cluster_is_node_active(const crm_node_t *node)
 {
-    const enum pcmk_cluster_layer cluster_layer =
-        (enum pcmk_cluster_layer) get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
 
     if ((node == NULL) || pcmk_is_set(node->flags, crm_remote_node)) {
         return false;

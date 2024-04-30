@@ -47,16 +47,16 @@ crm_peer_uuid(crm_node_t *peer)
         return peer->uuid;
     }
 
-    switch (get_cluster_type()) {
-        case pcmk_cluster_corosync:
+    switch (pcmk_get_cluster_layer()) {
+        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
             uuid = pcmk__corosync_uuid(peer);
 #endif
             break;
 
-        case pcmk_cluster_unknown:
-        case pcmk_cluster_invalid:
-            crm_err("Unsupported cluster type");
+        case pcmk_cluster_layer_unknown:
+        case pcmk_cluster_layer_invalid:
+            crm_err("Unsupported cluster layer");
             break;
     }
 
@@ -75,8 +75,7 @@ crm_peer_uuid(crm_node_t *peer)
 int
 pcmk_cluster_connect(crm_cluster_t *cluster)
 {
-    const enum pcmk_cluster_layer cluster_layer =
-        (enum pcmk_cluster_layer) get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     crm_notice("Connecting to %s cluster layer", cluster_layer_s);
@@ -108,8 +107,7 @@ pcmk_cluster_connect(crm_cluster_t *cluster)
 int
 pcmk_cluster_disconnect(crm_cluster_t *cluster)
 {
-    const enum pcmk_cluster_layer cluster_layer =
-        (enum pcmk_cluster_layer) get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     crm_info("Disconnecting from %s cluster layer", cluster_layer_s);
@@ -175,8 +173,8 @@ gboolean
 send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
                      const xmlNode *data, gboolean ordered)
 {
-    switch (get_cluster_type()) {
-        case pcmk_cluster_corosync:
+    switch (pcmk_get_cluster_layer()) {
+        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
             return pcmk__cpg_send_xml(data, node, service);
 #endif
@@ -217,8 +215,7 @@ char *
 get_node_name(uint32_t nodeid)
 {
     char *name = NULL;
-    const enum pcmk_cluster_layer cluster_layer =
-        (enum pcmk_cluster_layer) get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     switch (cluster_layer) {
@@ -229,7 +226,7 @@ get_node_name(uint32_t nodeid)
 #endif // SUPPORT_COROSYNC
 
         default:
-            crm_err("Unknown cluster type: %s (%d)",
+            crm_err("Unknown cluster layer: %s (%d)",
                     cluster_layer_s, cluster_layer);
     }
 
@@ -415,7 +412,7 @@ get_cluster_type(void)
 gboolean
 is_corosync_cluster(void)
 {
-    return get_cluster_type() == pcmk_cluster_corosync;
+    return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
 }
 
 // Deprecated functions kept only for backward API compatibility

@@ -213,8 +213,7 @@ do_dc_takeover(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     xmlNode *cib = NULL;
-    const enum pcmk_cluster_layer cluster_layer =
-        (enum pcmk_cluster_layer) get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     pid_t watchdog = pcmk__locate_sbd();
 

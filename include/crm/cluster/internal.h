@@ -57,8 +57,8 @@ enum pcmk__node_search_flags {
 static inline uint32_t
 crm_get_cluster_proc(void)
 {
-    switch (get_cluster_type()) {
-        case pcmk_cluster_corosync:
+    switch (pcmk_get_cluster_layer()) {
+        case pcmk_cluster_layer_corosync:
             return crm_proc_cpg;
 
         default:
