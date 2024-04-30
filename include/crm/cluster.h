@@ -251,13 +251,14 @@ const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
 
-/*!
+/*
  * \brief Get log-friendly string equivalent of a join phase
  *
  * \param[in] phase  Join phase
  *
  * \return Log-friendly string equivalent of \p phase
  */
+//! \deprecated Do not use (public access will be removed in a future release)
 static inline const char *
 crm_join_phase_str(enum crm_join_phase phase)
 {
