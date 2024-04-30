@@ -93,6 +93,9 @@ guint reap_crm_member(uint32_t id, const char *name);
 // \deprecated Use \c pcmk_cluster_layer_text() instead
 const char *name_for_cluster_type(enum cluster_type_e type);
 
+// \deprecated Use \c pcmk_get_cluster_layer() instead
+enum cluster_type_e get_cluster_type(void);
+
 #ifdef __cplusplus
 }
 #endif

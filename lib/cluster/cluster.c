@@ -393,18 +393,6 @@ pcmk_get_cluster_layer(void)
 }
 
 /*!
- * \brief Get (and validate) the local cluster type
- *
- * \return Local cluster type
- * \note This will fatally exit if the local cluster type is invalid.
- */
-enum cluster_type_e
-get_cluster_type(void)
-{
-    return (enum cluster_type_e) pcmk_get_cluster_layer();
-}
-
-/*!
  * \brief Check whether the local cluster is a Corosync cluster
  *
  * \return TRUE if the local cluster is a Corosync cluster, otherwise FALSE
@@ -451,6 +439,12 @@ name_for_cluster_type(enum cluster_type_e type)
     }
     crm_err("Invalid cluster type: %d", type);
     return "invalid";
+}
+
+enum cluster_type_e
+get_cluster_type(void)
+{
+    return (enum cluster_type_e) pcmk_get_cluster_layer();
 }
 
 // LCOV_EXCL_STOP
