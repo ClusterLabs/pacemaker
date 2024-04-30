@@ -131,11 +131,16 @@ typedef struct crm_peer_node_s {
 void crm_peer_init(void);
 void crm_peer_destroy(void);
 
-typedef struct crm_cluster_s {
+// Implementation of pcmk_cluster_t
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
+struct crm_cluster_s {
     char *uuid;
     char *uname;
     uint32_t nodeid;
 
+    //! \deprecated Call pcmk_cluster_set_destroy_fn() to set this
     void (*destroy) (gpointer);
 
 #  if SUPPORT_COROSYNC
@@ -144,11 +149,21 @@ typedef struct crm_cluster_s {
      * cluster layer further.
      */
     struct cpg_name group;
+
+    /*!
+     * \deprecated Call pcmk_cpg_set_deliver_fn() and pcmk_cpg_set_confchg_fn()
+     *             to set these
+     */
     cpg_callbacks_t cpg;
+
     cpg_handle_t cpg_handle;
 #  endif
 
-} pcmk_cluster_t;
+};
+//!@}
+
+//! Connection to a cluster layer
+typedef struct crm_cluster_s pcmk_cluster_t;
 
 int pcmk_cluster_connect(pcmk_cluster_t *cluster);
 int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
