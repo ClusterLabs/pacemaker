@@ -44,6 +44,8 @@ extern "C" {
 xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
                           const char *origin);
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 #define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
     create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, \
                        __func__)
