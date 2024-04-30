@@ -462,7 +462,7 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
         crm_err("Invalid cluster layer: %s " CRM_XS " cluster_layer=%d",
@@ -605,7 +605,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         goto bail;
     }
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
     crm_trace("Initializing Corosync node list");
     for (lpc = 0; TRUE; lpc++) {
         uint32_t nodeid = 0;

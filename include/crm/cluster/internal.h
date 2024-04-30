@@ -149,6 +149,10 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
+// Membership
+
+void pcmk__cluster_init_node_caches(void);
+
 bool pcmk__cluster_is_node_active(const crm_node_t *node);
 unsigned int pcmk__cluster_num_active_nodes(void);
 unsigned int pcmk__cluster_num_remote_nodes(void);

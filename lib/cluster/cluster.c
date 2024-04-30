@@ -83,7 +83,7 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     switch (cluster_layer) {
         case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            crm_peer_init();
+            pcmk__cluster_init_node_caches();
             return pcmk__corosync_connect(cluster);
 #else
             break;

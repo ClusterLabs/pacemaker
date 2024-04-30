@@ -608,7 +608,7 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     rc = fenced_scheduler_init();
     if (rc != pcmk_rc_ok) {

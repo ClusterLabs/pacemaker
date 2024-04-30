@@ -299,7 +299,7 @@ refresh_remote_nodes(xmlNode *cib)
 {
     struct refresh_data data;
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     /* First, we mark all existing cache entries as dirty,
      * so that later we can remove any that weren't in the CIB.
@@ -529,8 +529,12 @@ destroy_crm_node(gpointer data)
     free(node);
 }
 
+/*!
+ * \internal
+ * \brief Initialize node caches
+ */
 void
-crm_peer_init(void)
+pcmk__cluster_init_node_caches(void)
 {
     if (crm_peer_cache == NULL) {
         crm_peer_cache = pcmk__strikey_table(free, destroy_crm_node);
@@ -543,6 +547,12 @@ crm_peer_init(void)
     if (cluster_node_cib_cache == NULL) {
         cluster_node_cib_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
+}
+
+void
+crm_peer_init(void)
+{
+    pcmk__cluster_init_node_caches();
 }
 
 void
@@ -642,7 +652,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
@@ -726,7 +736,7 @@ pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     if (uname != NULL) {
         g_hash_table_iter_init(&iter, crm_peer_cache);
@@ -878,7 +888,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     // Check the Pacemaker Remote node cache first
     if (pcmk_is_set(flags, pcmk__node_search_remote)) {
@@ -1425,7 +1435,7 @@ cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 static void
 refresh_cluster_node_cib_cache(xmlNode *cib)
 {
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     g_hash_table_foreach(cluster_node_cib_cache, mark_dirty, NULL);
 

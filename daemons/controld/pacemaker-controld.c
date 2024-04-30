@@ -196,7 +196,7 @@ crmd_init(void)
     init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
     state = s_crmd_fsa(C_STARTUP);
 
     if (state == S_PENDING || state == S_STARTING) {

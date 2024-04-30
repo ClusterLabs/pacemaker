@@ -271,7 +271,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     // Read initial CIB, connect to cluster, and start IPC servers
     cib_init();
