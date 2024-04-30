@@ -37,6 +37,9 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 
+// \deprecated Use \c pcmk_cluster_t instead
+typedef pcmk_cluster_t crm_cluster_t;
+
 // \deprecated Do not use Pacemaker for cluster node cacheing
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 

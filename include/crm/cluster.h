@@ -150,8 +150,6 @@ typedef struct crm_cluster_s {
 
 } pcmk_cluster_t;
 
-typedef pcmk_cluster_t crm_cluster_t;
-
 int pcmk_cluster_connect(pcmk_cluster_t *cluster);
 int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
 
