@@ -306,6 +306,29 @@ crm_peer_uname(const char *uuid)
 }
 
 /*!
+ * \brief Get a log-friendly string equivalent of a cluster layer
+ *
+ * \param[in] layer  Cluster layer
+ *
+ * \return Log-friendly string corresponding to \p layer
+ */
+const char *
+pcmk_cluster_layer_text(enum pcmk_cluster_layer layer)
+{
+    switch (layer) {
+        case pcmk_cluster_layer_corosync:
+            return "corosync";
+        case pcmk_cluster_layer_unknown:
+            return "unknown";
+        case pcmk_cluster_layer_invalid:
+            return "invalid";
+        default:
+            crm_err("Invalid cluster layer: %d", layer);
+            return "invalid";
+    }
+}
+
+/*!
  * \brief  Get a log-friendly string equivalent of a cluster type
  *
  * \param[in] type  Cluster type
