@@ -224,12 +224,6 @@ enum pcmk_cluster_layer {
     pcmk_cluster_layer_corosync = 32,   //!< Corosync Cluster Engine
 };
 
-enum cluster_type_e {
-    pcmk_cluster_unknown    = pcmk_cluster_layer_unknown,
-    pcmk_cluster_invalid    = pcmk_cluster_layer_invalid,
-    pcmk_cluster_corosync   = pcmk_cluster_layer_corosync,
-};
-
 enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 

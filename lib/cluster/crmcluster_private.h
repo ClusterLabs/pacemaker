@@ -19,7 +19,7 @@
 #include <glib.h>                  // G_GNUC_INTERNAL, gboolean
 #include <libxml/tree.h>           // xmlNode
 
-#include <crm/cluster.h>           // cluster_type_e, crm_node_t
+#include <crm/cluster.h>           // crm_node_t
 
 G_GNUC_INTERNAL
 bool pcmk__corosync_is_active(void);

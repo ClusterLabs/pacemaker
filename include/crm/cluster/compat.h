@@ -90,6 +90,15 @@ guint crm_active_peers(void);
 // \deprecated Do not use
 guint reap_crm_member(uint32_t id, const char *name);
 
+//!@{
+//! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead
+enum cluster_type_e {
+    pcmk_cluster_unknown    = pcmk_cluster_layer_unknown,
+    pcmk_cluster_invalid    = pcmk_cluster_layer_invalid,
+    pcmk_cluster_corosync   = pcmk_cluster_layer_corosync,
+};
+//!@}
+
 // \deprecated Use \c pcmk_cluster_layer_text() instead
 const char *name_for_cluster_type(enum cluster_type_e type);
 
