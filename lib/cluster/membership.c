@@ -578,12 +578,6 @@ pcmk__cluster_destroy_node_caches(void)
     }
 }
 
-void
-crm_peer_destroy(void)
-{
-    pcmk__cluster_destroy_node_caches();
-}
-
 static void (*peer_status_callback)(enum crm_status_type, crm_node_t *,
                                     const void *) = NULL;
 
@@ -1561,6 +1555,12 @@ void
 crm_peer_init(void)
 {
     pcmk__cluster_init_node_caches();
+}
+
+void
+crm_peer_destroy(void)
+{
+    pcmk__cluster_destroy_node_caches();
 }
 
 // LCOV_EXCL_STOP

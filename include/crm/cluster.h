@@ -128,8 +128,6 @@ typedef struct crm_peer_node_s {
     time_t when_online;         // Since when peer has been online in CPG
 } crm_node_t;
 
-void crm_peer_destroy(void);
-
 // Implementation of pcmk_cluster_t
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
