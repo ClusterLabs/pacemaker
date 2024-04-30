@@ -138,10 +138,10 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     controld_clear_global_flags(controld_dc_left);
 }
 
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
+extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 
 gboolean
-crm_connect_corosync(crm_cluster_t * cluster)
+crm_connect_corosync(pcmk_cluster_t *cluster)
 {
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         crm_set_status_callback(&peer_update_callback);

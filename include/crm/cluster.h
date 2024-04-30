@@ -148,13 +148,15 @@ typedef struct crm_cluster_s {
     cpg_handle_t cpg_handle;
 #  endif
 
-} crm_cluster_t;
+} pcmk_cluster_t;
 
-int pcmk_cluster_connect(crm_cluster_t *cluster);
-int pcmk_cluster_disconnect(crm_cluster_t *cluster);
+typedef pcmk_cluster_t crm_cluster_t;
 
-crm_cluster_t *pcmk_cluster_new(void);
-void pcmk_cluster_free(crm_cluster_t *cluster);
+int pcmk_cluster_connect(pcmk_cluster_t *cluster);
+int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
+
+pcmk_cluster_t *pcmk_cluster_new(void);
+void pcmk_cluster_free(pcmk_cluster_t *cluster);
 
 enum crm_ais_msg_class {
     crm_class_cluster = 0,

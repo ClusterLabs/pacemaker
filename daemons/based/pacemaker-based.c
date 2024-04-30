@@ -35,7 +35,7 @@ extern int init_remote_listener(int port, gboolean encrypted);
 gboolean cib_shutdown_flag = FALSE;
 int cib_status = pcmk_ok;
 
-crm_cluster_t *crm_cluster = NULL;
+pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;

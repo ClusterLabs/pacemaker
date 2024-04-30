@@ -533,7 +533,7 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_cluster_t *cluster = NULL;
+    pcmk_cluster_t *cluster = NULL;
     crm_ipc_t *old_instance = NULL;
 
     GError *error = NULL;

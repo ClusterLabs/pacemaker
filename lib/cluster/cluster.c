@@ -73,7 +73,7 @@ crm_peer_uuid(crm_node_t *peer)
  * \return Standard Pacemaker return code
  */
 int
-pcmk_cluster_connect(crm_cluster_t *cluster)
+pcmk_cluster_connect(pcmk_cluster_t *cluster)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
@@ -105,7 +105,7 @@ pcmk_cluster_connect(crm_cluster_t *cluster)
  * \return Standard Pacemaker return code
  */
 int
-pcmk_cluster_disconnect(crm_cluster_t *cluster)
+pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
@@ -131,25 +131,25 @@ pcmk_cluster_disconnect(crm_cluster_t *cluster)
 }
 
 /*!
- * \brief Allocate a new \p crm_cluster_t object
+ * \brief Allocate a new \p pcmk_cluster_t object
  *
- * \return A newly allocated \p crm_cluster_t object (guaranteed not \c NULL)
+ * \return A newly allocated \p pcmk_cluster_t object (guaranteed not \c NULL)
  * \note The caller is responsible for freeing the return value using
  *       \p pcmk_cluster_free().
  */
-crm_cluster_t *
+pcmk_cluster_t *
 pcmk_cluster_new(void)
 {
-    return (crm_cluster_t *) pcmk__assert_alloc(1, sizeof(crm_cluster_t));
+    return (pcmk_cluster_t *) pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
 }
 
 /*!
- * \brief Free a \p crm_cluster_t object and its dynamically allocated members
+ * \brief Free a \p pcmk_cluster_t object and its dynamically allocated members
  *
  * \param[in,out] cluster  Cluster object to free
  */
 void
-pcmk_cluster_free(crm_cluster_t *cluster)
+pcmk_cluster_free(pcmk_cluster_t *cluster)
 {
     if (cluster == NULL) {
         return;
@@ -404,13 +404,13 @@ set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 }
 
 gboolean
-crm_cluster_connect(crm_cluster_t *cluster)
+crm_cluster_connect(pcmk_cluster_t *cluster)
 {
     return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
 }
 
 void
-crm_cluster_disconnect(crm_cluster_t *cluster)
+crm_cluster_disconnect(pcmk_cluster_t *cluster)
 {
     pcmk_cluster_disconnect(cluster);
 }

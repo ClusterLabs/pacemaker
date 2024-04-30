@@ -57,7 +57,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 lrmd_t *the_lrmd = NULL;
-crm_cluster_t *attrd_cluster = NULL;
+pcmk_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
 

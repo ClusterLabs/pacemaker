@@ -27,7 +27,7 @@ static qb_ipcs_service_t *ipcs = NULL;
 static crm_trigger_t *config_read_trigger = NULL;
 
 #if SUPPORT_COROSYNC
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
+extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 #endif
 
 static void crm_shutdown(int nsig);
@@ -41,7 +41,7 @@ do_ha_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     gboolean registered = FALSE;
-    static crm_cluster_t *cluster = NULL;
+    static pcmk_cluster_t *cluster = NULL;
 
     if (cluster == NULL) {
         cluster = pcmk_cluster_new();

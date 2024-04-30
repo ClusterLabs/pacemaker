@@ -223,7 +223,7 @@ bail:
  * \param[in,out] cluster  Cluster object to disconnect
  */
 void
-pcmk__corosync_disconnect(crm_cluster_t *cluster)
+pcmk__corosync_disconnect(pcmk_cluster_t *cluster)
 {
     pcmk__cpg_disconnect(cluster);
 
@@ -454,7 +454,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__corosync_connect(crm_cluster_t *cluster)
+pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();

@@ -176,7 +176,7 @@ typedef struct attribute_value_s {
             (attr_value)->flags, (flags_to_clear), #flags_to_clear);    \
     } while (0)
 
-extern crm_cluster_t *attrd_cluster;
+extern pcmk_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 extern GHashTable *peer_protocol_vers;
 

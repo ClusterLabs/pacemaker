@@ -33,12 +33,12 @@
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
-/* @TODO Once we can update the public API to require crm_cluster_t* in more
+/* @TODO Once we can update the public API to require pcmk_cluster_t* in more
  *       functions, we can ditch this in favor of cluster->cpg_handle.
  */
 static cpg_handle_t pcmk_cpg_handle = 0;
 
-// @TODO These could be moved to crm_cluster_t* at that time as well
+// @TODO These could be moved to pcmk_cluster_t* at that time as well
 static bool cpg_evicted = false;
 static GList *cs_message_queue = NULL;
 static int cs_message_timer = 0;
@@ -259,7 +259,7 @@ static int
 pcmk_cpg_dispatch(gpointer user_data)
 {
     cs_error_t rc = CS_OK;
-    crm_cluster_t *cluster = (crm_cluster_t *) user_data;
+    pcmk_cluster_t *cluster = (pcmk_cluster_t *) user_data;
 
     rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
@@ -765,7 +765,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__cpg_connect(crm_cluster_t *cluster)
+pcmk__cpg_connect(pcmk_cluster_t *cluster)
 {
     cs_error_t rc;
     int fd = -1;
@@ -869,7 +869,7 @@ pcmk__cpg_connect(crm_cluster_t *cluster)
  * \param[in,out] cluster  Cluster object to disconnect
  */
 void
-pcmk__cpg_disconnect(crm_cluster_t *cluster)
+pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
 {
     pcmk_cpg_handle = 0;
     if (cluster->cpg_handle != 0) {
@@ -1108,13 +1108,13 @@ text2msg_type(const char *text)
  * \return TRUE on success, otherwise FALSE
  */
 gboolean
-cluster_connect_cpg(crm_cluster_t *cluster)
+cluster_connect_cpg(pcmk_cluster_t *cluster)
 {
     return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
 }
 
 void
-cluster_disconnect_cpg(crm_cluster_t *cluster)
+cluster_disconnect_cpg(pcmk_cluster_t *cluster)
 {
     pcmk__cpg_disconnect(cluster);
 }
