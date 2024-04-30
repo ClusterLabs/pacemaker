@@ -758,6 +758,24 @@ pcmk_cpg_membership(cpg_handle_t handle,
 }
 
 /*!
+ * \brief Set the CPG deliver callback function for a cluster object
+ *
+ * \param[in,out] cluster  Cluster object
+ * \param[in]     fn       Deliver function to set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn)
+{
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+    cluster->cpg.cpg_deliver_fn = fn;
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Connect to Corosync CPG
  *
  * \param[in,out] cluster  Initialized cluster object to connect

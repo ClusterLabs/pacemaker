@@ -157,6 +157,9 @@ pcmk_cluster_t *pcmk_cluster_new(void);
 void pcmk_cluster_free(pcmk_cluster_t *cluster);
 
 int pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer));
+#if SUPPORT_COROSYNC
+int pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn);
+#endif  // SUPPORT_COROSYNC
 
 enum crm_ais_msg_class {
     crm_class_cluster = 0,

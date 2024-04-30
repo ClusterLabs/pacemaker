@@ -147,7 +147,7 @@ crm_connect_corosync(pcmk_cluster_t *cluster)
         crm_set_status_callback(&peer_update_callback);
 
         pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
-        cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
+        pcmk_cpg_set_deliver_fn(cluster, crmd_cs_dispatch);
         cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
 
         if (pcmk_cluster_connect(cluster) == pcmk_rc_ok) {

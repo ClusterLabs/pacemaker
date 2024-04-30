@@ -393,7 +393,7 @@ cib_init(void)
 #if SUPPORT_COROSYNC
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         pcmk_cluster_set_destroy_fn(crm_cluster, cib_cs_destroy);
-        crm_cluster->cpg.cpg_deliver_fn = cib_cs_dispatch;
+        pcmk_cpg_set_deliver_fn(crm_cluster, cib_cs_dispatch);
         crm_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
     }
 #endif // SUPPORT_COROSYNC
