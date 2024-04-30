@@ -232,7 +232,6 @@ enum cluster_type_e {
 
 enum cluster_type_e get_cluster_type(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
-const char *name_for_cluster_type(enum cluster_type_e type);
 
 gboolean is_corosync_cluster(void);
 

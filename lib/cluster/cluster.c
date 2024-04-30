@@ -334,28 +334,6 @@ pcmk_cluster_layer_text(enum pcmk_cluster_layer layer)
 }
 
 /*!
- * \brief  Get a log-friendly string equivalent of a cluster type
- *
- * \param[in] type  Cluster type
- *
- * \return Log-friendly string corresponding to \p type
- */
-const char *
-name_for_cluster_type(enum cluster_type_e type)
-{
-    switch (type) {
-        case pcmk_cluster_corosync:
-            return "corosync";
-        case pcmk_cluster_unknown:
-            return "unknown";
-        case pcmk_cluster_invalid:
-            return "invalid";
-    }
-    crm_err("Invalid cluster type: %d", type);
-    return "invalid";
-}
-
-/*!
  * \brief Get (and validate) the local cluster type
  *
  * \return Local cluster type
@@ -455,6 +433,21 @@ void
 crm_cluster_disconnect(crm_cluster_t *cluster)
 {
     pcmk_cluster_disconnect(cluster);
+}
+
+const char *
+name_for_cluster_type(enum cluster_type_e type)
+{
+    switch (type) {
+        case pcmk_cluster_corosync:
+            return "corosync";
+        case pcmk_cluster_unknown:
+            return "unknown";
+        case pcmk_cluster_invalid:
+            return "invalid";
+    }
+    crm_err("Invalid cluster type: %d", type);
+    return "invalid";
 }
 
 // LCOV_EXCL_STOP
