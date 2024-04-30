@@ -2128,8 +2128,16 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+#define KV_PAIR(k, v) do { \
+    if (legacy) { \
+        pcmk__g_strcat(s, k "=", pcmk__s(v, ""), " ", NULL); \
+    } else { \
+        pcmk__g_strcat(s, k "=\"", pcmk__s(v, ""), "\"", NULL); \
+    } \
+} while (0)
+
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *")
+                  "const char *", "const char *", "bool", "bool")
 static int
 attribute_default(pcmk__output_t *out, va_list args)
 {
@@ -2138,10 +2146,30 @@ attribute_default(pcmk__output_t *out, va_list args)
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
     const char *host = va_arg(args, const char *);
+    bool quiet = va_arg(args, int);
+    bool legacy = va_arg(args, int);
 
     gchar *value_esc = NULL;
+    GString *s = NULL;
 
-    GString *s = g_string_sized_new(50);
+    if (quiet) {
+        if (value != NULL) {
+            /* Quiet needs to be turned off for ->info() to do anything */
+            bool was_quiet = out->is_quiet(out);
+
+            if (was_quiet) {
+                out->quiet = false;
+            }
+
+            out->info(out, "%s", value);
+
+            out->quiet = was_quiet;
+        }
+
+        return pcmk_rc_ok;
+    }
+
+    s = g_string_sized_new(50);
 
     if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr_pretty)) {
         value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr_pretty);
@@ -2149,20 +2177,24 @@ attribute_default(pcmk__output_t *out, va_list args)
     }
 
     if (!pcmk__str_empty(scope)) {
-        pcmk__g_strcat(s, PCMK_XA_SCOPE "=\"", scope, "\" ", NULL);
+        KV_PAIR(PCMK_XA_SCOPE, scope);
     }
 
     if (!pcmk__str_empty(instance)) {
-        pcmk__g_strcat(s, PCMK_XA_ID "=\"", instance, "\" ", NULL);
+        KV_PAIR(PCMK_XA_ID, instance);
     }
 
-    pcmk__g_strcat(s, PCMK_XA_NAME "=\"", pcmk__s(name, ""), "\" ", NULL);
+    KV_PAIR(PCMK_XA_NAME, name);
 
     if (!pcmk__str_empty(host)) {
-        pcmk__g_strcat(s, PCMK_XA_HOST "=\"", host, "\" ", NULL);
+        KV_PAIR(PCMK_XA_HOST, host);
     }
 
-    pcmk__g_strcat(s, PCMK_XA_VALUE "=\"", pcmk__s(value, ""), "\"", NULL);
+    if (legacy) {
+        pcmk__g_strcat(s, PCMK_XA_VALUE "=", pcmk__s(value, "(null)"), NULL);
+    } else {
+        pcmk__g_strcat(s, PCMK_XA_VALUE "=\"", pcmk__s(value, ""), "\"", NULL);
+    }
 
     out->info(out, "%s", s->str);
 
@@ -2172,7 +2204,7 @@ attribute_default(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *")
+                  "const char *", "const char *", "bool", "bool")
 static int
 attribute_xml(pcmk__output_t *out, va_list args)
 {
@@ -2181,6 +2213,8 @@ attribute_xml(pcmk__output_t *out, va_list args)
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
     const char *host = va_arg(args, const char *);
+    bool quiet G_GNUC_UNUSED = va_arg(args, int);
+    bool legacy G_GNUC_UNUSED = va_arg(args, int);
 
     xmlNodePtr node = NULL;
 

@@ -52,50 +52,10 @@ GError *error = NULL;
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
-PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
-                  "const char *", "const char *")
-static int
-attribute_text(pcmk__output_t *out, va_list args)
-{
-    const char *scope = va_arg(args, const char *);
-    const char *instance = va_arg(args, const char *);
-    const char *name = va_arg(args, const char *);
-    const char *value = va_arg(args, const char *);
-    const char *host G_GNUC_UNUSED = va_arg(args, const char *);
-
-    gchar *value_esc = NULL;
-
-    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr_pretty)) {
-        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr_pretty);
-        value = value_esc;
-    }
-
-    if (out->quiet) {
-        if (value != NULL) {
-            pcmk__formatted_printf(out, "%s\n", value);
-        }
-    } else {
-        out->info(out, "%s%s %s%s %s%s value=%s",
-                  scope ? "scope=" : "", scope ? scope : "",
-                  instance ? "id=" : "", instance ? instance : "",
-                  name ? "name=" : "", name ? name : "",
-                  value ? value : "(null)");
-    }
-
-    g_free(value_esc);
-    return pcmk_rc_ok;
-}
-
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
-static pcmk__message_entry_t fmt_functions[] = {
-    { "attribute", "text", attribute_text },
-
     { NULL, NULL, NULL }
 };
 
@@ -602,7 +562,6 @@ output_one_attribute(xmlNode *node, void *userdata)
 
     const char *name = crm_element_value(node, PCMK_XA_NAME);
     const char *value = crm_element_value(node, PCMK_XA_VALUE);
-    const char *host = crm_element_value(node, PCMK__XA_ATTR_HOST);
 
     const char *type = options.type;
     const char *attr_id = options.attr_id;
@@ -611,7 +570,8 @@ output_one_attribute(xmlNode *node, void *userdata)
         return pcmk_rc_ok;
     }
 
-    od->out->message(od->out, "attribute", type, attr_id, name, value, host);
+    od->out->message(od->out, "attribute", type, attr_id, name, value, NULL,
+                     od->out->quiet, true);
     od->did_output = true;
     crm_info("Read %s='%s' %s%s",
              pcmk__s(name, "<null>"), pcmk__s(value, ""),
@@ -649,10 +609,9 @@ command_query(pcmk__output_t *out, cib_t *cib)
         const char *attr_id = options.attr_id;
         const char *attr_name = options.attr_name;
         const char *attr_default = options.attr_default;
-        const char *dest_uname = options.dest_uname;
 
         out->message(out, "attribute", type, attr_id, attr_name, attr_default,
-                     dest_uname);
+                     NULL, out->quiet, true);
         rc = pcmk_rc_ok;
 
     } else if (rc != pcmk_rc_ok) {
@@ -833,7 +792,6 @@ main(int argc, char **argv)
     }
 
     pcmk__register_lib_messages(out);
-    pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
         out->version(out, false);
