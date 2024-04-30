@@ -2940,7 +2940,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
             pcmk__scan_min_int(host, &nodeid, 0);
             node = pcmk__search_node_caches(nodeid, NULL,
                                             pcmk__node_search_any
-                                            |pcmk__node_search_known);
+                                            |pcmk__node_search_cluster_cib);
             if (node != NULL) {
                 host = node->uname;
             }

@@ -651,7 +651,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
         node = pcmk__search_cluster_node_cache(id, uname, NULL);
     }
 
-    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_known)) {
+    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster_cib)) {
         char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
 
         node = find_cib_cluster_node(id_str, uname);

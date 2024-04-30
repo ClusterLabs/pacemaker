@@ -1238,7 +1238,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         pcmk__scan_min_int(op->target, &nodeid, 0);
         node = pcmk__search_node_caches(nodeid, NULL,
                                         pcmk__node_search_any
-                                        |pcmk__node_search_known);
+                                        |pcmk__node_search_cluster_cib);
 
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);

@@ -45,7 +45,8 @@ enum pcmk__node_search_flags {
      * support for enum crm_get_peer_flags
      */
 
-    pcmk__node_search_known     = (1 << 2), // Search previously known nodes
+    //! Search for cluster nodes from CIB (as of last cache refresh)
+    pcmk__node_search_cluster_cib   = (1 << 2),
 };
 
 /*!
