@@ -55,7 +55,9 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
 char *
 pcmk__corosync_uuid(const crm_node_t *node)
 {
-    if ((node != NULL) && is_corosync_cluster()) {
+    if ((node != NULL)
+        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+
         if (node->id > 0) {
             return crm_strdup_printf("%u", node->id);
         } else {

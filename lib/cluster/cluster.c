@@ -284,7 +284,7 @@ crm_peer_uname(const char *uuid)
     }
     node = NULL;
 
-    if (is_corosync_cluster()) {
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         long long id;
 
         if ((pcmk__scan_ll(uuid, &id, 0LL) != pcmk_rc_ok)

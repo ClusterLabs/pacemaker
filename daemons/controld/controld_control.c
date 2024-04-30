@@ -59,7 +59,7 @@ do_ha_control(long long action,
         crm_set_autoreap(FALSE);
 
 #if SUPPORT_COROSYNC
-        if (is_corosync_cluster()) {
+        if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
             registered = crm_connect_corosync(cluster);
         }
 #endif // SUPPORT_COROSYNC

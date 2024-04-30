@@ -237,7 +237,9 @@ do_dc_takeover(long long action,
     dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_layer_s);
 
 #if SUPPORT_COROSYNC
-    if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
+    if ((controld_globals.cluster_name == NULL)
+        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name != NULL) {

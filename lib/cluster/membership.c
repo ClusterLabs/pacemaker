@@ -984,7 +984,9 @@ update_peer_uname(crm_node_t *node, const char *uname)
     }
 
 #if SUPPORT_COROSYNC
-    if (is_corosync_cluster() && !pcmk_is_set(node->flags, crm_remote_node)) {
+    if ((pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)
+        && !pcmk_is_set(node->flags, crm_remote_node)) {
+
         remove_conflicting_peer(node);
     }
 #endif

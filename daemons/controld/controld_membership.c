@@ -308,7 +308,9 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
-    if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
+    if (!pcmk_is_set(flags, node_update_quick)
+        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+
         from_hashtable = pcmk__corosync_add_nodes(node_list);
     }
 #endif

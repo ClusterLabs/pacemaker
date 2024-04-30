@@ -143,7 +143,7 @@ extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 gboolean
 crm_connect_corosync(crm_cluster_t * cluster)
 {
-    if (is_corosync_cluster()) {
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         crm_set_status_callback(&peer_update_callback);
         cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
         cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
