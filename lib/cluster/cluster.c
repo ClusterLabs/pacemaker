@@ -115,7 +115,7 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     switch (cluster_layer) {
         case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            crm_peer_destroy();
+            pcmk__cluster_destroy_node_caches();
             pcmk__corosync_disconnect(cluster);
             return pcmk_rc_ok;
 #else

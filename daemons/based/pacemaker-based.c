@@ -291,7 +291,7 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    crm_peer_destroy();
+    pcmk__cluster_destroy_node_caches();
 
     if (local_notify_queue != NULL) {
         g_hash_table_destroy(local_notify_queue);

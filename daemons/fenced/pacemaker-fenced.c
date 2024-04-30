@@ -430,7 +430,7 @@ stonith_cleanup(void)
         qb_ipcs_destroy(ipcs);
     }
 
-    crm_peer_destroy();
+    pcmk__cluster_destroy_node_caches();
     pcmk__client_cleanup();
     free_stonith_remote_op_list();
     free_topology_list();

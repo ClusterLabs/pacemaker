@@ -549,11 +549,16 @@ pcmk__cluster_init_node_caches(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Initialize node caches
+ */
 void
-crm_peer_destroy(void)
+pcmk__cluster_destroy_node_caches(void)
 {
     if (crm_peer_cache != NULL) {
-        crm_trace("Destroying peer cache with %d members", g_hash_table_size(crm_peer_cache));
+        crm_trace("Destroying peer cache with %d members",
+                  g_hash_table_size(crm_peer_cache));
         g_hash_table_destroy(crm_peer_cache);
         crm_peer_cache = NULL;
     }
@@ -571,7 +576,12 @@ crm_peer_destroy(void)
         g_hash_table_destroy(cluster_node_cib_cache);
         cluster_node_cib_cache = NULL;
     }
+}
 
+void
+crm_peer_destroy(void)
+{
+    pcmk__cluster_destroy_node_caches();
 }
 
 static void (*peer_status_callback)(enum crm_status_type, crm_node_t *,

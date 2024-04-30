@@ -241,7 +241,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_destroy_transition_trigger();
 
     pcmk__client_cleanup();
-    crm_peer_destroy();
+    pcmk__cluster_destroy_node_caches();
 
     controld_free_fsa_timers();
     te_cleanup_stonith_history_sync(NULL, TRUE);
