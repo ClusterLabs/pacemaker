@@ -105,6 +105,9 @@ const char *name_for_cluster_type(enum cluster_type_e type);
 // \deprecated Use \c pcmk_get_cluster_layer() instead
 enum cluster_type_e get_cluster_type(void);
 
+// \deprecated Use \c pcmk_get_cluster_layer() instead
+gboolean is_corosync_cluster(void);
+
 #ifdef __cplusplus
 }
 #endif

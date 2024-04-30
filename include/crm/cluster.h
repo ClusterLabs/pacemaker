@@ -227,8 +227,6 @@ enum pcmk_cluster_layer {
 enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 
-gboolean is_corosync_cluster(void);
-
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
 

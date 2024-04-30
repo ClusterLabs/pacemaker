@@ -392,17 +392,6 @@ pcmk_get_cluster_layer(void)
     return cluster_layer;
 }
 
-/*!
- * \brief Check whether the local cluster is a Corosync cluster
- *
- * \return TRUE if the local cluster is a Corosync cluster, otherwise FALSE
- */
-gboolean
-is_corosync_cluster(void)
-{
-    return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
-}
-
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
@@ -445,6 +434,12 @@ enum cluster_type_e
 get_cluster_type(void)
 {
     return (enum cluster_type_e) pcmk_get_cluster_layer();
+}
+
+gboolean
+is_corosync_cluster(void)
+{
+    return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
 }
 
 // LCOV_EXCL_STOP
