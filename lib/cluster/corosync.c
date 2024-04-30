@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <inttypes.h>   // PRIu64
+#include <stdbool.h>
 
 #include <bzlib.h>
 
@@ -498,22 +499,22 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
  * \internal
  * \brief Check whether a Corosync cluster is active
  *
- * \return pcmk_cluster_corosync if Corosync is found, else pcmk_cluster_unknown
+ * \return \c true if Corosync is found active, or \c false otherwise
  */
-enum cluster_type_e
-pcmk__corosync_detect(void)
+bool
+pcmk__corosync_is_active(void)
 {
     cmap_handle_t handle;
     int rc = pcmk__init_cmap(&handle);
 
     if (rc == CS_OK) {
         cmap_finalize(handle);
-        return pcmk_cluster_corosync;
+        return true;
     }
 
     crm_info("Failed to initialize the cmap API: %s (%d)",
              pcmk__cs_err_str(rc), rc);
-    return pcmk_cluster_unknown;
+    return false;
 }
 
 /*!

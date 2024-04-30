@@ -22,7 +22,7 @@
 #include <crm/cluster.h>           // cluster_type_e, crm_node_t
 
 G_GNUC_INTERNAL
-enum cluster_type_e pcmk__corosync_detect(void);
+bool pcmk__corosync_is_active(void);
 
 G_GNUC_INTERNAL
 bool pcmk__corosync_has_nodelist(void);

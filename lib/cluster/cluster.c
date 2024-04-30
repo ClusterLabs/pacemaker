@@ -357,8 +357,8 @@ get_cluster_type(void)
     /* If nothing is defined in the environment, try corosync (if supported) */
     if (cluster == NULL) {
         crm_debug("Testing with Corosync");
-        cluster_type = pcmk__corosync_detect();
-        if (cluster_type != pcmk_cluster_unknown) {
+        if (pcmk__corosync_is_active()) {
+            cluster_type = pcmk_cluster_corosync;
             detected = true;
             goto done;
         }
