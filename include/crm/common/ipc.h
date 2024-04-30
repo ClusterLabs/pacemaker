@@ -39,6 +39,8 @@ extern "C" {
 #define create_reply(request, xml_response_data)    \
     create_reply_adv(request, xml_response_data, __func__)
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
                           const char *origin);
 
