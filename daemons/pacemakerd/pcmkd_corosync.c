@@ -331,10 +331,10 @@ pacemakerd_read_config(void)
     }
 
     crm_info("Reading configuration for %s cluster layer", cluster_layer_s);
-    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, "corosync", true);
+    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, PCMK_VALUE_COROSYNC, true);
 
     // @COMPAT Drop at 3.0.0; added unused in 1.1.9
-    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, "corosync", true);
+    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, PCMK_VALUE_COROSYNC, true);
 
     // If debug logging is not configured, check whether corosync has it
     if (pcmk__env_option(PCMK__ENV_DEBUG) == NULL) {
