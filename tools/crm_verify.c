@@ -242,8 +242,12 @@ main(int argc, char **argv)
             failure_type = "";
           }
 
-          if (options.verbosity > 0) {
+          if (args->quiet) {
+              // User requested no output
+
+          } else if (options.verbosity > 0) {
               out->err(out, "%sconfig not valid", failure_type);
+
           } else {
               out->err(out, "%sconfig not valid\n-V may provide more details", failure_type);
           }
