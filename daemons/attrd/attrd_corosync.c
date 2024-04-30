@@ -412,7 +412,7 @@ attrd_cluster_connect(void)
 
     attrd_cluster = pcmk_cluster_new();
 
-    attrd_cluster->destroy = attrd_cpg_destroy;
+    pcmk_cluster_set_destroy_fn(attrd_cluster, attrd_cpg_destroy);
     attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
     attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
 

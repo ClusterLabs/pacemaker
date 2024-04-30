@@ -145,9 +145,10 @@ crm_connect_corosync(pcmk_cluster_t *cluster)
 {
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         crm_set_status_callback(&peer_update_callback);
+
+        pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
         cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
         cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
-        cluster->destroy = crmd_cs_destroy;
 
         if (pcmk_cluster_connect(cluster) == pcmk_rc_ok) {
             pcmk__corosync_quorum_connect(crmd_quorum_callback,

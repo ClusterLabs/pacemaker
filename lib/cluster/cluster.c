@@ -160,6 +160,24 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
 }
 
 /*!
+ * \brief Set the destroy function for a cluster object
+ *
+ * \param[in,out] cluster  Cluster object
+ * \param[in]     fn       Destroy function to set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
+{
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+    cluster->destroy = fn;
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Send an XML message via the cluster messaging layer
  *
  * \param[in] node     Cluster node to send message to

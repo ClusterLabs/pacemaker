@@ -156,6 +156,8 @@ int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
 pcmk_cluster_t *pcmk_cluster_new(void);
 void pcmk_cluster_free(pcmk_cluster_t *cluster);
 
+int pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer));
+
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
