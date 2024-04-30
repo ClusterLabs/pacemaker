@@ -503,29 +503,17 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
 enum cluster_type_e
 pcmk__corosync_detect(void)
 {
-    int rc = CS_OK;
     cmap_handle_t handle;
+    int rc = pcmk__init_cmap(&handle);
 
-    rc = pcmk__init_cmap(&handle);
-
-    switch(rc) {
-        case CS_OK:
-            break;
-        case CS_ERR_SECURITY:
-            crm_debug("Failed to initialize the cmap API: Permission denied (%d)", rc);
-            /* It's there, we just can't talk to it.
-             * Good enough for us to identify as 'corosync'
-             */
-            return pcmk_cluster_corosync;
-
-        default:
-            crm_info("Failed to initialize the cmap API: %s (%d)",
-                     pcmk__cs_err_str(rc), rc);
-            return pcmk_cluster_unknown;
+    if (rc == CS_OK) {
+        cmap_finalize(handle);
+        return pcmk_cluster_corosync;
     }
 
-    cmap_finalize(handle);
-    return pcmk_cluster_corosync;
+    crm_info("Failed to initialize the cmap API: %s (%d)",
+             pcmk__cs_err_str(rc), rc);
+    return pcmk_cluster_unknown;
 }
 
 /*!
