@@ -33,6 +33,9 @@
  *
  * Because cluster nodes can have conflicting names or UUIDs,
  * the hash table key is a uniquely generated ID.
+ *
+ * @COMPAT When this is internal, rename to cluster_node_member_cache and make
+ * static.
  */
 GHashTable *crm_peer_cache = NULL;
 
@@ -54,12 +57,12 @@ GHashTable *crm_peer_cache = NULL;
 GHashTable *crm_remote_peer_cache = NULL;
 
 /*
- * The known node cache tracks cluster and remote nodes that have been seen in
+ * The CIB cluster node cache tracks cluster nodes that have been seen in
  * the CIB. It is useful mainly when a caller needs to know about a node that
  * may no longer be in the membership, but doesn't want to add the node to the
  * main peer cache tables.
  */
-static GHashTable *known_node_cache = NULL;
+static GHashTable *cluster_node_cib_cache = NULL;
 
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
@@ -83,7 +86,7 @@ static gboolean crm_autoreap  = TRUE;
     } while (0)
 
 static void update_peer_uname(crm_node_t *node, const char *uname);
-static crm_node_t *find_known_node(const char *id, const char *uname);
+static crm_node_t *find_cib_cluster_node(const char *id, const char *uname);
 
 /*!
  * \internal
@@ -536,8 +539,8 @@ crm_peer_init(void)
         crm_remote_peer_cache = pcmk__strikey_table(NULL, destroy_crm_node);
     }
 
-    if (known_node_cache == NULL) {
-        known_node_cache = pcmk__strikey_table(free, destroy_crm_node);
+    if (cluster_node_cib_cache == NULL) {
+        cluster_node_cib_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 }
 
@@ -557,11 +560,11 @@ crm_peer_destroy(void)
         crm_remote_peer_cache = NULL;
     }
 
-    if (known_node_cache != NULL) {
-        crm_trace("Destroying known node cache with %d members",
-                  g_hash_table_size(known_node_cache));
-        g_hash_table_destroy(known_node_cache);
-        known_node_cache = NULL;
+    if (cluster_node_cib_cache != NULL) {
+        crm_trace("Destroying configured cluster node cache with %d members",
+                  g_hash_table_size(cluster_node_cib_cache));
+        g_hash_table_destroy(cluster_node_cib_cache);
+        cluster_node_cib_cache = NULL;
     }
 
 }
@@ -651,7 +654,7 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
     if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_known)) {
         char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
 
-        node = find_known_node(id_str, uname);
+        node = find_cib_cluster_node(id_str, uname);
         free(id_str);
     }
 
@@ -1310,7 +1313,7 @@ pcmk__reap_unseen_nodes(uint64_t membership)
 }
 
 static crm_node_t *
-find_known_node(const char *id, const char *uname)
+find_cib_cluster_node(const char *id, const char *uname)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -1318,7 +1321,7 @@ find_known_node(const char *id, const char *uname)
     crm_node_t *by_name = NULL;
 
     if (uname) {
-        g_hash_table_iter_init(&iter, known_node_cache);
+        g_hash_table_iter_init(&iter, cluster_node_cib_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (node->uname && strcasecmp(node->uname, uname) == 0) {
                 crm_trace("Name match: %s = %p", node->uname, node);
@@ -1329,7 +1332,7 @@ find_known_node(const char *id, const char *uname)
     }
 
     if (id) {
-        g_hash_table_iter_init(&iter, known_node_cache);
+        g_hash_table_iter_init(&iter, cluster_node_cib_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if(strcasecmp(node->uuid, id) == 0) {
                 crm_trace("ID match: %s= %p", id, node);
@@ -1388,14 +1391,14 @@ find_known_node(const char *id, const char *uname)
 }
 
 static void
-known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
+cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 {
     const char *id = crm_element_value(xml_node, PCMK_XA_ID);
     const char *uname = crm_element_value(xml_node, PCMK_XA_UNAME);
     crm_node_t * node =  NULL;
 
     CRM_CHECK(id != NULL && uname !=NULL, return);
-    node = find_known_node(id, uname);
+    node = find_cib_cluster_node(id, uname);
 
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
@@ -1405,7 +1408,7 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         node->uname = pcmk__str_copy(uname);
         node->uuid = pcmk__str_copy(id);
 
-        g_hash_table_replace(known_node_cache, uniqueid, node);
+        g_hash_table_replace(cluster_node_cib_cache, uniqueid, node);
 
     } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
         pcmk__str_update(&node->uname, uname);
@@ -1417,24 +1420,24 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 }
 
 static void
-refresh_known_node_cache(xmlNode *cib)
+refresh_cluster_node_cib_cache(xmlNode *cib)
 {
     crm_peer_init();
 
-    g_hash_table_foreach(known_node_cache, mark_dirty, NULL);
+    g_hash_table_foreach(cluster_node_cib_cache, mark_dirty, NULL);
 
     crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
-                             known_node_cache_refresh_helper, NULL);
+                             cluster_node_cib_cache_refresh_helper, NULL);
 
-    /* Remove all old cache entries that weren't seen in the CIB */
-    g_hash_table_foreach_remove(known_node_cache, is_dirty, NULL);
+    // Remove all old cache entries that weren't seen in the CIB
+    g_hash_table_foreach_remove(cluster_node_cib_cache, is_dirty, NULL);
 }
 
 void
 pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 {
     refresh_remote_nodes(cib);
-    refresh_known_node_cache(cib);
+    refresh_cluster_node_cib_cache(cib);
 }
 
 // Deprecated functions kept only for backward API compatibility
