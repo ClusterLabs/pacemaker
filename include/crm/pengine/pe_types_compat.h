@@ -244,10 +244,10 @@ typedef struct pe_tag_s tag_t;
 //! \deprecated Do not use
 typedef struct pe_tag_s pe_tag_t;
 
-//! \deprecated Use pcmk_ticket_t instead
+//! \deprecated Do not use
 typedef struct pe_ticket_s ticket_t;
 
-//! \deprecated Use pcmk_ticket_t instead
+//! \deprecated Do not use
 typedef struct pe_ticket_s pe_ticket_t;
 
 //! \deprecated Use pcmk_scheduler_t instead
