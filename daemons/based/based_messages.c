@@ -128,7 +128,7 @@ send_sync_request(const char *host)
                 stand_alone? "localhost" : crm_cluster->uname);
 
     if (host != NULL) {
-        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
     send_cluster_message(peer, crm_msg_cib, sync_me, FALSE);
     free_xml(sync_me);
@@ -255,7 +255,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_node_t *origin = NULL;
 
             origin = pcmk__search_node_caches(0, host,
-                                              pcmk__node_search_cluster);
+                                              pcmk__node_search_cluster_member);
 
             crm_info("Rejecting upgrade request from %s: %s "
                      CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
@@ -455,7 +455,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     pcmk__xml_copy(wrapper, the_cib);
 
     if (!all) {
-        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
     if (!send_cluster_message(peer, crm_msg_cib, replace_request, FALSE)) {
         result = -ENOTCONN;

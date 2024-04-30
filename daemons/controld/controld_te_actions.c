@@ -158,7 +158,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         crm_node_t *peer = pcmk__get_node(0, router_node, NULL,
-                                          pcmk__node_search_cluster);
+                                          pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
     }
@@ -171,7 +171,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     crm_xml_add(cmd, PCMK__XA_TRANSITION_KEY, counter);
 
     rc = send_cluster_message(pcmk__get_node(0, router_node, NULL,
-                                             pcmk__node_search_cluster),
+                                             pcmk__node_search_cluster_member),
                               crm_msg_crmd, cmd, TRUE);
     free(counter);
     free_xml(cmd);
@@ -427,9 +427,11 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                       I_NULL, &msg);
 
     } else {
-        rc = send_cluster_message(pcmk__get_node(0, router_node, NULL,
-                                                 pcmk__node_search_cluster),
-                                  crm_msg_lrmd, cmd, TRUE);
+        const crm_node_t *node =
+            pcmk__get_node(0, router_node, NULL,
+                           pcmk__node_search_cluster_member);
+
+        rc = send_cluster_message(node, crm_msg_lrmd, cmd, TRUE);
     }
 
     free(counter);

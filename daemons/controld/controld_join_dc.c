@@ -317,7 +317,7 @@ do_dc_join_offer_one(long long action,
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
         return;
     }
-    member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster);
+    member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster_member);
 
     /* It is possible that a node will have been sick or starting up when the
      * original offer was made. However, it will either re-announce itself in
@@ -332,7 +332,7 @@ do_dc_join_offer_one(long long action,
      */
     if (strcasecmp(join_to, controld_globals.our_nodename) != 0) {
         member = pcmk__get_node(0, controld_globals.our_nodename, NULL,
-                                pcmk__node_search_cluster);
+                                pcmk__node_search_cluster_member);
         join_make_offer(NULL, member, NULL);
     }
 
@@ -397,7 +397,8 @@ do_dc_join_filter_offer(long long action,
         crm_err("Ignoring invalid join request without node name");
         return;
     }
-    join_node = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster);
+    join_node = pcmk__get_node(0, join_from, NULL,
+                               pcmk__node_search_cluster_member);
 
     crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id);
     if (join_id != current_join_id) {
@@ -743,7 +744,7 @@ do_dc_join_ack(long long action,
         goto done;
     }
 
-    peer = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster);
+    peer = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster_member);
     if (peer->join != crm_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
@@ -877,7 +878,8 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    join_node = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster);
+    join_node = pcmk__get_node(0, join_to, NULL,
+                               pcmk__node_search_cluster_member);
     if (!pcmk__cluster_is_node_active(join_node)) {
         /*
          * NACK'ing nodes that the membership layer doesn't know about yet

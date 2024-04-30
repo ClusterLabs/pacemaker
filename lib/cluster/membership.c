@@ -134,7 +134,8 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
      * entry unless it has a node ID, which means the name actually is
      * associated with a cluster node. (@TODO return an error in that case?)
      */
-    node = pcmk__search_node_caches(0, node_name, pcmk__node_search_cluster);
+    node = pcmk__search_node_caches(0, node_name,
+                                    pcmk__node_search_cluster_member);
     if ((node != NULL) && (node->uuid == NULL)) {
         /* node_name could be a pointer into the cache entry being removed, so
          * reassign it to a copy before the original gets freed
@@ -647,7 +648,9 @@ pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
     }
 
-    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster)) {
+    if ((node == NULL)
+        && pcmk_is_set(flags, pcmk__node_search_cluster_member)) {
+
         node = pcmk__search_cluster_node_cache(id, uname, NULL);
     }
 
@@ -885,7 +888,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         }
     }
 
-    if (!pcmk_is_set(flags, pcmk__node_search_cluster)) {
+    if (!pcmk_is_set(flags, pcmk__node_search_cluster_member)) {
         return NULL;
     }
 
@@ -1460,7 +1463,7 @@ crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
-    return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster);
+    return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster_member);
 }
 
 crm_node_t *

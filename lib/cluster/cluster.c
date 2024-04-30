@@ -312,7 +312,7 @@ crm_peer_uname(const char *uuid)
         }
 
         node = pcmk__search_node_caches((uint32_t) id, NULL,
-                                        pcmk__node_search_cluster);
+                                        pcmk__node_search_cluster_member);
         if (node != NULL) {
             crm_info("Setting uuid for node %s[%u] to %s",
                      node->uname, node->id, uuid);

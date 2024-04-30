@@ -35,18 +35,25 @@ enum crm_proc_flag {
 
 // Used with node cache search functions
 enum pcmk__node_search_flags {
-    pcmk__node_search_none      = 0,
-    pcmk__node_search_cluster   = (1 << 0), // Search for cluster nodes
-    pcmk__node_search_remote    = (1 << 1), // Search for remote nodes
-    pcmk__node_search_any       = pcmk__node_search_cluster
-                                  |pcmk__node_search_remote,
+    //! Does not affect search
+    pcmk__node_search_none              = 0,
+
+    //! Search for cluster nodes from membership cache
+    pcmk__node_search_cluster_member    = (1 << 0),
+
+    //! Search for remote nodes
+    pcmk__node_search_remote            = (1 << 1),
+
+    //! Search for cluster member nodes and remote nodes
+    pcmk__node_search_any               = pcmk__node_search_cluster_member
+                                          |pcmk__node_search_remote,
 
     /* @COMPAT The values before this must stay the same until we can drop
      * support for enum crm_get_peer_flags
      */
 
     //! Search for cluster nodes from CIB (as of last cache refresh)
-    pcmk__node_search_cluster_cib   = (1 << 2),
+    pcmk__node_search_cluster_cib       = (1 << 2),
 };
 
 /*!
