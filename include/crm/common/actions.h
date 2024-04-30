@@ -76,77 +76,57 @@ extern "C" {
 #define PCMK_ACTION_STOPPED             "stopped"
 #define PCMK_ACTION_VALIDATE_ALL        "validate-all"
 
-//! Possible actions (including some pseudo-actions)
+// Possible actions (including some pseudo-actions)
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum action_tasks {
-    pcmk_action_unspecified = 0,    //!< Unspecified or unknown action
-    pcmk_action_monitor,            //!< Monitor
+    pcmk_action_unspecified = 0,    // Unspecified or unknown action
+    pcmk_action_monitor,            // Monitor
 
     // Each "completed" action must be the regular action plus 1
 
-    pcmk_action_stop,               //!< Stop
-    pcmk_action_stopped,            //!< Stop completed
+    pcmk_action_stop,               // Stop
+    pcmk_action_stopped,            // Stop completed
 
-    pcmk_action_start,              //!< Start
-    pcmk_action_started,            //!< Start completed
+    pcmk_action_start,              // Start
+    pcmk_action_started,            // Start completed
 
-    pcmk_action_notify,             //!< Notify
-    pcmk_action_notified,           //!< Notify completed
+    pcmk_action_notify,             // Notify
+    pcmk_action_notified,           // Notify completed
 
-    pcmk_action_promote,            //!< Promote
-    pcmk_action_promoted,           //!< Promoted
+    pcmk_action_promote,            // Promote
+    pcmk_action_promoted,           // Promoted
 
-    pcmk_action_demote,             //!< Demote
-    pcmk_action_demoted,            //!< Demoted
+    pcmk_action_demote,             // Demote
+    pcmk_action_demoted,            // Demoted
 
-    pcmk_action_shutdown,           //!< Shut down node
-    pcmk_action_fence,              //!< Fence node
+    pcmk_action_shutdown,           // Shut down node
+    pcmk_action_fence,              // Fence node
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_action_unspecified instead
     no_action               = pcmk_action_unspecified,
-
-    //! \deprecated Use pcmk_action_monitor instead
     monitor_rsc             = pcmk_action_monitor,
-
-    //! \deprecated Use pcmk_action_stop instead
     stop_rsc                = pcmk_action_stop,
-
-    //! \deprecated Use pcmk_action_stopped instead
     stopped_rsc             = pcmk_action_stopped,
-
-    //! \deprecated Use pcmk_action_start instead
     start_rsc               = pcmk_action_start,
-
-    //! \deprecated Use pcmk_action_started instead
     started_rsc             = pcmk_action_started,
-
-    //! \deprecated Use pcmk_action_notify instead
     action_notify           = pcmk_action_notify,
-
-    //! \deprecated Use pcmk_action_notified instead
     action_notified         = pcmk_action_notified,
-
-    //! \deprecated Use pcmk_action_promote instead
     action_promote          = pcmk_action_promote,
-
-    //! \deprecated Use pcmk_action_promoted instead
     action_promoted         = pcmk_action_promoted,
-
-    //! \deprecated Use pcmk_action_demote instead
     action_demote           = pcmk_action_demote,
-
-    //! \deprecated Use pcmk_action_demoted instead
     action_demoted          = pcmk_action_demoted,
-
-    //! \deprecated Use pcmk_action_shutdown instead
     shutdown_crm            = pcmk_action_shutdown,
-
-    //! \deprecated Use pcmk_action_fence instead
     stonith_node            = pcmk_action_fence,
 #endif
 };
+//!@}
 
-//! Possible responses to a resource action failure
+// Possible responses to a resource action failure
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum action_fail_response {
     /* The order is (partially) significant here; the values from
      * pcmk_on_fail_ignore through pcmk_on_fail_fence_node are in order of
@@ -161,33 +141,33 @@ enum action_fail_response {
      */
 
     // @TODO Define as 10
-    pcmk_on_fail_ignore             = 0,    //!< Act as if failure didn't happen
+    pcmk_on_fail_ignore             = 0,    // Act as if failure didn't happen
 
     // @TODO Define as 30
-    pcmk_on_fail_restart            = 1,    //!< Restart resource
+    pcmk_on_fail_restart            = 1,    // Restart resource
 
     // @TODO Define as 60
-    pcmk_on_fail_ban                = 2,    //!< Ban resource from current node
+    pcmk_on_fail_ban                = 2,    // Ban resource from current node
 
     // @TODO Define as 70
-    pcmk_on_fail_block              = 3,    //!< Treat resource as unmanaged
+    pcmk_on_fail_block              = 3,    // Treat resource as unmanaged
 
     // @TODO Define as 80
-    pcmk_on_fail_stop               = 4,    //!< Stop resource and leave stopped
+    pcmk_on_fail_stop               = 4,    // Stop resource and leave stopped
 
     // @TODO Define as 90
-    pcmk_on_fail_standby_node       = 5,    //!< Put resource's node in standby
+    pcmk_on_fail_standby_node       = 5,    // Put resource's node in standby
 
     // @TODO Define as 100
-    pcmk_on_fail_fence_node         = 6,    //!< Fence resource's node
+    pcmk_on_fail_fence_node         = 6,    // Fence resource's node
 
     // @COMPAT Values below here are out of desired order for API compatibility
 
     // @TODO Define as 50
-    pcmk_on_fail_restart_container  = 7,    //!< Restart resource's container
+    pcmk_on_fail_restart_container  = 7,    // Restart resource's container
 
     // @TODO Define as 40
-    /*!
+    /*
      * Fence the remote node created by the resource if fencing is enabled,
      * otherwise attempt to restart the resource (used internally for some
      * remote connection failures).
@@ -195,71 +175,56 @@ enum action_fail_response {
     pcmk_on_fail_reset_remote       = 8,
 
     // @TODO Define as 20
-    pcmk_on_fail_demote             = 9,    //!< Demote if promotable, else stop
+    pcmk_on_fail_demote             = 9,    // Demote if promotable, else stop
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_on_fail_ignore instead
     action_fail_ignore              = pcmk_on_fail_ignore,
-
-    //! \deprecated Use pcmk_on_fail_restart instead
     action_fail_recover             = pcmk_on_fail_restart,
-
-    //! \deprecated Use pcmk_on_fail_ban instead
     action_fail_migrate             = pcmk_on_fail_ban,
-
-    //! \deprecated Use pcmk_on_fail_block instead
     action_fail_block               = pcmk_on_fail_block,
-
-    //! \deprecated Use pcmk_on_fail_stop instead
     action_fail_stop                = pcmk_on_fail_stop,
-
-    //! \deprecated Use pcmk_on_fail_standby_node instead
     action_fail_standby             = pcmk_on_fail_standby_node,
-
-    //! \deprecated Use pcmk_on_fail_fence_node instead
     action_fail_fence               = pcmk_on_fail_fence_node,
-
-    //! \deprecated Use pcmk_on_fail_restart_container instead
     action_fail_restart_container   = pcmk_on_fail_restart_container,
-
-    //! \deprecated Use pcmk_on_fail_reset_remote instead
     action_fail_reset_remote        = pcmk_on_fail_reset_remote,
-
-    //! \deprecated Use pcmk_on_fail_demote instead
     action_fail_demote              = pcmk_on_fail_demote,
 #endif
 };
+//!@}
 
-//! Action scheduling flags
+// Action scheduling flags
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum pe_action_flags {
-    //! No action flags set (compare with equality rather than bit set)
+    // No action flags set (compare with equality rather than bit set)
     pcmk_no_action_flags            = 0,
 
-    //! Whether action does not require invoking an agent
+    // Whether action does not require invoking an agent
     pcmk_action_pseudo              = (1 << 0),
 
-    //! Whether action is runnable
+    // Whether action is runnable
     pcmk_action_runnable            = (1 << 1),
 
-    //! Whether action should not be executed
+    // Whether action should not be executed
     pcmk_action_optional            = (1 << 2),
 
-    //! Whether action should be added to transition graph even if optional
+    // Whether action should be added to transition graph even if optional
     pcmk_action_always_in_graph     = (1 << 3),
 
-    //! Whether operation-specific instance attributes have been unpacked yet
+    // Whether operation-specific instance attributes have been unpacked yet
     pcmk_action_attrs_evaluated     = (1 << 4),
 
-    //! Whether action is allowed to be part of a live migration
+    // Whether action is allowed to be part of a live migration
     pcmk_action_migratable           = (1 << 7),
 
-    //! Whether action has been added to transition graph
+    // Whether action has been added to transition graph
     pcmk_action_added_to_graph       = (1 << 8),
 
-    //! Whether action is a stop to abort a dangling migration
+    // Whether action is a stop to abort a dangling migration
     pcmk_action_migration_abort      = (1 << 11),
 
-    /*!
+    /*
      * Whether action is an ordering point for minimum required instances
      * (used to implement ordering after clones with \c PCMK_META_CLONE_MIN
      * configured, and ordered sets with \c PCMK_XA_REQUIRE_ALL set to
@@ -267,68 +232,38 @@ enum pe_action_flags {
      */
     pcmk_action_min_runnable         = (1 << 12),
 
-    //! Whether action is recurring monitor that must be rescheduled if active
+    // Whether action is recurring monitor that must be rescheduled if active
     pcmk_action_reschedule           = (1 << 13),
 
-    //! Whether action has already been processed by a recursive procedure
+    // Whether action has already been processed by a recursive procedure
     pcmk_action_detect_loop          = (1 << 14),
 
-    //! Whether action's inputs have been de-duplicated yet
+    // Whether action's inputs have been de-duplicated yet
     pcmk_action_inputs_deduplicated  = (1 << 15),
 
-    //! Whether action can be executed on DC rather than own node
+    // Whether action can be executed on DC rather than own node
     pcmk_action_on_dc                = (1 << 16),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use pcmk_action_pseudo instead
     pe_action_pseudo                = pcmk_action_pseudo,
-
-    //! \deprecated Use pcmk_action_runnable instead
     pe_action_runnable              = pcmk_action_runnable,
-
-    //! \deprecated Use pcmk_action_optional instead
     pe_action_optional              = pcmk_action_optional,
-
-    //! \deprecated Use pcmk_action_always_in_graph instead
     pe_action_print_always          = pcmk_action_always_in_graph,
-
-    //! \deprecated Use pcmk_action_attrs_evaluated instead
     pe_action_have_node_attrs       = pcmk_action_attrs_evaluated,
-
-    //! \deprecated Do not use
     pe_action_implied_by_stonith    = (1 << 6),
-
-    //! \deprecated Use pcmk_action_migratable instead
     pe_action_migrate_runnable      = pcmk_action_migratable,
-
-    //! \deprecated Use pcmk_action_added_to_graph instead
     pe_action_dumped                = pcmk_action_added_to_graph,
-
-    //! \deprecated Do not use
     pe_action_processed             = (1 << 9),
-
-    //! \deprecated Do not use
     pe_action_clear                 = (1 << 10),
-
-    //! \deprecated Use pcmk_action_migration_abort instead
     pe_action_dangle                = pcmk_action_migration_abort,
-
-    //! \deprecated Use pcmk_action_min_runnable instead
     pe_action_requires_any          = pcmk_action_min_runnable,
-
-    //! \deprecated Use pcmk_action_reschedule instead
     pe_action_reschedule            = pcmk_action_reschedule,
-
-    //! \deprecated Use pcmk_action_detect_loop instead
     pe_action_tracking              = pcmk_action_detect_loop,
-
-    //! \deprecated Use pcmk_action_inputs_deduplicated instead
     pe_action_dedup                 = pcmk_action_inputs_deduplicated,
-
-    //! \deprecated Use pcmk_action_on_dc instead
     pe_action_dc                    = pcmk_action_on_dc,
 #endif
 };
+//!@}
 
 /* @COMPAT enum pe_link_state and enum pe_ordering are currently needed for
  * struct pe_action_wrapper_s (which is public) but should be removed at an
@@ -388,40 +323,43 @@ struct pe_action_wrapper_s {
 };
 //!@}
 
-//! Implementation of pcmk_action_t
+// Implementation of pcmk_action_t
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 struct pe_action_s {
-    int id;                 //!< Counter to identify action
+    int id;                 // Counter to identify action
 
-    /*!
+    /*
      * When the controller aborts a transition graph, it sets an abort priority.
      * If this priority is higher, the action will still be executed anyway.
      * Pseudo-actions are always allowed, so this is irrelevant for them.
      */
     int priority;
 
-    pcmk_resource_t *rsc;   //!< Resource to apply action to, if any
-    pcmk_node_t *node;      //!< Node to execute action on, if any
-    xmlNode *op_entry;      //!< Action XML configuration, if any
-    char *task;             //!< Action name
-    char *uuid;             //!< Action key
-    char *cancel_task;      //!< If task is "cancel", the action being cancelled
-    char *reason;           //!< Readable description of why action is needed
+    pcmk_resource_t *rsc;   // Resource to apply action to, if any
+    pcmk_node_t *node;      // Node to execute action on, if any
+    xmlNode *op_entry;      // Action XML configuration, if any
+    char *task;             // Action name
+    char *uuid;             // Action key
+    char *cancel_task;      // If task is "cancel", the action being cancelled
+    char *reason;           // Readable description of why action is needed
 
     //@ COMPAT Change to uint32_t at a compatibility break
-    enum pe_action_flags flags;         //!< Group of enum pe_action_flags
+    enum pe_action_flags flags;         // Group of enum pe_action_flags
 
-    enum rsc_start_requirement needs;   //!< Prerequisite for recovery
-    enum action_fail_response on_fail;  //!< Response to failure
-    enum rsc_role_e fail_role;          //!< Resource role if action fails
-    GHashTable *meta;                   //!< Meta-attributes relevant to action
-    GHashTable *extra;                  //!< Action-specific instance attributes
+    enum rsc_start_requirement needs;   // Prerequisite for recovery
+    enum action_fail_response on_fail;  // Response to failure
+    enum rsc_role_e fail_role;          // Resource role if action fails
+    GHashTable *meta;                   // Meta-attributes relevant to action
+    GHashTable *extra;                  // Action-specific instance attributes
 
     /* Current count of runnable instance actions for "first" action in an
      * ordering dependency with pcmk__ar_min_runnable set.
      */
-    int runnable_before;                //!< For Pacemaker use only
+    int runnable_before;                // For Pacemaker use only
 
-    /*!
+    /*
      * Number of instance actions for "first" action in an ordering dependency
      * with pcmk__ar_min_runnable set that must be runnable before this action
      * can be runnable.
@@ -429,18 +367,27 @@ struct pe_action_s {
     int required_runnable_before;
 
     // Actions in a relation with this one (as pcmk__related_action_t *)
-    GList *actions_before;  //!< For Pacemaker use only
-    GList *actions_after;   //!< For Pacemaker use only
+    GList *actions_before;
+    GList *actions_after;
 
     /* This is intended to hold data that varies by the type of action, but is
      * not currently used. Some of the above fields could be moved here except
      * for API backward compatibility.
      */
-    void *action_details;               //!< For Pacemaker use only
+    void *action_details;
 };
+//!@}
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 const char *pcmk_action_text(enum action_tasks action);
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 enum action_tasks pcmk_parse_action(const char *action_name);
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 const char *pcmk_on_fail_text(enum action_fail_response on_fail);
 
 // For parsing various action-related string specifications
