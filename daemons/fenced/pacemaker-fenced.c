@@ -625,7 +625,7 @@ main(int argc, char **argv)
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
             pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
             pcmk_cpg_set_deliver_fn(cluster, stonith_peer_ais_callback);
-            cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+            pcmk_cpg_set_confchg_fn(cluster, pcmk_cpg_membership);
         }
 #endif // SUPPORT_COROSYNC
 

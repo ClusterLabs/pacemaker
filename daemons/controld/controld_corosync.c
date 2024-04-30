@@ -148,7 +148,7 @@ crm_connect_corosync(pcmk_cluster_t *cluster)
 
         pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
         pcmk_cpg_set_deliver_fn(cluster, crmd_cs_dispatch);
-        cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
+        pcmk_cpg_set_confchg_fn(cluster, cpg_membership_callback);
 
         if (pcmk_cluster_connect(cluster) == pcmk_rc_ok) {
             pcmk__corosync_quorum_connect(crmd_quorum_callback,

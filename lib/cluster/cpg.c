@@ -761,7 +761,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
  * \brief Set the CPG deliver callback function for a cluster object
  *
  * \param[in,out] cluster  Cluster object
- * \param[in]     fn       Deliver function to set
+ * \param[in]     fn       Deliver callback function to set
  *
  * \return Standard Pacemaker return code
  */
@@ -772,6 +772,24 @@ pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn)
         return EINVAL;
     }
     cluster->cpg.cpg_deliver_fn = fn;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \brief Set the CPG config change callback function for a cluster object
+ *
+ * \param[in,out] cluster  Cluster object
+ * \param[in]     fn       Configuration change callback function to set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_cpg_set_confchg_fn(pcmk_cluster_t *cluster, cpg_confchg_fn_t fn)
+{
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+    cluster->cpg.cpg_confchg_fn = fn;
     return pcmk_rc_ok;
 }
 
