@@ -75,13 +75,14 @@ crm_peer_uuid(crm_node_t *peer)
 int
 pcmk_cluster_connect(crm_cluster_t *cluster)
 {
-    enum cluster_type_e type = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer =
+        (enum pcmk_cluster_layer) get_cluster_type();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    crm_notice("Connecting to %s cluster infrastructure",
-               name_for_cluster_type(type));
+    crm_notice("Connecting to %s cluster layer", cluster_layer_s);
 
-    switch (type) {
-        case pcmk_cluster_corosync:
+    switch (cluster_layer) {
+        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
             crm_peer_init();
             return pcmk__corosync_connect(cluster);
@@ -92,8 +93,8 @@ pcmk_cluster_connect(crm_cluster_t *cluster)
             break;
     }
 
-    crm_err("Failed to connect to unsupported cluster type %s",
-            name_for_cluster_type(type));
+    crm_err("Failed to connect to unsupported cluster layer %s",
+            cluster_layer_s);
     return EPROTONOSUPPORT;
 }
 
@@ -107,13 +108,14 @@ pcmk_cluster_connect(crm_cluster_t *cluster)
 int
 pcmk_cluster_disconnect(crm_cluster_t *cluster)
 {
-    enum cluster_type_e type = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer =
+        (enum pcmk_cluster_layer) get_cluster_type();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    crm_info("Disconnecting from %s cluster infrastructure",
-             name_for_cluster_type(type));
+    crm_info("Disconnecting from %s cluster layer", cluster_layer_s);
 
-    switch (type) {
-        case pcmk_cluster_corosync:
+    switch (cluster_layer) {
+        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
             crm_peer_destroy();
             pcmk__corosync_disconnect(cluster);
@@ -125,8 +127,8 @@ pcmk_cluster_disconnect(crm_cluster_t *cluster)
             break;
     }
 
-    crm_err("Failed to disconnect from unsupported cluster type %s",
-            name_for_cluster_type(type));
+    crm_err("Failed to disconnect from unsupported cluster layer %s",
+            cluster_layer_s);
     return EPROTONOSUPPORT;
 }
 
@@ -215,34 +217,37 @@ char *
 get_node_name(uint32_t nodeid)
 {
     char *name = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer =
+        (enum pcmk_cluster_layer) get_cluster_type();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    switch (stack) {
-        case pcmk_cluster_corosync:
+    switch (cluster_layer) {
+        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
             name = pcmk__corosync_name(0, nodeid);
             break;
 #endif // SUPPORT_COROSYNC
 
         default:
-            crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+            crm_err("Unknown cluster type: %s (%d)",
+                    cluster_layer_s, cluster_layer);
     }
 
     if ((name == NULL) && (nodeid == 0)) {
         name = pcmk_hostname();
         if (name == NULL) {
             // @TODO Maybe let the caller decide what to do
-            crm_err("Could not obtain the local %s node name",
-                    name_for_cluster_type(stack));
+            crm_err("Could not obtain the local %s node name", cluster_layer_s);
             crm_exit(CRM_EX_FATAL);
         }
         crm_notice("Defaulting to uname -n for the local %s node name",
-                   name_for_cluster_type(stack));
+                   cluster_layer_s);
     }
 
     if (name == NULL) {
         crm_notice("Could not obtain a node name for %s node with "
-                   PCMK_XA_ID " %u", name_for_cluster_type(stack), nodeid);
+                   PCMK_XA_ID " %u",
+                   cluster_layer_s, nodeid);
     }
     return name;
 }
@@ -407,9 +412,12 @@ get_cluster_type(void)
         crm_exit(CRM_EX_FATAL);
 
     } else {
+        const enum pcmk_cluster_layer cluster_layer =
+            (enum pcmk_cluster_layer) cluster_type;
+
         crm_info("%s an active '%s' cluster",
                  (detected? "Detected" : "Assuming"),
-                 name_for_cluster_type(cluster_type));
+                 pcmk_cluster_layer_text(cluster_layer));
     }
 
     return cluster_type;

@@ -454,14 +454,16 @@ int
 pcmk__corosync_connect(crm_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer =
+        (enum pcmk_cluster_layer) get_cluster_type();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
 
     crm_peer_init();
 
-    if (stack != pcmk_cluster_corosync) {
-        crm_err("Invalid cluster type: %s " CRM_XS " stack=%d",
-                name_for_cluster_type(stack), stack);
+    if (cluster_layer != pcmk_cluster_layer_corosync) {
+        crm_err("Invalid cluster type: %s " CRM_XS " cluster_layer=%d",
+                cluster_layer_s, cluster_layer);
         return EINVAL;
     }
 
@@ -470,7 +472,7 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
         // Error message was logged by pcmk__cpg_connect()
         return rc;
     }
-    crm_info("Connection to %s established", name_for_cluster_type(stack));
+    crm_info("Connection to %s established", cluster_layer_s);
 
     cluster->nodeid = get_local_nodeid(0);
     if (cluster->nodeid == 0) {
