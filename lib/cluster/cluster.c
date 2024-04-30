@@ -65,19 +65,21 @@ crm_peer_uuid(crm_node_t *peer)
 }
 
 /*!
+ * \internal
  * \brief Connect to the cluster layer
  *
- * \param[in,out] Initialized cluster object to connect
+ * \param[in,out] cluster  Initialized cluster object to connect
  *
- * \return TRUE on success, otherwise FALSE
+ * \return Standard Pacemaker return code
  */
-gboolean
-crm_cluster_connect(crm_cluster_t *cluster)
+int
+pcmk_cluster_connect(crm_cluster_t *cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
     crm_notice("Connecting to %s cluster infrastructure",
                name_for_cluster_type(type));
+
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
@@ -89,31 +91,43 @@ crm_cluster_connect(crm_cluster_t *cluster)
         default:
             break;
     }
-    return FALSE;
+
+    crm_err("Failed to connect to unsupported cluster type %s",
+            name_for_cluster_type(type));
+    return EPROTONOSUPPORT;
 }
 
 /*!
  * \brief Disconnect from the cluster layer
  *
  * \param[in,out] cluster  Cluster object to disconnect
+ *
+ * \return Standard Pacemaker return code
  */
-void
-crm_cluster_disconnect(crm_cluster_t *cluster)
+int
+pcmk_cluster_disconnect(crm_cluster_t *cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
     crm_info("Disconnecting from %s cluster infrastructure",
              name_for_cluster_type(type));
+
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
             crm_peer_destroy();
             pcmk__corosync_disconnect(cluster);
-#endif // SUPPORT_COROSYNC
+            return pcmk_rc_ok;
+#else
             break;
+#endif // SUPPORT_COROSYNC
         default:
             break;
     }
+
+    crm_err("Failed to disconnect from unsupported cluster type %s",
+            name_for_cluster_type(type));
+    return EPROTONOSUPPORT;
 }
 
 /*!
@@ -398,6 +412,18 @@ void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
     crm_xml_add(xml, attr, crm_peer_uuid(node));
+}
+
+gboolean
+crm_cluster_connect(crm_cluster_t *cluster)
+{
+    return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
+}
+
+void
+crm_cluster_disconnect(crm_cluster_t *cluster)
+{
+    pcmk_cluster_disconnect(cluster);
 }
 
 // LCOV_EXCL_STOP

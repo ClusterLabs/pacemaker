@@ -11,6 +11,9 @@
 #  define PCMK__CRM_CLUSTER_INTERNAL__H
 
 #  include <stdint.h>       // uint32_t, uint64_t
+
+#  include <glib.h>         // gboolean
+
 #  include <crm/cluster.h>
 
 /* *INDENT-OFF* */
@@ -137,6 +140,14 @@ void pcmk__reap_unseen_nodes(uint64_t ring_id);
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
+
+bool pcmk__cluster_is_node_active(const crm_node_t *node);
+unsigned int pcmk__cluster_num_active_nodes(void);
+unsigned int pcmk__cluster_num_remote_nodes(void);
+
+crm_node_t *pcmk__cluster_lookup_remote_node(const char *node_name);
+void pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name);
+void pcmk__cluster_forget_remote_node(const char *node_name);
 crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
                                      uint32_t flags);
 crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,

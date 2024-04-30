@@ -10,7 +10,11 @@
 #ifndef PCMK__CRM_CLUSTER_COMPAT__H
 #  define PCMK__CRM_CLUSTER_COMPAT__H
 
+#include <inttypes.h>       // uint32_t
+
+#include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
+
 #include <crm/cluster.h>    // crm_node_t
 
 #ifdef __cplusplus
@@ -48,6 +52,43 @@ int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
 
 // \deprecated Use crm_xml_add(xml, attr, crm_peer_uuid(node)) instead
 void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
+
+#if SUPPORT_COROSYNC
+
+// \deprecated Do not use
+gboolean cluster_connect_cpg(crm_cluster_t *cluster);
+
+// \deprecated Do not use
+void cluster_disconnect_cpg(crm_cluster_t *cluster);
+
+#endif  // SUPPORT_COROSYNC
+
+// \deprecated Use \c pcmk_cluster_connect() instead
+gboolean crm_cluster_connect(crm_cluster_t *cluster);
+
+// \deprecated Use \c pcmk_cluster_disconnect() instead
+void crm_cluster_disconnect(crm_cluster_t *cluster);
+
+// \deprecated Do not use
+int crm_remote_peer_cache_size(void);
+
+// \deprecated Do not use
+void crm_remote_peer_cache_refresh(xmlNode *cib);
+
+// \deprecated Do not use
+crm_node_t *crm_remote_peer_get(const char *node_name);
+
+// \deprecated Do not use
+void crm_remote_peer_cache_remove(const char *node_name);
+
+// \deprecated Do not use
+gboolean crm_is_peer_active(const crm_node_t *node);
+
+// \deprecated Do not use
+guint crm_active_peers(void);
+
+// \deprecated Do not use
+guint reap_crm_member(uint32_t id, const char *name);
 
 #ifdef __cplusplus
 }

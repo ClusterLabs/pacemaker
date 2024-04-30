@@ -13,6 +13,7 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <inttypes.h>                   // PRIu32
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -47,8 +48,8 @@ GHashTable *crm_peer_cache = NULL;
  * so it would be a good idea to merge them one day.
  *
  * libcluster provides two avenues for populating the cache:
- * crm_remote_peer_get() and crm_remote_peer_cache_remove() directly manage it,
- * while crm_remote_peer_cache_refresh() populates it via the CIB.
+ * pcmk__cluster_lookup_remote_node() and pcmk__cluster_forget_remote_node()
+ * directly manage it, while refresh_remote_nodes() populates it via the CIB.
  */
 GHashTable *crm_remote_peer_cache = NULL;
 
@@ -84,30 +85,38 @@ static gboolean crm_autoreap  = TRUE;
 static void update_peer_uname(crm_node_t *node, const char *uname);
 static crm_node_t *find_known_node(const char *id, const char *uname);
 
-int
-crm_remote_peer_cache_size(void)
+/*!
+ * \internal
+ * \brief Get the number of Pacemaker Remote nodes that have been seen
+ *
+ * \return Number of cached Pacemaker Remote nodes
+ */
+unsigned int
+pcmk__cluster_num_remote_nodes(void)
 {
     if (crm_remote_peer_cache == NULL) {
-        return 0;
+        return 0U;
     }
     return g_hash_table_size(crm_remote_peer_cache);
 }
 
 /*!
- * \brief Get a remote node peer cache entry, creating it if necessary
+ * \internal
+ * \brief Get a remote node cache entry, creating it if necessary
  *
  * \param[in] node_name  Name of remote node
  *
- * \return Cache entry for node on success, NULL (and set errno) otherwise
+ * \return Cache entry for node on success, or \c NULL (and set \c errno)
+ *         otherwise
  *
- * \note When creating a new entry, this will leave the node state undetermined,
- *       so the caller should also call pcmk__update_peer_state() if the state
+ * \note When creating a new entry, this will leave the node state undetermined.
+ *       The caller should also call \c pcmk__update_peer_state() if the state
  *       is known.
  * \note Because this can add and remove cache entries, callers should not
  *       assume any previously obtained cache entry pointers remain valid.
  */
 crm_node_t *
-crm_remote_peer_get(const char *node_name)
+pcmk__cluster_lookup_remote_node(const char *node_name)
 {
     crm_node_t *node;
     char *node_name_copy = NULL;
@@ -133,7 +142,7 @@ crm_remote_peer_get(const char *node_name)
             return NULL;
         }
         node_name = node_name_copy;
-        reap_crm_member(0, node_name);
+        pcmk__cluster_forget_cluster_node(0, node_name);
     }
 
     /* Return existing cache entry if one exists */
@@ -171,6 +180,7 @@ crm_remote_peer_get(const char *node_name)
 }
 
 /*!
+ * \internal
  * \brief Remove a node from the Pacemaker Remote node cache
  *
  * \param[in] node_name  Name of node to remove from cache
@@ -179,7 +189,7 @@ crm_remote_peer_get(const char *node_name)
  *       function if it might be a pointer into the cache entry being removed.
  */
 void
-crm_remote_peer_cache_remove(const char *node_name)
+pcmk__cluster_forget_remote_node(const char *node_name)
 {
     /* Do a lookup first, because node_name could be a pointer within the entry
      * being removed -- we can't log it *after* removing it.
@@ -247,7 +257,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 
     if (node == NULL) {
         /* Node is not in cache, so add a new entry for it */
-        node = crm_remote_peer_get(remote);
+        node = pcmk__cluster_lookup_remote_node(remote);
         CRM_ASSERT(node);
         if (state) {
             pcmk__update_peer_state(__func__, node, state, 0);
@@ -275,12 +285,13 @@ is_dirty(gpointer key, gpointer value, gpointer user_data)
 }
 
 /*!
- * \brief Repopulate the remote peer cache based on CIB XML
+ * \internal
+ * \brief Repopulate the remote node cache based on CIB XML
  *
- * \param[in] xmlNode  CIB XML to parse
+ * \param[in] cib  CIB XML to parse
  */
-void
-crm_remote_peer_cache_refresh(xmlNode *cib)
+static void
+refresh_remote_nodes(xmlNode *cib)
 {
     struct refresh_data data;
 
@@ -317,111 +328,182 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
     g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
 }
 
-gboolean
-crm_is_peer_active(const crm_node_t * node)
+/*!
+ * \internal
+ * \brief Check whether a node is an active cluster node
+ *
+ * Remote nodes are never considered active. This guarantees that they can never
+ * become DC.
+ *
+ * \param[in] node  Node to check
+ *
+ * \return \c true if the node is an active cluster node, or \c false otherwise
+ */
+bool
+pcmk__cluster_is_node_active(const crm_node_t *node)
 {
-    if(node == NULL) {
-        return FALSE;
+    const enum cluster_type_e type = get_cluster_type();
+
+    if ((node == NULL) || pcmk_is_set(node->flags, crm_remote_node)) {
+        return false;
     }
 
-    if (pcmk_is_set(node->flags, crm_remote_node)) {
-        /* remote nodes are never considered active members. This
-         * guarantees they will never be considered for DC membership.*/
-        return FALSE;
-    }
+    switch (type) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_corosync_cluster()) {
-        return crm_is_corosync_peer_active(node);
+            return crm_is_corosync_peer_active(node);
+#else
+            break;
+#endif  // SUPPORT_COROSYNC
+        default:
+            break;
     }
-#endif
-    crm_err("Unhandled cluster type: %s", name_for_cluster_type(get_cluster_type()));
-    return FALSE;
+
+    crm_err("Unhandled cluster type: %s", name_for_cluster_type(type));
+    return false;
 }
 
+/*!
+ * \internal
+ * \brief Check if a node's entry should be removed from the cluster node cache
+ *
+ * A node should be removed from the cache if it's inactive and matches another
+ * \c crm_node_t (the search object). The node is considered a mismatch if any
+ * of the following are true:
+ * * The search object is \c NULL.
+ * * The search object has an ID set and the cached node's ID does not match it.
+ * * The search object does not have an ID set, and the cached node's name does
+ *   not match the search node's name. (If both names are \c NULL, it's a
+ *   match.)
+ *
+ * Otherwise, the node is considered a match.
+ *
+ * Note that if the search object has both an ID and a name set, the name is
+ * ignored for matching purposes.
+ *
+ * \param[in] key        Ignored
+ * \param[in] value      \c crm_node_t object from cluster node cache
+ * \param[in] user_data  \c crm_node_t object to match against (search object)
+ *
+ * \return \c TRUE if the node entry should be removed from \c crm_peer_cache,
+ *         or \c FALSE otherwise
+ */
 static gboolean
-crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
+should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
     crm_node_t *search = user_data;
 
     if (search == NULL) {
         return FALSE;
-
-    } else if (search->id && node->id != search->id) {
-        return FALSE;
-
-    } else if (search->id == 0 && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
-        return FALSE;
-
-    } else if (crm_is_peer_active(value) == FALSE) {
-        crm_info("Removing node with name %s and " PCMK_XA_ID
-                 " %u from membership cache",
-                 (node->uname? node->uname : "unknown"), node->id);
-        return TRUE;
     }
-    return FALSE;
+    if ((search->id != 0) && (node->id != search->id)) {
+        return FALSE;
+    }
+    if ((search->id == 0)
+        && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
+        // @TODO Consider name even if ID is set?
+        return FALSE;
+    }
+    if (pcmk__cluster_is_node_active(value)) {
+        return FALSE;
+    }
+
+    crm_info("Removing node with name %s and " PCMK_XA_ID " %u from membership "
+             "cache",
+             pcmk__s(node->uname, "(unknown)"), node->id);
+    return TRUE;
 }
 
 /*!
- * \brief Remove all peer cache entries matching a node ID and/or uname
+ * \internal
+ * \brief Remove one or more inactive nodes from the cluster node cache
  *
- * \param[in] id    ID of node to remove (or 0 to ignore)
- * \param[in] name  Uname of node to remove (or NULL to ignore)
+ * All inactive nodes matching \p id and \p node_name as described in
+ * \c should_forget_cluster_node documentation are removed from the cache.
  *
- * \return Number of cache entries removed
+ * If \p id is 0 and \p node_name is \c NULL, all inactive nodes are removed
+ * from the cache regardless of ID and name. This differs from clearing the
+ * cache, in that entries for active nodes are preserved.
  *
- * \note The caller must be careful not to use \p name after calling this
- *       function if it might be a pointer into the cache entry being removed.
+ * \param[in] id         ID of node to remove from cache (0 to ignore)
+ * \param[in] node_name  Name of node to remove from cache (ignored if \p id is
+ *                       nonzero)
+ *
+ * \note \p node_name is not modified directly, but it will be freed if it's a
+ *       pointer into a cache entry that is removed.
  */
-guint
-reap_crm_member(uint32_t id, const char *name)
+void
+pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
 {
-    int matches = 0;
     crm_node_t search = { 0, };
+    char *criterion = NULL; // For logging
+    guint matches = 0;
 
     if (crm_peer_cache == NULL) {
-        crm_trace("Membership cache not initialized, ignoring purge request");
-        return 0;
+        crm_trace("Membership cache not initialized, ignoring removal request");
+        return;
     }
 
     search.id = id;
-    search.uname = pcmk__str_copy(name);
-    matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
-    if(matches) {
-        crm_notice("Purged %d peer%s with " PCMK_XA_ID
-                   "=%u%s%s from the membership cache",
-                   matches, pcmk__plural_s(matches), search.id,
-                   (search.uname? " and/or uname=" : ""),
-                   (search.uname? search.uname : ""));
+    search.uname = pcmk__str_copy(node_name);   // May log after original freed
+
+    if (id > 0) {
+        criterion = crm_strdup_printf(PCMK_XA_ID "=%" PRIu32, id);
+
+    } else if (node_name != NULL) {
+        criterion = crm_strdup_printf(PCMK_XA_UNAME "=%s", node_name);
+    }
+
+    matches = g_hash_table_foreach_remove(crm_peer_cache,
+                                          should_forget_cluster_node, &search);
+    if (matches > 0) {
+        if (criterion != NULL) {
+            crm_notice("Removed %u inactive node%s with %s from the membership "
+                       "cache",
+                       matches, pcmk__plural_s(matches), criterion);
+        } else {
+            crm_notice("Removed all (%u) inactive cluster nodes from the "
+                       "membership cache",
+                       matches);
+        }
 
     } else {
-        crm_info("No peers with " PCMK_XA_ID
-                 "=%u%s%s to purge from the membership cache",
-                 search.id, (search.uname? " and/or uname=" : ""),
-                 (search.uname? search.uname : ""));
+        crm_info("No inactive cluster nodes%s%s to remove from the membership "
+                 "cache",
+                 ((criterion != NULL)? " with" : ""), pcmk__s(criterion, ""));
     }
 
     free(search.uname);
-    return matches;
+    free(criterion);
 }
 
 static void
 count_peer(gpointer key, gpointer value, gpointer user_data)
 {
-    guint *count = user_data;
+    unsigned int *count = user_data;
     crm_node_t *node = value;
 
-    if (crm_is_peer_active(node)) {
+    if (pcmk__cluster_is_node_active(node)) {
         *count = *count + 1;
     }
 }
 
-guint
-crm_active_peers(void)
+/*!
+ * \internal
+ * \brief Get the number of active cluster nodes that have been seen
+ *
+ * Remote nodes are never considered active. This guarantees that they can never
+ * become DC.
+ *
+ * \return Number of active nodes in the cluster node cache
+ */
+unsigned int
+pcmk__cluster_num_active_nodes(void)
 {
-    guint count = 0;
+    unsigned int count = 0;
 
-    if (crm_peer_cache) {
+    if (crm_peer_cache != NULL) {
         g_hash_table_foreach(crm_peer_cache, count_peer, &count);
     }
     return count;
@@ -468,7 +550,8 @@ crm_peer_destroy(void)
     }
 
     if (crm_remote_peer_cache != NULL) {
-        crm_trace("Destroying remote peer cache with %d members", g_hash_table_size(crm_remote_peer_cache));
+        crm_trace("Destroying remote peer cache with %d members",
+                  pcmk__cluster_num_remote_nodes());
         g_hash_table_destroy(crm_remote_peer_cache);
         crm_remote_peer_cache = NULL;
     }
@@ -610,7 +693,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
         g_hash_table_remove(crm_remote_peer_cache, node_name);
     }
 
-    reap_crm_member(node_id, node_name);
+    pcmk__cluster_forget_cluster_node(node_id, node_name);
     free(node_name_copy);
 }
 
@@ -751,7 +834,7 @@ remove_conflicting_peer(crm_node_t *node)
             && existing_node->uname != NULL
             && strcasecmp(existing_node->uname, node->uname) == 0) {
 
-            if (crm_is_peer_active(existing_node)) {
+            if (pcmk__cluster_is_node_active(existing_node)) {
                 continue;
             }
 
@@ -1147,7 +1230,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
             && !pcmk_is_set(node->flags, crm_remote_node)) {
             /* We only autoreap from the peer cache, not the remote peer cache,
              * because the latter should be managed only by
-             * crm_remote_peer_cache_refresh().
+             * refresh_remote_nodes().
              */
             if(iter) {
                 crm_notice("Purged 1 peer with " PCMK_XA_ID
@@ -1156,7 +1239,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
                 g_hash_table_iter_remove(iter);
 
             } else {
-                reap_crm_member(node->id, node->uname);
+                pcmk__cluster_forget_cluster_node(node->id, node->uname);
             }
             node = NULL;
         }
@@ -1347,7 +1430,7 @@ refresh_known_node_cache(xmlNode *cib)
 void
 pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 {
-    crm_remote_peer_cache_refresh(cib);
+    refresh_remote_nodes(cib);
     refresh_known_node_cache(cib);
 }
 
@@ -1378,6 +1461,77 @@ crm_node_t *
 crm_get_peer_full(unsigned int id, const char *uname, int flags)
 {
     return pcmk__get_node(id, uname, NULL, flags);
+}
+
+int
+crm_remote_peer_cache_size(void)
+{
+    unsigned int count = pcmk__cluster_num_remote_nodes();
+
+    return QB_MIN(count, INT_MAX);
+}
+
+void
+crm_remote_peer_cache_refresh(xmlNode *cib)
+{
+    refresh_remote_nodes(cib);
+}
+
+crm_node_t *
+crm_remote_peer_get(const char *node_name)
+{
+    return pcmk__cluster_lookup_remote_node(node_name);
+}
+
+void
+crm_remote_peer_cache_remove(const char *node_name)
+{
+    pcmk__cluster_forget_remote_node(node_name);
+}
+
+gboolean
+crm_is_peer_active(const crm_node_t * node)
+{
+    return pcmk__cluster_is_node_active(node);
+}
+
+guint
+crm_active_peers(void)
+{
+    return pcmk__cluster_num_active_nodes();
+}
+
+guint
+reap_crm_member(uint32_t id, const char *name)
+{
+    int matches = 0;
+    crm_node_t search = { 0, };
+
+    if (crm_peer_cache == NULL) {
+        crm_trace("Membership cache not initialized, ignoring purge request");
+        return 0;
+    }
+
+    search.id = id;
+    search.uname = pcmk__str_copy(name);
+    matches = g_hash_table_foreach_remove(crm_peer_cache,
+                                          should_forget_cluster_node, &search);
+    if(matches) {
+        crm_notice("Purged %d peer%s with " PCMK_XA_ID
+                   "=%u%s%s from the membership cache",
+                   matches, pcmk__plural_s(matches), search.id,
+                   (search.uname? " and/or uname=" : ""),
+                   (search.uname? search.uname : ""));
+
+    } else {
+        crm_info("No peers with " PCMK_XA_ID
+                 "=%u%s%s to purge from the membership cache",
+                 search.id, (search.uname? " and/or uname=" : ""),
+                 (search.uname? search.uname : ""));
+    }
+
+    free(search.uname);
+    return matches;
 }
 
 // LCOV_EXCL_STOP

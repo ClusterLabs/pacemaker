@@ -83,7 +83,7 @@ node_alive(const crm_node_t *node)
         // Pacemaker Remote nodes can't be partially alive
         return pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei) ? 1: -1;
 
-    } else if (crm_is_peer_active(node)) {
+    } else if (pcmk__cluster_is_node_active(node)) {
         // Completely up cluster node: both cluster member and peer
         return 1;
 
@@ -221,7 +221,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if (pcmk__str_eq(node->uname, controld_globals.dc_name,
                                     pcmk__str_casei)
-                       && !crm_is_peer_active(node)) {
+                       && !pcmk__cluster_is_node_active(node)) {
                 /* Did the DC leave us? */
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);

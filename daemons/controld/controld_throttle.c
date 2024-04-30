@@ -474,7 +474,7 @@ throttle_get_total_job_limit(int l)
     /* Cluster-wide limit */
     GHashTableIter iter;
     int limit = l;
-    int peers = crm_active_peers();
+    int peers = pcmk__cluster_num_active_nodes();
     struct throttle_record_s *r = NULL;
 
     g_hash_table_iter_init(&iter, throttle_records);

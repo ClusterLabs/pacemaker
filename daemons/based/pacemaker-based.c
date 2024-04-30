@@ -284,7 +284,7 @@ main(int argc, char **argv)
     /* If main loop returned, clean up and exit. We disconnect in case
      * terminate_cib() was called with fast=-1.
      */
-    crm_cluster_disconnect(crm_cluster);
+    pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
 
 done:
@@ -375,7 +375,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 
         case crm_status_uname:
         case crm_status_nstate:
-            if (cib_shutdown_flag && (crm_active_peers() < 2)
+            if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 
                 crm_info("No more peers");
@@ -408,7 +408,7 @@ cib_init(void)
     if (!stand_alone) {
         crm_set_status_callback(&cib_peer_update_callback);
 
-        if (!crm_cluster_connect(crm_cluster)) {
+        if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }

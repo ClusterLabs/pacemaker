@@ -548,7 +548,7 @@ check_join_counts(fsa_data_t *msg_data)
         return;
     }
 
-    npeers = crm_active_peers();
+    npeers = pcmk__cluster_num_active_nodes();
     count = crmd_join_phase_count(crm_join_confirmed);
     if (count == npeers) {
         if (npeers == 1) {

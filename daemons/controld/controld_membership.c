@@ -28,7 +28,7 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
 
-    if (crm_is_peer_active(node) == FALSE) {
+    if (!pcmk__cluster_is_node_active(node)) {
         crm_update_peer_join(__func__, node, crm_join_none);
 
         if(node && node->uname) {

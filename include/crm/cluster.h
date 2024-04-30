@@ -124,8 +124,8 @@ typedef struct crm_cluster_s {
 
 } crm_cluster_t;
 
-gboolean crm_cluster_connect(crm_cluster_t *cluster);
-void crm_cluster_disconnect(crm_cluster_t *cluster);
+int pcmk_cluster_connect(crm_cluster_t *cluster);
+int pcmk_cluster_disconnect(crm_cluster_t *cluster);
 
 crm_cluster_t *pcmk_cluster_new(void);
 void pcmk_cluster_free(crm_cluster_t *cluster);
@@ -151,22 +151,8 @@ gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
 
-int crm_remote_peer_cache_size(void);
-
-/* Initialize and refresh the remote peer cache from a cib config */
-void crm_remote_peer_cache_refresh(xmlNode *cib);
-crm_node_t *crm_remote_peer_get(const char *node_name);
-void crm_remote_peer_cache_remove(const char *node_name);
-
-guint crm_active_peers(void);
-gboolean crm_is_peer_active(const crm_node_t * node);
-guint reap_crm_member(uint32_t id, const char *name);
-
 #  if SUPPORT_COROSYNC
 uint32_t get_local_nodeid(cpg_handle_t handle);
-
-gboolean cluster_connect_cpg(crm_cluster_t *cluster);
-void cluster_disconnect_cpg(crm_cluster_t * cluster);
 
 void pcmk_cpg_membership(cpg_handle_t handle,
                          const struct cpg_name *groupName,

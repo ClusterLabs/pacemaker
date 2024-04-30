@@ -205,7 +205,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *member = (crm_node_t *)value;
 
     CRM_ASSERT(member != NULL);
-    if (crm_is_peer_active(member) == FALSE) {
+    if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
                  current_join_id,
                  (member->uname? member->uname : "with unknown name"));
@@ -441,7 +441,7 @@ do_dc_join_filter_offer(long long action,
                 join_id, join_from, value, ref);
         ack_nack_bool = FALSE;
 
-    } else if (!crm_is_peer_active(join_node)) {
+    } else if (!pcmk__cluster_is_node_active(join_node)) {
         if (match_down_event(join_from) != NULL) {
             /* The join request was received after the node was fenced or
              * otherwise shutdown in a way that we're aware of. No need to log
@@ -878,7 +878,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     }
 
     join_node = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster);
-    if (!crm_is_peer_active(join_node)) {
+    if (!pcmk__cluster_is_node_active(join_node)) {
         /*
          * NACK'ing nodes that the membership layer doesn't know about yet
          * simply creates more churn
@@ -907,7 +907,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          * node hosts each to the ACK message.  This keeps new controllers in
          * sync with what has already happened.
          */
-        if (crm_remote_peer_cache_size() != 0) {
+        if (pcmk__cluster_num_remote_nodes() > 0) {
             GHashTableIter iter;
             crm_node_t *node = NULL;
             xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);

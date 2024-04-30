@@ -785,7 +785,7 @@ handle_remote_state(const xmlNode *msg)
 
     CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
-    remote_peer = crm_remote_peer_get(remote_uname);
+    remote_peer = pcmk__cluster_lookup_remote_node(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
     pcmk__update_peer_state(__func__, remote_peer,
@@ -1162,7 +1162,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             free_xml(msg);
 
         } else {
-            reap_crm_member(id, name);
+            pcmk__cluster_forget_cluster_node(id, name);
 
             /* If we're forgetting this node, also forget any failures to fence
              * it, so we don't carry that over to any node added later with the

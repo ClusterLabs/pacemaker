@@ -298,7 +298,7 @@ election_vote(election_t *e)
     }
 
     our_node = pcmk__get_node(0, e->uname, NULL, pcmk__node_search_cluster);
-    if ((our_node == NULL) || (crm_is_peer_active(our_node) == FALSE)) {
+    if (!pcmk__cluster_is_node_active(our_node)) {
         crm_trace("Cannot vote in %s yet: local node not connected to cluster",
                   e->name);
         return;
@@ -356,7 +356,7 @@ election_check(election_t *e)
     }
 
     voted_size = g_hash_table_size(e->voted);
-    num_members = crm_active_peers();
+    num_members = pcmk__cluster_num_active_nodes();
 
     /* in the case of #voted > #members, it is better to
      *   wait for the timeout and give the cluster time to
@@ -373,7 +373,7 @@ election_check(election_t *e)
             crm_warn("Received too many votes in %s", e->name);
             g_hash_table_iter_init(&gIter, crm_peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
-                if (crm_is_peer_active(node)) {
+                if (pcmk__cluster_is_node_active(node)) {
                     crm_warn("* expected vote: %s", node->uname);
                 }
             }
@@ -553,7 +553,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         reason = "Not eligible";
         we_lose = TRUE;
 
-    } else if (our_node == NULL || crm_is_peer_active(our_node) == FALSE) {
+    } else if (!pcmk__cluster_is_node_active(our_node)) {
         reason = "We are not part of the cluster";
         log_level = LOG_ERR;
         we_lose = TRUE;
@@ -563,7 +563,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         reason = "Superseded";
         done = TRUE;
 
-    } else if (your_node == NULL || crm_is_peer_active(your_node) == FALSE) {
+    } else if (!pcmk__cluster_is_node_active(your_node)) {
         /* Possibly we cached the message in the FSA queue at a point that it wasn't */
         reason = "Peer is not part of our cluster";
         log_level = LOG_WARNING;
