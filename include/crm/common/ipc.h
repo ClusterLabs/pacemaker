@@ -50,6 +50,8 @@ xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
     create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, \
                        __func__)
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
                             const char *host_to, const char *sys_to,
                             const char *sys_from, const char *uuid_from,
