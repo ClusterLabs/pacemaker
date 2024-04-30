@@ -550,12 +550,6 @@ pcmk__cluster_init_node_caches(void)
 }
 
 void
-crm_peer_init(void)
-{
-    pcmk__cluster_init_node_caches();
-}
-
-void
 crm_peer_destroy(void)
 {
     if (crm_peer_cache != NULL) {
@@ -1551,6 +1545,12 @@ reap_crm_member(uint32_t id, const char *name)
 
     free(search.uname);
     return matches;
+}
+
+void
+crm_peer_init(void)
+{
+    pcmk__cluster_init_node_caches();
 }
 
 // LCOV_EXCL_STOP

@@ -128,7 +128,6 @@ typedef struct crm_peer_node_s {
     time_t when_online;         // Since when peer has been online in CPG
 } crm_node_t;
 
-void crm_peer_init(void);
 void crm_peer_destroy(void);
 
 // Implementation of pcmk_cluster_t
