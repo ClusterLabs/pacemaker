@@ -230,6 +230,7 @@ enum cluster_type_e {
     pcmk_cluster_corosync   = pcmk_cluster_layer_corosync,
 };
 
+enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
 enum cluster_type_e get_cluster_type(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 

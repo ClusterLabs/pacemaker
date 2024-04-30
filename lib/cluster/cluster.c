@@ -334,6 +334,68 @@ pcmk_cluster_layer_text(enum pcmk_cluster_layer layer)
 }
 
 /*!
+ * \brief Get and validate the local cluster layer
+ *
+ * If a cluster layer is not configured via the \c PCMK__ENV_CLUSTER_TYPE local
+ * option, this will try to detect an active cluster from among the supported
+ * cluster layers.
+ *
+ * \return Local cluster layer
+ *
+ * \note This will fatally exit if the configured cluster layer is invalid.
+ */
+enum pcmk_cluster_layer
+pcmk_get_cluster_layer(void)
+{
+    static enum pcmk_cluster_layer cluster_layer = pcmk_cluster_layer_unknown;
+    const char *cluster = NULL;
+
+    // Cluster layer is stable once set
+    if (cluster_layer != pcmk_cluster_layer_unknown) {
+        return cluster_layer;
+    }
+
+    cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
+
+    if (cluster != NULL) {
+        crm_info("Verifying configured cluster layer '%s'", cluster);
+        cluster_layer = pcmk_cluster_layer_invalid;
+
+#if SUPPORT_COROSYNC
+        if (pcmk__str_eq(cluster, PCMK_VALUE_COROSYNC, pcmk__str_casei)) {
+            cluster_layer = pcmk_cluster_layer_corosync;
+        }
+#endif  // SUPPORT_COROSYNC
+
+        if (cluster_layer == pcmk_cluster_layer_invalid) {
+            crm_notice("This installation does not support the '%s' cluster "
+                       "infrastructure: terminating",
+                       cluster);
+            crm_exit(CRM_EX_FATAL);
+        }
+        crm_info("Assuming an active '%s' cluster", cluster);
+
+    } else {
+        // Nothing configured, so test supported cluster layers
+#if SUPPORT_COROSYNC
+        crm_debug("Testing with Corosync");
+        if (pcmk__corosync_is_active()) {
+            cluster_layer = pcmk_cluster_layer_corosync;
+        }
+#endif  // SUPPORT_COROSYNC
+
+        if (cluster_layer == pcmk_cluster_layer_unknown) {
+            crm_notice("Could not determine the current cluster layer");
+        } else {
+            crm_info("Detected an active '%s' cluster",
+                     pcmk_cluster_layer_text(cluster_layer));
+        }
+    }
+
+    return cluster_layer;
+}
+
+/*!
  * \brief Get (and validate) the local cluster type
  *
  * \return Local cluster type
@@ -342,63 +404,7 @@ pcmk_cluster_layer_text(enum pcmk_cluster_layer layer)
 enum cluster_type_e
 get_cluster_type(void)
 {
-    bool detected = false;
-    const char *cluster = NULL;
-    static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
-
-    /* Return the previous calculation, if any */
-    if (cluster_type != pcmk_cluster_unknown) {
-        return cluster_type;
-    }
-
-    cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
-
-#if SUPPORT_COROSYNC
-    /* If nothing is defined in the environment, try corosync (if supported) */
-    if (cluster == NULL) {
-        crm_debug("Testing with Corosync");
-        if (pcmk__corosync_is_active()) {
-            cluster_type = pcmk_cluster_corosync;
-            detected = true;
-            goto done;
-        }
-    }
-#endif
-
-    /* Something was defined in the environment, test it against what we support */
-    crm_info("Verifying cluster type: '%s'",
-             ((cluster == NULL)? "-unspecified-" : cluster));
-    if (cluster == NULL) {
-
-#if SUPPORT_COROSYNC
-    } else if (pcmk__str_eq(cluster, PCMK_VALUE_COROSYNC, pcmk__str_casei)) {
-        cluster_type = pcmk_cluster_corosync;
-#endif
-
-    } else {
-        cluster_type = pcmk_cluster_invalid;
-        goto done; /* Keep the compiler happy when no stacks are supported */
-    }
-
-  done:
-    if (cluster_type == pcmk_cluster_unknown) {
-        crm_notice("Could not determine the current cluster type");
-
-    } else if (cluster_type == pcmk_cluster_invalid) {
-        crm_notice("This installation does not support the '%s' cluster infrastructure: terminating.",
-                   cluster);
-        crm_exit(CRM_EX_FATAL);
-
-    } else {
-        const enum pcmk_cluster_layer cluster_layer =
-            (enum pcmk_cluster_layer) cluster_type;
-
-        crm_info("%s an active '%s' cluster",
-                 (detected? "Detected" : "Assuming"),
-                 pcmk_cluster_layer_text(cluster_layer));
-    }
-
-    return cluster_type;
+    return (enum cluster_type_e) pcmk_get_cluster_layer();
 }
 
 /*!
