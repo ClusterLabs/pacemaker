@@ -9,7 +9,7 @@
 |                 | libtool            | libtool            | libtool        |
 |                 | libtool-ltdl-devel |                    | libltdl-dev    |
 |                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
-| 0.27 or later   | pkgconfig          | pkgconfig          | pkg-config     |
+| 0.28 or later   | pkgconfig          | pkgconfig          | pkg-config     |
 | 2.42.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
 | 2.9.2 or later  | libxml2-devel      | libxml2-devel      | libxml2-dev    |
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |

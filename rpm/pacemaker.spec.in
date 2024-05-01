@@ -316,7 +316,7 @@ BuildRequires: libtool
 BuildRequires: %{?pkgname_libtool_devel}
 %endif
 BuildRequires: make
-BuildRequires: pkgconfig
+BuildRequires: pkgconfig >= 0.28
 BuildRequires: sed
 
 # Required for core functionality

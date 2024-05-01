@@ -17,7 +17,6 @@ EXTRA_DIST		= CONTRIBUTING.md		\
 			  autogen.sh			\
 			  m4/CC_CHECK_LDFLAGS.m4	\
 			  m4/CHECK_ENUM_VALUE.m4	\
-			  m4/PKG_CHECK_VAR.m4		\
 			  m4/REQUIRE_HEADER.m4		\
 			  m4/version.m4
 

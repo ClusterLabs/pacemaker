@@ -54,9 +54,9 @@ dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
 AM_INIT_AUTOMAKE([1.13 foreign tar-ustar subdir-objects])
 
 dnl Require minimum version of pkg-config
-PKG_PROG_PKG_CONFIG(0.27)
+PKG_PROG_PKG_CONFIG(0.28)
 AS_IF([test x"${PKG_CONFIG}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.27 or later)])])
+      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.28 or later)])])
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
