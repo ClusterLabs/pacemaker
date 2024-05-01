@@ -545,19 +545,6 @@ pcmk__corosync_is_peer_active(const crm_node_t *node)
 }
 
 /*!
- * \brief Check whether a Corosync cluster peer is active
- *
- * \param[in] node  Node to check
- *
- * \return TRUE if \p node is an active Corosync peer, otherwise FALSE
- */
-gboolean
-crm_is_corosync_peer_active(const crm_node_t *node)
-{
-    return pcmk__corosync_is_peer_active(node);
-}
-
-/*!
  * \internal
  * \brief Load Corosync node list (via CMAP) into peer cache and optionally XML
  *
@@ -822,3 +809,17 @@ bail:
     cmap_finalize(cmap_handle);
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+gboolean
+crm_is_corosync_peer_active(const crm_node_t *node)
+{
+    return pcmk__corosync_is_peer_active(node);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

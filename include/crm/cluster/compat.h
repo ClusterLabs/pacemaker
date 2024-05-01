@@ -82,6 +82,9 @@ void pcmk_cpg_membership(cpg_handle_t handle,
                          const struct cpg_address *joined_list,
                          size_t joined_list_entries);
 
+//! \deprecated Do not use
+gboolean crm_is_corosync_peer_active(const crm_node_t * node);
+
 #endif  // SUPPORT_COROSYNC
 
 //! \deprecated Use \c pcmk_cluster_connect() instead
