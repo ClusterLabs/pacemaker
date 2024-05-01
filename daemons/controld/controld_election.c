@@ -213,7 +213,8 @@ do_dc_takeover(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     xmlNode *cib = NULL;
-    const char *cluster_type = name_for_cluster_type(get_cluster_type());
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     pid_t watchdog = pcmk__locate_sbd();
 
     crm_info("Taking over DC status for this partition");
@@ -233,10 +234,12 @@ do_dc_takeover(long long action,
     dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
     dc_takeover_update_attr(PCMK_OPT_DC_VERSION,
                             PACEMAKER_VERSION "-" BUILD_VERSION);
-    dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_type);
+    dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_layer_s);
 
 #if SUPPORT_COROSYNC
-    if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
+    if ((controld_globals.cluster_name == NULL)
+        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name != NULL) {

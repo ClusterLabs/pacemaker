@@ -37,6 +37,9 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 
+// \deprecated Use \c pcmk_cluster_t instead
+typedef pcmk_cluster_t crm_cluster_t;
+
 // \deprecated Do not use Pacemaker for cluster node cacheing
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
@@ -56,18 +59,18 @@ void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 #if SUPPORT_COROSYNC
 
 // \deprecated Do not use
-gboolean cluster_connect_cpg(crm_cluster_t *cluster);
+gboolean cluster_connect_cpg(pcmk_cluster_t *cluster);
 
 // \deprecated Do not use
-void cluster_disconnect_cpg(crm_cluster_t *cluster);
+void cluster_disconnect_cpg(pcmk_cluster_t *cluster);
 
 #endif  // SUPPORT_COROSYNC
 
 // \deprecated Use \c pcmk_cluster_connect() instead
-gboolean crm_cluster_connect(crm_cluster_t *cluster);
+gboolean crm_cluster_connect(pcmk_cluster_t *cluster);
 
 // \deprecated Use \c pcmk_cluster_disconnect() instead
-void crm_cluster_disconnect(crm_cluster_t *cluster);
+void crm_cluster_disconnect(pcmk_cluster_t *cluster);
 
 // \deprecated Do not use
 int crm_remote_peer_cache_size(void);
@@ -89,6 +92,24 @@ guint crm_active_peers(void);
 
 // \deprecated Do not use
 guint reap_crm_member(uint32_t id, const char *name);
+
+//!@{
+//! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead
+enum cluster_type_e {
+    pcmk_cluster_unknown    = pcmk_cluster_layer_unknown,
+    pcmk_cluster_invalid    = pcmk_cluster_layer_invalid,
+    pcmk_cluster_corosync   = pcmk_cluster_layer_corosync,
+};
+//!@}
+
+// \deprecated Use \c pcmk_cluster_layer_text() instead
+const char *name_for_cluster_type(enum cluster_type_e type);
+
+// \deprecated Use \c pcmk_get_cluster_layer() instead
+enum cluster_type_e get_cluster_type(void);
+
+// \deprecated Use \c pcmk_get_cluster_layer() instead
+gboolean is_corosync_cluster(void);
 
 #ifdef __cplusplus
 }

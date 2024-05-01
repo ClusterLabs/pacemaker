@@ -2164,6 +2164,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/Makefile                                        \
                 lib/cib/Makefile                                    \
                 lib/cluster/Makefile                                \
+                lib/cluster/tests/Makefile                          \
+                lib/cluster/tests/cluster/Makefile                  \
+                lib/cluster/tests/cpg/Makefile                      \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
                 lib/common/tests/acl/Makefile                       \

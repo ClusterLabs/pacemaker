@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <inttypes.h>   // PRIu64
+#include <stdbool.h>
 
 #include <bzlib.h>
 
@@ -54,7 +55,9 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
 char *
 pcmk__corosync_uuid(const crm_node_t *node)
 {
-    if ((node != NULL) && is_corosync_cluster()) {
+    if ((node != NULL)
+        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+
         if (node->id > 0) {
             return crm_strdup_printf("%u", node->id);
         } else {
@@ -220,7 +223,7 @@ bail:
  * \param[in,out] cluster  Cluster object to disconnect
  */
 void
-pcmk__corosync_disconnect(crm_cluster_t *cluster)
+pcmk__corosync_disconnect(pcmk_cluster_t *cluster)
 {
     pcmk__cpg_disconnect(cluster);
 
@@ -451,17 +454,18 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__corosync_connect(crm_cluster_t *cluster)
+pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     int rc = pcmk_rc_ok;
 
     crm_peer_init();
 
-    if (stack != pcmk_cluster_corosync) {
-        crm_err("Invalid cluster type: %s " CRM_XS " stack=%d",
-                name_for_cluster_type(stack), stack);
+    if (cluster_layer != pcmk_cluster_layer_corosync) {
+        crm_err("Invalid cluster layer: %s " CRM_XS " cluster_layer=%d",
+                cluster_layer_s, cluster_layer);
         return EINVAL;
     }
 
@@ -470,7 +474,7 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
         // Error message was logged by pcmk__cpg_connect()
         return rc;
     }
-    crm_info("Connection to %s established", name_for_cluster_type(stack));
+    crm_info("Connection to %s established", cluster_layer_s);
 
     cluster->nodeid = get_local_nodeid(0);
     if (cluster->nodeid == 0) {
@@ -496,34 +500,22 @@ pcmk__corosync_connect(crm_cluster_t *cluster)
  * \internal
  * \brief Check whether a Corosync cluster is active
  *
- * \return pcmk_cluster_corosync if Corosync is found, else pcmk_cluster_unknown
+ * \return \c true if Corosync is found active, or \c false otherwise
  */
-enum cluster_type_e
-pcmk__corosync_detect(void)
+bool
+pcmk__corosync_is_active(void)
 {
-    int rc = CS_OK;
     cmap_handle_t handle;
+    int rc = pcmk__init_cmap(&handle);
 
-    rc = pcmk__init_cmap(&handle);
-
-    switch(rc) {
-        case CS_OK:
-            break;
-        case CS_ERR_SECURITY:
-            crm_debug("Failed to initialize the cmap API: Permission denied (%d)", rc);
-            /* It's there, we just can't talk to it.
-             * Good enough for us to identify as 'corosync'
-             */
-            return pcmk_cluster_corosync;
-
-        default:
-            crm_info("Failed to initialize the cmap API: %s (%d)",
-                     pcmk__cs_err_str(rc), rc);
-            return pcmk_cluster_unknown;
+    if (rc == CS_OK) {
+        cmap_finalize(handle);
+        return true;
     }
 
-    cmap_finalize(handle);
-    return pcmk_cluster_corosync;
+    crm_info("Failed to initialize the cmap API: %s (%d)",
+             pcmk__cs_err_str(rc), rc);
+    return false;
 }
 
 /*!

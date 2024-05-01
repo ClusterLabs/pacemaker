@@ -35,7 +35,7 @@ extern int init_remote_listener(int port, gboolean encrypted);
 gboolean cib_shutdown_flag = FALSE;
 int cib_status = pcmk_ok;
 
-crm_cluster_t *crm_cluster = NULL;
+pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
@@ -391,10 +391,10 @@ cib_init(void)
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
-    if (is_corosync_cluster()) {
-        crm_cluster->destroy = cib_cs_destroy;
-        crm_cluster->cpg.cpg_deliver_fn = cib_cs_dispatch;
-        crm_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        pcmk_cluster_set_destroy_fn(crm_cluster, cib_cs_destroy);
+        pcmk_cpg_set_deliver_fn(crm_cluster, cib_cs_dispatch);
+        pcmk_cpg_set_confchg_fn(crm_cluster, pcmk_cpg_membership);
     }
 #endif // SUPPORT_COROSYNC
 

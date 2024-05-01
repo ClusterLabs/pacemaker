@@ -19,10 +19,10 @@
 #include <glib.h>                  // G_GNUC_INTERNAL, gboolean
 #include <libxml/tree.h>           // xmlNode
 
-#include <crm/cluster.h>           // cluster_type_e, crm_node_t
+#include <crm/cluster.h>           // crm_node_t
 
 G_GNUC_INTERNAL
-enum cluster_type_e pcmk__corosync_detect(void);
+bool pcmk__corosync_is_active(void);
 
 G_GNUC_INTERNAL
 bool pcmk__corosync_has_nodelist(void);
@@ -35,16 +35,16 @@ char *pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle,
                           uint32_t nodeid);
 
 G_GNUC_INTERNAL
-int pcmk__corosync_connect(crm_cluster_t *cluster);
+int pcmk__corosync_connect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
-void pcmk__corosync_disconnect(crm_cluster_t *cluster);
+void pcmk__corosync_disconnect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
-int pcmk__cpg_connect(crm_cluster_t *cluster);
+int pcmk__cpg_connect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
-void pcmk__cpg_disconnect(crm_cluster_t *cluster);
+void pcmk__cpg_disconnect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
 bool pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,

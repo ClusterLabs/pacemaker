@@ -24,14 +24,33 @@ extern "C" {
 #    include <corosync/cpg.h>
 #  endif
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 extern gboolean crm_have_quorum;
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 extern GHashTable *crm_peer_cache;
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 extern GHashTable *crm_remote_peer_cache;
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 extern unsigned long long crm_peer_seq;
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 #define CRM_NODE_LOST      "lost"
+
+// @COMPAT Make this internal when we can break API backward compatibility
+//! \deprecated Do not use (public access will be removed in a future release)
 #define CRM_NODE_MEMBER    "member"
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_join_phase {
     /* @COMPAT: crm_join_nack_quiet can be replaced by crm_node_t:user_data
      *          at a compatibility break.
@@ -46,14 +65,21 @@ enum crm_join_phase {
     crm_join_finalized  = 3,
     crm_join_confirmed  = 4,
 };
+//!@}
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_node_flags {
-    /* node is not a cluster node and should not be considered for cluster membership */
-    crm_remote_node          = 0x0001,
+    /* Node is not a cluster node and should not be considered for cluster
+     * membership
+     */
+    crm_remote_node = (1U << 0),
 
-    /* node's cache entry is dirty */
-    crm_node_dirty           = 0x0010,
+    // Node's cache entry is dirty
+    crm_node_dirty  = (1U << 1),
 };
+//!@}
 
 typedef struct crm_peer_node_s {
     char *uname;                // Node name as known to cluster
@@ -105,11 +131,16 @@ typedef struct crm_peer_node_s {
 void crm_peer_init(void);
 void crm_peer_destroy(void);
 
-typedef struct crm_cluster_s {
+// Implementation of pcmk_cluster_t
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
+struct crm_cluster_s {
     char *uuid;
     char *uname;
     uint32_t nodeid;
 
+    //! \deprecated Call pcmk_cluster_set_destroy_fn() to set this
     void (*destroy) (gpointer);
 
 #  if SUPPORT_COROSYNC
@@ -118,22 +149,41 @@ typedef struct crm_cluster_s {
      * cluster layer further.
      */
     struct cpg_name group;
+
+    /*!
+     * \deprecated Call pcmk_cpg_set_deliver_fn() and pcmk_cpg_set_confchg_fn()
+     *             to set these
+     */
     cpg_callbacks_t cpg;
+
     cpg_handle_t cpg_handle;
 #  endif
 
-} crm_cluster_t;
+};
+//!@}
 
-int pcmk_cluster_connect(crm_cluster_t *cluster);
-int pcmk_cluster_disconnect(crm_cluster_t *cluster);
+//! Connection to a cluster layer
+typedef struct crm_cluster_s pcmk_cluster_t;
 
-crm_cluster_t *pcmk_cluster_new(void);
-void pcmk_cluster_free(crm_cluster_t *cluster);
+int pcmk_cluster_connect(pcmk_cluster_t *cluster);
+int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
+
+pcmk_cluster_t *pcmk_cluster_new(void);
+void pcmk_cluster_free(pcmk_cluster_t *cluster);
+
+int pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer));
+#if SUPPORT_COROSYNC
+int pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn);
+int pcmk_cpg_set_confchg_fn(pcmk_cluster_t *cluster, cpg_confchg_fn_t fn);
+#endif  // SUPPORT_COROSYNC
 
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_ais_msg_types {
     crm_msg_none     = 0,
     crm_msg_ais      = 1,
@@ -146,6 +196,7 @@ enum crm_ais_msg_types {
     crm_msg_pe       = 8,
     crm_msg_stonith_ng = 9,
 };
+//!@}
 
 gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
@@ -170,40 +221,44 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
 const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_status_type {
     crm_status_uname,
     crm_status_nstate,
     crm_status_processes,
 };
+//!@}
 
 enum crm_ais_msg_types text2msg_type(const char *text);
 void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
 void crm_set_autoreap(gboolean autoreap);
 
-enum cluster_type_e {
-    pcmk_cluster_unknown     = 0x0001,
-    pcmk_cluster_invalid     = 0x0002,
-    // 0x0004 was heartbeat
-    // 0x0010 was corosync 1 with plugin
-    pcmk_cluster_corosync    = 0x0020,
-    // 0x0040 was corosync 1 with CMAN
+/*!
+ * \enum pcmk_cluster_layer
+ * \brief Types of cluster layer
+ */
+enum pcmk_cluster_layer {
+    pcmk_cluster_layer_unknown  = 1,    //!< Unknown cluster layer
+    pcmk_cluster_layer_invalid  = 2,    //!< Invalid cluster layer
+    pcmk_cluster_layer_corosync = 32,   //!< Corosync Cluster Engine
 };
 
-enum cluster_type_e get_cluster_type(void);
-const char *name_for_cluster_type(enum cluster_type_e type);
-
-gboolean is_corosync_cluster(void);
+enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
+const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
 
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
 
-/*!
+/*
  * \brief Get log-friendly string equivalent of a join phase
  *
  * \param[in] phase  Join phase
  *
  * \return Log-friendly string equivalent of \p phase
  */
+//! \deprecated Do not use (public access will be removed in a future release)
 static inline const char *
 crm_join_phase_str(enum crm_join_phase phase)
 {

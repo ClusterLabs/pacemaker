@@ -814,7 +814,7 @@ find_and_track_existing_processes(void)
 gboolean
 init_children_processes(void *user_data)
 {
-    if (is_corosync_cluster()) {
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         /* Corosync clusters can drop root group access, because we set
          * uidgid.gid.${gid}=1 via CMAP, which allows these processes to connect
          * to corosync.

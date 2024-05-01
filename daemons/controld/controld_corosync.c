@@ -138,16 +138,17 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     controld_clear_global_flags(controld_dc_left);
 }
 
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
+extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 
 gboolean
-crm_connect_corosync(crm_cluster_t * cluster)
+crm_connect_corosync(pcmk_cluster_t *cluster)
 {
-    if (is_corosync_cluster()) {
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         crm_set_status_callback(&peer_update_callback);
-        cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
-        cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
-        cluster->destroy = crmd_cs_destroy;
+
+        pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
+        pcmk_cpg_set_deliver_fn(cluster, crmd_cs_dispatch);
+        pcmk_cpg_set_confchg_fn(cluster, cpg_membership_callback);
 
         if (pcmk_cluster_connect(cluster) == pcmk_rc_ok) {
             pcmk__corosync_quorum_connect(crmd_quorum_callback,

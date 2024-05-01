@@ -342,14 +342,14 @@ refresh_remote_nodes(xmlNode *cib)
 bool
 pcmk__cluster_is_node_active(const crm_node_t *node)
 {
-    const enum cluster_type_e type = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
 
     if ((node == NULL) || pcmk_is_set(node->flags, crm_remote_node)) {
         return false;
     }
 
-    switch (type) {
-        case pcmk_cluster_corosync:
+    switch (cluster_layer) {
+        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
             return crm_is_corosync_peer_active(node);
 #else
@@ -359,7 +359,8 @@ pcmk__cluster_is_node_active(const crm_node_t *node)
             break;
     }
 
-    crm_err("Unhandled cluster type: %s", name_for_cluster_type(type));
+    crm_err("Unhandled cluster layer: %s",
+            pcmk_cluster_layer_text(cluster_layer));
     return false;
 }
 
@@ -983,7 +984,9 @@ update_peer_uname(crm_node_t *node, const char *uname)
     }
 
 #if SUPPORT_COROSYNC
-    if (is_corosync_cluster() && !pcmk_is_set(node->flags, crm_remote_node)) {
+    if ((pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)
+        && !pcmk_is_set(node->flags, crm_remote_node)) {
+
         remove_conflicting_peer(node);
     }
 #endif
