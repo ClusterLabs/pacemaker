@@ -33,9 +33,6 @@ RPM_EXTRA		?=
 # - subtree (default): RPM sources (i.e. TARFILE) in top-level build directory,
 #   everything else in dedicated "rpm" subdirectory of build tree
 #
-# - toplevel (deprecated): RPM sources, spec, and source rpm in top-level build
-#   directory, everything else uses the usual rpmbuild defaults
-#
 # - anything else: The value will be treated as a directory path to be used for
 #   all RPM artifacts. WARNING: The entire directory will get removed with
 #   "make clean" or "make rpm-clean".
@@ -52,13 +49,6 @@ RPM_CLEAN_subtree	= "$(abs_builddir)/BUILD"			\
 			  "$(abs_builddir)/SPECS"			\
 			  "$(abs_builddir)/SRPMS"
 
-RPM_SPEC_DIR_toplevel	= $(abs_builddir)/..
-RPM_SRCRPM_DIR_toplevel	= $(abs_builddir)/..
-RPM_OPTS_toplevel	= --define "_sourcedir $(abs_builddir)/.." 		\
-			  --define "_specdir   $(RPM_SPEC_DIR_toplevel)"	\
-			  --define "_srcrpmdir $(RPM_SRCRPM_DIR_toplevel)"
-RPM_CLEAN_toplevel	=
-
 RPM_SPEC_DIR_other	= $(RPMDEST)/SPECS
 RPM_SRCRPM_DIR_other	= $(RPMDEST)/SRPMS
 RPM_OPTS_other		= --define "_sourcedir $(abs_builddir)/.." 	\
@@ -66,7 +56,6 @@ RPM_OPTS_other		= --define "_sourcedir $(abs_builddir)/.." 	\
 RPM_CLEAN_other		= "$(RPMDEST)"
 
 RPMTYPE		= $(shell case "$(RPMDEST)" in 			\
-			toplevel$(rparen) echo toplevel ;;	\
 			subtree$(rparen) echo subtree ;;	\
 			*$(rparen) echo other ;;		\
 			esac)
