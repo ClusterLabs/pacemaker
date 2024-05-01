@@ -83,7 +83,7 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     switch (cluster_layer) {
         case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            crm_peer_init();
+            pcmk__cluster_init_node_caches();
             return pcmk__corosync_connect(cluster);
 #else
             break;
@@ -115,7 +115,7 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     switch (cluster_layer) {
         case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            crm_peer_destroy();
+            pcmk__cluster_destroy_node_caches();
             pcmk__corosync_disconnect(cluster);
             return pcmk_rc_ok;
 #else
@@ -312,7 +312,7 @@ crm_peer_uname(const char *uuid)
         }
 
         node = pcmk__search_node_caches((uint32_t) id, NULL,
-                                        pcmk__node_search_cluster);
+                                        pcmk__node_search_cluster_member);
         if (node != NULL) {
             crm_info("Setting uuid for node %s[%u] to %s",
                      node->uname, node->id, uuid);

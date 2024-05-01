@@ -111,6 +111,12 @@ enum cluster_type_e get_cluster_type(void);
 // \deprecated Use \c pcmk_get_cluster_layer() instead
 gboolean is_corosync_cluster(void);
 
+// \deprecated Do not use
+void crm_peer_init(void);
+
+// \deprecated Do not use
+void crm_peer_destroy(void);
+
 #ifdef __cplusplus
 }
 #endif

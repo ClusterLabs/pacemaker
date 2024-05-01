@@ -207,7 +207,7 @@ should_purge_attributes(crm_node_t *node)
      * peer cache.  That's the one we really care about here.
      */
     conn_node = pcmk__get_node(0, node->conn_host, NULL,
-                               pcmk__node_search_cluster);
+                               pcmk__node_search_cluster_member);
     if (conn_node == NULL) {
         return purge;
     }

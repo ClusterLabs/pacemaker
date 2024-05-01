@@ -959,7 +959,7 @@ forward_request(xmlNode *request)
     crm_xml_add(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
-        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster);
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
     send_cluster_message(peer, crm_msg_cib, request, FALSE);
 
@@ -1020,11 +1020,13 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
     } else if (originator != NULL) {
         /* send reply via HA to originating node */
+        const crm_node_t *node =
+            pcmk__get_node(0, originator, NULL,
+                           pcmk__node_search_cluster_member);
+
         crm_trace("Sending request result to %s only", originator);
         crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-        return send_cluster_message(pcmk__get_node(0, originator, NULL,
-                                                   pcmk__node_search_cluster),
-                                    crm_msg_cib, msg, FALSE);
+        return send_cluster_message(node, crm_msg_cib, msg, FALSE);
     }
 
     return FALSE;

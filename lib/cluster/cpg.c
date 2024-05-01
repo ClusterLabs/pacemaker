@@ -446,7 +446,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         msg->sender.id = nodeid;
         if (msg->sender.size == 0) {
             crm_node_t *peer = pcmk__get_node(nodeid, NULL, NULL,
-                                              pcmk__node_search_cluster);
+                                              pcmk__node_search_cluster_member);
 
             if (peer == NULL) {
                 crm_err("Peer with nodeid=%u is unknown", nodeid);
@@ -508,7 +508,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
     // Is this necessary?
     pcmk__get_node(msg->sender.id, msg->sender.uname, NULL,
-                   pcmk__node_search_cluster);
+                   pcmk__node_search_cluster_member);
 
     crm_trace("Payload: %.200s", data);
     return data;
@@ -609,8 +609,9 @@ node_left(const char *cpg_group_name, int event_counter,
           const struct cpg_address **sorted_member_list,
           size_t member_list_entries)
 {
-    crm_node_t *peer = pcmk__search_node_caches(cpg_peer->nodeid, NULL,
-                                                pcmk__node_search_cluster);
+    crm_node_t *peer =
+        pcmk__search_node_caches(cpg_peer->nodeid, NULL,
+                                 pcmk__node_search_cluster_member);
     const struct cpg_address **rival = NULL;
 
     /* Most CPG-related Pacemaker code assumes that only one process on a node
@@ -703,7 +704,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     for (i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = pcmk__get_node(member_list[i].nodeid, NULL, NULL,
-                                          pcmk__node_search_cluster);
+                                          pcmk__node_search_cluster_member);
 
         if (member_list[i].nodeid == local_nodeid
                 && member_list[i].pid != getpid()) {
@@ -893,7 +894,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
         return ENOTCONN;
     }
 
-    peer = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster);
+    peer = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster_member);
     crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
     return pcmk_rc_ok;
 }

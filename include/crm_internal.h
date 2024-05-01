@@ -35,6 +35,7 @@
 #define PCMK_ALLOW_DEPRECATED 0
 
 #  include <crm/lrmd.h>
+#  include <crm/cluster/internal.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/logging_internal.h>
 #  include <crm/common/ipc_internal.h>

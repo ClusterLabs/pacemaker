@@ -35,17 +35,25 @@ enum crm_proc_flag {
 
 // Used with node cache search functions
 enum pcmk__node_search_flags {
-    pcmk__node_search_none      = 0,
-    pcmk__node_search_cluster   = (1 << 0), // Search for cluster nodes
-    pcmk__node_search_remote    = (1 << 1), // Search for remote nodes
-    pcmk__node_search_any       = pcmk__node_search_cluster
-                                  |pcmk__node_search_remote,
+    //! Does not affect search
+    pcmk__node_search_none              = 0,
+
+    //! Search for cluster nodes from membership cache
+    pcmk__node_search_cluster_member    = (1 << 0),
+
+    //! Search for remote nodes
+    pcmk__node_search_remote            = (1 << 1),
+
+    //! Search for cluster member nodes and remote nodes
+    pcmk__node_search_any               = pcmk__node_search_cluster_member
+                                          |pcmk__node_search_remote,
 
     /* @COMPAT The values before this must stay the same until we can drop
      * support for enum crm_get_peer_flags
      */
 
-    pcmk__node_search_known     = (1 << 2), // Search previously known nodes
+    //! Search for cluster nodes from CIB (as of last cache refresh)
+    pcmk__node_search_cluster_cib       = (1 << 2),
 };
 
 /*!
@@ -140,6 +148,11 @@ void pcmk__reap_unseen_nodes(uint64_t ring_id);
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
+
+// Membership
+
+void pcmk__cluster_init_node_caches(void);
+void pcmk__cluster_destroy_node_caches(void);
 
 bool pcmk__cluster_is_node_active(const crm_node_t *node);
 unsigned int pcmk__cluster_num_active_nodes(void);

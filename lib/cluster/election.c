@@ -297,7 +297,8 @@ election_vote(election_t *e)
         return;
     }
 
-    our_node = pcmk__get_node(0, e->uname, NULL, pcmk__node_search_cluster);
+    our_node = pcmk__get_node(0, e->uname, NULL,
+                              pcmk__node_search_cluster_member);
     if (!pcmk__cluster_is_node_active(our_node)) {
         crm_trace("Cannot vote in %s yet: local node not connected to cluster",
                   e->name);
@@ -543,8 +544,10 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         return election_error;
     }
 
-    your_node = pcmk__get_node(0, vote.from, NULL, pcmk__node_search_cluster);
-    our_node = pcmk__get_node(0, e->uname, NULL, pcmk__node_search_cluster);
+    your_node = pcmk__get_node(0, vote.from, NULL,
+                               pcmk__node_search_cluster_member);
+    our_node = pcmk__get_node(0, e->uname, NULL,
+                              pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
                    && pcmk__str_eq(our_node->uuid, vote.election_owner,
                                    pcmk__str_none);

@@ -645,7 +645,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 
     if (device->include_nodeid && (cmd->target != NULL)) {
         crm_node_t *node = pcmk__get_node(0, cmd->target, NULL,
-                                          pcmk__node_search_cluster);
+                                          pcmk__node_search_cluster_member);
 
         cmd->target_nodeid = node->id;
     }
@@ -2415,7 +2415,7 @@ stonith_send_reply(const xmlNode *reply, int call_options,
         do_local_reply(reply, client, call_options);
     } else {
         send_cluster_message(pcmk__get_node(0, remote_peer, NULL,
-                                            pcmk__node_search_cluster),
+                                            pcmk__node_search_cluster_member),
                              crm_msg_stonith_ng, reply, FALSE);
     }
 }
@@ -2940,7 +2940,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
             pcmk__scan_min_int(host, &nodeid, 0);
             node = pcmk__search_node_caches(nodeid, NULL,
                                             pcmk__node_search_any
-                                            |pcmk__node_search_known);
+                                            |pcmk__node_search_cluster_cib);
             if (node != NULL) {
                 host = node->uname;
             }
@@ -3382,6 +3382,8 @@ handle_fence_request(pcmk__request_t *request)
         if (alternate_host != NULL) {
             const char *client_id = NULL;
             remote_fencing_op_t *op = NULL;
+            crm_node_t *node = pcmk__get_node(0, alternate_host, NULL,
+                                              pcmk__node_search_cluster_member);
 
             if (request->ipc_client->id == 0) {
                 client_id = crm_element_value(request->xml,
@@ -3400,9 +3402,7 @@ handle_fence_request(pcmk__request_t *request)
             crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
                         request->ipc_client->id);
             crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
-            send_cluster_message(pcmk__get_node(0, alternate_host, NULL,
-                                                pcmk__node_search_cluster),
-                                 crm_msg_stonith_ng, request->xml, FALSE);
+            send_cluster_message(node, crm_msg_stonith_ng, request->xml, FALSE);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 

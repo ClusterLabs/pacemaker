@@ -1008,6 +1008,7 @@ merge_duplicates(remote_fencing_op_t *op)
     g_hash_table_iter_init(&iter, stonith_remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
         const char *other_action = op_requested_action(other);
+        crm_node_t *node = NULL;
 
         if (!strcmp(op->id, other->id)) {
             continue; // Don't compare against self
@@ -1037,8 +1038,11 @@ merge_duplicates(remote_fencing_op_t *op)
                       op->id, other->id, other->target);
             continue;
         }
-        if (!fencing_peer_active(pcmk__get_node(0, other->originator, NULL,
-                                                pcmk__node_search_cluster))) {
+
+        node = pcmk__get_node(0, other->originator, NULL,
+                              pcmk__node_search_cluster_member);
+
+        if (!fencing_peer_active(node)) {
             crm_notice("Failing action '%s' targeting %s originating from "
                        "client %s@%s: Originator is dead " CRM_XS " id=%.8s",
                        other->action, other->target, other->client_name,
@@ -1238,7 +1242,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         pcmk__scan_min_int(op->target, &nodeid, 0);
         node = pcmk__search_node_caches(nodeid, NULL,
                                         pcmk__node_search_any
-                                        |pcmk__node_search_known);
+                                        |pcmk__node_search_cluster_cib);
 
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
@@ -1734,7 +1738,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     crm_xml_add_int(update, PCMK__XA_ST_TIMEOUT, op_timeout);
 
     send_cluster_message(pcmk__get_node(0, client_node, NULL,
-                                        pcmk__node_search_cluster),
+                                        pcmk__node_search_cluster_member),
                          crm_msg_stonith_ng, update, FALSE);
 
     free_xml(update);
@@ -1988,7 +1992,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         }
 
         send_cluster_message(pcmk__get_node(0, peer->host, NULL,
-                                            pcmk__node_search_cluster),
+                                            pcmk__node_search_cluster_member),
                              crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
         free_xml(remote_op);

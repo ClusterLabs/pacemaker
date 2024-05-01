@@ -430,7 +430,7 @@ stonith_cleanup(void)
         qb_ipcs_destroy(ipcs);
     }
 
-    crm_peer_destroy();
+    pcmk__cluster_destroy_node_caches();
     pcmk__client_cleanup();
     free_stonith_remote_op_list();
     free_topology_list();
@@ -608,7 +608,7 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     rc = fenced_scheduler_init();
     if (rc != pcmk_rc_ok) {

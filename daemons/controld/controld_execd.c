@@ -1764,7 +1764,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     }
 
     peer = pcmk__get_node(0, controld_globals.our_nodename, NULL,
-                          pcmk__node_search_cluster);
+                          pcmk__node_search_cluster_member);
     update = create_node_state_update(peer, node_update_none, NULL,
                                       __func__);
 

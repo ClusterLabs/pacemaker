@@ -182,7 +182,7 @@ handle_sync_response_request(pcmk__request_t *request)
     } else {
         if (request->peer != NULL) {
             crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
-                                              pcmk__node_search_cluster);
+                                              pcmk__node_search_cluster_member);
             bool peer_won = attrd_check_for_new_writer(peer, request->xml);
 
             if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
@@ -201,7 +201,7 @@ handle_update_request(pcmk__request_t *request)
     if (request->peer != NULL) {
         const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
         crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
-                                          pcmk__node_search_cluster);
+                                          pcmk__node_search_cluster_member);
 
         attrd_peer_update(peer, request->xml, host, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
