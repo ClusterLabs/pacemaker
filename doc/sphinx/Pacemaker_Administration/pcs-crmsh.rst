@@ -4,7 +4,7 @@ Quick Comparison of pcs and crm shell
 ``pcs`` and ``crm shell`` are two popular higher-level command-line interfaces
 to Pacemaker. Each has its own syntax; this chapter gives a quick comparion of
 how to accomplish the same tasks using either one. Some examples also show the
-equivalent command using low-level Pacmaker command-line tools.
+equivalent command using low-level Pacemaker command-line tools.
 
 These examples show the simplest syntax; see the respective man pages for all
 possible options.
