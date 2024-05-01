@@ -20,14 +20,6 @@
 #include <crm/common/xml_internal.h>
 #include <crm/common/scheduler_internal.h>
 
-#ifdef PCMK__COMPAT_2_0
-#define PROMOTED_INSTANCES   PCMK__ROLE_PROMOTED_LEGACY "s"
-#define UNPROMOTED_INSTANCES PCMK__ROLE_UNPROMOTED_LEGACY "s"
-#else
-#define PROMOTED_INSTANCES   PCMK_ROLE_PROMOTED
-#define UNPROMOTED_INSTANCES PCMK_ROLE_UNPROMOTED
-#endif
-
 typedef struct clone_variant_data_s {
     int clone_max;
     int clone_node_max;
@@ -784,7 +776,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     if ((list_text != NULL) && (list_text->len > 0)) {
         clone_header(out, &rc, rsc, clone_data, desc);
 
-        out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]",
+        out->list_item(out, NULL, PCMK_ROLE_PROMOTED ": [ %s ]",
                        (const char *) list_text->str);
         g_string_truncate(list_text, 0);
     }
@@ -812,11 +804,11 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             if (role == pcmk_role_unpromoted) {
                 out->list_item(out, NULL,
-                               UNPROMOTED_INSTANCES
+                               PCMK_ROLE_UNPROMOTED
                                " (" PCMK_META_TARGET_ROLE "): [ %s ]",
                                (const char *) list_text->str);
             } else {
-                out->list_item(out, NULL, UNPROMOTED_INSTANCES ": [ %s ]",
+                out->list_item(out, NULL, PCMK_ROLE_UNPROMOTED ": [ %s ]",
                                (const char *) list_text->str);
             }
 

@@ -19,12 +19,6 @@
 #include <crm/common/xml.h>
 #include <pe_status_private.h>
 
-#ifdef PCMK__COMPAT_2_0
-#define PROVIDER_SEP "::"
-#else
-#define PROVIDER_SEP ":"
-#endif
-
 /*!
  * \internal
  * \brief Check whether a resource is active on multiple nodes
@@ -520,7 +514,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
     // Resource name and agent
     pcmk__g_strcat(outstr,
-                   name, "\t(", class, ((provider == NULL)? "" : PROVIDER_SEP),
+                   name, "\t(", class, ((provider == NULL)? "" : ":"),
                    pcmk__s(provider, ""), ":", kind, "):\t", NULL);
 
     // State on node
@@ -780,8 +774,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     // Resource information
     snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
-            ((prov == NULL)? "" : PROVIDER_SEP), ((prov == NULL)? "" : prov),
-            crm_element_value(rsc->private->xml, PCMK_XA_TYPE));
+             ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
+             crm_element_value(rsc->private->xml, PCMK_XA_TYPE));
 
     if (rsc->meta != NULL) {
         target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
@@ -992,7 +986,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 
             if (prov != NULL) {
                 offset += snprintf(buffer + offset, LINE_MAX - offset,
-                                   PROVIDER_SEP "%s", prov);
+                                   ":%s", prov);
             }
         }
         offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);

@@ -3607,10 +3607,6 @@ for t in $tests; do
         -e 's/\(Injecting attribute last-failure-ping#monitor_10000=\)[0-9]*/\1/' \
         -e 's/^lt-//' \
         -e 's/ocf::/ocf:/' \
-        -e 's/Masters:/Promoted:/' \
-        -e 's/Slaves:/Unpromoted:/' \
-        -e 's/Master/Promoted/' \
-        -e 's/Slave/Unpromoted/' \
         -e 's/\x1b/\\x1b/' \
         -e "/$suppress/d" \
         "$TMPFILE" > "${TMPFILE}.$$"
