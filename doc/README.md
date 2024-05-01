@@ -4,13 +4,12 @@ Pacemaker has multiple forms of documentation:
 
 * The primary end-user documentation is a series of "books":
 
-    * Clusters From Scratch: Simplified walk-through of setting up a
-      cluster for the first time
-    * Pacemaker Administration: Tips for managing a cluster
-    * Pacemaker Development: How to work on the Pacemaker code base
-    * Pacemaker Explained: Configuration reference guide
-    * Pacemaker Remote: Configuration and walk-throughs for extended
-      clusters
+    * *Clusters From Scratch*: Simplified walk-through of setting up a cluster
+      for the first time
+    * *Pacemaker Administration*: Tips for managing a cluster
+    * *Pacemaker Development*: How to work on the Pacemaker code base
+    * *Pacemaker Explained*: Configuration reference guide
+    * *Pacemaker Remote*: Configuration and walk-throughs for extended clusters
 
   The source for these is kept in this directory's sphinx subdirectory.
   Generated versions are available online in epub, PDF, and HTML format at:
@@ -51,20 +50,7 @@ Pacemaker has multiple forms of documentation:
   but do still have some useful information. The plan is to incorporate an
   updated version of them into the books.
 
-## Editing the Books
+## Editing the Documentation
 
-The sphinx subdirectory has a subdirectory for each book by title. Each book's
-directory contains .rst files, which are the chapter sources in
-reStructuredText format (with index.rst as the starting point).
-
-Once you have edited the sources as desired, run "make" here or in the sphinx
-subdirectory to generate all the books locally. You can view the results by
-pointing your web browser to (replacing PATH\_TO\_CHECKOUT and BOOK\_TITLE
-appropriately):
-
-    file:///PATH_TO_CHECKOUT/doc/sphinx/BOOK_TITLE/_build/html/index.html
-
-See the comments at the top of doc/sphinx/Makefile.am for various options you
-can use. For a guide to sphinx-flavored reStructuredText, see:
-
-    https://www.sphinx-doc.org/en/master/usage/restructuredtext/
+If you wish to contribute documentation changes, please see the "Documentation"
+chapter of *Pacemaker Development*.

@@ -38,3 +38,13 @@ may put more specific copyright notices in their commit messages if desired.
        `"Updating Copyright Notices"
        <https://techwhirl.com/updating-copyright-notices/>`_ for a more
        readable summary.
+
+Terminology
+###########
+
+Pacemaker is extremely complex, and it helps to use terminology consistently
+throughout documentation, symbol names and comments in code, and so forth. It
+also helps to use natural language when practical instead of technical jargon
+and acronyms.
+
+For specific recommendations, see the :ref:`glossary`.
