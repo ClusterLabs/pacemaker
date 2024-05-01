@@ -18,9 +18,6 @@ dist_halib_SCRIPTS	= cts-support
 ctsdir		=	$(datadir)/$(PACKAGE)/tests/cts
 cts_DATA	=	pacemaker-cts-dummyd@.service
 dist_cts_DATA	=	cts.conf
-if BUILD_UPSTART
-dist_cts_DATA	+=	pacemaker-cts-dummyd.conf
-endif
 cts_SCRIPTS	= fence_dummy		\
 		  LSBDummy		\
 		  pacemaker-cts-dummyd

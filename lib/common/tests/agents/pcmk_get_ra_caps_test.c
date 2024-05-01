@@ -38,8 +38,6 @@ service_standard(void **state) {
     assert_int_equal(pcmk_get_ra_caps("SYSTEMD"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("service"), pcmk_ra_cap_status);
     assert_int_equal(pcmk_get_ra_caps("SeRvIcE"), pcmk_ra_cap_status);
-    assert_int_equal(pcmk_get_ra_caps("upstart"), pcmk_ra_cap_status);
-    assert_int_equal(pcmk_get_ra_caps("uPsTaRt"), pcmk_ra_cap_status);
 }
 
 static void

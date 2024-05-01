@@ -230,19 +230,6 @@ class ExecTests(Tests):
             "systemd_cancel_line": '-c cancel -r systemd_test_rsc -a monitor -i 2s ' + self._action_timeout,
             "systemd_cancel_event": '-l "NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:Cancelled" ',
 
-            "upstart_reg_line": '-c register_rsc -r upstart_test_rsc ' + self._action_timeout + ' -C upstart -T pacemaker-cts-dummyd',
-            "upstart_reg_event": '-l "NEW_EVENT event_type:register rsc_id:upstart_test_rsc action:none rc:ok op_status:complete"',
-            "upstart_unreg_line": '-c unregister_rsc -r upstart_test_rsc ' + self._action_timeout,
-            "upstart_unreg_event": '-l "NEW_EVENT event_type:unregister rsc_id:upstart_test_rsc action:none rc:ok op_status:complete"',
-            "upstart_start_line": '-c exec -r upstart_test_rsc -a start ' + self._action_timeout,
-            "upstart_start_event": '-l "NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:start rc:ok op_status:complete" ',
-            "upstart_stop_line": '-c exec -r upstart_test_rsc -a stop ' + self._action_timeout,
-            "upstart_stop_event": '-l "NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:stop rc:ok op_status:complete" ',
-            "upstart_monitor_line": '-c exec -r upstart_test_rsc -a monitor -i 2s ' + self._action_timeout,
-            "upstart_monitor_event": '-l "NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:complete" -t 15000',
-            "upstart_cancel_line": '-c cancel -r upstart_test_rsc -a monitor -i 2s ' + self._action_timeout,
-            "upstart_cancel_event": '-l "NEW_EVENT event_type:exec_complete rsc_id:upstart_test_rsc action:monitor rc:ok op_status:Cancelled" ',
-
             "service_reg_line": '-c register_rsc -r service_test_rsc ' + self._action_timeout
                                 + ' -C service -T %s' % service_agent,
             "service_reg_event": '-l "NEW_EVENT event_type:register rsc_id:service_test_rsc action:none rc:ok op_status:complete"',
@@ -588,30 +575,6 @@ class ExecTests(Tests):
             test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
                          + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
 
-        # monitor fail for upstart resource
-        if "upstart" in self._rsc_classes:
-            test = self.new_test("monitor_fail_upstart", "Force upstart monitor to fail, verify failure is reported")
-            test.add_cmd(args='-c register_rsc -r test_rsc -C upstart -T pacemaker-cts-dummyd ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ')
-            test.add_cmd(args='-c exec -r test_rsc -a start ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" ')
-            test.add_cmd(args='-c exec -r test_rsc -a start ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete" ')
-            test.add_cmd(args='-c exec -r test_rsc -a monitor -i 1s ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
-            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
-            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout)
-            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self._action_timeout,
-                         kill='killall -9 -q dd')
-            test.add_cmd(args='-c cancel -r test_rsc -a monitor -i 1s' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled" ')
-            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete" ' + self._action_timeout,
-                         expected_exitcode=ExitStatus.TIMEOUT)
-            test.add_cmd(args='-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ' + self._action_timeout,
-                         expected_exitcode=ExitStatus.TIMEOUT)
-            test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
-
         # Cancel non-existent operation on a resource
         test = self.new_test("cancel_non_existent_op", "Attempt to cancel the wrong monitor operation, verify expected failure")
         test.add_cmd(args='-c register_rsc -r test_rsc -C ocf -P pacemaker -T Dummy ' + self._action_timeout
@@ -655,15 +618,6 @@ class ExecTests(Tests):
         if "systemd" in self._rsc_classes:
             test = self.new_test("start_uninstalled_systemd", "Register uninstalled systemd agent, try to start, verify expected failure")
             test.add_cmd(args='-c register_rsc -r test_rsc -C systemd -T this_is_fake1234 ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ')
-            test.add_cmd(args='-c exec -r test_rsc -a start ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:Not installed" ')
-            test.add_cmd(args='-c unregister_rsc -r test_rsc ' + self._action_timeout
-                         + '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete" ')
-
-        if "upstart" in self._rsc_classes:
-            test = self.new_test("start_uninstalled_upstart", "Register uninstalled upstart agent, try to start, verify expected failure")
-            test.add_cmd(args='-c register_rsc -r test_rsc -C upstart -T this_is_fake1234 ' + self._action_timeout
                          + '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete" ')
             test.add_cmd(args='-c exec -r test_rsc -a start ' + self._action_timeout
                          + '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:not installed op_status:Not installed" ')
@@ -787,12 +741,6 @@ class ExecTests(Tests):
             test.add_cmd(args='-c unregister_rsc -r rsc1 ' + self._action_timeout)
             test.add_cmd(args='-c get_rsc_info -r rsc1 ', expected_exitcode=ExitStatus.ERROR)
 
-        if "upstart" in self._rsc_classes:
-            test.add_cmd(args='-c register_rsc -r rsc1 -C upstart -T pacemaker-cts-dummyd ' + self._action_timeout)
-            test.add_cmd(args='-c get_rsc_info -r rsc1 ')
-            test.add_cmd(args='-c unregister_rsc -r rsc1 ' + self._action_timeout)
-            test.add_cmd(args='-c get_rsc_info -r rsc1 ', expected_exitcode=ExitStatus.ERROR)
-
         test.add_cmd(args='-c register_rsc -r rsc2 -C ocf -T Dummy -P pacemaker ' + self._action_timeout)
         test.add_cmd(args='-c get_rsc_info -r rsc2 ')
         test.add_cmd(args='-c unregister_rsc -r rsc2 ' + self._action_timeout)
@@ -853,12 +801,6 @@ class ExecTests(Tests):
             test.add_cmd(args="-c metadata -C systemd -T pacemaker-cts-dummyd@",
                          stdout_match="resource-agent name=\"pacemaker-cts-dummyd@\"")
 
-        # get metadata
-        if "upstart" in self._rsc_classes:
-            test = self.new_test("get_upstart_metadata", "Retrieve metadata for a resource")
-            test.add_cmd(args="-c metadata -C upstart -T pacemaker-cts-dummyd",
-                         stdout_match="resource-agent name=\"pacemaker-cts-dummyd\"")
-
         # get ocf providers
         test = self.new_test("list_ocf_providers",
                              "Retrieve list of available resource providers, verifies pacemaker is a provider.")
@@ -888,12 +830,6 @@ class ExecTests(Tests):
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="Stateful")        # should not exist
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="pacemaker-cts-dummyd@")
             test.add_cmd(args="-c list_agents -C systemd", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
-
-        if "upstart" in self._rsc_classes:
-            test.add_cmd(args="-c list_agents ", stdout_match="pacemaker-cts-dummyd")                          # upstart
-            test.add_cmd(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="Stateful")        # should not exist
-            test.add_cmd(args="-c list_agents -C upstart", stdout_match="pacemaker-cts-dummyd")
-            test.add_cmd(args="-c list_agents -C upstart", stdout_match="", stdout_no_match="fence_dummy")     # should not exist
 
         if "stonith" in self._rsc_classes:
             test.add_cmd(args="-c list_agents -C stonith", stdout_match="fence_dummy")                         # stonith

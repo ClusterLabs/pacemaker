@@ -53,8 +53,7 @@ pcmk_get_ra_caps(const char *standard)
         return pcmk_ra_cap_status | pcmk_ra_cap_cli_exec;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
-               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)
-               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)) {
         return pcmk_ra_cap_status;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
