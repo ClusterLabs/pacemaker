@@ -200,8 +200,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               const xmlNode *data, gboolean ordered);
 
 #  if SUPPORT_COROSYNC
-uint32_t get_local_nodeid(cpg_handle_t handle);
-
 void pcmk_cpg_membership(cpg_handle_t handle,
                          const struct cpg_name *groupName,
                          const struct cpg_address *member_list, size_t member_list_entries,

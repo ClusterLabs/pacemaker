@@ -10,10 +10,14 @@
 #ifndef PCMK__CRM_CLUSTER_COMPAT__H
 #  define PCMK__CRM_CLUSTER_COMPAT__H
 
-#include <inttypes.h>       // uint32_t
+#include <stdint.h>         // uint32_t
 
 #include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
+
+#if SUPPORT_COROSYNC
+#include <corosync/cpg.h>   // cpg_handle_t
+#endif  // SUPPORT_COROSYNC
 
 #include <crm/cluster.h>    // crm_node_t
 
@@ -63,6 +67,9 @@ gboolean cluster_connect_cpg(pcmk_cluster_t *cluster);
 
 // \deprecated Do not use
 void cluster_disconnect_cpg(pcmk_cluster_t *cluster);
+
+//! \deprecated Do not use
+uint32_t get_local_nodeid(cpg_handle_t handle);
 
 #endif  // SUPPORT_COROSYNC
 

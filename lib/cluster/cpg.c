@@ -169,19 +169,6 @@ bail:
 }
 
 /*!
- * \brief Get the local Corosync node ID (via CPG)
- *
- * \param[in] handle  CPG connection to use (or 0 to use new connection)
- *
- * \return Corosync ID of local node (or 0 if not known)
- */
-uint32_t
-get_local_nodeid(cpg_handle_t handle)
-{
-    return pcmk__cpg_local_nodeid(handle);
-}
-
-/*!
  * \internal
  * \brief Callback function for Corosync message queue timer
  *
@@ -1173,6 +1160,12 @@ void
 cluster_disconnect_cpg(pcmk_cluster_t *cluster)
 {
     pcmk__cpg_disconnect(cluster);
+}
+
+uint32_t
+get_local_nodeid(cpg_handle_t handle)
+{
+    return pcmk__cpg_local_nodeid(handle);
 }
 
 // LCOV_EXCL_STOP
