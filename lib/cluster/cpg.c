@@ -1099,31 +1099,6 @@ pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
 }
 
 /*!
- * \brief Send string data via Corosync CPG
- *
- * \param[in] msg_class  Message class (to set as CPG header ID)
- * \param[in] data       Data to send
- * \param[in] local      What to set as host "local" value (which is never used)
- * \param[in] node       Cluster node to send message to
- * \param[in] dest       Type of message to send
- *
- * \return TRUE on success, otherwise FALSE
- */
-gboolean
-send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                  gboolean local, const crm_node_t *node,
-                  enum crm_ais_msg_types dest)
-{
-    switch (msg_class) {
-        case crm_class_cluster:
-            return send_cpg_text(data, local, node, dest);
-        default:
-            crm_err("Invalid message class: %d", msg_class);
-            return FALSE;
-    }
-}
-
-/*!
  * \brief Get the message type equivalent of a string
  *
  * \param[in] text  String of message type
@@ -1206,6 +1181,20 @@ pcmk_cpg_membership(cpg_handle_t handle,
     pcmk__cpg_confchg_cb(handle, group_name, member_list, member_list_entries,
                          left_list, left_list_entries,
                          joined_list, joined_list_entries);
+}
+
+gboolean
+send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
+                  gboolean local, const crm_node_t *node,
+                  enum crm_ais_msg_types dest)
+{
+    switch (msg_class) {
+        case crm_class_cluster:
+            return send_cpg_text(data, local, node, dest);
+        default:
+            crm_err("Invalid message class: %d", msg_class);
+            return FALSE;
+    }
 }
 
 // LCOV_EXCL_STOP

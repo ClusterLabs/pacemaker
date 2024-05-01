@@ -200,9 +200,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               const xmlNode *data, gboolean ordered);
 
 #  if SUPPORT_COROSYNC
-gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                           gboolean local, const crm_node_t *node,
-                           enum crm_ais_msg_types dest);
 char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
                         uint32_t *kind, const char **from);
 #  endif
