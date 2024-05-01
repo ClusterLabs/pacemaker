@@ -1333,8 +1333,8 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
     AS_IF([cc_supports_flag -fPIC],
-	  [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
-	  [cc_temp_flags "-Wcast-qual $WERROR"])
+          [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
+          [cc_temp_flags "-Wcast-qual $WERROR"])
 
     AC_MSG_CHECKING([whether curses library is compatible])
     AC_LINK_IFELSE(
@@ -1446,17 +1446,16 @@ dnl ===============================================
 dnl Detect DBus, systemd, and Upstart support
 dnl ===============================================
 
-HAVE_dbus=1
-PKG_CHECK_MODULES([DBUS], [dbus-1],
-                  [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
-                  [HAVE_dbus=0])
+HAVE_dbus=0
+PC_NAME_DBUS=""
+PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.5.12],
+                  [
+                      HAVE_dbus=1
+                      PC_NAME_DBUS="dbus-1"
+                      CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"
+                  ],[])
 AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
-dnl libdbus 1.5.12+ (2012-03) / 1.6.0+ (2012-06)
-AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
-AS_IF([test $HAVE_dbus = 0],
-      [PC_NAME_DBUS=""],
-      [PC_NAME_DBUS="dbus-1"])
 AC_SUBST(PC_NAME_DBUS)
 
 check_systemdsystemunitdir() {
