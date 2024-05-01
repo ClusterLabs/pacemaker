@@ -55,9 +55,6 @@ pcmk_get_ra_caps(const char *standard)
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)) {
         return pcmk_ra_cap_status;
-
-    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
-        return pcmk_ra_cap_params;
     }
     return pcmk_ra_cap_none;
 }

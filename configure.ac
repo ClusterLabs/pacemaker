@@ -365,25 +365,7 @@ AC_ARG_WITH([corosync-conf],
     [ PCMK__COROSYNC_CONF="$withval" ]
 )
 
-AC_ARG_WITH([nagios],
-    [AS_HELP_STRING([--with-nagios], [support nagios resources (deprecated)])]
-)
-yes_no_try "$with_nagios" "try"
-with_nagios=$?
-
 dnl --with-* options: directory locations
-
-AC_ARG_WITH([nagios-plugin-dir],
-    [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
-        [directory for nagios plugins (deprecated) @<:@LIBEXECDIR/nagios/plugins@:>@])],
-    [ NAGIOS_PLUGIN_DIR="$withval" ]
-)
-
-AC_ARG_WITH([nagios-metadata-dir],
-    [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
-        [directory for nagios plugins metadata (deprecated) @<:@DATADIR/nagios/plugins-metadata@:>@])],
-    [ NAGIOS_METADATA_DIR="$withval" ]
-)
 
 INITDIR=""
 AC_ARG_WITH([initdir],
@@ -1502,36 +1484,6 @@ AC_DEFINE_UNQUOTED([SUPPORT_SYSTEMD], [$enable_systemd],
                    [Support systemd resources])
 AM_CONDITIONAL([BUILD_SYSTEMD], [test $enable_systemd = $REQUIRED])
 AC_SUBST(SUPPORT_SYSTEMD)
-
-dnl ========================================================================
-dnl Detect Nagios support
-dnl ========================================================================
-
-AS_CASE([$with_nagios],
-        [$REQUIRED], [
-            AS_IF([test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
-                  [AC_MSG_FAILURE([Cannot support nagios resources without monotonic clock])])
-        ],
-        [$OPTIONAL], [
-            AS_IF([test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
-                  [with_nagios=$DISABLED], [with_nagios=$REQUIRED])
-        ]
-)
-AS_IF([test $with_nagios -eq $REQUIRED], [PCMK_FEATURES="$PCMK_FEATURES nagios"])
-AC_DEFINE_UNQUOTED([SUPPORT_NAGIOS], [$with_nagios], [Support nagios plugins])
-AM_CONDITIONAL([BUILD_NAGIOS], [test $with_nagios -eq $REQUIRED])
-
-AS_IF([test x"$NAGIOS_PLUGIN_DIR" = x""],
-      [NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"])
-
-AC_DEFINE_UNQUOTED(NAGIOS_PLUGIN_DIR, "$NAGIOS_PLUGIN_DIR", Directory for nagios plugins)
-AC_SUBST(NAGIOS_PLUGIN_DIR)
-
-AS_IF([test x"$NAGIOS_METADATA_DIR" = x""],
-      [NAGIOS_METADATA_DIR="${datadir}/nagios/plugins-metadata"])
-
-AC_DEFINE_UNQUOTED(NAGIOS_METADATA_DIR, "$NAGIOS_METADATA_DIR", Directory for nagios plugins metadata)
-AC_SUBST(NAGIOS_METADATA_DIR)
 
 STACKS=""
 CLUSTERLIBS=""

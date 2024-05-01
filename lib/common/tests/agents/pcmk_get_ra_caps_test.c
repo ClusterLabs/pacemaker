@@ -50,12 +50,6 @@ lsb_standard(void **state)
 }
 
 static void
-nagios_standard(void **state) {
-    assert_int_equal(pcmk_get_ra_caps("nagios"), pcmk_ra_cap_params);
-    assert_int_equal(pcmk_get_ra_caps("NAGios"), pcmk_ra_cap_params);
-}
-
-static void
 unknown_standard(void **state) {
     assert_int_equal(pcmk_get_ra_caps("blahblah"), pcmk_ra_cap_none);
     assert_int_equal(pcmk_get_ra_caps(""), pcmk_ra_cap_none);
@@ -67,5 +61,4 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(stonith_standard),
                 cmocka_unit_test(service_standard),
                 cmocka_unit_test(lsb_standard),
-                cmocka_unit_test(nagios_standard),
                 cmocka_unit_test(unknown_standard))

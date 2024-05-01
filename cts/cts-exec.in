@@ -280,9 +280,6 @@ class ExecTests(Tests):
         if self.tls:
             classes.remove("stonith")
 
-        if "nagios" in classes:
-            classes.remove("nagios")
-
         if "systemd" in classes:
             try:
                 # This code doesn't need this import, but pacemaker-cts-dummyd
