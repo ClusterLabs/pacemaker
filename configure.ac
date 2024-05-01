@@ -1080,7 +1080,7 @@ AS_IF([test x"$ac_cv_lib_c_dlopen" = x"yes"],
       [LIBADD_DL=-ldl],
       [LIBADD_DL=${lt_cv_dlopen_libs}])
 
-PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.6.0],
+PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
                    LIBS="${LIBS} ${LIBXML2_LIBS}"])
 

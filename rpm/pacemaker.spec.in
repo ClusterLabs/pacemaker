@@ -321,7 +321,7 @@ BuildRequires: sed
 
 # Required for core functionality
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
-BuildRequires: pkgconfig(libxml-2.0) >= 2.6.0
+BuildRequires: pkgconfig(libxml-2.0) >= 2.9.2
 BuildRequires: libxslt-devel
 BuildRequires: pkgconfig(uuid)
 BuildRequires: %{pkgname_bzip2_devel}
@@ -485,7 +485,7 @@ Requires:      libqb-devel%{?_isa} >= 1.0.1
 Requires:      %{?pkgname_libtool_devel_arch}
 %endif
 Requires:      libuuid-devel%{?_isa}
-Requires:      libxml2-devel%{?_isa} >= 2.6.0
+Requires:      libxml2-devel%{?_isa} >= 2.9.2
 Requires:      libxslt-devel%{?_isa}
 
 %description -n %{pkgname_pcmk_libs}-devel
