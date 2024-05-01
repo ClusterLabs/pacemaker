@@ -71,8 +71,4 @@
 /* Support systemd based system services */
 #undef SUPPORT_SYSTEMD
 
-/* Support upstart based system services */
-//! \deprecated Do not use (always treat as 0)
-#undef SUPPORT_UPSTART
-
 #endif /* CRM_CONFIG__H */
