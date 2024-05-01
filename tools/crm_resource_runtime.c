@@ -135,20 +135,17 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
                               cib_sync_call | cib_scope_local | cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
-    if (rc != pcmk_rc_ok) {
-        goto done;
+    if (rc == pcmk_rc_ok) {
+        crm_log_xml_debug(xml_search, "Match");
+        if (xml_search->children != NULL) {
+            rc = ENOTUNIQ;
+            pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
+            out->spacer(out);
+        } else if (value) {
+            pcmk__str_update(value, crm_element_value(xml_search, attr));
+        }
     }
 
-    crm_log_xml_debug(xml_search, "Match");
-    if (xml_search->children != NULL) {
-        rc = ENOTUNIQ;
-        pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
-        out->spacer(out);
-    } else if(value) {
-        pcmk__str_update(value, crm_element_value(xml_search, attr));
-    }
-
-  done:
     g_string_free(xpath, TRUE);
     free_xml(xml_search);
     return rc;
