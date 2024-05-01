@@ -938,45 +938,20 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
 
 /*!
  * \internal
- * \brief Send an XML message via Corosync CPG
- *
- * \param[in] msg   XML message to send
- * \param[in] node  Cluster node to send message to
- * \param[in] dest  Type of message to send
- *
- * \return TRUE on success, otherwise FALSE
- */
-bool
-pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
-                   enum crm_ais_msg_types dest)
-{
-    bool rc = true;
-    GString *data = g_string_sized_new(1024);
-
-    pcmk__xml_string(msg, 0, data, 0);
-
-    rc = send_cluster_text(crm_class_cluster, data->str, FALSE, node, dest);
-    g_string_free(data, TRUE);
-    return rc;
-}
-
-/*!
- * \internal
  * \brief Send string data via Corosync CPG
  *
- * \param[in] msg_class  Message class (to set as CPG header ID)
- * \param[in] data       Data to send
- * \param[in] local      What to set as host "local" value (which is never used)
- * \param[in] node       Cluster node to send message to
- * \param[in] dest       Type of message to send
+ * \param[in] data   Data to send
+ * \param[in] local  What to set as host "local" value (which is never used)
+ * \param[in] node   Cluster node to send message to
+ * \param[in] dest   Type of message to send
  *
- * \return TRUE on success, otherwise FALSE
+ * \return \c true on success, or \c false otherwise
  */
-gboolean
-send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                  gboolean local, const crm_node_t *node,
-                  enum crm_ais_msg_types dest)
+static bool
+send_cpg_text(const char *data, bool local, const crm_node_t *node,
+              enum crm_ais_msg_types dest)
 {
+    // @COMPAT Drop local argument when send_cluster_text is dropped
     static int msg_id = 0;
     static int local_pid = 0;
     static int local_name_len = 0;
@@ -987,15 +962,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     pcmk__cpg_msg_t *msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
-    switch (msg_class) {
-        case crm_class_cluster:
-            break;
-        default:
-            crm_err("Invalid message class: %d", msg_class);
-            return FALSE;
-    }
-
-    CRM_CHECK(dest != crm_msg_ais, return FALSE);
+    CRM_CHECK(dest != crm_msg_ais, return false);
 
     if (local_name == NULL) {
         local_name = get_local_node_name();
@@ -1020,22 +987,24 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
 
     msg_id++;
     msg->id = msg_id;
-    msg->header.id = msg_class;
+    msg->header.id = crm_class_cluster;
     msg->header.error = CS_OK;
 
     msg->host.type = dest;
     msg->host.local = local;
 
-    if (node) {
-        if (node->uname) {
+    if (node != NULL) {
+        if (node->uname != NULL) {
             target = pcmk__str_copy(node->uname);
             msg->host.size = strlen(node->uname);
             memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->uname, msg->host.size);
+
         } else {
             target = crm_strdup_printf("%u", node->id);
         }
         msg->host.id = node->id;
+
     } else {
         target = pcmk__str_copy("all");
     }
@@ -1045,6 +1014,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
     memset(msg->sender.uname, 0, MAX_NAME);
+
     if ((local_name != NULL) && (msg->sender.size != 0)) {
         memcpy(msg->sender.uname, local_name, msg->sender.size);
     }
@@ -1084,21 +1054,73 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     iov->iov_base = msg;
     iov->iov_len = msg->header.size;
 
-    if (msg->compressed_size) {
-        crm_trace("Queueing CPG message %u to %s (%llu bytes, %d bytes compressed payload): %.200s",
+    if (msg->compressed_size > 0) {
+        crm_trace("Queueing CPG message %u to %s "
+                  "(%llu bytes, %d bytes compressed payload): %.200s",
                   msg->id, target, (unsigned long long) iov->iov_len,
                   msg->compressed_size, data);
     } else {
-        crm_trace("Queueing CPG message %u to %s (%llu bytes, %d bytes payload): %.200s",
+        crm_trace("Queueing CPG message %u to %s "
+                  "(%llu bytes, %d bytes payload): %.200s",
                   msg->id, target, (unsigned long long) iov->iov_len,
                   msg->size, data);
     }
+
     free(target);
 
     cs_message_queue = g_list_append(cs_message_queue, iov);
     crm_cs_flush(&pcmk_cpg_handle);
 
-    return TRUE;
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Send an XML message via Corosync CPG
+ *
+ * \param[in] msg   XML message to send
+ * \param[in] node  Cluster node to send message to
+ * \param[in] dest  Type of message to send
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
+bool
+pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
+                   enum crm_ais_msg_types dest)
+{
+    bool rc = true;
+    GString *data = g_string_sized_new(1024);
+
+    pcmk__xml_string(msg, 0, data, 0);
+
+    rc = send_cpg_text(data->str, false, node, dest);
+    g_string_free(data, TRUE);
+    return rc;
+}
+
+/*!
+ * \brief Send string data via Corosync CPG
+ *
+ * \param[in] msg_class  Message class (to set as CPG header ID)
+ * \param[in] data       Data to send
+ * \param[in] local      What to set as host "local" value (which is never used)
+ * \param[in] node       Cluster node to send message to
+ * \param[in] dest       Type of message to send
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
+gboolean
+send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
+                  gboolean local, const crm_node_t *node,
+                  enum crm_ais_msg_types dest)
+{
+    switch (msg_class) {
+        case crm_class_cluster:
+            return send_cpg_text(data, local, node, dest);
+        default:
+            crm_err("Invalid message class: %d", msg_class);
+            return FALSE;
+    }
 }
 
 /*!
