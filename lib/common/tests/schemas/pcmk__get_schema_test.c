@@ -57,7 +57,9 @@ unknown_schema(void **state)
 static void
 known_schema(void **state)
 {
+    // @COMPAT none is deprecated since 2.1.8
     assert_schema(NULL, 16); // defaults to "none"
+
     assert_schema("pacemaker-1.0", 0);
     assert_schema("pacemaker-1.2", 1);
     assert_schema("pacemaker-2.0", 3);

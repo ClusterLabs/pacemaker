@@ -31,6 +31,7 @@ teardown(void **state)
 }
 
 // NULL schema name defaults to the "none" schema
+// @COMPAT none is deprecated since 2.1.8
 
 static void
 unknown_is_lesser(void **state)
@@ -41,14 +42,19 @@ unknown_is_lesser(void **state)
                                           "pacemaker-1.0") < 0);
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.0",
                                           "pacemaker-0.1") > 0);
+    assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.1", NULL) < 0);
+    assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-0.0") > 0);
+
+    /* @COMPAT pacemaker-next is deprecated since 2.1.5,
+     * and pacemaker-0.6 and pacemaker-0.7 since 2.1.8
+     */
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-0.6",
                                           "pacemaker-next") < 0);
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
                                           "pacemaker-0.7") > 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-1.1", NULL) < 0);
-    assert_true(pcmk__cmp_schemas_by_name(NULL, "pacemaker-0.0") > 0);
 }
 
+// @COMPAT none is deprecated since 2.1.8
 static void
 none_is_greater(void **state)
 {
@@ -57,16 +63,21 @@ none_is_greater(void **state)
     assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE, NULL) == 0);
     assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
                                           PCMK_VALUE_NONE) == 0);
-    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
-                                          PCMK_VALUE_NONE) < 0);
-    assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
-                                          "pacemaker-next") > 0);
+
     assert_true(pcmk__cmp_schemas_by_name("pacemaker-3.0",
                                           PCMK_VALUE_NONE) < 0);
     assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
                                           "pacemaker-1.0") > 0);
+
+    // @COMPAT pacemaker-next is deprecated since 2.1.5
+    assert_true(pcmk__cmp_schemas_by_name("pacemaker-next",
+                                          PCMK_VALUE_NONE) < 0);
+    assert_true(pcmk__cmp_schemas_by_name(PCMK_VALUE_NONE,
+                                          "pacemaker-next") > 0);
 }
 
+// @COMPAT pacemaker-next is deprecated since 2.1.5
+// @COMPAT none is deprecated since 2.1.8
 static void
 next_is_before_none(void **state)
 {

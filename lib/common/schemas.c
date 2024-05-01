@@ -62,8 +62,8 @@ xml_latest_schema_index(void)
      * so we have at least three schemas (one real schema, the "pacemaker-next"
      * schema, and the "none" schema).
      *
-     * @COMPAT: pacemaker-next is deprecated since 2.1.5.
-     * Update this when we drop that schema.
+     * @COMPAT: pacemaker-next is deprecated since 2.1.5 and none since 2.1.8.
+     * Update this when we drop those.
      */
     return g_list_length(known_schemas) - 3;
 }
@@ -429,6 +429,7 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
     const pcmk__schema_t *schema_a = a;
     const pcmk__schema_t *schema_b = b;
 
+    // @COMPAT pacemaker-next is deprecated since 2.1.5 and none since 2.1.8
     if (pcmk__str_eq(schema_a->name, "pacemaker-next", pcmk__str_none)) {
         if (pcmk__str_eq(schema_b->name, PCMK_VALUE_NONE, pcmk__str_none)) {
             return -1;
@@ -485,6 +486,7 @@ crm_schema_init(void)
         add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next", NULL,
                    NULL, FALSE);
 
+        // @COMPAT Deprecated since 2.1.8
         add_schema(pcmk__schema_validator_none, &zero, PCMK_VALUE_NONE, NULL,
                    NULL, FALSE);
 
@@ -656,6 +658,7 @@ crm_schema_cleanup(void)
 GList *
 pcmk__get_schema(const char *name)
 {
+    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     if (name == NULL) {
         name = PCMK_VALUE_NONE;
     }
@@ -717,11 +720,6 @@ validate_with(xmlNode *xml, pcmk__schema_t *schema,
         return true;
     }
 
-    if (pcmk__str_eq(schema->name, "pacemaker-next", pcmk__str_none)) {
-        crm_warn("The pacemaker-next schema is deprecated and will be removed "
-                 "in a future release.");
-    }
-
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
                                    schema->name);
 
@@ -764,7 +762,9 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     if (validation == NULL) {
         validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
+    pcmk__warn_if_schema_deprecated(validation);
 
+    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     if (validation == NULL) {
         bool valid = false;
 
@@ -780,14 +780,17 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
 
     entry = pcmk__get_schema(validation);
-    if (entry != NULL) {
-        schema = entry->data;
-        return validate_with(xml_blob, schema, error_handler,
-                             error_handler_context);
+    if (entry == NULL) {
+        pcmk__config_err("Cannot validate CIB with " PCMK_XA_VALIDATE_WITH
+                         " set to an unknown schema such as '%s' (manually"
+                         " edit to use a known schema)",
+                         validation);
+        return false;
     }
 
-    crm_err("Unknown validator: %s", validation);
-    return false;
+    schema = entry->data;
+    return validate_with(xml_blob, schema, error_handler,
+                         error_handler_context);
 }
 
 /*!
@@ -1109,6 +1112,7 @@ get_configured_schema(const xmlNode *xml)
 {
     const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
 
+    pcmk__warn_if_schema_deprecated(schema_name);
     if (schema_name == NULL) {
         return NULL;
     }
@@ -1160,6 +1164,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     entry = get_configured_schema(*xml);
     if (entry == NULL) {
+        // @COMPAT Not specifying a schema name is deprecated since 2.1.8
         entry = known_schemas;
     } else {
         original_schema = entry->data;
@@ -1244,12 +1249,16 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 {
     bool rc = true;
     char *original_schema_name = NULL;
+
+    // @COMPAT Not specifying a schema name is deprecated since 2.1.8
     const char *effective_original_name = "the first";
+
     int orig_version = -1;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
     GList *entry = NULL;
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
+    pcmk__warn_if_schema_deprecated(original_schema_name);
     entry = pcmk__get_schema(original_schema_name);
     if (entry != NULL) {
         pcmk__schema_t *original_schema = entry->data;
@@ -1340,24 +1349,18 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         }
 
     } else {
+        // @COMPAT the none schema is deprecated since 2.1.8
         pcmk__schema_t *none_schema = NULL;
 
         entry = pcmk__get_schema(PCMK_VALUE_NONE);
         CRM_ASSERT((entry != NULL) && (entry->data != NULL));
 
         none_schema = entry->data;
-        if (orig_version >= none_schema->schema_index) {
-            // Schema validation is disabled
-            if (to_logs) {
-                pcmk__config_warn("Schema validation of configuration is "
-                                  "disabled (enabling is encouraged and "
-                                  "prevents common misconfigurations)");
-
-            } else {
-                fprintf(stderr, "Schema validation of configuration is "
-                                "disabled (enabling is encouraged and "
-                                "prevents common misconfigurations)\n");
-            }
+        if (!to_logs && (orig_version >= none_schema->schema_index)) {
+            fprintf(stderr, "Schema validation of configuration is "
+                            "disabled (support for " PCMK_XA_VALIDATE_WITH
+                            " set to \"" PCMK_VALUE_NONE "\" is deprecated"
+                            " and will be removed in a future release)\n");
         }
     }
 
@@ -1569,6 +1572,24 @@ pcmk__remote_schema_dir(void)
     }
 
     return dir;
+}
+
+/*!
+ * \internal
+ * \brief Warn if a given validation schema is deprecated
+ *
+ * \param[in] Schema name to check
+ */
+void
+pcmk__warn_if_schema_deprecated(const char *schema)
+{
+    if ((schema == NULL) ||
+        pcmk__strcase_any_of(schema, "pacemaker-next", PCMK_VALUE_NONE, NULL)) {
+        pcmk__config_warn("Support for " PCMK_XA_VALIDATE_WITH "='%s' is "
+                          "deprecated and will be removed in a future release "
+                          "without the possibility of upgrades (manually edit "
+                          "to use a supported schema)", pcmk__s(schema, ""));
+    }
 }
 
 // Deprecated functions kept only for backward API compatibility

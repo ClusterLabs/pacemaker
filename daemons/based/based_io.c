@@ -307,6 +307,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
                 pcmk__s(validation, "no schema specified"));
         cib_status = -pcmk_err_schema_validation;
 
+    // @COMPAT Not specifying validate-with is deprecated since 2.1.8
     } else if (validation == NULL) {
         pcmk__update_schema(&root, NULL, false, false);
         validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);

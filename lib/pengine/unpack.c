@@ -383,12 +383,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     if (value != NULL) {
         if (crm_is_true(value)) {
             pcmk__set_scheduler_flags(scheduler, pcmk_sched_remove_after_stop);
-#ifndef PCMK__COMPAT_2_0
             pcmk__warn_once(pcmk__wo_remove_after,
                             "Support for the " PCMK__OPT_REMOVE_AFTER_STOP
                             " cluster property is deprecated and will be "
                             "removed in a future release");
-#endif
         } else {
             pcmk__clear_scheduler_flags(scheduler,
                                         pcmk_sched_remove_after_stop);

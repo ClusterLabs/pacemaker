@@ -588,6 +588,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
         pcmk__xe_add_last_written(scratch);
+        pcmk__warn_if_schema_deprecated(schema);
 
         /* Make values of origin, client, and user in scratch match
          * the ones in req (if the schema allows the attributes)
