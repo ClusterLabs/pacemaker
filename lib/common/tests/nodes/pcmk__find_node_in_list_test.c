@@ -13,13 +13,15 @@
 #include <crm/pengine/internal.h>
 
 static void
-empty_list(void **state) {
-    assert_null(pe_find_node(NULL, NULL));
-    assert_null(pe_find_node(NULL, "cluster1"));
+empty_list(void **state)
+{
+    assert_null(pcmk__find_node_in_list(NULL, NULL));
+    assert_null(pcmk__find_node_in_list(NULL, "cluster1"));
 }
 
 static void
-non_null_list(void **state) {
+non_null_list(void **state)
+{
     GList *nodes = NULL;
 
     pcmk_node_t *a = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
@@ -33,11 +35,11 @@ non_null_list(void **state) {
     nodes = g_list_append(nodes, a);
     nodes = g_list_append(nodes, b);
 
-    assert_ptr_equal(a, pe_find_node(nodes, "cluster1"));
-    assert_null(pe_find_node(nodes, "cluster10"));
-    assert_null(pe_find_node(nodes, "nodecluster1"));
-    assert_ptr_equal(b, pe_find_node(nodes, "CLUSTER2"));
-    assert_null(pe_find_node(nodes, "xyz"));
+    assert_ptr_equal(a, pcmk__find_node_in_list(nodes, "cluster1"));
+    assert_null(pcmk__find_node_in_list(nodes, "cluster10"));
+    assert_null(pcmk__find_node_in_list(nodes, "nodecluster1"));
+    assert_ptr_equal(b, pcmk__find_node_in_list(nodes, "CLUSTER2"));
+    assert_null(pcmk__find_node_in_list(nodes, "xyz"));
 
     free(a->details);
     free(a);

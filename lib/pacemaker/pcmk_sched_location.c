@@ -250,7 +250,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pcmk_node_t *match = pe_find_node(rsc->cluster->nodes, node);
+        pcmk_node_t *match = pcmk_find_node(rsc->cluster, node);
         enum rsc_role_e role = pcmk_role_unknown;
         pcmk__location_t *location = NULL;
 

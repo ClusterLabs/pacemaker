@@ -22,4 +22,6 @@
  */
 #define PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED  "resource-discovery-enabled"
 
+pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
+
 #endif  // PCMK__NODES_INTERNAL__H

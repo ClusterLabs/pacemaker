@@ -25,6 +25,7 @@ SUBDIRS = \
 	resources	\
 	results		\
 	rules		\
+	scheduler	\
 	schemas		\
 	scores		\
 	strings		\

@@ -954,7 +954,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
                                             options.promoted_role_only);
 
     } else if (options.host_uname) {
-        dest = pe_find_node(scheduler->nodes, options.host_uname);
+        dest = pcmk_find_node(scheduler, options.host_uname);
         if (dest == NULL) {
             rc = pcmk_rc_node_unknown;
             if (!out->is_quiet(out)) {
@@ -1067,7 +1067,7 @@ refresh(pcmk__output_t *out)
     int attr_options = pcmk__node_attr_none;
 
     if (options.host_uname) {
-        pcmk_node_t *node = pe_find_node(scheduler->nodes, options.host_uname);
+        pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
 
         if (pcmk__is_pacemaker_remote_node(node)) {
             node = pcmk__current_node(node->details->remote_rsc);
@@ -1755,7 +1755,7 @@ main(int argc, char **argv)
 
     // If user supplied a node name, check whether it exists
     if ((options.host_uname != NULL) && (scheduler != NULL)) {
-        node = pe_find_node(scheduler->nodes, options.host_uname);
+        node = pcmk_find_node(scheduler, options.host_uname);
 
         if (node == NULL) {
             exit_code = CRM_EX_NOSUCH;
@@ -1871,7 +1871,7 @@ main(int argc, char **argv)
             goto done;
 
         case cmd_digests:
-            node = pe_find_node(scheduler->nodes, options.host_uname);
+            node = pcmk_find_node(scheduler, options.host_uname);
             if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {

@@ -819,7 +819,8 @@ clone_print(pcmk_resource_t *rsc, const char *pre_text, long options,
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pcmk_node_t *node = (pcmk_node_t *) nIter->data;
 
-                if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
+                if (pcmk__find_node_in_list(rsc->running_on,
+                                            node->details->uname) == NULL) {
                     pcmk__add_word(&stopped_list, 1024, node->details->uname);
                 }
             }
@@ -1149,9 +1150,10 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pcmk_node_t *node = (pcmk_node_t *) nIter->data;
 
-                if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
-                    pcmk__str_in_list(node->details->uname, only_node,
-                                      pcmk__str_star_matches|pcmk__str_casei)) {
+                if ((pcmk__find_node_in_list(rsc->running_on,
+                                             node->details->uname) == NULL)
+                    && pcmk__str_in_list(node->details->uname, only_node,
+                                         pcmk__str_star_matches|pcmk__str_casei)) {
                     xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node->details->uname);
                     const char *state = "Stopped";
 

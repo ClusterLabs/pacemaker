@@ -43,8 +43,13 @@ typedef struct unpack_data_s {
  * \param[in] value  Value to add
  */
 #define pcmk__insert_meta(obj, name, value) do {                        \
-        if (!pcmk__str_eq((value), "#default",                          \
-                          pcmk__str_casei|pcmk__str_null_matches)) {    \
+        if (pcmk__str_eq((value), "#default", pcmk__str_casei)) {       \
+            /* @COMPAT Deprecated since 2.1.8 */                        \
+            pcmk__config_warn("Support for setting meta-attributes "    \
+                              "(such as %s) to the explicit value "     \
+                              "'#default' is deprecated and will be "   \
+                              "removed in a future release", (name));   \
+        } else if ((value) != NULL) {                                   \
             pcmk__insert_dup((obj)->meta, (name), (value));             \
         }                                                               \
     } while (0)

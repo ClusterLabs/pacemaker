@@ -111,7 +111,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
            // Guest is moving
            || ((guest_rsc->role > pcmk_role_stopped)
                && (guest_rsc->allocated_to != NULL)
-               && (pe_find_node(guest_rsc->running_on,
+               && (pcmk__find_node_in_list(guest_rsc->running_on,
                    guest_rsc->allocated_to->details->uname) == NULL));
 }
 
