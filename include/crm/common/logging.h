@@ -50,7 +50,6 @@ extern "C" {
 
 /* "Extended information" logging support */
 #define CRM_XS QB_XS
-#define crm_extended_logging(t, e) qb_log_ctl((t), QB_LOG_CONF_EXTENDED, (e))
 
 // @COMPAT Make internal when we can break API backward compatibility
 //! \deprecated Do not use
@@ -409,6 +408,10 @@ pcmk__clip_log_level(int level)
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/logging_compat.h>
 #endif
 
 #endif

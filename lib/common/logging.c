@@ -155,7 +155,7 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 {
     if (method == QB_LOG_SYSLOG) {
         // The system log gets a simplified, user-friendly format
-        crm_extended_logging(method, QB_FALSE);
+        qb_log_ctl(method, QB_LOG_CONF_EXTENDED, QB_FALSE);
         qb_log_format_set(method, "%g %p: %b");
 
     } else {
