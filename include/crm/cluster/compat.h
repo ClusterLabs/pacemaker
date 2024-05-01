@@ -11,6 +11,7 @@
 #  define PCMK__CRM_CLUSTER_COMPAT__H
 
 #include <stdint.h>         // uint32_t
+#include <sys/types.h>      // size_t
 
 #include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
@@ -70,6 +71,16 @@ void cluster_disconnect_cpg(pcmk_cluster_t *cluster);
 
 //! \deprecated Do not use
 uint32_t get_local_nodeid(cpg_handle_t handle);
+
+//! \deprecated Do not use
+void pcmk_cpg_membership(cpg_handle_t handle,
+                         const struct cpg_name *group_name,
+                         const struct cpg_address *member_list,
+                         size_t member_list_entries,
+                         const struct cpg_address *left_list,
+                         size_t left_list_entries,
+                         const struct cpg_address *joined_list,
+                         size_t joined_list_entries);
 
 #endif  // SUPPORT_COROSYNC
 

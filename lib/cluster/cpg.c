@@ -775,30 +775,6 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
 }
 
 /*!
- * \brief Handle a CPG configuration change event
- *
- * \param[in] handle               CPG connection
- * \param[in] group_name           CPG group name
- * \param[in] member_list          List of current CPG members
- * \param[in] member_list_entries  Number of entries in \p member_list
- * \param[in] left_list            List of CPG members that left
- * \param[in] left_list_entries    Number of entries in \p left_list
- * \param[in] joined_list          List of CPG members that joined
- * \param[in] joined_list_entries  Number of entries in \p joined_list
- */
-void
-pcmk_cpg_membership(cpg_handle_t handle,
-                    const struct cpg_name *group_name,
-                    const struct cpg_address *member_list, size_t member_list_entries,
-                    const struct cpg_address *left_list, size_t left_list_entries,
-                    const struct cpg_address *joined_list, size_t joined_list_entries)
-{
-    pcmk__cpg_confchg_cb(handle, group_name, member_list, member_list_entries,
-                         left_list, left_list_entries,
-                         joined_list, joined_list_entries);
-}
-
-/*!
  * \brief Set the CPG deliver callback function for a cluster object
  *
  * \param[in,out] cluster  Cluster object
@@ -1177,13 +1153,6 @@ text2msg_type(const char *text)
 
 #include <crm/cluster/compat.h>
 
-/*!
- * \brief Connect to Corosync CPG
- *
- * \param[in,out] cluster  Cluster object
- *
- * \return TRUE on success, otherwise FALSE
- */
 gboolean
 cluster_connect_cpg(pcmk_cluster_t *cluster)
 {
@@ -1200,6 +1169,21 @@ uint32_t
 get_local_nodeid(cpg_handle_t handle)
 {
     return pcmk__cpg_local_nodeid(handle);
+}
+
+void
+pcmk_cpg_membership(cpg_handle_t handle,
+                    const struct cpg_name *group_name,
+                    const struct cpg_address *member_list,
+                    size_t member_list_entries,
+                    const struct cpg_address *left_list,
+                    size_t left_list_entries,
+                    const struct cpg_address *joined_list,
+                    size_t joined_list_entries)
+{
+    pcmk__cpg_confchg_cb(handle, group_name, member_list, member_list_entries,
+                         left_list, left_list_entries,
+                         joined_list, joined_list_entries);
 }
 
 // LCOV_EXCL_STOP

@@ -200,11 +200,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               const xmlNode *data, gboolean ordered);
 
 #  if SUPPORT_COROSYNC
-void pcmk_cpg_membership(cpg_handle_t handle,
-                         const struct cpg_name *groupName,
-                         const struct cpg_address *member_list, size_t member_list_entries,
-                         const struct cpg_address *left_list, size_t left_list_entries,
-                         const struct cpg_address *joined_list, size_t joined_list_entries);
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
                            gboolean local, const crm_node_t *node,
