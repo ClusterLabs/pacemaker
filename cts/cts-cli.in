@@ -1539,16 +1539,16 @@ function test_tools() {
     unset CIB_file
 
     desc="Set a meta-attribute for primitive and resources colocated with it"
-    cmd="crm_resource -r prim5 --meta --set-parameter=target-role -v Stopped --recursive"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r prim5 --meta --set-parameter=target-role -v Stopped --recursive --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Set a meta-attribute for group and resource colocated with it"
     cmd="crm_resource -r group --meta --set-parameter=target-role -v Stopped --recursive"
     test_assert $CRM_EX_OK 0
 
     desc="Set a meta-attribute for clone and resource colocated with it"
-    cmd="crm_resource -r clone --meta --set-parameter=target-role -v Stopped --recursive"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r clone --meta --set-parameter=target-role -v Stopped --recursive --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_shadow
     unset CIB_shadow_dir
