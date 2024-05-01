@@ -550,7 +550,7 @@ dnl If PYTHON was specified, ensure it is an absolute path
 AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
 dnl Require a minimum Python version
-AM_PATH_PYTHON([3.4])
+AM_PATH_PYTHON([3.6])
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P

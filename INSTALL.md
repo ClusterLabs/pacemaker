@@ -15,7 +15,7 @@
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
 | 1.0.1 or later  | libqb-devel        | libqb-devel        | libqb-dev      |
-| 3.4 or later    | python3            | python3            | python3        |
+| 3.6 or later    | python3            | python3            | python3        |
 | 0.18 or later   | gettext-devel      | gettext-tools      | gettext        |
 | 0.18 or later   |                    |                    | autopoint      |
 | 2.12.0 or later | gnutls-devel       | libgnutls-devel    | libgnutls-dev  |
