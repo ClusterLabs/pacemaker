@@ -134,6 +134,16 @@ pcmk__cs_err_str(int error)
 
 char *pcmk__corosync_cluster_name(void);
 bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
+
+void pcmk__cpg_confchg_cb(cpg_handle_t handle,
+                          const struct cpg_name *group_name,
+                          const struct cpg_address *member_list,
+                          size_t member_list_entries,
+                          const struct cpg_address *left_list,
+                          size_t left_list_entries,
+                          const struct cpg_address *joined_list,
+                          size_t joined_list_entries);
+
 #  endif
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,

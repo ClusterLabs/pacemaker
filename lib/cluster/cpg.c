@@ -8,29 +8,30 @@
  */
 
 #include <crm_internal.h>
-#include <bzlib.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+
 #include <arpa/inet.h>
 #include <netdb.h>
-
-#include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
+#include <netinet/in.h>
+#include <stdbool.h>
+#include <sys/socket.h>
+#include <sys/types.h>                  // size_t
 #include <sys/utsname.h>
 
-#include <qb/qbipc_common.h>
-#include <qb/qbipcc.h>
-#include <qb/qbutil.h>
-
+#include <bzlib.h>
 #include <corosync/corodefs.h>
 #include <corosync/corotypes.h>
 #include <corosync/hdb.h>
 #include <corosync/cpg.h>
+#include <qb/qbipc_common.h>
+#include <qb/qbipcc.h>
+#include <qb/qbutil.h>
 
+#include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_internal.h>    // PCMK__SPECIAL_PID
+#include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
 /* @TODO Once we can update the public API to require pcmk_cluster_t* in more
@@ -661,29 +662,36 @@ node_left(const char *cpg_group_name, int event_counter,
 }
 
 /*!
+ * \internal
  * \brief Handle a CPG configuration change event
  *
  * \param[in] handle               CPG connection
- * \param[in] cpg_name             CPG group name
+ * \param[in] group_name           CPG group name
  * \param[in] member_list          List of current CPG members
  * \param[in] member_list_entries  Number of entries in \p member_list
  * \param[in] left_list            List of CPG members that left
  * \param[in] left_list_entries    Number of entries in \p left_list
  * \param[in] joined_list          List of CPG members that joined
  * \param[in] joined_list_entries  Number of entries in \p joined_list
+ *
+ * \note This is of type \c cpg_confchg_fn_t, intended to be used in a
+ *       \c cpg_callbacks_t object.
  */
 void
-pcmk_cpg_membership(cpg_handle_t handle,
-                    const struct cpg_name *groupName,
-                    const struct cpg_address *member_list, size_t member_list_entries,
-                    const struct cpg_address *left_list, size_t left_list_entries,
-                    const struct cpg_address *joined_list, size_t joined_list_entries)
+pcmk__cpg_confchg_cb(cpg_handle_t handle,
+                     const struct cpg_name *group_name,
+                     const struct cpg_address *member_list,
+                     size_t member_list_entries,
+                     const struct cpg_address *left_list,
+                     size_t left_list_entries,
+                     const struct cpg_address *joined_list,
+                     size_t joined_list_entries)
 {
-    int i;
-    gboolean found = FALSE;
     static int counter = 0;
+
+    bool found = false;
     uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
-    const struct cpg_address **sorted;
+    const struct cpg_address **sorted = NULL;
 
     sorted = pcmk__assert_alloc(member_list_entries,
                                 sizeof(const struct cpg_address *));
@@ -691,24 +699,25 @@ pcmk_cpg_membership(cpg_handle_t handle,
     for (size_t iter = 0; iter < member_list_entries; iter++) {
         sorted[iter] = member_list + iter;
     }
-    /* so that the cross-matching multiply-subscribed nodes is then cheap */
+
+    // So that the cross-matching of multiply-subscribed nodes is then cheap
     qsort(sorted, member_list_entries, sizeof(const struct cpg_address *),
           cmp_member_list_nodeid);
 
-    for (i = 0; i < left_list_entries; i++) {
-        node_left(groupName->value, counter, local_nodeid, &left_list[i],
+    for (int i = 0; i < left_list_entries; i++) {
+        node_left(group_name->value, counter, local_nodeid, &left_list[i],
                   sorted, member_list_entries);
     }
     free(sorted);
     sorted = NULL;
 
-    for (i = 0; i < joined_list_entries; i++) {
+    for (int i = 0; i < joined_list_entries; i++) {
         crm_info("Group %s event %d: node %u pid %u joined%s",
-                 groupName->value, counter, joined_list[i].nodeid,
+                 group_name->value, counter, joined_list[i].nodeid,
                  joined_list[i].pid, cpgreason2str(joined_list[i].reason));
     }
 
-    for (i = 0; i < member_list_entries; i++) {
+    for (int i = 0; i < member_list_entries; i++) {
         crm_node_t *peer = pcmk__get_node(member_list[i].nodeid, NULL, NULL,
                                           pcmk__node_search_cluster_member);
 
@@ -716,11 +725,11 @@ pcmk_cpg_membership(cpg_handle_t handle,
                 && member_list[i].pid != getpid()) {
             // See the note in node_left()
             crm_warn("Group %s event %d: detected duplicate local pid %u",
-                     groupName->value, counter, member_list[i].pid);
+                     group_name->value, counter, member_list[i].pid);
             continue;
         }
         crm_info("Group %s event %d: %s (node %u pid %u) is member",
-                 groupName->value, counter, peer_name(peer),
+                 group_name->value, counter, peer_name(peer),
                  member_list[i].nodeid, member_list[i].pid);
 
         /* If the caller left auto-reaping enabled, this will also update the
@@ -745,23 +754,48 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
             } else if (now > (peer->when_lost + 60)) {
                 // If it persists for more than a minute, update the state
-                crm_warn("Node %u is member of group %s but was believed offline",
-                         member_list[i].nodeid, groupName->value);
+                crm_warn("Node %u is member of group %s but was believed "
+                         "offline",
+                         member_list[i].nodeid, group_name->value);
                 pcmk__update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
             }
         }
 
         if (local_nodeid == member_list[i].nodeid) {
-            found = TRUE;
+            found = true;
         }
     }
 
     if (!found) {
-        crm_err("Local node was evicted from group %s", groupName->value);
+        crm_err("Local node was evicted from group %s", group_name->value);
         cpg_evicted = true;
     }
 
     counter++;
+}
+
+/*!
+ * \brief Handle a CPG configuration change event
+ *
+ * \param[in] handle               CPG connection
+ * \param[in] group_name           CPG group name
+ * \param[in] member_list          List of current CPG members
+ * \param[in] member_list_entries  Number of entries in \p member_list
+ * \param[in] left_list            List of CPG members that left
+ * \param[in] left_list_entries    Number of entries in \p left_list
+ * \param[in] joined_list          List of CPG members that joined
+ * \param[in] joined_list_entries  Number of entries in \p joined_list
+ */
+void
+pcmk_cpg_membership(cpg_handle_t handle,
+                    const struct cpg_name *group_name,
+                    const struct cpg_address *member_list, size_t member_list_entries,
+                    const struct cpg_address *left_list, size_t left_list_entries,
+                    const struct cpg_address *joined_list, size_t joined_list_entries)
+{
+    pcmk__cpg_confchg_cb(handle, group_name, member_list, member_list_entries,
+                         left_list, left_list_entries,
+                         joined_list, joined_list_entries);
 }
 
 /*!

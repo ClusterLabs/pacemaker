@@ -131,9 +131,9 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     }
 
     // Process the change normally, which will call the peer callback as needed
-    pcmk_cpg_membership(handle, cpg_name, member_list, member_list_entries,
-                        left_list, left_list_entries,
-                        joined_list, joined_list_entries);
+    pcmk__cpg_confchg_cb(handle, cpg_name, member_list, member_list_entries,
+                         left_list, left_list_entries,
+                         joined_list, joined_list_entries);
 
     controld_clear_global_flags(controld_dc_left);
 }
