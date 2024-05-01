@@ -107,7 +107,7 @@ post_connect(pcmk_ipc_api_t *api)
     rc = pcmk__send_ipc_request(api, hello);
     pcmk__xml_free(hello);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not send IPC hello to %s: %s " CRM_XS " rc=%s",
+        crm_info("Could not send IPC hello to %s: %s " QB_XS " rc=%s",
                  pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
     } else {
         crm_debug("Sent IPC hello to %s", pcmk_ipc_name(api, true));

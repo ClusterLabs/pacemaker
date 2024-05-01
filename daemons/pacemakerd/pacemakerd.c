@@ -412,7 +412,7 @@ main(int argc, char **argv)
         }
     }
 
-    crm_notice("Starting Pacemaker %s "CRM_XS" build=%s features:%s",
+    crm_notice("Starting Pacemaker %s " QB_XS " build=%s features:%s",
                PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     mainloop = g_main_loop_new(NULL, FALSE);
 

@@ -276,7 +276,7 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
 
 error:
     crm_err("Could not initialize %s TLS %s session: %s "
-            CRM_XS " rc=%d priority='%s'",
+            QB_XS " rc=%d priority='%s'",
             (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
             (conn_type == GNUTLS_SERVER)? "server" : "client",
             gnutls_strerror(rc), rc, prio);
@@ -332,7 +332,7 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
 
 error:
     crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
-            CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+            QB_XS " rc=%d", gnutls_strerror(rc), rc);
     return EPROTO;
 }
 
@@ -365,7 +365,7 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
         return EAGAIN;
     } else if (rc != GNUTLS_E_SUCCESS) {
         crm_err("TLS handshake with remote client failed: %s "
-                CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+                QB_XS " rc=%d", gnutls_strerror(rc), rc);
         return EPROTO;
     }
     return pcmk_rc_ok;
@@ -394,7 +394,7 @@ send_tls(gnutls_session_t *session, struct iovec *iov)
 
         } else if (gnutls_rc < 0) {
             // Caller can log as error if necessary
-            crm_info("TLS connection terminated: %s " CRM_XS " rc=%lld",
+            crm_info("TLS connection terminated: %s " QB_XS " rc=%lld",
                      gnutls_strerror((int) gnutls_rc),
                      (long long) gnutls_rc);
             return ECONNABORTED;
@@ -438,7 +438,7 @@ send_plaintext(int sock, struct iovec *iov)
             }
 
             // Caller can log as error if necessary
-            crm_info("Could not send message: %s " CRM_XS " rc=%d socket=%d",
+            crm_info("Could not send message: %s " QB_XS " rc=%d socket=%d",
                      pcmk_rc_str(rc), rc, sock);
             return rc;
 
@@ -522,7 +522,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 
     rc = remote_send_iovs(remote, iov, 2);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not send remote message: %s " CRM_XS " rc=%d",
+        crm_err("Could not send remote message: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
     }
 
@@ -572,7 +572,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
             return NULL;
 
         } else if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+            crm_err("Decompression failed: %s " QB_XS " rc=%d",
                     pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
@@ -816,7 +816,7 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
 
         } else if (rc != pcmk_rc_ok) {
             crm_debug("Wait for remote data aborted (will retry): %s "
-                      CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
+                      QB_XS " rc=%d", pcmk_rc_str(rc), rc);
 
         } else {
             rc = read_available_remote_data(remote);
@@ -825,7 +825,7 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
             } else if (rc == EAGAIN) {
                 crm_trace("Waiting for more remote data");
             } else {
-                crm_debug("Could not receive remote data: %s " CRM_XS " rc=%d",
+                crm_debug("Could not receive remote data: %s " QB_XS " rc=%d",
                           pcmk_rc_str(rc), rc);
             }
         }
@@ -962,7 +962,7 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
 
     rc = pcmk__set_nonblocking(sock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+        crm_warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
         return rc;
     }
@@ -970,7 +970,7 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
     rc = connect(sock, addr, addrlen);
     if (rc < 0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
         rc = errno;
-        crm_warn("Could not connect socket: %s " CRM_XS " rc=%d",
+        crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
         return rc;
     }
@@ -1030,14 +1030,14 @@ connect_socket_once(int sock, const struct sockaddr *addr, socklen_t addrlen)
 
     if (rc < 0) {
         rc = errno;
-        crm_warn("Could not connect socket: %s " CRM_XS " rc=%d",
+        crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
         return rc;
     }
 
     rc = pcmk__set_nonblocking(sock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+        crm_warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
         return rc;
     }
@@ -1114,7 +1114,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
         if (sock == -1) {
             rc = errno;
             crm_warn("Could not create socket for remote connection to %s:%d: "
-                     "%s " CRM_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+                     "%s " QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
             continue;
         }
 
@@ -1213,7 +1213,7 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     if (*csock == -1) {
         rc = errno;
         crm_err("Could not accept remote client connection: %s "
-                CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
+                QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         return rc;
     }
     pcmk__sockaddr2str(&addr, addr_str);
@@ -1221,7 +1221,7 @@ pcmk__accept_remote_connection(int ssock, int *csock)
 
     rc = pcmk__set_nonblocking(*csock);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+        crm_err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
         close(*csock);
         *csock = -1;
@@ -1240,7 +1240,7 @@ pcmk__accept_remote_connection(int ssock, int *csock)
         if (rc < 0) {
             rc = errno;
             crm_err("Could not set TCP timeout to %d ms on remote connection: "
-                    "%s " CRM_XS " rc=%d", optval, pcmk_rc_str(rc), rc);
+                    "%s " QB_XS " rc=%d", optval, pcmk_rc_str(rc), rc);
             close(*csock);
             *csock = -1;
             return rc;

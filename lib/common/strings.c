@@ -862,7 +862,7 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     free(uncompressed);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Compression of %d bytes failed: %s " CRM_XS " rc=%d",
+        crm_err("Compression of %d bytes failed: %s " QB_XS " rc=%d",
                 length, pcmk_rc_str(rc), rc);
         free(compressed);
         return rc;

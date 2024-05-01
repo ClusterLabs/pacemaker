@@ -1149,7 +1149,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
         if (rc < 0) {
             crm_debug("Couldn't register with the fencer: %s "
-                      CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                      QB_XS " rc=%d", pcmk_strerror(rc), rc);
             rc = -ECOMM;
 
         } else if (reply == NULL) {
@@ -1184,7 +1184,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
     if (rc != pcmk_ok) {
         crm_debug("Connection attempt to fencer by %s failed: %s "
-                  CRM_XS " rc=%d", display_name, pcmk_strerror(rc), rc);
+                  QB_XS " rc=%d", display_name, pcmk_strerror(rc), rc);
         stonith->cmds->disconnect(stonith);
     }
     return rc;
@@ -1916,12 +1916,12 @@ stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
             return pcmk_ok;
         } else if (attempt < max_attempts) {
             crm_notice("Fencer connection attempt %d of %d failed (retrying in 2s): %s "
-                       CRM_XS " rc=%d",
+                       QB_XS " rc=%d",
                        attempt, max_attempts, pcmk_strerror(rc), rc);
             sleep(2);
         }
     }
-    crm_notice("Could not connect to fencer: %s " CRM_XS " rc=%d",
+    crm_notice("Could not connect to fencer: %s " QB_XS " rc=%d",
                pcmk_strerror(rc), rc);
     return rc;
 }
@@ -2169,7 +2169,7 @@ parse_list_line(const char *line, int len, GList **output)
             rc = sscanf(line + entry_start, "%[a-zA-Z0-9_-.]", entry);
             if (rc != 1) {
                 crm_warn("Could not parse list output entry: %s "
-                         CRM_XS " entry_start=%d position=%d",
+                         QB_XS " entry_start=%d position=%d",
                          line + entry_start, entry_start, i);
                 free(entry);
 

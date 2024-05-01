@@ -78,7 +78,7 @@ alert_complete(svc_action_t *action)
     if (action->status != PCMK_EXEC_DONE) {
         const char *reason = services__exit_reason(action);
 
-        crm_notice("Could not send alert: %s%s%s%s " CRM_XS " client=%s",
+        crm_notice("Could not send alert: %s%s%s%s " QB_XS " client=%s",
                    pcmk_exec_status_str(action->status),
                    (reason == NULL)? "" : " (",
                    (reason == NULL)? "" : reason,
@@ -87,11 +87,11 @@ alert_complete(svc_action_t *action)
 
     } else if (action->rc != 0) {
         crm_notice("Alert [%d] completed but exited with status %d "
-                   CRM_XS " client=%s",
+                   QB_XS " client=%s",
                    action->pid, action->rc, cb_data->client_id);
 
     } else {
-        crm_debug("Alert [%d] completed " CRM_XS " client=%s",
+        crm_debug("Alert [%d] completed " QB_XS " client=%s",
                   action->pid, cb_data->client_id);
     }
 

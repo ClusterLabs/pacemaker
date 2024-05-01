@@ -48,9 +48,6 @@ extern "C" {
 #define LOG_NEVER   255
 #endif
 
-/* "Extended information" logging support */
-#define CRM_XS QB_XS
-
 // @COMPAT Make internal when we can break API backward compatibility
 //! \deprecated Do not use
 extern unsigned int crm_log_level;
@@ -311,7 +308,7 @@ pcmk__clip_log_level(int level)
  * \note This is a macro, and \p level may be evaluated more than once.
  * \note Because crm_perror() adds the system error message and error number
  *       onto the end of fmt, that information will become extended information
- *       if CRM_XS is used inside fmt and will not show up in syslog.
+ *       if QB_XS is used inside fmt and will not show up in syslog.
  */
 #define crm_perror(level, fmt, args...) do {                                \
         uint8_t _level = pcmk__clip_log_level(level);                       \

@@ -402,7 +402,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         no_wait = TRUE;
     }
 
-    crm_notice("Initiating %s operation %s%s on %s%s "CRM_XS" action %d",
+    crm_notice("Initiating %s operation %s%s on %s%s " QB_XS " action %d",
                task, task_uuid, (is_local? " locally" : ""), on_node,
                (no_wait? " without waiting" : ""), action->id);
 

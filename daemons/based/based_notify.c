@@ -82,7 +82,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                 rc = pcmk__ipc_send_iov(client, update->iov,
                                         crm_ipc_server_event);
                 if (rc != pcmk_rc_ok) {
-                    crm_warn("Could not notify client %s: %s " CRM_XS " id=%s",
+                    crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
                              pcmk__client_name(client), pcmk_rc_str(rc),
                              client->id);
                 }
@@ -95,7 +95,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                 break;
             default:
                 crm_err("Unknown transport for client %s "
-                        CRM_XS " flags=%#016" PRIx64,
+                        QB_XS " flags=%#016" PRIx64,
                         pcmk__client_name(client), client->flags);
         }
     }
@@ -117,7 +117,7 @@ cib_notify_send(const xmlNode *xml)
         pcmk__foreach_ipc_client(cib_notify_send_one, &update);
 
     } else {
-        crm_notice("Could not notify clients: %s " CRM_XS " rc=%d",
+        crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
                    pcmk_rc_str(rc), rc);
     }
     pcmk_free_ipc_event(iov);

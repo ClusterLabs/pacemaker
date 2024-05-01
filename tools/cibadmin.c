@@ -968,7 +968,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         report_schema_unchanged();
 
     } else if (rc != pcmk_rc_ok) {
-        crm_warn("Call %s failed: %s " CRM_XS " rc=%d",
+        crm_warn("Call %s failed: %s " QB_XS " rc=%d",
                  options.cib_action, pcmk_rc_str(rc), rc);
         fprintf(stderr, "Call %s failed: %s\n",
                 options.cib_action, pcmk_rc_str(rc));

@@ -16,6 +16,9 @@
 extern "C" {
 #endif
 
+//! \deprecated use QB_XS instead
+#define CRM_XS QB_XS
+
 //! \deprecated Use qb_log_ctl() directly instead
 #define crm_extended_logging(t, e) qb_log_ctl((t), QB_LOG_CONF_EXTENDED, (e))
 

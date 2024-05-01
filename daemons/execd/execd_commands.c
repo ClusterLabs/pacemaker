@@ -587,7 +587,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
             msg = pcmk_rc_str(rc);
             break;
     }
-    do_crm_log(log_level, "Could not notify client %s: %s " CRM_XS " rc=%d",
+    do_crm_log(log_level, "Could not notify client %s: %s " QB_XS " rc=%d",
                pcmk__client_name(client), msg, rc);
 }
 
@@ -1955,7 +1955,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         send_rc = lrmd_server_send_reply(client, id, reply);
         pcmk__xml_free(reply);
         if (send_rc != pcmk_rc_ok) {
-            crm_warn("Reply to client %s failed: %s " CRM_XS " rc=%d",
+            crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
                      pcmk__client_name(client), pcmk_rc_str(send_rc), send_rc);
         }
     }

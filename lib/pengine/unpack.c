@@ -3714,7 +3714,7 @@ unpack_rsc_op_failure(struct action_history *history,
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)
         && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
-                  "%s of %s on %s at %s " CRM_XS " exit-status=%d id=%s",
+                  "%s of %s on %s at %s " QB_XS " exit-status=%d id=%s",
                   services_ocf_exitcode_str(history->exit_status),
                   (pcmk__str_empty(history->exit_reason)? "" : ": "),
                   pcmk__s(history->exit_reason, ""),
@@ -3723,7 +3723,7 @@ unpack_rsc_op_failure(struct action_history *history,
                   history->exit_status, history->id);
     } else {
         pcmk__sched_warn("Unexpected result (%s%s%s) was recorded for %s of "
-                         "%s on %s at %s " CRM_XS " exit-status=%d id=%s",
+                         "%s on %s at %s " QB_XS " exit-status=%d id=%s",
                          services_ocf_exitcode_str(history->exit_status),
                          (pcmk__str_empty(history->exit_reason)? "" : ": "),
                          pcmk__s(history->exit_reason, ""),
@@ -3839,7 +3839,7 @@ block_if_unrecoverable(struct action_history *history)
     last_change_s = last_change_str(history->xml);
     pcmk__sched_err("No further recovery can be attempted for %s "
                     "because %s on %s failed (%s%s%s) at %s "
-                    CRM_XS " rc=%d id=%s",
+                    QB_XS " rc=%d id=%s",
                     history->rsc->id, history->task,
                     pcmk__node_name(history->node),
                     services_ocf_exitcode_str(history->exit_status),
@@ -4864,7 +4864,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             if (failure_strategy == pcmk_on_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
                          "Resource agent doesn't exist "
-                         CRM_XS " status=%d rc=%d id=%s",
+                         QB_XS " status=%d rc=%d id=%s",
                          history.task, rsc->id, pcmk__node_name(node),
                          history.execution_status, history.exit_status,
                          history.id);
@@ -4914,7 +4914,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         char *last_change_s = last_change_str(xml_op);
 
         crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s succeeded "
-                 CRM_XS " %s",
+                 QB_XS " %s",
                  history.task, services_ocf_exitcode_str(history.exit_status),
                  (pcmk__str_empty(history.exit_reason)? "" : ": "),
                  pcmk__s(history.exit_reason, ""), rsc->id,
@@ -4945,7 +4945,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
             }
             do_crm_log(log_level,
                        "Preventing %s from restarting on %s because "
-                       "of hard failure (%s%s%s) " CRM_XS " %s",
+                       "of hard failure (%s%s%s) " QB_XS " %s",
                        parent->id, pcmk__node_name(node),
                        services_ocf_exitcode_str(history.exit_status),
                        (pcmk__str_empty(history.exit_reason)? "" : ": "),
@@ -4955,7 +4955,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
             pcmk__sched_err("Preventing %s from restarting anywhere because "
-                            "of fatal failure (%s%s%s) " CRM_XS " %s",
+                            "of fatal failure (%s%s%s) " QB_XS " %s",
                             parent->id,
                             services_ocf_exitcode_str(history.exit_status),
                             (pcmk__str_empty(history.exit_reason)? "" : ": "),

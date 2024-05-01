@@ -93,7 +93,7 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not prepare to read compressed %s: %s "
-                CRM_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
+                QB_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -114,7 +114,7 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         rc = pcmk__bzlib2rc(rc);
-        crm_err("Could not read compressed %s: %s " CRM_XS " rc=%d",
+        crm_err("Could not read compressed %s: %s " QB_XS " rc=%d",
                 filename, pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
@@ -513,7 +513,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             dump_xml_cdata(data, options, buffer, depth);
             break;
         default:
-            crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
+            crm_warn("Cannot convert XML %s node to text " QB_XS " type=%d",
                      xml_element_type_text(data->type), data->type);
             break;
     }
@@ -543,7 +543,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not prepare file stream: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  filename, pcmk_rc_str(rc), rc);
         goto done;
     }
@@ -552,7 +552,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not compress data: %s "
-                 CRM_XS " rc=%d errno=%d",
+                 QB_XS " rc=%d errno=%d",
                  filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
@@ -562,7 +562,7 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         crm_warn("Not compressing %s: could not write compressed data: %s "
-                 CRM_XS " rc=%d errno=%d",
+                 QB_XS " rc=%d errno=%d",
                  filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }

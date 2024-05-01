@@ -468,7 +468,7 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
                           scheduler);
     pcmk__insert_meta(clear, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
-    crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
+    crm_notice("Clearing failure of %s on %s because %s " QB_XS " %s",
                rsc->id, pcmk__node_name(node), reason, clear->uuid);
     return clear;
 }

@@ -127,7 +127,7 @@ void
 crmd_fast_exit(crm_exit_t exit_code)
 {
     if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
+        crm_warn("Inhibiting respawn " QB_XS " remapping exit code %d to %d",
                  exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 

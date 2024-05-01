@@ -180,7 +180,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                     dc_s = PCMK_VALUE_TRUE;
                 }
 
-                crm_info("Node %s is %s a peer " CRM_XS
+                crm_info("Node %s is %s a peer " QB_XS
                          " DC=%s old=%#07x new=%#07x",
                          node->uname, (appeared? "now" : "no longer"),
                          pcmk__s(dc_s, "<none>"), old, node->processes);
@@ -291,10 +291,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                     check_join_state(controld_globals.fsa_state, __func__);
                 }
                 if (alive >= 0) {
-                    crm_info("%s of peer %s is in progress " CRM_XS " action=%d",
+                    crm_info("%s of peer %s is in progress " QB_XS " action=%d",
                              task, node->uname, down->id);
                 } else {
-                    crm_notice("%s of peer %s is complete " CRM_XS " action=%d",
+                    crm_notice("%s of peer %s is complete " QB_XS " action=%d",
                                task, node->uname, down->id);
                     pcmk__update_graph(controld_globals.transition_graph, down);
                     trigger_graph();

@@ -758,7 +758,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     rc = read_remote_reply(lrmd, timeout, global_remote_msg_id, &xml);
     if (rc != pcmk_rc_ok) {
         crm_err("Disconnecting remote after request %d reply not received: %s "
-                CRM_XS " rc=%d timeout=%dms",
+                QB_XS " rc=%d timeout=%dms",
                 global_remote_msg_id, pcmk_rc_str(rc), rc, timeout);
         lrmd_tls_disconnect(lrmd);
     }
@@ -1460,7 +1460,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
         crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
         return;
@@ -1475,7 +1475,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     rc = lrmd__init_remote_key(&psk_key);
     if (rc != pcmk_rc_ok) {
         crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
         report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
@@ -1519,7 +1519,7 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
                               &(native->sock), lrmd, lrmd_tcp_connect_cb);
     if (rc != pcmk_rc_ok) {
         crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
     }
@@ -1542,7 +1542,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
                               &(native->sock), NULL, NULL);
     if (rc != pcmk_rc_ok) {
         crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
-                 CRM_XS " rc=%d",
+                 QB_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
         return -ENOTCONN;

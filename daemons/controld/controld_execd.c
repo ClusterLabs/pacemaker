@@ -943,7 +943,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
             fsa_data_t *msg_data = NULL;
 
             crm_err("Could not register resource %s with the executor on %s: %s "
-                    CRM_XS " rc=%d",
+                    QB_XS " rc=%d",
                     id, lrm_state->node_name, pcmk_strerror(rc), rc);
 
             /* Register this as an internal error if this involves the local
@@ -991,7 +991,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
         return;
     } else {
         crm_warn("Could not delete '%s' from executor for %s%s%s: %s "
-                 CRM_XS " rc=%d", id, sys, (user? " as " : ""),
+                 QB_XS " rc=%d", id, sys, (user? " as " : ""),
                  (user? user : ""), pcmk_strerror(rc), rc);
     }
 
@@ -1516,7 +1516,7 @@ do_lrm_invoke(long long action,
              * (deleting something that does not exist is a success)
              */
             crm_notice("Not registering resource '%s' for a %s event "
-                       CRM_XS " get-rc=%d (%s) transition-key=%s",
+                       QB_XS " get-rc=%d (%s) transition-key=%s",
                        pcmk__xe_id(xml_rsc), operation,
                        rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
             delete_rsc_entry(lrm_state, input, pcmk__xe_id(xml_rsc), NULL,
@@ -1535,7 +1535,7 @@ do_lrm_invoke(long long action,
         } else if (rc < 0) {
             // Error communicating with the executor
             crm_err("Could not register resource '%s' with executor: %s "
-                    CRM_XS " rc=%d",
+                    QB_XS " rc=%d",
                     pcmk__xe_id(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
@@ -1939,7 +1939,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     if (lrm_state == NULL) {
         // This shouldn't be possible, but provide a failsafe just in case
         crm_err("Cannot execute %s of %s: No executor connection "
-                CRM_XS " transition_key=%s",
+                QB_XS " transition_key=%s",
                 operation, rsc->id, pcmk__s(transition, ""));
         synthesize_lrmd_failure(NULL, msg, PCMK_EXEC_INVALID,
                                 PCMK_OCF_UNKNOWN_ERROR,
@@ -1984,7 +1984,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     /* now do the op */
     crm_notice("Requesting local execution of %s operation for %s on %s "
-               CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
+               QB_XS " transition_key=%s op_key=" PCMK__OP_FMT,
                pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
                lrm_state->node_name, pcmk__s(transition, ""), rsc->id,
                operation, op->interval_ms);
@@ -2056,7 +2056,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     } else if (lrm_state_is_local(lrm_state)) {
         crm_err("Could not initiate %s action for resource %s locally: %s "
-                CRM_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
+                QB_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
@@ -2064,7 +2064,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     } else {
         crm_err("Could not initiate %s action for resource %s remotely on %s: "
-                "%s " CRM_XS " rc=%d",
+                "%s " QB_XS " rc=%d",
                 operation, rsc->id, lrm_state->node_name, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
@@ -2198,7 +2198,7 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
         pcmk__g_strcat(str, " (", op->exit_reason, ")", NULL);
     }
 
-    g_string_append(str, " " CRM_XS);
+    g_string_append(str, " " QB_XS);
     g_string_append_printf(str, " graph action %sconfirmed; call=%d key=%s",
                            (confirmed? "" : "un"), op->call_id, op_key);
     if (op->op_status == PCMK_EXEC_DONE) {

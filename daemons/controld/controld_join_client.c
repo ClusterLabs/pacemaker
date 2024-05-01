@@ -114,7 +114,7 @@ do_cl_join_offer_respond(long long action,
 
     welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
     join_id = crm_element_value(input->msg, PCMK__XA_JOIN_ID);
-    crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
+    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
               welcome_from, crm_element_value(input->msg, PCMK__XA_JOIN_ID));
 
     /* we only ever want the last one */
@@ -278,7 +278,7 @@ do_cl_join_finalize_respond(long long action,
 
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "
-                CRM_XS" join-%d NACK'd", welcome_from, join_id);
+                QB_XS " join-%d NACK'd", welcome_from, join_id);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;

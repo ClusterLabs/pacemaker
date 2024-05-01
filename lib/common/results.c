@@ -948,7 +948,7 @@ crm_exit(crm_exit_t rc)
     free(pcmk__our_nodename);
 
     if (crm_system_name) {
-        crm_info("Exiting %s " CRM_XS " with status %d", crm_system_name, rc);
+        crm_info("Exiting %s " QB_XS " with status %d", crm_system_name, rc);
         free(crm_system_name);
     } else {
         crm_trace("Exiting with status %d", rc);
