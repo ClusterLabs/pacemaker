@@ -45,6 +45,9 @@ G_GNUC_INTERNAL
 void pcmk__corosync_disconnect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
+bool pcmk__corosync_is_peer_active(const crm_node_t *node);
+
+G_GNUC_INTERNAL
 int pcmk__cpg_connect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL

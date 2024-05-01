@@ -9,33 +9,30 @@
 
 #include <crm_internal.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <inttypes.h>                   // PRIu64, PRIx32
 #include <netdb.h>
-#include <inttypes.h>   // PRIu64
+#include <netinet/in.h>
 #include <stdbool.h>
-
-#include <bzlib.h>
-
-#include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
+#include <sys/socket.h>
 #include <sys/utsname.h>
 
-#include <qb/qbipcc.h>
-#include <qb/qbutil.h>
-
+#include <bzlib.h>
+#include <corosync/cfg.h>
+#include <corosync/cmap.h>
 #include <corosync/corodefs.h>
 #include <corosync/corotypes.h>
 #include <corosync/hdb.h>
-#include <corosync/cfg.h>
-#include <corosync/cmap.h>
 #include <corosync/quorum.h>
+#include <qb/qbipcc.h>
+#include <qb/qbutil.h>
 
+#include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_internal.h>    // PCMK__SPECIAL_PID
+#include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
 static quorum_handle_t pcmk_quorum_handle = 0;
@@ -520,6 +517,34 @@ pcmk__corosync_is_active(void)
 }
 
 /*!
+ * \internal
+ * \brief Check whether a Corosync cluster peer is active
+ *
+ * \param[in] node  Node to check
+ *
+ * \return \c true if \p node is an active Corosync peer, or \c false otherwise
+ */
+bool
+pcmk__corosync_is_peer_active(const crm_node_t *node)
+{
+    if (node == NULL) {
+        crm_trace("Corosync peer inactive: NULL");
+        return false;
+    }
+    if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_none)) {
+        crm_trace("Corosync peer %s inactive: state=%s",
+                  node->uname, node->state);
+        return false;
+    }
+    if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
+        crm_trace("Corosync peer %s inactive " CRM_XS " processes=%.16" PRIx32,
+                  node->uname, node->processes);
+        return false;
+    }
+    return true;
+}
+
+/*!
  * \brief Check whether a Corosync cluster peer is active
  *
  * \param[in] node  Node to check
@@ -529,21 +554,7 @@ pcmk__corosync_is_active(void)
 gboolean
 crm_is_corosync_peer_active(const crm_node_t *node)
 {
-    if (node == NULL) {
-        crm_trace("Corosync peer inactive: NULL");
-        return FALSE;
-
-    } else if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
-        crm_trace("Corosync peer %s inactive: state=%s",
-                  node->uname, node->state);
-        return FALSE;
-
-    } else if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
-        crm_trace("Corosync peer %s inactive: processes=%.16x",
-                  node->uname, node->processes);
-        return FALSE;
-    }
-    return TRUE;
+    return pcmk__corosync_is_peer_active(node);
 }
 
 /*!

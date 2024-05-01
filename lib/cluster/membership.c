@@ -355,7 +355,7 @@ pcmk__cluster_is_node_active(const crm_node_t *node)
     switch (cluster_layer) {
         case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            return crm_is_corosync_peer_active(node);
+            return pcmk__corosync_is_peer_active(node);
 #else
             break;
 #endif  // SUPPORT_COROSYNC
