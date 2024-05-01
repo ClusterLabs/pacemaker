@@ -246,33 +246,45 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     return result;
 }
 
-// \return Standard Pacemaker return code
-int
-cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
-                              const char *attr_set, const char *attr_set_type,
-                              const char *attr_id, const char *attr_name,
-                              const char *attr_value, gboolean recursive,
-                              cib_t *cib, int cib_options, gboolean force)
+static int
+update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
+                         cib_t *cib, const char *attr_name, const char *attr_value)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
     int rc = pcmk_rc_ok;
 
-    char *found_attr_id = NULL;
-
-    GList/*<pcmk_resource_t*>*/ *resources = NULL;
-    const char *top_id = pe__const_top_resource(rsc, false)->id;
-
-    if ((attr_id == NULL) && !force) {
-        find_resource_attr(out, cib, PCMK_XA_ID, top_id, NULL, NULL, NULL,
-                           attr_name, NULL);
+    if (cib == NULL) {
+        return ENOTCONN;
     }
 
+    crm_xml_add(rsc->xml, attr_name, attr_value);
+
+    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+    if (rc == pcmk_rc_ok) {
+        out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
+                  attr_name, attr_value);
+    }
+
+    return rc;
+}
+
+static int
+resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
+                    const char *requested_name, const char *attr_set,
+                    const char *attr_set_type, const char *attr_id,
+                    const char *attr_name, const char *top_id, gboolean force,
+                    GList **resources)
+{
     if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
                      pcmk__str_casei)) {
         if (!force) {
+            char *found_attr_id = NULL;
+            int rc = pcmk_rc_ok;
+
             rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
                                     PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
                                     attr_name, &found_attr_id);
+
             if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
                 out->err(out,
                          "WARNING: There is already a meta attribute "
@@ -282,51 +294,71 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                          "         Delete '%s' first or use the force option "
                          "to override", found_attr_id);
             }
+
             free(found_attr_id);
+
             if (rc == pcmk_rc_ok) {
                 return ENOTUNIQ;
             }
         }
-        resources = g_list_append(resources, rsc);
 
-    } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        crm_xml_add(rsc->xml, attr_name, attr_value);
-        CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
-        rc = pcmk_legacy2rc(rc);
-        if (rc == pcmk_rc_ok) {
-            out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
-                      attr_name, attr_value);
-        }
-        return rc;
+        *resources = g_list_append(*resources, rsc);
 
     } else {
-        resources = find_matching_attr_resources(out, rsc, requested_name,
-                                                 attr_set, attr_set_type,
-                                                 attr_id, attr_name, cib,
-                                                 "update", force);
+        *resources = find_matching_attr_resources(out, rsc, requested_name,
+                                                  attr_set, attr_set_type,
+                                                  attr_id, attr_name, cib,
+                                                  "update", force);
     }
 
     /* If the user specified attr_set or attr_id, the intent is to modify a
      * single resource, which will be the last item in the list.
      */
     if ((attr_set != NULL) || (attr_id != NULL)) {
-        GList *last = g_list_last(resources);
+        GList *last = g_list_last(*resources);
 
-        resources = g_list_remove_link(resources, last);
-        g_list_free(resources);
-        resources = last;
+        *resources = g_list_remove_link(*resources, last);
+        g_list_free(*resources);
+        *resources = last;
+    }
+
+    return pcmk_rc_ok;
+}
+
+static int
+update_attribute(pcmk_resource_t *rsc, const char *requested_name,
+                 const char *attr_set, const char *attr_set_type,
+                 const char *attr_id, const char *attr_name,
+                 const char *attr_value, gboolean recursive, cib_t *cib,
+                 gboolean force)
+{
+    pcmk__output_t *out = rsc->cluster->priv;
+    int rc = pcmk_rc_ok;
+
+    GList/*<pcmk_resource_t*>*/ *resources = NULL;
+    const char *top_id = pe__const_top_resource(rsc, false)->id;
+
+    if ((attr_id == NULL) && !force) {
+        find_resource_attr(out, cib, PCMK_XA_ID, top_id, NULL, NULL, NULL,
+                           attr_name, NULL);
+    }
+
+    rc = resources_with_attr(out, cib, rsc, requested_name, attr_set, attr_set_type,
+                             attr_id, attr_name, top_id, force, &resources);
+
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
         char *local_attr_set = NULL;
+        char *found_attr_id = NULL;
         const char *rsc_attr_id = attr_id;
         const char *rsc_attr_set = attr_set;
 
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
-        found_attr_id = NULL;
 
         rsc = (pcmk_resource_t *) iter->data;
 
@@ -375,7 +407,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         crm_log_xml_debug(xml_top, "Update");
 
-        rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_options);
+        rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: "
@@ -396,41 +428,63 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         if (recursive
             && pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_casei)) {
-            GList *lpc = NULL;
-            static bool need_init = true;
-
-            if (need_init) {
-                need_init = false;
-                pcmk__unpack_constraints(rsc->cluster);
-                pe__clear_resource_flags_on_all(rsc->cluster,
-                                                pcmk_rsc_detect_loop);
-            }
-
             /* We want to set the attribute only on resources explicitly
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
              * rather than the with_this_colocations() method.
              */
             pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
-            for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+            for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
-                if (!pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)
-                    && (cons->score > 0)) {
-                    crm_debug("Setting %s=%s for dependent resource %s",
-                              attr_name, attr_value, cons->dependent->id);
-                    cli_resource_update_attribute(cons->dependent,
-                                                  cons->dependent->id, NULL,
-                                                  attr_set_type, NULL,
-                                                  attr_name, attr_value,
-                                                  recursive, cib, cib_options,
-                                                  force);
+
+                if (pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)
+                    || (cons->score <= 0)) {
+                    continue;
                 }
+
+                crm_debug("Setting %s=%s for dependent resource %s",
+                          attr_name, attr_value, cons->dependent->id);
+                update_attribute(cons->dependent, cons->dependent->id, NULL,
+                                 attr_set_type, NULL, attr_name, attr_value,
+                                 recursive, cib, force);
             }
         }
     }
+
     g_list_free(resources);
     return rc;
+}
+
+// \return Standard Pacemaker return code
+int
+cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
+                              const char *attr_set, const char *attr_set_type,
+                              const char *attr_id, const char *attr_name,
+                              const char *attr_value, gboolean recursive,
+                              cib_t *cib, gboolean force)
+{
+    static bool need_init = true;
+
+    pcmk__output_t *out = rsc->cluster->priv;
+
+    /* If we were asked to update the attribute in a resource element (for
+     * instance, <primitive class="ocf">) there's really not much we need to do.
+     */
+    if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
+        return update_element_attribute(out, rsc, cib, attr_name, attr_value);
+    }
+
+    /* One time initialization - clear flags so we can detect loops */
+    if (need_init) {
+        need_init = false;
+        pcmk__unpack_constraints(rsc->cluster);
+        pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+    }
+
+    return update_attribute(rsc, requested_name, attr_set, attr_set_type,
+                            attr_id, attr_name, attr_value, recursive, cib,
+                            force);
 }
 
 // \return Standard Pacemaker return code
@@ -1569,7 +1623,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
                                            PCMK_ACTION_STOPPED, FALSE, cib,
-                                           cib_options, force);
+                                           force);
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
@@ -1649,8 +1703,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           orig_target_role, FALSE, cib,
-                                           cib_options, force);
+                                           orig_target_role, FALSE, cib, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
@@ -1733,7 +1786,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, cib_options, force);
+                                      FALSE, cib, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,

@@ -2061,7 +2061,7 @@ main(int argc, char **argv)
                                                options.prop_name,
                                                options.prop_value,
                                                options.recursive, cib_conn,
-                                               cib_sync_call, options.force);
+                                               options.force);
             break;
 
         case cmd_delete_param:
