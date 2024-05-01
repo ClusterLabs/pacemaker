@@ -301,8 +301,8 @@ BuildRequires: %{python_name}-devel
 BuildRequires: %{python_name}-setuptools
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb >= 0.17.0
-BuildRequires: pkgconfig(libqb) >= 0.17.0
+Requires:      libqb >= 1.0.1
+BuildRequires: pkgconfig(libqb) >= 1.0.1
 
 # Required basic build tools
 BuildRequires: autoconf
@@ -480,7 +480,7 @@ Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{pkgname_bzip2_devel}%{?_isa}
 Requires:      corosync-devel >= 2.0.0
 Requires:      glib2-devel%{?_isa}
-Requires:      libqb-devel%{?_isa}
+Requires:      libqb-devel%{?_isa} >= 1.0.1
 %if %{defined pkgname_libtool_devel_arch}
 Requires:      %{?pkgname_libtool_devel_arch}
 %endif

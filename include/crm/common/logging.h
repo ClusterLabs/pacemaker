@@ -49,22 +49,8 @@ extern "C" {
 #endif
 
 /* "Extended information" logging support */
-#ifdef QB_XS
 #define CRM_XS QB_XS
 #define crm_extended_logging(t, e) qb_log_ctl((t), QB_LOG_CONF_EXTENDED, (e))
-#else
-#define CRM_XS "|"
-
-/* A caller might want to check the return value, so we can't define this as a
- * no-op, and we can't simply define it to be 0 because gcc will then complain
- * when the value isn't checked.
- */
-static inline int
-crm_extended_logging(int t, int e)
-{
-    return 0;
-}
-#endif
 
 // @COMPAT Make internal when we can break API backward compatibility
 //! \deprecated Do not use

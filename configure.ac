@@ -1416,7 +1416,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - LibQB
 dnl ========================================================================
 
-PKG_CHECK_MODULES(libqb, libqb >= 0.17)
+PKG_CHECK_MODULES([libqb], [libqb >= 1.0.1])
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
@@ -1427,6 +1427,7 @@ dnl libqb 2.0.2+ (2020-10)
 AC_CHECK_FUNCS([qb_ipcc_auth_get])
 
 dnl libqb 2.0.0+ (2020-05)
+dnl also defines QB_FEATURE_LOG_HIRES_TIMESTAMPS
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
 
