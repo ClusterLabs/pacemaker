@@ -2,7 +2,7 @@
 # Original Author: Sun Jiang Dong <sunjd@cn.ibm.com>
 # Copyright 2004 International Business Machines
 #
-# with later changes copyright 2004-2023 the Pacemaker project contributors.
+# with later changes copyright 2004-2024 the Pacemaker project contributors.
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
@@ -47,13 +47,3 @@ pacemaker_fenced_SOURCES	= pacemaker-fenced.c	\
 				  fenced_history.c
 
 CLEANFILES = $(man7_MANS) $(man8_MANS)
-
-if BUILD_LEGACY_LINKS
-.PHONY: install-exec-hook
-install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f stonithd && $(LN_S) pacemaker-fenced stonithd
-
-.PHONY: uninstall-hook
-uninstall-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f stonithd
-endif

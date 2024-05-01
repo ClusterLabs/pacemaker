@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2023 the Pacemaker project contributors
+# Copyright 2018-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -63,13 +63,3 @@ man7_MANS 	= pacemaker-controld.7
 endif
 
 CLEANFILES = $(man7_MANS)
-
-if BUILD_LEGACY_LINKS
-.PHONY: install-exec-hook
-install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd && $(LN_S) pacemaker-controld crmd
-
-.PHONY: uninstall-hook
-uninstall-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd
-endif

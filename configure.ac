@@ -247,16 +247,6 @@ enable_upstart=$?
 
 dnl --enable-* options: features inherent to Pacemaker
 
-# Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
-# that users and tools can continue to invoke those names directly (e.g., for
-# meta-data). This option will be removed in a future release.
-AC_ARG_ENABLE([legacy-links],
-    [AS_HELP_STRING([--enable-legacy-links],
-        [add symlinks for old daemon names (deprecated) @<:@no@:>@])]
-)
-yes_no_try "$enable_legacy_links" "no"
-enable_legacy_links=$?
-
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
 # to enabled. We override the definition of AM_NLS to flip the default and mark
 # it as experimental in the help text.
@@ -639,8 +629,6 @@ AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
 dnl ==============================================
 dnl Process simple options
 dnl ==============================================
-
-AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
