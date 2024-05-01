@@ -422,9 +422,13 @@
           <value>lsb</value>
           <value>heartbeat</value>
           <value>stonith</value>
-          <value>upstart</value>
           <value>service</value>
           <value>systemd</value>
+
+          <!-- @COMPAT upstart resources are deprecated since 2.1.0 -->
+          <value>upstart</value>
+
+          <!-- @COMPAT nagios resources are deprecated since 2.1.6 -->
           <value>nagios</value>
         </choice>
       </attribute>
