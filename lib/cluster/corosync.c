@@ -117,7 +117,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     int rv;
 
     if (nodeid == 0) {
-        nodeid = get_local_nodeid(0);
+        nodeid = pcmk__cpg_local_nodeid(0);
     }
 
     if (cmap_handle == 0 && local_handle == 0) {
@@ -477,7 +477,7 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     }
     crm_info("Connection to %s established", cluster_layer_s);
 
-    cluster->nodeid = get_local_nodeid(0);
+    cluster->nodeid = pcmk__cpg_local_nodeid(0);
     if (cluster->nodeid == 0) {
         crm_err("Could not determine local node ID");
         return ENXIO;

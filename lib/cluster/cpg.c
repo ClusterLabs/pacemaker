@@ -87,6 +87,7 @@ static void crm_cs_flush(gpointer data);
     } while (counter < max)
 
 /*!
+ * \internal
  * \brief Get the local Corosync node ID (via CPG)
  *
  * \param[in] handle  CPG connection to use (or 0 to use new connection)
@@ -94,7 +95,7 @@ static void crm_cs_flush(gpointer data);
  * \return Corosync ID of local node (or 0 if not known)
  */
 uint32_t
-get_local_nodeid(cpg_handle_t handle)
+pcmk__cpg_local_nodeid(cpg_handle_t handle)
 {
     cs_error_t rc = CS_OK;
     int retries = 0;
@@ -105,15 +106,18 @@ get_local_nodeid(cpg_handle_t handle)
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
-    int rv;
+    int rv = 0;
 
-    if(local_nodeid != 0) {
+    if (local_nodeid != 0) {
         return local_nodeid;
     }
 
-    if(handle == 0) {
+    if (handle == 0) {
         crm_trace("Creating connection");
-        cs_repeat(rc, retries, 5, cpg_model_initialize(&local_handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
+        cs_repeat(rc, retries, 5,
+                  cpg_model_initialize(&local_handle, CPG_MODEL_V1,
+                                       (cpg_model_data_t *) &cpg_model_info,
+                                       NULL));
         if (rc != CS_OK) {
             crm_err("Could not connect to the CPG API: %s (%d)",
                     cs_strerror(rc), rc);
@@ -127,14 +131,16 @@ get_local_nodeid(cpg_handle_t handle)
             goto bail;
         }
 
-        /* CPG provider run as root (in given user namespace, anyway)? */
-        if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                                &found_uid, &found_gid))) {
+        // CPG provider run as root (at least in given user namespace)?
+        rv = crm_ipc_is_authentic_process(fd, (uid_t) 0, (gid_t) 0, &found_pid,
+                                          &found_uid, &found_gid);
+        if (rv == 0) {
             crm_err("CPG provider is not authentic:"
                     " process %lld (uid: %lld, gid: %lld)",
                     (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                     (long long) found_uid, (long long) found_gid);
             goto bail;
+
         } else if (rv < 0) {
             crm_err("Could not verify authenticity of CPG provider: %s (%d)",
                     strerror(-rv), -rv);
@@ -154,12 +160,25 @@ get_local_nodeid(cpg_handle_t handle)
     }
 
 bail:
-    if(handle == 0) {
+    if (handle == 0) {
         crm_trace("Closing connection");
         cpg_finalize(local_handle);
     }
     crm_debug("Local nodeid is %u", local_nodeid);
     return local_nodeid;
+}
+
+/*!
+ * \brief Get the local Corosync node ID (via CPG)
+ *
+ * \param[in] handle  CPG connection to use (or 0 to use new connection)
+ *
+ * \return Corosync ID of local node (or 0 if not known)
+ */
+uint32_t
+get_local_nodeid(cpg_handle_t handle)
+{
+    return pcmk__cpg_local_nodeid(handle);
 }
 
 /*!
@@ -426,7 +445,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
     if(handle) {
         // Do filtering and field massaging
-        uint32_t local_nodeid = get_local_nodeid(handle);
+        uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
         const char *local_name = get_local_node_name();
 
         if (msg->sender.id > 0 && msg->sender.id != nodeid) {
@@ -676,7 +695,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
     int i;
     gboolean found = FALSE;
     static int counter = 0;
-    uint32_t local_nodeid = get_local_nodeid(handle);
+    uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
     const struct cpg_address **sorted;
 
     sorted = pcmk__assert_alloc(member_list_entries,
@@ -868,7 +887,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
         goto bail;
     }
 
-    id = get_local_nodeid(handle);
+    id = pcmk__cpg_local_nodeid(handle);
     if (id == 0) {
         crm_err("Could not get local node id from the CPG API");
         goto bail;
