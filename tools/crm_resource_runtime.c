@@ -538,7 +538,6 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
             case ENXIO:
                 free(lookup_id);
-                rc = pcmk_rc_ok;
                 continue;
 
             default:
