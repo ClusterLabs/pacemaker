@@ -942,7 +942,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
     if(node->uuid == NULL) {
         if (uuid == NULL) {
-            uuid = crm_peer_uuid(node);
+            uuid = pcmk__cluster_node_uuid(node);
         }
 
         if (uuid) {

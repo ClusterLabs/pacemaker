@@ -31,6 +31,40 @@
 CRM_TRACE_INIT_DATA(cluster);
 
 /*!
+ * \internal
+ * \brief Get a node's cluster-layer UUID, setting it if not already set
+ *
+ * \param[in,out] node  Node to check
+ *
+ * \return Cluster-layer node UUID of \p node, or \c NULL if unknown
+ */
+const char *
+pcmk__cluster_node_uuid(crm_node_t *node)
+{
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+
+    if (node == NULL) {
+        return NULL;
+    }
+    if (node->uuid != NULL) {
+        return node->uuid;
+    }
+
+    switch (cluster_layer) {
+#if SUPPORT_COROSYNC
+        case pcmk_cluster_layer_corosync:
+            node->uuid = pcmk__corosync_uuid(node);
+            return node->uuid;
+#endif  // SUPPORT_COROSYNC
+
+        default:
+            crm_err("Unsupported cluster layer %s",
+                    pcmk_cluster_layer_text(cluster_layer));
+            return NULL;
+    }
+}
+
+/*!
  * \brief Get (and set if needed) a node's UUID
  *
  * \param[in,out] peer  Node to check
@@ -40,31 +74,7 @@ CRM_TRACE_INIT_DATA(cluster);
 const char *
 crm_peer_uuid(crm_node_t *peer)
 {
-    char *uuid = NULL;
-
-    // Check simple cases first, to avoid any calls that might block
-    if (peer == NULL) {
-        return NULL;
-    }
-    if (peer->uuid != NULL) {
-        return peer->uuid;
-    }
-
-    switch (pcmk_get_cluster_layer()) {
-        case pcmk_cluster_layer_corosync:
-#if SUPPORT_COROSYNC
-            uuid = pcmk__corosync_uuid(peer);
-#endif
-            break;
-
-        case pcmk_cluster_layer_unknown:
-        case pcmk_cluster_layer_invalid:
-            crm_err("Unsupported cluster layer");
-            break;
-    }
-
-    peer->uuid = uuid;
-    return peer->uuid;
+    return pcmk__cluster_node_uuid(peer);
 }
 
 /*!
@@ -422,7 +432,7 @@ pcmk_get_cluster_layer(void)
 void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
-    crm_xml_add(xml, attr, crm_peer_uuid(node));
+    crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node));
 }
 
 gboolean

@@ -58,7 +58,11 @@ int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
                                      int *connection);
 
-//! \deprecated Use \c crm_xml_add(xml, attr, crm_peer_uuid(node)) instead
+/*!
+ * \deprecated Use
+ *             <tt>crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node))</tt>
+ *             instead
+ */
 void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 
 #if SUPPORT_COROSYNC
