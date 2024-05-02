@@ -168,6 +168,9 @@ char *get_node_name(uint32_t nodeid);
 //! \deprecated Do not use
 const char *get_local_node_name(void);
 
+//! \deprecated Do not use
+void crm_set_autoreap(gboolean enable);
+
 #ifdef __cplusplus
 }
 #endif

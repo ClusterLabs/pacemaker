@@ -617,23 +617,6 @@ pcmk__cluster_set_autoreap(bool enable)
     autoreap = enable;
 }
 
-/*!
- * \brief Tell the library whether to automatically reap lost nodes
- *
- * If TRUE (the default), calling crm_update_peer_proc() will also update the
- * peer state to CRM_NODE_MEMBER or CRM_NODE_LOST, and pcmk__update_peer_state()
- * will reap peers whose state changes to anything other than CRM_NODE_MEMBER.
- * Callers should leave this enabled unless they plan to manage the cache
- * separately on their own.
- *
- * \param[in] enable  TRUE to enable automatic reaping, FALSE to disable
- */
-void
-crm_set_autoreap(gboolean enable)
-{
-    pcmk__cluster_set_autoreap(enable);
-}
-
 static void
 dump_peer_hash(int level, const char *caller)
 {
@@ -1563,6 +1546,12 @@ void
 crm_peer_destroy(void)
 {
     pcmk__cluster_destroy_node_caches();
+}
+
+void
+crm_set_autoreap(gboolean enable)
+{
+    pcmk__cluster_set_autoreap(enable);
 }
 
 // LCOV_EXCL_STOP
