@@ -199,6 +199,9 @@ void crm_xml_init(void);
 //! \deprecated Exit with \c crm_exit() instead
 void crm_xml_cleanup(void);
 
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void pcmk_free_xml_subtree(xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif
