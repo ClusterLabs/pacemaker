@@ -262,9 +262,6 @@ typedef struct pe_working_set_s pe_working_set_t;
 //! \deprecated This type should be treated as internal to Pacemaker
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-//! \deprecated Use pcmk_rsc_methods_t instead
-typedef struct resource_object_functions_s resource_object_functions_t;
-
 #ifdef __cplusplus
 }
 #endif
