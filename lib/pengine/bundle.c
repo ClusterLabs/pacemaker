@@ -2033,7 +2033,7 @@ pe__bundle_containers(const pcmk_resource_t *bundle)
     return containers;
 }
 
-// Bundle implementation of pcmk_rsc_methods_t:active_node()
+// Bundle implementation of pcmk__rsc_methods_t:active_node()
 pcmk_node_t *
 pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
                        unsigned int *count_clean)
