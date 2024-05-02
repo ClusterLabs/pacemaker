@@ -905,7 +905,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
     if ((node == NULL || node->uname == NULL) && (uname == NULL)) { 
-        uname_lookup = get_node_name(id);
+        uname_lookup = pcmk__cluster_node_name(id);
     }
 
     if (uname_lookup) {

@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <dlfcn.h>
 
+#include <inttypes.h>               // PRIu32
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -262,6 +263,63 @@ pcmk__cluster_send_message(const crm_node_t *node,
 }
 
 /*!
+ * \internal
+ * \brief Get the node name corresponding to a cluster-layer node ID
+ *
+ * Get the node name from the cluster layer if possible. Otherwise, if for the
+ * local node, call \c uname() and get the \c nodename member from the
+ * <tt>struct utsname</tt> object.
+ *
+ * \param[in] nodeid  Node ID to check (or 0 for the local node)
+ *
+ * \return Node name corresponding to \p nodeid
+ *
+ * \note This will fatally exit if \c uname() fails to get the local node name
+ *       or we run out of memory.
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__cluster_node_name(uint32_t nodeid)
+{
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
+
+    switch (cluster_layer) {
+#if SUPPORT_COROSYNC
+        case pcmk_cluster_layer_corosync:
+            return pcmk__corosync_name(0, nodeid);
+#else
+            break;
+#endif // SUPPORT_COROSYNC
+
+        default:
+            crm_err("Unsupported cluster layer: %s", cluster_layer_s);
+            break;
+    }
+
+    if (nodeid == 0) {
+        char *name = NULL;
+
+        crm_notice("Could not get local node name from %s cluster layer, "
+                   "defaulting to local hostname",
+                   cluster_layer_s);
+
+        name = pcmk_hostname();
+        if (name == NULL) {
+            // @TODO Maybe let the caller decide what to do
+            crm_err("Failed to get the local hostname");
+            crm_exit(CRM_EX_FATAL);
+        }
+        return name;
+    }
+
+    crm_notice("Could not obtain a node name for node with "
+               PCMK_XA_ID "=" PRIu32,
+               nodeid);
+    return NULL;
+}
+
+/*!
  * \brief Get the local node's name
  *
  * \return Local node's name
@@ -273,7 +331,7 @@ get_local_node_name(void)
     static char *name = NULL;
 
     if (name == NULL) {
-        name = get_node_name(0);
+        name = pcmk__cluster_node_name(0);
     }
     return name;
 }
@@ -290,39 +348,7 @@ get_local_node_name(void)
 char *
 get_node_name(uint32_t nodeid)
 {
-    char *name = NULL;
-    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
-    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
-
-    switch (cluster_layer) {
-        case pcmk_cluster_layer_corosync:
-#if SUPPORT_COROSYNC
-            name = pcmk__corosync_name(0, nodeid);
-            break;
-#endif // SUPPORT_COROSYNC
-
-        default:
-            crm_err("Unknown cluster layer: %s (%d)",
-                    cluster_layer_s, cluster_layer);
-    }
-
-    if ((name == NULL) && (nodeid == 0)) {
-        name = pcmk_hostname();
-        if (name == NULL) {
-            // @TODO Maybe let the caller decide what to do
-            crm_err("Could not obtain the local %s node name", cluster_layer_s);
-            crm_exit(CRM_EX_FATAL);
-        }
-        crm_notice("Defaulting to uname -n for the local %s node name",
-                   cluster_layer_s);
-    }
-
-    if (name == NULL) {
-        crm_notice("Could not obtain a node name for %s node with "
-                   PCMK_XA_ID " %u",
-                   cluster_layer_s, nodeid);
-    }
-    return name;
+    return pcmk__cluster_node_name(nodeid);
 }
 
 /*!

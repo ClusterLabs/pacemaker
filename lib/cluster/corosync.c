@@ -480,7 +480,7 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
         return ENXIO;
     }
 
-    cluster->uname = get_node_name(0);
+    cluster->uname = pcmk__cluster_node_name(0);
     if (cluster->uname == NULL) {
         crm_err("Could not determine local node name");
         return ENXIO;

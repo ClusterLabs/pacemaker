@@ -146,6 +146,7 @@ char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
 #  endif
 
 const char *pcmk__cluster_node_uuid(crm_node_t *node);
+char *pcmk__cluster_node_name(uint32_t nodeid);
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
                                  uint32_t flag, const char *status);
