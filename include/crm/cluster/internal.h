@@ -186,8 +186,6 @@ void pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name);
 void pcmk__cluster_forget_remote_node(const char *node_name);
 crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
                                      uint32_t flags);
-crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
-                                            const char *uuid);
 void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
