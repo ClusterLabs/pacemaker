@@ -17,22 +17,16 @@
 
 #  include <crm/cluster.h>
 
-/* *INDENT-OFF* */
 enum crm_proc_flag {
+    /* @COMPAT When crm_node_t:processes is made internal, we can merge this
+     * into node flags or turn it into a boolean. Until then, in theory
+     * something could depend on these particular numeric values.
+     */
     crm_proc_none       = 0x00000001,
 
     // Cluster layers
     crm_proc_cpg        = 0x04000000,
-
-    // Daemons
-    crm_proc_execd      = 0x00000010,
-    crm_proc_based      = 0x00000100,
-    crm_proc_controld   = 0x00000200,
-    crm_proc_attrd      = 0x00001000,
-    crm_proc_schedulerd = 0x00010000,
-    crm_proc_fenced     = 0x00100000,
 };
-/* *INDENT-ON* */
 
 // Used with node cache search functions
 enum pcmk__node_search_flags {
