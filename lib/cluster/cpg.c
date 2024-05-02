@@ -464,10 +464,7 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                 pcmk__get_node(sender_id, NULL, NULL,
                                pcmk__node_search_cluster_member);
 
-            if (peer == NULL) {
-                crm_err("Peer with nodeid=%u is unknown", sender_id);
-
-            } else if (peer->uname == NULL) {
+            if (peer->uname == NULL) {
                 crm_err("No uname for peer with nodeid=%u", sender_id);
 
             } else {

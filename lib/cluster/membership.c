@@ -870,7 +870,12 @@ remove_conflicting_peer(crm_node_t *node)
 #endif
 
 /*!
- * \brief Get a cluster node cache entry
+ * \internal
+ * \brief Get a cluster node cache entry, possibly creating one if not found
+ *
+ * If \c pcmk__node_search_cluster_member is set in \p flags, the return value
+ * is guaranteed not to be \c NULL. A new cache entry is created if one does not
+ * already exist.
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
