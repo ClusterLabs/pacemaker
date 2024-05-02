@@ -786,18 +786,6 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
     }
 }
 
-/*!
- * Free an XML element and all of its children, removing it from its parent
- *
- * \param[in,out] xml  XML element to free
- */
-void
-pcmk_free_xml_subtree(xmlNode *xml)
-{
-    xmlUnlinkNode(xml); // Detaches from parent and siblings
-    xmlFreeNode(xml);   // Frees
-}
-
 static void
 free_xml_with_position(xmlNode *child, int position)
 {
@@ -2747,6 +2735,13 @@ void
 crm_xml_cleanup(void)
 {
     pcmk__xml_cleanup();
+}
+
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
 }
 
 // LCOV_EXCL_STOP
