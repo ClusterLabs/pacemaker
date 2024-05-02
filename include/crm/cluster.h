@@ -174,9 +174,16 @@ int pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn);
 int pcmk_cpg_set_confchg_fn(pcmk_cluster_t *cluster, cpg_confchg_fn_t fn);
 #endif  // SUPPORT_COROSYNC
 
+/* @COMPAT Make this internal when we can break API backward compatibility. Also
+ * evaluate whether we can drop this entirely. Since 2.0.0, we have sent only
+ * messages with crm_class_cluster.
+ */
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
+//!@}
 
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
