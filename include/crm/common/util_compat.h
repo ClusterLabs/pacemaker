@@ -167,6 +167,9 @@ guint crm_parse_interval_spec(const char *input);
 //! \deprecated Use \c PCMK_VALUE_OFFLINE instead
 #define OFFLINESTATUS PCMK_VALUE_OFFLINE
 
+//! \deprecated Use \c uname() instead
+char *pcmk_hostname(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -30,7 +30,6 @@ WRAPPED = abort 		\
 	  setenv		\
 	  setgrent		\
 	  strdup 		\
-	  uname			\
 	  unsetenv
 
 if WRAPPABLE_FOPEN64

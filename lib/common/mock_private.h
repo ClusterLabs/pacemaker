@@ -81,8 +81,4 @@ extern bool pcmk__mock_strdup;
 char *__real_strdup(const char *s);
 char *__wrap_strdup(const char *s);
 
-extern bool pcmk__mock_uname;
-int __real_uname(struct utsname *buf);
-int __wrap_uname(struct utsname *buf);
-
 #endif  // MOCK_PRIVATE__H

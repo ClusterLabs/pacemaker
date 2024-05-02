@@ -105,8 +105,6 @@ int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 void crm_gnutls_global_init(void);
 #endif
 
-char *pcmk_hostname(void);
-
 bool pcmk_str_is_infinity(const char *s);
 bool pcmk_str_is_minus_infinity(const char *s);
 
