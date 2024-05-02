@@ -65,19 +65,6 @@ pcmk__cluster_node_uuid(crm_node_t *node)
 }
 
 /*!
- * \brief Get (and set if needed) a node's UUID
- *
- * \param[in,out] peer  Node to check
- *
- * \return Node UUID of \p peer, or NULL if unknown
- */
-const char *
-crm_peer_uuid(crm_node_t *peer)
-{
-    return pcmk__cluster_node_uuid(peer);
-}
-
-/*!
  * \internal
  * \brief Connect to the cluster layer
  *
@@ -476,6 +463,12 @@ send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
                      const xmlNode *data, gboolean ordered)
 {
     return pcmk__cluster_send_message(node, service, data);
+}
+
+const char *
+crm_peer_uuid(crm_node_t *peer)
+{
+    return pcmk__cluster_node_uuid(peer);
 }
 
 // LCOV_EXCL_STOP

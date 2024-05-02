@@ -195,7 +195,6 @@ enum crm_ais_msg_types {
 };
 //!@}
 
-const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
 
 // @COMPAT Make this internal when we can break API backward compatibility
