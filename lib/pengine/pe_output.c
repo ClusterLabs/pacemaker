@@ -2016,24 +2016,24 @@ health_text(int health)
 
 /*!
  * \internal
- * \brief Convert a node type to a string representation
+ * \brief Convert a node variant to a string representation
  *
- * \param[in] type  Node type
+ * \param[in] variant  Node variant
  *
- * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk_node_variant_cluster
- * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk_node_variant_remote
- * \retval \c PCMK__VALUE_PING if \p node_type is \c node_ping
+ * \retval \c PCMK_VALUE_MEMBER if \p node_type is \c pcmk__node_variant_cluster
+ * \retval \c PCMK_VALUE_REMOTE if \p node_type is \c pcmk__node_variant_remote
+ * \retval \c PCMK__VALUE_PING if \p node_type is \c pcmk__node_variant_ping
  * \retval \c PCMK_VALUE_UNKNOWN otherwise
  */
 static const char *
-node_type_str(enum node_type type)
+node_variant_text(enum pcmk__node_variant variant)
 {
-    switch (type) {
-        case pcmk_node_variant_cluster:
+    switch (variant) {
+        case pcmk__node_variant_cluster:
             return PCMK_VALUE_MEMBER;
-        case pcmk_node_variant_remote:
+        case pcmk__node_variant_remote:
             return PCMK_VALUE_REMOTE;
-        case node_ping:
+        case pcmk__node_variant_ping:
             return PCMK__VALUE_PING;
         default:
             return PCMK_VALUE_UNKNOWN;
@@ -2064,7 +2064,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *is_dc = pcmk__btoa(node->details->is_dc);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
-        const char *node_type = node_type_str(node->private->variant);
+        const char *node_type = node_variant_text(node->private->variant);
 
         int rc = pcmk_rc_ok;
 

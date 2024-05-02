@@ -12,12 +12,12 @@
 
 #include <stdio.h>          // NULL
 #include <stdbool.h>        // bool
+#include <gnutls/gnutls.h>  // gnutls_session_t, etc.
 #include <libxml/tree.h>    // xmlNode
 #include <gnutls/gnutls.h>  // gnutls_session_t, gnutls_dh_params_t, etc.
 
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
-#include <crm/common/nodes.h>               // pcmk_node_variant_remote
-#include <crm/common/nodes_internal.h>      // struct pcmk__node_private
+#include <crm/common/nodes_internal.h>      // pcmk__node_variant_remote, etc.
 #include <crm/common/resources_internal.h>  // struct pcmk__remote_private
 #include <crm/common/scheduler_types.h>     // pcmk_node_t
 
@@ -47,7 +47,7 @@ static inline bool
 pcmk__is_pacemaker_remote_node(const pcmk_node_t *node)
 {
     return (node != NULL)
-            && (node->private->variant == pcmk_node_variant_remote);
+            && (node->private->variant == pcmk__node_variant_remote);
 }
 
 /*!

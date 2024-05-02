@@ -28,6 +28,12 @@
  */
 #define PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED  "resource-discovery-enabled"
 
+enum pcmk__node_variant { // Possible node types
+    pcmk__node_variant_ping     = 0,    // deprecated
+    pcmk__node_variant_cluster  = 1,    // Cluster layer node
+    pcmk__node_variant_remote   = 2,    // Pacemaker Remote node
+};
+
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow
  * copies, so all pcmk_node_t objects for the same node will share the same
  * private data)
@@ -39,7 +45,7 @@ typedef struct pcmk__node_private {
     const char *id;
 
     const char *name;                   // Node name in cluster
-    enum node_type variant;             // Node variant
+    enum pcmk__node_variant variant;    // Node variant
 } pcmk__node_private_t;
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
