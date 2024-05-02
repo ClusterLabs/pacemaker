@@ -811,7 +811,9 @@ free_xml_with_position(xmlNode *child, int position)
     nodepriv = child->_private;
 
     if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
-        // Free everything
+        /* @TODO Should we check ACLs first? Otherwise it seems like we could
+         * free the root element without write permission.
+         */
         xmlFreeDoc(doc);
         return;
     }
@@ -859,7 +861,8 @@ free_xml_with_position(xmlNode *child, int position)
             pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
         }
     }
-    pcmk_free_xml_subtree(child);
+    xmlUnlinkNode(child);
+    xmlFreeNode(child);
 }
 
 
@@ -929,8 +932,8 @@ pcmk__strip_xml_text(xmlNode *xml)
 
         switch (iter->type) {
             case XML_TEXT_NODE:
-                /* Remove it */
-                pcmk_free_xml_subtree(iter);
+                xmlUnlinkNode(iter);
+                xmlFreeNode(iter);
                 break;
 
             case XML_ELEMENT_NODE:
