@@ -679,6 +679,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
+
+    (*rsc)->private = calloc(1, sizeof(pcmk__resource_private_t));
+    if ((*rsc)->private == NULL) {
+        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
+        free(*rsc);
+        return ENOMEM;
+    }
+
     (*rsc)->cluster = scheduler;
 
     if (expanded_xml) {
@@ -1100,12 +1108,12 @@ common_free(pcmk_resource_t * rsc)
     }
     g_list_free(rsc->fillers);
     g_list_free(rsc->rsc_location);
-    pcmk__rsc_trace(rsc, "Resource freed");
     free(rsc->id);
     free(rsc->clone_name);
     free(rsc->allocated_to);
     free(rsc->variant_opaque);
     free(rsc->pending_task);
+    free(rsc->private);
     free(rsc);
 }
 

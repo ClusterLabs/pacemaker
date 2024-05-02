@@ -223,6 +223,9 @@ enum pe_restart {
     pe_restart_ignore,
 };
 
+//! \internal Do not use
+typedef struct pcmk__resource_private pcmk__resource_private_t;
+
 // Resource assignment methods (implementation defined by libpacemaker)
 //! \deprecated Do not use (public access will be removed in a future release)
 typedef struct resource_alloc_functions_s pcmk_assignment_methods_t;
@@ -369,6 +372,12 @@ typedef struct resource_object_functions_s {
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_resource_s {
+    /* @COMPAT Once all members are moved to pcmk__resource_private_t,
+     * We can make that the pcmk_resource_t implementation and drop this
+     * struct altogether, leaving pcmk_resource_t as an opaque public type.
+     */
+    pcmk__resource_private_t *private;
+
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
