@@ -66,7 +66,12 @@ crm_extended_logging(int t, int e)
 }
 #endif
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 extern unsigned int crm_log_level;
+
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 extern unsigned int crm_trace_nonlog;
 
 /*! \deprecated Pacemaker library functions set this when a configuration

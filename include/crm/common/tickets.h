@@ -23,14 +23,18 @@ extern "C" {
  * \ingroup core
  */
 
-//! Ticket constraint object
+// Ticket constraint object
+// @COMPAT Make internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct pe_ticket_s {
-    char *id;               //!< XML ID of ticket constraint or state
-    gboolean granted;       //!< Whether cluster has been granted the ticket
-    time_t last_granted;    //!< When cluster was last granted the ticket
-    gboolean standby;       //!< Whether ticket is temporarily suspended
-    GHashTable *state;      //!< XML attributes from ticket state
+    char *id;               // XML ID of ticket constraint or state
+    gboolean granted;       // Whether cluster has been granted the ticket
+    time_t last_granted;    // When cluster was last granted the ticket
+    gboolean standby;       // Whether ticket is temporarily suspended
+    GHashTable *state;      // XML attributes from ticket state
 } pcmk_ticket_t;
+//!@}
 
 #ifdef __cplusplus
 }

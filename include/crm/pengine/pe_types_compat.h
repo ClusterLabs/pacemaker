@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -238,16 +238,16 @@ typedef struct pe_resource_s resource_t;
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s pe_resource_t;
 
-//! \deprecated Use pcmk_tag_t instead
+//! \deprecated Do not use
 typedef struct pe_tag_s tag_t;
 
-//! \deprecated Use pcmk_tag_t instead
+//! \deprecated Do not use
 typedef struct pe_tag_s pe_tag_t;
 
-//! \deprecated Use pcmk_ticket_t instead
+//! \deprecated Do not use
 typedef struct pe_ticket_s ticket_t;
 
-//! \deprecated Use pcmk_ticket_t instead
+//! \deprecated Do not use
 typedef struct pe_ticket_s pe_ticket_t;
 
 //! \deprecated Use pcmk_scheduler_t instead

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2021 the Pacemaker project contributors
+ * Copyright 2006-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,6 +70,7 @@
 #undef SUPPORT_SYSTEMD
 
 /* Support upstart based system services */
+//! \deprecated Do not use (always treat as 0)
 #undef SUPPORT_UPSTART
 
 #endif /* CRM_CONFIG__H */

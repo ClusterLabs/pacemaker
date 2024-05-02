@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 extern pcmk_rsc_methods_t resource_class_functions[];
 
 GHashTable *pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,

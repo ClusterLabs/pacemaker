@@ -34,16 +34,24 @@ extern "C" {
  * compatibility.
  */
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 #define create_reply(request, xml_response_data)    \
     create_reply_adv(request, xml_response_data, __func__)
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
                           const char *origin);
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 #define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
     create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, \
                        __func__)
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
                             const char *host_to, const char *sys_to,
                             const char *sys_from, const char *uuid_from,
@@ -220,9 +228,8 @@ unsigned int crm_ipc_default_buffer_size(void);
 int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                                  pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
-/* This is controller-specific but is declared in this header for C API
- * backward compatibility.
- */
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
                               const char *major_version, const char *minor_version);
 
