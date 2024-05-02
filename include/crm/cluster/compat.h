@@ -89,6 +89,11 @@ gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
                            gboolean local, const crm_node_t *node,
                            enum crm_ais_msg_types dest);
+
+//! \deprecated Do not use
+char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
+                             void *msg, uint32_t *kind, const char **from);
+
 #endif  // SUPPORT_COROSYNC
 
 //! \deprecated Use \c pcmk_cluster_connect() instead

@@ -199,11 +199,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
 
-#  if SUPPORT_COROSYNC
-char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
-                        uint32_t *kind, const char **from);
-#  endif
-
 const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
 
