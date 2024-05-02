@@ -2469,20 +2469,32 @@ function test_tools() {
     CIB_file_invalid_1="$test_home/cli/crm_verify_invalid_bz.xml"
     CIB_file_invalid_2="$test_home/cli/crm_verify_invalid_no_stonith.xml"
     
-    desc="Verify a file-specified invalid configuration, outputting as xml"
+    desc="Verify a file-specified invalid configuration (text output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1'"
+    test_assert $CRM_EX_CONFIG 0
+
+    desc="Verify a file-specified invalid configuration (verbose text output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --verbose"
+    test_assert $CRM_EX_CONFIG 0
+
+    desc="Verify a file-specified invalid configuration (quiet text output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --quiet"
+    test_assert $CRM_EX_CONFIG 0
+
+    desc="Verify a file-specified invalid configuration (XML output)"
     cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml"
     test_assert_validate $CRM_EX_CONFIG 0
 
-    desc="Verify another file-specified invalid configuration, outputting as xml"
-    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml"
-    test_assert_validate $CRM_EX_CONFIG 0
-
-    desc="Verbosely verify a file-specified invalid configuration, outputting as xml"
+    desc="Verify a file-specified invalid configuration (verbose XML output)"
     cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml --verbose"
     test_assert_validate $CRM_EX_CONFIG 0
 
-    desc="Verbosely verify another file-specified invalid configuration, outputting as xml"
-    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml --verbose"
+    desc="Verify a file-specified invalid configuration (quiet XML output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml --quiet"
+    test_assert_validate $CRM_EX_CONFIG 0
+
+    desc="Verify another file-specified invalid configuration (XML output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml"
     test_assert_validate $CRM_EX_CONFIG 0
 
     export CIB_file="$test_home/cli/crm_mon.xml"

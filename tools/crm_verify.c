@@ -42,6 +42,7 @@ struct {
     char *xml_file;
     gboolean xml_stdin;
     char *xml_string;
+    unsigned int verbosity;
 } options;
 
 static GOptionEntry data_entries[] = {
@@ -111,6 +112,30 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+/*!
+ * \internal
+ * \brief Output a configuration issue
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_issue(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    CRM_ASSERT(vasprintf(&buf, msg, ap) > 0);
+    if (options.verbosity > 0) {
+        out->err(out, "%s", buf);
+    }
+    va_end(ap);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -162,12 +187,13 @@ main(int argc, char **argv)
 
     pcmk__register_lib_messages(out);
 
-    pcmk__set_config_error_handler((pcmk__config_error_func) out->err, out);
-    pcmk__set_config_warning_handler((pcmk__config_warning_func) out->err, out);
+    pcmk__set_config_error_handler(output_config_issue, out);
+    pcmk__set_config_warning_handler(output_config_issue, out);
 
     if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         args->verbosity = 1;
     }
+    options.verbosity = args->verbosity;
 
     if (options.xml_file != NULL) {
         cib_source = options.xml_file;
@@ -216,8 +242,12 @@ main(int argc, char **argv)
             failure_type = "";
           }
 
-          if (args->verbosity > 0) {
+          if (args->quiet) {
+              // User requested no output
+
+          } else if (options.verbosity > 0) {
               out->err(out, "%sconfig not valid", failure_type);
+
           } else {
               out->err(out, "%sconfig not valid\n-V may provide more details", failure_type);
           }

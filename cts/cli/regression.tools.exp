@@ -10210,7 +10210,23 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
 </pacemaker-result>
 =#=#=#= End test: Switch to nonexistent shadow instance (force) (XML) - No such object (105) =#=#=#=
 * Passed: crm_shadow     - Switch to nonexistent shadow instance (force) (XML)
-=#=#=#= Begin test: Verify a file-specified invalid configuration, outputting as xml =#=#=#=
+=#=#=#= Begin test: Verify a file-specified invalid configuration (text output) =#=#=#=
+Errors found during check: config not valid
+-V may provide more details
+=#=#=#= End test: Verify a file-specified invalid configuration (text output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify a file-specified invalid configuration (text output)
+=#=#=#= Begin test: Verify a file-specified invalid configuration (verbose text output) =#=#=#=
+unpack_config 	warning: Blind faith: not fencing unseen nodes
+Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource
+Ignoring <clone> resource 'test2-clone' because configuration is invalid
+CIB did not pass schema validation
+Errors found during check: config not valid
+=#=#=#= End test: Verify a file-specified invalid configuration (verbose text output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify a file-specified invalid configuration (verbose text output)
+=#=#=#= Begin test: Verify a file-specified invalid configuration (quiet text output) =#=#=#=
+=#=#=#= End test: Verify a file-specified invalid configuration (quiet text output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify a file-specified invalid configuration (quiet text output)
+=#=#=#= Begin test: Verify a file-specified invalid configuration (XML output) =#=#=#=
 <pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml">
   <status code="78" message="Invalid configuration">
     <errors>
@@ -10221,9 +10237,35 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
     </errors>
   </status>
 </pacemaker-result>
-=#=#=#= End test: Verify a file-specified invalid configuration, outputting as xml - Invalid configuration (78) =#=#=#=
-* Passed: crm_verify     - Verify a file-specified invalid configuration, outputting as xml
-=#=#=#= Begin test: Verify another file-specified invalid configuration, outputting as xml =#=#=#=
+=#=#=#= End test: Verify a file-specified invalid configuration (XML output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify a file-specified invalid configuration (XML output)
+=#=#=#= Begin test: Verify a file-specified invalid configuration (verbose XML output) =#=#=#=
+unpack_config 	warning: Blind faith: not fencing unseen nodes
+<pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml --verbose">
+  <status code="78" message="Invalid configuration">
+    <errors>
+      <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
+      <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
+      <error>CIB did not pass schema validation</error>
+      <error>Errors found during check: config not valid</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Verify a file-specified invalid configuration (verbose XML output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify a file-specified invalid configuration (verbose XML output)
+=#=#=#= Begin test: Verify a file-specified invalid configuration (quiet XML output) =#=#=#=
+<pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml --quiet">
+  <status code="78" message="Invalid configuration">
+    <errors>
+      <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
+      <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
+      <error>CIB did not pass schema validation</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Verify a file-specified invalid configuration (quiet XML output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify a file-specified invalid configuration (quiet XML output)
+=#=#=#= Begin test: Verify another file-specified invalid configuration (XML output) =#=#=#=
 <pacemaker-result api-version="X" request="crm_verify_invalid_no_stonith.xml --output-as=xml">
   <status code="78" message="Invalid configuration">
     <errors>
@@ -10237,39 +10279,8 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
     </errors>
   </status>
 </pacemaker-result>
-=#=#=#= End test: Verify another file-specified invalid configuration, outputting as xml - Invalid configuration (78) =#=#=#=
-* Passed: crm_verify     - Verify another file-specified invalid configuration, outputting as xml
-=#=#=#= Begin test: Verbosely verify a file-specified invalid configuration, outputting as xml =#=#=#=
-unpack_config 	warning: Blind faith: not fencing unseen nodes
-<pacemaker-result api-version="X" request="crm_verify_invalid_bz.xml --output-as=xml --verbose">
-  <status code="78" message="Invalid configuration">
-    <errors>
-      <error>Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
-      <error>Ignoring &lt;clone&gt; resource 'test2-clone' because configuration is invalid</error>
-      <error>CIB did not pass schema validation</error>
-      <error>Errors found during check: config not valid</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: Verbosely verify a file-specified invalid configuration, outputting as xml - Invalid configuration (78) =#=#=#=
-* Passed: crm_verify     - Verbosely verify a file-specified invalid configuration, outputting as xml
-=#=#=#= Begin test: Verbosely verify another file-specified invalid configuration, outputting as xml =#=#=#=
-cluster_status 	warning: Fencing and resource management disabled due to lack of quorum
-<pacemaker-result api-version="X" request="crm_verify_invalid_no_stonith.xml --output-as=xml --verbose">
-  <status code="78" message="Invalid configuration">
-    <errors>
-      <error>Resource start-up disabled since no STONITH resources have been defined</error>
-      <error>Either configure some or disable STONITH with the stonith-enabled option</error>
-      <error>NOTE: Clusters with shared data need STONITH to ensure data integrity</error>
-      <error>Node pcmk-1 is unclean but cannot be fenced</error>
-      <error>Node pcmk-2 is unclean but cannot be fenced</error>
-      <error>CIB did not pass schema validation</error>
-      <error>Errors found during check: config not valid</error>
-    </errors>
-  </status>
-</pacemaker-result>
-=#=#=#= End test: Verbosely verify another file-specified invalid configuration, outputting as xml - Invalid configuration (78) =#=#=#=
-* Passed: crm_verify     - Verbosely verify another file-specified invalid configuration, outputting as xml
+=#=#=#= End test: Verify another file-specified invalid configuration (XML output) - Invalid configuration (78) =#=#=#=
+* Passed: crm_verify     - Verify another file-specified invalid configuration (XML output)
 =#=#=#= Begin test: Verify a file-specified valid configuration, outputting as xml =#=#=#=
 <pacemaker-result api-version="X" request="crm_mon.xml --output-as=xml">
   <status code="0" message="OK"/>
