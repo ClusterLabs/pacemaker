@@ -438,7 +438,7 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
     if (handle != 0) {
         // Do filtering and field massaging
         uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
-        const char *local_name = get_local_node_name();
+        const char *local_name = pcmk__cluster_local_node_name();
 
         if ((msg->sender.id != 0) && (msg->sender.id != sender_id)) {
             crm_err("Nodeid mismatch from %" PRIu32 ".%" PRIu32
@@ -977,7 +977,7 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
     CRM_CHECK(dest != crm_msg_ais, return false);
 
     if (local_name == NULL) {
-        local_name = get_local_node_name();
+        local_name = pcmk__cluster_local_node_name();
     }
     if ((local_name_len == 0) && (local_name != NULL)) {
         local_name_len = strlen(local_name);

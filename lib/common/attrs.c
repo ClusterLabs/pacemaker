@@ -70,7 +70,7 @@ pcmk__node_attr_target(const char *name)
         free(target_var);
         free(phys_var);
 
-        // TODO? Call get_local_node_name() if name == NULL
+        // TODO? Call pcmk__cluster_local_node_name() if name == NULL
         // (currently would require linkage against libcrmcluster)
         return name;
     } else {

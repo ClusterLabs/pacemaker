@@ -320,6 +320,31 @@ pcmk__cluster_node_name(uint32_t nodeid)
 }
 
 /*!
+ * \internal
+ * \brief Get the local node's cluster-layer node name
+ *
+ * If getting the node name from the cluster layer is impossible, call
+ * \c uname() and get the \c nodename member from the <tt>struct utsname</tt>
+ * object.
+ *
+ * \return Local node's name
+ *
+ * \note This will fatally exit if \c uname() fails to get the local node name
+ *       or we run out of memory.
+ */
+const char *
+pcmk__cluster_local_node_name(void)
+{
+    // @TODO Refactor to avoid trivially leaking name at exit
+    static char *name = NULL;
+
+    if (name == NULL) {
+        name = pcmk__cluster_node_name(0);
+    }
+    return name;
+}
+
+/*!
  * \brief Get the local node's name
  *
  * \return Local node's name
@@ -328,12 +353,7 @@ pcmk__cluster_node_name(uint32_t nodeid)
 const char *
 get_local_node_name(void)
 {
-    static char *name = NULL;
-
-    if (name == NULL) {
-        name = pcmk__cluster_node_name(0);
-    }
-    return name;
+    return pcmk__cluster_local_node_name();
 }
 
 /*!

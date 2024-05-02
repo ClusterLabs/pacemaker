@@ -221,7 +221,8 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
     const char *reason = NULL;
     char *dynamic_reason = NULL;
 
-    if (pcmk__str_eq(target, get_local_node_name(), pcmk__str_casei)) {
+    if (pcmk__str_eq(target, pcmk__cluster_local_node_name(),
+                     pcmk__str_casei)) {
         reason = "Local executor did not return result in time";
     } else {
         const char *router_node = NULL;
