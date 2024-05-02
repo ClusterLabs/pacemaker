@@ -226,10 +226,6 @@ enum pe_restart {
 //! \internal Do not use
 typedef struct pcmk__resource_private pcmk__resource_private_t;
 
-// Resource assignment methods (implementation defined by libpacemaker)
-//! \deprecated Do not use (public access will be removed in a future release)
-typedef struct resource_alloc_functions_s pcmk_assignment_methods_t;
-
 // Implementation of pcmk_resource_t
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{

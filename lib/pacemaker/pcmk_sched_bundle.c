@@ -582,7 +582,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     g_list_free(coloc_data.container_hosts);
 }
 
-// Bundle implementation of pcmk_assignment_methods_t:with_this_colocations()
+// Bundle implementation of pcmk__assignment_methods_t:with_this_colocations()
 void
 pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
                               const pcmk_resource_t *orig_rsc, GList **list)
@@ -626,7 +626,7 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
     }
 }
 
-// Bundle implementation of pcmk_assignment_methods_t:this_with_colocations()
+// Bundle implementation of pcmk__assignment_methods_t:this_with_colocations()
 void
 pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
                               const pcmk_resource_t *orig_rsc, GList **list)
@@ -1018,7 +1018,7 @@ pcmk__output_bundle_actions(pcmk_resource_t *rsc)
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
-// Bundle implementation of pcmk_assignment_methods_t:add_utilization()
+// Bundle implementation of pcmk__assignment_methods_t:add_utilization()
 void
 pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList *all_rscs,
@@ -1043,7 +1043,7 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
     }
 }
 
-// Bundle implementation of pcmk_assignment_methods_t:shutdown_lock()
+// Bundle implementation of pcmk__assignment_methods_t:shutdown_lock()
 void
 pcmk__bundle_shutdown_lock(pcmk_resource_t *rsc)
 {

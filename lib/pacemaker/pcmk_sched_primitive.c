@@ -1133,7 +1133,7 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 }
 
 /* Primitive implementation of
- * pcmk_assignment_methods_t:with_this_colocations()
+ * pcmk__assignment_methods_t:with_this_colocations()
  */
 void
 pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
@@ -1163,7 +1163,7 @@ pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
 }
 
 /* Primitive implementation of
- * pcmk_assignment_methods_t:this_with_colocations()
+ * pcmk__assignment_methods_t:this_with_colocations()
  */
 void
 pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
@@ -1548,7 +1548,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     }
 }
 
-// Primitive implementation of pcmk_assignment_methods_t:add_utilization()
+// Primitive implementation of pcmk__assignment_methods_t:add_utilization()
 void
 pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
                                 const pcmk_resource_t *orig_rsc,
@@ -1611,7 +1611,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
     }
 }
 
-// Primitive implementation of pcmk_assignment_methods_t:shutdown_lock()
+// Primitive implementation of pcmk__assignment_methods_t:shutdown_lock()
 void
 pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {

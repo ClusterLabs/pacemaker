@@ -45,6 +45,9 @@ extern "C" {
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
 
+//! Resource assignment methods (implementation defined by libpacemaker)
+typedef struct pcmk__assignment_methods pcmk__assignment_methods_t;
+
 //! Resource object methods
 typedef struct {
     /*!
@@ -188,7 +191,7 @@ typedef struct {
 // Implementation of pcmk__resource_private_t
 struct pcmk__resource_private {
     const pcmk__rsc_methods_t *fns;         // Resource object methods
-    const pcmk_assignment_methods_t *cmds;  // Resource assignment methods
+    const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };
 
 const char *pcmk__multiply_active_text(enum rsc_recovery_type recovery);
