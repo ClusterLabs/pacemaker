@@ -345,18 +345,6 @@ pcmk__cluster_local_node_name(void)
 }
 
 /*!
- * \brief Get the local node's name
- *
- * \return Local node's name
- * \note This will fatally exit if local node name cannot be known.
- */
-const char *
-get_local_node_name(void)
-{
-    return pcmk__cluster_local_node_name();
-}
-
-/*!
  * \brief Get the node name corresponding to a node UUID
  *
  * \param[in] uuid  UUID of desired node
@@ -566,6 +554,12 @@ char *
 get_node_name(uint32_t nodeid)
 {
     return pcmk__cluster_node_name(nodeid);
+}
+
+const char *
+get_local_node_name(void)
+{
+    return pcmk__cluster_local_node_name();
 }
 
 // LCOV_EXCL_STOP

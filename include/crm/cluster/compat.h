@@ -165,6 +165,9 @@ enum crm_ais_msg_types text2msg_type(const char *text);
 //! \deprecated Do not use
 char *get_node_name(uint32_t nodeid);
 
+//! \deprecated Do not use
+const char *get_local_node_name(void);
+
 #ifdef __cplusplus
 }
 #endif
