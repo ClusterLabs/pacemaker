@@ -582,6 +582,23 @@ static void (*peer_status_callback)(enum crm_status_type, crm_node_t *,
                                     const void *) = NULL;
 
 /*!
+ * \internal
+ * \brief Set a client function that will be called after peer status changes
+ *
+ * \param[in] dispatch  Pointer to function to use as callback
+ *
+ * \note Client callbacks should do only client-specific handling. Callbacks
+ *       must not add or remove entries in the peer caches.
+ */
+void
+pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+                                                   crm_node_t *, const void *))
+{
+    // @TODO Improve documentation of peer_status_callback
+    peer_status_callback = dispatch;
+}
+
+/*!
  * \brief Set a client function that will be called after peer status changes
  *
  * \param[in] dispatch  Pointer to function to use as callback
@@ -594,7 +611,7 @@ static void (*peer_status_callback)(enum crm_status_type, crm_node_t *,
 void
 crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
 {
-    peer_status_callback = dispatch;
+    pcmk__cluster_set_status_callback(dispatch);
 }
 
 /*!

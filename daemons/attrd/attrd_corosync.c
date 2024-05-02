@@ -416,7 +416,7 @@ attrd_cluster_connect(void)
     pcmk_cpg_set_deliver_fn(attrd_cluster, attrd_cpg_dispatch);
     pcmk_cpg_set_confchg_fn(attrd_cluster, pcmk__cpg_confchg_cb);
 
-    crm_set_status_callback(&attrd_peer_change_cb);
+    pcmk__cluster_set_status_callback(&attrd_peer_change_cb);
 
     rc = pcmk_cluster_connect(attrd_cluster);
     rc = pcmk_rc2legacy(rc);

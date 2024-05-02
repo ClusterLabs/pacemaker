@@ -406,7 +406,7 @@ cib_init(void)
     }
 
     if (!stand_alone) {
-        crm_set_status_callback(&cib_peer_update_callback);
+        pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
         if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
             crm_crit("Cannot sign in to the cluster... terminating");

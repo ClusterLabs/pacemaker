@@ -144,7 +144,7 @@ gboolean
 crm_connect_corosync(pcmk_cluster_t *cluster)
 {
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        crm_set_status_callback(&peer_update_callback);
+        pcmk__cluster_set_status_callback(&peer_update_callback);
 
         pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
         pcmk_cpg_set_deliver_fn(cluster, crmd_cs_dispatch);

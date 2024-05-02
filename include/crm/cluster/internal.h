@@ -173,6 +173,9 @@ void pcmk__cluster_init_node_caches(void);
 void pcmk__cluster_destroy_node_caches(void);
 
 void pcmk__cluster_set_autoreap(bool enable);
+void pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+                                                        crm_node_t *,
+                                                        const void *));
 
 bool pcmk__cluster_is_node_active(const crm_node_t *node);
 unsigned int pcmk__cluster_num_active_nodes(void);

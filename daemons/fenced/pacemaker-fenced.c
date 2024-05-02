@@ -629,7 +629,7 @@ main(int argc, char **argv)
         }
 #endif // SUPPORT_COROSYNC
 
-        crm_set_status_callback(&st_peer_update_callback);
+        pcmk__cluster_set_status_callback(&st_peer_update_callback);
 
         if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
             exit_code = CRM_EX_FATAL;
