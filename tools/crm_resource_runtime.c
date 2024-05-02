@@ -84,15 +84,15 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
 static int
 find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
                    const char *rsc, const char *attr_set_type, const char *set_name,
-                   const char *attr_id, const char *attr_name, char **value)
+                   const char *attr_id, const char *attr_name, xmlNode **result)
 {
+    xmlNode *xml_search;
     int rc = pcmk_rc_ok;
-    xmlNode *xml_search = NULL;
     GString *xpath = NULL;
     const char *xpath_base = NULL;
 
-    if(value) {
-        *value = NULL;
+    if (result) {
+        *result = NULL;
     }
 
     if(the_cib == NULL) {
@@ -141,13 +141,16 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
             rc = ENOTUNIQ;
             pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
             out->spacer(out);
-        } else if (value) {
-            pcmk__str_update(value, crm_element_value(xml_search, attr));
         }
     }
 
+    if (result) {
+        *result = xml_search;
+    } else {
+        free_xml(xml_search);
+    }
+
     g_string_free(xpath, TRUE);
-    free_xml(xml_search);
     return rc;
 }
 
@@ -223,8 +226,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
         if (child->variant == pcmk_rsc_variant_primitive) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
             rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id,
-                                    attr_set_type, attr_set, attr_id, attr_name,
-                                    NULL);
+                                    attr_set_type, attr_set, attr_id, attr_name, NULL);
 
             if(rc == pcmk_rc_ok) {
                 rsc = child;
@@ -275,14 +277,18 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
     if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
                      pcmk__str_casei)) {
         if (!force) {
-            char *found_attr_id = NULL;
+            xmlNode *xml_search = NULL;
             int rc = pcmk_rc_ok;
 
             rc = find_resource_attr(out, cib, PCMK_XA_ID, top_id,
                                     PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
-                                    attr_name, &found_attr_id);
+                                    attr_name, &xml_search);
 
             if (rc == pcmk_rc_ok || rc == ENOTUNIQ) {
+                char *found_attr_id = NULL;
+
+                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+
                 if (!out->is_quiet(out)) {
                     out->err(out,
                              "WARNING: There is already a meta attribute "
@@ -294,10 +300,11 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
                 }
 
                 free(found_attr_id);
+                free_xml(xml_search);
                 return ENOTUNIQ;
             }
 
-            free(found_attr_id);
+            free_xml(xml_search);
         }
 
         *resources = g_list_append(*resources, rsc);
@@ -357,15 +364,17 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
+        xmlNode *xml_search = NULL;
 
         rsc = (pcmk_resource_t *) iter->data;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
         rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
-                                attr_set, attr_id, attr_name, &found_attr_id);
+                                attr_set, attr_id, attr_name, &xml_search);
 
         switch (rc) {
             case pcmk_rc_ok:
+                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
                 crm_debug("Found a match for " PCMK_XA_NAME "='%s': "
                           PCMK_XA_ID "='%s'", attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
@@ -393,6 +402,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             default:
                 free(lookup_id);
                 free(found_attr_id);
+                free_xml(xml_search);
                 g_list_free(resources);
                 return rc;
         }
@@ -418,6 +428,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         free_xml(xml_top);
+        free_xml(xml_search);
 
         free(lookup_id);
         free(found_attr_id);
@@ -525,6 +536,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     for (GList *iter = resources; iter != NULL; iter = iter->next) {
         char *lookup_id = NULL;
         xmlNode *xml_obj = NULL;
+        xmlNode *xml_search = NULL;
         char *found_attr_id = NULL;
         const char *rsc_attr_id = attr_id;
 
@@ -532,17 +544,21 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
 
         lookup_id = clone_strip(rsc->id);
         rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id, attr_set_type,
-                                attr_set, attr_id, attr_name, &found_attr_id);
+                                attr_set, attr_id, attr_name, &xml_search);
         switch (rc) {
             case pcmk_rc_ok:
+                found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
+                free_xml(xml_search);
                 break;
 
             case ENXIO:
                 free(lookup_id);
+                free_xml(xml_search);
                 continue;
 
             default:
                 free(lookup_id);
+                free_xml(xml_search);
                 g_list_free(resources);
                 return rc;
         }
@@ -1609,13 +1625,22 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                               cib_options, promoted_role_only,
                               PCMK_ROLE_PROMOTED);
     } else {
+        xmlNode *xml_search = NULL;
+
         /* Stop the resource by setting PCMK_META_TARGET_ROLE to Stopped.
          * Remember any existing PCMK_META_TARGET_ROLE so we can restore it
          * later (though it only makes any difference if it's Unpromoted).
          */
 
-        find_resource_attr(out, cib, PCMK_XA_VALUE, lookup_id, NULL, NULL, NULL,
-                           PCMK_META_TARGET_ROLE, &orig_target_role);
+        rc = find_resource_attr(out, cib, PCMK_XA_VALUE, lookup_id, NULL, NULL, NULL,
+                                PCMK_META_TARGET_ROLE, &xml_search);
+
+        if (rc == pcmk_rc_ok) {
+            orig_target_role = crm_element_value_copy(xml_search, PCMK_XA_VALUE);
+        }
+
+        free_xml(xml_search);
+
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
