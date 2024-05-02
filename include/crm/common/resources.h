@@ -241,8 +241,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    char *clone_name;                   // Resource instance ID in history
-
     // Resource configuration (possibly expanded from template)
     xmlNode *xml;
 

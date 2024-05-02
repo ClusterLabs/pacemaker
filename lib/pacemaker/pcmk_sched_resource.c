@@ -156,8 +156,8 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
 static GList *
 add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
 {
-    if ((strcmp(rsc->id, id) == 0)
-        || ((rsc->clone_name != NULL) && (strcmp(rsc->clone_name, id) == 0))) {
+    if (pcmk__str_eq(id, rsc->id, pcmk__str_none)
+        || pcmk__str_eq(id, rsc->private->history_id, pcmk__str_none)) {
         result = g_list_prepend(result, rsc);
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

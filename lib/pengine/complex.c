@@ -1107,11 +1107,13 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->fillers);
     g_list_free(rsc->rsc_location);
     free(rsc->id);
-    free(rsc->clone_name);
     free(rsc->allocated_to);
     free(rsc->variant_opaque);
     free(rsc->pending_task);
+
+    free(rsc->private->history_id);
     free(rsc->private);
+
     free(rsc);
 }
 

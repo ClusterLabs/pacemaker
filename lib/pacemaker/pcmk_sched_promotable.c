@@ -695,7 +695,7 @@ static int
 promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                 bool *is_default)
 {
-    char *name = NULL;
+    const char *name = NULL;
     const char *attr_value = NULL;
 
     if (is_default != NULL) {
@@ -733,7 +733,7 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
      * known as in resource history, since that's what crm_attribute --promotion
      * would have used.
      */
-    name = (rsc->clone_name == NULL)? rsc->id : rsc->clone_name;
+    name = pcmk__s(rsc->private->history_id, rsc->id);
 
     attr_value = promotion_attr_value(rsc, node, name);
     if (attr_value != NULL) {
@@ -741,18 +741,19 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                         name, pcmk__node_name(node),
                         pcmk__s(attr_value, "(unset)"));
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
-        /* If we don't have any resource history yet, we won't have clone_name.
+        /* If we don't have any resource history yet, we won't have history_id.
          * In that case, for anonymous clones, try the resource name without
          * any instance number.
          */
-        name = clone_strip(rsc->id);
-        if (strcmp(rsc->id, name) != 0) {
-            attr_value = promotion_attr_value(rsc, node, name);
+        char *rsc_name = clone_strip(rsc->id);
+
+        if (strcmp(rsc->id, rsc_name) != 0) {
+            attr_value = promotion_attr_value(rsc, node, rsc_name);
             pcmk__rsc_trace(rsc, "Promotion score for %s on %s (for %s) = %s",
-                            name, pcmk__node_name(node), rsc->id,
+                            rsc_name, pcmk__node_name(node), rsc->id,
                             pcmk__s(attr_value, "(unset)"));
         }
-        free(name);
+        free(rsc_name);
     }
 
     if (attr_value == NULL) {

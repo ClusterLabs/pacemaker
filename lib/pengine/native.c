@@ -290,7 +290,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
         match = true;
 
     } else if (pcmk_is_set(flags, pcmk_rsc_match_history)
-               && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+               && pcmk__str_eq(rsc->private->history_id, id, pcmk__str_none)) {
         match = true;
 
     } else if (pcmk_is_set(flags, pcmk_rsc_match_basename)

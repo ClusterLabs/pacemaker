@@ -2215,9 +2215,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     }
 
     if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_none)
-        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_none)) {
+        && !pcmk__str_eq(rsc_id, rsc->private->history_id, pcmk__str_none)) {
 
-        pcmk__str_update(&rsc->clone_name, rsc_id);
+        pcmk__str_update(&(rsc->private->history_id), rsc_id);
         pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                         rsc_id, pcmk__node_name(node), rsc->id,
                         pcmk_is_set(rsc->flags, pcmk_rsc_removed)? " (ORPHAN)" : "");
@@ -2272,10 +2272,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
-                pcmk__rsc_trace(rsc, "%s%s%s known on %s",
+                pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
                                 rsc->id,
-                                ((rsc->clone_name == NULL)? "" : " also known as "),
-                                ((rsc->clone_name == NULL)? "" : rsc->clone_name),
+                                pcmk__s(rsc->private->history_id, "the same"),
                                 pcmk__node_name(n));
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
@@ -2488,14 +2487,15 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                 break;
         }
 
-    } else if (rsc->clone_name && strchr(rsc->clone_name, ':') != NULL) {
+    } else if ((rsc->private->history_id != NULL)
+               && (strchr(rsc->private->history_id, ':') != NULL)) {
         /* Only do this for older status sections that included instance numbers
          * Otherwise stopped instances will appear as orphans
          */
-        pcmk__rsc_trace(rsc, "Resetting clone_name %s for %s (stopped)",
-                        rsc->clone_name, rsc->id);
-        free(rsc->clone_name);
-        rsc->clone_name = NULL;
+        pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
+                        rsc->private->history_id, rsc->id);
+        free(rsc->private->history_id);
+        rsc->private->history_id = NULL;
 
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node,

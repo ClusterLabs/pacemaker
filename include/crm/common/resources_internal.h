@@ -190,6 +190,8 @@ typedef struct {
 
 // Implementation of pcmk__resource_private_t
 struct pcmk__resource_private {
+    char *history_id;               // Resource instance ID in history
+
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };

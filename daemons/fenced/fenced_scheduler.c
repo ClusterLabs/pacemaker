@@ -109,6 +109,7 @@ static void
 register_if_fencing_device(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
+    const char *rsc_id = pcmk__s(rsc->private->history_id, rsc->id);
 
     xmlNode *xml = NULL;
     GHashTableIter hash_iter;
@@ -194,9 +195,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         params = stonith_key_value_add(params, name, value);
     }
 
-    xml = create_device_registration_xml(pcmk__s(rsc->clone_name, rsc->id),
-                                         st_namespace_any, agent, params,
-                                         rsc_provides);
+    xml = create_device_registration_xml(rsc_id, st_namespace_any, agent,
+                                         params, rsc_provides);
     stonith_key_value_freeall(params, 1, 1);
     CRM_ASSERT(stonith_device_register(xml, TRUE) == pcmk_ok);
     pcmk__xml_free(xml);

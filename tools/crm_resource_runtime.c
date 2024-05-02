@@ -62,8 +62,9 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     /* The anonymous clone children's common ID is supplied */
     } else if (pcmk__is_clone(parent)
                && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
-               && rsc->clone_name
-               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_none)
+               && (rsc->private->history_id != NULL)
+               && pcmk__str_eq(requested_name, rsc->private->history_id,
+                               pcmk__str_none)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
 
         retval = build_node_info_list(parent);
@@ -698,8 +699,8 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         }
     }
 
-    if (rsc->clone_name) {
-        rsc_api_id = rsc->clone_name;
+    if (rsc->private->history_id != NULL) {
+        rsc_api_id = rsc->private->history_id;
         rsc_long_id = rsc->id;
     } else {
         rsc_api_id = rsc->id;
@@ -727,7 +728,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
 static inline char *
 rsc_fail_name(const pcmk_resource_t *rsc)
 {
-    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
+    const char *name = pcmk__s(rsc->private->history_id, rsc->id);
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         return strdup(name);
@@ -1566,7 +1567,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     pcmk_resource_t *parent = uber_parent(rsc);
 
     bool running = false;
-    const char *id = rsc->clone_name ? rsc->clone_name : rsc->id;
+    const char *id = pcmk__s(rsc->private->history_id, rsc->id);
     const char *host = node ? node->details->uname : NULL;
 
     /* If the implicit resource or primitive resource of a bundle is given, operate on the

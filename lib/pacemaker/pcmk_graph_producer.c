@@ -204,15 +204,12 @@ clone_op_key(const pcmk_action_t *action, guint interval_ms)
         const char *n_task = g_hash_table_lookup(action->meta,
                                                  "notify_operation");
 
-        CRM_LOG_ASSERT((n_type != NULL) && (n_task != NULL));
-        return pcmk__notify_key(action->rsc->clone_name, n_type, n_task);
-
-    } else if (action->cancel_task != NULL) {
-        return pcmk__op_key(action->rsc->clone_name, action->cancel_task,
-                            interval_ms);
-    } else {
-        return pcmk__op_key(action->rsc->clone_name, action->task, interval_ms);
+        return pcmk__notify_key(action->rsc->private->history_id, n_type,
+                                n_task);
     }
+    return pcmk__op_key(action->rsc->private->history_id,
+                        pcmk__s(action->cancel_task, action->task),
+                        interval_ms);
 }
 
 /*!
@@ -265,7 +262,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
     rsc_xml = pcmk__xe_create(action_xml,
                               (const char *) action->rsc->xml->name);
     if (pcmk_is_set(action->rsc->flags, pcmk_rsc_removed)
-        && (action->rsc->clone_name != NULL)) {
+        && (action->rsc->private->history_id != NULL)) {
         /* Use the numbered instance name here, because if there is more
          * than one instance on a node, we need to make sure the command
          * goes to the right one.
@@ -274,16 +271,16 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * unique meta-attribute might have just been toggled from on to
          * off.
          */
-        crm_debug("Using orphan clone name %s instead of %s",
-                  action->rsc->id, action->rsc->clone_name);
-        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->clone_name);
+        crm_debug("Using orphan clone name %s instead of history ID %s",
+                  action->rsc->id, action->rsc->private->history_id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->private->history_id);
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
         const char *xml_id = pcmk__xe_id(action->rsc->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
-                  xml_id, action->rsc->id, action->rsc->clone_name);
+                  xml_id, action->rsc->id, action->rsc->private->history_id);
 
         /* ID is what we'd like client to use
          * LONG_ID is what they might know it as instead
@@ -299,16 +296,17 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * and fall into the clause above instead
          */
         crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);
-        if ((action->rsc->clone_name != NULL)
-            && !pcmk__str_eq(xml_id, action->rsc->clone_name,
+        if ((action->rsc->private->history_id != NULL)
+            && !pcmk__str_eq(xml_id, action->rsc->private->history_id,
                              pcmk__str_none)) {
-            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->clone_name);
+            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID,
+                        action->rsc->private->history_id);
         } else {
             crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
         }
 
     } else {
-        CRM_ASSERT(action->rsc->clone_name == NULL);
+        CRM_ASSERT(action->rsc->private->history_id == NULL);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
@@ -440,7 +438,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
     crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
-    if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
+    if ((action->rsc != NULL) && (action->rsc->private->history_id != NULL)) {
         char *clone_key = NULL;
         guint interval_ms;
 
