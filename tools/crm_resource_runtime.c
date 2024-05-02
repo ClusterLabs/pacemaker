@@ -282,21 +282,22 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
                                     PCMK_XE_META_ATTRIBUTES, attr_set, attr_id,
                                     attr_name, &found_attr_id);
 
-            if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
-                out->err(out,
-                         "WARNING: There is already a meta attribute "
-                         "for '%s' called '%s' (id=%s)",
-                         top_id, attr_name, found_attr_id);
-                out->err(out,
-                         "         Delete '%s' first or use the force option "
-                         "to override", found_attr_id);
+            if (rc == pcmk_rc_ok || rc == ENOTUNIQ) {
+                if (!out->is_quiet(out)) {
+                    out->err(out,
+                             "WARNING: There is already a meta attribute "
+                             "for '%s' called '%s' (id=%s)",
+                             top_id, attr_name, found_attr_id);
+                    out->err(out,
+                             "         Delete '%s' first or use the force option "
+                             "to override", found_attr_id);
+                }
+
+                free(found_attr_id);
+                return ENOTUNIQ;
             }
 
             free(found_attr_id);
-
-            if (rc == pcmk_rc_ok) {
-                return ENOTUNIQ;
-            }
         }
 
         *resources = g_list_append(*resources, rsc);
