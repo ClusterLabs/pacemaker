@@ -259,9 +259,6 @@ typedef struct pe_ticket_s pe_ticket_t;
 //! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
 
-//! \deprecated This type should be treated as internal to Pacemaker
-typedef struct resource_alloc_functions_s resource_alloc_functions_t;
-
 #ifdef __cplusplus
 }
 #endif
