@@ -207,8 +207,6 @@ enum crm_status_type {
 };
 //!@}
 
-void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
-
 /*!
  * \enum pcmk_cluster_layer
  * \brief Types of cluster layer

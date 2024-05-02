@@ -599,22 +599,6 @@ pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
 }
 
 /*!
- * \brief Set a client function that will be called after peer status changes
- *
- * \param[in] dispatch  Pointer to function to use as callback
- *
- * \note Previously, client callbacks were responsible for peer cache
- *       management. This is no longer the case, and client callbacks should do
- *       only client-specific handling. Callbacks MUST NOT add or remove entries
- *       in the peer caches.
- */
-void
-crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
-{
-    pcmk__cluster_set_status_callback(dispatch);
-}
-
-/*!
  * \internal
  * \brief Tell the library whether to automatically reap lost nodes
  *
@@ -1569,6 +1553,12 @@ void
 crm_set_autoreap(gboolean enable)
 {
     pcmk__cluster_set_autoreap(enable);
+}
+
+void
+crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
+{
+    pcmk__cluster_set_status_callback(dispatch);
 }
 
 // LCOV_EXCL_STOP
