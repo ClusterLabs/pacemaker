@@ -422,7 +422,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     stonith__xe_set_result(notify_data, &op->result);
     xmlAddChild(wrapper, notify_data);
 
-    send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, bcast);
     free_xml(bcast);
 
     return;
@@ -1351,7 +1351,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
         }
     }
 
-    send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
     free_xml(query);
 
     query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
@@ -1737,9 +1737,9 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     crm_xml_add(update, PCMK__XA_ST_CALLID, call_id);
     crm_xml_add_int(update, PCMK__XA_ST_TIMEOUT, op_timeout);
 
-    send_cluster_message(pcmk__get_node(0, client_node, NULL,
-                                        pcmk__node_search_cluster_member),
-                         crm_msg_stonith_ng, update, FALSE);
+    pcmk__cluster_send_message(pcmk__get_node(0, client_node, NULL,
+                                              pcmk__node_search_cluster_member),
+                               crm_msg_stonith_ng, update);
 
     free_xml(update);
 
@@ -1923,6 +1923,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     if (peer) {
         int timeout_one = 0;
         xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
+        const crm_node_t *peer_node =
+            pcmk__get_node(0, peer->host, NULL,
+                           pcmk__node_search_cluster_member);
 
         if (op->client_delay > 0) {
            /* Take requested fencing delay into account to prevent it from
@@ -1991,9 +1994,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
 
-        send_cluster_message(pcmk__get_node(0, peer->host, NULL,
-                                            pcmk__node_search_cluster_member),
-                             crm_msg_stonith_ng, remote_op, FALSE);
+        pcmk__cluster_send_message(peer_node, crm_msg_stonith_ng, remote_op);
         peer->tried = TRUE;
         free_xml(remote_op);
         return;

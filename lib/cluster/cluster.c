@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <dlfcn.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -17,6 +18,8 @@
 #include <time.h>
 #include <sys/param.h>
 #include <sys/types.h>
+
+#include <glib.h>                   // gboolean
 
 #include <crm/crm.h>
 
@@ -178,6 +181,33 @@ pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
 }
 
 /*!
+ * \internal
+ * \brief Send an XML message via the cluster messaging layer
+ *
+ * \param[in] node     Cluster node to send message to
+ * \param[in] service  Message type to use in message host info
+ * \param[in] data     XML message to send
+ *
+ * \return \c true on success, or \c false otherwise
+ */
+bool
+pcmk__cluster_send_message(const crm_node_t *node,
+                           enum crm_ais_msg_types service, const xmlNode *data)
+{
+    // @TODO Return standard Pacemaker return code
+    switch (pcmk_get_cluster_layer()) {
+        case pcmk_cluster_layer_corosync:
+#if SUPPORT_COROSYNC
+            return pcmk__cpg_send_xml(data, node, service);
+#endif
+            break;
+        default:
+            break;
+    }
+    return false;
+}
+
+/*!
  * \brief Send an XML message via the cluster messaging layer
  *
  * \param[in] node     Cluster node to send message to
@@ -191,16 +221,7 @@ gboolean
 send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
                      const xmlNode *data, gboolean ordered)
 {
-    switch (pcmk_get_cluster_layer()) {
-        case pcmk_cluster_layer_corosync:
-#if SUPPORT_COROSYNC
-            return pcmk__cpg_send_xml(data, node, service);
-#endif
-            break;
-        default:
-            break;
-    }
-    return FALSE;
+    return pcmk__cluster_send_message(node, service, data);
 }
 
 /*!

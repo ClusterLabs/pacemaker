@@ -465,7 +465,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                 node_to = pcmk__get_node(0, host_to, NULL,
                                          pcmk__node_search_cluster_member);
             }
-            send_cluster_message(node_to, dest, msg, TRUE);
+            pcmk__cluster_send_message(node_to, dest, msg);
             return TRUE;
         }
 
@@ -502,7 +502,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     crm_trace("Relay message %s to %s",
               ref, pcmk__s(host_to, "all peers"));
     crm_log_xml_trace(msg, "relayed");
-    send_cluster_message(node_to, dest, msg, TRUE);
+    pcmk__cluster_send_message(node_to, dest, msg);
     return TRUE;
 }
 
@@ -1154,7 +1154,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         if(cause == C_IPC_MESSAGE) {
             msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-            if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+            if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
                 crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
@@ -1352,7 +1352,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
                     controld_globals.our_nodename);
     }
 
-    send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, msg);
     free_xml(msg);
 }
 

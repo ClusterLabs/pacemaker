@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_CLUSTER_INTERNAL__H
 #  define PCMK__CRM_CLUSTER_INTERNAL__H
 
+#  include <stdbool.h>
 #  include <stdint.h>       // uint32_t, uint64_t
 
 #  include <glib.h>         // gboolean
@@ -162,6 +163,10 @@ void pcmk__reap_unseen_nodes(uint64_t ring_id);
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
+
+bool pcmk__cluster_send_message(const crm_node_t *node,
+                                enum crm_ais_msg_types service,
+                                const xmlNode *data);
 
 // Membership
 

@@ -127,7 +127,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
         crm_debug("Sending hello to node %u so that it learns our node name", node->id);
-        send_cluster_message(node, crm_msg_crmd, query, FALSE);
+        pcmk__cluster_send_message(node, crm_msg_crmd, query);
 
         free_xml(query);
     }

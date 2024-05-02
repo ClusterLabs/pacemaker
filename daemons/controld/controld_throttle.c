@@ -371,7 +371,7 @@ throttle_send_command(enum throttle_state_e mode)
         crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
         crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 
-        send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
+        pcmk__cluster_send_message(NULL, crm_msg_crmd, xml);
         free_xml(xml);
     }
 }

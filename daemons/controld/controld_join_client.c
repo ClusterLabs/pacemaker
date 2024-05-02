@@ -55,7 +55,7 @@ do_cl_join_query(long long action,
     sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
-    send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, req);
     free_xml(req);
 }
 
@@ -84,7 +84,7 @@ do_cl_join_announce(long long action,
 
         crm_debug("Announcing availability");
         update_dc(NULL);
-        send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
+        pcmk__cluster_send_message(NULL, crm_msg_crmd, req);
         free_xml(req);
 
     } else {
@@ -166,6 +166,9 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
     } else {
         xmlNode *reply = NULL;
+        const crm_node_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
 
         crm_debug("Respond to join offer join-%s from %s",
                   join_id, controld_globals.dc_name);
@@ -177,9 +180,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
         crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
-                                            pcmk__node_search_cluster_member),
-                             crm_msg_crmd, reply, TRUE);
+        pcmk__cluster_send_message(dc_node, crm_msg_crmd, reply);
         free_xml(reply);
     }
 
@@ -309,6 +310,9 @@ do_cl_join_finalize_respond(long long action,
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
                                         controld_globals.dc_name, CRM_SYSTEM_DC,
                                         CRM_SYSTEM_CRMD, NULL);
+        const crm_node_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
 
         crm_xml_add_int(reply, PCMK__XA_JOIN_ID, join_id);
 
@@ -337,9 +341,7 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        send_cluster_message(pcmk__get_node(0, controld_globals.dc_name, NULL,
-                                            pcmk__node_search_cluster_member),
-                             crm_msg_crmd, reply, TRUE);
+        pcmk__cluster_send_message(dc_node, crm_msg_crmd, reply);
         free_xml(reply);
 
         if (AM_I_DC == FALSE) {
