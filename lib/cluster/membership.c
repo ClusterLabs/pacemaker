@@ -66,7 +66,7 @@ static GHashTable *cluster_node_cib_cache = NULL;
 
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
-static gboolean crm_autoreap  = TRUE;
+static bool autoreap = true;
 
 // Flag setting and clearing for crm_node_t:flags
 
@@ -598,6 +598,26 @@ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, co
 }
 
 /*!
+ * \internal
+ * \brief Tell the library whether to automatically reap lost nodes
+ *
+ * If \c true (the default), calling \c crm_update_peer_proc() will also update
+ * the peer state to \c CRM_NODE_MEMBER or \c CRM_NODE_LOST, and updating the
+ * peer state will reap peers whose state changes to anything other than
+ * \c CRM_NODE_MEMBER.
+ *
+ * Callers should leave this enabled unless they plan to manage the cache
+ * separately on their own.
+ *
+ * \param[in] enable  \c true to enable automatic reaping, \c false to disable
+ */
+void
+pcmk__cluster_set_autoreap(bool enable)
+{
+    autoreap = enable;
+}
+
+/*!
  * \brief Tell the library whether to automatically reap lost nodes
  *
  * If TRUE (the default), calling crm_update_peer_proc() will also update the
@@ -606,12 +626,12 @@ crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, co
  * Callers should leave this enabled unless they plan to manage the cache
  * separately on their own.
  *
- * \param[in] autoreap  TRUE to enable automatic reaping, FALSE to disable
+ * \param[in] enable  TRUE to enable automatic reaping, FALSE to disable
  */
 void
-crm_set_autoreap(gboolean autoreap)
+crm_set_autoreap(gboolean enable)
 {
-    crm_autoreap = autoreap;
+    pcmk__cluster_set_autoreap(enable);
 }
 
 static void
@@ -1115,7 +1135,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             return NULL;
         }
 
-        if (crm_autoreap) {
+        if (autoreap) {
             const char *peer_state = NULL;
 
             if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
@@ -1225,7 +1245,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
         }
         free(last);
 
-        if (crm_autoreap && !is_member
+        if (autoreap && !is_member
             && !pcmk_is_set(node->flags, crm_remote_node)) {
             /* We only autoreap from the peer cache, not the remote peer cache,
              * because the latter should be managed only by

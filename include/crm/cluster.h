@@ -208,7 +208,7 @@ enum crm_status_type {
 //!@}
 
 void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
-void crm_set_autoreap(gboolean autoreap);
+void crm_set_autoreap(gboolean enable);
 
 /*!
  * \enum pcmk_cluster_layer

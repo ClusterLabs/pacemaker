@@ -56,7 +56,7 @@ do_ha_control(long long action,
 
     if (action & A_HA_CONNECT) {
         crm_set_status_callback(&peer_update_callback);
-        crm_set_autoreap(FALSE);
+        pcmk__cluster_set_autoreap(false);
 
 #if SUPPORT_COROSYNC
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
