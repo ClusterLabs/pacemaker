@@ -349,8 +349,6 @@ pcmk__cluster_local_node_name(void)
  * \brief Get the node name corresonding to a node UUID
  *
  * Look for the UUID in both the remote node cache and the cluster member cache.
- * For a Corosync cluster, if no cache entry is found, treat the UUID as a
- * cluster-layer ID and try again.
  *
  * \param[in] uuid  UUID to search for
  *
@@ -381,34 +379,12 @@ pcmk__node_name_from_uuid(const char *uuid)
         return uuid;
     }
 
-    // Avoid blocking calls where possible
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
             return node->uname;
         }
     }
-
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        long long id = 0;
-
-        if ((pcmk__scan_ll(uuid, &id, 0LL) != pcmk_rc_ok)
-            || (id < 1LL) || (id > UINT32_MAX))  {
-
-            crm_err("Invalid Corosync node ID '%s'", uuid);
-            return NULL;
-        }
-
-        node = pcmk__search_node_caches((uint32_t) id, NULL,
-                                        pcmk__node_search_cluster_member);
-        if (node != NULL) {
-            crm_info("Setting uuid for node %s[%u] to %s",
-                     node->uname, node->id, uuid);
-            node->uuid = pcmk__str_copy(uuid);
-            return node->uname;
-        }
-    }
-
     return NULL;
 }
 
