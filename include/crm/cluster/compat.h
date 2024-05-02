@@ -175,6 +175,9 @@ void crm_set_autoreap(gboolean enable);
 void crm_set_status_callback(void (*dispatch)(enum crm_status_type,
                                               crm_node_t *, const void *));
 
+//! \deprecated Do not use
+const char *crm_peer_uname(const char *uuid);
+
 #ifdef __cplusplus
 }
 #endif

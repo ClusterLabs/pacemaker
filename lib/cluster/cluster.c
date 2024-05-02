@@ -389,22 +389,6 @@ pcmk__node_name_from_uuid(const char *uuid)
 }
 
 /*!
- * \brief Get the node name corresponding to a node UUID
- *
- * \param[in] uuid  UUID of desired node
- *
- * \return name of desired node
- *
- * \note This relies on the remote peer cache being populated with all
- *       remote nodes in the cluster, so callers should maintain that cache.
- */
-const char *
-crm_peer_uname(const char *uuid)
-{
-    return pcmk__node_name_from_uuid(uuid);
-}
-
-/*!
  * \brief Get a log-friendly string equivalent of a cluster layer
  *
  * \param[in] layer  Cluster layer
@@ -562,6 +546,12 @@ const char *
 get_local_node_name(void)
 {
     return pcmk__cluster_local_node_name();
+}
+
+const char *
+crm_peer_uname(const char *uuid)
+{
+    return pcmk__node_name_from_uuid(uuid);
 }
 
 // LCOV_EXCL_STOP

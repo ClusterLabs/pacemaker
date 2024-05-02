@@ -195,8 +195,6 @@ enum crm_ais_msg_types {
 };
 //!@}
 
-const char *crm_peer_uname(const char *uuid);
-
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
