@@ -81,6 +81,9 @@ enum crm_node_flags {
 };
 //!@}
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct crm_peer_node_s {
     char *uname;                // Node name as known to cluster
 
@@ -127,6 +130,7 @@ typedef struct crm_peer_node_s {
     time_t when_member;         // Since when node has been a cluster member
     time_t when_online;         // Since when peer has been online in CPG
 } crm_node_t;
+//!@}
 
 // Implementation of pcmk_cluster_t
 // @COMPAT Make this internal when we can break API backward compatibility
