@@ -328,7 +328,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
 gboolean
 relay_message(xmlNode * msg, gboolean originated_locally)
 {
-    enum crm_ais_msg_types dest = crm_msg_ais;
+    enum crm_ais_msg_types dest = crm_msg_none;
     bool is_for_dc = false;
     bool is_for_dcib = false;
     bool is_for_te = false;

@@ -194,7 +194,7 @@ enum crm_ais_msg_class {
 //! \deprecated Do not use (public access will be removed in a future release)
 enum crm_ais_msg_types {
     crm_msg_none     = 0,
-    crm_msg_ais      = 1,   // Used only trivially
+    crm_msg_ais      = 1,   // Unused
     crm_msg_lrmd     = 2,
     crm_msg_cib      = 3,
     crm_msg_crmd     = 4,
