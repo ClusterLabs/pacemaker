@@ -22,6 +22,7 @@
             <ref name="resource-config" />
             <ref name="resources-list" />
             <ref name="resource-agent-action" />
+            <ref name="resource-settings-list" />
         </choice>
     </define>
 
@@ -238,6 +239,64 @@
                 </element>
             </optional>
         </element>
+    </define>
+
+    <define name="resource-settings-list">
+        <element name="resource-settings">
+            <zeroOrMore>
+                <choice>
+                  <ref name="element-bundle-settings"/>
+                  <ref name="element-clone-settings"/>
+                  <ref name="element-group-settings"/>
+                  <ref name="element-primitive-settings"/>
+                </choice>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-bundle-settings">
+        <element name="bundle">
+            <ref name="element-resource-setting-attrs" />
+        </element>
+    </define>
+
+    <define name="element-clone-settings">
+        <element name="clone">
+            <ref name="element-resource-setting-attrs" />
+        </element>
+    </define>
+
+    <define name="element-group-settings">
+        <element name="group">
+            <ref name="element-resource-setting-attrs" />
+        </element>
+    </define>
+
+    <define name="element-primitive-settings">
+        <element name="primitive">
+            <ref name="element-resource-setting-attrs" />
+        </element>
+    </define>
+
+    <define name="element-resource-setting-attrs">
+        <attribute name="id"> <data type="ID"/> </attribute>
+        <interleave>
+            <optional>
+                <element name="meta_attributes">
+                    <externalRef href="../nvset-3.10.rng" />
+                </element>
+            </optional>
+            <optional>
+                <element name="instance_attributes">
+                    <externalRef href="../nvset-3.10.rng" />
+                </element>
+            </optional>
+            <optional>
+                <element name="utilization">
+                    <externalRef href="../nvset-3.10.rng" />
+                </element>
+            </optional>
+        </interleave>
     </define>
 
     <define name="overrides-list">
