@@ -166,6 +166,7 @@ void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
 
+enum crm_ais_msg_types pcmk__cluster_parse_msg_type(const char *text);
 bool pcmk__cluster_send_message(const crm_node_t *node,
                                 enum crm_ais_msg_types service,
                                 const xmlNode *data);

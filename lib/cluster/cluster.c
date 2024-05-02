@@ -32,6 +32,66 @@ CRM_TRACE_INIT_DATA(cluster);
 
 /*!
  * \internal
+ * \brief Get the message type equivalent of a string
+ *
+ * \param[in] text  String of message type
+ *
+ * \return Message type equivalent of \p text
+ */
+enum crm_ais_msg_types
+pcmk__cluster_parse_msg_type(const char *text)
+{
+    int rc = 0;
+    int type = crm_msg_none;
+
+    CRM_CHECK(text != NULL, return crm_msg_none);
+
+    text = pcmk__message_name(text);
+
+    if (pcmk__str_eq(text, "ais", pcmk__str_none)) {
+        return crm_msg_ais;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_none)) {
+        return crm_msg_cib;
+    }
+    if (pcmk__str_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
+        return crm_msg_crmd;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
+        return crm_msg_te;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
+        return crm_msg_pe;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_none)) {
+        return crm_msg_lrmd;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_none)) {
+        return crm_msg_stonithd;
+    }
+    if (pcmk__str_eq(text, "stonith-ng", pcmk__str_none)) {
+        return crm_msg_stonith_ng;
+    }
+    if (pcmk__str_eq(text, "attrd", pcmk__str_none)) {
+        return crm_msg_attrd;
+    }
+
+    /* This will normally be a transient client rather than a cluster daemon.
+     * Set the type to the pid of the client.
+     *
+     * @TODO Check whether this is necessary and correct.
+     */
+    rc = sscanf(text, "%d", &type);
+
+    if ((rc != 1) || (type <= crm_msg_stonith_ng)) {
+        // Ensure it's sane; don't falsely return a standard message type
+        type = crm_msg_none;
+    }
+    return type;
+}
+
+/*!
+ * \internal
  * \brief Get a node's cluster-layer UUID, setting it if not already set
  *
  * \param[in,out] node  Node to check

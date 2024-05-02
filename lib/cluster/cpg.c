@@ -971,7 +971,8 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
-    enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
+    enum crm_ais_msg_types sender =
+        pcmk__cluster_parse_msg_type(crm_system_name);
 
     CRM_CHECK(dest != crm_msg_ais, return false);
 
