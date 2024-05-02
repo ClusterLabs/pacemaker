@@ -431,6 +431,6 @@ pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->internal_constraints(rsc);
+        rsc->private->cmds->internal_constraints(rsc);
     }
 }

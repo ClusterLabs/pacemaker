@@ -57,7 +57,7 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        if (rsc->cmds->create_probe(rsc, node)) {
+        if (rsc->private->cmds->create_probe(rsc, node)) {
             any_created = true;
         }
     }

@@ -43,7 +43,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * return the flags as determined by the resource method without a node
      * specified.
      */
-    flags = action->rsc->cmds->action_flags(action, NULL);
+    flags = action->rsc->private->cmds->action_flags(action, NULL);
     if ((node == NULL) || !pcmk__is_clone(action->rsc)) {
         return flags;
     }
@@ -54,7 +54,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
     runnable = pcmk_is_set(flags, pcmk_action_runnable);
 
     // Then recheck the resource method with the node
-    flags = action->rsc->cmds->action_flags(action, node);
+    flags = action->rsc->private->cmds->action_flags(action, node);
 
     /* For clones in ordering constraints, the node-specific "runnable" doesn't
      * matter, just the non-node-specific setting (i.e., is the action runnable
@@ -220,8 +220,8 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pcmk_scheduler_t *scheduler)
 {
-    return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
-                                             type, scheduler);
+    return rsc->private->cmds->update_ordered_actions(first, then, node, flags,
+                                                      filter, type, scheduler);
 }
 
 /*!
@@ -1451,7 +1451,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->output_actions(rsc);
+        rsc->private->cmds->output_actions(rsc);
     }
 }
 

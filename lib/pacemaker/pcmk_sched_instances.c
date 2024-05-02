@@ -151,9 +151,10 @@ apply_parent_colocations(const pcmk_resource_t *rsc, GHashTable **nodes)
         pcmk_resource_t *other = colocation->primary;
         float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
 
-        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
-                                               colocation, factor,
-                                               pcmk__coloc_select_default);
+        other->private->cmds->add_colocated_node_scores(other, rsc, rsc->id,
+                                                        nodes, colocation,
+                                                        factor,
+                                                        pcmk__coloc_select_default);
     }
     g_list_free(colocations);
     colocations = pcmk__with_this_colocations(rsc);
@@ -166,9 +167,10 @@ apply_parent_colocations(const pcmk_resource_t *rsc, GHashTable **nodes)
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        other->cmds->add_colocated_node_scores(other, rsc, rsc->id, nodes,
-                                               colocation, factor,
-                                               pcmk__coloc_select_nonnegative);
+        other->private->cmds->add_colocated_node_scores(other, rsc, rsc->id,
+                                                        nodes, colocation,
+                                                        factor,
+                                                        pcmk__coloc_select_nonnegative);
     }
     g_list_free(colocations);
 }
@@ -570,7 +572,8 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     ban_unavailable_allowed_nodes(instance, max_per_node);
 
     // Failed early assignments are reversible (stop_if_fail=false)
-    chosen = instance->cmds->assign(instance, prefer, (prefer == NULL));
+    chosen = instance->private->cmds->assign(instance, prefer,
+                                             (prefer == NULL));
     increment_parent_count(instance, chosen);
     return chosen;
 }
@@ -989,7 +992,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
     for (GList *iter = instances; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->cmds->create_actions(instance);
+        instance->private->cmds->create_actions(instance);
         check_instance_state(instance, &state);
     }
 
@@ -1430,10 +1433,10 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
                                     pcmk__updated_first|pcmk__updated_then);
         }
 
-        changed |= then_instance->cmds->update_ordered_actions(
+        changed |= then_instance->private->cmds->update_ordered_actions(
             first_action, then_action, node,
-            first_instance->cmds->action_flags(first_action, node), filter,
-            type, then->rsc->cluster);
+            first_instance->private->cmds->action_flags(first_action, node),
+            filter, type, then->rsc->cluster);
     }
     free_instance_list(then->rsc, instances);
     return changed;
@@ -1527,15 +1530,18 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
     }
 
     // Check whether action is runnable
-    instance_flags = instance->cmds->action_flags(instance_action, node);
+    instance_flags = instance->private->cmds->action_flags(instance_action,
+                                                           node);
     if (!pcmk_is_set(instance_flags, pcmk_action_runnable)) {
         return changed;
     }
 
     // If so, update actions for the instance
-    changed = instance->cmds->update_ordered_actions(first, instance_action,
-                                                     node, flags, filter, type,
-                                                     instance->cluster);
+    changed = instance->private->cmds->update_ordered_actions(first,
+                                                              instance_action,
+                                                              node, flags,
+                                                              filter, type,
+                                                              instance->cluster);
 
     // Propagate any changes to later actions
     if (pcmk_is_set(changed, pcmk__updated_then)) {
@@ -1658,7 +1664,8 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                         instance->id, instance_action->uuid, action_name,
                         pcmk__node_name(node));
 
-        instance_flags = instance->cmds->action_flags(instance_action, node);
+        instance_flags = instance->private->cmds->action_flags(instance_action,
+                                                               node);
 
         // If any instance action is mandatory, so is the collective action
         if (pcmk_is_set(flags, pcmk_action_optional)

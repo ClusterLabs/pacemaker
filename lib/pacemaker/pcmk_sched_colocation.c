@@ -1771,9 +1771,11 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                             "(%s with %s)",
                             constraint->id, constraint->dependent->id,
                             constraint->primary->id);
-            other->cmds->add_colocated_node_scores(other, target_rsc, log_id,
-                                                   &work, constraint,
-                                                   other_factor, flags);
+            other->private->cmds->add_colocated_node_scores(other, target_rsc,
+                                                            log_id, &work,
+                                                            constraint,
+                                                            other_factor,
+                                                            flags);
             pe__show_node_scores(true, NULL, log_id, work, source_rsc->cluster);
         }
         g_list_free(colocations);
@@ -1818,26 +1820,27 @@ void
 pcmk__add_dependent_scores(gpointer data, gpointer user_data)
 {
     pcmk__colocation_t *colocation = data;
-    pcmk_resource_t *target_rsc = user_data;
+    pcmk_resource_t *primary = user_data;
 
-    pcmk_resource_t *source_rsc = colocation->dependent;
+    pcmk_resource_t *dependent = colocation->dependent;
     const float factor = colocation->score / (float) PCMK_SCORE_INFINITY;
     uint32_t flags = pcmk__coloc_select_active;
 
     if (!pcmk__colocation_has_influence(colocation, NULL)) {
         return;
     }
-    if (pcmk__is_clone(target_rsc)) {
+    if (pcmk__is_clone(primary)) {
         flags |= pcmk__coloc_select_nonnegative;
     }
-    pcmk__rsc_trace(target_rsc,
+    pcmk__rsc_trace(primary,
                     "%s: Incorporating attenuated %s assignment scores due "
                     "to colocation %s",
-                    target_rsc->id, source_rsc->id, colocation->id);
-    source_rsc->cmds->add_colocated_node_scores(source_rsc, target_rsc,
-                                                source_rsc->id,
-                                                &target_rsc->allowed_nodes,
-                                                colocation, factor, flags);
+                    primary->id, dependent->id, colocation->id);
+    dependent->private->cmds->add_colocated_node_scores(dependent, primary,
+                                                        dependent->id,
+                                                        &primary->allowed_nodes,
+                                                        colocation, factor,
+                                                        flags);
 }
 
 /*!
@@ -1911,7 +1914,7 @@ pcmk__with_this_colocations(const pcmk_resource_t *rsc)
 {
     GList *list = NULL;
 
-    rsc->cmds->with_this_colocations(rsc, rsc, &list);
+    rsc->private->cmds->with_this_colocations(rsc, rsc, &list);
     return list;
 }
 
@@ -1930,6 +1933,6 @@ pcmk__this_with_colocations(const pcmk_resource_t *rsc)
 {
     GList *list = NULL;
 
-    rsc->cmds->this_with_colocations(rsc, rsc, &list);
+    rsc->private->cmds->this_with_colocations(rsc, rsc, &list);
     return list;
 }

@@ -208,7 +208,7 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
         return false;
     }
 
-    if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
+    if (!pcmk_is_set(rsc->private->cmds->action_flags(start, NULL),
                      pcmk_action_optional)) {
         pcmk__rsc_trace(rsc, "%s will be mandatory because %s is",
                         key, start->uuid);

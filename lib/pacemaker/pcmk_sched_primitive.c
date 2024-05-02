@@ -316,11 +316,11 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
                         rsc->id, colocation->id, other->id,
                         colocation->score,
                         pcmk_role_text(colocation->dependent_role));
-        other->cmds->assign(other, NULL, true);
+        other->private->cmds->assign(other, NULL, true);
     }
 
     // Apply the colocation score to this resource's allowed node scores
-    rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
+    rsc->private->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
         && !pcmk__any_node_available(rsc->allowed_nodes)) {
         pcmk__rsc_info(rsc,
@@ -403,9 +403,10 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
         && !pcmk_is_set(rsc->parent->flags, pcmk_rsc_assigning)) {
+
         pcmk__rsc_debug(rsc, "%s: Assigning parent %s first",
                         rsc->id, rsc->parent->id);
-        rsc->parent->cmds->assign(rsc->parent, prefer, stop_if_fail);
+        rsc->parent->private->cmds->assign(rsc->parent, prefer, stop_if_fail);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
@@ -1106,7 +1107,8 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 
     if (for_dependent) {
         // Always process on behalf of primary resource
-        primary->cmds->apply_coloc_score(dependent, primary, colocation, false);
+        primary->private->cmds->apply_coloc_score(dependent, primary,
+                                                  colocation, false);
         return;
     }
 
@@ -1145,7 +1147,8 @@ pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
          */
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         if (rsc->parent != NULL) {
-            rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc, list);
+            rsc->parent->private->cmds->with_this_colocations(rsc->parent,
+                                                              orig_rsc, list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
@@ -1174,7 +1177,8 @@ pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
          */
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         if (rsc->parent != NULL) {
-            rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc, list);
+            rsc->parent->private->cmds->this_with_colocations(rsc->parent,
+                                                              orig_rsc, list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints

@@ -204,7 +204,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
-    rsc->cmds = &assignment_methods[rsc->variant];
+    rsc->private->cmds = &assignment_methods[rsc->variant];
     g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
 }
 
@@ -234,7 +234,7 @@ static inline void
 add_colocated_resources(const pcmk_resource_t *rsc,
                         const pcmk_resource_t *orig_rsc, GList **list)
 {
-    *list = rsc->cmds->colocated_resources(rsc, orig_rsc, *list);
+    *list = rsc->private->cmds->colocated_resources(rsc, orig_rsc, *list);
 }
 
 // Shared implementation of pcmk_assignment_methods_t:colocated_resources()
@@ -327,7 +327,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
-            child->cmds->output_actions(child);
+            child->private->cmds->output_actions(child);
         }
         return;
     }
@@ -690,12 +690,14 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node scores
-    resource1->cmds->add_colocated_node_scores(resource1, NULL, resource1->id,
-                                               &r1_nodes, NULL, 1,
-                                               pcmk__coloc_select_this_with);
-    resource2->cmds->add_colocated_node_scores(resource2, NULL, resource2->id,
-                                               &r2_nodes, NULL, 1,
-                                               pcmk__coloc_select_this_with);
+    resource1->private->cmds->add_colocated_node_scores(resource1, NULL,
+                                                        resource1->id,
+                                                        &r1_nodes, NULL, 1,
+                                                        pcmk__coloc_select_this_with);
+    resource2->private->cmds->add_colocated_node_scores(resource2, NULL,
+                                                        resource2->id,
+                                                        &r2_nodes, NULL, 1,
+                                                        pcmk__coloc_select_this_with);
     pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
                          resource1->cluster);
     pe__show_node_scores(true, NULL, resource2->id, r2_nodes,

@@ -361,7 +361,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
         pcmk_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
-            parent->cmds->add_graph_meta(parent, args_xml);
+            parent->private->cmds->add_graph_meta(parent, args_xml);
             parent = parent->parent;
         }
 
@@ -988,7 +988,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     for (iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
-        child_rsc->cmds->add_actions_to_graph(child_rsc);
+        child_rsc->private->cmds->add_actions_to_graph(child_rsc);
     }
 }
 
@@ -1054,7 +1054,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
-        rsc->cmds->add_actions_to_graph(rsc);
+        rsc->private->cmds->add_actions_to_graph(rsc);
     }
 
     // Add pseudo-action for list of nodes with maintenance state update

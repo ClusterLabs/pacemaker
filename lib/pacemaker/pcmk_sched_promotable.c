@@ -366,9 +366,10 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
                     colocation->id, colocation->dependent->id,
                     colocation->primary->id,
                     pcmk_readable_score(colocation->score));
-    primary->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                             &clone->allowed_nodes, colocation,
-                                             factor, flags);
+    primary->private->cmds->add_colocated_node_scores(primary, clone, clone->id,
+                                                      &clone->allowed_nodes,
+                                                      colocation, factor,
+                                                      flags);
 }
 
 /*!
@@ -397,9 +398,11 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                     colocation->id, colocation->dependent->id,
                     colocation->primary->id,
                     pcmk_readable_score(colocation->score));
-    dependent->cmds->add_colocated_node_scores(dependent, clone, clone->id,
-                                               &clone->allowed_nodes,
-                                               colocation, factor, flags);
+    dependent->private->cmds->add_colocated_node_scores(dependent, clone,
+                                                        clone->id,
+                                                        &clone->allowed_nodes,
+                                                        colocation, factor,
+                                                        flags);
 }
 
 /*!
@@ -987,7 +990,8 @@ set_instance_priority(gpointer data, gpointer user_data)
     for (GList *iter = list; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) iter->data;
 
-        instance->cmds->apply_coloc_score(instance, cons->primary, cons, true);
+        instance->private->cmds->apply_coloc_score(instance, cons->primary,
+                                                   cons, true);
     }
     g_list_free(list);
 
@@ -1093,7 +1097,7 @@ create_promotable_instance_actions(pcmk_resource_t *clone,
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->cmds->create_actions(instance);
+        instance->private->cmds->create_actions(instance);
         check_for_role_change(instance, any_demoting, any_promoting);
     }
 }

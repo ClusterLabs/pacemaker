@@ -654,7 +654,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         pcmk__location_t *location = iter->data;
 
-        location->rsc->cmds->apply_location(location->rsc, location);
+        location->rsc->private->cmds->apply_location(location->rsc, location);
     }
 }
 

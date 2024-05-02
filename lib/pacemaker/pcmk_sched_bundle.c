@@ -45,7 +45,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
     if (replica->ip != NULL) {
         pcmk__rsc_trace(bundle, "Assigning bundle %s IP %s",
                         bundle->id, replica->ip->id);
-        replica->ip->cmds->assign(replica->ip, prefer, stop_if_fail);
+        replica->ip->private->cmds->assign(replica->ip, prefer, stop_if_fail);
     }
 
     container_host = replica->container->allocated_to;
@@ -62,7 +62,8 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         }
         pcmk__rsc_trace(bundle, "Assigning bundle %s connection %s",
                         bundle->id, replica->remote->id);
-        replica->remote->cmds->assign(replica->remote, prefer, stop_if_fail);
+        replica->remote->private->cmds->assign(replica->remote, prefer,
+                                               stop_if_fail);
     }
 
     if (replica->child != NULL) {
@@ -81,8 +82,8 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         pcmk__set_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
         pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
                         bundle->id, replica->child->id);
-        replica->child->cmds->assign(replica->child, replica->node,
-                                     stop_if_fail);
+        replica->child->private->cmds->assign(replica->child, replica->node,
+                                              stop_if_fail);
         pcmk__clear_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
     }
     return true;
@@ -147,7 +148,8 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                 node->weight = -PCMK_SCORE_INFINITY;
             }
         }
-        bundled_resource->cmds->assign(bundled_resource, prefer, stop_if_fail);
+        bundled_resource->private->cmds->assign(bundled_resource, prefer,
+                                                stop_if_fail);
     }
 
     pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
@@ -167,13 +169,13 @@ static bool
 create_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
-        replica->ip->cmds->create_actions(replica->ip);
+        replica->ip->private->cmds->create_actions(replica->ip);
     }
     if (replica->container != NULL) {
-        replica->container->cmds->create_actions(replica->container);
+        replica->container->private->cmds->create_actions(replica->container);
     }
     if (replica->remote != NULL) {
-        replica->remote->cmds->create_actions(replica->remote);
+        replica->remote->private->cmds->create_actions(replica->remote);
     }
     return true;
 }
@@ -201,7 +203,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
-        bundled_resource->cmds->create_actions(bundled_resource);
+        bundled_resource->private->cmds->create_actions(bundled_resource);
 
         if (pcmk_is_set(bundled_resource->flags, pcmk_rsc_promotable)) {
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
@@ -231,7 +233,7 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_resource_t *bundle = user_data;
 
-    replica->container->cmds->internal_constraints(replica->container);
+    replica->container->private->cmds->internal_constraints(replica->container);
 
     // Start bundle -> start replica container
     pcmk__order_starts(bundle, replica->container,
@@ -257,7 +259,7 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
                                  pcmk__ar_first_implies_then_graphed);
 
     if (replica->ip != NULL) {
-        replica->ip->cmds->internal_constraints(replica->ip);
+        replica->ip->private->cmds->internal_constraints(replica->ip);
 
         // Replica IP address -> replica container (symmetric)
         pcmk__order_starts(replica->ip, replica->container,
@@ -277,7 +279,7 @@ replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
          * colocated relative to the container, we don't need to do anything
          * explicit here with IP.
          */
-        replica->remote->cmds->internal_constraints(replica->remote);
+        replica->remote->private->cmds->internal_constraints(replica->remote);
     }
 
     if (replica->child != NULL) {
@@ -327,7 +329,7 @@ pcmk__bundle_internal_constraints(pcmk_resource_t *rsc)
                                  rsc, PCMK_ACTION_STOPPED,
                                  pcmk__ar_first_implies_then_graphed);
 
-    bundled_resource->cmds->internal_constraints(bundled_resource);
+    bundled_resource->private->cmds->internal_constraints(bundled_resource);
 
     if (!pcmk_is_set(bundled_resource->flags, pcmk_rsc_promotable)) {
         return;
@@ -471,19 +473,19 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
 {
     struct coloc_data *coloc_data = user_data;
     pcmk_node_t *chosen = NULL;
+    pcmk_resource_t *container = replica->container;
 
     if (coloc_data->colocation->score < PCMK_SCORE_INFINITY) {
-        replica->container->cmds->apply_coloc_score(coloc_data->dependent,
-                                                    replica->container,
+        container->private->cmds->apply_coloc_score(coloc_data->dependent,
+                                                    container,
                                                     coloc_data->colocation,
                                                     false);
         return true;
     }
 
-    chosen = replica->container->private->fns->location(replica->container,
-                                                        NULL, 0);
+    chosen = container->private->fns->location(container, NULL, 0);
     if ((chosen == NULL)
-        || is_set_recursive(replica->container, pcmk_rsc_blocked, true)) {
+        || is_set_recursive(container, pcmk_rsc_blocked, true)) {
         return true;
     }
 
@@ -493,7 +495,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
         return true;
     }
 
-    pcmk__rsc_trace(pe__const_top_resource(replica->container, true),
+    pcmk__rsc_trace(pe__const_top_resource(container, true),
                     "Allowing mandatory colocation %s using %s @%d",
                     coloc_data->colocation->id, pcmk__node_name(chosen),
                     chosen->weight);
@@ -551,8 +553,9 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
         if (primary_container != NULL) { // Success, we found one
             pcmk__rsc_debug(primary, "Pairing %s with %s",
                             dependent->id, primary_container->id);
-            dependent->cmds->apply_coloc_score(dependent, primary_container,
-                                               colocation, true);
+            dependent->private->cmds->apply_coloc_score(dependent,
+                                                        primary_container,
+                                                        colocation, true);
 
         } else if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Failure, and it's fatal
@@ -724,11 +727,10 @@ apply_location_to_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk__location_t *location = user_data;
 
-    if (replica->container != NULL) {
-        replica->container->cmds->apply_location(replica->container, location);
-    }
+    replica->container->private->cmds->apply_location(replica->container,
+                                                      location);
     if (replica->ip != NULL) {
-        replica->ip->cmds->apply_location(replica->ip, location);
+        replica->ip->private->cmds->apply_location(replica->ip, location);
     }
     return true;
 }
@@ -754,7 +756,9 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     if ((bundled_resource != NULL)
         && ((location->role_filter == pcmk_role_unpromoted)
             || (location->role_filter == pcmk_role_promoted))) {
-        bundled_resource->cmds->apply_location(bundled_resource, location);
+
+        bundled_resource->private->cmds->apply_location(bundled_resource,
+                                                        location);
         bundled_resource->rsc_location = g_list_prepend(
             bundled_resource->rsc_location, location);
     }
@@ -774,7 +778,7 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 static bool
 add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
 {
-    if ((replica->remote != NULL) && (replica->container != NULL)
+    if ((replica->remote != NULL)
         && pe__bundle_needs_remote_name(replica->remote)) {
 
         /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
@@ -817,13 +821,11 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
         }
     }
     if (replica->ip != NULL) {
-        replica->ip->cmds->add_actions_to_graph(replica->ip);
+        replica->ip->private->cmds->add_actions_to_graph(replica->ip);
     }
-    if (replica->container != NULL) {
-        replica->container->cmds->add_actions_to_graph(replica->container);
-    }
+    replica->container->private->cmds->add_actions_to_graph(replica->container);
     if (replica->remote != NULL) {
-        replica->remote->cmds->add_actions_to_graph(replica->remote);
+        replica->remote->private->cmds->add_actions_to_graph(replica->remote);
     }
     return true;
 }
@@ -843,7 +845,7 @@ pcmk__bundle_add_actions_to_graph(pcmk_resource_t *rsc)
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
-        bundled_resource->cmds->add_actions_to_graph(bundled_resource);
+        bundled_resource->private->cmds->add_actions_to_graph(bundled_resource);
     }
     pe__foreach_bundle_replica(rsc, add_replica_actions_to_graph, rsc);
 }
@@ -898,18 +900,18 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
     pcmk_resource_t *bundle = probe_data->bundle;
 
     if ((replica->ip != NULL)
-        && replica->ip->cmds->create_probe(replica->ip, probe_data->node)) {
+        && replica->ip->private->cmds->create_probe(replica->ip,
+                                                    probe_data->node)) {
         probe_data->any_created = true;
     }
     if ((replica->child != NULL)
         && pcmk__same_node(probe_data->node, replica->node)
-        && replica->child->cmds->create_probe(replica->child,
-                                              probe_data->node)) {
+        && replica->child->private->cmds->create_probe(replica->child,
+                                                       probe_data->node)) {
         probe_data->any_created = true;
     }
-    if ((replica->container != NULL)
-        && replica->container->cmds->create_probe(replica->container,
-                                                  probe_data->node)) {
+    if (replica->container->private->cmds->create_probe(replica->container,
+                                                        probe_data->node)) {
         probe_data->any_created = true;
 
         /* If we're limited to one replica per host (due to
@@ -929,9 +931,9 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
                                        replica);
         }
     }
-    if ((replica->container != NULL) && (replica->remote != NULL)
-        && replica->remote->cmds->create_probe(replica->remote,
-                                               probe_data->node)) {
+    if ((replica->remote != NULL)
+        && replica->remote->private->cmds->create_probe(replica->remote,
+                                                        probe_data->node)) {
         /* Do not probe the remote resource until we know where the container is
          * running. This is required for REMOTE_CONTAINER_HACK to correctly
          * probe remote resources.
@@ -991,16 +993,14 @@ static bool
 output_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
-        replica->ip->cmds->output_actions(replica->ip);
+        replica->ip->private->cmds->output_actions(replica->ip);
     }
-    if (replica->container != NULL) {
-        replica->container->cmds->output_actions(replica->container);
-    }
+    replica->container->private->cmds->output_actions(replica->container);
     if (replica->remote != NULL) {
-        replica->remote->cmds->output_actions(replica->remote);
+        replica->remote->private->cmds->output_actions(replica->remote);
     }
     if (replica->child != NULL) {
-        replica->child->cmds->output_actions(replica->child);
+        replica->child->private->cmds->output_actions(replica->child);
     }
     return true;
 }
@@ -1038,8 +1038,8 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
      */
     container = pe__first_container(rsc);
     if (container != NULL) {
-        container->cmds->add_utilization(container, orig_rsc, all_rscs,
-                                         utilization);
+        container->private->cmds->add_utilization(container, orig_rsc, all_rscs,
+                                                  utilization);
     }
 }
 
