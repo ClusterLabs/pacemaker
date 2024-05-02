@@ -345,6 +345,74 @@ pcmk__cluster_local_node_name(void)
 }
 
 /*!
+ * \internal
+ * \brief Get the node name corresonding to a node UUID
+ *
+ * Look for the UUID in both the remote node cache and the cluster member cache.
+ * For a Corosync cluster, if no cache entry is found, treat the UUID as a
+ * cluster-layer ID and try again.
+ *
+ * \param[in] uuid  UUID to search for
+ *
+ * \return Node name corresponding to \p uuid if found, or \c NULL otherwise
+ */
+const char *
+pcmk__node_name_from_uuid(const char *uuid)
+{
+    /* @TODO There are too many functions in libcrmcluster that look up a node
+     * from the node caches (possibly creating a cache entry if none exists).
+     * There are at least the following:
+     * * pcmk__cluster_lookup_remote_node()
+     * * pcmk__get_node()
+     * * pcmk__node_name_from_uuid()
+     * * pcmk__search_node_caches()
+     *
+     * There's a lot of duplication among them, but they all do slightly
+     * different things. We should try to clean them up and consolidate them to
+     * the extent possible, likely with new helper functions.
+     */
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
+
+    CRM_CHECK(uuid != NULL, return NULL);
+
+    // Remote nodes have the same uname and uuid
+    if (g_hash_table_lookup(crm_remote_peer_cache, uuid)) {
+        return uuid;
+    }
+
+    // Avoid blocking calls where possible
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
+            return node->uname;
+        }
+    }
+
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        long long id = 0;
+
+        if ((pcmk__scan_ll(uuid, &id, 0LL) != pcmk_rc_ok)
+            || (id < 1LL) || (id > UINT32_MAX))  {
+
+            crm_err("Invalid Corosync node ID '%s'", uuid);
+            return NULL;
+        }
+
+        node = pcmk__search_node_caches((uint32_t) id, NULL,
+                                        pcmk__node_search_cluster_member);
+        if (node != NULL) {
+            crm_info("Setting uuid for node %s[%u] to %s",
+                     node->uname, node->id, uuid);
+            node->uuid = pcmk__str_copy(uuid);
+            return node->uname;
+        }
+    }
+
+    return NULL;
+}
+
+/*!
  * \brief Get the node name corresponding to a node UUID
  *
  * \param[in] uuid  UUID of desired node
@@ -357,49 +425,7 @@ pcmk__cluster_local_node_name(void)
 const char *
 crm_peer_uname(const char *uuid)
 {
-    GHashTableIter iter;
-    crm_node_t *node = NULL;
-
-    CRM_CHECK(uuid != NULL, return NULL);
-
-    /* remote nodes have the same uname and uuid */
-    if (g_hash_table_lookup(crm_remote_peer_cache, uuid)) {
-        return uuid;
-    }
-
-    /* avoid blocking calls where possible */
-    g_hash_table_iter_init(&iter, crm_peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
-            if (node->uname != NULL) {
-                return node->uname;
-            }
-            break;
-        }
-    }
-    node = NULL;
-
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        long long id;
-
-        if ((pcmk__scan_ll(uuid, &id, 0LL) != pcmk_rc_ok)
-            || (id < 1LL) || (id > UINT32_MAX))  {
-            crm_err("Invalid Corosync node ID '%s'", uuid);
-            return NULL;
-        }
-
-        node = pcmk__search_node_caches((uint32_t) id, NULL,
-                                        pcmk__node_search_cluster_member);
-        if (node != NULL) {
-            crm_info("Setting uuid for node %s[%u] to %s",
-                     node->uname, node->id, uuid);
-            node->uuid = strdup(uuid);
-            return node->uname;
-        }
-        return NULL;
-    }
-
-    return NULL;
+    return pcmk__node_name_from_uuid(uuid);
 }
 
 /*!
