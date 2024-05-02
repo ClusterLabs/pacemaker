@@ -193,7 +193,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
     uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;

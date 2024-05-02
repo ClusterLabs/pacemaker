@@ -144,6 +144,10 @@ void pcmk__cpg_confchg_cb(cpg_handle_t handle,
                           const struct cpg_address *joined_list,
                           size_t joined_list_entries);
 
+char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
+                             uint32_t pid, void *content, uint32_t *kind,
+                             const char **from);
+
 #  endif
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,

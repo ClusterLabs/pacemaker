@@ -10,9 +10,11 @@
 #include <crm_internal.h>
 
 #include <arpa/inet.h>
+#include <inttypes.h>                   // PRIu32
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdbool.h>
+#include <stdint.h>                     // uint32_t
 #include <sys/socket.h>
 #include <sys/types.h>                  // size_t
 #include <sys/utsname.h>
@@ -409,60 +411,67 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
 }
 
 /*!
+ * \internal
  * \brief Extract text data from a Corosync CPG message
  *
- * \param[in]     handle   CPG connection (to get local node ID if not known)
- * \param[in]     nodeid   Corosync ID of node that sent message
- * \param[in]     pid      Process ID of message sender (for logging only)
- * \param[in,out] content  CPG message
- * \param[out]    kind     If not NULL, will be set to CPG header ID
- *                         (which should be an enum crm_ais_msg_class value,
- *                         currently always crm_class_cluster)
- * \param[out]    from     If not NULL, will be set to sender uname
- *                         (valid for the lifetime of \p content)
+ * \param[in]     handle     CPG connection (to get local node ID if not known)
+ * \param[in]     sender_id  Corosync ID of node that sent message
+ * \param[in]     pid        Process ID of message sender (for logging only)
+ * \param[in,out] content    CPG message
+ * \param[out]    kind       If not \c NULL, will be set to CPG header ID
+ *                           (which should be an <tt>enum crm_ais_msg_class</tt>
+ *                           value, currently always \c crm_class_cluster)
+ * \param[out]    from       If not \c NULL, will be set to sender uname
+ *                           (valid for the lifetime of \p content)
  *
  * \return Newly allocated string with message data
- * \note It is the caller's responsibility to free the return value with free().
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
  */
 char *
-pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *content,
-                        uint32_t *kind, const char **from)
+pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
+                       void *content, uint32_t *kind, const char **from)
 {
     char *data = NULL;
-    pcmk__cpg_msg_t *msg = (pcmk__cpg_msg_t *) content;
+    pcmk__cpg_msg_t *msg = content;
 
-    if(handle) {
+    if (handle != 0) {
         // Do filtering and field massaging
         uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
         const char *local_name = get_local_node_name();
 
-        if (msg->sender.id > 0 && msg->sender.id != nodeid) {
-            crm_err("Nodeid mismatch from %d.%d: claimed nodeid=%u", nodeid, pid, msg->sender.id);
+        if ((msg->sender.id != 0) && (msg->sender.id != sender_id)) {
+            crm_err("Nodeid mismatch from %" PRIu32 ".%" PRIu32
+                    ": claimed nodeid=%" PRIu32,
+                    sender_id, pid, msg->sender.id);
             return NULL;
+        }
+        if ((msg->host.id != 0) && (local_nodeid != msg->host.id)) {
+            crm_trace("Not for us: %" PRIu32" != %" PRIu32,
+                      msg->host.id, local_nodeid);
+            return NULL;
+        }
+        if ((msg->host.size > 0)
+            && !pcmk__str_eq(msg->host.uname, local_name, pcmk__str_casei)) {
 
-        } else if (msg->host.id != 0 && (local_nodeid != msg->host.id)) {
-            /* Not for us */
-            crm_trace("Not for us: %u != %u", msg->host.id, local_nodeid);
-            return NULL;
-        } else if (msg->host.size != 0 && !pcmk__str_eq(msg->host.uname, local_name, pcmk__str_casei)) {
-            /* Not for us */
             crm_trace("Not for us: %s != %s", msg->host.uname, local_name);
             return NULL;
         }
 
-        msg->sender.id = nodeid;
+        msg->sender.id = sender_id;
         if (msg->sender.size == 0) {
-            crm_node_t *peer = pcmk__get_node(nodeid, NULL, NULL,
-                                              pcmk__node_search_cluster_member);
+            const crm_node_t *peer =
+                pcmk__get_node(sender_id, NULL, NULL,
+                               pcmk__node_search_cluster_member);
 
             if (peer == NULL) {
-                crm_err("Peer with nodeid=%u is unknown", nodeid);
+                crm_err("Peer with nodeid=%u is unknown", sender_id);
 
             } else if (peer->uname == NULL) {
-                crm_err("No uname for peer with nodeid=%u", nodeid);
+                crm_err("No uname for peer with nodeid=%u", sender_id);
 
             } else {
-                crm_notice("Fixing uname for peer with nodeid=%u", nodeid);
+                crm_notice("Fixing uname for peer with nodeid=%u", sender_id);
                 msg->sender.size = strlen(peer->uname);
                 memset(msg->sender.uname, 0, MAX_NAME);
                 memcpy(msg->sender.uname, peer->uname, msg->sender.size);
@@ -481,7 +490,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         *from = msg->sender.uname;
     }
 
-    if (msg->is_compressed && msg->size > 0) {
+    if (msg->is_compressed && (msg->size > 0)) {
         int rc = BZ_OK;
         char *uncompressed = NULL;
         unsigned int new_size = msg->size + 1;
@@ -492,12 +501,14 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
         crm_trace("Decompressing message data");
         uncompressed = pcmk__assert_alloc(1, new_size);
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data,
+                                        msg->compressed_size, 1, 0);
 
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d", pcmk_rc_str(rc), rc);
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
             free(uncompressed);
             goto badmsg;
         }
@@ -530,6 +541,29 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
     free(data);
     return NULL;
+}
+
+/*!
+ * \brief Extract text data from a Corosync CPG message
+ *
+ * \param[in]     handle   CPG connection (to get local node ID if not known)
+ * \param[in]     nodeid   Corosync ID of node that sent message
+ * \param[in]     pid      Process ID of message sender (for logging only)
+ * \param[in,out] content  CPG message
+ * \param[out]    kind     If not NULL, will be set to CPG header ID
+ *                         (which should be an enum crm_ais_msg_class value,
+ *                         currently always crm_class_cluster)
+ * \param[out]    from     If not NULL, will be set to sender uname
+ *                         (valid for the lifetime of \p content)
+ *
+ * \return Newly allocated string with message data
+ * \note It is the caller's responsibility to free the return value with free().
+ */
+char *
+pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *content,
+                        uint32_t *kind, const char **from)
+{
+    return pcmk__cpg_message_data(handle, nodeid, pid, content, kind, from);
 }
 
 /*!
