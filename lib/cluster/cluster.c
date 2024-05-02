@@ -337,21 +337,6 @@ get_local_node_name(void)
 }
 
 /*!
- * \brief Get the node name corresponding to a cluster node ID
- *
- * \param[in] nodeid  Node ID to check (or 0 for local node)
- *
- * \return Node name corresponding to \p nodeid
- * \note This will fatally exit if \p nodeid is 0 and local node name cannot be
- *       known.
- */
-char *
-get_node_name(uint32_t nodeid)
-{
-    return pcmk__cluster_node_name(nodeid);
-}
-
-/*!
  * \brief Get the node name corresponding to a node UUID
  *
  * \param[in] uuid  UUID of desired node
@@ -555,6 +540,12 @@ const char *
 crm_peer_uuid(crm_node_t *peer)
 {
     return pcmk__cluster_node_uuid(peer);
+}
+
+char *
+get_node_name(uint32_t nodeid)
+{
+    return pcmk__cluster_node_name(nodeid);
 }
 
 // LCOV_EXCL_STOP
