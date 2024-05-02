@@ -94,13 +94,11 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     crm_notice("Connecting to %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
-        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            pcmk__cluster_init_node_caches();
+        case pcmk_cluster_layer_corosync:
             return pcmk__corosync_connect(cluster);
-#else
-            break;
 #endif // SUPPORT_COROSYNC
+
         default:
             break;
     }
@@ -126,14 +124,13 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     crm_info("Disconnecting from %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
-        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            pcmk__cluster_destroy_node_caches();
+        case pcmk_cluster_layer_corosync:
             pcmk__corosync_disconnect(cluster);
+            pcmk__cluster_destroy_node_caches();
             return pcmk_rc_ok;
-#else
-            break;
 #endif // SUPPORT_COROSYNC
+
         default:
             break;
     }
@@ -206,11 +203,11 @@ pcmk__cluster_send_message(const crm_node_t *node,
 {
     // @TODO Return standard Pacemaker return code
     switch (pcmk_get_cluster_layer()) {
-        case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
+        case pcmk_cluster_layer_corosync:
             return pcmk__cpg_send_xml(data, node, service);
-#endif
-            break;
+#endif  // SUPPORT_COROSYNC
+
         default:
             break;
     }
