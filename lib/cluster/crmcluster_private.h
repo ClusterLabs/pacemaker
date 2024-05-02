@@ -19,6 +19,10 @@
 #include <glib.h>                  // G_GNUC_INTERNAL, gboolean
 #include <libxml/tree.h>           // xmlNode
 
+#if SUPPORT_COROSYNC
+#include <corosync/cpg.h>          // cpg_handle_t
+#endif  // SUPPORT_COROSYNC
+
 #include <crm/cluster.h>           // crm_node_t
 
 G_GNUC_INTERNAL
@@ -41,10 +45,16 @@ G_GNUC_INTERNAL
 void pcmk__corosync_disconnect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
+bool pcmk__corosync_is_peer_active(const crm_node_t *node);
+
+G_GNUC_INTERNAL
 int pcmk__cpg_connect(pcmk_cluster_t *cluster);
 
 G_GNUC_INTERNAL
 void pcmk__cpg_disconnect(pcmk_cluster_t *cluster);
+
+G_GNUC_INTERNAL
+uint32_t pcmk__cpg_local_nodeid(cpg_handle_t handle);
 
 G_GNUC_INTERNAL
 bool pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,

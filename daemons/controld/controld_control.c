@@ -55,8 +55,8 @@ do_ha_control(long long action,
     }
 
     if (action & A_HA_CONNECT) {
-        crm_set_status_callback(&peer_update_callback);
-        crm_set_autoreap(FALSE);
+        pcmk__cluster_set_status_callback(&peer_update_callback);
+        pcmk__cluster_set_autoreap(false);
 
 #if SUPPORT_COROSYNC
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
@@ -117,7 +117,7 @@ do_shutdown_req(long long action,
              pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+    if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     free_xml(msg);

@@ -377,7 +377,7 @@ execute_stonith_cleanup(void)
         char *target = iter->data;
         crm_node_t *target_node =
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
-        const char *uuid = crm_peer_uuid(target_node);
+        const char *uuid = pcmk__cluster_node_uuid(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
         send_stonith_update(NULL, target, uuid);
@@ -592,7 +592,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
             return;
         }
 
-        uuid = crm_peer_uuid(peer);
+        uuid = pcmk__cluster_node_uuid(peer);
 
         if (AM_I_DC) {
             /* The DC always sends updates */

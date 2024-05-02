@@ -66,7 +66,7 @@ static GHashTable *cluster_node_cib_cache = NULL;
 
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
-static gboolean crm_autoreap  = TRUE;
+static bool autoreap = true;
 
 // Flag setting and clearing for crm_node_t:flags
 
@@ -355,7 +355,7 @@ pcmk__cluster_is_node_active(const crm_node_t *node)
     switch (cluster_layer) {
         case pcmk_cluster_layer_corosync:
 #if SUPPORT_COROSYNC
-            return crm_is_corosync_peer_active(node);
+            return pcmk__corosync_is_peer_active(node);
 #else
             break;
 #endif  // SUPPORT_COROSYNC
@@ -582,36 +582,40 @@ static void (*peer_status_callback)(enum crm_status_type, crm_node_t *,
                                     const void *) = NULL;
 
 /*!
+ * \internal
  * \brief Set a client function that will be called after peer status changes
  *
  * \param[in] dispatch  Pointer to function to use as callback
  *
- * \note Previously, client callbacks were responsible for peer cache
- *       management. This is no longer the case, and client callbacks should do
- *       only client-specific handling. Callbacks MUST NOT add or remove entries
- *       in the peer caches.
+ * \note Client callbacks should do only client-specific handling. Callbacks
+ *       must not add or remove entries in the peer caches.
  */
 void
-crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
+pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+                                                   crm_node_t *, const void *))
 {
+    // @TODO Improve documentation of peer_status_callback
     peer_status_callback = dispatch;
 }
 
 /*!
+ * \internal
  * \brief Tell the library whether to automatically reap lost nodes
  *
- * If TRUE (the default), calling crm_update_peer_proc() will also update the
- * peer state to CRM_NODE_MEMBER or CRM_NODE_LOST, and pcmk__update_peer_state()
- * will reap peers whose state changes to anything other than CRM_NODE_MEMBER.
+ * If \c true (the default), calling \c crm_update_peer_proc() will also update
+ * the peer state to \c CRM_NODE_MEMBER or \c CRM_NODE_LOST, and updating the
+ * peer state will reap peers whose state changes to anything other than
+ * \c CRM_NODE_MEMBER.
+ *
  * Callers should leave this enabled unless they plan to manage the cache
  * separately on their own.
  *
- * \param[in] autoreap  TRUE to enable automatic reaping, FALSE to disable
+ * \param[in] enable  \c true to enable automatic reaping, \c false to disable
  */
 void
-crm_set_autoreap(gboolean autoreap)
+pcmk__cluster_set_autoreap(bool enable)
 {
-    crm_autoreap = autoreap;
+    autoreap = enable;
 }
 
 static void
@@ -635,86 +639,7 @@ hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
 
 /*!
  * \internal
- * \brief Search caches for a node (cluster or Pacemaker Remote)
- *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Group of enum pcmk__node_search_flags
- *
- * \return Node cache entry if found, otherwise NULL
- */
-crm_node_t *
-pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
-{
-    crm_node_t *node = NULL;
-
-    CRM_ASSERT(id > 0 || uname != NULL);
-
-    pcmk__cluster_init_node_caches();
-
-    if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
-        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
-    }
-
-    if ((node == NULL)
-        && pcmk_is_set(flags, pcmk__node_search_cluster_member)) {
-
-        node = pcmk__search_cluster_node_cache(id, uname, NULL);
-    }
-
-    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster_cib)) {
-        char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
-
-        node = find_cib_cluster_node(id_str, uname);
-        free(id_str);
-    }
-
-    return node;
-}
-
-/*!
- * \internal
- * \brief Purge a node from cache (both cluster and Pacemaker Remote)
- *
- * \param[in] node_name  If not NULL, purge only nodes with this name
- * \param[in] node_id    If not 0, purge cluster nodes only if they have this ID
- *
- * \note If \p node_name is NULL and \p node_id is 0, no nodes will be purged.
- *       If \p node_name is not NULL and \p node_id is not 0, Pacemaker Remote
- *       nodes that match \p node_name will be purged, and cluster nodes that
- *       match both \p node_name and \p node_id will be purged.
- * \note The caller must be careful not to use \p node_name after calling this
- *       function if it might be a pointer into a cache entry being removed.
- */
-void
-pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
-{
-    char *node_name_copy = NULL;
-
-    if ((node_name == NULL) && (node_id == 0U)) {
-        return;
-    }
-
-    // Purge from Pacemaker Remote node cache
-    if ((node_name != NULL)
-        && (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL)) {
-        /* node_name could be a pointer into the cache entry being purged,
-         * so reassign it to a copy before the original gets freed
-         */
-        node_name_copy = pcmk__str_copy(node_name);
-        node_name = node_name_copy;
-
-        crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
-        g_hash_table_remove(crm_remote_peer_cache, node_name);
-    }
-
-    pcmk__cluster_forget_cluster_node(node_id, node_name);
-    free(node_name_copy);
-}
-
-/*!
- * \internal
- * \brief Search cluster node cache
+ * \brief Search cluster member node cache
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
@@ -723,9 +648,9 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
  *
  * \return Cluster node cache entry if found, otherwise NULL
  */
-crm_node_t *
-pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
-                                const char *uuid)
+static crm_node_t *
+search_cluster_member_cache(unsigned int id, const char *uname,
+                            const char *uuid)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -826,6 +751,85 @@ pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Search caches for a node (cluster or Pacemaker Remote)
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ * \param[in] flags  Group of enum pcmk__node_search_flags
+ *
+ * \return Node cache entry if found, otherwise NULL
+ */
+crm_node_t *
+pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
+{
+    crm_node_t *node = NULL;
+
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    pcmk__cluster_init_node_caches();
+
+    if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
+        node = g_hash_table_lookup(crm_remote_peer_cache, uname);
+    }
+
+    if ((node == NULL)
+        && pcmk_is_set(flags, pcmk__node_search_cluster_member)) {
+
+        node = search_cluster_member_cache(id, uname, NULL);
+    }
+
+    if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster_cib)) {
+        char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
+
+        node = find_cib_cluster_node(id_str, uname);
+        free(id_str);
+    }
+
+    return node;
+}
+
+/*!
+ * \internal
+ * \brief Purge a node from cache (both cluster and Pacemaker Remote)
+ *
+ * \param[in] node_name  If not NULL, purge only nodes with this name
+ * \param[in] node_id    If not 0, purge cluster nodes only if they have this ID
+ *
+ * \note If \p node_name is NULL and \p node_id is 0, no nodes will be purged.
+ *       If \p node_name is not NULL and \p node_id is not 0, Pacemaker Remote
+ *       nodes that match \p node_name will be purged, and cluster nodes that
+ *       match both \p node_name and \p node_id will be purged.
+ * \note The caller must be careful not to use \p node_name after calling this
+ *       function if it might be a pointer into a cache entry being removed.
+ */
+void
+pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
+{
+    char *node_name_copy = NULL;
+
+    if ((node_name == NULL) && (node_id == 0U)) {
+        return;
+    }
+
+    // Purge from Pacemaker Remote node cache
+    if ((node_name != NULL)
+        && (g_hash_table_lookup(crm_remote_peer_cache, node_name) != NULL)) {
+        /* node_name could be a pointer into the cache entry being purged,
+         * so reassign it to a copy before the original gets freed
+         */
+        node_name_copy = pcmk__str_copy(node_name);
+        node_name = node_name_copy;
+
+        crm_trace("Purging %s from Pacemaker Remote node cache", node_name);
+        g_hash_table_remove(crm_remote_peer_cache, node_name);
+    }
+
+    pcmk__cluster_forget_cluster_node(node_id, node_name);
+    free(node_name_copy);
+}
+
 #if SUPPORT_COROSYNC
 static guint
 remove_conflicting_peer(crm_node_t *node)
@@ -866,7 +870,12 @@ remove_conflicting_peer(crm_node_t *node)
 #endif
 
 /*!
- * \brief Get a cluster node cache entry
+ * \internal
+ * \brief Get a cluster node cache entry, possibly creating one if not found
+ *
+ * If \c pcmk__node_search_cluster_member is set in \p flags, the return value
+ * is guaranteed not to be \c NULL. A new cache entry is created if one does not
+ * already exist.
  *
  * \param[in] id     If not 0, cluster node ID to search for
  * \param[in] uname  If not NULL, node name to search for
@@ -900,12 +909,12 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
         return NULL;
     }
 
-    node = pcmk__search_cluster_node_cache(id, uname, uuid);
+    node = search_cluster_member_cache(id, uname, uuid);
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
     if ((node == NULL || node->uname == NULL) && (uname == NULL)) { 
-        uname_lookup = get_node_name(id);
+        uname_lookup = pcmk__cluster_node_name(id);
     }
 
     if (uname_lookup) {
@@ -914,7 +923,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
-            node = pcmk__search_cluster_node_cache(id, uname, uuid);
+            node = search_cluster_member_cache(id, uname, uuid);
         }
     }
 
@@ -942,7 +951,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *uuid,
 
     if(node->uuid == NULL) {
         if (uuid == NULL) {
-            uuid = crm_peer_uuid(node);
+            uuid = pcmk__cluster_node_uuid(node);
         }
 
         if (uuid) {
@@ -1022,24 +1031,6 @@ proc2text(enum crm_proc_flag proc)
     switch (proc) {
         case crm_proc_none:
             text = "none";
-            break;
-        case crm_proc_based:
-            text = "pacemaker-based";
-            break;
-        case crm_proc_controld:
-            text = "pacemaker-controld";
-            break;
-        case crm_proc_schedulerd:
-            text = "pacemaker-schedulerd";
-            break;
-        case crm_proc_execd:
-            text = "pacemaker-execd";
-            break;
-        case crm_proc_attrd:
-            text = "pacemaker-attrd";
-            break;
-        case crm_proc_fenced:
-            text = "pacemaker-fenced";
             break;
         case crm_proc_cpg:
             text = "corosync-cpg";
@@ -1133,7 +1124,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             return NULL;
         }
 
-        if (crm_autoreap) {
+        if (autoreap) {
             const char *peer_state = NULL;
 
             if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
@@ -1243,7 +1234,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
         }
         free(last);
 
-        if (crm_autoreap && !is_member
+        if (autoreap && !is_member
             && !pcmk_is_set(node->flags, crm_remote_node)) {
             /* We only autoreap from the peer cache, not the remote peer cache,
              * because the latter should be managed only by
@@ -1561,6 +1552,18 @@ void
 crm_peer_destroy(void)
 {
     pcmk__cluster_destroy_node_caches();
+}
+
+void
+crm_set_autoreap(gboolean enable)
+{
+    pcmk__cluster_set_autoreap(enable);
+}
+
+void
+crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
+{
+    pcmk__cluster_set_status_callback(dispatch);
 }
 
 // LCOV_EXCL_STOP

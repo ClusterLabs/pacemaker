@@ -471,7 +471,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
         } else if (pcmk__str_any_of((const char *) reason->name,
                    PCMK__XE_NODE_STATE, PCMK_XE_NODE, NULL)) {
-            const char *uname = crm_peer_uname(pcmk__xe_id(reason));
+            const char *uname = pcmk__node_name_from_uuid(pcmk__xe_id(reason));
 
             do_crm_log(level, "Transition %d aborted by %s '%s' on %s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d complete=%s",

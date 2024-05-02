@@ -413,7 +413,7 @@ cib_digester_cb(gpointer data)
         crm_xml_add(ping, PCMK__XA_CIB_PING_ID, buffer);
 
         crm_xml_add(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        send_cluster_message(NULL, crm_msg_cib, ping, TRUE);
+        pcmk__cluster_send_message(NULL, crm_msg_cib, ping);
 
         free_xml(ping);
     }
@@ -961,7 +961,7 @@ forward_request(xmlNode *request)
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    send_cluster_message(peer, crm_msg_cib, request, FALSE);
+    pcmk__cluster_send_message(peer, crm_msg_cib, request);
 
     // Return the request to its original state
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
@@ -1016,7 +1016,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
         pcmk__xml_copy(wrapper, result_diff);
 
         crm_log_xml_explicit(msg, "copy");
-        return send_cluster_message(NULL, crm_msg_cib, msg, TRUE);
+        return pcmk__cluster_send_message(NULL, crm_msg_cib, msg);
 
     } else if (originator != NULL) {
         /* send reply via HA to originating node */
@@ -1026,7 +1026,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
         crm_trace("Sending request result to %s only", originator);
         crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-        return send_cluster_message(node, crm_msg_cib, msg, FALSE);
+        return pcmk__cluster_send_message(node, crm_msg_cib, msg);
     }
 
     return FALSE;
@@ -1638,7 +1638,7 @@ initiate_exit(void)
     crm_xml_add(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
     crm_xml_add(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
 
-    send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
+    pcmk__cluster_send_message(NULL, crm_msg_cib, leaving);
     free_xml(leaving);
 
     g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);

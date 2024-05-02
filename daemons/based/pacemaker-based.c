@@ -323,7 +323,7 @@ cib_cs_dispatch(cpg_handle_t handle,
     uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;
@@ -394,7 +394,7 @@ cib_init(void)
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         pcmk_cluster_set_destroy_fn(crm_cluster, cib_cs_destroy);
         pcmk_cpg_set_deliver_fn(crm_cluster, cib_cs_dispatch);
-        pcmk_cpg_set_confchg_fn(crm_cluster, pcmk_cpg_membership);
+        pcmk_cpg_set_confchg_fn(crm_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
 
@@ -406,7 +406,7 @@ cib_init(void)
     }
 
     if (!stand_alone) {
-        crm_set_status_callback(&cib_peer_update_callback);
+        pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
         if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
             crm_crit("Cannot sign in to the cluster... terminating");

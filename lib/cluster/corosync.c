@@ -9,33 +9,30 @@
 
 #include <crm_internal.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <inttypes.h>                   // PRIu64, PRIx32
 #include <netdb.h>
-#include <inttypes.h>   // PRIu64
+#include <netinet/in.h>
 #include <stdbool.h>
-
-#include <bzlib.h>
-
-#include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
+#include <sys/socket.h>
 #include <sys/utsname.h>
 
-#include <qb/qbipcc.h>
-#include <qb/qbutil.h>
-
+#include <bzlib.h>
+#include <corosync/cfg.h>
+#include <corosync/cmap.h>
 #include <corosync/corodefs.h>
 #include <corosync/corotypes.h>
 #include <corosync/hdb.h>
-#include <corosync/cfg.h>
-#include <corosync/cmap.h>
 #include <corosync/quorum.h>
+#include <qb/qbipcc.h>
+#include <qb/qbutil.h>
 
+#include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_internal.h>    // PCMK__SPECIAL_PID
+#include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
 static quorum_handle_t pcmk_quorum_handle = 0;
@@ -55,9 +52,9 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
 char *
 pcmk__corosync_uuid(const crm_node_t *node)
 {
-    if ((node != NULL)
-        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+    CRM_ASSERT(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
 
+    if (node != NULL) {
         if (node->id > 0) {
             return crm_strdup_printf("%u", node->id);
         } else {
@@ -117,7 +114,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     int rv;
 
     if (nodeid == 0) {
-        nodeid = get_local_nodeid(0);
+        nodeid = pcmk__cpg_local_nodeid(0);
     }
 
     if (cmap_handle == 0 && local_handle == 0) {
@@ -477,13 +474,13 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     }
     crm_info("Connection to %s established", cluster_layer_s);
 
-    cluster->nodeid = get_local_nodeid(0);
+    cluster->nodeid = pcmk__cpg_local_nodeid(0);
     if (cluster->nodeid == 0) {
         crm_err("Could not determine local node ID");
         return ENXIO;
     }
 
-    cluster->uname = get_node_name(0);
+    cluster->uname = pcmk__cluster_node_name(0);
     if (cluster->uname == NULL) {
         crm_err("Could not determine local node name");
         return ENXIO;
@@ -520,30 +517,31 @@ pcmk__corosync_is_active(void)
 }
 
 /*!
+ * \internal
  * \brief Check whether a Corosync cluster peer is active
  *
  * \param[in] node  Node to check
  *
- * \return TRUE if \p node is an active Corosync peer, otherwise FALSE
+ * \return \c true if \p node is an active Corosync peer, or \c false otherwise
  */
-gboolean
-crm_is_corosync_peer_active(const crm_node_t *node)
+bool
+pcmk__corosync_is_peer_active(const crm_node_t *node)
 {
     if (node == NULL) {
         crm_trace("Corosync peer inactive: NULL");
-        return FALSE;
-
-    } else if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
+        return false;
+    }
+    if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_none)) {
         crm_trace("Corosync peer %s inactive: state=%s",
                   node->uname, node->state);
-        return FALSE;
-
-    } else if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
-        crm_trace("Corosync peer %s inactive: processes=%.16x",
-                  node->uname, node->processes);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
+        crm_trace("Corosync peer %s inactive " CRM_XS " processes=%.16" PRIx32,
+                  node->uname, node->processes);
+        return false;
+    }
+    return true;
 }
 
 /*!
@@ -811,3 +809,17 @@ bail:
     cmap_finalize(cmap_handle);
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+gboolean
+crm_is_corosync_peer_active(const crm_node_t *node)
+{
+    return pcmk__corosync_is_peer_active(node);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

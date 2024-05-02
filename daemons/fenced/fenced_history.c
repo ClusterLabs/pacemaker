@@ -55,7 +55,7 @@ stonith_send_broadcast_history(xmlNode *history,
         crm_xml_add(call_data, PCMK__XA_ST_TARGET, target);
     }
 
-    send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, bcast);
 
     free_xml(bcast);
 }

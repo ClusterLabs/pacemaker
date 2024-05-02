@@ -318,7 +318,7 @@ election_vote(election_t *e)
     crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, vote);
     free_xml(vote);
 
     crm_debug("Started %s round %d", e->name, e->count);
@@ -508,7 +508,7 @@ send_no_vote(crm_node_t *peer, struct vote *vote)
     crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
     crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    send_cluster_message(peer, crm_msg_crmd, novote, TRUE);
+    pcmk__cluster_send_message(peer, crm_msg_crmd, novote);
     free_xml(novote);
 }
 

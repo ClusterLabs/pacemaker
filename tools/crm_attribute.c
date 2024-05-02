@@ -354,16 +354,15 @@ static GOptionEntry deprecated_entries[] = {
 static void
 get_node_name_from_local(void)
 {
-    char *hostname = pcmk_hostname();
+    struct utsname hostinfo;
 
     g_free(options.dest_uname);
 
-    /* This silliness is so that dest_uname is always a glib-managed
-     * string so we know how to free it later.  pcmk_hostname returns
-     * a newly allocated string via strdup.
-     */
-    options.dest_uname = g_strdup(hostname);
-    free(hostname);
+    if (uname(&hostinfo) == 0) {
+        options.dest_uname = g_strdup(hostinfo.nodename);
+    } else {
+        options.dest_uname = NULL;
+    }
 }
 
 static int

@@ -29,7 +29,7 @@ attrd_confirmation(int callid)
     xmlNode *node = pcmk__xe_create(NULL, __func__);
 
     crm_xml_add(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(node, PCMK__XA_SRC, get_local_node_name());
+    crm_xml_add(node, PCMK__XA_SRC, pcmk__cluster_local_node_name());
     crm_xml_add(node, PCMK_XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
     crm_xml_add_int(node, PCMK__XA_CALL_ID, callid);
 
@@ -106,7 +106,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;
@@ -414,9 +414,9 @@ attrd_cluster_connect(void)
 
     pcmk_cluster_set_destroy_fn(attrd_cluster, attrd_cpg_destroy);
     pcmk_cpg_set_deliver_fn(attrd_cluster, attrd_cpg_dispatch);
-    pcmk_cpg_set_confchg_fn(attrd_cluster, pcmk_cpg_membership);
+    pcmk_cpg_set_confchg_fn(attrd_cluster, pcmk__cpg_confchg_cb);
 
-    crm_set_status_callback(&attrd_peer_change_cb);
+    pcmk__cluster_set_status_callback(&attrd_peer_change_cb);
 
     rc = pcmk_cluster_connect(attrd_cluster);
     rc = pcmk_rc2legacy(rc);

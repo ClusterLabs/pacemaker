@@ -61,7 +61,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
 
             cmd = create_request(task, pseudo->xml, node->uname,
                                  CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
-            send_cluster_message(node, crm_msg_crmd, cmd, FALSE);
+            pcmk__cluster_send_message(node, crm_msg_crmd, cmd);
             free_xml(cmd);
         }
 
@@ -111,6 +111,8 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     gboolean rc = TRUE;
     gboolean no_wait = FALSE;
+
+    const crm_node_t *node = NULL;
 
     id = pcmk__xe_id(action->xml);
     CRM_CHECK(!pcmk__str_empty(id), return EPROTO);
@@ -170,9 +172,9 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                    controld_globals.te_uuid);
     crm_xml_add(cmd, PCMK__XA_TRANSITION_KEY, counter);
 
-    rc = send_cluster_message(pcmk__get_node(0, router_node, NULL,
-                                             pcmk__node_search_cluster_member),
-                              crm_msg_crmd, cmd, TRUE);
+    node = pcmk__get_node(0, router_node, NULL,
+                          pcmk__node_search_cluster_member);
+    rc = pcmk__cluster_send_message(node, crm_msg_crmd, cmd);
     free(counter);
     free_xml(cmd);
 
@@ -219,7 +221,8 @@ synthesize_timeout_event(const pcmk__graph_action_t *action, int target_rc)
     const char *reason = NULL;
     char *dynamic_reason = NULL;
 
-    if (pcmk__str_eq(target, get_local_node_name(), pcmk__str_casei)) {
+    if (pcmk__str_eq(target, pcmk__cluster_local_node_name(),
+                     pcmk__str_casei)) {
         reason = "Local executor did not return result in time";
     } else {
         const char *router_node = NULL;
@@ -431,7 +434,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        rc = send_cluster_message(node, crm_msg_lrmd, cmd, TRUE);
+        rc = pcmk__cluster_send_message(node, crm_msg_lrmd, cmd);
     }
 
     free(counter);

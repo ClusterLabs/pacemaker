@@ -114,7 +114,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         crm_xml_add(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
         crm_xml_add(request, PCMK__XA_ST_CLIENTNODE, stonith_our_uname);
 
-        send_cluster_message(NULL, crm_msg_stonith_ng, request, FALSE);
+        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, request);
         free_xml(request);
         return 0;
     }
@@ -193,7 +193,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
     uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;
@@ -482,7 +482,7 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
         crm_xml_add(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
         crm_debug("Broadcasting our uname because of node %u", node->id);
-        send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
+        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
 
         free_xml(query);
     }
@@ -625,11 +625,11 @@ main(int argc, char **argv)
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
             pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
             pcmk_cpg_set_deliver_fn(cluster, stonith_peer_ais_callback);
-            pcmk_cpg_set_confchg_fn(cluster, pcmk_cpg_membership);
+            pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
         }
 #endif // SUPPORT_COROSYNC
 
-        crm_set_status_callback(&st_peer_update_callback);
+        pcmk__cluster_set_status_callback(&st_peer_update_callback);
 
         if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
             exit_code = CRM_EX_FATAL;

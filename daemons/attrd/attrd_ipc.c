@@ -162,7 +162,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host = node->uname;
             } else {
                 // Otherwise ask cluster layer
-                host_alloc = get_node_name(nodeid);
+                host_alloc = pcmk__cluster_node_name(nodeid);
                 host = host_alloc;
             }
             pcmk__xe_add_node(xml, host, 0);

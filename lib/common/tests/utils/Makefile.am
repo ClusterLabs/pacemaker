@@ -22,8 +22,4 @@ check_PROGRAMS = compare_version_test			\
 		 pcmk__lastfailure_name_test 		\
 		 pcmk__realloc_test
 
-if WRAPPABLE_UNAME
-check_PROGRAMS += pcmk_hostname_test
-endif
-
 TESTS = $(check_PROGRAMS)

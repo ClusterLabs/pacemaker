@@ -130,7 +130,7 @@ send_sync_request(const char *host)
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    send_cluster_message(peer, crm_msg_cib, sync_me, FALSE);
+    pcmk__cluster_send_message(peer, crm_msg_cib, sync_me);
     free_xml(sync_me);
 }
 
@@ -241,7 +241,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                     op, options, section, up, input, existing_cib, result_cib, answer);
 
             } else {
-                send_cluster_message(NULL, crm_msg_cib, up, FALSE);
+                pcmk__cluster_send_message(NULL, crm_msg_cib, up);
             }
 
             free_xml(up);
@@ -272,8 +272,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
                 crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
                 crm_xml_add_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
-                if (send_cluster_message(origin, crm_msg_cib, up, TRUE)
-                    == FALSE) {
+                if (!pcmk__cluster_send_message(origin, crm_msg_cib, up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
                 free_xml(up);
@@ -457,7 +456,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    if (!send_cluster_message(peer, crm_msg_cib, replace_request, FALSE)) {
+    if (!pcmk__cluster_send_message(peer, crm_msg_cib, replace_request)) {
         result = -ENOTCONN;
     }
     free_xml(replace_request);

@@ -84,7 +84,7 @@ post_cache_update(int instance)
      */
     no_op = create_request(CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
                            AM_I_DC ? CRM_SYSTEM_DC : CRM_SYSTEM_CRMD, NULL);
-    send_cluster_message(NULL, crm_msg_crmd, no_op, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, no_op);
     free_xml(no_op);
 }
 
@@ -137,7 +137,8 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
         pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
-    if (crm_xml_add(node_state, PCMK_XA_ID, crm_peer_uuid(node)) == NULL) {
+    if (crm_xml_add(node_state, PCMK_XA_ID,
+                    pcmk__cluster_node_uuid(node)) == NULL) {
         crm_info("Node update for %s cancelled: no ID", node->uname);
         free_xml(node_state);
         return NULL;

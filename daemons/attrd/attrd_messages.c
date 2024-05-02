@@ -353,5 +353,5 @@ attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
     }
 
     attrd_xml_add_writer(data);
-    return send_cluster_message(node, crm_msg_attrd, data, TRUE);
+    return pcmk__cluster_send_message(node, crm_msg_attrd, data);
 }

@@ -31,7 +31,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
 {
     uint32_t kind = 0;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;
@@ -131,9 +131,9 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     }
 
     // Process the change normally, which will call the peer callback as needed
-    pcmk_cpg_membership(handle, cpg_name, member_list, member_list_entries,
-                        left_list, left_list_entries,
-                        joined_list, joined_list_entries);
+    pcmk__cpg_confchg_cb(handle, cpg_name, member_list, member_list_entries,
+                         left_list, left_list_entries,
+                         joined_list, joined_list_entries);
 
     controld_clear_global_flags(controld_dc_left);
 }
@@ -144,7 +144,7 @@ gboolean
 crm_connect_corosync(pcmk_cluster_t *cluster)
 {
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        crm_set_status_callback(&peer_update_callback);
+        pcmk__cluster_set_status_callback(&peer_update_callback);
 
         pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
         pcmk_cpg_set_deliver_fn(cluster, crmd_cs_dispatch);

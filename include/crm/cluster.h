@@ -81,6 +81,9 @@ enum crm_node_flags {
 };
 //!@}
 
+// @COMPAT Make this internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct crm_peer_node_s {
     char *uname;                // Node name as known to cluster
 
@@ -127,6 +130,7 @@ typedef struct crm_peer_node_s {
     time_t when_member;         // Since when node has been a cluster member
     time_t when_online;         // Since when peer has been online in CPG
 } crm_node_t;
+//!@}
 
 // Implementation of pcmk_cluster_t
 // @COMPAT Make this internal when we can break API backward compatibility
@@ -174,49 +178,33 @@ int pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn);
 int pcmk_cpg_set_confchg_fn(pcmk_cluster_t *cluster, cpg_confchg_fn_t fn);
 #endif  // SUPPORT_COROSYNC
 
+/* @COMPAT Make this internal when we can break API backward compatibility. Also
+ * evaluate whether we can drop this entirely. Since 2.0.0, we have sent only
+ * messages with crm_class_cluster.
+ */
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
+//!@}
 
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 enum crm_ais_msg_types {
     crm_msg_none     = 0,
-    crm_msg_ais      = 1,
+    crm_msg_ais      = 1,   // Unused
     crm_msg_lrmd     = 2,
     crm_msg_cib      = 3,
     crm_msg_crmd     = 4,
     crm_msg_attrd    = 5,
-    crm_msg_stonithd = 6,
-    crm_msg_te       = 7,
-    crm_msg_pe       = 8,
+    crm_msg_stonithd = 6,   // Unused
+    crm_msg_te       = 7,   // Unused
+    crm_msg_pe       = 8,   // Unused
     crm_msg_stonith_ng = 9,
 };
 //!@}
-
-gboolean send_cluster_message(const crm_node_t *node,
-                              enum crm_ais_msg_types service,
-                              const xmlNode *data, gboolean ordered);
-
-#  if SUPPORT_COROSYNC
-uint32_t get_local_nodeid(cpg_handle_t handle);
-
-void pcmk_cpg_membership(cpg_handle_t handle,
-                         const struct cpg_name *groupName,
-                         const struct cpg_address *member_list, size_t member_list_entries,
-                         const struct cpg_address *left_list, size_t left_list_entries,
-                         const struct cpg_address *joined_list, size_t joined_list_entries);
-gboolean crm_is_corosync_peer_active(const crm_node_t * node);
-gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                           gboolean local, const crm_node_t *node,
-                           enum crm_ais_msg_types dest);
-char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
-                        uint32_t *kind, const char **from);
-#  endif
-
-const char *crm_peer_uuid(crm_node_t *node);
-const char *crm_peer_uname(const char *uuid);
 
 // @COMPAT Make this internal when we can break API backward compatibility
 //!@{
@@ -227,10 +215,6 @@ enum crm_status_type {
     crm_status_processes,
 };
 //!@}
-
-enum crm_ais_msg_types text2msg_type(const char *text);
-void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
-void crm_set_autoreap(gboolean autoreap);
 
 /*!
  * \enum pcmk_cluster_layer
@@ -244,9 +228,6 @@ enum pcmk_cluster_layer {
 
 enum pcmk_cluster_layer pcmk_get_cluster_layer(void);
 const char *pcmk_cluster_layer_text(enum pcmk_cluster_layer layer);
-
-const char *get_local_node_name(void);
-char *get_node_name(uint32_t nodeid);
 
 /*
  * \brief Get log-friendly string equivalent of a join phase

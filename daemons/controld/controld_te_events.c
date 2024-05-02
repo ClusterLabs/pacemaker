@@ -186,7 +186,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
     const char *value = NULL;
     const char *id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
-    const char *on_uname = crm_peer_uname(event_node_uuid);
+    const char *on_uname = pcmk__node_name_from_uuid(event_node_uuid);
     const char *origin = crm_element_value(event, PCMK_XA_CRM_DEBUG_ORIGIN);
 
     // Nothing needs to be done for success or status refresh

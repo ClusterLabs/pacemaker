@@ -448,19 +448,6 @@ crm_gnutls_global_init(void)
 }
 #endif
 
-/*!
- * \brief Get the local hostname
- *
- * \return Newly allocated string with name, or NULL (and set errno) on error
- */
-char *
-pcmk_hostname(void)
-{
-    struct utsname hostinfo;
-
-    return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
-}
-
 bool
 pcmk_str_is_infinity(const char *s) {
     return pcmk__str_any_of(s, PCMK_VALUE_INFINITY, PCMK_VALUE_PLUS_INFINITY,
@@ -548,6 +535,14 @@ crm_parse_interval_spec(const char *input)
         return 0;
     }
     return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
+}
+
+char *
+pcmk_hostname(void)
+{
+    struct utsname hostinfo;
+
+    return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
 }
 
 // LCOV_EXCL_STOP
