@@ -19,6 +19,7 @@
 #include <time.h>
 #include <sys/param.h>
 #include <sys/types.h>
+#include <sys/utsname.h>            // uname()
 
 #include <glib.h>                   // gboolean
 
@@ -298,19 +299,18 @@ pcmk__cluster_node_name(uint32_t nodeid)
     }
 
     if (nodeid == 0) {
-        char *name = NULL;
+        struct utsname hostinfo;
 
         crm_notice("Could not get local node name from %s cluster layer, "
                    "defaulting to local hostname",
                    cluster_layer_s);
 
-        name = pcmk_hostname();
-        if (name == NULL) {
+        if (uname(&hostinfo) < 0) {
             // @TODO Maybe let the caller decide what to do
             crm_err("Failed to get the local hostname");
             crm_exit(CRM_EX_FATAL);
         }
-        return name;
+        return pcmk__str_copy(hostinfo.nodename);
     }
 
     crm_notice("Could not obtain a node name for node with "
