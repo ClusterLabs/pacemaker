@@ -968,8 +968,6 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
-    enum crm_ais_msg_types sender =
-        pcmk__cluster_parse_msg_type(crm_system_name);
 
     CRM_CHECK(dest != crm_msg_ais, return false);
 
@@ -986,10 +984,6 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
 
     if (local_pid == 0) {
         local_pid = getpid();
-    }
-
-    if (sender == crm_msg_none) {
-        sender = local_pid;
     }
 
     msg = pcmk__assert_alloc(1, sizeof(pcmk__cpg_msg_t));
@@ -1019,7 +1013,7 @@ send_cpg_text(const char *data, bool local, const crm_node_t *node,
     }
 
     msg->sender.id = 0;
-    msg->sender.type = sender;
+    msg->sender.type = pcmk__cluster_parse_msg_type(crm_system_name);
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
     memset(msg->sender.uname, 0, MAX_NAME);

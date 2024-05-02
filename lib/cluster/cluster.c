@@ -43,9 +43,6 @@ CRM_TRACE_INIT_DATA(cluster);
 enum crm_ais_msg_types
 pcmk__cluster_parse_msg_type(const char *text)
 {
-    int rc = 0;
-    int type = crm_msg_none;
-
     CRM_CHECK(text != NULL, return crm_msg_none);
 
     text = pcmk__message_name(text);
@@ -77,19 +74,7 @@ pcmk__cluster_parse_msg_type(const char *text)
     if (pcmk__str_eq(text, "attrd", pcmk__str_none)) {
         return crm_msg_attrd;
     }
-
-    /* This will normally be a transient client rather than a cluster daemon.
-     * Set the type to the pid of the client.
-     *
-     * @TODO Check whether this is necessary and correct.
-     */
-    rc = sscanf(text, "%d", &type);
-
-    if ((rc != 1) || (type <= crm_msg_stonith_ng)) {
-        // Ensure it's sane; don't falsely return a standard message type
-        type = crm_msg_none;
-    }
-    return type;
+    return crm_msg_none;
 }
 
 /*!

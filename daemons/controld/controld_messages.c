@@ -386,7 +386,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     // Get the message type appropriate to the destination subsystem
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         dest = pcmk__cluster_parse_msg_type(sys_to);
-        if ((dest < crm_msg_ais) || (dest > crm_msg_stonith_ng)) {
+        if (dest == crm_msg_none) {
             /* Unrecognized value, use a sane default
              *
              * @TODO Maybe we should bail instead
