@@ -312,7 +312,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
-        result = rsc->fns->find_rsc(child, id, on_node, flags);
+        result = rsc->private->fns->find_rsc(child, id, on_node, flags);
         if (result) {
             return result;
         }
@@ -758,7 +758,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     char ra_name[LINE_MAX];
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
-    const char *active = pcmk__btoa(rsc->fns->active(rsc, TRUE));
+    const char *active = pcmk__btoa(rsc->private->fns->active(rsc, TRUE));
     const char *orphaned = pcmk__flag_text(rsc->flags, pcmk_rsc_removed);
     const char *blocked = pcmk__flag_text(rsc->flags, pcmk_rsc_blocked);
     const char *maintenance = pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance);
@@ -772,7 +772,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
     }
 
@@ -844,7 +844,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
 
     const pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
     }
 
@@ -871,7 +871,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return pcmk_rc_no_output;
     }
 
@@ -925,7 +925,7 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
-            child->fns->location(child, &result, current);
+            child->private->fns->location(child, &result, current);
         }
 
     } else if (current) {
@@ -1148,7 +1148,7 @@ pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
     } else if (check_parent && rsc->parent) {
         const pcmk_resource_t *up = pe__const_top_resource(rsc, true);
 
-        return up->fns->is_filtered(up, only_rsc, FALSE);
+        return up->private->fns->is_filtered(up, only_rsc, FALSE);
     }
 
     return TRUE;

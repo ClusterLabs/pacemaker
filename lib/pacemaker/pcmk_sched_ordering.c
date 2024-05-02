@@ -1339,11 +1339,13 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         char *key = NULL;
         char *op_type = NULL;
         guint interval_ms = 0;
+        enum rsc_role_e first_role;
 
         parse_op_key(order->task1, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        if ((first_rsc->fns->state(first_rsc, TRUE) == pcmk_role_stopped)
+        first_role = first_rsc->private->fns->state(first_rsc, TRUE);
+        if ((first_role == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);
             pcmk__rsc_trace(first_rsc,
@@ -1351,8 +1353,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
                             "not found",
                             order->id, order->task1, first_rsc->id);
 
-        } else if ((first_rsc->fns->state(first_rsc,
-                                          TRUE) == pcmk_role_unpromoted)
+        } else if ((first_role == pcmk_role_unpromoted)
                    && pcmk__str_eq(op_type, PCMK_ACTION_DEMOTE,
                                    pcmk__str_none)) {
             free(key);

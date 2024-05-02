@@ -127,7 +127,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     // Assign all containers first, so we know what nodes the bundle will be on
     containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
     pcmk__assign_instances(rsc, containers, pe__bundle_max(rsc),
-                           rsc->fns->max_per_node(rsc));
+                           rsc->private->fns->max_per_node(rsc));
     g_list_free(containers);
 
     // Then assign remaining replica resources
@@ -398,7 +398,7 @@ get_bundle_node_host(const pcmk_node_t *node)
     if (pcmk__is_bundle_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
 
-        return container->fns->location(container, NULL, 0);
+        return container->private->fns->location(container, NULL, 0);
     }
     return node;
 }
@@ -422,7 +422,7 @@ compatible_container(const pcmk_resource_t *dependent,
     struct match_data match_data = { NULL, NULL };
 
     // If dependent is assigned, only check there
-    match_data.node = dependent->fns->location(dependent, NULL, 0);
+    match_data.node = dependent->private->fns->location(dependent, NULL, 0);
     match_data.node = get_bundle_node_host(match_data.node);
     if (match_data.node != NULL) {
         pe__foreach_const_bundle_replica(bundle, match_replica_container,
@@ -480,7 +480,8 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
         return true;
     }
 
-    chosen = replica->container->fns->location(replica->container, NULL, 0);
+    chosen = replica->container->private->fns->location(replica->container,
+                                                        NULL, 0);
     if ((chosen == NULL)
         || is_set_recursive(replica->container, pcmk_rsc_blocked, true)) {
         return true;
@@ -894,6 +895,7 @@ static bool
 create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
 {
     struct probe_data *probe_data = user_data;
+    pcmk_resource_t *bundle = probe_data->bundle;
 
     if ((replica->ip != NULL)
         && replica->ip->cmds->create_probe(replica->ip, probe_data->node)) {
@@ -922,9 +924,9 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
          * mappings (which won't include an IP for uniqueness)
          * are already taken
          */
-        if (probe_data->bundle->fns->max_per_node(probe_data->bundle) == 1) {
-            pe__foreach_bundle_replica(probe_data->bundle,
-                                       order_replica_start_after, replica);
+        if (bundle->private->fns->max_per_node(bundle) == 1) {
+            pe__foreach_bundle_replica(bundle, order_replica_start_after,
+                                       replica);
         }
     }
     if ((replica->container != NULL) && (replica->remote != NULL)
@@ -943,15 +945,14 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
         free(probe_uuid);
         if (probe != NULL) {
             probe_data->any_created = true;
-            pcmk__rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
+            pcmk__rsc_trace(bundle, "Ordering %s probe on %s",
                             replica->remote->id,
                             pcmk__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
-                               pcmk__ar_nested_remote_probe,
-                               probe_data->bundle->cluster);
+                               pcmk__ar_nested_remote_probe, bundle->cluster);
         }
     }
     return true;

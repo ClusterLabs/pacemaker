@@ -2010,10 +2010,11 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
                         const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *top = pe__create_clone_child(parent, scheduler);
+    pcmk_resource_t *orphan = NULL;
 
     // find_rsc() because we might be a cloned group
-    pcmk_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL,
-                                               pcmk_rsc_match_clone_only);
+    orphan = top->private->fns->find_rsc(top, rsc_id, NULL,
+                                         pcmk_rsc_match_clone_only);
 
     pcmk__rsc_debug(parent, "Created orphan %s for %s: %s on %s",
                     top->id, parent->id, rsc_id, pcmk__node_name(node));
@@ -2068,7 +2069,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (3) when we re-run calculations on the same scheduler data as part of
          *     a simulation.
          */
-        child->fns->location(child, &locations, 2);
+        child->private->fns->location(child, &locations, 2);
         if (locations) {
             /* We should never associate the same numbered anonymous clone
              * instance with multiple nodes, and clone instances can't migrate,
@@ -2084,8 +2085,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                  *
                  * If the history entry is orphaned, rsc will be NULL.
                  */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL,
-                                            pcmk_rsc_match_clone_only);
+                rsc = parent->private->fns->find_rsc(child, rsc_id, NULL,
+                                                     pcmk_rsc_match_clone_only);
                 if (rsc) {
                     /* If there are multiple instance history entries for an
                      * anonymous clone in a single node's history (which can
@@ -2112,8 +2113,9 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
             if (!skip_inactive && !inactive_instance
                 && !pcmk_is_set(child->flags, pcmk_rsc_blocked)) {
                 // Remember one inactive instance in case we don't find active
-                inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
-                                                          pcmk_rsc_match_clone_only);
+                inactive_instance =
+                    parent->private->fns->find_rsc(child, rsc_id, NULL,
+                                                   pcmk_rsc_match_clone_only);
 
                 /* ... but don't use it if it was already associated with a
                  * pending action on another node

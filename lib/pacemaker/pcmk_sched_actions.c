@@ -550,7 +550,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             && pcmk__is_group(first->rsc)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
+            first_node = first->rsc->private->fns->location(first->rsc, NULL,
+                                                            FALSE);
             if (first_node != NULL) {
                 pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
                                 pcmk__node_name(first_node), first->uuid);
@@ -560,7 +561,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         if (pcmk__is_group(then->rsc)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
+            then_node = then->rsc->private->fns->location(then->rsc, NULL,
+                                                          FALSE);
             if (then_node != NULL) {
                 pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
                                 pcmk__node_name(then_node), then->uuid);
@@ -726,7 +728,9 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
 
     // Certain optional 'then' actions are unaffected by unrunnable 'first'
     if (pcmk_is_set(then->flags, pcmk_action_optional)) {
-        enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
+        enum rsc_role_e then_rsc_role;
+
+        then_rsc_role = then->rsc->private->fns->state(then->rsc, TRUE);
 
         if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {

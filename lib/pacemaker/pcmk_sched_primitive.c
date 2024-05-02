@@ -709,7 +709,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                     pcmk_role_text(rsc->next_role), next_role_source,
                     pcmk__node_name(rsc->allocated_to));
 
-    current = rsc->fns->active_node(rsc, &num_all_active, &num_clean_active);
+    current = rsc->private->fns->active_node(rsc, &num_all_active,
+                                             &num_clean_active);
 
     g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
                    rsc);

@@ -788,7 +788,8 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 bool
 pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node)
 {
-    return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any(rsc, only_node));
+    return rsc->private->fns->active(rsc, FALSE)
+           && !pe__rsc_running_on_any(rsc, only_node);
 }
 
 GList *

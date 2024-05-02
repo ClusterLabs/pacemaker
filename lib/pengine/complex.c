@@ -645,6 +645,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     const char *id = NULL;
     bool guest_node = false;
     bool remote_node = false;
+    pcmk__resource_private_t *rsc_private = NULL;
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -686,6 +687,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         free(*rsc);
         return ENOMEM;
     }
+    rsc_private = (*rsc)->private;
 
     (*rsc)->cluster = scheduler;
 
@@ -730,7 +732,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     warn_about_deprecated_classes(*rsc);
 
-    (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
+    rsc_private->fns = &resource_class_functions[(*rsc)->variant];
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, scheduler);
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
@@ -959,8 +961,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     ((*rsc)->next_role == pcmk_role_unknown)?
                         "default" : pcmk_role_text((*rsc)->next_role));
 
-    if ((*rsc)->fns->unpack(*rsc, scheduler) == FALSE) {
-        (*rsc)->fns->free(*rsc);
+    if (rsc_private->fns->unpack(*rsc, scheduler) == FALSE) {
+        rsc_private->fns->free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -986,7 +988,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, scheduler) == FALSE) {
-            (*rsc)->fns->free(*rsc);
+            rsc_private->fns->free(*rsc);
             *rsc = NULL;
             return pcmk_rc_unpack_error;
         }
@@ -1220,12 +1222,12 @@ pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
             *count = 0;
         }
         return NULL;
+    }
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
-        return rsc->fns->active_node(rsc, count, NULL);
-
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
+        return rsc->private->fns->active_node(rsc, count, NULL);
     } else {
-        return rsc->fns->active_node(rsc, NULL, count);
+        return rsc->private->fns->active_node(rsc, NULL, count);
     }
 }
 
@@ -1234,7 +1236,9 @@ pe__count_common(pcmk_resource_t *rsc)
 {
     if (rsc->children != NULL) {
         for (GList *item = rsc->children; item != NULL; item = item->next) {
-            ((pcmk_resource_t *) item->data)->fns->count(item->data);
+            pcmk_resource_t *child = item->data;
+
+            child->private->fns->count(item->data);
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)

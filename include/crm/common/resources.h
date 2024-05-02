@@ -397,7 +397,6 @@ struct pe_resource_s {
     pcmk_resource_t *parent;            // Resource's parent resource, if any
     enum pe_obj_types variant;          // Resource variant
     void *variant_opaque;               // Variant-specific (and private) data
-    pcmk_rsc_methods_t *fns;            // Resource object methods
     pcmk_assignment_methods_t *cmds;    // Resource assignment methods
 
     enum rsc_recovery_type recovery_type;   // How to recover if failed

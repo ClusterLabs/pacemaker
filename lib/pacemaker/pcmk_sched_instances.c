@@ -360,8 +360,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 
     CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
 
-    node1 = instance1->fns->active_node(instance1, &nnodes1, NULL);
-    node2 = instance2->fns->active_node(instance2, &nnodes2, NULL);
+    node1 = instance1->private->fns->active_node(instance1, &nnodes1, NULL);
+    node2 = instance2->private->fns->active_node(instance2, &nnodes2, NULL);
 
     /* If both instances are running and at least one is multiply
      * active, prefer instance that's running on fewer nodes.
@@ -1081,7 +1081,7 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
     CRM_CHECK((instance != NULL) && (node != NULL), return false);
 
     if ((role != pcmk_role_unknown)
-        && (role != instance->fns->state(instance, current))) {
+        && (role != instance->private->fns->state(instance, current))) {
         pcmk__rsc_trace(instance,
                         "%s is not a compatible instance (role is not %s)",
                         instance->id, pcmk_role_text(role));
@@ -1090,7 +1090,8 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
 
     if (!is_set_recursive(instance, pcmk_rsc_blocked, true)) {
         // We only want instances that haven't failed
-        instance_node = instance->fns->location(instance, NULL, current);
+        instance_node = instance->private->fns->location(instance, NULL,
+                                                         current);
     }
 
     if (instance_node == NULL) {
@@ -1182,7 +1183,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     const pcmk_node_t *node = NULL;
 
     // If match_rsc has a node, check only that node
-    node = match_rsc->fns->location(match_rsc, NULL, current);
+    node = match_rsc->private->fns->location(match_rsc, NULL, current);
     if (node != NULL) {
         return find_compatible_instance_on_node(match_rsc, rsc, node, role,
                                                 current);

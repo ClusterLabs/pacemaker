@@ -325,13 +325,14 @@ static void
 update_resource_action_runnable(pcmk_action_t *action,
                                 pcmk_scheduler_t *scheduler)
 {
+    pcmk_resource_t *rsc = action->rsc;
+
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
     }
 
     if (action->node == NULL) {
-        pcmk__rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
-                        action->uuid);
+        pcmk__rsc_trace(rsc, "%s is unrunnable (unallocated)", action->uuid);
         pcmk__clear_action_flags(action, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
@@ -341,7 +342,7 @@ update_resource_action_runnable(pcmk_action_t *action,
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pcmk__node_name(action->node));
-        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
             pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
@@ -363,33 +364,31 @@ update_resource_action_runnable(pcmk_action_t *action,
              * such an action cannot be completed if it is on a guest node whose
              * host is unclean and cannot be fenced.
              */
-            pcmk__rsc_debug(action->rsc,
+            pcmk__rsc_debug(rsc,
                             "%s on %s is unrunnable "
                             "(node's host cannot be fenced)",
                             action->uuid, pcmk__node_name(action->node));
             pcmk__clear_action_flags(action, pcmk_action_runnable);
         } else {
-            pcmk__rsc_trace(action->rsc,
+            pcmk__rsc_trace(rsc,
                             "%s on %s does not require fencing or quorum",
                             action->uuid, pcmk__node_name(action->node));
             pcmk__set_action_flags(action, pcmk_action_runnable);
         }
 
     } else {
-        switch (effective_quorum_policy(action->rsc, scheduler)) {
+        switch (effective_quorum_policy(rsc, scheduler)) {
             case pcmk_no_quorum_stop:
-                pcmk__rsc_debug(action->rsc,
-                                "%s on %s is unrunnable (no quorum)",
+                pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                 action->uuid, pcmk__node_name(action->node));
                 pcmk__clear_action_flags(action, pcmk_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
             case pcmk_no_quorum_freeze:
-                if (!action->rsc->fns->active(action->rsc, TRUE)
-                    || (action->rsc->next_role > action->rsc->role)) {
-                    pcmk__rsc_debug(action->rsc,
-                                    "%s on %s is unrunnable (no quorum)",
+                if (!rsc->private->fns->active(rsc, TRUE)
+                    || (rsc->next_role > rsc->role)) {
+                    pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,
                                     pcmk__node_name(action->node));
                     pcmk__clear_action_flags(action, pcmk_action_runnable);

@@ -18,6 +18,7 @@ extern "C" {
 
 // Implementation of pcmk__resource_private_t
 struct pcmk__resource_private {
+    const pcmk_rsc_methods_t *fns;          // Resource object methods
 };
 
 const char *pcmk__multiply_active_text(enum rsc_recovery_type recovery);

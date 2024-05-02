@@ -468,7 +468,7 @@ clone_active(pcmk_resource_t * rsc, gboolean all)
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        gboolean child_active = child_rsc->fns->active(child_rsc, all);
+        gboolean child_active = child_rsc->private->fns->active(child_rsc, all);
 
         if (all == FALSE && child_active) {
             return TRUE;
@@ -562,7 +562,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
 
@@ -578,7 +578,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
+        if (child_rsc->private->fns->is_filtered(child_rsc, only_rsc,
+                                                 print_everything)) {
             continue;
         }
 
@@ -654,7 +655,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
 
@@ -664,13 +665,15 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
+        gboolean partially_active = child_rsc->private->fns->active(child_rsc,
+                                                                    FALSE);
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
         }
 
-        if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
+        if (child_rsc->private->fns->is_filtered(child_rsc, only_rsc,
+                                                 print_everything)) {
             continue;
         }
 
@@ -711,16 +714,18 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;
 
-        } else if (child_rsc->fns->active(child_rsc, TRUE)) {
+        } else if (child_rsc->private->fns->active(child_rsc, TRUE)) {
             // Instance of fully active anonymous clone
 
             pcmk_node_t *location = NULL;
 
-            location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+            location = child_rsc->private->fns->location(child_rsc, NULL, TRUE);
             if (location) {
                 // Instance is active on a single node
 
-                enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
+                enum rsc_role_e a_role;
+
+                a_role = child_rsc->private->fns->state(child_rsc, TRUE);
 
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
@@ -937,7 +942,7 @@ clone_free(pcmk_resource_t * rsc)
         /* There could be a saved unexpanded xml */
         pcmk__xml_free(child_rsc->orig_xml);
         child_rsc->orig_xml = NULL;
-        child_rsc->fns->free(child_rsc);
+        child_rsc->private->fns->free(child_rsc);
     }
 
     g_list_free(rsc->children);
@@ -960,7 +965,8 @@ clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
+        enum rsc_role_e a_role = child_rsc->private->fns->state(child_rsc,
+                                                                current);
 
         if (a_role > clone_role) {
             clone_role = a_role;
@@ -1013,7 +1019,8 @@ pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
                 const pcmk_resource_t *child_rsc = NULL;
 
                 child_rsc = (const pcmk_resource_t *) iter->data;
-                if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
+                if (!child_rsc->private->fns->is_filtered(child_rsc, only_rsc,
+                                                          FALSE)) {
                     passes = TRUE;
                     break;
                 }

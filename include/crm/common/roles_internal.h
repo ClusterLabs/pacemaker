@@ -10,6 +10,9 @@
 #ifndef PCMK__CRM_COMMON_ROLES_INTERNAL__H
 #define PCMK__CRM_COMMON_ROLES_INTERNAL__H
 
+#include <crm/common/scheduler_types.h>     // pcmk_node_t, pcmk_resource_t
+#include <crm/common/resources_internal.h>  // struct pcmk__resource_private
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,7 +59,10 @@ extern "C" {
 static inline pcmk_node_t *
 pcmk__current_node(const pcmk_resource_t *rsc)
 {
-    return (rsc == NULL)? NULL : rsc->fns->active_node(rsc, NULL, NULL);
+    if (rsc == NULL) {
+        return NULL;
+    }
+    return rsc->private->fns->active_node(rsc, NULL, NULL);
 }
 
 #ifdef __cplusplus

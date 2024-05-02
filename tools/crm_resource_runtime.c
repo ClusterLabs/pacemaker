@@ -36,8 +36,11 @@ build_node_info_list(const pcmk_resource_t *rsc)
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            ni->promoted = pcmk_is_set(rsc->flags, pcmk_rsc_promotable) &&
-                           child->fns->state(child, TRUE) == pcmk_role_promoted;
+            if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)
+                && (child->private->fns->state(child,
+                                               TRUE) == pcmk_role_promoted)) {
+                ni->promoted = true;
+            }
 
             retval = g_list_prepend(retval, ni);
         }
@@ -71,7 +74,9 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            ni->promoted = (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted);
+            if (rsc->private->fns->state(rsc, TRUE) == pcmk_role_promoted) {
+                ni->promoted = true;
+            }
 
             retval = g_list_prepend(retval, ni);
         }
@@ -1205,7 +1210,7 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
         return false;
     }
 
-    rsc->fns->location(rsc, &hosts, TRUE);
+    rsc->private->fns->location(rsc, &hosts, TRUE);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
@@ -1580,9 +1585,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             lookup_id = clone_strip(rsc->id);
         }
 
-        rsc = parent->fns->find_rsc(parent, lookup_id, node,
-                                    pcmk_rsc_match_basename
-                                    |pcmk_rsc_match_current_node);
+        rsc = parent->private->fns->find_rsc(parent, lookup_id, node,
+                                             pcmk_rsc_match_basename
+                                             |pcmk_rsc_match_current_node);
         free(lookup_id);
         running = resource_is_running_on(rsc, host);
     }
@@ -2319,7 +2324,8 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
         for (const GList *iter = rsc->children; iter; iter = iter->next) {
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
-            enum rsc_role_e child_role = child->fns->state(child, TRUE);
+            enum rsc_role_e child_role = child->private->fns->state(child,
+                                                                    TRUE);
 
             if (child_role == pcmk_role_promoted) {
                 rsc = child;

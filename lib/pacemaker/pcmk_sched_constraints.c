@@ -114,9 +114,10 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
     }
     for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
         pcmk_resource_t *parent = iter->data;
-        pcmk_resource_t *match = parent->fns->find_rsc(parent, id, NULL,
-                                                       pcmk_rsc_match_history);
+        pcmk_resource_t *match = NULL;
 
+        match = parent->private->fns->find_rsc(parent, id, NULL,
+                                               pcmk_rsc_match_history);
         if (match != NULL) {
             if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
                 /* We found an instance of a clone instead */

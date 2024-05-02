@@ -2467,10 +2467,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
                                       pcmk__str_star_matches)) {
                 continue;
             }
-        } else {
-            if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
-                continue;
-            }
+        } else if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
+            continue;
         }
 
         if (!pcmk_is_set(section_opts, pcmk_section_operations)) {
@@ -3030,8 +3028,8 @@ resource_list(pcmk__output_t *out, va_list args)
         int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
-        gboolean is_active = rsc->fns->active(rsc, TRUE);
-        gboolean partially_active = rsc->fns->active(rsc, FALSE);
+        gboolean is_active = rsc->private->fns->active(rsc, TRUE);
+        gboolean partially_active = rsc->private->fns->active(rsc, FALSE);
 
         /* Skip inactive orphans (deleted but still in CIB) */
         if (pcmk_is_set(rsc->flags, pcmk_rsc_removed) && !is_active) {
