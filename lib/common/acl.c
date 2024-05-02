@@ -585,9 +585,23 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
                       xml->name, display_id(xml));
 
         } else if (check_top) {
-            crm_trace("ACLs disallow creation of <%s> with "
-                      PCMK_XA_ID "=\"%s\"", xml->name, display_id(xml));
-            pcmk_free_xml_subtree(xml);
+            /* is_root=true should be impossible with check_top=true, but check
+             * for sanity
+             */
+            bool is_root = (xml->doc != NULL)
+                           && (xmlDocGetRootElement(xml->doc) == xml);
+
+            crm_trace("ACLs disallow creation of %s<%s> with "
+                      PCMK_XA_ID "=\"%s\"",
+                      (is_root? "root element " : ""), xml->name,
+                      display_id(xml));
+
+            if (is_root) {
+                xmlFreeDoc(xml->doc);
+            } else {
+                xmlUnlinkNode(xml);
+                xmlFreeNode(xml);
+            }
             return;
 
         } else {
