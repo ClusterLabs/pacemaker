@@ -23,7 +23,7 @@ static pcmk_node_t *active_node(const pcmk_resource_t *rsc,
                                 unsigned int *count_all,
                                 unsigned int *count_clean);
 
-pcmk_rsc_methods_t resource_class_functions[] = {
+static pcmk_rsc_methods_t resource_class_functions[] = {
     {
          native_unpack,
          native_find_rsc,
