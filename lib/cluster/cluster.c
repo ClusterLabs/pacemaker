@@ -208,23 +208,6 @@ pcmk__cluster_send_message(const crm_node_t *node,
 }
 
 /*!
- * \brief Send an XML message via the cluster messaging layer
- *
- * \param[in] node     Cluster node to send message to
- * \param[in] service  Message type to use in message host info
- * \param[in] data     XML message to send
- * \param[in] ordered  Ignored for currently supported messaging layers
- *
- * \return TRUE on success, otherwise FALSE
- */
-gboolean
-send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
-                     const xmlNode *data, gboolean ordered)
-{
-    return pcmk__cluster_send_message(node, service, data);
-}
-
-/*!
  * \brief Get the local node's name
  *
  * \return Local node's name
@@ -479,6 +462,13 @@ gboolean
 is_corosync_cluster(void)
 {
     return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
+}
+
+gboolean
+send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
+                     const xmlNode *data, gboolean ordered)
+{
+    return pcmk__cluster_send_message(node, service, data);
 }
 
 // LCOV_EXCL_STOP

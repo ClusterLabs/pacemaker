@@ -147,6 +147,11 @@ void crm_peer_init(void);
 //! \deprecated Do not use
 void crm_peer_destroy(void);
 
+//! \deprecated Do not use
+gboolean send_cluster_message(const crm_node_t *node,
+                              enum crm_ais_msg_types service,
+                              const xmlNode *data, gboolean ordered);
+
 #ifdef __cplusplus
 }
 #endif

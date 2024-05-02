@@ -195,10 +195,6 @@ enum crm_ais_msg_types {
 };
 //!@}
 
-gboolean send_cluster_message(const crm_node_t *node,
-                              enum crm_ais_msg_types service,
-                              const xmlNode *data, gboolean ordered);
-
 const char *crm_peer_uuid(crm_node_t *node);
 const char *crm_peer_uname(const char *uuid);
 
