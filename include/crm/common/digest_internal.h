@@ -38,6 +38,7 @@ typedef struct {
 } pcmk__op_digest_t;
 
 char *pcmk__digest_on_disk_cib(xmlNode *input);
+char *pcmk__digest_operation(xmlNode *input);
 
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 

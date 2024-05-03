@@ -1372,7 +1372,7 @@ device_has_duplicate(const stonith_device_t *device)
         return NULL;
     }
 
-    /* Use calculate_operation_digest() here? */
+    // Use pcmk__digest_operation() here?
     if (device_params_diff(device->params, dup->params) ||
         device_params_diff(dup->params, device->params)) {
         return NULL;

@@ -141,6 +141,20 @@ pcmk__digest_on_disk_cib(xmlNode *input)
 }
 
 /*!
+ * \internal
+ * \brief Calculate and return digest of an operation XML element
+ *
+ * \param[in] input  Root of XML to digest
+ *
+ * \return Newly allocated string containing digest
+ */
+char *
+pcmk__digest_operation(xmlNode *input)
+{
+    return calculate_xml_digest_v1(input, true);
+}
+
+/*!
  * \brief Calculate and return digest of XML operation
  *
  * \param[in] input    Root of XML to digest
