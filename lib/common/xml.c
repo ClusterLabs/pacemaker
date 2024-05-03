@@ -610,6 +610,66 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 
 /*!
  * \internal
+ * \brief Move an XML attribute to the end of its element's attribute list
+ *
+ * This does not consider ACLs and does not mark the attribute as deleted or
+ * dirty. Upon return, the attribute still exists and is set to the same value
+ * as before the call. Only its position in the attribute list may change.
+ *
+ * \param[in]     data       \c pcmk_nvpair_t representing an XML attribute
+ * \param[in,out] user_data  XML element whose attribute to move
+ */
+static void
+move_xml_attr_to_end(gpointer data, gpointer user_data)
+{
+    const pcmk_nvpair_t *pair = data;
+    xmlNode *xml = user_data;
+
+    xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) pair->name);
+    xml_node_private_t *nodepriv = attr->_private;
+    uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
+
+    xmlRemoveProp(attr);
+    attr = xmlSetProp(xml, (pcmkXmlStr) pair->name, (pcmkXmlStr) pair->value);
+
+    nodepriv = attr->_private;
+    if (nodepriv != NULL) {
+        nodepriv->flags = flags;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Sort an XML element's attributes by name
+ *
+ * This does not consider ACLs and does not mark the attribute as deleted or
+ * dirty. Upon return, all attributes still exist and are set to the same values
+ * as before the call. The only thing that may change is the order of the
+ * attribute list.
+ *
+ * \param[in,out] xml  XML element whose attributes to sort
+ */
+void
+pcmk__xe_sort_attrs(xmlNode *xml)
+{
+    xmlAttr *attr = pcmk__xe_first_attr(xml);
+    GSList *nvpairs = NULL;
+
+    if ((attr == NULL) || (attr->next == NULL)) {
+        return;
+    }
+
+    nvpairs = pcmk_xml_attrs2nvpairs(xml);
+    nvpairs = pcmk_sort_nvpairs(nvpairs);
+
+    // Reset attributes in sorted order
+    g_slist_foreach(nvpairs, move_xml_attr_to_end, xml);
+
+    pcmk_free_nvpairs(nvpairs);
+}
+
+/*!
+ * \internal
  * \brief Remove an XML attribute from an element
  *
  * \param[in,out] element  XML element that owns \p attr
