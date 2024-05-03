@@ -68,6 +68,9 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 void crm_xml_sanitize_id(char *id);
 
+//! \deprecated Do not use
+char *calculate_on_disk_digest(xmlNode *input);
+
 #ifdef __cplusplus
 }
 #endif
