@@ -641,7 +641,7 @@ free_schema(gpointer data)
  * \brief Clean up global memory associated with XML schemas
  */
 void
-crm_schema_cleanup(void)
+pcmk__schema_cleanup(void)
 {
     if (known_schemas != NULL) {
         g_list_free_full(known_schemas, free_schema);

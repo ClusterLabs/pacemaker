@@ -57,7 +57,7 @@ last_is_0(void **state)
      */
     pcmk__schema_init();
     assert_schema_0(14, "pacemaker-3.0");
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
 }
 
 static void
@@ -72,7 +72,7 @@ last_is_not_0(void **state)
     assert_schema_0(3, "pacemaker-2.0");
     assert_int_equal(0, rename(SCHEMA_PREFIX "3.0.bak",
                                SCHEMA_PREFIX "3.0.rng"));
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
 }
 
 static void
@@ -91,7 +91,7 @@ schema_0_missing(void **state)
                                SCHEMA_PREFIX "2.0.rng"));
     assert_int_equal(0, rename(SCHEMA_PREFIX "3.0.bak",
                                SCHEMA_PREFIX "3.0.rng"));
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
 }
 
 PCMK__UNIT_TEST(setup, teardown,
