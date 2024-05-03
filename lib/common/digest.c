@@ -155,21 +155,6 @@ pcmk__digest_operation(xmlNode *input)
 }
 
 /*!
- * \brief Calculate and return digest of XML operation
- *
- * \param[in] input    Root of XML to digest
- * \param[in] version  Unused
- *
- * \return Newly allocated string containing digest
- */
-char *
-calculate_operation_digest(xmlNode *input, const char *version)
-{
-    /* We still need the sorting for operation digests */
-    return calculate_xml_digest_v1(input, true);
-}
-
-/*!
  * \brief Calculate and return digest of XML tree
  *
  * \param[in] input      Root of XML to digest
@@ -372,6 +357,12 @@ char *
 calculate_on_disk_digest(xmlNode *input)
 {
     return calculate_xml_digest_v1(input, false);
+}
+
+char *
+calculate_operation_digest(xmlNode *input, const char *version)
+{
+    return calculate_xml_digest_v1(input, true);
 }
 
 // LCOV_EXCL_STOP
