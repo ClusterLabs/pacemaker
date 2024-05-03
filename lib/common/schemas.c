@@ -58,9 +58,9 @@ xml_log(int priority, const char *fmt, ...)
 static int
 xml_latest_schema_index(void)
 {
-    /* This function assumes that crm_schema_init() has been called beforehand,
-     * so we have at least three schemas (one real schema, the "pacemaker-next"
-     * schema, and the "none" schema).
+    /* This function assumes that pcmk__schema_init() has been called
+     * beforehand, so we have at least three schemas (one real schema, the
+     * "pacemaker-next" schema, and the "none" schema).
      *
      * @COMPAT: pacemaker-next is deprecated since 2.1.5 and none since 2.1.8.
      * Update this when we drop those.
@@ -451,7 +451,8 @@ schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
  *        version order, then pacemaker-next, then none
  *
  * This function should be called whenever additional schemas are loaded using
- * pcmk__load_schemas_from_dir(), after the initial sets in crm_schema_init().
+ * \c pcmk__load_schemas_from_dir(), after the initial sets in
+ * \c pcmk__schema_init().
  */
 void
 pcmk__sort_schemas(void)
@@ -467,7 +468,7 @@ pcmk__sort_schemas(void)
  *       generic initialization of the libxslt library.
  */
 void
-crm_schema_init(void)
+pcmk__schema_init(void)
 {
     if (!initialized) {
         const char *remote_schema_dir = pcmk__remote_schema_dir();

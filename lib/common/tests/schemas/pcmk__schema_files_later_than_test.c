@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@ static int
 setup(void **state)
 {
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
-    crm_schema_init();
+    pcmk__schema_init();
     return 0;
 }
 

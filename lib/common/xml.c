@@ -2155,7 +2155,7 @@ pcmk__xml_init(void)
         xmlDeregisterNodeDefault(free_private_data);
 
         // Load schemas into the cache
-        crm_schema_init();
+        pcmk__schema_init();
     }
 }
 
