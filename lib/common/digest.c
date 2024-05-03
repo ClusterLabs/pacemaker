@@ -144,6 +144,9 @@ pcmk__digest_on_disk_cib(xmlNode *input)
  * \internal
  * \brief Calculate and return digest of an operation XML element
  *
+ * The digest is invariant to changes in the order of XML attributes, provided
+ * that \p input has no children.
+ *
  * \param[in] input  Root of XML to digest
  *
  * \return Newly allocated string containing digest
@@ -151,7 +154,14 @@ pcmk__digest_on_disk_cib(xmlNode *input)
 char *
 pcmk__digest_operation(xmlNode *input)
 {
-    return calculate_xml_digest_v1(input, true);
+    xmlNode *sorted = pcmk__xml_copy(NULL, input);
+    char *digest = NULL;
+
+    pcmk__xe_sort_attrs(sorted);
+    digest = calculate_xml_digest_v1(sorted, false);
+
+    pcmk__xml_free(sorted);
+    return digest;
 }
 
 /*!

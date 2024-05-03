@@ -16,6 +16,7 @@ check_PROGRAMS = pcmk__xe_copy_attrs_test	\
 		 pcmk__xe_foreach_child_test 	\
 		 pcmk__xe_set_id_test		\
 		 pcmk__xe_set_score_test	\
+		 pcmk__xe_sort_attrs_test	\
 		 pcmk__xml_escape_test		\
 		 pcmk__xml_init_test		\
 		 pcmk__xml_is_name_char_test	\
