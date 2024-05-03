@@ -1097,7 +1097,7 @@ add_op_digest_to_xml(const lrmd_event_data_t *op, xmlNode *update)
     args_xml = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     pcmk__filter_op_for_digest(args_xml);
-    digest = calculate_operation_digest(args_xml, NULL);
+    digest = pcmk__digest_operation(args_xml);
     crm_xml_add(update, PCMK__XA_OP_DIGEST, digest);
     pcmk__xml_free(args_xml);
     free(digest);
