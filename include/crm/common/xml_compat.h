@@ -213,6 +213,9 @@ void crm_xml_sanitize_id(char *id);
 //! \deprecated Do not use
 char *calculate_on_disk_digest(xmlNode *input);
 
+//! \deprecated Do not use
+char *calculate_operation_digest(xmlNode *input, const char *version);
+
 #ifdef __cplusplus
 }
 #endif
