@@ -9,10 +9,13 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <glib.h>               // GString, etc.
 #include <md5.h>
 
 #include <crm/crm.h>
@@ -43,17 +46,18 @@ dump_xml_for_digest(xmlNodePtr xml)
 }
 
 /*!
+ * \internal
  * \brief Calculate and return v1 digest of XML tree
  *
- * \param[in] input Root of XML to digest
- * \param[in] sort Whether to sort the XML before calculating digest
- * \param[in] ignored Not used
+ * \param[in] input  Root of XML to digest
+ * \param[in] sort   Whether to sort the XML before calculating digest
  *
  * \return Newly allocated string containing digest
+ *
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
+calculate_xml_digest_v1(xmlNode *input, bool sort)
 {
     char *digest = NULL;
     GString *buffer = NULL;
@@ -80,22 +84,23 @@ calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
 }
 
 /*!
+ * \internal
  * \brief Calculate and return v2 digest of XML tree
  *
- * \param[in] source Root of XML to digest
- * \param[in] do_filter Whether to filter certain XML attributes
+ * \param[in] source  Root of XML to digest
+ * \param[in] filter  Whether to filter certain XML attributes
  *
  * \return Newly allocated string containing digest
  */
 static char *
-calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
+calculate_xml_digest_v2(const xmlNode *source, bool filter)
 {
     char *digest = NULL;
     GString *buf = g_string_sized_new(1024);
 
-    crm_trace("Begin digest %s", do_filter?"filtered":"");
+    crm_trace("Begin digest %s", filter? "filtered" : "");
 
-    pcmk__xml_string(source, (do_filter? pcmk__xml_fmt_filtered : 0), buf, 0);
+    pcmk__xml_string(source, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
     digest = crm_md5sum(buf->str);
 
     pcmk__if_tracing(
@@ -133,7 +138,7 @@ calculate_on_disk_digest(xmlNode *input)
      * b) we only use this once at startup, all other
      *    invocations are in a separate child process
      */
-    return calculate_xml_digest_v1(input, FALSE, FALSE);
+    return calculate_xml_digest_v1(input, FALSE);
 }
 
 /*!
@@ -148,7 +153,7 @@ char *
 calculate_operation_digest(xmlNode *input, const char *version)
 {
     /* We still need the sorting for operation digests */
-    return calculate_xml_digest_v1(input, TRUE, FALSE);
+    return calculate_xml_digest_v1(input, TRUE);
 }
 
 /*!
@@ -177,13 +182,12 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
      *
      * v2 also uses the xmlBuffer contents directly to avoid additional copying
      */
-    if (version == NULL || compare_version("3.0.5", version) > 0) {
+    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
         crm_trace("Using v1 digest algorithm for %s",
                   pcmk__s(version, "unknown feature set"));
-        return calculate_xml_digest_v1(input, sort, do_filter);
+        return calculate_xml_digest_v1(input, sort);
     }
-    crm_trace("Using v2 digest algorithm for %s",
-              pcmk__s(version, "unknown feature set"));
+    crm_trace("Using v2 digest algorithm for %s", version);
     return calculate_xml_digest_v2(input, do_filter);
 }
 
