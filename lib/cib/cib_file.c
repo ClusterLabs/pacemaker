@@ -985,7 +985,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     }
 
     /* Calculate CIB digest */
-    digest = calculate_on_disk_digest(cib_root);
+    digest = pcmk__digest_on_disk_cib(cib_root);
     CRM_ASSERT(digest != NULL);
     crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
              (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);

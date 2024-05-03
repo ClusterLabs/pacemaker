@@ -21,7 +21,7 @@
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/actions_internal.h>
-#include <crm/common/digests_internal.h>
+#include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
