@@ -14,7 +14,7 @@
 #include <libxml/tree.h>    // xmlNode, xmlRelaxNGValidityErrorFunc
 
 void pcmk__schema_init(void);
-void crm_schema_cleanup(void);
+void pcmk__schema_cleanup(void);
 
 void pcmk__load_schemas_from_dir(const char *dir);
 void pcmk__sort_schemas(void);

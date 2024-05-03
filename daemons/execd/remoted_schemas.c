@@ -256,7 +256,7 @@ remoted_request_cib_schema_files(void)
      * would fail. So we need to load the base schemas right now.
      */
     clean_up_extra_schema_files();
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
     pcmk__schema_init();
 
     crm_info("Fetching extra schema files from cluster");

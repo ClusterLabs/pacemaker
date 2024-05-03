@@ -87,7 +87,7 @@ setup(void **state)
 
     /* Do not call pcmk__schema_init() here because that is the function we're
      * testing. It needs to be called in each unit test. However, we can call
-     * crm_schema_cleanup() in teardown().
+     * pcmk__schema_cleanup() in teardown().
      */
 
     return 0;
@@ -99,7 +99,7 @@ teardown(void **state)
     int rc = 0;
     char *f = NULL;
 
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
     unsetenv("PCMK_remote_schema_directory");
     unsetenv("PCMK_schema_directory");
 
