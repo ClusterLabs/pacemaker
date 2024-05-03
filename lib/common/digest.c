@@ -122,6 +122,25 @@ calculate_xml_digest_v2(const xmlNode *source, bool filter)
 }
 
 /*!
+ * \internal
+ * \brief Calculate and return the digest of a CIB, suitable for storing on disk
+ *
+ * \param[in] input  Root of XML to digest
+ *
+ * \return Newly allocated string containing digest
+ */
+char *
+pcmk__digest_on_disk_cib(xmlNode *input)
+{
+    /* Always use the v1 format for on-disk digests.
+     * * Switching to v2 is a compatibility nightmare.
+     * * We only use this once at startup. All other invocations are in a
+     *   separate child process.
+     */
+    return calculate_xml_digest_v1(input, false);
+}
+
+/*!
  * \brief Calculate and return digest of XML tree, suitable for storing on disk
  *
  * \param[in] input Root of XML to digest
@@ -205,7 +224,7 @@ pcmk__verify_digest(xmlNode *input, const char *expected)
     bool passed;
 
     if (input != NULL) {
-        calculated = calculate_on_disk_digest(input);
+        calculated = pcmk__digest_on_disk_cib(input);
         if (calculated == NULL) {
             crm_perror(LOG_ERR, "Could not calculate digest for comparison");
             return false;

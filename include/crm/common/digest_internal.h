@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,15 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
-#define PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_DIGEST_INTERNAL__H
+#define PCMK__CRM_COMMON_DIGEST_INTERNAL__H
+
+/*
+ * Internal-only functions to create digest strings from XML
+ */
 
 #include <stdbool.h>
-#include <libxml/tree.h>            // xmlNode
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <libxml/tree.h>    // xmlNode
 
 // Digest comparison results
 enum pcmk__digest_result {
@@ -36,10 +37,8 @@ typedef struct {
     char *digest_restart_calc;      // Digest of params_restart
 } pcmk__op_digest_t;
 
+char *pcmk__digest_on_disk_cib(xmlNode *input);
+
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif // PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
+#endif  // PCMK__CRM_COMMON_DIGEST_INTERNAL__H
