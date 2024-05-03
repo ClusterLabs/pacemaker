@@ -13,7 +13,7 @@
 #include <glib.h>           // GList, gboolean
 #include <libxml/tree.h>    // xmlNode, xmlRelaxNGValidityErrorFunc
 
-void crm_schema_init(void);
+void pcmk__schema_init(void);
 void crm_schema_cleanup(void);
 
 void pcmk__load_schemas_from_dir(const char *dir);

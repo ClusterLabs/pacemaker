@@ -85,9 +85,9 @@ setup(void **state)
     setenv("PCMK_remote_schema_directory", remote_schema_dir, 1);
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
 
-    /* Do not call crm_schema_init here because that is the function we're
-     * testing.  It needs to be called in each unit test.  However, we can
-     * call crm_schema_cleanup in teardown().
+    /* Do not call pcmk__schema_init() here because that is the function we're
+     * testing. It needs to be called in each unit test. However, we can call
+     * crm_schema_cleanup() in teardown().
      */
 
     return 0;
@@ -128,7 +128,7 @@ assert_schema(const char *schema_name, int schema_index)
 static void
 extra_schema_files(void **state)
 {
-    crm_schema_init();
+    pcmk__schema_init();
 
     /* Just iterate through the list of schemas and make sure everything
      * (including the new schemas we loaded from a second directory) is in
