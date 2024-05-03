@@ -143,24 +143,6 @@ pcmk__digest_on_disk_cib(xmlNode *input)
 }
 
 /*!
- * \brief Calculate and return digest of XML tree, suitable for storing on disk
- *
- * \param[in] input Root of XML to digest
- *
- * \return Newly allocated string containing digest
- */
-char *
-calculate_on_disk_digest(xmlNode *input)
-{
-    /* Always use the v1 format for on-disk digests
-     * a) it's a compatibility nightmare
-     * b) we only use this once at startup, all other
-     *    invocations are in a separate child process
-     */
-    return calculate_xml_digest_v1(input, FALSE);
-}
-
-/*!
  * \brief Calculate and return digest of XML operation
  *
  * \param[in] input    Root of XML to digest
@@ -357,3 +339,17 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     free(timeout);
     free(key);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+char *
+calculate_on_disk_digest(xmlNode *input)
+{
+    return calculate_xml_digest_v1(input, false);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
