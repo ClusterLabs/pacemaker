@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the Pacemaker project contributors
+ * Copyright 2018-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,6 +86,9 @@ typedef struct xml_doc_private_s {
             LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
+
+G_GNUC_INTERNAL
+const char *pcmk__xml_element_type_text(xmlElementType type);
 
 G_GNUC_INTERNAL
 bool pcmk__xml_reset_node_flags(xmlNode *xml, void *user_data);
