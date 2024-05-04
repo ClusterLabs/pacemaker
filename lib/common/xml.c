@@ -2290,34 +2290,6 @@ pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags)
     return ENXIO;
 }
 
-xmlNode *
-sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
-{
-    xmlNode *child = NULL;
-    GSList *nvpairs = NULL;
-    xmlNode *result = NULL;
-
-    CRM_CHECK(input != NULL, return NULL);
-
-    result = pcmk__xe_create(parent, (const char *) input->name);
-    nvpairs = pcmk_xml_attrs2nvpairs(input);
-    nvpairs = pcmk_sort_nvpairs(nvpairs);
-    pcmk_nvpairs2xml_attrs(nvpairs, result);
-    pcmk_free_nvpairs(nvpairs);
-
-    for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
-
-        if (recursive) {
-            sorted_xml(child, result, recursive);
-        } else {
-            pcmk__xml_copy(result, child);
-        }
-    }
-
-    return result;
-}
-
 /*!
  * \internal
  * \brief Get next sibling XML element with the same name as a given element
@@ -3030,6 +3002,34 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     crm_xml_sanitize_id(id);
     crm_xml_add(xml, PCMK_XA_ID, id);
     free(id);
+}
+
+xmlNode *
+sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
+{
+    xmlNode *child = NULL;
+    GSList *nvpairs = NULL;
+    xmlNode *result = NULL;
+
+    CRM_CHECK(input != NULL, return NULL);
+
+    result = pcmk__xe_create(parent, (const char *) input->name);
+    nvpairs = pcmk_xml_attrs2nvpairs(input);
+    nvpairs = pcmk_sort_nvpairs(nvpairs);
+    pcmk_nvpairs2xml_attrs(nvpairs, result);
+    pcmk_free_nvpairs(nvpairs);
+
+    for (child = pcmk__xe_first_child(input, NULL, NULL, NULL); child != NULL;
+         child = pcmk__xe_next(child)) {
+
+        if (recursive) {
+            sorted_xml(child, result, recursive);
+        } else {
+            pcmk__xml_copy(result, child);
+        }
+    }
+
+    return result;
 }
 
 // LCOV_EXCL_STOP
