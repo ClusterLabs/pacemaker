@@ -227,6 +227,16 @@ xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
 //! \deprecated Do not use
 xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 
+//! \deprecated Do not use
+static inline
+int numXpathResults(xmlXPathObjectPtr xpathObj)
+{
+    if ((xpathObj == NULL) || (xpathObj->nodesetval == NULL)) {
+        return 0;
+    }
+    return xpathObj->nodesetval->nodeNr;
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -52,14 +52,6 @@ void freeXpathObject(xmlXPathObjectPtr xpathObj);
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 void dedupXpathResults(xmlXPathObjectPtr xpathObj);
 
-static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
-{
-    if(xpathObj == NULL || xpathObj->nodesetval == NULL) {
-        return 0;
-    }
-    return xpathObj->nodesetval->nodeNr;
-}
-
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
 void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
