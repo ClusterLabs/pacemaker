@@ -70,6 +70,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
         /* Previously requested */
         return NULL;
+
     }
 
     match = xpathObj->nodesetval->nodeTab[index];
