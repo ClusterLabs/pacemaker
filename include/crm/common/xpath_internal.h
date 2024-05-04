@@ -38,6 +38,8 @@ pcmk__xpath_num_nodes(const xmlXPathObject *xpath_obj)
     return xmlXPathNodeSetGetLength(xpath_obj->nodesetval);
 }
 
+void pcmk__xpath_free_object(xmlXPathObject *xpath_obj);
+
 GString *pcmk__element_xpath(const xmlNode *xml);
 char *pcmk__xpath_node_id(const char *xpath, const char *node);
 

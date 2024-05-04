@@ -160,7 +160,7 @@ fencing_topology_init(void)
     xpathObj = pcmk__xpath_search(local_cib->doc, "//" PCMK_XE_FENCING_LEVEL);
     register_fencing_topology(xpathObj);
 
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 }
 
 static void
@@ -277,7 +277,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             crm_log_xml_trace(match, "new constraint");
         }
     }
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     /* process deletions */
     xpath_obj = pcmk__xpath_search(msg->doc,
@@ -287,7 +287,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     if (pcmk__xpath_num_nodes(xpath_obj) > 0) {
         remove_cib_device(xpath_obj);
     }
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     /* process additions */
     xpath_obj = pcmk__xpath_search(msg->doc,
@@ -314,7 +314,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             needs_update = TRUE;
         }
     }
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     if(needs_update) {
         crm_info("Updating device list from CIB: %s", reason);
@@ -525,7 +525,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                                       "//" PCMK_XE_FENCING_LEVEL);
 
         remove_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+        pcmk__xpath_free_object(xpathObj);
 
         /* Process additions and changes */
         xpathObj = pcmk__xpath_search(msg->doc,
@@ -534,7 +534,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
                                       "//" PCMK_XE_FENCING_LEVEL);
 
         register_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+        pcmk__xpath_free_object(xpathObj);
 
     } else if(format == 2) {
         xmlNode *change = NULL;

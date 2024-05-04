@@ -128,7 +128,7 @@ element_in_patchset_v1(const xmlNode *patchset, const char *element)
     if (xpath_obj == NULL) {
         return false;
     }
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
     return true;
 }
 

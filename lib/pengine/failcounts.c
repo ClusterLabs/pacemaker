@@ -162,7 +162,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                         }
                     }
                 }
-                freeXpathObject(lrm_op_xpathObj);
+                pcmk__xpath_free_object(lrm_op_xpathObj);
 
                 if (should_block) {
                     break;
@@ -172,7 +172,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
     }
 
     free(xml_name);
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     return should_block;
 }

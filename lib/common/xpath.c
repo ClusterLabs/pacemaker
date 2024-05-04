@@ -14,6 +14,60 @@
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
+/*!
+ * \internal
+ * \brief Free an XPath object
+ *
+ * All elements returned by an XPath query are pointers to elements from the
+ * tree, except namespace nodes (which are allocated separately for the XPath
+ * object's node set). Accordingly, only namespace nodes and the node set itself
+ * are freed when libxml2 frees a node set.
+ *
+ * This logic requires checking the type of every node in the node set. However,
+ * a node may have been freed already (for example, by \c xmlNodeSetContent()),
+ * so this check may constitute a use-after-free error.
+ *
+ * To avoid this, we remove references from the node set by setting them to
+ * \c NULL when we access them.
+ *
+ * This approach is adapted from \c xpath2.c in libxml2's examples. That file
+ * also describes a way to reproduce the use-after-free error.
+ *
+ * \param[in,out] xpath_obj  XPath object to free
+ */
+void
+pcmk__xpath_free_object(xmlXPathObject *xpath_obj)
+{
+    /* @TODO The "set node set members to NULL" logic here and in
+     * pcmk__xpath_result_element() helps, but there are still edge cases.
+     *
+     * For example, suppose our XPath expression matches both a parent node and
+     * a child node. Index 0 of the node set is a pointer to the parent, and
+     * index 1 is a pointer to the child.
+     *
+     * Suppose that while processing the parent, we free the child. In general,
+     * we can't know while processing the parent that we should set the child's
+     * reference to NULL. So when we later reach the child in the node set, it's
+     * a use-after-free error.
+     *
+     * It may be better to document limitations and use caution when processing
+     * XPath matches, rather than relying on a false sense of security.
+     */
+    int num_nodes = pcmk__xpath_num_nodes(xpath_obj);
+
+    for (int i = 0; i < num_nodes; i++) {
+        xmlNode **node_tab = xpath_obj->nodesetval->nodeTab;
+
+        if ((node_tab[i] != NULL)
+            && (node_tab[i]->type != XML_NAMESPACE_DECL)) {
+
+            node_tab[i] = NULL;
+        }
+    }
+
+    xmlXPathFreeObject(xpath_obj);
+}
+
 /*
  * From xpath2.c
  *
@@ -78,7 +132,7 @@ freeXpathObject(xmlXPathObjectPtr xpathObj)
  * \note This has a side effect: it sets the result node at \p index to NULL
  *       within \p xpath_obj, so the result at a given index can be retrieved
  *       only once. This is a workaround to prevent a use-after-free error. See
- *       \c freeXpathObject() for details.
+ *       \c pcmk__xpath_free_object() for details.
  */
 xmlNode *
 pcmk__xpath_result_element(xmlXPathObject *xpath_obj, int index)
@@ -94,7 +148,7 @@ pcmk__xpath_result_element(xmlXPathObject *xpath_obj, int index)
     }
 
     if (match->type != XML_NAMESPACE_DECL) {
-        // See the comment for freeXpathObject()
+        // See the comment for pcmk__xpath_free_object()
         xpath_obj->nodesetval->nodeTab[index] = NULL;
     }
 
@@ -215,7 +269,7 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
             (*helper)(result, user_data);
         }
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 }
 
 xmlNode *
@@ -270,7 +324,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         result = pcmk__xpath_result_element(xpathObj, 0);
     }
 
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     free(nodePath);
 
     return result;
@@ -475,7 +529,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     CRM_CHECK(match != NULL, return NULL);
 
     if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
-        /* See the comment for freeXpathObject() */
+        /* See the comment for pcmk__xpath_free_object() */
         xpathObj->nodesetval->nodeTab[index] = NULL;
     }
 

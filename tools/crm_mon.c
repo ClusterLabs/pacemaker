@@ -2046,7 +2046,7 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
 
         handle_rsc_op(rsc_op, NULL);
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 }
 
 static void

@@ -65,7 +65,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         goto bail;
 
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     /* Tickets Attributes - Removed */
     xpathObj = pcmk__xpath_search(diff->doc,
@@ -79,7 +79,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                          "Ticket attribute: removal", aborted);
         goto bail;
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     /* Transient Attributes - Removed */
     xpathObj = pcmk__xpath_search(diff->doc,
@@ -94,7 +94,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         goto bail;
 
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     // Check for PCMK__XE_LRM_RESOURCE entries
     xpathObj = pcmk__xpath_search(diff->doc,
@@ -132,7 +132,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
             // Still process results, so we stop timers and update failcounts
         }
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     /* Process operation updates */
     xpathObj = pcmk__xpath_search(diff->doc,
@@ -150,7 +150,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
             process_graph_event(rsc_op, node);
         }
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
     xpathObj = pcmk__xpath_search(diff->doc,
@@ -185,7 +185,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                           (const char *) rsc_op_xpath->str, op_id, node);
                 abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                                  "Resource op removal", match);
-                freeXpathObject(op_match);
+                pcmk__xpath_free_object(op_match);
                 goto bail;
 
             } else {
@@ -195,11 +195,11 @@ te_update_diff_v1(const char *event, xmlNode *diff)
             }
         }
 
-        freeXpathObject(op_match);
+        pcmk__xpath_free_object(op_match);
     }
 
   bail:
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     if (rsc_op_xpath != NULL) {
         g_string_free(rsc_op_xpath, TRUE);
     }
@@ -643,7 +643,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
             process_graph_event(rsc_op, node);
         }
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 }
 
 void

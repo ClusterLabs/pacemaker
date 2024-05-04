@@ -89,7 +89,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
 
     node = pcmk__xpath_result_element(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_ID), ticket_id);
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     /* Verify that it has an <attribute> child whose name and value are what
      * we expect.
@@ -104,7 +104,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     assert_string_equal(crm_element_value(node, PCMK_XA_NAME), attr_name);
     assert_string_equal(crm_element_value(node, PCMK_XA_VALUE), attr_value);
 
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 }
 
 static void

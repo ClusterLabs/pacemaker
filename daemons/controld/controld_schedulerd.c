@@ -438,7 +438,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         crm_xml_add(xml, PCMK_XA_NAME, attr_name);
         crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 }
 
 static void

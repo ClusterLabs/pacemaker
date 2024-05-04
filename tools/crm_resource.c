@@ -284,7 +284,7 @@ build_constraint_list(xmlNode *root)
                                       compare_id);
     }
 
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     return retval;
 }
 

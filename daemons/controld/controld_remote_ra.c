@@ -1385,7 +1385,7 @@ remote_ra_process_pseudo(xmlNode *xml)
             }
         }
     }
-    freeXpathObject(search);
+    pcmk__xpath_free_object(search);
 }
 
 static void
@@ -1461,7 +1461,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                   PCMK_OPT_MAINTENANCE_MODE,
                   cnt, cnt_remote);
     }
-    freeXpathObject(search);
+    pcmk__xpath_free_object(search);
 }
 
 gboolean

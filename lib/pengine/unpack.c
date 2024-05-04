@@ -206,7 +206,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
         if (result && (pcmk__xpath_num_nodes(result) > 0)) {
             pcmk__set_scheduler_flags(scheduler, flag);
         }
-        freeXpathObject(result);
+        pcmk__xpath_free_object(result);
     }
 }
 
@@ -2994,7 +2994,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 
     search = pcmk__xpath_search(rsc->cluster->input->doc, xpath);
     result = (pcmk__xpath_num_nodes(search) == 0);
-    freeXpathObject(search);
+    pcmk__xpath_free_object(search);
     free(xpath);
     return result;
 }

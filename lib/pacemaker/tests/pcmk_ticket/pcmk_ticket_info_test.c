@@ -71,7 +71,7 @@ all_tickets(void **state)
                                    "//" PCMK_XE_PACEMAKER_RESULT
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
     assert_int_equal(pcmk__xpath_num_nodes(xpath_obj), 3);
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     xpath_obj = pcmk__xpath_search(xml->doc,
                                    "//" PCMK_XE_PACEMAKER_RESULT
@@ -84,7 +84,7 @@ all_tickets(void **state)
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "false");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_string_equal(crm_element_value(node, "owner"), "1");
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     xpath_obj = pcmk__xpath_search(xml->doc,
                                    "//" PCMK_XE_PACEMAKER_RESULT
@@ -97,7 +97,7 @@ all_tickets(void **state)
     assert_string_equal(crm_element_value(node, PCMK__XA_GRANTED), "true");
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_null(crm_element_value(node, "owner"));
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
 
     xpath_obj = pcmk__xpath_search(xml->doc,
                                    "//" PCMK_XE_PACEMAKER_RESULT
@@ -111,7 +111,7 @@ all_tickets(void **state)
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_null(crm_element_value(node, "owner"));
 
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
     pcmk__xml_free(xml);
 }
 
@@ -141,7 +141,7 @@ single_ticket(void **state)
     assert_string_equal(crm_element_value(node, PCMK_XA_STANDBY), PCMK_VALUE_FALSE);
     assert_string_equal(crm_element_value(node, "owner"), "1");
 
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
     pcmk__xml_free(xml);
 }
 

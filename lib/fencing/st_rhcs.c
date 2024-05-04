@@ -109,7 +109,7 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
 
         crm_xml_add(tmp, "required", "0");
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     free(xpath);
 }
 
@@ -177,7 +177,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     if (pcmk__xpath_num_nodes(xpathObj) > 0) {
         actions = pcmk__xpath_result_element(xpathObj, 0);
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     // Add start and stop (implemented by pacemaker, not agent) to meta-data
     xpathObj = pcmk__xpath_search(xml->doc,
@@ -197,7 +197,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     // Fudge metadata so parameters are not required in config (pacemaker adds them)
     stonith_rhcs_parameter_not_required(xml, "action");

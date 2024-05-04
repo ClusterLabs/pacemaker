@@ -912,11 +912,11 @@ is_nodeid_required(xmlNode * xml)
                                "//" PCMK_XE_PARAMETER
                                "[@" PCMK_XA_NAME "='nodeid']");
     if (pcmk__xpath_num_nodes(xpath) <= 0) {
-        freeXpathObject(xpath);
+        pcmk__xpath_free_object(xpath);
         return FALSE;
     }
 
-    freeXpathObject(xpath);
+    pcmk__xpath_free_object(xpath);
     return TRUE;
 }
 
@@ -936,7 +936,7 @@ read_action_metadata(stonith_device_t *device)
     max = pcmk__xpath_num_nodes(xpath);
 
     if (max <= 0) {
-        freeXpathObject(xpath);
+        pcmk__xpath_free_object(xpath);
         return;
     }
 
@@ -980,7 +980,7 @@ read_action_metadata(stonith_device_t *device)
         }
     }
 
-    freeXpathObject(xpath);
+    pcmk__xpath_free_object(xpath);
 }
 
 /*!

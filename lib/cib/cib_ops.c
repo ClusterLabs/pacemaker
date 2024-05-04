@@ -525,7 +525,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
             pcmk__xml_free(match);
         }
 
-        freeXpathObject(xpathObj);
+        pcmk__xpath_free_object(xpathObj);
     }
     return pcmk_ok;
 }
@@ -717,7 +717,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
         config_changes = true;
         goto done;
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
 
     /*
      * Do not check PCMK__XE_DIFF_ADDED "//" PCMK_XE_CIB
@@ -759,7 +759,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     }
 
   done:
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     return config_changes;
 }
 
@@ -910,6 +910,6 @@ cib_process_xpath(const char *op, int options, const char *section,
         }
     }
 
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     return rc;
 }

@@ -583,7 +583,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
             }
         }
 
-        freeXpathObject(xpathObj);
+        pcmk__xpath_free_object(xpathObj);
     }
 
 done:
@@ -2415,7 +2415,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
     max = pcmk__xpath_num_nodes(xpath);
 
     if (max <= 0) {
-        freeXpathObject(xpath);
+        pcmk__xpath_free_object(xpath);
         return;
     }
 
@@ -2440,7 +2440,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
         }
     }
 
-    freeXpathObject(xpath);
+    pcmk__xpath_free_object(xpath);
 }
 
 /*!

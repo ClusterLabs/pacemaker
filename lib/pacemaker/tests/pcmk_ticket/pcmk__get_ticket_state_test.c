@@ -99,7 +99,7 @@ ticket_exists(void **state)
                                    "[@" PCMK_XA_ID "=\"ticketA\"]");
     assert_int_equal(pcmk__xpath_num_nodes(xpath_obj), 1);
 
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
     pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
@@ -135,7 +135,7 @@ multiple_tickets(void **state)
     ticket_node = pcmk__xpath_result_element(xpath_obj, 3);
     assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketC");
 
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
     pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
@@ -159,7 +159,7 @@ duplicate_tickets(void **state)
                                    "[@" PCMK_XA_ID "=\"ticketC\"]");
 
     assert_int_equal(pcmk__xpath_num_nodes(xpath_obj), 2);
-    freeXpathObject(xpath_obj);
+    pcmk__xpath_free_object(xpath_obj);
     pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }

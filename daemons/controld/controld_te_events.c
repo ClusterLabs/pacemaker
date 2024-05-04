@@ -403,7 +403,7 @@ match_down_event(const char *target)
                 if (pcmk__xpath_num_nodes(xpath_ret) < 1) {
                     match = NULL;
                 }
-                freeXpathObject(xpath_ret);
+                pcmk__xpath_free_object(xpath_ret);
             } else {
                 // Only actions that were actually started can match
                 match = NULL;

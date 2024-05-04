@@ -511,7 +511,7 @@ done:
     if (buf != NULL) {
         g_string_free(buf, TRUE);
     }
-    freeXpathObject(xpathObj);
+    pcmk__xpath_free_object(xpathObj);
     crm_time_free(now);
     return rc;
 }

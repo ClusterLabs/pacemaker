@@ -1365,7 +1365,7 @@ contains_config_change(xmlNode *diff)
         if (pcmk__xpath_num_nodes(xpathObj) > 0) {
             changed = true;
         }
-        freeXpathObject(xpathObj);
+        pcmk__xpath_free_object(xpathObj);
     }
     return changed;
 }

@@ -267,7 +267,7 @@ pcmk__apply_acl(xmlNode *xml)
         crm_trace("Applied %s ACL %s (%d match%s)",
                   acl_to_text(acl->mode), acl->xpath, max,
                   ((max == 1)? "" : "es"));
-        freeXpathObject(xpathObj);
+        pcmk__xpath_free_object(xpathObj);
     }
 }
 
@@ -485,14 +485,14 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                 if (!purge_xml_attributes(match) && (match == target)) {
                     crm_trace("ACLs deny user '%s' access to entire XML document",
                               user);
-                    freeXpathObject(xpathObj);
+                    pcmk__xpath_free_object(xpathObj);
                     return true;
                 }
             }
             crm_trace("ACLs deny user '%s' access to %s (%d %s)",
                       user, acl->xpath, max,
                       pcmk__plural_alt(max, "match", "matches"));
-            freeXpathObject(xpathObj);
+            pcmk__xpath_free_object(xpathObj);
         }
     }
 
