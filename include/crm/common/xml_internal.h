@@ -232,8 +232,6 @@ int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
 int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
 int pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags);
 
-GString *pcmk__element_xpath(const xmlNode *xml);
-
 /*!
  * \internal
  * \enum pcmk__xml_escape_type
@@ -498,32 +496,6 @@ pcmk__xe_first_attr(const xmlNode *xe)
 {
     return (xe == NULL)? NULL : xe->properties;
 }
-
-/*!
- * \internal
- * \brief Extract the ID attribute from an XML element
- *
- * \param[in] xpath String to search
- * \param[in] node  Node to get the ID for
- *
- * \return ID attribute of \p node in xpath string \p xpath
- */
-char *
-pcmk__xpath_node_id(const char *xpath, const char *node);
-
-/*!
- * \internal
- * \brief Print an informational message if an xpath query returned multiple
- *        items with the same ID.
- *
- * \param[in,out] out       The output object
- * \param[in]     search    The xpath search result, most typically the result of
- *                          calling cib->cmds->query().
- * \param[in]     name      The name searched for
- */
-void
-pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
-                                 const char *name);
 
 /* internal XML-related utilities */
 
