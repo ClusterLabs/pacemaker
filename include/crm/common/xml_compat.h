@@ -240,6 +240,9 @@ int numXpathResults(xmlXPathObjectPtr xpathObj)
 //! \deprecated Do not use
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 
+//! \deprecated Do not use
+void freeXpathObject(xmlXPathObjectPtr xpathObj);
+
 #ifdef __cplusplus
 }
 #endif
