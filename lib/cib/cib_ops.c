@@ -512,7 +512,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         xpathObj = pcmk__xpath_search((*result_cib)->doc, "//@__delete__");
 
         if (xpathObj) {
-            max = numXpathResults(xpathObj);
+            max = pcmk__xpath_num_nodes(xpathObj);
             crm_log_xml_trace(*result_cib, "Mixed result");
         }
 
@@ -713,7 +713,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     CRM_LOG_ASSERT(format == 1);
 
     xpathObj = pcmk__xpath_search((*diff)->doc, "//" PCMK_XE_CONFIGURATION);
-    if (numXpathResults(xpathObj) > 0) {
+    if (pcmk__xpath_num_nodes(xpathObj) > 0) {
         config_changes = true;
         goto done;
     }
@@ -726,7 +726,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
      */
     xpathObj = pcmk__xpath_search((*diff)->doc,
                                   "//" PCMK__XE_DIFF_REMOVED "//" PCMK_XE_CIB);
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_nodes(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *top = getXpathResult(xpathObj, lpc);
@@ -785,7 +785,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
     }
 
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_nodes(xpathObj);
 
     if ((max < 1)
         && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {

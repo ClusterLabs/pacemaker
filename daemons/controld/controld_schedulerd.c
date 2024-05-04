@@ -390,7 +390,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
                                      xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
                                      attr_name);
     xpathObj = pcmk__xpath_search(xml->doc, xpath_string);
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_nodes(xpathObj);
     free(xpath_string);
 
     for (lpc = 0; lpc < max; lpc++) {

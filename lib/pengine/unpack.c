@@ -203,7 +203,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
 
     if (!pcmk_is_set(scheduler->flags, flag)) {
         result = pcmk__xpath_search(scheduler->input->doc, xpath);
-        if (result && (numXpathResults(result) > 0)) {
+        if (result && (pcmk__xpath_num_nodes(result) > 0)) {
             pcmk__set_scheduler_flags(scheduler, flag);
         }
         freeXpathObject(result);
@@ -2993,7 +2993,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
     CRM_CHECK(rsc->cluster->input != NULL, return false);
 
     search = pcmk__xpath_search(rsc->cluster->input->doc, xpath);
-    result = (numXpathResults(search) == 0);
+    result = (pcmk__xpath_num_nodes(search) == 0);
     freeXpathObject(search);
     free(xpath);
     return result;

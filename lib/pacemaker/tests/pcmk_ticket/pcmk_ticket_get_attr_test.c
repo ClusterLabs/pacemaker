@@ -85,7 +85,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     xpath_obj = pcmk__xpath_search(xml->doc,
                                    "//" PCMK_XE_PACEMAKER_RESULT
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
-    assert_int_equal(numXpathResults(xpath_obj), 1);
+    assert_int_equal(pcmk__xpath_num_nodes(xpath_obj), 1);
 
     node = getXpathResult(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_ID), ticket_id);
@@ -98,7 +98,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
                                    "//" PCMK_XE_PACEMAKER_RESULT
                                    "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
                                    "/" PCMK_XE_ATTRIBUTE);
-    assert_int_equal(numXpathResults(xpath_obj), 1);
+    assert_int_equal(pcmk__xpath_num_nodes(xpath_obj), 1);
 
     node = getXpathResult(xpath_obj, 0);
     assert_string_equal(crm_element_value(node, PCMK_XA_NAME), attr_name);

@@ -2039,9 +2039,9 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
     const char *xpath = "//" PCMK__XE_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
                         "//" PCMK__XE_LRM_RSC_OP;
     xmlXPathObject *xpathObj = pcmk__xpath_search(msg->doc, xpath);
-    int lpc = 0, max = numXpathResults(xpathObj);
+    int max = pcmk__xpath_num_nodes(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
 
         handle_rsc_op(rsc_op, NULL);

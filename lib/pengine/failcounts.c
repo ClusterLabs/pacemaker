@@ -102,7 +102,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
     free(xpath);
 
     if (xpathObj) {
-        int max = numXpathResults(xpathObj);
+        int max = pcmk__xpath_num_nodes(xpathObj);
         int lpc = 0;
 
         for (lpc = 0; lpc < max; lpc++) {
@@ -148,7 +148,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 free(lrm_op_xpath);
 
                 if (lrm_op_xpathObj) {
-                    int max2 = numXpathResults(lrm_op_xpathObj);
+                    int max2 = pcmk__xpath_num_nodes(lrm_op_xpathObj);
                     int lpc2 = 0;
 
                     for (lpc2 = 0; lpc2 < max2; lpc2++) {

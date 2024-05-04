@@ -18,6 +18,26 @@
  * Internal-only wrappers for and extensions to libxml2 XPath utilities
  */
 
+/*!
+ * \internal
+ * \brief Get the number of nodes in an XPath object's node set
+ *
+ * In other words, this is the number of results from evaluating an XPath
+ * expression.
+ *
+ * \param[in] xpath_obj  XPath object
+ *
+ * \return Number of nodes in <tt>xpath_obj->nodesetval</tt>
+ */
+static inline int
+pcmk__xpath_num_nodes(const xmlXPathObject *xpath_obj)
+{
+    if (xpath_obj == NULL) {
+        return 0;
+    }
+    return xmlXPathNodeSetGetLength(xpath_obj->nodesetval);
+}
+
 GString *pcmk__element_xpath(const xmlNode *xml);
 char *pcmk__xpath_node_id(const char *xpath, const char *node);
 

@@ -116,9 +116,9 @@ remove_topology_level(xmlNode *match)
 static void
 register_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
+    int max = pcmk__xpath_num_nodes(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         remove_topology_level(match);
@@ -166,9 +166,9 @@ fencing_topology_init(void)
 static void
 remove_cib_device(xmlXPathObjectPtr xpathObj)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
+    int max = pcmk__xpath_num_nodes(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         const char *rsc_id = NULL;
         const char *standard = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -264,14 +264,14 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xpath_obj = pcmk__xpath_search(msg->doc,
                                    "//" PCMK__XE_CIB_UPDATE_RESULT
                                    "//" PCMK_XE_RSC_LOCATION);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
+    if (pcmk__xpath_num_nodes(xpath_obj) > 0) {
+        int max = pcmk__xpath_num_nodes(xpath_obj);
 
         /* Safest and simplest to always recompute */
         needs_update = TRUE;
         reason = "new location constraint";
 
-        for (lpc = 0; lpc < max; lpc++) {
+        for (int lpc = 0; lpc < max; lpc++) {
             xmlNode *match = getXpathResult(xpath_obj, lpc);
 
             crm_log_xml_trace(match, "new constraint");
@@ -284,7 +284,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
                                    "//" PCMK__XE_CIB_UPDATE_RESULT
                                    "//" PCMK__XE_DIFF_REMOVED
                                    "//" PCMK_XE_PRIMITIVE);
-    if (numXpathResults(xpath_obj) > 0) {
+    if (pcmk__xpath_num_nodes(xpath_obj) > 0) {
         remove_cib_device(xpath_obj);
     }
     freeXpathObject(xpath_obj);
@@ -294,10 +294,10 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
                                    "//" PCMK__XE_CIB_UPDATE_RESULT
                                    "//" PCMK__XE_DIFF_ADDED
                                    "//" PCMK_XE_PRIMITIVE);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
+    if (pcmk__xpath_num_nodes(xpath_obj) > 0) {
+        int max = pcmk__xpath_num_nodes(xpath_obj);
 
-        for (lpc = 0; lpc < max; lpc++) {
+        for (int lpc = 0; lpc < max; lpc++) {
             const char *rsc_id = NULL;
             const char *standard = NULL;
             xmlNode *match = getXpathResult(xpath_obj, lpc);
@@ -477,9 +477,9 @@ fenced_query_cib(void)
 static void
 remove_fencing_topology(xmlXPathObjectPtr xpathObj)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
+    int max = pcmk__xpath_num_nodes(xpathObj);
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);

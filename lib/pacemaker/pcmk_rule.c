@@ -61,7 +61,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      */
     xpath = crm_strdup_printf(XPATH_NODE_RULE, rule_id);
     xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
-    num_results = numXpathResults(xpath_obj);
+    num_results = pcmk__xpath_num_nodes(xpath_obj);
 
     free(xpath);
     freeXpathObject(xpath_obj);
@@ -80,7 +80,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     /* Next, make sure it has exactly one date_expression. */
     xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression", rule_id);
     xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
-    num_results = numXpathResults(xpath_obj);
+    num_results = pcmk__xpath_num_nodes(xpath_obj);
 
     free(xpath);
     freeXpathObject(xpath_obj);
@@ -101,7 +101,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                                   "!='" PCMK_VALUE_DATE_SPEC "']",
                               rule_id);
     xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
-    num_results = numXpathResults(xpath_obj);
+    num_results = pcmk__xpath_num_nodes(xpath_obj);
 
     free(xpath);
 
@@ -118,7 +118,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                                       "/@" PCMK__XA_MOON ")]",
                                   rule_id);
         xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
-        num_results = numXpathResults(xpath_obj);
+        num_results = pcmk__xpath_num_nodes(xpath_obj);
 
         free(xpath);
 

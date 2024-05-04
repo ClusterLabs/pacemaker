@@ -57,7 +57,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_CIB_UPDATE_RESULT
                                   "//" PCMK__XE_DIFF_ADDED
                                   "//" PCMK_XE_TICKETS);
-    if (numXpathResults(xpathObj) > 0) {
+    if (pcmk__xpath_num_nodes(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
@@ -72,7 +72,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_CIB_UPDATE_RESULT
                                   "//" PCMK__XE_DIFF_REMOVED
                                   "//" PCMK_XE_TICKETS);
-    if (numXpathResults(xpathObj) > 0) {
+    if (pcmk__xpath_num_nodes(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
@@ -86,7 +86,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_CIB_UPDATE_RESULT
                                   "//" PCMK__XE_DIFF_REMOVED
                                   "//" PCMK__XE_TRANSIENT_ATTRIBUTES);
-    if (numXpathResults(xpathObj) > 0) {
+    if (pcmk__xpath_num_nodes(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
@@ -101,7 +101,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_CIB_UPDATE_RESULT
                                   "//" PCMK__XE_DIFF_ADDED
                                   "//" PCMK__XE_LRM_RESOURCE);
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_nodes(xpathObj);
 
     /*
      * Updates by, or in response to, graph actions will never affect more than
@@ -139,7 +139,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_CIB_UPDATE_RESULT
                                   "//" PCMK__XE_DIFF_ADDED
                                   "//" PCMK__XE_LRM_RSC_OP);
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_nodes(xpathObj);
     if (max > 0) {
         int lpc = 0;
 
@@ -156,7 +156,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     xpathObj = pcmk__xpath_search(diff->doc,
                                   "//" PCMK__XE_DIFF_REMOVED
                                   "//" PCMK__XE_LRM_RSC_OP);
-    max = numXpathResults(xpathObj);
+    max = pcmk__xpath_num_nodes(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
         const char *op_id = NULL;
         xmlXPathObject *op_match = NULL;
@@ -175,7 +175,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         pcmk__g_strcat(rsc_op_xpath, op_id, "']", NULL);
 
         op_match = pcmk__xpath_search(diff->doc, rsc_op_xpath->str);
-        if (numXpathResults(op_match) == 0) {
+        if (pcmk__xpath_num_nodes(op_match) == 0) {
             /* Prevent false positives by matching cancelations too */
             const char *node = get_node_id(match);
             pcmk__graph_action_t *cancelled = get_cancel_action(op_id, node);
@@ -632,7 +632,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
               pcmk__s(crm_element_value(msg, PCMK__XA_SRC), ""));
 
     xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
-    nmatches = numXpathResults(xpathObj);
+    nmatches = pcmk__xpath_num_nodes(xpathObj);
     if (nmatches == 0) {
         crm_err("Received transition request with no results (bug?)");
     } else {

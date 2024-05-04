@@ -400,7 +400,7 @@ match_down_event(const char *target)
                           match = NULL; goto done);
 
                 xpath_ret = pcmk__xpath_search(match->xml->doc, xpath);
-                if (numXpathResults(xpath_ret) < 1) {
+                if (pcmk__xpath_num_nodes(xpath_ret) < 1) {
                     match = NULL;
                 }
                 freeXpathObject(xpath_ret);

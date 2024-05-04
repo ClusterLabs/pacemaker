@@ -1362,7 +1362,7 @@ contains_config_change(xmlNode *diff)
         xmlXPathObject *xpathObj = pcmk__xpath_search(diff->doc,
                                                       XPATH_CONFIG_CHANGE);
 
-        if (numXpathResults(xpathObj) > 0) {
+        if (pcmk__xpath_num_nodes(xpathObj) > 0) {
             changed = true;
         }
         freeXpathObject(xpathObj);
