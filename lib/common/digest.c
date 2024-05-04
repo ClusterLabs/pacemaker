@@ -51,28 +51,19 @@ dump_xml_for_digest(xmlNodePtr xml)
  * \brief Calculate and return v1 digest of XML tree
  *
  * \param[in] input  Root of XML to digest
- * \param[in] sort   Whether to sort the XML before calculating digest
  *
  * \return Newly allocated string containing digest
  *
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode *input, bool sort)
+calculate_xml_digest_v1(xmlNode *input)
 {
+    GString *buffer = dump_xml_for_digest(input);
     char *digest = NULL;
-    GString *buffer = NULL;
-    xmlNode *copy = NULL;
 
-    if (sort) {
-        crm_trace("Sorting xml...");
-        copy = sorted_xml(input, NULL, TRUE);
-        crm_trace("Done");
-        input = copy;
-    }
-
-    buffer = dump_xml_for_digest(input);
-    CRM_CHECK(buffer->len > 0, pcmk__xml_free(copy);
+    // buffer->len > 2 for initial space and trailing newline
+    CRM_CHECK(buffer->len > 2,
               g_string_free(buffer, TRUE);
               return NULL);
 
@@ -80,7 +71,6 @@ calculate_xml_digest_v1(xmlNode *input, bool sort)
     crm_log_xml_trace(input, "digest:source");
 
     g_string_free(buffer, TRUE);
-    pcmk__xml_free(copy);
     return digest;
 }
 
@@ -137,7 +127,7 @@ pcmk__digest_on_disk_cib(xmlNode *input)
      * * We only use this once at startup. All other invocations are in a
      *   separate child process.
      */
-    return calculate_xml_digest_v1(input, false);
+    return calculate_xml_digest_v1(input);
 }
 
 /*!
@@ -158,7 +148,7 @@ pcmk__digest_operation(xmlNode *input)
     char *digest = NULL;
 
     pcmk__xe_sort_attrs(sorted);
-    digest = calculate_xml_digest_v1(sorted, false);
+    digest = calculate_xml_digest_v1(sorted);
 
     pcmk__xml_free(sorted);
     return digest;
@@ -191,7 +181,7 @@ pcmk__digest_xml(xmlNode *input, bool filter, const char *version)
     if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
         crm_trace("Using v1 digest algorithm for %s",
                   pcmk__s(version, "unknown feature set"));
-        return calculate_xml_digest_v1(input, false);
+        return calculate_xml_digest_v1(input);
     }
     crm_trace("Using v2 digest algorithm for %s", version);
     return calculate_xml_digest_v2(input, filter);
@@ -364,13 +354,17 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 char *
 calculate_on_disk_digest(xmlNode *input)
 {
-    return calculate_xml_digest_v1(input, false);
+    return calculate_xml_digest_v1(input);
 }
 
 char *
 calculate_operation_digest(xmlNode *input, const char *version)
 {
-    return calculate_xml_digest_v1(input, true);
+    xmlNode *sorted = sorted_xml(input, NULL, true);
+    char *digest = calculate_xml_digest_v1(sorted);
+
+    pcmk__xml_free(sorted);
+    return digest;
 }
 
 char *
@@ -378,9 +372,22 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
                                gboolean do_filter, const char *version)
 {
     if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
+        xmlNode *sorted = NULL;
+        char *digest = NULL;
+
+        if (sort) {
+            xmlNode *sorted = sorted_xml(input, NULL, true);
+
+            input = sorted;
+        }
+
         crm_trace("Using v1 digest algorithm for %s",
                   pcmk__s(version, "unknown feature set"));
-        return calculate_xml_digest_v1(input, sort);
+
+        digest = calculate_xml_digest_v1(input);
+
+        pcmk__xml_free(sorted);
+        return digest;
     }
     crm_trace("Using v2 digest algorithm for %s", version);
     return calculate_xml_digest_v2(input, do_filter);
