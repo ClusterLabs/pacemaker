@@ -78,8 +78,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
-                                            CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(xml_data, false, CRM_FEATURE_SET);
     converted = pcmk__xml_copy(NULL, xml_data);
     if (!pcmk__update_configured_schema(&converted, true)) {
         scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);

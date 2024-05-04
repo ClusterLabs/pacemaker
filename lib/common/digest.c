@@ -157,6 +157,39 @@ pcmk__digest_operation(xmlNode *input)
 }
 
 /*!
+ * \internal
+ * \brief Calculate and return the digest of an XML tree
+ *
+ * \param[in] input    Root of XML to digest
+ * \param[in] filter   Whether to filter certain XML attributes (ignored if
+ *                     version is less than or equal to "3.0.5")
+ * \param[in] version  CRM feature set version (used to select v1/v2 digest)
+ *
+ * \return Newly allocated string containing digest
+ */
+char *
+pcmk__digest_xml(xmlNode *input, bool filter, const char *version)
+{
+    /* @COMPAT Digests (on-disk or in diffs/patchsets) created <1.1.4 (commit
+     * 3032878) were always v1. Removing this affects even full-restart upgrades
+     * from old versions.
+     *
+     * The sorting associated with v1 digest creation accounted for 23% of
+     * the CIB manager's CPU usage on the server. v2 drops this.
+     *
+     * The filtering accounts for an additional 2.5% and we may want to
+     * remove it in future.
+     */
+    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
+        crm_trace("Using v1 digest algorithm for %s",
+                  pcmk__s(version, "unknown feature set"));
+        return calculate_xml_digest_v1(input, false);
+    }
+    crm_trace("Using v2 digest algorithm for %s", version);
+    return calculate_xml_digest_v2(input, filter);
+}
+
+/*!
  * \brief Calculate and return digest of XML tree
  *
  * \param[in] input      Root of XML to digest

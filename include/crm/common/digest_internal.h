@@ -37,6 +37,7 @@ typedef struct {
 
 char *pcmk__digest_on_disk_cib(xmlNode *input);
 char *pcmk__digest_operation(xmlNode *input);
+char *pcmk__digest_xml(xmlNode *input, bool filter, const char *version);
 
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 

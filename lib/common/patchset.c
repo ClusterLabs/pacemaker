@@ -405,7 +405,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     }
 
     version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
-    digest = calculate_xml_versioned_digest(target, FALSE, TRUE, version);
+    digest = pcmk__digest_xml(target, true, version);
 
     crm_xml_add(patch, PCMK__XA_DIGEST, digest);
     free(digest);
@@ -1375,7 +1375,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         char *new_digest = NULL;
         char *version = crm_element_value_copy(xml, PCMK_XA_CRM_FEATURE_SET);
 
-        new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
+        new_digest = pcmk__digest_xml(xml, true, version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("v%d digest mis-match: expected %s, calculated %s",
                      format, digest, new_digest);
@@ -1538,8 +1538,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
         char *new_digest = NULL;
 
         purge_v1_diff_markers(*new_xml);    // Purge now so diff is ok
-        new_digest = calculate_xml_versioned_digest(*new_xml, FALSE, TRUE,
-                                                    version);
+        new_digest = pcmk__digest_xml(*new_xml, true, version);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("Digest mis-match: expected %s, calculated %s",
                      digest, new_digest);
