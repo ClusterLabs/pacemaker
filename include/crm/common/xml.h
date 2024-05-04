@@ -45,7 +45,6 @@ typedef const xmlChar *pcmkXmlStr;
  */
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 
-xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
 

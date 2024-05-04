@@ -12,6 +12,7 @@
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
+#include <libxml/xpath.h>       // xmlXPathObjectPtr
 
 #include <crm/common/nvpair.h>  // crm_xml_add()
 #include <crm/common/xml_names.h>   // PCMK_XE_CLONE
@@ -222,6 +223,9 @@ char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
 
 //! \deprecated Do not use
 xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
+
+//! \deprecated Do not use
+xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 
 #ifdef __cplusplus
 }

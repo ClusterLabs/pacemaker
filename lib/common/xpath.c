@@ -161,14 +161,6 @@ pcmk__xpath_search(xmlDoc *doc, const char *path)
     return xpath_obj;
 }
 
-xmlXPathObjectPtr
-xpath_search(const xmlNode *xml_top, const char *path)
-{
-    CRM_CHECK(xml_top != NULL, return NULL);
-
-    return pcmk__xpath_search(xml_top->doc, path);
-}
-
 /*!
  * \brief Run a supplied function for each result of an xpath search
  *
@@ -429,6 +421,14 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
     free(xpath_prefix);
     free(xpath_full);
     return result;
+}
+
+xmlXPathObjectPtr
+xpath_search(const xmlNode *xml_top, const char *path)
+{
+    CRM_CHECK(xml_top != NULL, return NULL);
+
+    return pcmk__xpath_search(xml_top->doc, path);
 }
 
 // LCOV_EXCL_STOP
