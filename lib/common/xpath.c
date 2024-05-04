@@ -286,6 +286,15 @@ pcmk__element_xpath(const xmlNode *xml)
     return xpath;
 }
 
+/*!
+ * \internal
+ * \brief Extract the ID attribute from an XML element
+ *
+ * \param[in] xpath String to search
+ * \param[in] node  Node to get the ID for
+ *
+ * \return ID attribute of \p node in xpath string \p xpath
+ */
 char *
 pcmk__xpath_node_id(const char *xpath, const char *node)
 {
@@ -328,6 +337,15 @@ output_attr_child(xmlNode *child, void *userdata)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Warn if an XPath query returned multiple nodes with the same ID
+ *
+ * \param[in,out] out     Output object
+ * \param[in]     search  XPath search result, most typically the result of
+ *                        calling <tt>cib->cmds->query()</tt>.
+ * \param[in]     name    Name searched for
+ */
 void
 pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
                                  const char *name)

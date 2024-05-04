@@ -22,12 +22,13 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
-// This file is a wrapper for other xml_*_internal.h headers
+// This file is a wrapper for other {xml_*,xpath}_internal.h headers
 #include <crm/common/xml_comment_internal.h>
 #include <crm/common/xml_element_internal.h>
 #include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>
+#include <crm/common/xpath_internal.h>
 
 #include <libxml/relaxng.h>
 
@@ -169,31 +170,6 @@ int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
                    int depth, uint32_t options);
 int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 
-/* XML search strings for guest, remote and pacemaker_remote nodes */
-
-/* search string to find CIB resources entries for cluster nodes */
-#define PCMK__XP_MEMBER_NODE_CONFIG                                 \
-    "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES    \
-    "/" PCMK_XE_NODE                                                \
-    "[not(@" PCMK_XA_TYPE ") or @" PCMK_XA_TYPE "='" PCMK_VALUE_MEMBER "']"
-
-/* search string to find CIB resources entries for guest nodes */
-#define PCMK__XP_GUEST_NODE_CONFIG \
-    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" PCMK_XE_PRIMITIVE  \
-    "//" PCMK_XE_META_ATTRIBUTES "//" PCMK_XE_NVPAIR                    \
-    "[@" PCMK_XA_NAME "='" PCMK_META_REMOTE_NODE "']"
-
-/* search string to find CIB resources entries for remote nodes */
-#define PCMK__XP_REMOTE_NODE_CONFIG                                     \
-    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" PCMK_XE_PRIMITIVE  \
-    "[@" PCMK_XA_TYPE "='" PCMK_VALUE_REMOTE "']"                       \
-    "[@" PCMK_XA_PROVIDER "='pacemaker']"
-
-/* search string to find CIB node status entries for pacemaker_remote nodes */
-#define PCMK__XP_REMOTE_NODE_STATUS                                 \
-    "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
-    "[@" PCMK_XA_REMOTE_NODE "='" PCMK_VALUE_TRUE "']"
-
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,
     pcmk__xml_artefact_ns_legacy_xslt,
@@ -202,8 +178,6 @@ enum pcmk__xml_artefact_ns {
 };
 
 void pcmk__strip_xml_text(xmlNode *xml);
-
-GString *pcmk__element_xpath(const xmlNode *xml);
 
 /*!
  * \internal
@@ -370,32 +344,6 @@ enum pcmk__xa_flags {
 };
 
 void pcmk__xml_sanitize_id(char *id);
-
-/*!
- * \internal
- * \brief Extract the ID attribute from an XML element
- *
- * \param[in] xpath String to search
- * \param[in] node  Node to get the ID for
- *
- * \return ID attribute of \p node in xpath string \p xpath
- */
-char *
-pcmk__xpath_node_id(const char *xpath, const char *node);
-
-/*!
- * \internal
- * \brief Print an informational message if an xpath query returned multiple
- *        items with the same ID.
- *
- * \param[in,out] out       The output object
- * \param[in]     search    The xpath search result, most typically the result of
- *                          calling cib->cmds->query().
- * \param[in]     name      The name searched for
- */
-void
-pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
-                                 const char *name);
 
 /* internal XML-related utilities */
 
