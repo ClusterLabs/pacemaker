@@ -431,46 +431,6 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
 
 /*!
  * \internal
- * \brief Get a string representation of an XML element type
- *
- * \param[in] type  XML element type
- *
- * \return String representation of \p type
- */
-static const char *
-xml_element_type_text(xmlElementType type)
-{
-    static const char *const element_type_names[] = {
-        [XML_ELEMENT_NODE]       = "element",
-        [XML_ATTRIBUTE_NODE]     = "attribute",
-        [XML_TEXT_NODE]          = "text",
-        [XML_CDATA_SECTION_NODE] = "CDATA section",
-        [XML_ENTITY_REF_NODE]    = "entity reference",
-        [XML_ENTITY_NODE]        = "entity",
-        [XML_PI_NODE]            = "PI",
-        [XML_COMMENT_NODE]       = "comment",
-        [XML_DOCUMENT_NODE]      = "document",
-        [XML_DOCUMENT_TYPE_NODE] = "document type",
-        [XML_DOCUMENT_FRAG_NODE] = "document fragment",
-        [XML_NOTATION_NODE]      = "notation",
-        [XML_HTML_DOCUMENT_NODE] = "HTML document",
-        [XML_DTD_NODE]           = "DTD",
-        [XML_ELEMENT_DECL]       = "element declaration",
-        [XML_ATTRIBUTE_DECL]     = "attribute declaration",
-        [XML_ENTITY_DECL]        = "entity declaration",
-        [XML_NAMESPACE_DECL]     = "namespace declaration",
-        [XML_XINCLUDE_START]     = "XInclude start",
-        [XML_XINCLUDE_END]       = "XInclude end",
-    };
-
-    if ((type < 0) || (type >= PCMK__NELEM(element_type_names))) {
-        return "unrecognized type";
-    }
-    return element_type_names[type];
-}
-
-/*!
- * \internal
  * \brief Create a string representation of an XML object
  *
  * libxml2's \c xmlNodeDumpOutput() doesn't allow filtering, doesn't escape
@@ -514,7 +474,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             break;
         default:
             crm_warn("Cannot convert XML %s node to text " CRM_XS " type=%d",
-                     xml_element_type_text(data->type), data->type);
+                     pcmk__xml_element_type_text(data->type), data->type);
             break;
     }
 }
