@@ -74,6 +74,10 @@ char *calculate_on_disk_digest(xmlNode *input);
 //! \deprecated Do not use
 char *calculate_operation_digest(xmlNode *input, const char *version);
 
+//! \deprecated Do not use
+char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
+                                     gboolean do_filter, const char *version);
+
 #ifdef __cplusplus
 }
 #endif

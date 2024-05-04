@@ -188,41 +188,6 @@ pcmk__digest_xml(xmlNode *input, bool filter, const char *version)
 }
 
 /*!
- * \brief Calculate and return digest of XML tree
- *
- * \param[in] input      Root of XML to digest
- * \param[in] sort       Whether to sort XML before calculating digest
- * \param[in] do_filter  Whether to filter certain XML attributes
- * \param[in] version    CRM feature set version (used to select v1/v2 digest)
- *
- * \return Newly allocated string containing digest
- */
-char *
-calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
-                               gboolean do_filter, const char *version)
-{
-    /*
-     * @COMPAT digests (on-disk or in diffs/patchsets) created <1.1.4;
-     * removing this affects even full-restart upgrades from old versions
-     *
-     * The sorting associated with v1 digest creation accounted for 23% of
-     * the CIB manager's CPU usage on the server. v2 drops this.
-     *
-     * The filtering accounts for an additional 2.5% and we may want to
-     * remove it in future.
-     *
-     * v2 also uses the xmlBuffer contents directly to avoid additional copying
-     */
-    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
-        crm_trace("Using v1 digest algorithm for %s",
-                  pcmk__s(version, "unknown feature set"));
-        return calculate_xml_digest_v1(input, sort);
-    }
-    crm_trace("Using v2 digest algorithm for %s", version);
-    return calculate_xml_digest_v2(input, do_filter);
-}
-
-/*!
  * \internal
  * \brief Check whether calculated digest of given XML matches expected digest
  *
@@ -396,6 +361,19 @@ char *
 calculate_operation_digest(xmlNode *input, const char *version)
 {
     return calculate_xml_digest_v1(input, true);
+}
+
+char *
+calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
+                               gboolean do_filter, const char *version)
+{
+    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
+        crm_trace("Using v1 digest algorithm for %s",
+                  pcmk__s(version, "unknown feature set"));
+        return calculate_xml_digest_v1(input, sort);
+    }
+    crm_trace("Using v2 digest algorithm for %s", version);
+    return calculate_xml_digest_v2(input, do_filter);
 }
 
 // LCOV_EXCL_STOP
