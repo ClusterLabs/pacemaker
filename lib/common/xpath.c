@@ -119,50 +119,6 @@ pcmk__xpath_result_element(xmlXPathObject *xpath_obj, int index)
     }
 }
 
-xmlNode *
-getXpathResult(xmlXPathObjectPtr xpathObj, int index)
-{
-    xmlNode *match = NULL;
-    int max = pcmk__xpath_num_nodes(xpathObj);
-
-    CRM_CHECK(index >= 0, return NULL);
-    CRM_CHECK(xpathObj != NULL, return NULL);
-
-    if (index >= max) {
-        crm_err("Requested index %d of only %d items", index, max);
-        return NULL;
-
-    } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
-        /* Previously requested */
-        return NULL;
-    }
-
-    match = xpathObj->nodesetval->nodeTab[index];
-    CRM_CHECK(match != NULL, return NULL);
-
-    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
-        /* See the comment for freeXpathObject() */
-        xpathObj->nodesetval->nodeTab[index] = NULL;
-    }
-
-    if (match->type == XML_DOCUMENT_NODE) {
-        /* Will happen if section = '/' */
-        // Bug? match->children is not guaranteed to be an element node
-        match = match->children;
-
-    } else if (match->type != XML_ELEMENT_NODE
-               && match->parent && match->parent->type == XML_ELEMENT_NODE) {
-        /* Return the parent instead */
-        match = match->parent;
-
-    } else if (match->type != XML_ELEMENT_NODE) {
-        /* We only support searching nodes */
-        crm_err("We only support %d not %d", XML_ELEMENT_NODE, match->type);
-        match = NULL;
-    }
-    return match;
-}
-
 void
 dedupXpathResults(xmlXPathObjectPtr xpathObj)
 {
@@ -495,6 +451,50 @@ xpath_search(const xmlNode *xml_top, const char *path)
     CRM_CHECK(xml_top != NULL, return NULL);
 
     return pcmk__xpath_search(xml_top->doc, path);
+}
+
+xmlNode *
+getXpathResult(xmlXPathObjectPtr xpathObj, int index)
+{
+    xmlNode *match = NULL;
+    int max = pcmk__xpath_num_nodes(xpathObj);
+
+    CRM_CHECK(index >= 0, return NULL);
+    CRM_CHECK(xpathObj != NULL, return NULL);
+
+    if (index >= max) {
+        crm_err("Requested index %d of only %d items", index, max);
+        return NULL;
+
+    } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
+        /* Previously requested */
+        return NULL;
+    }
+
+    match = xpathObj->nodesetval->nodeTab[index];
+    CRM_CHECK(match != NULL, return NULL);
+
+    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
+        /* See the comment for freeXpathObject() */
+        xpathObj->nodesetval->nodeTab[index] = NULL;
+    }
+
+    if (match->type == XML_DOCUMENT_NODE) {
+        /* Will happen if section = '/' */
+        // Bug? match->children is not guaranteed to be an element node
+        match = match->children;
+
+    } else if (match->type != XML_ELEMENT_NODE
+               && match->parent && match->parent->type == XML_ELEMENT_NODE) {
+        /* Return the parent instead */
+        match = match->parent;
+
+    } else if (match->type != XML_ELEMENT_NODE) {
+        /* We only support searching nodes */
+        crm_err("We only support %d not %d", XML_ELEMENT_NODE, match->type);
+        match = NULL;
+    }
+    return match;
 }
 
 // LCOV_EXCL_STOP

@@ -49,7 +49,6 @@ void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
 
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
-xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 void dedupXpathResults(xmlXPathObjectPtr xpathObj);
 
 bool xml_tracking_changes(xmlNode * xml);
