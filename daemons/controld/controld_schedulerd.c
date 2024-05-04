@@ -378,6 +378,8 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
+    CRM_CHECK(xml != NULL, return);
+
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_CRM_CONFIG);
     if (xpath_base == NULL) {
         crm_err(PCMK_XE_CRM_CONFIG " CIB element not known (bug?)");
@@ -387,7 +389,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
                                      xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
                                      attr_name);
-    xpathObj = xpath_search(xml, xpath_string);
+    xpathObj = pcmk__xpath_search(xml->doc, xpath_string);
     max = numXpathResults(xpathObj);
     free(xpath_string);
 
@@ -475,8 +477,6 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_trigger_fsa();
         return;
     }
-
-    CRM_LOG_ASSERT(output != NULL);
 
     /* Refresh the remote node cache and the known node cache when the
      * scheduler is invoked */

@@ -396,7 +396,10 @@ match_down_event(const char *target)
 
             match = (pcmk__graph_action_t *) gIter2->data;
             if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
-                xpath_ret = xpath_search(match->xml, xpath);
+                CRM_CHECK(match->xml != NULL,
+                          match = NULL; goto done);
+
+                xpath_ret = pcmk__xpath_search(match->xml->doc, xpath);
                 if (numXpathResults(xpath_ret) < 1) {
                     match = NULL;
                 }
@@ -408,8 +411,6 @@ match_down_event(const char *target)
         }
     }
 
-    free(xpath);
-
     if (match != NULL) {
         crm_debug("Shutdown action %d (%s) found for node %s", match->id,
                   crm_element_value(match->xml, PCMK__XA_OPERATION_KEY),
@@ -417,6 +418,9 @@ match_down_event(const char *target)
     } else {
         crm_debug("No reason to expect node %s to be down", target);
     }
+
+done:
+    free(xpath);
     return match;
 }
 

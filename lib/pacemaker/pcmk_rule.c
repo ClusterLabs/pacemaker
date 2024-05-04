@@ -47,6 +47,8 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     cib_constraints = pcmk_find_cib_element(scheduler->input,
                                             PCMK_XE_CONSTRAINTS);
 
+    CRM_CHECK(cib_constraints != NULL, return EINVAL);
+
     /* Get all rules matching the given ID that are also simple enough for us
      * to check. For the moment, these rules must only have a single
      * date_expression child and:
@@ -58,7 +60,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * there's any rule with the given ID.
      */
     xpath = crm_strdup_printf(XPATH_NODE_RULE, rule_id);
-    xpath_obj = xpath_search(cib_constraints, xpath);
+    xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
     num_results = numXpathResults(xpath_obj);
 
     free(xpath);
@@ -77,7 +79,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
     /* Next, make sure it has exactly one date_expression. */
     xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression", rule_id);
-    xpath_obj = xpath_search(cib_constraints, xpath);
+    xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
     num_results = numXpathResults(xpath_obj);
 
     free(xpath);
@@ -98,7 +100,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                               "[@" PCMK_XA_OPERATION
                                   "!='" PCMK_VALUE_DATE_SPEC "']",
                               rule_id);
-    xpath_obj = xpath_search(cib_constraints, xpath);
+    xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
     num_results = numXpathResults(xpath_obj);
 
     free(xpath);
@@ -115,7 +117,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
                                   "and not(" PCMK_XE_DATE_SPEC
                                       "/@" PCMK__XA_MOON ")]",
                                   rule_id);
-        xpath_obj = xpath_search(cib_constraints, xpath);
+        xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
         num_results = numXpathResults(xpath_obj);
 
         free(xpath);

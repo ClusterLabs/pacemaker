@@ -82,7 +82,9 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     /* Verify that the XML result has only one <ticket>, and that its ID is
      * what we asked for.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET);
     assert_int_equal(numXpathResults(xpath_obj), 1);
 
     node = getXpathResult(xpath_obj, 0);
@@ -92,8 +94,10 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
     /* Verify that it has an <attribute> child whose name and value are what
      * we expect.
      */
-    xpath_obj = xpath_search(xml, "//" PCMK_XE_PACEMAKER_RESULT "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
-                                  "/" PCMK_XE_ATTRIBUTE);
+    xpath_obj = pcmk__xpath_search(xml->doc,
+                                   "//" PCMK_XE_PACEMAKER_RESULT
+                                   "/" PCMK_XE_TICKETS "/" PCMK_XE_TICKET
+                                   "/" PCMK_XE_ATTRIBUTE);
     assert_int_equal(numXpathResults(xpath_obj), 1);
 
     node = getXpathResult(xpath_obj, 0);

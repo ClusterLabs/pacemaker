@@ -447,7 +447,10 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
     int rc = pcmk_rc_ok;
 
     cib_constraints = pcmk_find_cib_element(root, PCMK_XE_CONSTRAINTS);
-    xpathObj = xpath_search(cib_constraints, "//" PCMK_XE_RSC_LOCATION);
+    CRM_CHECK(cib_constraints != NULL, return ENXIO);
+
+    xpathObj = pcmk__xpath_search(cib_constraints->doc,
+                                  "//" PCMK_XE_RSC_LOCATION);
 
     for (i = 0; i < numXpathResults(xpathObj); i++) {
         xmlNode *constraint_node = getXpathResult(xpathObj, i);

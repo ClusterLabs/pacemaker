@@ -562,7 +562,9 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         return rc;
     }
 
-    xpathObj = xpath_search(output, "//@agent");
+    CRM_CHECK(output != NULL, goto done);
+
+    xpathObj = pcmk__xpath_search(output->doc, "//@" PCMK_XA_AGENT);
     if (xpathObj) {
         max = numXpathResults(xpathObj);
 
@@ -584,6 +586,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
         freeXpathObject(xpathObj);
     }
 
+done:
     pcmk__xml_free(output);
     pcmk__xml_free(data);
     return max;
@@ -2408,7 +2411,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
     CRM_CHECK((device_flags != NULL) && (metadata != NULL), return);
 
-    xpath = xpath_search(metadata, "//" PCMK_XE_PARAMETER);
+    xpath = pcmk__xpath_search(metadata->doc, "//" PCMK_XE_PARAMETER);
     max = numXpathResults(xpath);
 
     if (max <= 0) {

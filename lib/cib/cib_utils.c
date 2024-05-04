@@ -121,7 +121,7 @@ element_in_patchset_v1(const xmlNode *patchset, const char *element)
 {
     char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
                                     pcmk__s(element, PCMK_XE_CIB));
-    xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(patchset->doc, xpath);
 
     free(xpath);
 

@@ -202,7 +202,7 @@ set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
     xmlXPathObjectPtr result = NULL;
 
     if (!pcmk_is_set(scheduler->flags, flag)) {
-        result = xpath_search(scheduler->input, xpath);
+        result = pcmk__xpath_search(scheduler->input->doc, xpath);
         if (result && (numXpathResults(result) > 0)) {
             pcmk__set_scheduler_flags(scheduler, flag);
         }
@@ -2990,7 +2990,9 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
                               "[@" PCMK__XA_RC_CODE "!='%d']",
                               node_name, rsc->id, PCMK_OCF_UNKNOWN);
 
-    search = xpath_search(rsc->cluster->input, xpath);
+    CRM_CHECK(rsc->cluster->input != NULL, return false);
+
+    search = pcmk__xpath_search(rsc->cluster->input->doc, xpath);
     result = (numXpathResults(search) == 0);
     freeXpathObject(search);
     free(xpath);

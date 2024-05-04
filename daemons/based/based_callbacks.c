@@ -1359,7 +1359,8 @@ contains_config_change(xmlNode *diff)
     bool changed = false;
 
     if (diff) {
-        xmlXPathObject *xpathObj = xpath_search(diff, XPATH_CONFIG_CHANGE);
+        xmlXPathObject *xpathObj = pcmk__xpath_search(diff->doc,
+                                                      XPATH_CONFIG_CHANGE);
 
         if (numXpathResults(xpathObj) > 0) {
             changed = true;

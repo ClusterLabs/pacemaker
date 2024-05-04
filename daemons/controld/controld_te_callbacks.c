@@ -53,11 +53,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     }
 
     /* Tickets Attributes - Added/Updated */
-    xpathObj =
-        xpath_search(diff,
-                     "//" PCMK__XE_CIB_UPDATE_RESULT
-                     "//" PCMK__XE_DIFF_ADDED
-                     "//" PCMK_XE_TICKETS);
+    xpathObj = pcmk__xpath_search(diff->doc,
+                                  "//" PCMK__XE_CIB_UPDATE_RESULT
+                                  "//" PCMK__XE_DIFF_ADDED
+                                  "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -69,11 +68,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     /* Tickets Attributes - Removed */
-    xpathObj =
-        xpath_search(diff,
-                     "//" PCMK__XE_CIB_UPDATE_RESULT
-                     "//" PCMK__XE_DIFF_REMOVED
-                     "//" PCMK_XE_TICKETS);
+    xpathObj = pcmk__xpath_search(diff->doc,
+                                  "//" PCMK__XE_CIB_UPDATE_RESULT
+                                  "//" PCMK__XE_DIFF_REMOVED
+                                  "//" PCMK_XE_TICKETS);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -84,11 +82,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     /* Transient Attributes - Removed */
-    xpathObj =
-        xpath_search(diff,
-                     "//" PCMK__XE_CIB_UPDATE_RESULT
-                     "//" PCMK__XE_DIFF_REMOVED
-                     "//" PCMK__XE_TRANSIENT_ATTRIBUTES);
+    xpathObj = pcmk__xpath_search(diff->doc,
+                                  "//" PCMK__XE_CIB_UPDATE_RESULT
+                                  "//" PCMK__XE_DIFF_REMOVED
+                                  "//" PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
@@ -100,10 +97,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     // Check for PCMK__XE_LRM_RESOURCE entries
-    xpathObj = xpath_search(diff,
-                            "//" PCMK__XE_CIB_UPDATE_RESULT
-                            "//" PCMK__XE_DIFF_ADDED
-                            "//" PCMK__XE_LRM_RESOURCE);
+    xpathObj = pcmk__xpath_search(diff->doc,
+                                  "//" PCMK__XE_CIB_UPDATE_RESULT
+                                  "//" PCMK__XE_DIFF_ADDED
+                                  "//" PCMK__XE_LRM_RESOURCE);
     max = numXpathResults(xpathObj);
 
     /*
@@ -138,11 +135,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     /* Process operation updates */
-    xpathObj =
-        xpath_search(diff,
-                     "//" PCMK__XE_CIB_UPDATE_RESULT
-                     "//" PCMK__XE_DIFF_ADDED
-                     "//" PCMK__XE_LRM_RSC_OP);
+    xpathObj = pcmk__xpath_search(diff->doc,
+                                  "//" PCMK__XE_CIB_UPDATE_RESULT
+                                  "//" PCMK__XE_DIFF_ADDED
+                                  "//" PCMK__XE_LRM_RSC_OP);
     max = numXpathResults(xpathObj);
     if (max > 0) {
         int lpc = 0;
@@ -157,9 +153,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     freeXpathObject(xpathObj);
 
     /* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */
-    xpathObj = xpath_search(diff,
-                            "//" PCMK__XE_DIFF_REMOVED
-                            "//" PCMK__XE_LRM_RSC_OP);
+    xpathObj = pcmk__xpath_search(diff->doc,
+                                  "//" PCMK__XE_DIFF_REMOVED
+                                  "//" PCMK__XE_LRM_RSC_OP);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
         const char *op_id = NULL;
@@ -178,7 +174,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         }
         pcmk__g_strcat(rsc_op_xpath, op_id, "']", NULL);
 
-        op_match = xpath_search(diff, (const char *) rsc_op_xpath->str);
+        op_match = pcmk__xpath_search(diff->doc, rsc_op_xpath->str);
         if (numXpathResults(op_match) == 0) {
             /* Prevent false positives by matching cancelations too */
             const char *node = get_node_id(match);
@@ -575,6 +571,8 @@ te_update_diff(const char *event, xmlNode * msg)
     wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT, NULL, NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
+    CRM_CHECK(diff != NULL, return);
+
     xml_patch_versions(diff, p_add, p_del);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
@@ -602,7 +600,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     xmlXPathObject *xpathObj = NULL;
     int nmatches = 0;
 
-    CRM_CHECK(msg != NULL, return);
+    CRM_CHECK((msg != NULL) && (xml_data != NULL), return);
 
     // Transition requests must specify transition engine as subsystem
     value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
@@ -633,7 +631,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
               pcmk__s(crm_element_value(msg, PCMK_XA_REFERENCE), ""),
               pcmk__s(crm_element_value(msg, PCMK__XA_SRC), ""));
 
-    xpathObj = xpath_search(xml_data, "//" PCMK__XE_LRM_RSC_OP);
+    xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = numXpathResults(xpathObj);
     if (nmatches == 0) {
         crm_err("Received transition request with no results (bug?)");

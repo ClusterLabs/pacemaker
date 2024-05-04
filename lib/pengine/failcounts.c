@@ -96,7 +96,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+    xmlXPathObject *xpathObj = pcmk__xpath_search(rsc->xml->doc, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
@@ -137,7 +137,13 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                                  node->details->uname, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->cluster->input, lrm_op_xpath);
+
+                CRM_CHECK(rsc->cluster->input != NULL,
+                          free(xpathObj);
+                          free(lrm_op_xpath);
+                          return FALSE);
+                lrm_op_xpathObj = pcmk__xpath_search(rsc->cluster->input->doc,
+                                                     lrm_op_xpath);
 
                 free(lrm_op_xpath);
 

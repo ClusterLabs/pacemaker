@@ -103,7 +103,7 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
                               parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
-    xpathObj = xpath_search(metadata, xpath);
+    xpathObj = pcmk__xpath_search(metadata->doc, xpath);
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *tmp = getXpathResult(xpathObj, 0);
 
@@ -173,16 +173,16 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -pcmk_err_schema_validation;
     }
 
-    xpathObj = xpath_search(xml, "//" PCMK_XE_ACTIONS);
+    xpathObj = pcmk__xpath_search(xml->doc, "//" PCMK_XE_ACTIONS);
     if (numXpathResults(xpathObj) > 0) {
         actions = getXpathResult(xpathObj, 0);
     }
     freeXpathObject(xpathObj);
 
     // Add start and stop (implemented by pacemaker, not agent) to meta-data
-    xpathObj = xpath_search(xml,
-                            "//" PCMK_XE_ACTION
-                            "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
+    xpathObj = pcmk__xpath_search(xml->doc,
+                                  "//" PCMK_XE_ACTION
+                                  "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
     if (numXpathResults(xpathObj) <= 0) {
         xmlNode *tmp = NULL;
         const char *timeout_str = NULL;

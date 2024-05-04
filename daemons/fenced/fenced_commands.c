@@ -908,8 +908,9 @@ is_nodeid_required(xmlNode * xml)
         return FALSE;
     }
 
-    xpath = xpath_search(xml,
-                         "//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='nodeid']");
+    xpath = pcmk__xpath_search(xml->doc,
+                               "//" PCMK_XE_PARAMETER
+                               "[@" PCMK_XA_NAME "='nodeid']");
     if (numXpathResults(xpath)  <= 0) {
         freeXpathObject(xpath);
         return FALSE;
@@ -930,7 +931,8 @@ read_action_metadata(stonith_device_t *device)
         return;
     }
 
-    xpath = xpath_search(device->agent_metadata, "//action");
+    xpath = pcmk__xpath_search(device->agent_metadata->doc,
+                               "//" PCMK_XE_ACTION);
     max = numXpathResults(xpath);
 
     if (max <= 0) {

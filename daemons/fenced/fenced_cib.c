@@ -149,14 +149,15 @@ void
 fencing_topology_init(void)
 {
     xmlXPathObjectPtr xpathObj = NULL;
-    const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
+
+    CRM_CHECK(local_cib != NULL, return);
 
     crm_trace("Full topology refresh");
     free_topology_list();
     init_topology_list();
 
     /* Grab everything */
-    xpathObj = xpath_search(local_cib, xpath);
+    xpathObj = pcmk__xpath_search(local_cib->doc, "//" PCMK_XE_FENCING_LEVEL);
     register_fencing_topology(xpathObj);
 
     freeXpathObject(xpathObj);
@@ -260,9 +261,9 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     xmlXPathObjectPtr xpath_obj = NULL;
 
     /* process new constraints */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK_XE_RSC_LOCATION);
+    xpath_obj = pcmk__xpath_search(msg->doc,
+                                   "//" PCMK__XE_CIB_UPDATE_RESULT
+                                   "//" PCMK_XE_RSC_LOCATION);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
@@ -279,20 +280,20 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     freeXpathObject(xpath_obj);
 
     /* process deletions */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK__XE_DIFF_REMOVED
-                             "//" PCMK_XE_PRIMITIVE);
+    xpath_obj = pcmk__xpath_search(msg->doc,
+                                   "//" PCMK__XE_CIB_UPDATE_RESULT
+                                   "//" PCMK__XE_DIFF_REMOVED
+                                   "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
         remove_cib_device(xpath_obj);
     }
     freeXpathObject(xpath_obj);
 
     /* process additions */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK__XE_DIFF_ADDED
-                             "//" PCMK_XE_PRIMITIVE);
+    xpath_obj = pcmk__xpath_search(msg->doc,
+                                   "//" PCMK__XE_CIB_UPDATE_RESULT
+                                   "//" PCMK__XE_DIFF_ADDED
+                                   "//" PCMK_XE_PRIMITIVE);
     if (numXpathResults(xpath_obj) > 0) {
         int max = numXpathResults(xpath_obj), lpc = 0;
 
@@ -508,7 +509,6 @@ static void
 update_fencing_topology(const char *event, xmlNode * msg)
 {
     int format = 1;
-    const char *xpath;
     xmlXPathObjectPtr xpathObj = NULL;
     xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
@@ -519,19 +519,19 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
     if(format == 1) {
         /* Process deletions (only) */
-        xpath = "//" PCMK__XE_CIB_UPDATE_RESULT
-                "//" PCMK__XE_DIFF_REMOVED
-                "//" PCMK_XE_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+        xpathObj = pcmk__xpath_search(msg->doc,
+                                      "//" PCMK__XE_CIB_UPDATE_RESULT
+                                      "//" PCMK__XE_DIFF_REMOVED
+                                      "//" PCMK_XE_FENCING_LEVEL);
 
         remove_fencing_topology(xpathObj);
         freeXpathObject(xpathObj);
 
         /* Process additions and changes */
-        xpath = "//" PCMK__XE_CIB_UPDATE_RESULT
-                "//" PCMK__XE_DIFF_ADDED
-                "//" PCMK_XE_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+        xpathObj = pcmk__xpath_search(msg->doc,
+                                      "//" PCMK__XE_CIB_UPDATE_RESULT
+                                      "//" PCMK__XE_DIFF_ADDED
+                                      "//" PCMK_XE_FENCING_LEVEL);
 
         register_fencing_topology(xpathObj);
         freeXpathObject(xpathObj);

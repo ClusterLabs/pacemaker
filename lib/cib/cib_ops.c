@@ -505,7 +505,11 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     // @COMPAT cib_mixed_update is deprecated as of 2.1.7
     if (pcmk_is_set(options, cib_mixed_update)) {
         int max = 0, lpc;
-        xmlXPathObjectPtr xpathObj = xpath_search(*result_cib, "//@__delete__");
+        xmlXPathObject *xpathObj = NULL;
+
+        CRM_CHECK(*result_cib != NULL, return -ENXIO);
+
+        xpathObj = pcmk__xpath_search((*result_cib)->doc, "//@__delete__");
 
         if (xpathObj) {
             max = numXpathResults(xpathObj);
@@ -708,7 +712,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     crm_element_value_int(*diff, PCMK_XA_FORMAT, &format);
     CRM_LOG_ASSERT(format == 1);
 
-    xpathObj = xpath_search(*diff, "//" PCMK_XE_CONFIGURATION);
+    xpathObj = pcmk__xpath_search((*diff)->doc, "//" PCMK_XE_CONFIGURATION);
     if (numXpathResults(xpathObj) > 0) {
         config_changes = true;
         goto done;
@@ -720,7 +724,8 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
      * This always contains every field and would produce a false positive
      * every time if the checked value existed
      */
-    xpathObj = xpath_search(*diff, "//" PCMK__XE_DIFF_REMOVED "//" PCMK_XE_CIB);
+    xpathObj = pcmk__xpath_search((*diff)->doc,
+                                  "//" PCMK__XE_DIFF_REMOVED "//" PCMK_XE_CIB);
     max = numXpathResults(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {
@@ -773,9 +778,11 @@ cib_process_xpath(const char *op, int options, const char *section,
     crm_trace("Processing \"%s\" event", op);
 
     if (is_query) {
-        xpathObj = xpath_search(existing_cib, section);
+        CRM_CHECK(existing_cib != NULL, return EINVAL);
+        xpathObj = pcmk__xpath_search(existing_cib->doc, section);
     } else {
-        xpathObj = xpath_search(*result_cib, section);
+        CRM_CHECK(*result_cib != NULL, return EINVAL);
+        xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
     }
 
     max = numXpathResults(xpathObj);

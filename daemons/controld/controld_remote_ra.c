@@ -1354,7 +1354,11 @@ remote_ra_fail(const char *node_name)
 void
 remote_ra_process_pseudo(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_FENCE);
+    xmlXPathObject *search = NULL;
+
+    CRM_CHECK(xml != NULL, return);
+
+    search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_FENCE);
 
     if (numXpathResults(search) == 1) {
         xmlNode *result = getXpathResult(search, 0);
@@ -1423,7 +1427,11 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_MAINTENANCE);
+    xmlXPathObject *search = NULL;
+
+    CRM_CHECK(xml != NULL, return);
+
+    search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_MAINTENANCE);
 
     if (numXpathResults(search) == 1) {
         xmlNode *node;

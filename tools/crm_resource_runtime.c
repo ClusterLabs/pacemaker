@@ -1967,7 +1967,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             }
         }
 
-        search = xpath_search(scheduler->input, xpath);
+        search = pcmk__xpath_search(scheduler->input->doc, xpath);
         pending_unknown_state_resources = (numXpathResults(search) > 0);
         freeXpathObject(search);
     } while (actions_are_pending(scheduler->actions) || pending_unknown_state_resources);
