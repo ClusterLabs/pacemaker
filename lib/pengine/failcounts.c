@@ -106,7 +106,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
         int lpc = 0;
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *pref = getXpathResult(xpathObj, lpc);
+            xmlNode *pref = pcmk__xpath_result_element(xpathObj, lpc);
 
             if (xml_op) {
                 should_block = is_matched_failure(xml_name, pref, xml_op);
@@ -152,8 +152,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                     int lpc2 = 0;
 
                     for (lpc2 = 0; lpc2 < max2; lpc2++) {
-                        xmlNode *lrm_op_xml = getXpathResult(lrm_op_xpathObj,
-                                                             lpc2);
+                        xmlNode *lrm_op_xml =
+                            pcmk__xpath_result_element(lrm_op_xpathObj, lpc2);
 
                         should_block = is_matched_failure(xml_name, pref,
                                                           lrm_op_xml);

@@ -394,7 +394,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     free(xpath_string);
 
     for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
         crm_trace("Forcing %s/%s = %s",
                   pcmk__xe_id(match), attr_name, attr_value);
         crm_xml_add(match, PCMK_XA_VALUE, attr_value);

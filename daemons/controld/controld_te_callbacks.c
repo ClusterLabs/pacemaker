@@ -58,7 +58,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_DIFF_ADDED
                                   "//" PCMK_XE_TICKETS);
     if (pcmk__xpath_num_nodes(xpathObj) > 0) {
-        xmlNode *aborted = getXpathResult(xpathObj, 0);
+        xmlNode *aborted = pcmk__xpath_result_element(xpathObj, 0);
 
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Ticket attribute: update", aborted);
@@ -73,7 +73,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_DIFF_REMOVED
                                   "//" PCMK_XE_TICKETS);
     if (pcmk__xpath_num_nodes(xpathObj) > 0) {
-        xmlNode *aborted = getXpathResult(xpathObj, 0);
+        xmlNode *aborted = pcmk__xpath_result_element(xpathObj, 0);
 
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Ticket attribute: removal", aborted);
@@ -87,7 +87,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                   "//" PCMK__XE_DIFF_REMOVED
                                   "//" PCMK__XE_TRANSIENT_ATTRIBUTES);
     if (pcmk__xpath_num_nodes(xpathObj) > 0) {
-        xmlNode *aborted = getXpathResult(xpathObj, 0);
+        xmlNode *aborted = pcmk__xpath_result_element(xpathObj, 0);
 
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Transient attribute: removal", aborted);
@@ -123,7 +123,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     }
 
     if (max == 1) {
-        xmlNode *lrm_resource = getXpathResult(xpathObj, 0);
+        xmlNode *lrm_resource = pcmk__xpath_result_element(xpathObj, 0);
 
         if (shutdown_lock_cleared(lrm_resource)) {
             // @TODO would be more efficient to abort once after transition done
@@ -144,7 +144,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         int lpc = 0;
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+            xmlNode *rsc_op = pcmk__xpath_result_element(xpathObj, lpc);
             const char *node = get_node_id(rsc_op);
 
             process_graph_event(rsc_op, node);
@@ -160,7 +160,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     for (lpc = 0; lpc < max; lpc++) {
         const char *op_id = NULL;
         xmlXPathObject *op_match = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
@@ -637,7 +637,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         crm_err("Received transition request with no results (bug?)");
     } else {
         for (int lpc = 0; lpc < nmatches; lpc++) {
-            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+            xmlNode *rsc_op = pcmk__xpath_result_element(xpathObj, lpc);
             const char *node = get_node_id(rsc_op);
 
             process_graph_event(rsc_op, node);

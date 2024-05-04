@@ -517,7 +517,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         }
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+            xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
             xmlChar *match_path = xmlGetNodePath(match);
 
             crm_debug("Destroying %s", match_path);
@@ -729,7 +729,7 @@ cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
     max = pcmk__xpath_num_nodes(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *top = getXpathResult(xpathObj, lpc);
+        xmlNode *top = pcmk__xpath_result_element(xpathObj, lpc);
 
         if (crm_element_value(top, PCMK_XA_EPOCH) != NULL) {
             config_changes = true;
@@ -808,7 +808,7 @@ cib_process_xpath(const char *op, int options, const char *section,
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlChar *path = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
         if (match == NULL) {
             continue;

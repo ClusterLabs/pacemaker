@@ -279,7 +279,7 @@ build_constraint_list(xmlNode *root)
                                   "//" PCMK_XE_RSC_LOCATION);
 
     for (ndx = 0; ndx < pcmk__xpath_num_nodes(xpathObj); ndx++) {
-        xmlNode *match = getXpathResult(xpathObj, ndx);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, ndx);
         retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
                                       compare_id);
     }

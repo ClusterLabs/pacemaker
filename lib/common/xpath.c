@@ -54,6 +54,71 @@ freeXpathObject(xmlXPathObjectPtr xpathObj)
     xmlXPathFreeObject(xpathObj);
 }
 
+/*!
+ * \internal
+ * \brief Get an element node from the result of evaluating an XPath expression
+ *
+ * Evaluating an XPath expression stores the list of matching nodes in an
+ * \c xmlXPathObject. This function gets the node at a particular index within
+ * that list.
+ *
+ * Each matching node may be of an arbitrary type. This function is guaranteed
+ * to return an element node (or \c NULL).
+ * * If a match is an element, return it.
+ * * If a match is a document, return the document's root element.
+ * * If the match has an element as its parent, return the match's parent.
+ * * Otherwise, return \c NULL.
+ *
+ * \param[in,out] xpath_obj  XPath object containing result nodes
+ * \param[in]     index      Index of result node to get
+ *
+ * \return Element node based on result node at the given index if possible, or
+ *         \c NULL otherwise
+ *
+ * \note This has a side effect: it sets the result node at \p index to NULL
+ *       within \p xpath_obj, so the result at a given index can be retrieved
+ *       only once. This is a workaround to prevent a use-after-free error. See
+ *       \c freeXpathObject() for details.
+ */
+xmlNode *
+pcmk__xpath_result_element(xmlXPathObject *xpath_obj, int index)
+{
+    xmlNode *match = NULL;
+
+    CRM_CHECK((xpath_obj != NULL) && (index >= 0), return NULL);
+
+    match = xmlXPathNodeSetItem(xpath_obj->nodesetval, index);
+    if (match == NULL) {
+        // Previously requested or out of range
+        return NULL;
+    }
+
+    if (match->type != XML_NAMESPACE_DECL) {
+        // See the comment for freeXpathObject()
+        xpath_obj->nodesetval->nodeTab[index] = NULL;
+    }
+
+    switch (match->type) {
+        case XML_ELEMENT_NODE:
+            return match;
+
+        case XML_DOCUMENT_NODE:
+            // Happens if XPath expression is "/"; return root element instead
+            return xmlDocGetRootElement((xmlDoc *) match);
+
+        default:
+            if ((match->parent != NULL)
+                && (match->parent->type == XML_ELEMENT_NODE)) {
+
+                // Probably an attribute; return parent element instead
+                return match->parent;
+            }
+            crm_err("Cannot get element from XPath expression match of type %s",
+                    pcmk__xml_element_type_text(match->type));
+            return NULL;
+    }
+}
+
 xmlNode *
 getXpathResult(xmlXPathObjectPtr xpathObj, int index)
 {
@@ -70,7 +135,6 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
         /* Previously requested */
         return NULL;
-
     }
 
     match = xpathObj->nodesetval->nodeTab[index];
@@ -83,6 +147,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
 
     if (match->type == XML_DOCUMENT_NODE) {
         /* Will happen if section = '/' */
+        // Bug? match->children is not guaranteed to be an element node
         match = match->children;
 
     } else if (match->type != XML_ELEMENT_NODE
@@ -187,7 +252,7 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
     nresults = pcmk__xpath_num_nodes(xpathObj);
 
     for (int i = 0; i < nresults; i++) {
-        xmlNode *result = getXpathResult(xpathObj, i);
+        xmlNode *result = pcmk__xpath_result_element(xpathObj, i);
 
         CRM_LOG_ASSERT(result != NULL);
         if (result) {
@@ -231,7 +296,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
                        xpath, pcmk__s(nodePath, "unknown path"));
 
             for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = getXpathResult(xpathObj, lpc);
+                xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
                 CRM_LOG_ASSERT(match != NULL);
                 if (match != NULL) {
@@ -246,7 +311,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
         }
 
     } else {
-        result = getXpathResult(xpathObj, 0);
+        result = pcmk__xpath_result_element(xpathObj, 0);
     }
 
     freeXpathObject(xpathObj);

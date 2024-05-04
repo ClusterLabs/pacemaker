@@ -248,7 +248,7 @@ pcmk__apply_acl(xmlNode *xml)
         max = pcmk__xpath_num_nodes(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
+            xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
             nodepriv = match->_private;
             pcmk__set_xml_flags(nodepriv, acl->mode);
@@ -480,7 +480,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
             max = pcmk__xpath_num_nodes(xpathObj);
             for(lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = getXpathResult(xpathObj, lpc);
+                xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
                 if (!purge_xml_attributes(match) && (match == target)) {
                     crm_trace("ACLs deny user '%s' access to entire XML document",

@@ -1361,7 +1361,7 @@ remote_ra_process_pseudo(xmlNode *xml)
     search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_FENCE);
 
     if (pcmk__xpath_num_nodes(search) == 1) {
-        xmlNode *result = getXpathResult(search, 0);
+        xmlNode *result = pcmk__xpath_result_element(search, 0);
 
         /* Normally, we handle the necessary side effects of a guest node stop
          * action when reporting the remote agent's result. However, if the stop
@@ -1437,7 +1437,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node = pcmk__xe_first_child(getXpathResult(search, 0),
+        for (node = pcmk__xe_first_child(pcmk__xpath_result_element(search, 0),
                                          PCMK_XE_NODE, NULL, NULL);
              node != NULL; node = pcmk__xe_next_same(node)) {
 

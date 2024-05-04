@@ -119,7 +119,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
     int max = pcmk__xpath_num_nodes(xpathObj);
 
     for (int lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
         remove_topology_level(match);
         add_topology_level(match);
@@ -171,7 +171,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
     for (int lpc = 0; lpc < max; lpc++) {
         const char *rsc_id = NULL;
         const char *standard = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if(match != NULL) {
@@ -272,7 +272,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
         reason = "new location constraint";
 
         for (int lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
+            xmlNode *match = pcmk__xpath_result_element(xpath_obj, lpc);
 
             crm_log_xml_trace(match, "new constraint");
         }
@@ -300,7 +300,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
         for (int lpc = 0; lpc < max; lpc++) {
             const char *rsc_id = NULL;
             const char *standard = NULL;
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
+            xmlNode *match = pcmk__xpath_result_element(xpath_obj, lpc);
 
             rsc_id = crm_element_value(match, PCMK_XA_ID);
             standard = crm_element_value(match, PCMK_XA_CLASS);
@@ -480,7 +480,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
     int max = pcmk__xpath_num_nodes(xpathObj);
 
     for (int lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if (match && crm_element_value(match, PCMK__XA_CRM_DIFF_MARKER)) {

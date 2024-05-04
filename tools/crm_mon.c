@@ -2042,7 +2042,7 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
     int max = pcmk__xpath_num_nodes(xpathObj);
 
     for (int lpc = 0; lpc < max; lpc++) {
-        xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+        xmlNode *rsc_op = pcmk__xpath_result_element(xpathObj, lpc);
 
         handle_rsc_op(rsc_op, NULL);
     }

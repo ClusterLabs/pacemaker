@@ -131,7 +131,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
         }
     }
 
-    match = getXpathResult(xpath_obj, 0);
+    match = pcmk__xpath_result_element(xpath_obj, 0);
 
     /* We should have ensured this with the xpath query above, but double-
      * checking can't hurt.

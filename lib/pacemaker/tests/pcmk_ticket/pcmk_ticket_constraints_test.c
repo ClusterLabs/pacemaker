@@ -108,10 +108,10 @@ multiple_tickets(void **state)
 
     assert_int_equal(pcmk__xpath_num_nodes(xpath_obj), 2);
 
-    ticket_node = getXpathResult(xpath_obj, 0);
+    ticket_node = pcmk__xpath_result_element(xpath_obj, 0);
     assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketA");
 
-    ticket_node = getXpathResult(xpath_obj, 1);
+    ticket_node = pcmk__xpath_result_element(xpath_obj, 1);
     assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketB");
 
     freeXpathObject(xpath_obj);
