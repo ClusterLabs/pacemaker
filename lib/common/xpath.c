@@ -161,6 +161,36 @@ pcmk__xpath_search(xmlDoc *doc, const char *path)
 }
 
 /*!
+ * \internal
+ * \brief Run a supplied function for each result of an XPath search
+ *
+ * \param[in,out] doc        XML document to search
+ * \param[in]     path       XPath expression to evaluate in the context of
+ *                           \p doc
+ * \param[in]     fn         Function to call for the XML node of each result
+ * \param[in,out] user_data  Data to pass to \p fn
+ *
+ * \note Results for which an element node cannot be obtained are ignored. See
+ *       \c pcmk__xpath_result_element() for details.
+ */
+void
+pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
+                           void (*fn)(xmlNode *, void *), void *user_data)
+{
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(doc, path);
+    int num_nodes = pcmk__xpath_num_nodes(xpath_obj);
+
+    for (int i = 0; i < num_nodes; i++) {
+        xmlNode *result = pcmk__xpath_result_element(xpath_obj, i);
+
+        if (result != NULL) {
+            (*fn)(result, user_data);
+        }
+    }
+    pcmk__xpath_free_object(xpath_obj);
+}
+
+/*!
  * \brief Run a supplied function for each result of an xpath search
  *
  * \param[in,out] xml        XML to search
@@ -176,23 +206,8 @@ void
 crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                          void (*helper)(xmlNode*, void*), void *user_data)
 {
-    xmlXPathObjectPtr xpathObj = NULL;
-    int nresults = 0;
-
     CRM_CHECK(xml != NULL, return);
-
-    xpathObj = pcmk__xpath_search(xml->doc, xpath);
-    nresults = pcmk__xpath_num_nodes(xpathObj);
-
-    for (int i = 0; i < nresults; i++) {
-        xmlNode *result = pcmk__xpath_result_element(xpathObj, i);
-
-        CRM_LOG_ASSERT(result != NULL);
-        if (result) {
-            (*helper)(result, user_data);
-        }
-    }
-    pcmk__xpath_free_object(xpathObj);
+    pcmk__xpath_foreach_result(xml->doc, xpath, helper, user_data);
 }
 
 xmlNode *

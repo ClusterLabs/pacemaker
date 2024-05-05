@@ -310,8 +310,8 @@ refresh_remote_nodes(xmlNode *cib)
     /* Look for guest nodes and remote nodes in the status section */
     data.field = PCMK_XA_ID;
     data.has_state = TRUE;
-    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_STATUS,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_REMOTE_NODE_STATUS,
+                               remote_cache_refresh_helper, &data);
 
     /* Look for guest nodes and remote nodes in the configuration section,
      * because they may have just been added and not have a status entry yet.
@@ -321,12 +321,12 @@ refresh_remote_nodes(xmlNode *cib)
      */
     data.field = PCMK_XA_VALUE;
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                               remote_cache_refresh_helper, &data);
     data.field = PCMK_XA_ID;
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_CONFIG,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                               remote_cache_refresh_helper, &data);
 
     /* Remove all old cache entries that weren't seen in the CIB */
     g_hash_table_foreach_remove(crm_remote_peer_cache, is_dirty, NULL);
@@ -1428,8 +1428,8 @@ refresh_cluster_node_cib_cache(xmlNode *cib)
 
     g_hash_table_foreach(cluster_node_cib_cache, mark_dirty, NULL);
 
-    crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
-                             cluster_node_cib_cache_refresh_helper, NULL);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                               cluster_node_cib_cache_refresh_helper, NULL);
 
     // Remove all old cache entries that weren't seen in the CIB
     g_hash_table_foreach_remove(cluster_node_cib_cache, is_dirty, NULL);
@@ -1438,6 +1438,7 @@ refresh_cluster_node_cib_cache(xmlNode *cib)
 void
 pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 {
+    CRM_CHECK(cib != NULL, return);
     refresh_remote_nodes(cib);
     refresh_cluster_node_cib_cache(cib);
 }
@@ -1482,7 +1483,9 @@ crm_remote_peer_cache_size(void)
 void
 crm_remote_peer_cache_refresh(xmlNode *cib)
 {
-    refresh_remote_nodes(cib);
+    if (cib != NULL) {
+        refresh_remote_nodes(cib);
+    }
 }
 
 crm_node_t *
