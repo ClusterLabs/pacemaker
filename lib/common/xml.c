@@ -1810,6 +1810,10 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
+    /* BUG: If tracking is not enabled when this function is called, then
+     * xml_calculate_changes() will unset the lazy flag because
+     * pcmk__xml_accept_changes() will be in the call chain.
+     */
     pcmk__set_xml_doc_flag(new_xml, pcmk__xf_lazy);
     xml_calculate_changes(old_xml, new_xml);
 }
