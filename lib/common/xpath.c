@@ -190,26 +190,6 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
     pcmk__xpath_free_object(xpath_obj);
 }
 
-/*!
- * \brief Run a supplied function for each result of an xpath search
- *
- * \param[in,out] xml        XML to search
- * \param[in]     xpath      XPath search string
- * \param[in]     helper     Function to call for each result
- * \param[in,out] user_data  Data to pass to supplied function
- *
- * \note The helper function will be passed the XML node of the result,
- *       and the supplied user_data. This function does not otherwise
- *       use user_data.
- */
-void
-crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
-                         void (*helper)(xmlNode*, void*), void *user_data)
-{
-    CRM_CHECK(xml != NULL, return);
-    pcmk__xpath_foreach_result(xml->doc, xpath, helper, user_data);
-}
-
 xmlNode *
 get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 {
@@ -542,6 +522,14 @@ dedupXpathResults(xmlXPathObjectPtr xpathObj)
             }
         }
     }
+}
+
+void
+crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                         void (*helper)(xmlNode*, void*), void *user_data)
+{
+    CRM_CHECK(xml != NULL, return);
+    pcmk__xpath_foreach_result(xml->doc, xpath, helper, user_data);
 }
 
 // LCOV_EXCL_STOP

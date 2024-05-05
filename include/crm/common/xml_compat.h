@@ -246,6 +246,10 @@ void freeXpathObject(xmlXPathObjectPtr xpathObj);
 //! \deprecated Do not use
 void dedupXpathResults(xmlXPathObjectPtr xpathObj);
 
+//! \deprecated Do not use
+void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                              void (*helper)(xmlNode*, void*), void *user_data);
+
 #ifdef __cplusplus
 }
 #endif
