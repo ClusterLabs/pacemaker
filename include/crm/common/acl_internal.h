@@ -29,7 +29,7 @@ pcmk__is_privileged(const char *user)
 
 void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
 
-bool pcmk__check_acl(xmlNode *xml, const char *name,
+bool pcmk__check_acl(xmlNode *xml, const char *attr_name,
                      enum xml_private_flags mode);
 
 #endif /* CRM_COMMON_INTERNAL__H */
