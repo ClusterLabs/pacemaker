@@ -768,8 +768,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                   const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                   xmlNode **result_cib, xmlNode **answer)
 {
-    int lpc = 0;
-    int max = 0;
+    int num_nodes = 0;
     int rc = pcmk_ok;
     bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
 
@@ -785,30 +784,30 @@ cib_process_xpath(const char *op, int options, const char *section,
         xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
     }
 
-    max = pcmk__xpath_num_nodes(xpathObj);
+    num_nodes = pcmk__xpath_num_nodes(xpathObj);
 
-    if ((max < 1)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-        crm_debug("%s was already removed", section);
-
-    } else if (max < 1) {
-        crm_debug("%s: %s does not exist", op, section);
-        rc = -ENXIO;
-
-    } else if (is_query) {
-        if (max > 1) {
-            *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+    if (num_nodes < 1) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
+            crm_debug("%s was already removed", section);
+        } else {
+            crm_debug("%s: %s does not exist", op, section);
+            rc = -ENXIO;
         }
+
+    } else if (is_query && (num_nodes > 1)) {
+        *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
     }
 
-    if (pcmk_is_set(options, cib_multiple)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-        dedupXpathResults(xpathObj);
-    }
-
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int i = 0; i < num_nodes; i++) {
         xmlChar *path = NULL;
-        xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
+
+        /* If we're processing multiple nodes, go in reverse document order.
+         * Otherwise, if the node set contains both a parent and its descendant,
+         * operating on the parent may free the descendent before the loop
+         * reaches the descendant. This would be a use-after-free error.
+         */
+        int index = pcmk_is_set(options, cib_multiple)? (num_nodes - i - 1) : i;
+        xmlNode *match = pcmk__xpath_result_element(xpathObj, index);
 
         if (match == NULL) {
             continue;
