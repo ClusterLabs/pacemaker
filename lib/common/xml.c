@@ -381,9 +381,7 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
 
 bool xml_document_dirty(xmlNode *xml) 
 {
-    return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
-           && pcmk_is_set(((xml_doc_private_t *)(xml->doc->_private))->flags,
-                          pcmk__xf_dirty);
+    return pcmk__xml_all_flags_set_doc(xml, pcmk__xf_dirty);
 }
 
 /*!

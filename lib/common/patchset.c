@@ -254,7 +254,6 @@ xml_create_patchset_v1(xmlNode *source, xmlNode *target, bool config,
     xmlNode *patchset = pcmk__diff_v1_xml_object(source, target, suppress);
 
     if (patchset) {
-        CRM_LOG_ASSERT(xml_document_dirty(target));
         xml_repair_v1_diff(source, target, patchset, config);
         crm_xml_add(patchset, PCMK_XA_FORMAT, "1");
     }
@@ -277,12 +276,8 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         PCMK_XA_NUM_UPDATES,
     };
 
-    CRM_ASSERT(target);
-    if (!xml_document_dirty(target)) {
-        return NULL;
-    }
+    CRM_ASSERT((target != NULL) && (target->doc != NULL));
 
-    CRM_ASSERT(target->doc);
     docpriv = target->doc->_private;
 
     patchset = pcmk__xe_create(NULL, PCMK_XE_DIFF);
@@ -335,9 +330,9 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     const char *version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
 
     xml_acl_disable(target);
-    if (!xml_document_dirty(target)) {
+    if (!pcmk__xml_all_flags_set_doc(target, pcmk__xf_dirty)) {
         crm_trace("No change %d", format);
-        return NULL; /* No change */
+        return NULL;
     }
 
     config = is_config_change(target);
@@ -398,7 +393,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     /* We should always call xml_accept_changes() before calculating a digest.
      * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
      */
-    CRM_LOG_ASSERT(!xml_document_dirty(target));
+    CRM_LOG_ASSERT(!pcmk__xml_all_flags_set_doc(target, pcmk__xf_dirty));
 
     crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if ((format > 1) && !with_digest) {
