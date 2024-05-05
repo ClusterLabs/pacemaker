@@ -450,7 +450,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                 pcmk__enable_acl(*current_cib, scratch, user);
             }
 
-            pcmk__xml_mark_changes(*current_cib, scratch);
+            pcmk__xml_mark_changes(*current_cib, scratch, false);
         }
         CRM_CHECK(*current_cib != scratch, return -EINVAL);
     }

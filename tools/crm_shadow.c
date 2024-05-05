@@ -958,7 +958,7 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
         goto done;
     }
     pcmk__xml_track_changes(new_config->doc);
-    pcmk__xml_mark_changes(old_config, new_config);
+    pcmk__xml_mark_changes(old_config, new_config, false);
     diff = xml_create_patchset(0, old_config, new_config, NULL, false);
 
     pcmk__log_xml_changes(LOG_INFO, new_config);

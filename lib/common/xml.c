@@ -1812,12 +1812,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    /* BUG: If tracking is not enabled when this function is called, then
-     * pcmk__xml_mark_changes() will unset the ignore_attr_pos flag because
-     * pcmk__xml_accept_changes() will be in the call chain.
-     */
-    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_ignore_attr_pos);
-    pcmk__xml_mark_changes(old_xml, new_xml);
+    pcmk__xml_mark_changes(old_xml, new_xml, true);
 }
 
 /*!
@@ -1826,8 +1821,10 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
  *
  * Set flags in a new XML tree to indicate changes relative to an old XML tree.
  *
- * \param[in,out] old_xml  XML before changes
- * \param[in,out] new_xml  XML after changes
+ * \param[in,out] old_xml          XML before changes
+ * \param[in,out] new_xml          XML after changes
+ * \param[in]     ignore_attr_pos  If \c true, ignore changes in attribute
+ *                                 position within an element
  *
  * \note This may set \c pcmk__xf_skip on parts of \p old_xml.
  * \note This function first enables change tracking on \p new_xml if not
@@ -1835,7 +1832,7 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
  *       side effects.
  */
 void
-pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
+pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml, bool ignore_attr_pos)
 {
     CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
               && pcmk__xe_is(old_xml, (const char *) new_xml->name)
@@ -1845,6 +1842,9 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
 
     if (!pcmk__xml_all_flags_set_doc(new_xml, pcmk__xf_tracking)) {
         pcmk__xml_track_changes(new_xml->doc);
+    }
+    if (ignore_attr_pos) {
+        pcmk__set_xml_doc_flag(new_xml, pcmk__xf_ignore_attr_pos);
     }
 
     mark_xml_changes(old_xml, new_xml, false);
@@ -2169,7 +2169,7 @@ replace_node(xmlNode *old, xmlNode *new)
         // Replaced sections may have included relevant ACLs
         pcmk__apply_acl(new);
     }
-    pcmk__xml_mark_changes(old, new);
+    pcmk__xml_mark_changes(old, new, false);
     xmlFreeNode(old);
 }
 
@@ -3136,7 +3136,7 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
 void
 xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    pcmk__xml_mark_changes(old_xml, new_xml);
+    pcmk__xml_mark_changes(old_xml, new_xml, false);
 }
 
 // LCOV_EXCL_STOP
