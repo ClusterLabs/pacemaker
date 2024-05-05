@@ -266,6 +266,10 @@ bool xml_document_dirty(xmlNode *xml);
 //! \deprecated Do not use
 void xml_accept_changes(xmlNode *xml);
 
+//! \deprecated Do not use
+void xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                       bool enforce_acls);
+
 #ifdef __cplusplus
 }
 #endif

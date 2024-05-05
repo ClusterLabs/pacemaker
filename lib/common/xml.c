@@ -348,19 +348,6 @@ new_private_data(xmlNode *node)
     }
 }
 
-void
-xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
-{
-    if (xml != NULL) {
-        pcmk__xml_track_changes(xml->doc);
-
-        if (enforce_acls) {
-            pcmk__enable_acl(((acl_source != NULL)? acl_source : xml), xml,
-                             user);
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Return ordinal position of an XML node among its siblings
@@ -3110,6 +3097,20 @@ xml_accept_changes(xmlNode *xml)
 {
     if (xml != NULL) {
         pcmk__xml_accept_changes(xml->doc);
+    }
+}
+
+void
+xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                  bool enforce_acls)
+{
+    if (xml != NULL) {
+        pcmk__xml_track_changes(xml->doc);
+
+        if (enforce_acls) {
+            pcmk__enable_acl(((acl_source != NULL)? acl_source : xml), xml,
+                             user);
+        }
     }
 }
 
