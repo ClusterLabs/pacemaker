@@ -260,6 +260,9 @@ xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
 //! \deprecated Do not use
 bool xml_tracking_changes(xmlNode *xml);
 
+//! \deprecated Do not use
+bool xml_document_dirty(xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif
