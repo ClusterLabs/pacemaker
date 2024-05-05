@@ -710,7 +710,8 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name,
 
     CRM_ASSERT((xml != NULL) && (xml->doc->_private != NULL));
 
-    if (!pcmk__tracking_xml_changes(xml, false) || !xml_acl_enabled(xml)) {
+    if (!pcmk__xml_all_flags_set_doc(xml, pcmk__xf_tracking)
+        || !xml_acl_enabled(xml)) {
         return true;
     }
 

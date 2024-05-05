@@ -312,7 +312,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    if (pcmk__tracking_xml_changes(node, FALSE)) {
+    if (pcmk__xml_all_flags_set_doc(node, pcmk__xf_tracking)) {
         const char *old = crm_element_value(node, name);
 
         if (old == NULL || value == NULL || strcmp(old, value) != 0) {
@@ -1051,7 +1051,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    if (pcmk__tracking_xml_changes(node, FALSE)) {
+    if (pcmk__xml_all_flags_set_doc(node, pcmk__xf_tracking)) {
         if (!old_value || !value || !strcmp(old_value, value)) {
             dirty = TRUE;
         }

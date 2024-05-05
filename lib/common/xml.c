@@ -99,21 +99,6 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
     return true;
 }
 
-bool
-pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
-{
-    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
-        return FALSE;
-    } else if (!pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                            pcmk__xf_tracking)) {
-        return FALSE;
-    } else if (lazy && !pcmk_is_set(((xml_doc_private_t *)xml->doc->_private)->flags,
-                                    pcmk__xf_lazy)) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
 static inline void
 set_parent_flag(xmlNode *xml, long flag) 
 {
@@ -225,7 +210,7 @@ pcmk__xml_mark_created(xmlNode *xml)
 {
     CRM_ASSERT(xml != NULL);
 
-    if (!pcmk__tracking_xml_changes(xml, false)) {
+    if (!pcmk__xml_all_flags_set_doc(xml, pcmk__xf_tracking)) {
         // Tracking is disabled for entire document
         return;
     }
@@ -343,7 +328,7 @@ new_private_data(xmlNode *node)
             /* Flags will be reset if necessary when tracking is enabled */
             pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
             node->_private = nodepriv;
-            if (pcmk__tracking_xml_changes(node, FALSE)) {
+            if (pcmk__xml_all_flags_set_doc(node, pcmk__xf_tracking)) {
                 /* XML_ELEMENT_NODE doesn't get picked up here, node->doc is
                  * not hooked up at the point we are called
                  */
@@ -741,7 +726,7 @@ remove_xe_attr(xmlNode *element, xmlAttr *attr)
         return EPERM;
     }
 
-    if (pcmk__tracking_xml_changes(element, false)) {
+    if (pcmk__xml_all_flags_set_doc(element, pcmk__xf_tracking)) {
         // Leave in place (marked for removal) until after diff is calculated
         set_parent_flag(element, pcmk__xf_dirty);
         pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
@@ -1136,7 +1121,7 @@ free_xml_with_position(xmlNode *node, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
+    if (pcmk__xml_all_flags_set_doc(node, pcmk__xf_tracking)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
@@ -1624,7 +1609,9 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                   old_value);
 
             } else if ((old_pos != new_pos)
-                       && !pcmk__tracking_xml_changes(new_xml, TRUE)) {
+                       && !pcmk__xml_all_flags_set_doc(new_xml,
+                                                       pcmk__xf_lazy)) {
+
                 mark_attr_moved(new_xml, (const char *) old_xml->name,
                                 old_attr, new_attr, old_pos, new_pos);
             }
