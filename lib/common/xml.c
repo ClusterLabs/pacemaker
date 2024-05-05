@@ -1850,13 +1850,6 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
     mark_xml_changes(old_xml, new_xml, false);
 }
 
-// Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
-void
-xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
-{
-    pcmk__xml_mark_changes(old_xml, new_xml);
-}
-
 /*!
  * \internal
  * \brief Find a comment with matching content in specified XML
@@ -3138,6 +3131,12 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
                              user);
         }
     }
+}
+
+void
+xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
 // LCOV_EXCL_STOP

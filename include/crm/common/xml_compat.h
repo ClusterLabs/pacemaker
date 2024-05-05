@@ -270,6 +270,9 @@ void xml_accept_changes(xmlNode *xml);
 void xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
                        bool enforce_acls);
 
+//! \deprecated Do not use
+void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
+
 #ifdef __cplusplus
 }
 #endif
