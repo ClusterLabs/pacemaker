@@ -431,6 +431,8 @@ pcmk__xml_accept_changes(xmlDoc *doc)
  * \brief Accept any pending changes to an XML document and enable tracking
  *
  * \param[in,out] doc  XML document
+ *
+ * \note See \c pcmk__xml_accept_changes() for details about side effects.
  */
 void
 pcmk__xml_track_changes(xmlDoc *doc)
@@ -1811,16 +1813,29 @@ void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     /* BUG: If tracking is not enabled when this function is called, then
-     * xml_calculate_changes() will unset the ignore_attr_pos flag because
+     * pcmk__xml_mark_changes() will unset the ignore_attr_pos flag because
      * pcmk__xml_accept_changes() will be in the call chain.
      */
     pcmk__set_xml_doc_flag(new_xml, pcmk__xf_ignore_attr_pos);
-    xml_calculate_changes(old_xml, new_xml);
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
-// Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
+/*!
+ * \internal
+ * \brief Mark changes between two XML trees
+ *
+ * Set flags in a new XML tree to indicate changes relative to an old XML tree.
+ *
+ * \param[in,out] old_xml  XML before changes
+ * \param[in,out] new_xml  XML after changes
+ *
+ * \note This may set \c pcmk__xf_skip on parts of \p old_xml.
+ * \note This function first enables change tracking on \p new_xml if not
+ *       already enabled. See \c pcmk__xml_track_changes() for details about
+ *       side effects.
+ */
 void
-xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
+pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     CRM_CHECK((old_xml != NULL) && (new_xml != NULL)
               && pcmk__xe_is(old_xml, (const char *) new_xml->name)
@@ -1832,7 +1847,14 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
         pcmk__xml_track_changes(new_xml->doc);
     }
 
-    mark_xml_changes(old_xml, new_xml, FALSE);
+    mark_xml_changes(old_xml, new_xml, false);
+}
+
+// Called functions may set the \p pcmk__xf_skip flag on parts of \p old_xml
+void
+xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    pcmk__xml_mark_changes(old_xml, new_xml);
 }
 
 /*!
@@ -2154,7 +2176,7 @@ replace_node(xmlNode *old, xmlNode *new)
         // Replaced sections may have included relevant ACLs
         pcmk__apply_acl(new);
     }
-    xml_calculate_changes(old, new);
+    pcmk__xml_mark_changes(old, new);
     xmlFreeNode(old);
 }
 

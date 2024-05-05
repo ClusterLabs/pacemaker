@@ -493,7 +493,7 @@ process_ping_reply(xmlNode *reply)
 
             if(remote_cib && remote_cib->children) {
                 // Additional debug
-                xml_calculate_changes(the_cib, remote_cib);
+                pcmk__xml_mark_changes(the_cib, remote_cib);
                 pcmk__log_xml_changes(LOG_INFO, remote_cib);
                 crm_trace("End of differences");
             }
