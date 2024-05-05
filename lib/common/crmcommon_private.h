@@ -17,8 +17,10 @@
 #include <stdint.h>         // uint8_t, uint32_t
 #include <stdbool.h>        // bool
 #include <sys/types.h>      // size_t
+                            //
 #include <glib.h>           // gchar, GList
 #include <libxml/tree.h>    // xmlNode, xmlAttr
+#include <libxml/xmlstring.h>   // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
 // Decent chunk size for processing large amounts of data
@@ -58,7 +60,7 @@ typedef struct xml_doc_private_s {
 #define PCMK__XML_ENTITY_QUOT   "&quot;"
 
 //! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
-#define PCMK__XML_VERSION ((pcmkXmlStr) "1.0")
+#define PCMK__XML_VERSION ((const xmlChar *) "1.0")
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \

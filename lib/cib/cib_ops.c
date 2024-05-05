@@ -20,7 +20,8 @@
 #include <sys/types.h>
 
 #include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>        // xmlNode, etc.
+#include <libxml/xmlstring.h>   // xmlChar
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>

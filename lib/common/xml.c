@@ -20,7 +20,8 @@
 #include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <libxml/xmlstring.h>           // xmlGetUTF8Char()
+#include <libxml/xmlmemory.h>           // xmlFree()
+#include <libxml/xmlstring.h>           // xmlChar, xmlGetUTF8Char()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -665,12 +666,13 @@ move_xml_attr_to_end(gpointer data, gpointer user_data)
     const pcmk_nvpair_t *pair = data;
     xmlNode *xml = user_data;
 
-    xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) pair->name);
+    xmlAttr *attr = xmlHasProp(xml, (const xmlChar *) pair->name);
     xml_node_private_t *nodepriv = attr->_private;
     uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
 
     xmlRemoveProp(attr);
-    attr = xmlSetProp(xml, (pcmkXmlStr) pair->name, (pcmkXmlStr) pair->value);
+    attr = xmlSetProp(xml, (const xmlChar *) pair->name,
+                      (const xmlChar *) pair->value);
 
     nodepriv = attr->_private;
     if (nodepriv != NULL) {
@@ -754,7 +756,7 @@ void
 pcmk__xe_remove_attr(xmlNode *element, const char *name)
 {
     if (name != NULL) {
-        remove_xe_attr(element, xmlHasProp(element, (pcmkXmlStr) name));
+        remove_xe_attr(element, xmlHasProp(element, (const xmlChar *) name));
     }
 }
 
@@ -830,13 +832,13 @@ pcmk__xe_create(xmlNode *parent, const char *name)
 
         pcmk__mem_assert(doc);
 
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewDocRawNode(doc, NULL, (const xmlChar *) name, NULL);
         pcmk__mem_assert(node);
 
         xmlDocSetRootElement(doc, node);
 
     } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewChild(parent, NULL, (const xmlChar *) name, NULL);
         pcmk__mem_assert(node);
     }
 
@@ -883,7 +885,7 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
             va_end(ap);
         }
 
-        xmlNodeSetContent(node, (pcmkXmlStr) content);
+        xmlNodeSetContent(node, (const xmlChar *) content);
         free(buf);
     }
 }
@@ -922,7 +924,7 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
     if (c < 0) {
         crm_err("Invalid UTF-8 character 0x%X", c);
         return false;
@@ -970,7 +972,7 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
     *len = 4;
 
     // Note: xmlGetUTF8Char() assumes a 32-bit int
-    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    c = xmlGetUTF8Char((const xmlChar *) utf8, len);
 
     if (c < 0) {
         crm_err("Invalid UTF-8 character 0x%X", c);
@@ -1077,7 +1079,7 @@ pcmk__xe_set_id(xmlNode *node, const char *format, ...)
     CRM_ASSERT(vasprintf(&id, format, ap) >= 0);
     va_end(ap);
 
-    if (!xmlValidateNameValue((pcmkXmlStr) id)) {
+    if (!xmlValidateNameValue((const xmlChar *) id)) {
         pcmk__xml_sanitize_id(id);
     }
     crm_xml_add(node, PCMK_XA_ID, id);
@@ -1509,7 +1511,8 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Restore the old value (and the tracking flag)
-    attr = xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
+    attr = xmlSetProp(new_xml, (const xmlChar *) attr_name,
+                      (const xmlChar *) old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
@@ -1537,7 +1540,8 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
               attr_name, old_value, vcopy, element);
 
     // Restore the original value
-    xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
+    xmlSetProp(new_xml, (const xmlChar *) attr_name,
+               (const xmlChar *) old_value);
 
     // Change it back to the new value, to check ACLs
     crm_xml_add(new_xml, attr_name, vcopy);
@@ -2014,7 +2018,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
             /* Remove it first so the ordering of the update is preserved */
             xmlUnsetProp(target, a->name);
-            xmlSetProp(target, a->name, (pcmkXmlStr) p_value);
+            xmlSetProp(target, a->name, (const xmlChar *) p_value);
         }
     }
 
@@ -2746,7 +2750,7 @@ create_xml_node(xmlNode *parent, const char *name)
             return NULL;
         }
 
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewDocRawNode(doc, NULL, (const xmlChar *) name, NULL);
         if (node == NULL) {
             xmlFreeDoc(doc);
             return NULL;
@@ -2754,7 +2758,7 @@ create_xml_node(xmlNode *parent, const char *name)
         xmlDocSetRootElement(doc, node);
 
     } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
+        node = xmlNewChild(parent, NULL, (const xmlChar *) name, NULL);
         if (node == NULL) {
             return NULL;
         }

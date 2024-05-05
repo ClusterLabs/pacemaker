@@ -15,6 +15,9 @@
 
 #include <stdio.h>
 
+#include <libxml/tree.h>                    // xmlNode, etc.
+#include <libxml/xmlstring.h>               // xmlChar
+
 #include <crm/crm.h>
 #include <crm/common/attrs_internal.h>
 #include <crm/common/ipc.h>
@@ -89,7 +92,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      * backward compatibility with attribute managers <2.1.3 that didn't set it.
      */
     if (pcmk__str_eq(value, PCMK__ATTRD_CMD_QUERY, pcmk__str_null_matches)) {
-        if (!xmlHasProp(reply, (pcmkXmlStr) PCMK__XA_ATTR_NAME)) {
+        if (!xmlHasProp(reply, (const xmlChar *) PCMK__XA_ATTR_NAME)) {
             status = ENXIO; // Most likely, the attribute doesn't exist
             goto done;
         }

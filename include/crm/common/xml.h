@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #include <libxml/tree.h>            // xmlNode
+#include <libxml/xmlstring.h>       // xmlChar
 
 #include <crm/common/xml_io.h>
 #include <crm/common/xml_names.h>

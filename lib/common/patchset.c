@@ -16,9 +16,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <bzlib.h>
 
+#include <bzlib.h>
 #include <libxml/tree.h>
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -239,7 +240,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         
         const char *p_value = pcmk__xml_attr_value(a);
 
-        xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
+        xmlSetProp(cib, a->name, (const xmlChar *) p_value);
     }
 
     crm_log_xml_explicit(local_diff, "Repaired-diff");
@@ -515,7 +516,8 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
             const char *p_name = (const char *)pIter->name;
             const char *p_value = pcmk__xml_attr_value(pIter);
 
-            xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
+            xmlSetProp(diff, (const xmlChar *) p_name,
+                       (const xmlChar *) p_value);
         }
 
         // We have everything we need
@@ -531,7 +533,8 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
         if (strcmp(prop_name, PCMK_XA_ID) == 0) {
             // id already obtained when present ~ this case, so just reuse
-            xmlSetProp(diff, (pcmkXmlStr) PCMK_XA_ID, (pcmkXmlStr) id);
+            xmlSetProp(diff, (const xmlChar *) PCMK_XA_ID,
+                       (const xmlChar *) id);
             continue;
         }
 
@@ -539,7 +542,7 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
             continue;
         }
 
-        right_attr = xmlHasProp(right, (pcmkXmlStr) prop_name);
+        right_attr = xmlHasProp(right, (const xmlChar *) prop_name);
         if (right_attr) {
             nodepriv = right_attr->_private;
         }
@@ -556,14 +559,16 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                     const char *p_name = (const char *) pIter->name;
                     const char *p_value = pcmk__xml_attr_value(pIter);
 
-                    xmlSetProp(diff, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
+                    xmlSetProp(diff, (const xmlChar *) p_name,
+                               (const xmlChar *) p_value);
                 }
                 break;
 
             } else {
                 const char *left_value = pcmk__xml_attr_value(xIter);
 
-                xmlSetProp(diff, (pcmkXmlStr) prop_name, (pcmkXmlStr) value);
+                xmlSetProp(diff, (const xmlChar *) prop_name,
+                           (const xmlChar *) value);
                 crm_xml_add(diff, prop_name, left_value);
             }
 
@@ -586,8 +591,8 @@ subtract_v1_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
                         const char *p_name = (const char *) pIter->name;
                         const char *p_value = pcmk__xml_attr_value(pIter);
 
-                        xmlSetProp(diff, (pcmkXmlStr) p_name,
-                                   (pcmkXmlStr) p_value);
+                        xmlSetProp(diff, (const xmlChar *) p_name,
+                                   (const xmlChar *) p_value);
                     }
                     break;
 

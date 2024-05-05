@@ -9,6 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <libxml/tree.h>                    // xmlNode, etc.
+#include <libxml/xmlstring.h>               // xmlChar
+
 #include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
@@ -70,7 +73,7 @@ create_element_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlNodePtr node = xmlNewDocNode(doc, NULL, (pcmkXmlStr) "test", NULL);
+    xmlNodePtr node = xmlNewDocNode(doc, NULL, (const xmlChar *) "test", NULL);
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
@@ -96,9 +99,9 @@ create_attr_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlNodePtr node = xmlNewDocNode(doc, NULL, (pcmkXmlStr) "test", NULL);
-    xmlAttrPtr attr = xmlNewProp(node, (pcmkXmlStr) PCMK_XA_NAME,
-                                 (pcmkXmlStr) "dummy-value");
+    xmlNodePtr node = xmlNewDocNode(doc, NULL, (const xmlChar *) "test", NULL);
+    xmlAttrPtr attr = xmlNewProp(node, (const xmlChar *) PCMK_XA_NAME,
+                                 (const xmlChar *) "dummy-value");
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
@@ -124,7 +127,7 @@ create_comment_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlNodePtr node = xmlNewDocComment(doc, (pcmkXmlStr) "blahblah");
+    xmlNodePtr node = xmlNewDocComment(doc, (const xmlChar *) "blahblah");
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
@@ -150,7 +153,7 @@ create_text_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlNodePtr node = xmlNewDocText(doc, (pcmkXmlStr) "blahblah");
+    xmlNodePtr node = xmlNewDocText(doc, (const xmlChar *) "blahblah");
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
@@ -174,9 +177,9 @@ create_dtd_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlDtdPtr dtd = xmlNewDtd(doc, (pcmkXmlStr) PCMK_XA_NAME,
-                              (pcmkXmlStr) "externalId",
-                              (pcmkXmlStr) "systemId");
+    xmlDtdPtr dtd = xmlNewDtd(doc, (const xmlChar *) PCMK_XA_NAME,
+                              (const xmlChar *) "externalId",
+                              (const xmlChar *) "systemId");
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;
@@ -200,7 +203,7 @@ create_cdata_node(void **state) {
     xml_doc_private_t *docpriv = NULL;
     xml_node_private_t *priv = NULL;
     xmlDocPtr doc = xmlNewDoc(PCMK__XML_VERSION);
-    xmlNodePtr node = xmlNewCDataBlock(doc, (pcmkXmlStr) "blahblah", 8);
+    xmlNodePtr node = xmlNewCDataBlock(doc, (const xmlChar *) "blahblah", 8);
 
     /* Adding a node to the document marks it as dirty */
     docpriv = doc->_private;

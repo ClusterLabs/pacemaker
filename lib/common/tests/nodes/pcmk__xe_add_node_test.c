@@ -9,6 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <libxml/tree.h>        // xmlNode, etc.
+#include <libxml/xmlstring.h>   // xmlChar
+
 #include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
@@ -22,12 +25,12 @@ bad_input(void **state) {
     node = pcmk__xe_create(NULL, "test");
 
     pcmk__xe_add_node(node, NULL, 0);
-    assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST));
-    assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST_ID));
+    assert_null(xmlHasProp(node, (const xmlChar *) PCMK__XA_ATTR_HOST));
+    assert_null(xmlHasProp(node, (const xmlChar *) PCMK__XA_ATTR_HOST_ID));
 
     pcmk__xe_add_node(node, NULL, -100);
-    assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST));
-    assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST_ID));
+    assert_null(xmlHasProp(node, (const xmlChar *) PCMK__XA_ATTR_HOST));
+    assert_null(xmlHasProp(node, (const xmlChar *) PCMK__XA_ATTR_HOST_ID));
 
     pcmk__xml_free(node);
 }

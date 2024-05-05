@@ -12,6 +12,8 @@
 #include <crm/common/unittest_internal.h>
 
 #include <glib.h>                           // GHashTable, etc.
+#include <libxml/tree.h>                    // xmlNode, etc.
+#include <libxml/xmlstring.h>               // xmlChar
 
 #include "crmcommon_private.h"              // xml_node_private_t
 
@@ -115,7 +117,7 @@ already_sorted(void **state)
     xml_node_private_t *nodepriv = NULL;
 
     crm_xml_add(test_xml, "admin", "john");
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "admin");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "admin");
     if (attr != NULL) {
         nodepriv = attr->_private;
         if (nodepriv != NULL) {
@@ -126,7 +128,7 @@ already_sorted(void **state)
     crm_xml_add(test_xml, "dummy", "value");
 
     crm_xml_add(test_xml, "location", "usa");
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "location");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "location");
     if (attr != NULL) {
         nodepriv = attr->_private;
         if (nodepriv != NULL) {
@@ -156,7 +158,7 @@ need_sort(void **state)
     xml_node_private_t *nodepriv = NULL;
 
     crm_xml_add(test_xml, "location", "usa");
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "location");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "location");
     if (attr != NULL) {
         nodepriv = attr->_private;
         if (nodepriv != NULL) {
@@ -165,7 +167,7 @@ need_sort(void **state)
     }
 
     crm_xml_add(test_xml, "admin", "john");
-    attr = xmlHasProp(test_xml, (pcmkXmlStr) "admin");
+    attr = xmlHasProp(test_xml, (const xmlChar *) "admin");
     if (attr != NULL) {
         nodepriv = attr->_private;
         if (nodepriv != NULL) {

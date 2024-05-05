@@ -13,8 +13,10 @@
 #include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
+
 #include <glib.h>
 #include <libxml/tree.h>
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -323,7 +325,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         return NULL;
     }
 
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }
@@ -460,7 +462,7 @@ crm_element_value(const xmlNode *data, const char *name)
     /* The first argument to xmlHasProp() has always been const,
      * but libxml2 <2.9.2 didn't declare that, so cast it
      */
-    attr = xmlHasProp((xmlNode *) data, (pcmkXmlStr) name);
+    attr = xmlHasProp((xmlNode *) data, (const xmlChar *) name);
     if (!attr || !attr->children) {
         return NULL;
     }
@@ -1055,7 +1057,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         }
     }
 
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
+    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
     if (dirty) {
         pcmk__mark_xml_attr_dirty(attr);
     }

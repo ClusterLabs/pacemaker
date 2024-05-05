@@ -13,7 +13,10 @@
 #include <sys/types.h>
 #include <stdbool.h>
 #include <regex.h>
+
 #include <glib.h>
+#include <libxml/tree.h>            // xmlNode, etc.
+#include <libxml/xmlstring.h>       // xmlChar
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -285,12 +288,11 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 
                 for (iter = tag->refs; iter != NULL; iter = iter->next) {
                     const char *obj_ref = iter->data;
-                    xmlNode *new_rsc_ref = NULL;
+                    const xmlChar *name =
+                        (const xmlChar *) PCMK_XE_RESOURCE_REF;
+                    xmlNode *new_rsc_ref = xmlNewDocRawNode(set->doc, NULL,
+                                                            name, NULL);
 
-                    new_rsc_ref = xmlNewDocRawNode(set->doc, NULL,
-                                                   (pcmkXmlStr)
-                                                   PCMK_XE_RESOURCE_REF,
-                                                   NULL);
                     crm_xml_add(new_rsc_ref, PCMK_XA_ID, obj_ref);
                     xmlAddNextSibling(last_ref, new_rsc_ref);
 

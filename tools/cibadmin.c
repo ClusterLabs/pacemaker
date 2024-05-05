@@ -8,7 +8,12 @@
  */
 
 #include <crm_internal.h>
+
 #include <stdio.h>
+
+#include <libxml/tree.h>            // xmlNode
+#include <libxml/xmlstring.h>       // xmlChar
+
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>

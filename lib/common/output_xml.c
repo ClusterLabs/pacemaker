@@ -14,7 +14,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <crm/crm.h>
+
 #include <glib.h>
+#include <libxml/tree.h>                // xmlNode, etc.
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output.h>
@@ -324,7 +327,8 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     if (parent == NULL) {
         return;
     }
-    cdata_node = xmlNewCDataBlock(parent->doc, (pcmkXmlStr) buf, strlen(buf));
+    cdata_node = xmlNewCDataBlock(parent->doc, (const xmlChar *) buf,
+                                  strlen(buf));
     xmlAddChild(parent, cdata_node);
 }
 

@@ -10,8 +10,12 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
-#include <glib.h>
 #include <regex.h>
+
+#include <glib.h>               // GList, etc.
+#include <libxml/tree.h>        // xmlNode, etc.
+#include <libxml/xmlmemory.h>   // xmlFree()
+#include <libxml/xmlstring.h>   // xmlChar
 
 #include <crm/crm.h>
 #include <crm/lrmd.h>

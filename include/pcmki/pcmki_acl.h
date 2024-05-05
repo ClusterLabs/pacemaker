@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,9 @@
  */
 #ifndef PCMK__PCMKI_PCMKI_ACL__H
 #define PCMK__PCMKI_PCMKI_ACL__H
+
+#include <libxml/tree.h>            // xmlNode
+#include <libxml/xmlstring.h>       // xmlChar
 
 #include <crm/common/xml.h>
 

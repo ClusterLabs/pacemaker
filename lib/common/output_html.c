@@ -10,10 +10,13 @@
 #include <crm_internal.h>
 
 #include <ctype.h>
-#include <libxml/HTMLtree.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <libxml/HTMLtree.h>    // htmlNodePtr, etc.
+#include <libxml/tree.h>        // xmlNode, etc.
+#include <libxml/xmlstring.h>   // xmlChar
 
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
@@ -113,7 +116,7 @@ html_init(pcmk__output_t *out) {
     priv->parent_q = g_queue_new();
 
     priv->root = pcmk__xe_create(NULL, "html");
-    xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
+    xmlCreateIntSubset(priv->root->doc, (const xmlChar *) "html", NULL, NULL);
 
     crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
     g_queue_push_tail(priv->parent_q, priv->root);
@@ -157,7 +160,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * anything else that the user could add, and we want it done last to pick up
      * any options that may have been given.
      */
-    head_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) "head", NULL);
+    head_node = xmlNewDocRawNode(NULL, NULL, (const xmlChar *) "head", NULL);
 
     if (title != NULL ) {
         child_node = pcmk__xe_create(head_node, "title");
@@ -500,7 +503,7 @@ pcmk__html_add_header(const char *name, ...) {
 
     va_start(ap, name);
 
-    header_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) name, NULL);
+    header_node = xmlNewDocRawNode(NULL, NULL, (const xmlChar *) name, NULL);
     while (1) {
         char *key = va_arg(ap, char *);
         char *value;

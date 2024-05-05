@@ -8,17 +8,20 @@
  */
 
 #include <crm_internal.h>
+
+#include <inttypes.h>
+#include <stdint.h>
+
+#include <libxml/tree.h>
+#include <libxml/xmlstring.h>       // xmlChar
+
 #include <crm/common/output.h>
 #include <crm/common/results.h>
 #include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__*
 #include <crm/pengine/internal.h>
-#include <libxml/tree.h>
 #include <pacemaker-internal.h>
-
-#include <inttypes.h>
-#include <stdint.h>
 
 static char *
 colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
@@ -53,18 +56,18 @@ colocations_xml_node(pcmk__output_t *out, pcmk_resource_t *rsc,
                                         NULL);
 
     if (cons->node_attribute) {
-        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_NODE_ATTRIBUTE,
-                   (pcmkXmlStr) cons->node_attribute);
+        xmlSetProp(node, (const xmlChar *) PCMK_XA_NODE_ATTRIBUTE,
+                   (const xmlChar *) cons->node_attribute);
     }
 
     if (cons->dependent_role != pcmk_role_unknown) {
-        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_RSC_ROLE,
-                   (pcmkXmlStr) pcmk_role_text(cons->dependent_role));
+        xmlSetProp(node, (const xmlChar *) PCMK_XA_RSC_ROLE,
+                   (const xmlChar *) pcmk_role_text(cons->dependent_role));
     }
 
     if (cons->primary_role != pcmk_role_unknown) {
-        xmlSetProp(node, (pcmkXmlStr) PCMK_XA_WITH_RSC_ROLE,
-                   (pcmkXmlStr) pcmk_role_text(cons->primary_role));
+        xmlSetProp(node, (const xmlChar *) PCMK_XA_WITH_RSC_ROLE,
+                   (const xmlChar *) pcmk_role_text(cons->primary_role));
     }
 }
 

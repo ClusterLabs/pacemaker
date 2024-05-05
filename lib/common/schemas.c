@@ -17,6 +17,8 @@
 #include <stdarg.h>
 
 #include <libxml/relaxng.h>
+#include <libxml/tree.h>        // xmlNode, etc.
+#include <libxml/xmlstring.h>   // xmlChar
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #include <libxslt/security.h>
@@ -980,7 +982,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
         xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
-    xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
+    xslt = xsltParseStylesheetFile((const xmlChar *) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
     res = xsltApplyStylesheet(xslt, xml->doc, NULL);
@@ -1509,8 +1511,9 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     crm_xml_add(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
-    xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,
-                                            strlen(contents)));
+    xmlAddChild(file_node,
+                xmlNewCDataBlock(parent->doc, (const xmlChar *) contents,
+                                 strlen(contents)));
 
     /* Scan the file for any <externalRef> or <include> nodes and build up
      * a list of the files they reference.

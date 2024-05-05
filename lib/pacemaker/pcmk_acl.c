@@ -17,8 +17,9 @@
 #include <stdarg.h>
 
 #include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
+#include <libxml/tree.h>            // xmlNode, etc.
+#include <libxml/xmlmemory.h>       // xmlFree()
+#include <libxml/xmlstring.h>       // xmlChar
 #include <libxslt/transform.h>
 #include <libxslt/variables.h>
 #include <libxslt/xsltutils.h>
@@ -243,7 +244,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         char *credentials = crm_strdup_printf("ACLs as evaluated for user %s",
                                               cred);
 
-        comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
+        comment = xmlNewDocComment(target->doc, (const xmlChar *) credentials);
         free(credentials);
         if (comment == NULL) {
             xmlFreeNode(target);

@@ -17,7 +17,8 @@
 #include <bzlib.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <libxml/xmlIO.h>               // xmlOutputBuffer*
+#include <libxml/xmlIO.h>               // xmlOutputBuffer
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -188,8 +189,8 @@ pcmk__xml_read(const char *filename)
         char *input = read_stdin();
 
         if (input != NULL) {
-            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
-                              NULL, NULL);
+            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt,
+                              (const xmlChar *) input, NULL, NULL);
             free(input);
         }
 
@@ -197,8 +198,8 @@ pcmk__xml_read(const char *filename)
         char *input = decompress_file(filename);
 
         if (input != NULL) {
-            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
-                              NULL, NULL);
+            parse_xml_recover(&output, xmlCtxtReadDoc, ctxt,
+                              (const xmlChar *) input, NULL, NULL);
             free(input);
         }
 
@@ -260,8 +261,8 @@ pcmk__xml_parse(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input, NULL,
-                      NULL);
+    parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (const xmlChar *) input,
+                      NULL, NULL);
 
     if (output != NULL) {
         xml = xmlDocGetRootElement(output);

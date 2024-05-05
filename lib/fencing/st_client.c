@@ -16,7 +16,10 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <sys/types.h>
+
 #include <glib.h>
+#include <libxml/tree.h>        // xmlNode, etc.
+#include <libxml/xmlstring.h>   // xmlChar
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
