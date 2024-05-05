@@ -1809,12 +1809,6 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     }
 }
 
-void
-xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
-{
-    pcmk__xml_mark_changes(old_xml, new_xml, true);
-}
-
 /*!
  * \internal
  * \brief Mark changes between two XML trees
@@ -3137,6 +3131,12 @@ void
 xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     pcmk__xml_mark_changes(old_xml, new_xml, false);
+}
+
+void
+xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    pcmk__xml_mark_changes(old_xml, new_xml, true);
 }
 
 // LCOV_EXCL_STOP

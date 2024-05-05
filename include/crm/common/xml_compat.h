@@ -273,6 +273,9 @@ void xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
 //! \deprecated Do not use
 void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
 
+//! \deprecated Do not use
+void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
+
 #ifdef __cplusplus
 }
 #endif

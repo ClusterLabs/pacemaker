@@ -27,7 +27,6 @@ extern "C" {
  * \ingroup core
  */
 
-void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 xmlNode *xml_create_patchset(
