@@ -243,6 +243,9 @@ xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 //! \deprecated Do not use
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
 
+//! \deprecated Do not use
+void dedupXpathResults(xmlXPathObjectPtr xpathObj);
+
 #ifdef __cplusplus
 }
 #endif

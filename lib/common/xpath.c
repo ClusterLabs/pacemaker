@@ -133,43 +133,6 @@ pcmk__xpath_result_element(xmlXPathObject *xpath_obj, int index)
     }
 }
 
-void
-dedupXpathResults(xmlXPathObjectPtr xpathObj)
-{
-    int lpc, max = pcmk__xpath_num_nodes(xpathObj);
-
-    if (xpathObj == NULL) {
-        return;
-    }
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *xml = NULL;
-        gboolean dedup = FALSE;
-
-        if (xpathObj->nodesetval->nodeTab[lpc] == NULL) {
-            continue;
-        }
-
-        xml = xpathObj->nodesetval->nodeTab[lpc]->parent;
-
-        for (; xml; xml = xml->parent) {
-            int lpc2 = 0;
-
-            for (lpc2 = 0; lpc2 < max; lpc2++) {
-                if (xpathObj->nodesetval->nodeTab[lpc2] == xml) {
-                    xpathObj->nodesetval->nodeTab[lpc] = NULL;
-                    dedup = TRUE;
-                    break;
-                }
-            }
-
-            if (dedup) {
-                break;
-            }
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Search an XML document using an XPath expression
@@ -527,6 +490,43 @@ freeXpathObject(xmlXPathObjectPtr xpathObj)
     }
 
     xmlXPathFreeObject(xpathObj);
+}
+
+void
+dedupXpathResults(xmlXPathObjectPtr xpathObj)
+{
+    int lpc, max = pcmk__xpath_num_nodes(xpathObj);
+
+    if (xpathObj == NULL) {
+        return;
+    }
+
+    for (lpc = 0; lpc < max; lpc++) {
+        xmlNode *xml = NULL;
+        gboolean dedup = FALSE;
+
+        if (xpathObj->nodesetval->nodeTab[lpc] == NULL) {
+            continue;
+        }
+
+        xml = xpathObj->nodesetval->nodeTab[lpc]->parent;
+
+        for (; xml; xml = xml->parent) {
+            int lpc2 = 0;
+
+            for (lpc2 = 0; lpc2 < max; lpc2++) {
+                if (xpathObj->nodesetval->nodeTab[lpc2] == xml) {
+                    xpathObj->nodesetval->nodeTab[lpc] = NULL;
+                    dedup = TRUE;
+                    break;
+                }
+            }
+
+            if (dedup) {
+                break;
+            }
+        }
+    }
 }
 
 // LCOV_EXCL_STOP
