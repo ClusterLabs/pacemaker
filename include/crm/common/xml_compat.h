@@ -12,6 +12,7 @@
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
+#include <libxml/xmlstring.h>   // xmlChar
 #include <libxml/xpath.h>       // xmlXPathObjectPtr
 
 #include <crm/common/nvpair.h>  // crm_xml_add()
@@ -29,6 +30,9 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Do not use
+typedef const xmlChar *pcmkXmlStr;
 
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_PARANOIA_CHECKS 0

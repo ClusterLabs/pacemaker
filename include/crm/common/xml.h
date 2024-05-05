@@ -13,7 +13,6 @@
 #include <stdbool.h>
 
 #include <libxml/tree.h>            // xmlNode
-#include <libxml/xmlstring.h>       // xmlChar
 
 #include <crm/common/xml_io.h>
 #include <crm/common/xml_names.h>
@@ -27,8 +26,6 @@ extern "C" {
  * \brief Wrappers for and extensions to libxml2
  * \ingroup core
  */
-
-typedef const xmlChar *pcmkXmlStr;
 
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
