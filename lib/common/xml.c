@@ -150,6 +150,26 @@ pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether the given flags are set for an XML document
+ *
+ * \param[in] doc    XML document to check
+ * \param[in] flags  Group of <tt>enum xml_private_flags</tt>
+ *
+ * \return \c true if all of \p flags are set for \p doc, or \c false otherwise
+ */
+bool
+pcmk__xml_doc_all_flags_set(const xmlDoc *doc, uint32_t flags)
+{
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
+
+        return (docpriv != NULL) && pcmk_all_flags_set(docpriv->flags, flags);
+    }
+    return false;
+}
+
 // Mark document, element, and all element's parents as changed
 void
 pcmk__mark_xml_node_dirty(xmlNode *xml)

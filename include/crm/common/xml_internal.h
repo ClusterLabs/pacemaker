@@ -370,6 +370,7 @@ enum xml_private_flags {
 };
 
 void pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags);
+bool pcmk__xml_doc_all_flags_set(const xmlDoc *xml, uint32_t flags);
 
 bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                             void *user_data);
