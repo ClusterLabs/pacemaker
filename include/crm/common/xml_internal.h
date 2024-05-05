@@ -500,25 +500,24 @@ pcmk__xe_first_attr(const xmlNode *xe)
 /* internal XML-related utilities */
 
 enum xml_private_flags {
-     pcmk__xf_none        = 0x0000,
-     pcmk__xf_dirty       = 0x0001,
-     pcmk__xf_deleted     = 0x0002,
-     pcmk__xf_created     = 0x0004,
-     pcmk__xf_modified    = 0x0008,
+     pcmk__xf_none              = 0U,
+     pcmk__xf_dirty             = (1U << 0),
+     pcmk__xf_deleted           = (1U << 1),
+     pcmk__xf_created           = (1U << 2),
+     pcmk__xf_modified          = (1U << 3),
+     pcmk__xf_tracking          = (1U << 4),
+     pcmk__xf_processed         = (1U << 5),
+     pcmk__xf_skip              = (1U << 6),
+     pcmk__xf_moved             = (1U << 7),
+     pcmk__xf_acl_enabled       = (1U << 8),
+     pcmk__xf_acl_read          = (1U << 9),
+     pcmk__xf_acl_write         = (1U << 10),
+     pcmk__xf_acl_deny          = (1U << 11),
+     pcmk__xf_acl_create        = (1U << 12),
+     pcmk__xf_acl_denied        = (1U << 13),
 
-     pcmk__xf_tracking    = 0x0010,
-     pcmk__xf_processed   = 0x0020,
-     pcmk__xf_skip        = 0x0040,
-     pcmk__xf_moved       = 0x0080,
-
-     pcmk__xf_acl_enabled = 0x0100,
-     pcmk__xf_acl_read    = 0x0200,
-     pcmk__xf_acl_write   = 0x0400,
-     pcmk__xf_acl_deny    = 0x0800,
-
-     pcmk__xf_acl_create  = 0x1000,
-     pcmk__xf_acl_denied  = 0x2000,
-     pcmk__xf_lazy        = 0x4000,
+     //! Ignore changes in attribute position within an element
+     pcmk__xf_ignore_attr_pos   = (1U << 14),
 };
 
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);

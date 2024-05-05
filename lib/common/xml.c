@@ -1618,9 +1618,9 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                 mark_attr_changed(new_xml, (const char *) old_xml->name, name,
                                   old_value);
 
-            } else if ((old_pos != new_pos)
-                       && !pcmk__xml_all_flags_set_doc(new_xml,
-                                                       pcmk__xf_lazy)) {
+            } else if (!pcmk__xml_all_flags_set_doc(new_xml,
+                                                    pcmk__xf_ignore_attr_pos)
+                       && (old_pos != new_pos)) {
 
                 mark_attr_moved(new_xml, (const char *) old_xml->name,
                                 old_attr, new_attr, old_pos, new_pos);
@@ -1811,10 +1811,10 @@ void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
     /* BUG: If tracking is not enabled when this function is called, then
-     * xml_calculate_changes() will unset the lazy flag because
+     * xml_calculate_changes() will unset the ignore_attr_pos flag because
      * pcmk__xml_accept_changes() will be in the call chain.
      */
-    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_lazy);
+    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_ignore_attr_pos);
     xml_calculate_changes(old_xml, new_xml);
 }
 
