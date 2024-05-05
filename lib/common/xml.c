@@ -351,19 +351,13 @@ new_private_data(xmlNode *node)
 void
 xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
 {
-    if (xml == NULL) {
-        return;
-    }
-    pcmk__xml_accept_changes(xml->doc);
-    crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__set_xml_doc_flag(xml, pcmk__xf_tracking);
-    if(enforce_acls) {
-        if(acl_source == NULL) {
-            acl_source = xml;
+    if (xml != NULL) {
+        pcmk__xml_track_changes(xml->doc);
+
+        if (enforce_acls) {
+            pcmk__enable_acl(((acl_source != NULL)? acl_source : xml), xml,
+                             user);
         }
-        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_enabled);
-        pcmk__unpack_acl(acl_source, xml, user);
-        pcmk__apply_acl(xml);
     }
 }
 
@@ -442,6 +436,23 @@ pcmk__xml_accept_changes(xmlDoc *doc)
         if (dirty) {
             pcmk__xml_tree_foreach(root, accept_attr_deletions, NULL);
         }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Accept any pending changes to an XML document and enable tracking
+ *
+ * \param[in,out] doc  XML document
+ */
+void
+pcmk__xml_track_changes(xmlDoc *doc)
+{
+    if (doc != NULL) {
+        xml_doc_private_t *docpriv = doc->_private;
+
+        pcmk__xml_accept_changes(doc);
+        pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
     }
 }
 
@@ -1827,7 +1838,7 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
               return);
 
     if (!pcmk__xml_all_flags_set_doc(new_xml, pcmk__xf_tracking)) {
-        xml_track_changes(new_xml, NULL, NULL, FALSE);
+        pcmk__xml_track_changes(new_xml->doc);
     }
 
     mark_xml_changes(old_xml, new_xml, FALSE);

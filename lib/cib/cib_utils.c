@@ -352,7 +352,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
               (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
-    CRM_CHECK(current_cib != NULL, return -ENOMSG);
+    CRM_CHECK((current_cib != NULL) && (*current_cib != NULL), return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
     CRM_CHECK(config_changed != NULL, return -ENOMSG);
 
@@ -411,7 +411,6 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
 
     if (!make_copy) {
         /* Conditional on v2 patch style */
-
         scratch = *current_cib;
 
         // Make a copy of the top-level element to store version details
@@ -419,7 +418,11 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
         patchset_cib = top;
 
-        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
+        pcmk__xml_track_changes(scratch->doc);
+        if (cib_acl_enabled(scratch, user)) {
+            pcmk__enable_acl(scratch, scratch, user);
+        }
+
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
         /* If scratch points to a new object now (for example, after an erase
@@ -431,14 +434,22 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
         scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
-        xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
+        pcmk__xml_track_changes(scratch->doc);
+        if (cib_acl_enabled(scratch, user)) {
+            pcmk__enable_acl(scratch, scratch, user);
+        }
+
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
 
         if (!pcmk__xml_all_flags_set_doc(scratch, pcmk__xf_tracking)) {
             crm_trace("Inferring changes after %s op", op);
-            xml_track_changes(scratch, user, *current_cib,
-                              cib_acl_enabled(*current_cib, user));
+
+            pcmk__xml_track_changes(scratch->doc);
+            if (cib_acl_enabled(*current_cib, user)) {
+                pcmk__enable_acl(*current_cib, scratch, user);
+            }
+
             xml_calculate_changes(*current_cib, scratch);
         }
         CRM_CHECK(*current_cib != scratch, return -EINVAL);

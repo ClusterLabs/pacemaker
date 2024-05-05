@@ -524,6 +524,7 @@ enum xml_private_flags {
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 bool pcmk__xml_all_flags_set_doc(const xmlNode *xml, uint32_t flags);
 
+void pcmk__xml_track_changes(xmlDoc *doc);
 void pcmk__xml_accept_changes(xmlDoc *doc);
 
 /*!

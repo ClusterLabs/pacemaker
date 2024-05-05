@@ -228,7 +228,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         }
     }
 
-    xml_track_changes(object_2, NULL, object_2, FALSE);
+    pcmk__xml_track_changes(object_2->doc);
     if(as_cib) {
         xml_calculate_significant_changes(object_1, object_2);
     } else {
