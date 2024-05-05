@@ -379,11 +379,6 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
     }
 }
 
-bool xml_tracking_changes(xmlNode * xml)
-{
-    return pcmk__xml_all_flags_set_doc(xml, pcmk__xf_tracking);
-}
-
 bool xml_document_dirty(xmlNode *xml) 
 {
     return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
@@ -3093,6 +3088,12 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     }
 
     return result;
+}
+
+bool
+xml_tracking_changes(xmlNode *xml)
+{
+    return pcmk__xml_all_flags_set_doc(xml, pcmk__xf_tracking);
 }
 
 // LCOV_EXCL_STOP

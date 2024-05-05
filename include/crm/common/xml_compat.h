@@ -257,6 +257,9 @@ void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
 //! \deprecated Do not use
 xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
 
+//! \deprecated Do not use
+bool xml_tracking_changes(xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif
