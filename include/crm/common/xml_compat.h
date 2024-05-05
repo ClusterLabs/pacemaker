@@ -263,6 +263,9 @@ bool xml_tracking_changes(xmlNode *xml);
 //! \deprecated Do not use
 bool xml_document_dirty(xmlNode *xml);
 
+//! \deprecated Do not use
+void xml_accept_changes(xmlNode *xml);
+
 #ifdef __cplusplus
 }
 #endif

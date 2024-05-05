@@ -470,14 +470,6 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
     }
 }
 
-void
-xml_accept_changes(xmlNode * xml)
-{
-    if (xml != NULL) {
-        pcmk__xml_accept_changes(xml->doc);
-    }
-}
-
 /*!
  * \internal
  * \brief Find first XML child element matching given criteria
@@ -3100,6 +3092,14 @@ bool
 xml_document_dirty(xmlNode *xml)
 {
     return pcmk__xml_all_flags_set_doc(xml, pcmk__xf_dirty);
+}
+
+void
+xml_accept_changes(xmlNode *xml)
+{
+    if (xml != NULL) {
+        pcmk__xml_accept_changes(xml->doc);
+    }
 }
 
 // LCOV_EXCL_STOP
