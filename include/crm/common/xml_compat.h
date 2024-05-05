@@ -250,6 +250,9 @@ void dedupXpathResults(xmlXPathObjectPtr xpathObj);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
 
+//! \deprecated Do not use
+xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
+
 #ifdef __cplusplus
 }
 #endif

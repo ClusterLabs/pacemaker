@@ -269,64 +269,6 @@ pcmk__xpath_find_one(xmlDoc *doc, const char *path, uint8_t level)
     return result;
 }
 
-xmlNode *
-get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
-{
-    int max;
-    xmlNode *result = NULL;
-    xmlXPathObjectPtr xpathObj = NULL;
-    char *nodePath = NULL;
-    char *matchNodePath = NULL;
-
-    if (xpath == NULL) {
-        return xml_obj;         /* or return NULL? */
-    }
-
-    CRM_CHECK(xml_obj != NULL, return NULL);
-
-    xpathObj = pcmk__xpath_search(xml_obj->doc, xpath);
-    nodePath = (char *)xmlGetNodePath(xml_obj);
-    max = pcmk__xpath_num_nodes(xpathObj);
-
-    if (max < 1) {
-        if (error_level < LOG_NEVER) {
-            do_crm_log(error_level, "No match for %s in %s",
-                       xpath, pcmk__s(nodePath, "unknown path"));
-            crm_log_xml_explicit(xml_obj, "Unexpected Input");
-        }
-
-    } else if (max > 1) {
-        if (error_level < LOG_NEVER) {
-            int lpc = 0;
-
-            do_crm_log(error_level, "Too many matches for %s in %s",
-                       xpath, pcmk__s(nodePath, "unknown path"));
-
-            for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
-
-                CRM_LOG_ASSERT(match != NULL);
-                if (match != NULL) {
-                    matchNodePath = (char *) xmlGetNodePath(match);
-                    do_crm_log(error_level, "%s[%d] = %s",
-                               xpath, lpc,
-                               pcmk__s(matchNodePath, "unrecognizable match"));
-                    free(matchNodePath);
-                }
-            }
-            crm_log_xml_explicit(xml_obj, "Bad Input");
-        }
-
-    } else {
-        result = pcmk__xpath_result_element(xpathObj, 0);
-    }
-
-    pcmk__xpath_free_object(xpathObj);
-    free(nodePath);
-
-    return result;
-}
-
 /*!
  * \internal
  * \brief Get an XPath string that matches an XML element as closely as possible
@@ -472,6 +414,64 @@ xml_get_path(const xmlNode *xml)
     path = pcmk__str_copy(g_path->str);
     g_string_free(g_path, TRUE);
     return path;
+}
+
+xmlNode *
+get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
+{
+    int max;
+    xmlNode *result = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    char *nodePath = NULL;
+    char *matchNodePath = NULL;
+
+    if (xpath == NULL) {
+        return xml_obj;         /* or return NULL? */
+    }
+
+    CRM_CHECK(xml_obj != NULL, return NULL);
+
+    xpathObj = pcmk__xpath_search(xml_obj->doc, xpath);
+    nodePath = (char *)xmlGetNodePath(xml_obj);
+    max = pcmk__xpath_num_nodes(xpathObj);
+
+    if (max < 1) {
+        if (error_level < LOG_NEVER) {
+            do_crm_log(error_level, "No match for %s in %s",
+                       xpath, pcmk__s(nodePath, "unknown path"));
+            crm_log_xml_explicit(xml_obj, "Unexpected Input");
+        }
+
+    } else if (max > 1) {
+        if (error_level < LOG_NEVER) {
+            int lpc = 0;
+
+            do_crm_log(error_level, "Too many matches for %s in %s",
+                       xpath, pcmk__s(nodePath, "unknown path"));
+
+            for (lpc = 0; lpc < max; lpc++) {
+                xmlNode *match = pcmk__xpath_result_element(xpathObj, lpc);
+
+                CRM_LOG_ASSERT(match != NULL);
+                if (match != NULL) {
+                    matchNodePath = (char *) xmlGetNodePath(match);
+                    do_crm_log(error_level, "%s[%d] = %s",
+                               xpath, lpc,
+                               pcmk__s(matchNodePath, "unrecognizable match"));
+                    free(matchNodePath);
+                }
+            }
+            crm_log_xml_explicit(xml_obj, "Bad Input");
+        }
+
+    } else {
+        result = pcmk__xpath_result_element(xpathObj, 0);
+    }
+
+    pcmk__xpath_free_object(xpathObj);
+    free(nodePath);
+
+    return result;
 }
 
 xmlNode *

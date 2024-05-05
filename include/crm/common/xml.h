@@ -39,12 +39,6 @@ extern "C" {
 
 typedef const xmlChar *pcmkXmlStr;
 
-
-/*
- * Searching & Modifying
- */
-xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
 void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
