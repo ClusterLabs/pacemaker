@@ -377,7 +377,7 @@ find_resource_xml(xmlNode *cib_node, const char *resource)
 {
     const char *node = crm_element_value(cib_node, PCMK_XA_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
-    xmlNode *match = get_xpath_object(xpath, cib_node, LOG_TRACE);
+    xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
 
     free(xpath);
     return match;
@@ -408,6 +408,8 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     xmlNode *lrm = NULL;
     xmlNode *container = NULL;
     xmlNode *cib_resource = NULL;
+
+    CRM_CHECK(cib_node != NULL, return NULL);
 
     cib_resource = find_resource_xml(cib_node, resource);
     if (cib_resource != NULL) {

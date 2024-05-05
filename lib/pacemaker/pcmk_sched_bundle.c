@@ -789,9 +789,13 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
          * connection host as the magic string "#uname", then
          * replacing it with the underlying host when needed.
          */
-        xmlNode *nvpair = get_xpath_object(XPATH_REMOTE, replica->remote->xml,
-                                           LOG_ERR);
+        xmlNode *nvpair = NULL;
         const char *calculated_addr = NULL;
+
+        if (replica->remote->xml != NULL) {
+            nvpair = pcmk__xpath_find_one(replica->remote->xml->doc,
+                                          XPATH_REMOTE, LOG_ERR);
+        }
 
         // Replace the value in replica->remote->xml (if appropriate)
         calculated_addr = pe__add_bundle_remote_name(replica->remote, nvpair,

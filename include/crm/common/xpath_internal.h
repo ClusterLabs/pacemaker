@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_COMMON_XPATH_INTERNAL__H
 #define PCMK__CRM_COMMON_XPATH_INTERNAL__H
 
+#include <stdint.h>             // uint8_t
+
 #include <glib.h>               // GString
 #include <libxml/tree.h>        // xmlDoc, xmlNode
 #include <libxml/xpath.h>       // xmlXPathObject
@@ -48,6 +50,7 @@ xmlNode *pcmk__xpath_result_element(xmlXPathObject *xpath_obj, int index);
 void pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
                                 void (*helper)(xmlNode *, void *),
                                 void *user_data);
+xmlNode *pcmk__xpath_find_one(xmlDoc *doc, const char *path, uint8_t level);
 
 void pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
                                       const char *name);

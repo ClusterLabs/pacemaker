@@ -40,9 +40,12 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     bool best_failure = false;
     const char *best_digest = NULL;
 
+    CRM_CHECK(rsc->cluster->input != NULL, return NULL);
+
     // Find node's resource history
     xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->details->uname, rsc->id);
-    history = get_xpath_object(xpath, rsc->cluster->input, LOG_NEVER);
+    history = pcmk__xpath_find_one(rsc->cluster->input->doc, xpath,
+                                   LOG_NEVER);
     free(xpath);
 
     // Examine each history entry

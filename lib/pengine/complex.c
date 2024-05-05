@@ -302,6 +302,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *template_ref = NULL;
     const char *id = NULL;
 
+    CRM_CHECK(scheduler->input != NULL, return FALSE);
+
     if (xml_obj == NULL) {
         pcmk__config_err("No resource object for template unpacking");
         return FALSE;
@@ -324,8 +326,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    cib_resources = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
-                                     LOG_TRACE);
+    cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
+                                         "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
         return FALSE;

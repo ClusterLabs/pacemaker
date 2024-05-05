@@ -476,9 +476,12 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_NEVER);
+    xmlNode *dev = NULL;
     xmlNode *out_history = NULL;
 
+    CRM_CHECK(msg != NULL, return);
+
+    dev = pcmk__xpath_find_one(msg->doc, "//@" PCMK__XA_ST_TARGET, LOG_NEVER);
     if (dev) {
         target = crm_element_value(dev, PCMK__XA_ST_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
@@ -523,8 +526,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         NULL);
         } else if (remote_peer &&
                    !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
-            xmlNode *history = get_xpath_object("//" PCMK__XE_ST_HISTORY, msg,
-                                                LOG_NEVER);
+            xmlNode *history = pcmk__xpath_find_one(msg->doc,
+                                                    "//" PCMK__XE_ST_HISTORY,
+                                                    LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing

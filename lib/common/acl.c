@@ -290,7 +290,8 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 {
     xml_doc_private_t *docpriv = NULL;
 
-    if ((target == NULL) || (target->doc == NULL)
+    if ((source == NULL) || (source->doc == NULL)
+        || (target == NULL) || (target->doc == NULL)
         || (target->doc->_private == NULL)) {
         return;
     }
@@ -301,7 +302,9 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                   user);
 
     } else if (docpriv->acls == NULL) {
-        xmlNode *acls = get_xpath_object("//" PCMK_XE_ACLS, source, LOG_NEVER);
+        xmlNode *acls = NULL;
+
+        acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS, LOG_NEVER);
 
         pcmk__str_update(&docpriv->user, user);
 

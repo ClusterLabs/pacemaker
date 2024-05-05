@@ -61,7 +61,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
-    match = get_xpath_object((const char *) xpath->str, local_cib, LOG_NEVER);
+    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
 
     g_string_free(xpath, TRUE);
     return (match != NULL);
@@ -196,11 +196,10 @@ static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
     long long timeout_ms = 0;
-    xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
-
-    stonith_watchdog_xml = get_xpath_object(XPATH_WATCHDOG_TIMEOUT, cib,
-                                            LOG_NEVER);
+    xmlNode *stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
+                                                         XPATH_WATCHDOG_TIMEOUT,
+                                                         LOG_NEVER);
     if (stonith_watchdog_xml) {
         value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
     }

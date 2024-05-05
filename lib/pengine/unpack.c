@@ -2904,7 +2904,8 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     GString *xpath = NULL;
     xmlNode *xml = NULL;
 
-    CRM_CHECK((resource != NULL) && (op != NULL) && (node != NULL),
+    CRM_CHECK((resource != NULL) && (op != NULL) && (node != NULL)
+              && (scheduler->input != NULL),
               return NULL);
 
     xpath = g_string_sized_new(256);
@@ -2929,8 +2930,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         g_string_append_c(xpath, ']');
     }
 
-    xml = get_xpath_object((const char *) xpath->str, scheduler->input,
-                           LOG_DEBUG);
+    xml = pcmk__xpath_find_one(scheduler->input->doc, xpath->str, LOG_DEBUG);
     g_string_free(xpath, TRUE);
 
     if (xml && target_rc >= 0) {
@@ -2953,7 +2953,8 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
     GString *xpath = NULL;
     xmlNode *xml = NULL;
 
-    CRM_CHECK((rsc_id != NULL) && (node_name != NULL), return NULL);
+    CRM_CHECK((rsc_id != NULL) && (node_name != NULL)
+              && (scheduler->input != NULL), return NULL);
 
     xpath = g_string_sized_new(256);
     pcmk__g_strcat(xpath,
@@ -2961,8 +2962,7 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc_id, "']",
                    NULL);
 
-    xml = get_xpath_object((const char *) xpath->str, scheduler->input,
-                           LOG_DEBUG);
+    xml = pcmk__xpath_find_one(scheduler->input->doc, xpath->str, LOG_DEBUG);
 
     g_string_free(xpath, TRUE);
     return xml;

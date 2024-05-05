@@ -2429,7 +2429,7 @@ pcmk__xe_expand_idref(xmlNode *input, xmlNode *search)
     }
 
     xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
-    result = get_xpath_object(xpath, search, LOG_DEBUG);
+    result = pcmk__xpath_find_one(search->doc, xpath, LOG_DEBUG);
     if (result == NULL) {
         // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "

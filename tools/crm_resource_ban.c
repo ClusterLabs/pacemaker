@@ -458,6 +458,10 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
         crm_time_t *end = NULL;
         int rc = pcmk_rc_ok;
 
+        if (constraint_node == NULL) {
+            continue;
+        }
+
         if (buf == NULL) {
             buf = g_string_sized_new(1024);
         }
@@ -468,8 +472,8 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
             continue;
         }
 
-        date_expr_node = get_xpath_object((const char *) buf->str,
-                                          constraint_node, LOG_DEBUG);
+        date_expr_node = pcmk__xpath_find_one(constraint_node->doc, buf->str,
+                                              LOG_DEBUG);
         if (date_expr_node == NULL) {
             continue;
         }

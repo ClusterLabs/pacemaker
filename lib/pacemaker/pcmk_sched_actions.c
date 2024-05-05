@@ -1905,6 +1905,7 @@ void
 pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
 {
     crm_trace("Check resource and action configuration for changes");
+    CRM_CHECK(scheduler->input != NULL, return);
 
     /* Rather than iterate through the status section, iterate through the nodes
      * and search for the appropriate status subsection for each. This skips
@@ -1924,7 +1925,8 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
             xmlNode *history = NULL;
 
             xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->details->uname);
-            history = get_xpath_object(xpath, scheduler->input, LOG_NEVER);
+            history = pcmk__xpath_find_one(scheduler->input->doc, xpath,
+                                           LOG_NEVER);
             free(xpath);
 
             process_node_history(node, history);

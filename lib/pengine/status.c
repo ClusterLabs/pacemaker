@@ -70,8 +70,9 @@ static void
 check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
 {
     // @COMPAT Drop this function when support for the syntax is dropped
-    xmlNode *deprecated = get_xpath_object(XPATH_DEPRECATED_RULES,
-                                           scheduler->input, LOG_NEVER);
+    xmlNode *deprecated = pcmk__xpath_find_one(scheduler->input->doc,
+                                               XPATH_DEPRECATED_RULES,
+                                               LOG_NEVER);
 
     if (deprecated != NULL) {
         pcmk__warn_once(pcmk__wo_op_attr_expr,
@@ -132,15 +133,17 @@ cluster_status(pcmk_scheduler_t * scheduler)
         pcmk__clear_scheduler_flags(scheduler, pcmk_sched_quorate);
     }
 
-    scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
-                                              scheduler->input, LOG_NEVER);
+    scheduler->op_defaults = pcmk__xpath_find_one(scheduler->input->doc,
+                                                  "//" PCMK_XE_OP_DEFAULTS,
+                                                  LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
-    scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
-                                               scheduler->input, LOG_NEVER);
+    scheduler->rsc_defaults = pcmk__xpath_find_one(scheduler->input->doc,
+                                                   "//" PCMK_XE_RSC_DEFAULTS,
+                                                   LOG_NEVER);
 
-    section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
-                               LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc,
+                                   "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
     unpack_config(section, scheduler);
 
    if (!pcmk_any_flags_set(scheduler->flags,
@@ -150,22 +153,24 @@ cluster_status(pcmk_scheduler_t * scheduler)
                          "due to lack of quorum");
     }
 
-    section = get_xpath_object("//" PCMK_XE_NODES, scheduler->input, LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_NODES,
+                                   LOG_TRACE);
     unpack_nodes(section, scheduler);
 
-    section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
-                               LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc,
+                                   "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
 
-    section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
+    section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_TAGS,
+                                   LOG_NEVER);
     unpack_tags(section, scheduler);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
-        section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
-                                   LOG_TRACE);
+        section = pcmk__xpath_find_one(scheduler->input->doc,
+                                       "//" PCMK_XE_STATUS, LOG_TRACE);
         unpack_status(section, scheduler);
     }
 

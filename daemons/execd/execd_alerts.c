@@ -105,16 +105,21 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
-    xmlNode *alert_xml = get_xpath_object("//" PCMK__XE_LRMD_ALERT, request,
-                                          LOG_ERR);
-    const char *alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
-    const char *alert_path = crm_element_value(alert_xml,
-                                               PCMK__XA_LRMD_ALERT_PATH);
+    xmlNode *alert_xml = NULL;
+    const char *alert_id = NULL;
+    const char *alert_path = NULL;
     svc_action_t *action = NULL;
     int alert_timeout = 0;
     int rc = pcmk_ok;
     GHashTable *params = NULL;
     struct alert_cb_s *cb_data = NULL;
+
+    CRM_CHECK(request != NULL, return -EINVAL);
+
+    alert_xml = pcmk__xpath_find_one(request->doc, "//" PCMK__XE_LRMD_ALERT,
+                                     LOG_ERR);
+    alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
+    alert_path = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_PATH);
 
     if ((alert_id == NULL) || (alert_path == NULL) ||
         (client == NULL) || (client->id == NULL)) { /* hint static analyzer */

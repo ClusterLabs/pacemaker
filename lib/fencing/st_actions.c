@@ -468,13 +468,17 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
 xmlNode *
 stonith__find_xe_with_result(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" PCMK__XA_RC_CODE, xml, LOG_NEVER);
+    xmlNode *match = NULL;
+
+    CRM_CHECK(xml != NULL, return NULL);
+
+    match = pcmk__xpath_find_one(xml->doc, "//@" PCMK__XA_RC_CODE, LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
          * return code, not a full result, so check for that.
          */
-        match = get_xpath_object("//@" PCMK__XA_ST_RC, xml, LOG_ERR);
+        match = pcmk__xpath_find_one(xml->doc, "//@" PCMK__XA_ST_RC, LOG_ERR);
     }
     return match;
 }

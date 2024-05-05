@@ -724,13 +724,14 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
                               call_options, timeout);
     pcmk__xml_free(data);
 
-    if (rc == 0) {
-        xmlNode *op = NULL;
-        xmlNode *reply = get_xpath_object("//" PCMK__XE_ST_HISTORY, output,
-                                          LOG_NEVER);
+    if ((rc == 0) && (output != NULL)) {
+        xmlNode *reply = pcmk__xpath_find_one(output->doc,
+                                              "//" PCMK__XE_ST_HISTORY,
+                                              LOG_NEVER);
 
-        for (op = pcmk__xe_first_child(reply, NULL, NULL, NULL); op != NULL;
-             op = pcmk__xe_next(op)) {
+        for (xmlNode *op = pcmk__xe_first_child(reply, NULL, NULL, NULL);
+             op != NULL; op = pcmk__xe_next(op)) {
+
             stonith_history_t *kvp;
             long long completed;
             long long completed_nsec = 0L;
@@ -1389,7 +1390,7 @@ static xmlNode *
 get_event_data_xml(xmlNode *msg, const char *ntype)
 {
     char *data_addr = crm_strdup_printf("//%s", ntype);
-    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
+    xmlNode *data = pcmk__xpath_find_one(msg->doc, data_addr, LOG_DEBUG);
 
     free(data_addr);
     return data;
