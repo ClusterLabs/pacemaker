@@ -239,7 +239,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
 
     pcmk__log_xml_changes(LOG_INFO, object_2);
-    xml_accept_changes(object_2);
+    pcmk__xml_accept_changes(object_2->doc);
 
     if (output == NULL) {
         return pcmk_rc_ok;  // No changes

@@ -524,6 +524,8 @@ enum xml_private_flags {
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 bool pcmk__xml_all_flags_set_doc(const xmlNode *xml, uint32_t flags);
 
+void pcmk__xml_accept_changes(xmlDoc *doc);
+
 /*!
  * \internal
  * \brief Iterate over child elements of \p xml

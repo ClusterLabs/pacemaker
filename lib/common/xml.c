@@ -351,7 +351,10 @@ new_private_data(xmlNode *node)
 void
 xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls) 
 {
-    xml_accept_changes(xml);
+    if (xml == NULL) {
+        return;
+    }
+    pcmk__xml_accept_changes(xml->doc);
     crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
     pcmk__set_xml_doc_flag(xml, pcmk__xf_tracking);
     if(enforce_acls) {
@@ -410,6 +413,40 @@ accept_attr_deletions(xmlNode *xml, void *user_data)
 
 /*!
  * \internal
+ * \brief Accept all pending changes to an XML document
+ *
+ * Clear user and all flags, ACLs, and deleted node records for the document;
+ * clear all flags on each node in the tree; and delete any attributes marked
+ * for deletion.
+ *
+ * When change tracking is enabled, "removing" an attribute simply marks it for
+ * deletion until changes are accepted. This ensures they're considered when
+ * calculating changes for a patchset.
+ *
+ * Note that this function clears all flags, not just flags that indicate
+ * changes like \c pcmk__xf_dirty and \c pcmk__xf_deleted.
+ *
+ * \param[in,out] doc  XML document
+ */
+void
+pcmk__xml_accept_changes(xmlDoc *doc)
+{
+    if (doc != NULL) {
+        xmlNode *root = xmlDocGetRootElement(doc);
+        xml_doc_private_t *docpriv = doc->_private;
+        bool dirty = pcmk_is_set(docpriv->flags, pcmk__xf_dirty);
+
+        reset_xml_private_data(docpriv);
+        docpriv->flags = pcmk__xf_none;
+
+        if (dirty) {
+            pcmk__xml_tree_foreach(root, accept_attr_deletions, NULL);
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Find first child XML node matching another given XML node
  *
  * \param[in] haystack  XML whose children should be checked
@@ -436,26 +473,9 @@ pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
 void
 xml_accept_changes(xmlNode * xml)
 {
-    xmlNode *top = NULL;
-    xml_doc_private_t *docpriv = NULL;
-
-    if(xml == NULL) {
-        return;
+    if (xml != NULL) {
+        pcmk__xml_accept_changes(xml->doc);
     }
-
-    crm_trace("Accepting changes to %p", xml);
-    docpriv = xml->doc->_private;
-    top = xmlDocGetRootElement(xml->doc);
-
-    reset_xml_private_data(xml->doc->_private);
-
-    if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
-        docpriv->flags = pcmk__xf_none;
-        return;
-    }
-
-    docpriv->flags = pcmk__xf_none;
-    pcmk__xml_tree_foreach(top, accept_attr_deletions, NULL);
 }
 
 /*!

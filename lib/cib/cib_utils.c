@@ -529,7 +529,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     }
 
     pcmk__log_xml_changes(LOG_TRACE, scratch);
-    xml_accept_changes(scratch);
+    pcmk__xml_accept_changes(scratch->doc);
 
     if(local_diff) {
         patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
