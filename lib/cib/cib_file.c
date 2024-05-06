@@ -701,7 +701,7 @@ cib_file_new(const char *cib_location)
  * \return TRUE if digests match or signature file does not exist, else FALSE
  */
 static gboolean
-cib_file_verify_digest(xmlNode *root, const char *sigfile)
+cib_file_verify_digest(const xmlNode *root, const char *sigfile)
 {
     gboolean passed = FALSE;
     char *expected;
