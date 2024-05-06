@@ -96,7 +96,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+    xmlXPathObject *xpathObj = xpath_search(rsc->private->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);

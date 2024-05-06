@@ -707,9 +707,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *str = NULL;
 
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->xml, PCMK_XA_CLASS),
-        .provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
-        .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE),
+        .standard = crm_element_value(rsc->private->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE),
     };
 
     pe_op_eval_data_t op_rule_data = {

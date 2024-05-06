@@ -119,7 +119,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
     };
 
     for (int i = 0; i < PCMK__NELEM(attr_list); i++) {
-        const char *value = crm_element_value(rsc->xml, attr_list[i]);
+        const char *value = crm_element_value(rsc->private->xml, attr_list[i]);
         const char *old_value = crm_element_value(rsc_entry, attr_list[i]);
 
         if (!pcmk__str_eq(value, old_value, pcmk__str_none)) {

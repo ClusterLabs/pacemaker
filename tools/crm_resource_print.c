@@ -67,9 +67,9 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     const char *host = NULL;
     bool needs_quorum = TRUE;
-    const char *rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
-    const char *rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
-    const char *rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    const char *rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
+    const char *rprov = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    const char *rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
@@ -83,7 +83,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     }
 
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
-              rsc->xml->name, rsc->id,
+              rsc->private->xml->name, rsc->id,
               pcmk__s(rsc->private->history_id, rsc->id),
               ((rsc->parent == NULL)? "NA" : rsc->parent->id),
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
@@ -129,8 +129,8 @@ cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, pcmk__map_element_name(rsc->xml), show_opts, rsc, all,
-                 all);
+    out->message(out, pcmk__map_element_name(rsc->private->xml), show_opts, rsc,
+                 all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
@@ -161,7 +161,8 @@ attribute_changed_xml(pcmk__output_t *out, va_list args)
 {
     attr_update_data_t *ud = va_arg(args, attr_update_data_t *);
 
-    pcmk__output_xml_create_parent(out, (const char *) ud->rsc->xml->name,
+    pcmk__output_xml_create_parent(out,
+                                   (const char *) ud->rsc->private->xml->name,
                                    PCMK_XA_ID, ud->rsc->id,
                                    NULL);
 
@@ -375,7 +376,7 @@ property_list_default(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *attr = va_arg(args, char *);
 
-    const char *value = crm_element_value(rsc->xml, attr);
+    const char *value = crm_element_value(rsc->private->xml, attr);
 
     if (value != NULL) {
         out->begin_list(out, NULL, NULL, "Properties");
@@ -392,7 +393,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     const char *attr = va_arg(args, const char *);
 
-    const char *value = crm_element_value(rsc->xml, attr);
+    const char *value = crm_element_value(rsc->private->xml, attr);
 
     if (value != NULL) {
         pcmk__formatted_printf(out, "%s\n", value);

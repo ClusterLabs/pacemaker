@@ -192,6 +192,9 @@ typedef struct {
 struct pcmk__resource_private {
     char *history_id;               // Resource instance ID in history
 
+    // Resource configuration (possibly expanded from template)
+    xmlNode *xml;
+
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };

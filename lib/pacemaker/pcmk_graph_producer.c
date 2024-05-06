@@ -260,7 +260,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
     // List affected resource
 
     rsc_xml = pcmk__xe_create(action_xml,
-                              (const char *) action->rsc->xml->name);
+                              (const char *) action->rsc->private->xml->name);
     if (pcmk_is_set(action->rsc->flags, pcmk_rsc_removed)
         && (action->rsc->private->history_id != NULL)) {
         /* Use the numbered instance name here, because if there is more
@@ -277,7 +277,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
-        const char *xml_id = pcmk__xe_id(action->rsc->xml);
+        const char *xml_id = pcmk__xe_id(action->rsc->private->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
                   xml_id, action->rsc->id, action->rsc->private->history_id);

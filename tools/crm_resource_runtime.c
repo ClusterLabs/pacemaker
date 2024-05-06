@@ -260,9 +260,10 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENOTCONN;
     }
 
-    crm_xml_add(rsc->xml, attr_name, attr_value);
+    crm_xml_add(rsc->private->xml, attr_name, attr_value);
 
-    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_sync_call);
+    rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->private->xml,
+                            cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         out->info(out, "Set attribute: " PCMK_XA_NAME "=%s value=%s",
@@ -415,7 +416,9 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                     rsc_attr_id = found_attr_id;
                 }
 
-                xml_top = pcmk__xe_create(NULL, (const char *) rsc->xml->name);
+                xml_top = pcmk__xe_create(NULL,
+                                          (const char *)
+                                          rsc->private->xml->name);
                 crm_xml_add(xml_top, PCMK_XA_ID, lookup_id);
 
                 xml_obj = pcmk__xe_create(xml_top, attr_set_type);
@@ -568,9 +571,10 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                                                  "delete", force);
 
     } else if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        pcmk__xe_remove_attr(rsc->xml, attr_name);
+        pcmk__xe_remove_attr(rsc->private->xml, attr_name);
         CRM_ASSERT(cib != NULL);
-        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->xml, cib_options);
+        rc = cib->cmds->replace(cib, PCMK_XE_RESOURCES, rsc->private->xml,
+                                cib_options);
         rc = pcmk_legacy2rc(rc);
         if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted attribute: %s", attr_name);
@@ -664,9 +668,9 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         return EINVAL;
     }
 
-    rsc_class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    rsc_provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
-    rsc_type = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+    rsc_class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    rsc_provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    rsc_type = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
         out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
@@ -1410,7 +1414,7 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, bool simulate)
     }
 
   done:
-    // Do not free scheduler->input here, we need rsc->xml to be valid later on
+    // Do not free scheduler->input because rsc->private->xml must remain valid
     cib_delete(shadow_cib);
     free(pid);
 
@@ -2263,9 +2267,9 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
-    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    rprov = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
-    rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    rprov = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
+    rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
 
     params = generate_resource_params(rsc, NULL /* @TODO use local node */,
                                       scheduler);

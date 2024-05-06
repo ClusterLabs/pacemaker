@@ -241,9 +241,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    // Resource configuration (possibly expanded from template)
-    xmlNode *xml;
-
     // Original resource configuration, if using template
     xmlNode *orig_xml;
 

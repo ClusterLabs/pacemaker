@@ -931,7 +931,7 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
     value = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
-           && xml_contains_remote_node(rsc->xml);
+           && xml_contains_remote_node(rsc->private->xml);
 }
 
 const char *
@@ -997,11 +997,13 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
-    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_DOCKER, NULL, NULL);
+    xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_DOCKER, NULL,
+                                   NULL);
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {
-        xml_obj = pcmk__xe_first_child(rsc->xml, PCMK__XE_RKT, NULL, NULL);
+        xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK__XE_RKT, NULL,
+                                       NULL);
         if (xml_obj != NULL) {
             pcmk__warn_once(pcmk__wo_rkt,
                             "Support for " PCMK__XE_RKT " in bundles "
@@ -1009,8 +1011,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                             "removed in a future release", rsc->id);
             bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
-            xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_PODMAN, NULL,
-                                           NULL);
+            xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_PODMAN,
+                                           NULL, NULL);
             if (xml_obj != NULL) {
                 bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
             } else {
@@ -1065,7 +1067,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     bundle_data->container_network = crm_element_value_copy(xml_obj,
                                                             PCMK_XA_NETWORK);
 
-    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_NETWORK, NULL, NULL);
+    xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_NETWORK, NULL,
+                                   NULL);
     if(xml_obj) {
         bundle_data->ip_range_start =
             crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
@@ -1110,7 +1113,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_STORAGE, NULL, NULL);
+    xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_STORAGE, NULL,
+                                   NULL);
     for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_STORAGE_MAPPING,
                                           NULL, NULL);
          xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
@@ -1137,7 +1141,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_PRIMITIVE, NULL, NULL);
+    xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_PRIMITIVE, NULL,
+                                   NULL);
     if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
@@ -1508,23 +1513,23 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (print_ip) {
-            out->message(out, (const char *) ip->xml->name, show_opts, ip,
-                         only_node, only_rsc);
+            out->message(out, (const char *) ip->private->xml->name, show_opts,
+                         ip, only_node, only_rsc);
         }
 
         if (print_child) {
-            out->message(out, (const char *) child->xml->name, show_opts, child,
-                         only_node, only_rsc);
+            out->message(out, (const char *) child->private->xml->name,
+                         show_opts, child, only_node, only_rsc);
         }
 
         if (print_ctnr) {
-            out->message(out, (const char *) container->xml->name, show_opts,
-                         container, only_node, only_rsc);
+            out->message(out, (const char *) container->private->xml->name,
+                         show_opts, container, only_node, only_rsc);
         }
 
         if (print_remote) {
-            out->message(out, (const char *) remote->xml->name, show_opts,
-                         remote, only_node, only_rsc);
+            out->message(out, (const char *) remote->private->xml->name,
+                         show_opts, remote, only_node, only_rsc);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1659,22 +1664,22 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             }
 
             if (print_ip) {
-                out->message(out, (const char *) ip->xml->name,
+                out->message(out, (const char *) ip->private->xml->name,
                              new_show_opts, ip, only_node, only_rsc);
             }
 
             if (print_child) {
-                out->message(out, (const char *) child->xml->name,
+                out->message(out, (const char *) child->private->xml->name,
                              new_show_opts, child, only_node, only_rsc);
             }
 
             if (print_ctnr) {
-                out->message(out, (const char *) container->xml->name,
+                out->message(out, (const char *) container->private->xml->name,
                              new_show_opts, container, only_node, only_rsc);
             }
 
             if (print_remote) {
-                out->message(out, (const char *) remote->xml->name,
+                out->message(out, (const char *) remote->private->xml->name,
                              new_show_opts, remote, only_node, only_rsc);
             }
 
@@ -1804,22 +1809,22 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {
-                out->message(out, (const char *) ip->xml->name,
+                out->message(out, (const char *) ip->private->xml->name,
                              new_show_opts, ip, only_node, only_rsc);
             }
 
             if (print_child) {
-                out->message(out, (const char *) child->xml->name,
+                out->message(out, (const char *) child->private->xml->name,
                              new_show_opts, child, only_node, only_rsc);
             }
 
             if (print_ctnr) {
-                out->message(out, (const char *) container->xml->name,
+                out->message(out, (const char *) container->private->xml->name,
                              new_show_opts, container, only_node, only_rsc);
             }
 
             if (print_remote) {
-                out->message(out, (const char *) remote->xml->name,
+                out->message(out, (const char *) remote->private->xml->name,
                              new_show_opts, remote, only_node, only_rsc);
             }
 
@@ -1857,22 +1862,19 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
     }
 
     if (replica->ip) {
-        pcmk__xml_free(replica->ip->xml);
-        replica->ip->xml = NULL;
+        pcmk__xml_free(replica->ip->private->xml);
+        replica->ip->private->xml = NULL;
         replica->ip->private->fns->free(replica->ip);
-        replica->ip = NULL;
     }
     if (replica->container) {
-        pcmk__xml_free(replica->container->xml);
-        replica->container->xml = NULL;
+        pcmk__xml_free(replica->container->private->xml);
+        replica->container->private->xml = NULL;
         replica->container->private->fns->free(replica->container);
-        replica->container = NULL;
     }
     if (replica->remote) {
-        pcmk__xml_free(replica->remote->xml);
-        replica->remote->xml = NULL;
+        pcmk__xml_free(replica->remote->private->xml);
+        replica->remote->private->xml = NULL;
         replica->remote->private->fns->free(replica->remote);
-        replica->remote = NULL;
     }
     free(replica->ipaddr);
     free(replica);
@@ -1905,8 +1907,8 @@ pe__free_bundle(pcmk_resource_t *rsc)
     g_list_free(rsc->children);
 
     if(bundle_data->child) {
-        pcmk__xml_free(bundle_data->child->xml);
-        bundle_data->child->xml = NULL;
+        pcmk__xml_free(bundle_data->child->private->xml);
+        bundle_data->child->private->xml = NULL;
         bundle_data->child->private->fns->free(bundle_data->child);
     }
     common_free(rsc);

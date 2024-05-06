@@ -132,7 +132,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return; // Not a fencing device
     }
@@ -177,7 +177,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     crm_debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = crm_element_value(rsc->xml, PCMK_XA_TYPE);
+    agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
 
     /* @COMPAT Support for node attribute expressions in rules for resource
      * meta-attributes is deprecated. When we can break behavioral backward
