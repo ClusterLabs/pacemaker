@@ -693,11 +693,11 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     if (expanded_xml) {
         crm_log_xml_trace(expanded_xml, "[expanded XML]");
         rsc_private->xml = expanded_xml;
-        (*rsc)->orig_xml = xml_obj;
+        rsc_private->orig_xml = xml_obj;
 
     } else {
         rsc_private->xml = xml_obj;
-        (*rsc)->orig_xml = NULL;
+        rsc_private->orig_xml = NULL;
     }
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
@@ -1085,10 +1085,10 @@ common_free(pcmk_resource_t * rsc)
 
         pcmk__xml_free(rsc->private->xml);
         rsc->private->xml = NULL;
-        pcmk__xml_free(rsc->orig_xml);
-        rsc->orig_xml = NULL;
+        pcmk__xml_free(rsc->private->orig_xml);
+        rsc->private->orig_xml = NULL;
 
-    } else if (rsc->orig_xml) {
+    } else if (rsc->private->orig_xml != NULL) {
         // rsc->private->xml was expanded from a template
         pcmk__xml_free(rsc->private->xml);
         rsc->private->xml = NULL;

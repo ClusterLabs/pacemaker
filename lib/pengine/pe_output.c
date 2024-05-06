@@ -391,8 +391,9 @@ is_mixed_version(pcmk_scheduler_t *scheduler)
 static void
 formatted_xml_buf(const pcmk_resource_t *rsc, GString *xml_buf, bool raw)
 {
-    if (raw && (rsc->orig_xml != NULL)) {
-        pcmk__xml_string(rsc->orig_xml, pcmk__xml_fmt_pretty, xml_buf, 0);
+    if (raw && (rsc->private->orig_xml != NULL)) {
+        pcmk__xml_string(rsc->private->orig_xml, pcmk__xml_fmt_pretty, xml_buf,
+                         0);
     } else {
         pcmk__xml_string(rsc->private->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
     }
