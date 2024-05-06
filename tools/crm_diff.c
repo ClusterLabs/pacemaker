@@ -216,8 +216,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 
 // \return Standard Pacemaker return code
 static int
-generate_patch(xmlNode *source, xmlNode *target, const char *target_file,
-               gboolean as_cib, gboolean no_version)
+generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
 {
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -240,7 +239,7 @@ generate_patch(xmlNode *source, xmlNode *target, const char *target_file,
 
     pcmk__xml_track_changes(target->doc);
     pcmk__xml_mark_changes(source, target, as_cib);
-    crm_log_xml_debug(target, pcmk__s(target_file, "target"));
+    crm_log_xml_debug(target, "target");
 
     output = xml_create_patchset(0, source, target, NULL, FALSE);
 
@@ -374,8 +373,7 @@ main(int argc, char **argv)
     if (options.patch) {
         rc = apply_patch(source, target, options.as_cib);
     } else {
-        rc = generate_patch(source, target, options.target_file,
-                            options.as_cib, options.no_version);
+        rc = generate_patch(source, target, options.as_cib, options.no_version);
     }
     exit_code = pcmk_rc2exitc(rc);
 
