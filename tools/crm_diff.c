@@ -27,6 +27,7 @@
 #define SUMMARY "Compare two Pacemaker configurations (in XML format) to "    \
                 "produce a custom diff-like output, or apply such an output " \
                 "as a patch"
+#define INDENT "                                   "
 
 struct {
     gboolean apply;
@@ -66,12 +67,17 @@ patch_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     return TRUE;
 }
 
+// @COMPAT Use last-one-wins for original/new/patch input sources
 static GOptionEntry original_xml_entries[] = {
     { "original", 'o', 0, G_OPTION_ARG_STRING, &options.xml_file_1,
-      "XML is contained in the named file",
+      "XML is contained in the named file. Currently --original-string and\n"
+      INDENT "--stdin both override this. In a future release, the last one\n"
+      INDENT "specified will be used.",
       "FILE" },
     { "original-string", 'O', 0, G_OPTION_ARG_CALLBACK, original_string_cb,
-      "XML is contained in the supplied string",
+      "XML is contained in the supplied string. Currently this takes\n"
+      INDENT "precedence over both --stdin and --original. In a future\n"
+      INDENT "release, the last one specified will be used.",
       "STRING" },
 
     { NULL }
@@ -79,13 +85,22 @@ static GOptionEntry original_xml_entries[] = {
 
 static GOptionEntry operation_entries[] = {
     { "new", 'n', 0, G_OPTION_ARG_STRING, &options.xml_file_2,
-      "Compare the original XML to the contents of the named file",
+      "Compare the original XML to the contents of the named file. Currently\n"
+      INDENT "--new-string and --stdin both override this. In a future\n"
+      INDENT "release, the last one specified will be used.",
       "FILE" },
     { "new-string", 'N', 0, G_OPTION_ARG_CALLBACK, new_string_cb,
-      "Compare the original XML with the contents of the supplied string",
+      "Compare the original XML with the contents of the supplied string.\n"
+      INDENT "Currently this takes precedence over --stdin, --patch, and\n"
+      INDENT "--new. In a future release, the last one specified will be used.",
       "STRING" },
     { "patch", 'p', 0, G_OPTION_ARG_CALLBACK, patch_cb,
-      "Patch the original XML with the contents of the named file",
+      "Patch the original XML with the contents of the named file. Currently\n"
+      INDENT "--new-string, --stdin, and (if specified later) --new override\n"
+      INDENT "the input source specified here. In a future release, the last\n"
+      INDENT "one specified will be used. Note: even if this input source is\n"
+      INDENT "overridden, the input source will be applied as a patch to the\n"
+      INDENT "original XML.",
       "FILE" },
 
     { NULL }
@@ -93,13 +108,16 @@ static GOptionEntry operation_entries[] = {
 
 static GOptionEntry addl_entries[] = {
     { "cib", 'c', 0, G_OPTION_ARG_NONE, &options.as_cib,
-      "Compare/patch the inputs as a CIB (includes versions details)",
+      "Compare/patch the inputs as a CIB (includes version details)",
       NULL },
     { "stdin", 's', 0, G_OPTION_ARG_NONE, &options.use_stdin,
-      "",
+      "Get the original XML and new (or patch) XML from stdin. Currently\n"
+      INDENT "--original-string and --new-string override this for original\n"
+      INDENT "and new/patch XML, respectively. In a future release, the last\n"
+      INDENT "one specified will be used.",
       NULL },
     { "no-version", 'u', 0, G_OPTION_ARG_NONE, &options.no_version,
-      "Generate the difference without versions details",
+      "Generate the difference without version details",
       NULL },
 
     { NULL }
