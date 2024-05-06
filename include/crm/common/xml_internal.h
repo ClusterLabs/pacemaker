@@ -528,6 +528,9 @@ void pcmk__xml_accept_changes(xmlDoc *doc);
 void pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml,
                             bool ignore_attr_pos);
 
+int pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                                int target[3]);
+
 /*!
  * \internal
  * \brief Iterate over child elements of \p xml

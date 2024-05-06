@@ -49,7 +49,7 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
 
-    xml_patch_versions(diff, add, del);
+    pcmk__xml_patchset_versions(diff, del, add);
 
     *admin_epoch = add[0];
     *epoch = add[1];

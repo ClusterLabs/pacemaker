@@ -152,7 +152,7 @@ log_patch_cib_versions(xmlNode *patch)
     const char *fmt = NULL;
     const char *digest = NULL;
 
-    xml_patch_versions(patch, add, del);
+    pcmk__xml_patchset_versions(patch, del, add);
     fmt = crm_element_value(patch, PCMK_XA_FORMAT);
     digest = crm_element_value(patch, PCMK__XA_DIGEST);
 

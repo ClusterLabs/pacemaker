@@ -44,7 +44,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patchset_versions(patchset, del, add);
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
         const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);

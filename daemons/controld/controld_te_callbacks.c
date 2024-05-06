@@ -573,7 +573,7 @@ te_update_diff(const char *event, xmlNode * msg)
 
     CRM_CHECK(diff != NULL, return);
 
-    xml_patch_versions(diff, p_add, p_del);
+    pcmk__xml_patchset_versions(diff, p_del, p_add);
     crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
               fsa_state2string(controld_globals.fsa_state));

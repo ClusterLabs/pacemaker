@@ -540,7 +540,7 @@ update_fencing_topology(const char *event, xmlNode * msg)
         int add[] = { 0, 0, 0 };
         int del[] = { 0, 0, 0 };
 
-        xml_patch_versions(patchset, add, del);
+        pcmk__xml_patchset_versions(patchset, del, add);
 
         for (change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
              change != NULL; change = pcmk__xe_next(change)) {

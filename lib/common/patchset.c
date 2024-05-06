@@ -745,10 +745,10 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
  * \internal
  * \brief Find additions or removals in a patch set
  *
- * \param[in]     patchset   XML of patch
- * \param[in]     format     Patch version
- * \param[in]     added      TRUE if looking for additions, FALSE if removals
- * \param[in,out] patch_node Will be set to node if found
+ * \param[in]  patchset    XML of patch
+ * \param[in]  format      Patch version
+ * \param[in]  added       TRUE if looking for additions, FALSE if removals
+ * \param[out] patch_node  Will be set to node if found
  *
  * \return TRUE if format is valid, FALSE if invalid
  */
@@ -782,6 +782,64 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
             return FALSE;
     }
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Get the source and target CIB versions from an XML patchset
+ *
+ * Each output object will contain, in order, the following version fields from
+ * the source and target:
+ * * \c PCMK_XA_ADMIN_EPOCH
+ * * \c PCMK_XA_EPOCH
+ * * \c PCMK_XA_NUM_UPDATES
+ *
+ * \param[in]  patchset  XML patchset
+ * \param[out] source    Where to store versions from source
+ * \param[out] target    Where to store versions from target
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                            int target[3])
+{
+    static const char *vfields[] = {
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
+    };
+
+    int format = 1;
+    const xmlNode *source_xml = NULL;
+    const xmlNode *target_xml = NULL;
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+
+    // Source node (or removals node for v1)
+    if (!find_patch_xml_node(patchset, format, false, (xmlNode **) &source_xml)
+        || (source_xml == NULL)) {
+        return EINVAL;
+    }
+
+    // Process target (or additions for v1)
+    if (!find_patch_xml_node(patchset, format, true, (xmlNode **) &target_xml)
+        || (target_xml == NULL)) {
+        return EINVAL;
+    }
+
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        if (crm_element_value_int(source_xml, vfields[i], &(source[i])) != 0) {
+            return EINVAL;
+        }
+        crm_trace("Got %d for source[%s]", source[i], vfields[i]);
+
+        if (crm_element_value_int(target_xml, vfields[i], &(target[i])) != 0) {
+            return EINVAL;
+        }
+        crm_trace("Got %d for target[%s]", target[i], vfields[i]);
+    }
+    return pcmk_rc_ok;
 }
 
 // Get CIB versions used for additions and deletions in a patchset
@@ -867,7 +925,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
         del[lpc] = this[lpc];
     }
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patchset_versions(patchset, del, add);
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         if (this[lpc] < del[lpc]) {
