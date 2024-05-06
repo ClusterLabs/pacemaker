@@ -198,6 +198,9 @@ struct pcmk__resource_private {
     // Original resource configuration, if using template
     xmlNode *orig_xml;
 
+    // Configuration of resource operations (possibly expanded from template)
+    xmlNode *ops_xml;
+
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };

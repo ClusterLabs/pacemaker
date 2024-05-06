@@ -87,8 +87,8 @@ static xmlNode *
 find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
                          guint interval_ms, bool include_disabled)
 {
-    for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
-                                                   NULL, NULL);
+    for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+                                                   PCMK_XE_OP, NULL, NULL);
          operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
         bool enabled = false;
@@ -478,8 +478,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          * block (which may have rules that need to be evaluated) rather than
          * XML properties.
          */
-        for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
-                                                       NULL, NULL);
+        for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+                                                       PCMK_XE_OP, NULL, NULL);
              operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
             bool enabled = false;
@@ -647,8 +647,8 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
     guint min_interval_ms = G_MAXUINT;
     xmlNode *op = NULL;
 
-    for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
-                                                   NULL, NULL);
+    for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+                                                   PCMK_XE_OP, NULL, NULL);
          operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
         bool enabled = false;

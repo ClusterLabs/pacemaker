@@ -706,7 +706,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     ops = pcmk__xe_first_child(rsc_private->xml, PCMK_XE_OPERATIONS, NULL,
                                NULL);
-    (*rsc)->ops_xml = pcmk__xe_resolve_idref(ops, scheduler->input);
+    rsc_private->ops_xml = pcmk__xe_resolve_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) rsc_private->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {

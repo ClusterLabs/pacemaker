@@ -241,9 +241,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    // Configuration of resource operations (possibly expanded from template)
-    xmlNode *ops_xml;
-
     pcmk_scheduler_t *cluster;          // Cluster that resource is part of
     pcmk_resource_t *parent;            // Resource's parent resource, if any
     enum pe_obj_types variant;          // Resource variant
