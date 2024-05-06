@@ -220,50 +220,68 @@ strip_patchset_cib_versions(xmlNode *patchset)
     }
 }
 
-// \return Standard Pacemaker return code
+/*!
+ * \internal
+ * \brief Create an XML patchset from the given source and target XML trees
+ *
+ * \param[in,out] source      Source XML
+ * \param[in,out] target      Target XML
+ * \param[in]     as_cib      If \c true, treat the XML trees as CIBs. In
+ *                            particular, ignore attribute position changes,
+ *                            include the target digest in the patchset, and log
+ *                            the source and target CIB versions.
+ * \param[in]     no_version  If \c true, ignore changes to the CIB version
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
+generate_patchset(xmlNode *source, xmlNode *target, bool as_cib,
+                  bool no_version)
 {
     int format = 1;
-    xmlNode *output = NULL;
+    xmlNode *patchset = NULL;
 
-    /* If we're ignoring the version, make the version information
-     * identical, so it isn't detected as a change. */
+    /* If we're ignoring the version, make the version information identical,
+     * so it isn't detected as a change
+     */
     if (no_version) {
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_xml_add(target, vfields[lpc],
-                        crm_element_value(source, vfields[lpc]));
+            crm_xml_add(target, vfields[i],
+                        crm_element_value(source, vfields[i]));
         }
     }
 
-    pcmk__xml_track_changes(target->doc);
     pcmk__xml_mark_changes(source, target, as_cib);
     crm_log_xml_debug(target, "target");
 
-    output = xml_create_patchset(0, source, target, NULL, FALSE);
+    patchset = xml_create_patchset(0, source, target, NULL, false);
 
     pcmk__log_xml_changes(LOG_INFO, target);
     pcmk__xml_accept_changes(target->doc);
 
-    if (output == NULL) {
+    if (patchset == NULL) {
         return pcmk_rc_ok;  // No changes
     }
 
-    crm_element_value_int(output, PCMK_XA_FORMAT, &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     if (as_cib || (format == 1)) {
-        pcmk__xml_patchset_add_digest(output, source, target);
+        pcmk__xml_patchset_add_digest(patchset, source, target);
     }
 
     if (as_cib) {
-        log_patch_cib_versions(output);
+        /* @TODO Will incorrectly be logged as the same in source and target
+         * if no_version is true. Probably not ideal. Ignoring version isn't the
+         * same as reporting an incorrect target version.
+         */
+        log_patch_cib_versions(patchset);
 
     } else if (no_version) {
-        strip_patchset_cib_versions(output);
+        strip_patchset_cib_versions(patchset);
     }
 
-    pcmk__log_xml_patchset(LOG_NOTICE, output);
-    print_patch(output);
-    pcmk__xml_free(output);
+    pcmk__log_xml_patchset(LOG_NOTICE, patchset);
+    print_patch(patchset);
+    pcmk__xml_free(patchset);
 
     /* pcmk_rc_error means there's a non-empty diff.
      * @COMPAT Choose a more descriptive return code, like one that maps to
@@ -372,7 +390,8 @@ main(int argc, char **argv)
     if (options.patch) {
         rc = apply_patch(source, target, options.as_cib);
     } else {
-        rc = generate_patch(source, target, options.as_cib, options.no_version);
+        rc = generate_patchset(source, target, options.as_cib,
+                               options.no_version);
     }
     exit_code = pcmk_rc2exitc(rc);
 
