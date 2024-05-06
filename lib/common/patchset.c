@@ -379,8 +379,8 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
 }
 
 void
-patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
-                        bool with_digest)
+patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                        const xmlNode *target, bool with_digest)
 {
     int format = 1;
     const char *version = NULL;
