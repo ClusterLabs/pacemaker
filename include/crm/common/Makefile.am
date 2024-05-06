@@ -29,6 +29,7 @@ header_HEADERS = acl.h 			\
 		 nodes.h 		\
 		 nodes_internal.h 	\
 		 nvpair.h 		\
+		 nvpair_compat.h 	\
 		 options.h 		\
 		 output.h 		\
 		 resources.h		\
