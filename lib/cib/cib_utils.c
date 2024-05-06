@@ -336,6 +336,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                bool manage_counters, bool *config_changed, xmlNode **current_cib,
                xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
+    int patchset_format = 1;
     int rc = pcmk_ok;
     bool check_schema = true;
     bool make_copy = true;
@@ -543,7 +544,11 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     pcmk__xml_accept_changes(scratch->doc);
 
     if(local_diff) {
-        patchset_process_digest(local_diff, patchset_cib, scratch, with_digest);
+        crm_element_value_int(local_diff, PCMK_XA_FORMAT, &patchset_format);
+
+        if (with_digest || (patchset_format == 1)) {
+            pcmk__xml_patchset_add_digest(local_diff, patchset_cib, scratch);
+        }
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
@@ -554,10 +559,8 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
             {
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
-                int format = 1;
                 xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
 
-                crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
                                              manage_counters);
 
@@ -568,8 +571,8 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                     save_xml_to_file(local_diff, "PatchApply:diff", NULL);
                     crm_err("v%d patchset error, patch failed to apply: %s "
                             "(%d)",
-                            format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
-                            test_rc);
+                            patchset_format,
+                            pcmk_rc_str(pcmk_legacy2rc(test_rc)), test_rc);
                 }
                 pcmk__xml_free(cib_copy);
             },

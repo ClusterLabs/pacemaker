@@ -216,6 +216,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         PCMK_XA_NUM_UPDATES,
     };
 
+    int format = 1;
     xmlNode *output = NULL;
 
     /* If we're ignoring the version, make the version information
@@ -241,7 +242,10 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         return pcmk_rc_ok;  // No changes
     }
 
-    patchset_process_digest(output, object_1, object_2, as_cib);
+    crm_element_value_int(output, PCMK_XA_FORMAT, &format);
+    if (as_cib || (format == 1)) {
+        pcmk__xml_patchset_add_digest(output, object_1, object_2);
+    }
 
     if (as_cib) {
         log_patch_cib_versions(output);

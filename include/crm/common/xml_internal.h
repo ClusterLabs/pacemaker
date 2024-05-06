@@ -530,6 +530,8 @@ void pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml,
 
 int pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
                                 int target[3]);
+void pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *source,
+                                   const xmlNode *target);
 
 /*!
  * \internal

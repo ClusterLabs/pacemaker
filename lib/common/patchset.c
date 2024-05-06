@@ -379,6 +379,29 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
 }
 
 void
+pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *source,
+                              const xmlNode *target)
+{
+    const char *version = NULL;
+    char *digest = NULL;
+
+    CRM_CHECK((patchset != NULL) && (source != NULL) && (target != NULL),
+              return);
+
+    /* We should always call pcmk__xml_accept_changes() before calculating a
+     * digest. Otherwise, with an on-tracking dirty target, we could get an
+     * incorrect digest.
+     */
+    CRM_CHECK(!pcmk__xml_all_flags_set_doc(target, pcmk__xf_dirty), return);
+
+    version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(target, true, version);
+
+    crm_xml_add(patchset, PCMK__XA_DIGEST, digest);
+    free(digest);
+}
+
+void
 patchset_process_digest(xmlNode *patch, const xmlNode *source,
                         const xmlNode *target, bool with_digest)
 {
@@ -406,8 +429,6 @@ patchset_process_digest(xmlNode *patch, const xmlNode *source,
 
     crm_xml_add(patch, PCMK__XA_DIGEST, digest);
     free(digest);
-
-    return;
 }
 
 // @COMPAT Remove when v1 patchsets are removed
