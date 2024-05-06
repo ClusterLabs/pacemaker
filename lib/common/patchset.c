@@ -785,6 +785,7 @@ find_patch_xml_node(const xmlNode *patchset, int format, bool added,
 }
 
 // Get CIB versions used for additions and deletions in a patchset
+// Return value of true means failure; false means success
 bool
 xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 {
@@ -803,7 +804,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 
     /* Process removals */
     if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
-        return -EINVAL;
+        return true;
     }
     if (tmp != NULL) {
         for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
@@ -814,7 +815,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 
     /* Process additions */
     if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
-        return -EINVAL;
+        return true;
     }
     if (tmp != NULL) {
         for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
@@ -822,7 +823,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
             crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
         }
     }
-    return pcmk_ok;
+    return false;
 }
 
 /*!
