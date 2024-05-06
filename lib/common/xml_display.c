@@ -111,7 +111,8 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             const char *p_value = pcmk__xml_attr_value(attr);
             gchar *p_copy = NULL;
 
-            if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
+            if ((nodepriv == NULL)
+                || pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
             }
 
@@ -272,6 +273,10 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
     xml_node_private_t *nodepriv = (xml_node_private_t *) data->_private;
     int rc = pcmk_rc_no_output;
     int temp_rc = pcmk_rc_no_output;
+
+    if (nodepriv == NULL) {
+        return pcmk_rc_no_output;
+    }
 
     if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         // Newly created
