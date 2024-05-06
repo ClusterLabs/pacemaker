@@ -230,10 +230,9 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
     /* If we're ignoring the version, make the version information
      * identical, so it isn't detected as a change. */
     if (no_version) {
-        int lpc;
-
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_copy_xml_element(source, target, vfields[lpc]);
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_xml_add(target, vfields[lpc],
+                        crm_element_value(source, vfields[lpc]));
         }
     }
 
