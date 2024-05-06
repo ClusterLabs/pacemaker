@@ -125,6 +125,7 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
+    // cts-lab looks for this message
     crm_notice("Connecting to %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
