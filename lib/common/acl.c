@@ -658,24 +658,6 @@ xml_acl_disable(xmlNode *xml)
 }
 
 /*!
- * \brief Check whether or not an XML node is ACL-enabled
- *
- * \param[in]  xml node to check
- *
- * \return true if XML node exists and is ACL-enabled, false otherwise
- */
-bool
-xml_acl_enabled(const xmlNode *xml)
-{
-    if (xml && xml->doc && xml->doc->_private){
-        xml_doc_private_t *docpriv = xml->doc->_private;
-
-        return pcmk_is_set(docpriv->flags, pcmk__xf_acl_enabled);
-    }
-    return false;
-}
-
-/*!
  * \internal
  * \brief Create an XML path string for trace logging in \c pcmk__check_acl()
  *
@@ -900,3 +882,22 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     return requested_user;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/acl_compat.h>
+
+bool
+xml_acl_enabled(const xmlNode *xml)
+{
+    if (xml && xml->doc && xml->doc->_private){
+        xml_doc_private_t *docpriv = xml->doc->_private;
+
+        return pcmk_is_set(docpriv->flags, pcmk__xf_acl_enabled);
+    }
+    return false;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
