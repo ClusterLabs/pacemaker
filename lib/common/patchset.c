@@ -842,48 +842,6 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
     return pcmk_rc_ok;
 }
 
-// Get CIB versions used for additions and deletions in a patchset
-// Return value of true means failure; false means success
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
-{
-    int lpc = 0;
-    int format = 1;
-    xmlNode *tmp = NULL;
-
-    const char *vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
-
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-
-    /* Process removals */
-    if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
-        return true;
-    }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
-            crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
-        }
-    }
-
-    /* Process additions */
-    if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
-        return true;
-    }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
-            crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
-        }
-    }
-    return false;
-}
-
 /*!
  * \internal
  * \brief Check whether patchset can be applied to current CIB
@@ -1649,6 +1607,46 @@ gboolean
 can_prune_leaf(xmlNode *xml_node)
 {
     return can_prune_leaf_v1(xml_node);
+}
+
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    int lpc = 0;
+    int format = 1;
+    xmlNode *tmp = NULL;
+
+    const char *vfields[] = {
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
+    };
+
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+
+    /* Process removals */
+    if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
+        return true;
+    }
+    if (tmp != NULL) {
+        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
+            crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
+            crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+        }
+    }
+
+    /* Process additions */
+    if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
+        return true;
+    }
+    if (tmp != NULL) {
+        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
+            crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
+            crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
+        }
+    }
+    return false;
 }
 
 // LCOV_EXCL_STOP

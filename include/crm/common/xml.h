@@ -27,8 +27,6 @@ extern "C" {
  * \ingroup core
  */
 
-bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
-
 xmlNode *xml_create_patchset(
     int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);
 int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
