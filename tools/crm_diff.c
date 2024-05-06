@@ -24,8 +24,9 @@
 #include <crm/common/ipc.h>
 #include <crm/cib.h>
 
-#define SUMMARY "Compare two Pacemaker configurations (in XML format) to produce a custom diff-like output, " \
-                "or apply such an output as a patch"
+#define SUMMARY "Compare two Pacemaker configurations (in XML format) to "    \
+                "produce a custom diff-like output, or apply such an output " \
+                "as a patch"
 
 struct {
     gboolean apply;
@@ -38,9 +39,32 @@ struct {
     char *xml_file_2;
 } options;
 
-gboolean new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+static gboolean
+original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                   GError **error)
+{
+    options.raw_1 = TRUE;
+    pcmk__str_update(&options.xml_file_1, optarg);
+    return TRUE;
+}
+
+static gboolean
+new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+              GError **error)
+{
+    options.raw_2 = TRUE;
+    pcmk__str_update(&options.xml_file_2, optarg);
+    return TRUE;
+}
+
+static gboolean
+patch_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+         GError **error)
+{
+    options.apply = TRUE;
+    pcmk__str_update(&options.xml_file_2, optarg);
+    return TRUE;
+}
 
 static GOptionEntry original_xml_entries[] = {
     { "original", 'o', 0, G_OPTION_ARG_STRING, &options.xml_file_1,
@@ -80,27 +104,6 @@ static GOptionEntry addl_entries[] = {
 
     { NULL }
 };
-
-gboolean
-new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.raw_2 = TRUE;
-    pcmk__str_update(&options.xml_file_2, optarg);
-    return TRUE;
-}
-
-gboolean
-original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.raw_1 = TRUE;
-    pcmk__str_update(&options.xml_file_1, optarg);
-    return TRUE;
-}
-
-gboolean
-patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.apply = TRUE;
-    pcmk__str_update(&options.xml_file_2, optarg);
-    return TRUE;
-}
 
 static void
 print_patch(xmlNode *patch)
