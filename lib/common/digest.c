@@ -136,20 +136,24 @@ pcmk__digest_on_disk_cib(const xmlNode *input)
  * \internal
  * \brief Calculate and return digest of an operation XML element
  *
- * The digest is invariant to changes in the order of XML attributes, provided
- * that \p input has no children.
+ * The digest is invariant to changes in the order of XML attributes.
  *
- * \param[in] input  Root of XML to digest
+ * \param[in] input  Root of XML to digest (must have no children)
  *
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_operation(xmlNode *input)
+pcmk__digest_operation(const xmlNode *input)
 {
-    xmlNode *sorted = pcmk__xml_copy(NULL, input);
     char *digest = NULL;
+    xmlNode *sorted = NULL;
 
+    CRM_ASSERT(input->children == NULL);
+
+    sorted = pcmk__xe_create(NULL, (const char *) input->name);
+    pcmk__xe_copy_attrs(sorted, input, pcmk__xaf_none);
     pcmk__xe_sort_attrs(sorted);
+
     digest = calculate_xml_digest_v1(sorted);
 
     pcmk__xml_free(sorted);
