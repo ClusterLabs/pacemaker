@@ -33,7 +33,8 @@ extern "C" {
 
 xmlNode *xml_create_patchset(
     int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);
-int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
+int xml_apply_patchset(xmlNode *xml, const xmlNode *patchset,
+                       bool check_version);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/xml_compat.h>
