@@ -30,7 +30,13 @@
                 "as a patch"
 #define INDENT "                                   "
 
-struct {
+static const char *const vfields[] = {
+    PCMK_XA_ADMIN_EPOCH,
+    PCMK_XA_EPOCH,
+    PCMK_XA_NUM_UPDATES,
+};
+
+static struct {
     gchar *source_file;
     gchar *target_file;
     gchar *source_string;
@@ -171,44 +177,44 @@ log_patch_cib_versions(xmlNode *patch)
     }
 }
 
+/*!
+ * \internal
+ * \brief Remove CIB version details from an XML patchset
+ *
+ * \param[in,out] patchset  XML patchset
+ */
 static void
-strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
+strip_patchset_cib_versions(xmlNode *patchset)
 {
     int format = 1;
 
-    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     if (format == 2) {
-        xmlNode *version_xml = pcmk__xe_first_child(patch, PCMK_XE_VERSION,
-                                                    NULL, NULL);
-
-        if (version_xml) {
-            pcmk__xml_free(version_xml);
-        }
+        pcmk__xml_free(pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL,
+                                            NULL));
 
     } else {
-        int i = 0;
-
-        const char *tags[] = {
+        static const char *const tags[] = {
             PCMK__XE_DIFF_REMOVED,
             PCMK__XE_DIFF_ADDED,
         };
 
-        for (i = 0; i < PCMK__NELEM(tags); i++) {
-            xmlNode *tmp = NULL;
-            int lpc;
+        for (int i = 0; i < PCMK__NELEM(tags); i++) {
+            xmlNode *tmp = pcmk__xe_first_child(patchset, tags[i], NULL, NULL);
 
-            tmp = pcmk__xe_first_child(patch, tags[i], NULL, NULL);
-            if (tmp) {
-                for (lpc = 0; lpc < nvfields; lpc++) {
-                    pcmk__xe_remove_attr(tmp, vfields[lpc]);
-                }
+            if (tmp == NULL) {
+                continue;
+            }
+            for (int j = 0; j < PCMK__NELEM(vfields); j++) {
+                pcmk__xe_remove_attr(tmp, vfields[j]);
+            }
 
-                tmp = pcmk__xe_first_child(tmp, PCMK_XE_CIB, NULL, NULL);
-                if (tmp) {
-                    for (lpc = 0; lpc < nvfields; lpc++) {
-                        pcmk__xe_remove_attr(tmp, vfields[lpc]);
-                    }
-                }
+            tmp = pcmk__xe_first_child(tmp, PCMK_XE_CIB, NULL, NULL);
+            if (tmp == NULL) {
+                continue;
+            }
+            for (int j = 0; j < PCMK__NELEM(vfields); j++) {
+                pcmk__xe_remove_attr(tmp, vfields[j]);
             }
         }
     }
@@ -218,12 +224,6 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 static int
 generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
 {
-    const char *vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
     int format = 1;
     xmlNode *output = NULL;
 
@@ -259,7 +259,7 @@ generate_patch(xmlNode *source, xmlNode *target, bool as_cib, bool no_version)
         log_patch_cib_versions(output);
 
     } else if (no_version) {
-        strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
+        strip_patchset_cib_versions(output);
     }
 
     pcmk__log_xml_patchset(LOG_NOTICE, output);
