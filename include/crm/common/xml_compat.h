@@ -279,6 +279,10 @@ void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 //! \deprecated Do not use
 bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
+//! \deprecated Do not use
+void patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                             const xmlNode *target, bool with_digest);
+
 #ifdef __cplusplus
 }
 #endif

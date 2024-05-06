@@ -401,36 +401,6 @@ pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *source,
     free(digest);
 }
 
-void
-patchset_process_digest(xmlNode *patch, const xmlNode *source,
-                        const xmlNode *target, bool with_digest)
-{
-    int format = 1;
-    const char *version = NULL;
-    char *digest = NULL;
-
-    if ((patch == NULL) || (source == NULL) || (target == NULL)) {
-        return;
-    }
-
-    /* We should always call pcmk__xml_accept_changes() before calculating a
-     * digest. Otherwise, with an on-tracking dirty target, we could get a
-     * wrong digest.
-     */
-    CRM_LOG_ASSERT(!pcmk__xml_all_flags_set_doc(target, pcmk__xf_dirty));
-
-    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
-    if ((format > 1) && !with_digest) {
-        return;
-    }
-
-    version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
-    digest = pcmk__digest_xml(target, true, version);
-
-    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
-    free(digest);
-}
-
 // @COMPAT Remove when v1 patchsets are removed
 static xmlNode *
 subtract_v1_xml_comment(xmlNode *parent, xmlNode *left, xmlNode *right,
@@ -1668,6 +1638,36 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
         }
     }
     return false;
+}
+
+void
+patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                        const xmlNode *target, bool with_digest)
+{
+    int format = 1;
+    const char *version = NULL;
+    char *digest = NULL;
+
+    if ((patch == NULL) || (source == NULL) || (target == NULL)) {
+        return;
+    }
+
+    /* We should always call pcmk__xml_accept_changes() before calculating a
+     * digest. Otherwise, with an on-tracking dirty target, we could get a
+     * wrong digest.
+     */
+    CRM_LOG_ASSERT(!pcmk__xml_all_flags_set_doc(target, pcmk__xf_dirty));
+
+    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
+    if ((format > 1) && !with_digest) {
+        return;
+    }
+
+    version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(target, true, version);
+
+    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    free(digest);
 }
 
 // LCOV_EXCL_STOP
