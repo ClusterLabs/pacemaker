@@ -129,32 +129,41 @@ print_patch(xmlNode *patch)
     fflush(stdout);
 }
 
-// \return Standard Pacemaker return code
+/*!
+ * \internal
+ * \brief Apply an XML patchset and output the result
+ *
+ * \param[in,out] input          XML tree to apply the patchset to
+ * \param[in]     patchset       XML patchset
+ * \param[in]     check_version  If \c true, apply the patchset only if its CIB
+ *                               versions are compatible with those in \p input
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
+apply_patchset(xmlNode *input, const xmlNode *patchset, bool check_version)
 {
-    xmlNode *output = pcmk__xml_copy(NULL, input);
-    int rc = xml_apply_patchset(output, patch, as_cib);
+    int rc = xml_apply_patchset(input, patchset, check_version);
 
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
-        pcmk__xml_free(output);
         return rc;
     }
 
-    if (output != NULL) {
-        const char *version;
-        char *buffer;
+    print_patch(input);
 
-        print_patch(output);
+    pcmk__if_tracing(
+        {
+            const char *version = crm_element_value(input,
+                                                    PCMK_XA_CRM_FEATURE_SET);
+            char *buffer = pcmk__digest_xml(input, true, version);
 
-        version = crm_element_value(output, PCMK_XA_CRM_FEATURE_SET);
-        buffer = pcmk__digest_xml(output, true, version);
-        crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
-        free(buffer);
-        pcmk__xml_free(output);
-    }
+            crm_trace("Digest: %s", pcmk__s(buffer, "<null>"));
+            free(buffer);
+        },
+        {}
+    );
     return pcmk_rc_ok;
 }
 
@@ -388,7 +397,7 @@ main(int argc, char **argv)
     }
 
     if (options.patch) {
-        rc = apply_patch(source, target, options.as_cib);
+        rc = apply_patchset(source, target, options.as_cib);
     } else {
         rc = generate_patchset(source, target, options.as_cib,
                                options.no_version);
