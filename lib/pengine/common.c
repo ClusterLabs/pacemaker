@@ -34,11 +34,5 @@ text2role(const char *role)
     return pcmk_parse_role(role);
 }
 
-const char *
-task2text(enum action_tasks task)
-{
-    return pcmk_action_text(task);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
