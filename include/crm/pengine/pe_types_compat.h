@@ -175,9 +175,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_quick_location          pcmk_sched_location_only
 
-//! \deprecated Do not use
-#define pe_flag_sanitized               pcmk_sched_sanitized
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
