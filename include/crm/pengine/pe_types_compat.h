@@ -25,9 +25,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use
-#define pe_rsc_orphan                   pcmk_rsc_removed
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_rsc_managed                  pcmk_rsc_managed
