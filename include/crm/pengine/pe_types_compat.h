@@ -35,9 +35,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_block                    pcmk_rsc_blocked
 
-//! \deprecated Do not use
-#define pe_rsc_orphan_container_filler  pcmk_rsc_removed_filler
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
