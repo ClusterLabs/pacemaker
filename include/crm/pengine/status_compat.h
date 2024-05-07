@@ -31,13 +31,6 @@ extern "C" {
 //! \deprecated Use pcmk_find_node() with scheduler object instead
 pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);
 
-//! \deprecated Compare variant directly instead
-static inline bool
-pe_rsc_is_clone(const pcmk_resource_t *rsc)
-{
-    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
-}
-
 #ifdef __cplusplus
 }
 #endif
