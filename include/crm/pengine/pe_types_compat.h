@@ -32,9 +32,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_managed                  pcmk_rsc_managed
 
-//! \deprecated Do not use
-#define pe_rsc_block                    pcmk_rsc_blocked
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
