@@ -45,7 +45,7 @@ typedef struct {
 static inline bool
 pcmk__is_bundle(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle);
+    return (rsc != NULL) && (rsc->private->variant == pcmk_rsc_variant_bundle);
 }
 
 /*!
@@ -65,7 +65,7 @@ pcmk__is_bundled(const pcmk_resource_t *rsc)
     while (rsc->private->parent != NULL) {
         rsc = rsc->private->parent;
     }
-    return rsc->variant == pcmk_rsc_variant_bundle;
+    return rsc->private->variant == pcmk_rsc_variant_bundle;
 }
 
 /*!

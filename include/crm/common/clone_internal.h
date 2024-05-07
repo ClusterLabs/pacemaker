@@ -10,9 +10,10 @@
 #ifndef PCMK__CRM_COMMON_CLONE_INTERNAL__H
 #define PCMK__CRM_COMMON_CLONE_INTERNAL__H
 
-#include <stdbool.h>                    // bool
-#include <crm/common/scheduler_types.h> // pcmk_resource_t
-#include <crm/common/resources.h>       // pcmk_rsc_variant_clone
+#include <stdbool.h>                        // bool
+#include <crm/common/scheduler_types.h>     // pcmk_resource_t
+#include <crm/common/resources.h>           // pcmk_rsc_variant_clone
+#include <crm/common/resources_internal.h>  // struct pcmk__resource_private
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +44,7 @@ enum pcmk__clone_flags {
 static inline bool
 pcmk__is_clone(const pcmk_resource_t *rsc)
 {
-    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
+    return (rsc != NULL) && (rsc->private->variant == pcmk_rsc_variant_clone);
 }
 
 /*!

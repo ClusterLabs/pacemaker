@@ -204,7 +204,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
-    rsc->private->cmds = &assignment_methods[rsc->variant];
+    rsc->private->cmds = &assignment_methods[rsc->private->variant];
     g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
 }
 

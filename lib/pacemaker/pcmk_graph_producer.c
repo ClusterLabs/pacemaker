@@ -327,6 +327,7 @@ static void
 add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
 {
     xmlNode *args_xml = NULL;
+    pcmk_resource_t *rsc = action->rsc;
 
     /* We create free-standing XML to start, so we can sort the attributes
      * before adding it to action_xml, which keeps the scheduler regression
@@ -337,26 +338,25 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
     crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);
 
-    if ((action->rsc != NULL) && (action->node != NULL)) {
+    if ((rsc != NULL) && (action->node != NULL)) {
         // Get the resource instance attributes, evaluated properly for node
-        GHashTable *params = pe_rsc_params(action->rsc, action->node,
-                                           action->rsc->private->scheduler);
+        GHashTable *params = pe_rsc_params(rsc, action->node,
+                                           rsc->private->scheduler);
 
-        pcmk__substitute_remote_addr(action->rsc, params);
+        pcmk__substitute_remote_addr(rsc, params);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
-    } else if ((action->rsc != NULL)
-               && (action->rsc->variant <= pcmk_rsc_variant_primitive)) {
-        GHashTable *params = pe_rsc_params(action->rsc, NULL,
-                                           action->rsc->private->scheduler);
+    } else if ((rsc != NULL)
+               && (rsc->private->variant <= pcmk_rsc_variant_primitive)) {
+        GHashTable *params = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
     }
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
-    if (action->rsc != NULL) {
-        pcmk_resource_t *parent = action->rsc;
+    if (rsc != NULL) {
+        pcmk_resource_t *parent = rsc;
 
         while (parent != NULL) {
             parent->private->cmds->add_graph_meta(parent, args_xml);

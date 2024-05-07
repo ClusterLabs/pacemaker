@@ -81,10 +81,10 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
     }
 
     // Process clones before primitives and groups
-    if (rsc1->variant > rsc2->variant) {
+    if (rsc1->private->variant > rsc2->private->variant) {
         return -1;
     }
-    if (rsc1->variant < rsc2->variant) {
+    if (rsc1->private->variant < rsc2->private->variant) {
         return 1;
     }
 

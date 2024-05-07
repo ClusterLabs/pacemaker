@@ -903,7 +903,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
     }
 
     // If instance is a collective (a cloned group), check its children instead
-    if (instance->variant > pcmk_rsc_variant_primitive) {
+    if (instance->private->variant > pcmk_rsc_variant_primitive) {
         for (iter = instance->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
@@ -1470,8 +1470,8 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
         return false;
     }
 
-    if ((first->rsc->variant < pcmk_rsc_variant_clone)
-        || (then->rsc->variant < pcmk_rsc_variant_clone)) {
+    if ((first->rsc->private->variant < pcmk_rsc_variant_clone)
+        || (then->rsc->private->variant < pcmk_rsc_variant_clone)) {
         crm_trace("Not interleaving %s with %s: not clones or bundles",
                   first->uuid, then->uuid);
         return false;

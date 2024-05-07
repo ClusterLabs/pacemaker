@@ -206,7 +206,7 @@ can_interleave(const pcmk__colocation_t *colocation)
     const pcmk_resource_t *dependent = colocation->dependent;
 
     // Only colocations between clone or bundle resources use interleaving
-    if (dependent->variant <= pcmk_rsc_variant_group) {
+    if (dependent->private->variant <= pcmk_rsc_variant_group) {
         return false;
     }
 

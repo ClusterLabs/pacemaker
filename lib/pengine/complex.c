@@ -707,8 +707,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                                NULL);
     rsc_private->ops_xml = pcmk__xe_resolve_idref(ops, scheduler->input);
 
-    (*rsc)->variant = get_resource_type((const char *) rsc_private->xml->name);
-    if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
+    rsc_private->variant = get_resource_type((const char *)
+                                             rsc_private->xml->name);
+    if (rsc_private->variant == pcmk_rsc_variant_unknown) {
         pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
                          id, rsc_private->xml->name);
         common_free(*rsc);
@@ -731,7 +732,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     warn_about_deprecated_classes(*rsc);
 
-    rsc_private->fns = &resource_class_functions[(*rsc)->variant];
+    rsc_private->fns = &resource_class_functions[rsc_private->variant];
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, scheduler);
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
@@ -1063,7 +1064,8 @@ common_free(pcmk_resource_t * rsc)
         return;
     }
 
-    pcmk__rsc_trace(rsc, "Freeing %s %d", rsc->id, rsc->variant);
+    pcmk__rsc_trace(rsc, "Freeing %s %s",
+                    (const char *) rsc->private->xml->name, rsc->id);
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
