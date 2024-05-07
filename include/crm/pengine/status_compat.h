@@ -38,13 +38,6 @@ pe_rsc_is_clone(const pcmk_resource_t *rsc)
     return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
 }
 
-//! \deprecated Compare variant and flags directly
-static inline bool
-pe_rsc_is_unique_clone(const pcmk_resource_t *rsc)
-{
-    return pe_rsc_is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
-}
-
 #ifdef __cplusplus
 }
 #endif
