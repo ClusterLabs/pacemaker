@@ -74,9 +74,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_critical                 pcmk_rsc_critical
 
-//! \deprecated Do not use
-#define pe_rsc_failed                   pcmk_rsc_failed
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
