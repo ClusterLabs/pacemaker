@@ -169,9 +169,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_have_status             pcmk_sched_have_status
 
-//! \deprecated Do not use
-#define pe_flag_have_remote_nodes       pcmk_sched_have_remote_nodes
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
