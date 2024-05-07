@@ -794,6 +794,8 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
     const xmlNode *source_xml = NULL;
     const xmlNode *target_xml = NULL;
 
+    CRM_CHECK((source != NULL) && (target != NULL), return EINVAL);
+
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
 
     // Source node (or removals node for v1)

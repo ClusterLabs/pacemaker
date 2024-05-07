@@ -216,19 +216,23 @@ static int
 generate_patchset(xmlNode *source, xmlNode *target, bool as_cib,
                   bool no_version)
 {
+    int target_versions[3] = {0, 0, 0};
     int format = 1;
     xmlNode *patchset = NULL;
 
-    /* If we're ignoring the version, make the version information identical,
-     * so it isn't detected as a change
-     */
     if (no_version) {
-        /* @TODO If as_cib is true, the versions will later be logged as the
-         * same even though they're not, due to this workaround.
-         */
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_xml_add(target, vfields[i],
-                        crm_element_value(source, vfields[i]));
+            if (as_cib) {
+                // Back up the true target versions
+                crm_element_value_int(target, vfields[i],
+                                      &(target_versions[i]));
+            }
+
+            /* Make them match the source versions so they aren't detected as
+             * a change
+             */
+            xmlSetProp(target, (const xmlChar *) vfields[i],
+                       (const xmlChar *) crm_element_value(source, vfields[i]));
         }
     }
 
@@ -249,8 +253,20 @@ generate_patchset(xmlNode *source, xmlNode *target, bool as_cib,
         pcmk__xml_patchset_add_digest(patchset, source, target);
     }
 
-    if (no_version && !as_cib) {
-        strip_patchset_cib_versions(patchset);
+    if (no_version) {
+        if (as_cib) {
+            // Restore true target versions before logging
+            for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+                char *version = pcmk__itoa(target_versions[i]);
+
+                xmlSetProp(target, (const xmlChar *) vfields[i],
+                           (const xmlChar *) version);
+                free(version);
+            }
+
+        } else {
+            strip_patchset_cib_versions(patchset);
+        }
     }
 
     pcmk__log_xml_patchset(LOG_NOTICE, patchset);
