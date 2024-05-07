@@ -433,23 +433,5 @@ pe_eval_subexpr(xmlNode *expr, const pe_rule_eval_data_t *rule_data,
                                     next_change) == pcmk_rc_ok;
 }
 
-void
-unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
-                           GHashTable *node_hash, GHashTable *hash,
-                           const char *always_first, gboolean overwrite,
-                           crm_time_t *now)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_hash,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    pe_eval_nvpairs(NULL, xml_obj, set_name, &rule_data, hash, always_first,
-                    overwrite, NULL);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
