@@ -37,9 +37,6 @@ extern "C" {
 //! \deprecated Use pcmk_role_text(pcmk_role_started) instead
 #define RSC_ROLE_STARTED_S      pcmk_role_text(pcmk_role_started)
 
-//! \deprecated Use pcmk_role_text(pcmk_role_unpromoted) instead
-#define RSC_ROLE_UNPROMOTED_S   pcmk_role_text(pcmk_role_unpromoted)
-
 #ifdef __cplusplus
 }
 #endif
