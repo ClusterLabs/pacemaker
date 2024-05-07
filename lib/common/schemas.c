@@ -1540,19 +1540,13 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
 void
 pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_included)
 {
-    /* First, create an unattached node to add all the schema files to as children. */
-    xmlNode *schema_node = pcmk__xe_create(NULL, PCMK__XA_SCHEMA);
+    xmlNode *schema_node = pcmk__xe_create(parent, PCMK__XA_SCHEMA);
 
     crm_xml_add(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
 
-    /* Then, if we actually added any children, attach the node to parent.  If
-     * we did not add any children (for instance, name was invalid), this prevents
-     * us from returning a document with additional empty children.
-     */
-    if (schema_node->children != NULL) {
-        xmlAddChild(parent, schema_node);
-    } else {
+    if (schema_node->children == NULL) {
+        // Not needed if empty. May happen if name was invalid, for example.
         free_xml(schema_node);
     }
 }
