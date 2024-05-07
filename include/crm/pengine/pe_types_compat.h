@@ -206,14 +206,6 @@ enum pe_graph_flags {
 };
 //!@}
 
-//!@{
-//! \deprecated Do not use
-enum pe_check_parameters {
-    pe_check_last_failure,
-    pe_check_active,
-};
-//!@}
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
