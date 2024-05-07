@@ -289,18 +289,6 @@ pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
 
 #include <crm/pengine/rules_compat.h>
 
-gboolean
-pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
-                  crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = {
-        .node_attrs = node_hash,
-        .now = now,
-    };
-
-    return pcmk__evaluate_rules(ruleset, &rule_input, next_change);
-}
-
 static gboolean
 pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
