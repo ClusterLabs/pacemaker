@@ -87,9 +87,6 @@ recovery2text(enum rsc_recovery_type type)
     return "Unknown";
 }
 
-//! \deprecated Do not use
-const char *pe_pref(GHashTable * options, const char *name);
-
 #ifdef __cplusplus
 }
 #endif

@@ -47,12 +47,6 @@ text2task(const char *task)
 }
 
 const char *
-pe_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, name);
-}
-
-const char *
 fail2text(enum action_fail_response fail)
 {
     return pcmk_on_fail_text(fail);
