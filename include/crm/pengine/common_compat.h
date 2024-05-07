@@ -28,9 +28,6 @@ extern "C" {
 //! \deprecated Use (pcmk_role_promoted + 1) instead
 #define RSC_ROLE_MAX    (pcmk_role_promoted + 1)
 
-//! \deprecated Use pcmk_role_text(pcmk_role_unknown) instead
-#define RSC_ROLE_UNKNOWN_S      pcmk_role_text(pcmk_role_unknown)
-
 #ifdef __cplusplus
 }
 #endif
