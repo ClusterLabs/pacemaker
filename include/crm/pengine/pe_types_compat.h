@@ -157,9 +157,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_remove_after_stop       pcmk_sched_remove_after_stop
 
-//! \deprecated Do not use
-#define pe_flag_startup_fencing         pcmk_sched_startup_fencing
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
