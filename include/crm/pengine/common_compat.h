@@ -31,9 +31,6 @@ extern "C" {
 //! \deprecated Use pcmk_role_text(pcmk_role_unknown) instead
 #define RSC_ROLE_UNKNOWN_S      pcmk_role_text(pcmk_role_unknown)
 
-//! \deprecated Use pcmk_role_text(pcmk_role_stopped) instead
-#define RSC_ROLE_STOPPED_S      pcmk_role_text(pcmk_role_stopped)
-
 #ifdef __cplusplus
 }
 #endif
