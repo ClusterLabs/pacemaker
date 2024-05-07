@@ -46,9 +46,6 @@ extern "C" {
 //! \deprecated Do not use
 #define RSC_ROLE_UNPROMOTED_LEGACY_S    "Slave"
 
-//! \deprecated Do not use
-#define RSC_ROLE_SLAVE_S                RSC_ROLE_UNPROMOTED_LEGACY_S
-
 #ifdef __cplusplus
 }
 #endif
