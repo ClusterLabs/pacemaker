@@ -80,9 +80,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_detect_loop              pcmk_rsc_detect_loop
 
-//! \deprecated Do not use
-#define pe_rsc_runnable                 pcmk_rsc_runnable
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
