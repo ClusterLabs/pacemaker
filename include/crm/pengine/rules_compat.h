@@ -93,9 +93,6 @@ void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
                                 GHashTable *hash, const char *always_first,
                                 gboolean overwrite, crm_time_t *now);
 
-//! \deprecated Do not use
-enum expression_type find_expression_type(xmlNode *expr);
-
 #ifdef __cplusplus
 }
 #endif
