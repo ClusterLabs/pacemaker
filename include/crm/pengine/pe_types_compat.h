@@ -126,9 +126,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_symmetric_cluster       pcmk_sched_symmetric_cluster
 
-//! \deprecated Do not use
-#define pe_flag_maintenance_mode        pcmk_sched_in_maintenance
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
