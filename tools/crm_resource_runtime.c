@@ -60,8 +60,8 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     } else if (pcmk__is_clone(parent)
                && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
                && rsc->clone_name
-               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
-               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
+               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_none)
+               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
 
         retval = build_node_info_list(parent);
 

@@ -2212,8 +2212,8 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         }
     }
 
-    if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_casei)
-        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_casei)) {
+    if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_none)
+        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_none)) {
 
         pcmk__str_update(&rsc->clone_name, rsc_id);
         pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
