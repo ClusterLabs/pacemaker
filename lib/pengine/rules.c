@@ -335,12 +335,6 @@ pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 }
 
 gboolean
-test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
-{
-    return pe_evaluate_rules(ruleset, node_hash, now, NULL);
-}
-
-gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
     return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
