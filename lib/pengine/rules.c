@@ -412,15 +412,5 @@ pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
     return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
 }
 
-gboolean
-pe_eval_expr(xmlNode *rule, const pe_rule_eval_data_t *rule_data,
-             crm_time_t *next_change)
-{
-    pcmk_rule_input_t rule_input = { NULL, };
-
-    map_rule_input(&rule_input, rule_data);
-    return pcmk_evaluate_rule(rule, &rule_input, next_change) == pcmk_rc_ok;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
