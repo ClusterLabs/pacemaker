@@ -123,9 +123,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
-//! \deprecated Do not use
-#define pe_flag_symmetric_cluster       pcmk_sched_symmetric_cluster
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
