@@ -53,9 +53,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_provisional              pcmk_rsc_unassigned
 
-//! \deprecated Do not use
-#define pe_rsc_allocating               pcmk_rsc_assigning
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
