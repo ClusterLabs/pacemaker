@@ -39,6 +39,7 @@ gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
 //! \deprecated Use pcmk_evaluate_rule() on each rule instead
 gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
 
+// @COMPAT sbd's configure script checks for this (as of at least 1.5.2)
 //! \deprecated Use pcmk_evaluate_rule() instead
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now);
@@ -94,10 +95,6 @@ void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
 
 //! \deprecated Do not use
 enum expression_type find_expression_type(xmlNode *expr);
-
-//! \deprecated Do not use
-char *pe_expand_re_matches(const char *string,
-                           const pe_re_match_data_t *match_data);
 
 #ifdef __cplusplus
 }

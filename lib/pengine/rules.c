@@ -457,15 +457,5 @@ find_expression_type(xmlNode *expr)
     return pcmk__condition_type(expr);
 }
 
-char *
-pe_expand_re_matches(const char *string, const pe_re_match_data_t *match_data)
-{
-    if (match_data == NULL) {
-        return NULL;
-    }
-    return pcmk__replace_submatches(string, match_data->string,
-                                    match_data->pmatch, match_data->nregs);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
