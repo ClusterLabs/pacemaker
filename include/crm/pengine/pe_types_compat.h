@@ -71,9 +71,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_allow_remote_remotes     pcmk_rsc_remote_nesting_allowed
 
-//! \deprecated Do not use
-#define pe_rsc_critical                 pcmk_rsc_critical
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
