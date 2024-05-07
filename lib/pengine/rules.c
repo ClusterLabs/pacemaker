@@ -346,16 +346,5 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time
     return pe_test_rule(rule, node_hash, role, now, NULL, NULL);
 }
 
-gboolean
-pe_test_rule_re(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now, pe_re_match_data_t * re_match_data)
-{
-    pe_match_data_t match_data = {
-                                    .re = re_match_data,
-                                    .params = NULL,
-                                    .meta = NULL,
-                                 };
-    return pe_test_rule(rule, node_hash, role, now, NULL, &match_data);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
