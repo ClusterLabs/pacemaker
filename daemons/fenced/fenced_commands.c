@@ -2427,7 +2427,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 {
     struct st_query_data *query = user_data;
     int available_devices = 0;
-    xmlNode *dev = NULL;
+    xmlNode *wrapper = NULL;
     xmlNode *list = NULL;
     GList *lpc = NULL;
     pcmk__client_t *client = NULL;
@@ -2441,12 +2441,15 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
     }
 
-    /* Pack the results into XML */
-    list = pcmk__xe_create(NULL, __func__);
+    // Pack the results into XML
+    wrapper = pcmk__xe_create(query->reply, PCMK__XE_ST_CALLDATA);
+    list = pcmk__xe_create(wrapper, __func__);
     crm_xml_add(list, PCMK__XA_ST_TARGET, query->target);
+
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
         const char *action = query->action;
+        xmlNode *dev = NULL;
 
         if (!device) {
             /* It is possible the device got unregistered while
@@ -2516,12 +2519,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
                   available_devices, pcmk__plural_s(available_devices));
     }
 
-    if (list != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(query->reply, PCMK__XE_ST_CALLDATA);
-
-        crm_log_xml_trace(list, "Add query results");
-        xmlAddChild(wrapper, list);
-    }
+    crm_log_xml_trace(list, "query-result");
 
     stonith_send_reply(query->reply, query->call_options, query->remote_peer,
                        client);
