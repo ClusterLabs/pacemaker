@@ -117,12 +117,18 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+/*!
+ * \internal
+ * \brief Print an XML tree serialized to text
+ *
+ * \param[in] xml  XML tree to print
+ */
 static void
-print_patch(xmlNode *patch)
+print_xml(const xmlNode *xml)
 {
     GString *buffer = g_string_sized_new(1024);
 
-    pcmk__xml_string(patch, pcmk__xml_fmt_pretty, buffer, 0);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
 
     printf("%s", buffer->str);
     g_string_free(buffer, TRUE);
@@ -151,7 +157,7 @@ apply_patchset(xmlNode *input, const xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    print_patch(input);
+    print_xml(input);
     return pcmk_rc_ok;
 }
 
@@ -270,7 +276,7 @@ generate_patchset(xmlNode *source, xmlNode *target, bool as_cib,
     }
 
     pcmk__log_xml_patchset(LOG_NOTICE, patchset);
-    print_patch(patchset);
+    print_xml(patchset);
     pcmk__xml_free(patchset);
 
     /* pcmk_rc_error means there's a non-empty diff.
