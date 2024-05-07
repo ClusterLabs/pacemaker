@@ -55,9 +55,6 @@ extern "C" {
 //! \deprecated Do not use
 #define RSC_ROLE_MASTER_S               RSC_ROLE_PROMOTED_LEGACY_S
 
-//! \deprecated Use pcmk_role_text() instead
-const char *role2text(enum rsc_role_e role);
-
 #ifdef __cplusplus
 }
 #endif

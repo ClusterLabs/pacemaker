@@ -29,8 +29,7 @@ libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 ## Library sources (*must* use += format for bumplibs)
-libpe_rules_la_SOURCES	= common.c
-libpe_rules_la_SOURCES	+= rules.c
+libpe_rules_la_SOURCES	= rules.c
 libpe_rules_la_SOURCES	+= rules_alerts.c
 
 libpe_status_la_LDFLAGS	= -version-info 35:1:7
@@ -44,7 +43,6 @@ libpe_status_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_status_la_SOURCES	=
 libpe_status_la_SOURCES	+= bundle.c
 libpe_status_la_SOURCES	+= clone.c
-libpe_status_la_SOURCES	+= common.c
 libpe_status_la_SOURCES	+= complex.c
 libpe_status_la_SOURCES	+= failcounts.c
 libpe_status_la_SOURCES	+= group.c
