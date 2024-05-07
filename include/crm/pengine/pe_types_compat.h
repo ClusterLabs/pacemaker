@@ -190,9 +190,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_show_scores             pcmk_sched_output_scores
 
-//! \deprecated Do not use
-#define pe_flag_show_utilization        pcmk_sched_show_utilization
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
