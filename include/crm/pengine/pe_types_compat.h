@@ -83,9 +83,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_runnable                 pcmk_rsc_runnable
 
-//! \deprecated Do not use
-#define pe_rsc_start_pending            pcmk_rsc_start_pending
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
