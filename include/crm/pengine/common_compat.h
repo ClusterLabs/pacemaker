@@ -58,9 +58,6 @@ extern "C" {
 //! \deprecated Use pcmk_role_text() instead
 const char *role2text(enum rsc_role_e role);
 
-//! \deprecated Use pcmk_parse_role() instead
-enum rsc_role_e text2role(const char *role);
-
 #ifdef __cplusplus
 }
 #endif

@@ -28,11 +28,5 @@ role2text(enum rsc_role_e role)
     return pcmk_role_text(role);
 }
 
-enum rsc_role_e
-text2role(const char *role)
-{
-    return pcmk_parse_role(role);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
