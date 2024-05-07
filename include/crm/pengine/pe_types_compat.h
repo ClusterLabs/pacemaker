@@ -142,9 +142,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_concurrent_fencing      pcmk_sched_concurrent_fencing
 
-//! \deprecated Do not use
-#define pe_flag_stop_rsc_orphans        pcmk_sched_stop_removed_resources
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
