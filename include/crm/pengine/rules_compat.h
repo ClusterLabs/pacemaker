@@ -44,11 +44,6 @@ gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now);
 
-//! \deprecated Use pcmk_evaluate_rule() instead
-gboolean pe_test_rule(xmlNode *rule, GHashTable *node_hash,
-                      enum rsc_role_e role, crm_time_t *now,
-                      crm_time_t *next_change, pe_match_data_t *match_data);
-
 #ifdef __cplusplus
 }
 #endif

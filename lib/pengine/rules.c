@@ -312,7 +312,7 @@ pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now,
     return pcmk__evaluate_rules(ruleset, &rule_input, next_change);
 }
 
-gboolean
+static gboolean
 pe_test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
              crm_time_t *now, crm_time_t *next_change,
              pe_match_data_t *match_data)
