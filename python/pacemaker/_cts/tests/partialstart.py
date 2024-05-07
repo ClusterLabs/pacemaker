@@ -45,7 +45,7 @@ class PartialStart(CTSTest):
             return self.failure("Setup failed")
 
         watchpats = [
-            "pacemaker-controld.*Connecting to .* cluster infrastructure"
+            "pacemaker-controld.*Connecting to .* cluster layer"
         ]
         watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
         watch.set_watch()

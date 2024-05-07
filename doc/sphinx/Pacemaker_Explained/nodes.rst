@@ -133,7 +133,7 @@ The ``--type nodes`` indicates that this is a permanent node attribute;
    However, it's best to use ``--output-as=xml`` when parsing attribute values
    from output. Newlines, tabs, and special characters are replaced with XML
    character references that a conforming XML processor can recognize and
-   convert to literals:
+   convert to literals *(since 2.1.8)*:
 
    .. code-block:: none
 

@@ -8,6 +8,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# @COMPAT "next" schemas are deprecated since 2.1.5
 list_candidates() {
     ls -1 "${1}.rng" "${1}"-[0-9]*.rng "${1}"-next.rng 2>/dev/null
 }
@@ -47,6 +48,8 @@ int_version() {
 # Version numbers are assumed to be in the format X.Y,
 # where X and Y are integers, and Y is no more than 3 digits,
 # or the special value "next".
+#
+# @COMPAT "next" schemas are deprecated since 2.1.5
 best_match() {
     # (Sub-)schema name (e.g. "resources")
     local base="$1"
