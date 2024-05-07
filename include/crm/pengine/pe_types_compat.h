@@ -214,9 +214,6 @@ enum pe_check_parameters {
 };
 //!@}
 
-//! \deprecated Use pcmk_action_t instead
-typedef struct pe_action_s action_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
