@@ -152,18 +152,6 @@ apply_patchset(xmlNode *input, const xmlNode *patchset, bool check_version)
     }
 
     print_patch(input);
-
-    pcmk__if_tracing(
-        {
-            const char *version = crm_element_value(input,
-                                                    PCMK_XA_CRM_FEATURE_SET);
-            char *buffer = pcmk__digest_xml(input, true, version);
-
-            crm_trace("Digest: %s", pcmk__s(buffer, "<null>"));
-            free(buffer);
-        },
-        {}
-    );
     return pcmk_rc_ok;
 }
 
