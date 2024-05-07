@@ -65,9 +65,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_stop                     pcmk_rsc_stop_if_failed
 
-//! \deprecated Do not use
-#define pe_rsc_reload                   pcmk_rsc_reload
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
