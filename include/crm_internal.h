@@ -36,6 +36,7 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/cluster/internal.h>
+#  include <crm/common/cmdline_internal.h>
 #  include <crm/common/digest_internal.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/logging_internal.h>
