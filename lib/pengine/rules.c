@@ -364,28 +364,5 @@ pe_test_rule_full(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
     return pe_test_rule(rule, node_hash, role, now, NULL, match_data);
 }
 
-gboolean
-pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
-                   crm_time_t *now, crm_time_t *next_change,
-                   pe_match_data_t *match_data)
-{
-    pcmk_rule_input_t rule_input = {
-        .now = now,
-        .node_attrs = node_hash,
-    };
-
-    if (match_data != NULL) {
-        rule_input.rsc_params = match_data->params;
-        rule_input.rsc_meta = match_data->meta;
-        if (match_data->re != NULL) {
-            rule_input.rsc_id = match_data->re->string;
-            rule_input.rsc_id_submatches = match_data->re->pmatch;
-            rule_input.rsc_id_nmatches = match_data->re->nregs;
-        }
-    }
-    return pcmk__evaluate_condition(expr, &rule_input,
-                                    next_change) == pcmk_rc_ok;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
