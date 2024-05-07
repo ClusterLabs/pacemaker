@@ -129,9 +129,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_maintenance_mode        pcmk_sched_in_maintenance
 
-//! \deprecated Do not use
-#define pe_flag_stonith_enabled         pcmk_sched_fencing_enabled
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
