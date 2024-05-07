@@ -428,10 +428,12 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
     if ((rsc == NULL) || (node == NULL)) {
         return NULL;
-    } else if (rsc->parent == NULL) {
+    }
+
+    if (rsc->private->parent == NULL) {
         allowed_nodes = rsc->allowed_nodes;
     } else {
-        allowed_nodes = rsc->parent->allowed_nodes;
+        allowed_nodes = rsc->private->parent->allowed_nodes;
     }
     return g_hash_table_lookup(allowed_nodes, node->details->id);
 }

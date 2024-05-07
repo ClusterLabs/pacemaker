@@ -614,6 +614,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      */
     for (iter = after->actions_after; iter != NULL; iter = iter->next) {
         pcmk__related_action_t *after_wrapper = iter->data;
+        const pcmk_resource_t *chained_rsc = NULL;
 
         /* pcmk__ar_first_implies_then is the reason why a required A.start
          * implies/enforces B.start to be required too, which is the cause of
@@ -634,10 +635,14 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
              */
             if ((after->rsc == NULL)
                 || (after->rsc->variant < pcmk_rsc_variant_group)
-                || (probe->rsc->parent == after->rsc)
-                || (after_wrapper->action->rsc == NULL)
-                || (after_wrapper->action->rsc->variant > pcmk_rsc_variant_group)
-                || (after->rsc != after_wrapper->action->rsc->parent)) {
+                || (probe->rsc->private->parent == after->rsc)
+                || (after_wrapper->action->rsc == NULL)) {
+                continue;
+            }
+            chained_rsc = after_wrapper->action->rsc;
+
+            if ((chained_rsc->variant > pcmk_rsc_variant_group)
+                || (after->rsc != chained_rsc->private->parent)) {
                 continue;
             }
 
@@ -646,7 +651,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
              */
             if ((after->rsc->variant > pcmk_rsc_variant_group) && interleave
                 && ((compatible_rsc == NULL)
-                    || (compatible_rsc != after_wrapper->action->rsc))) {
+                    || (compatible_rsc != chained_rsc))) {
                 continue;
             }
         }

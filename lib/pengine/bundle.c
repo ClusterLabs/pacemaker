@@ -779,7 +779,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         {
             pcmk_node_t *copy = pe__copy_node(replica->node);
             copy->weight = -PCMK_SCORE_INFINITY;
-            g_hash_table_insert(replica->child->parent->allowed_nodes,
+            g_hash_table_insert(replica->child->private->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
@@ -900,9 +900,8 @@ replica_for_remote(pcmk_resource_t *remote)
     if (top == NULL) {
         return NULL;
     }
-
-    while (top->parent != NULL) {
-        top = top->parent;
+    while (top->private->parent != NULL) {
+        top = top->private->parent;
     }
 
     get_bundle_variant_data(bundle_data, top);

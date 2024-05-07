@@ -360,7 +360,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
 
         while (parent != NULL) {
             parent->private->cmds->add_graph_meta(parent, args_xml);
-            parent = parent->parent;
+            parent = parent->private->parent;
         }
 
         pcmk__add_guest_meta_to_xml(args_xml, action);

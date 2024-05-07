@@ -79,12 +79,14 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
             }
         }
 
-        pcmk__set_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__set_rsc_flags(replica->child->private->parent,
+                            pcmk_rsc_assigning);
         pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
                         bundle->id, replica->child->id);
         replica->child->private->cmds->assign(replica->child, replica->node,
                                               stop_if_fail);
-        pcmk__clear_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__clear_rsc_flags(replica->child->private->parent,
+                              pcmk_rsc_assigning);
     }
     return true;
 }

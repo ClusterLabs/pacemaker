@@ -2204,7 +2204,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     if (pcmk__is_anonymous_clone(parent)) {
 
         if (pcmk__is_bundled(parent)) {
-            rsc = pe__find_bundle_replica(parent->parent, node);
+            rsc = pe__find_bundle_replica(parent->private->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
 
@@ -2284,7 +2284,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (pcmk_is_set(iter->flags, pcmk_rsc_unique)) {
                 break;
             }
-            iter = iter->parent;
+            iter = iter->private->parent;
         }
     }
 
@@ -3636,7 +3636,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
     pcmk_resource_t *fail_rsc = rsc;
     const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
 
-    if (fail_rsc->parent != NULL) {
+    if (fail_rsc->private->parent != NULL) {
         pcmk_resource_t *parent = uber_parent(fail_rsc);
 
         if (pcmk__is_anonymous_clone(parent)) {

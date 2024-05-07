@@ -207,24 +207,25 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
     GList * result = NULL;
+
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
      * Otherwise use the clone. */
     if(force == TRUE) {
         return g_list_append(result, rsc);
     }
-    if (pcmk__is_clone(rsc->parent)) {
+    if (pcmk__is_clone(rsc->private->parent)) {
         int rc = find_resource_attr(out, cib, PCMK_XA_ID, rsc_id, attr_set_type,
                                     attr_set, attr_id, attr_name, NULL);
 
         if(rc != pcmk_rc_ok) {
-            rsc = rsc->parent;
+            rsc = rsc->private->parent;
             out->info(out, "Performing %s of '%s' on '%s', the parent of '%s'",
                       cmd, attr_name, rsc->id, rsc_id);
         }
         return g_list_append(result, rsc);
 
-    } else if ((rsc->parent == NULL) && (rsc->children != NULL)
+    } else if ((rsc->private->parent == NULL) && (rsc->children != NULL)
                && pcmk__is_clone(rsc)) {
         pcmk_resource_t *child = rsc->children->data;
 
@@ -1579,7 +1580,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
      * bundle itself instead.
      */
     if (pcmk__is_bundled(rsc)) {
-        rsc = parent->parent;
+        rsc = parent->private->parent;
     }
 
     running = resource_is_running_on(rsc, host);
@@ -2231,7 +2232,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 {
     pcmk__output_t *out = scheduler->priv;
     crm_exit_t exit_code = CRM_EX_OK;
-    const char *rid = NULL;
+    const char *rid = requested_name;
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
@@ -2279,7 +2280,9 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         timeout_ms = get_action_timeout(rsc, get_action(rsc_action));
     }
 
-    rid = pcmk__is_anonymous_clone(rsc->parent)? requested_name : rsc->id;
+    if (!pcmk__is_anonymous_clone(rsc->private->parent)) {
+        rid = rsc->id;
+    }
 
     exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, rsc_action,
                                                  params, override_hash, timeout_ms,

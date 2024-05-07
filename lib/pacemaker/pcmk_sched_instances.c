@@ -202,8 +202,8 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
-    CRM_ASSERT((instance1 != NULL) && (instance1->parent != NULL)
-               && (instance2 != NULL) && (instance2->parent != NULL)
+    CRM_ASSERT((instance1 != NULL) && (instance1->private->parent != NULL)
+               && (instance2 != NULL) && (instance2->private->parent != NULL)
                && (current_node1 != NULL) && (current_node2 != NULL));
 
     // Create node tables initialized with each node
@@ -599,7 +599,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     const pcmk_node_t *chosen = NULL;
     int reserved = 0;
 
-    pcmk_resource_t *parent = instance->parent;
+    pcmk_resource_t *parent = instance->private->parent;
     GHashTable *allowed_orig = NULL;
     GHashTable *allowed_orig_parent = parent->allowed_nodes;
     const pcmk_node_t *allowed_node = NULL;

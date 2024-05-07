@@ -1095,8 +1095,8 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
      * collective resource.
      */
     rsc = uber_parent(action->rsc);
-    if (rsc->parent != NULL) {
-        rsc = rsc->parent; // Bundle
+    if (rsc->private->parent != NULL) {
+        rsc = rsc->private->parent; // Bundle
     }
 
     // Colocation fails only if entire primary can't reach desired role
@@ -1214,11 +1214,13 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     }
 
     dependent_role_rsc = get_resource_for_role(dependent);
+
     primary_role_rsc = get_resource_for_role(primary);
 
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
-        && (dependent_role_rsc->parent != NULL)
-        && pcmk_is_set(dependent_role_rsc->parent->flags, pcmk_rsc_promotable)
+        && (dependent_role_rsc->private->parent != NULL)
+        && pcmk_is_set(dependent_role_rsc->private->parent->flags,
+                       pcmk_rsc_promotable)
         && !pcmk_is_set(dependent_role_rsc->flags, pcmk_rsc_unassigned)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone

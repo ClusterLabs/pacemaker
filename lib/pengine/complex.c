@@ -136,7 +136,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
                              GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
-    pcmk_resource_t *p = rsc->parent;
+    pcmk_resource_t *p = rsc->private->parent;
 
     if (p == NULL) {
         return ;
@@ -152,7 +152,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         pe__unpack_dataset_nvpairs(p->private->xml, PCMK_XE_META_ATTRIBUTES,
                                    rule_data, parent_orig_meta, NULL, FALSE,
                                    scheduler);
-        p = p->parent; 
+        p = p->private->parent;
     }
 
     if (parent_orig_meta != NULL) {
@@ -209,7 +209,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
      * the hash table of the child resource. If it is already explicitly set as
      * a child, it will not be overwritten.
      */
-    if (rsc->parent != NULL) {
+    if (rsc->private->parent != NULL) {
         expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
     }
 
@@ -221,8 +221,8 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
      * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
      * either. The values already set up to this point will not be overwritten.
      */
-    if (rsc->parent) {
-        g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+    if (rsc->private->parent != NULL) {
+        g_hash_table_foreach(rsc->private->parent->meta, dup_attr, meta_hash);
     }
 }
 
@@ -246,8 +246,8 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                                &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
-    if (rsc->parent != NULL) {
-        get_rsc_attributes(meta_hash, rsc->parent, node, scheduler);
+    if (rsc->private->parent != NULL) {
+        get_rsc_attributes(meta_hash, rsc->private->parent, node, scheduler);
 
     } else {
         if (pcmk__xe_first_child(scheduler->rsc_defaults,
@@ -701,7 +701,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
 
-    (*rsc)->parent = parent;
+    rsc_private->parent = parent;
 
     ops = pcmk__xe_first_child(rsc_private->xml, PCMK_XE_OPERATIONS, NULL,
                                NULL);
@@ -1004,11 +1004,11 @@ is_parent(pcmk_resource_t *child, pcmk_resource_t *rsc)
     if (parent == NULL || rsc == NULL) {
         return FALSE;
     }
-    while (parent->parent != NULL) {
-        if (parent->parent == rsc) {
+    while (parent->private->parent != NULL) {
+        if (parent->private->parent == rsc) {
             return TRUE;
         }
-        parent = parent->parent;
+        parent = parent->private->parent;
     }
     return FALSE;
 }
@@ -1021,8 +1021,9 @@ uber_parent(pcmk_resource_t *rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while ((parent->parent != NULL) && !pcmk__is_bundle(parent->parent)) {
-        parent = parent->parent;
+    while ((parent->private->parent != NULL)
+           && !pcmk__is_bundle(parent->private->parent)) {
+        parent = parent->private->parent;
     }
     return parent;
 }
@@ -1046,11 +1047,11 @@ pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->parent != NULL) {
-        if (!include_bundle && pcmk__is_bundle(parent->parent)) {
+    while (parent->private->parent != NULL) {
+        if (!include_bundle && pcmk__is_bundle(parent->private->parent)) {
             break;
         }
-        parent = parent->parent;
+        parent = parent->private->parent;
     }
     return parent;
 }
@@ -1079,7 +1080,7 @@ common_free(pcmk_resource_t * rsc)
         g_hash_table_destroy(rsc->utilization);
     }
 
-    if ((rsc->parent == NULL)
+    if ((rsc->private->parent == NULL)
         && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
 
         pcmk__xml_free(rsc->private->xml);

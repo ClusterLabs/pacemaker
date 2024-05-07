@@ -940,7 +940,7 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
                         then->uuid, pcmk__node_name(then->node),
                         then->flags, then_flags, first->uuid, first->flags);
 
-        if ((then->rsc != NULL) && (then->rsc->parent != NULL)) {
+        if ((then->rsc != NULL) && (then->rsc->private->parent != NULL)) {
             // Required to handle "X_stop then X_start" for cloned groups
             pcmk__update_action_for_orderings(then, scheduler);
         }

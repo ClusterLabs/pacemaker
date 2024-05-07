@@ -804,7 +804,9 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
          * function.  If not, it needs to move into pe__node_text.
          */
         if (pcmk__str_in_list(rsc_printable_id(rsc), filter, pcmk__str_star_matches) ||
-            (rsc->parent && pcmk__str_in_list(rsc_printable_id(rsc->parent), filter, pcmk__str_star_matches))) {
+            ((rsc->private->parent != NULL)
+             && pcmk__str_in_list(rsc_printable_id(rsc->private->parent),
+                                  filter, pcmk__str_star_matches))) {
             retval = g_list_prepend(retval, rsc);
         }
     }

@@ -85,7 +85,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
               rsc->private->xml->name, rsc->id,
               pcmk__s(rsc->private->history_id, rsc->id),
-              ((rsc->parent == NULL)? "NA" : rsc->parent->id),
+              ((rsc->private->parent == NULL)? "NA" : rsc->private->parent->id),
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);
 

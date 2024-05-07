@@ -196,45 +196,49 @@ member_internal_constraints(gpointer data, gpointer user_data)
 
     if (member_data->promotable) {
         // Demote group -> demote member -> group is demoted
-        pcmk__order_resource_actions(member->parent, PCMK_ACTION_DEMOTE,
+        pcmk__order_resource_actions(member->private->parent,
+                                     PCMK_ACTION_DEMOTE,
                                      member, PCMK_ACTION_DEMOTE, down_flags);
         pcmk__order_resource_actions(member, PCMK_ACTION_DEMOTE,
-                                     member->parent, PCMK_ACTION_DEMOTED,
-                                     post_down_flags);
+                                     member->private->parent,
+                                     PCMK_ACTION_DEMOTED, post_down_flags);
 
         // Promote group -> promote member -> group is promoted
         pcmk__order_resource_actions(member, PCMK_ACTION_PROMOTE,
-                                     member->parent, PCMK_ACTION_PROMOTED,
+                                     member->private->parent,
+                                     PCMK_ACTION_PROMOTED,
                                      pcmk__ar_unrunnable_first_blocks
                                      |pcmk__ar_first_implies_then
                                      |pcmk__ar_first_implies_then_graphed);
-        pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
+        pcmk__order_resource_actions(member->private->parent,
+                                     PCMK_ACTION_PROMOTE,
                                      member, PCMK_ACTION_PROMOTE,
                                      pcmk__ar_then_implies_first_graphed);
     }
 
     // Stop group -> stop member -> group is stopped
-    pcmk__order_stops(member->parent, member, down_flags);
+    pcmk__order_stops(member->private->parent, member, down_flags);
     pcmk__order_resource_actions(member, PCMK_ACTION_STOP,
-                                 member->parent, PCMK_ACTION_STOPPED,
+                                 member->private->parent, PCMK_ACTION_STOPPED,
                                  post_down_flags);
 
     // Start group -> start member -> group is started
-    pcmk__order_starts(member->parent, member,
+    pcmk__order_starts(member->private->parent, member,
                        pcmk__ar_then_implies_first_graphed);
     pcmk__order_resource_actions(member, PCMK_ACTION_START,
-                                 member->parent, PCMK_ACTION_RUNNING,
+                                 member->private->parent, PCMK_ACTION_RUNNING,
                                  pcmk__ar_unrunnable_first_blocks
                                  |pcmk__ar_first_implies_then
                                  |pcmk__ar_first_implies_then_graphed);
 
     if (!member_data->ordered) {
-        pcmk__order_starts(member->parent, member,
+        pcmk__order_starts(member->private->parent, member,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks
                            |pcmk__ar_then_implies_first_graphed);
         if (member_data->promotable) {
-            pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
+            pcmk__order_resource_actions(member->private->parent,
+                                         PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
                                          pcmk__ar_first_implies_then
                                          |pcmk__ar_unrunnable_first_blocks
@@ -242,9 +246,10 @@ member_internal_constraints(gpointer data, gpointer user_data)
         }
 
     } else if (member_data->previous_member == NULL) {
-        pcmk__order_starts(member->parent, member, pcmk__ar_none);
+        pcmk__order_starts(member->private->parent, member, pcmk__ar_none);
         if (member_data->promotable) {
-            pcmk__order_resource_actions(member->parent, PCMK_ACTION_PROMOTE,
+            pcmk__order_resource_actions(member->private->parent,
+                                         PCMK_ACTION_PROMOTE,
                                          member, PCMK_ACTION_PROMOTE,
                                          pcmk__ar_none);
         }
@@ -667,7 +672,7 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
     }
 
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
-        || pcmk__is_clone(rsc->parent)) {
+        || pcmk__is_clone(rsc->private->parent)) {
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list. The first and last
          * members will include the group's own colocations.
@@ -699,7 +704,10 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_ASSERT((orig_rsc != NULL) && (list != NULL) && pcmk__is_group(rsc));
+    parent = rsc->private->parent;
 
     // Ignore empty groups
     if (rsc->children == NULL) {
@@ -721,9 +729,8 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
 
     // If cloned, add any relevant colocations with the clone
-    if (rsc->parent != NULL) {
-        rsc->parent->private->cmds->with_this_colocations(rsc->parent, orig_rsc,
-                                                          list);
+    if (parent != NULL) {
+        parent->private->cmds->with_this_colocations(parent, orig_rsc, list);
     }
 
     if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
@@ -747,9 +754,11 @@ void
 pcmk__group_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
     const pcmk_resource_t *member = NULL;
 
     CRM_ASSERT((orig_rsc != NULL) && (list != NULL) && pcmk__is_group(rsc));
+    parent = rsc->private->parent;
 
     // Ignore empty groups
     if (rsc->children == NULL) {
@@ -768,9 +777,9 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
 
         // If cloned, add any relevant colocations involving the clone
-        if (rsc->parent != NULL) {
-            rsc->parent->private->cmds->this_with_colocations(rsc->parent,
-                                                              orig_rsc, list);
+        if (parent != NULL) {
+            parent->private->cmds->this_with_colocations(parent, orig_rsc,
+                                                         list);
         }
 
         if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {
@@ -923,7 +932,7 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
     pcmk__rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
                     orig_rsc->id, rsc->id);
     if (pe__group_flag_is_set(rsc, pcmk__group_colocated)
-        || pcmk__is_clone(rsc->parent)) {
+        || pcmk__is_clone(rsc->private->parent)) {
         // Every group member will be on same node, so sum all members
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             member = (pcmk_resource_t *) iter->data;

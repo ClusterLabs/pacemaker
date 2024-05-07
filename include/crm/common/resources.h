@@ -241,7 +241,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    pcmk_resource_t *parent;            // Resource's parent resource, if any
     enum pe_obj_types variant;          // Resource variant
     void *variant_opaque;               // Variant-specific (and private) data
 

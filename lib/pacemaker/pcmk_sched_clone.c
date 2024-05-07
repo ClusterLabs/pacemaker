@@ -358,13 +358,15 @@ void
 pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+    parent = rsc->private->parent;
 
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
 
-    if (rsc->parent != NULL) {
-        rsc->parent->private->cmds->with_this_colocations(rsc->parent, orig_rsc,
-                                                          list);
+    if (parent != NULL) {
+        parent->private->cmds->with_this_colocations(parent, orig_rsc, list);
     }
 }
 
@@ -373,13 +375,15 @@ void
 pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+    parent = rsc->private->parent;
 
     pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
 
-    if (rsc->parent != NULL) {
-        rsc->parent->private->cmds->this_with_colocations(rsc->parent, orig_rsc,
-                                                          list);
+    if (parent != NULL) {
+        parent->private->cmds->this_with_colocations(parent, orig_rsc, list);
     }
 }
 

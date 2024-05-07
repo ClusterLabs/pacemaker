@@ -226,7 +226,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
         chosen = best;
 
-        if (!pcmk__is_unique_clone(rsc->parent)
+        if (!pcmk__is_unique_clone(rsc->private->parent)
             && (chosen->weight > 0) // Zero not acceptable
             && pcmk__node_available(chosen, false, false)) {
             /* If the resource is already running on a node, prefer that node if
@@ -396,19 +396,20 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     GList *this_with_colocations = NULL;
     GList *with_this_colocations = NULL;
     GList *iter = NULL;
+    pcmk_resource_t *parent = NULL;
     pcmk__colocation_t *colocation = NULL;
     pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
     scheduler = rsc->private->scheduler;
+    parent = rsc->private->parent;
 
     // Never assign a child without parent being assigned first
-    if ((rsc->parent != NULL)
-        && !pcmk_is_set(rsc->parent->flags, pcmk_rsc_assigning)) {
+    if ((parent != NULL) && !pcmk_is_set(parent->flags, pcmk_rsc_assigning)) {
 
         pcmk__rsc_debug(rsc, "%s: Assigning parent %s first",
-                        rsc->id, rsc->parent->id);
-        rsc->parent->private->cmds->assign(rsc->parent, prefer, stop_if_fail);
+                        rsc->id, parent->id);
+        parent->private->cmds->assign(parent, prefer, stop_if_fail);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
@@ -1141,16 +1142,19 @@ void
 pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
                                  const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_ASSERT(pcmk__is_primitive(rsc) && (list != NULL));
+    parent = rsc->private->parent;
 
     if (rsc == orig_rsc) {
         /* For the resource itself, add all of its own colocations and relevant
          * colocations from its parent (if any).
          */
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
-        if (rsc->parent != NULL) {
-            rsc->parent->private->cmds->with_this_colocations(rsc->parent,
-                                                              orig_rsc, list);
+        if (parent != NULL) {
+            parent->private->cmds->with_this_colocations(parent, orig_rsc,
+                                                         list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
@@ -1171,16 +1175,19 @@ void
 pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
                                  const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_ASSERT(pcmk__is_primitive(rsc) && (list != NULL));
+    parent = rsc->private->parent;
 
     if (rsc == orig_rsc) {
         /* For the resource itself, add all of its own colocations and relevant
          * colocations from its parent (if any).
          */
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
-        if (rsc->parent != NULL) {
-            rsc->parent->private->cmds->this_with_colocations(rsc->parent,
-                                                              orig_rsc, list);
+        if (parent != NULL) {
+            parent->private->cmds->this_with_colocations(parent, orig_rsc,
+                                                         list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
@@ -1535,7 +1542,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      * its parents (for example, a group inside a container resource), so check
      * them all, and keep the highest one found.
      */
-    for (parent = rsc; parent != NULL; parent = parent->parent) {
+    for (parent = rsc; parent != NULL; parent = parent->private->parent) {
         if (parent->container != NULL) {
             crm_xml_add(xml, CRM_META "_" PCMK__META_CONTAINER,
                         parent->container->id);
