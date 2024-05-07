@@ -154,9 +154,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_start_failure_fatal     pcmk_sched_start_failure_fatal
 
-//! \deprecated Do not use
-#define pe_flag_remove_after_stop       pcmk_sched_remove_after_stop
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
