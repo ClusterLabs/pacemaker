@@ -59,9 +59,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_merging                  pcmk_rsc_updating_nodes
 
-//! \deprecated Do not use
-#define pe_rsc_restarting               pcmk_rsc_restarting
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
