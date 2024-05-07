@@ -43,9 +43,6 @@ extern "C" {
 //! \deprecated Use pcmk_role_text(pcmk_role_promoted) instead
 #define RSC_ROLE_PROMOTED_S     pcmk_role_text(pcmk_role_promoted)
 
-//! \deprecated Do not use
-#define RSC_ROLE_UNPROMOTED_LEGACY_S    "Slave"
-
 #ifdef __cplusplus
 }
 #endif
