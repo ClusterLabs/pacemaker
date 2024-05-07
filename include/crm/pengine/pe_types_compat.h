@@ -148,9 +148,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_stop_action_orphans     pcmk_sched_cancel_removed_actions
 
-//! \deprecated Do not use
-#define pe_flag_stop_everything         pcmk_sched_stop_all
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
