@@ -107,9 +107,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_maintenance              pcmk_rsc_maintenance
 
-//! \deprecated Do not use
-#define pe_rsc_is_container             pcmk_rsc_has_filler
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
