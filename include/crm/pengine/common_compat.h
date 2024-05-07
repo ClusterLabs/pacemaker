@@ -40,9 +40,6 @@ extern "C" {
 //! \deprecated Use pcmk_role_text(pcmk_role_unpromoted) instead
 #define RSC_ROLE_UNPROMOTED_S   pcmk_role_text(pcmk_role_unpromoted)
 
-//! \deprecated Use pcmk_role_text(pcmk_role_promoted) instead
-#define RSC_ROLE_PROMOTED_S     pcmk_role_text(pcmk_role_promoted)
-
 #ifdef __cplusplus
 }
 #endif
