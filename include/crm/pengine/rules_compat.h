@@ -32,10 +32,6 @@ extern "C" {
 gboolean pe_evaluate_rules(xmlNode *ruleset, GHashTable *node_hash,
                            crm_time_t *now, crm_time_t *next_change);
 
-//! \deprecated Use pcmk_evaluate_rule() on each rule instead
-gboolean pe_eval_rules(xmlNode *ruleset, const pe_rule_eval_data_t *rule_data,
-                       crm_time_t *next_change);
-
 // @COMPAT sbd's configure script checks for this (as of at least 1.5.2)
 //! \deprecated Use pcmk_evaluate_rule() instead
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
