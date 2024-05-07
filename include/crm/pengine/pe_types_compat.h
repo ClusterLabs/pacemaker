@@ -160,9 +160,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_startup_fencing         pcmk_sched_startup_fencing
 
-//! \deprecated Do not use
-#define pe_flag_shutdown_lock           pcmk_sched_shutdown_lock
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
