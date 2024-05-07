@@ -113,9 +113,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_needs_quorum             pcmk_rsc_needs_quorum
 
-//! \deprecated Do not use
-#define pe_rsc_needs_fencing            pcmk_rsc_needs_fencing
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
