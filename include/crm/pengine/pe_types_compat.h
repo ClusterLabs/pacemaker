@@ -230,9 +230,6 @@ typedef struct pe_action_wrapper_s pe_action_wrapper_t;
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
 
-//! \deprecated Use enum pe_quorum_policy instead
-typedef enum pe_quorum_policy no_quorum_policy_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
