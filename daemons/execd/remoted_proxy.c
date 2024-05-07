@@ -232,6 +232,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *wrapper = NULL;
     xmlNode *request = NULL;
     xmlNode *msg = NULL;
+    xmlDoc *old_doc = NULL;
 
     if (!ipc_proxy) {
         qb_ipcs_disconnect(client->ipcs);
@@ -277,7 +278,10 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     crm_xml_add_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, flags);
 
     wrapper = pcmk__xe_create(msg, PCMK__XE_LRMD_IPC_MSG);
+
+    old_doc = request->doc;
     xmlAddChild(wrapper, request);
+    xmlFreeDoc(old_doc);
 
     lrmd_server_send_notify(ipc_proxy, msg);
 
