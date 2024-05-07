@@ -50,9 +50,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_promotable               pcmk_rsc_promotable
 
-//! \deprecated Do not use
-#define pe_rsc_provisional              pcmk_rsc_unassigned
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
