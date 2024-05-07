@@ -14,7 +14,6 @@ headerdir=$(pkgincludedir)/crm
 header_HEADERS		= cib.h			\
 			  cib_compat.h		\
 			  cluster.h		\
-			  compatibility.h	\
 			  crm.h			\
 			  crm_compat.h		\
 			  lrmd.h		\
