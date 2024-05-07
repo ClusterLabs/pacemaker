@@ -52,9 +52,6 @@ extern "C" {
 //! \deprecated Do not use
 #define RSC_ROLE_PROMOTED_LEGACY_S      "Master"
 
-//! \deprecated Do not use
-#define RSC_ROLE_MASTER_S               RSC_ROLE_PROMOTED_LEGACY_S
-
 #ifdef __cplusplus
 }
 #endif
