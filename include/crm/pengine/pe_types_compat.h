@@ -237,9 +237,6 @@ typedef enum pe_quorum_policy no_quorum_policy_t;
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
-//! \deprecated Do not use
-typedef struct pe_tag_s tag_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
