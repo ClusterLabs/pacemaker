@@ -95,9 +95,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_stop_unexpected          pcmk_rsc_stop_unexpected
 
-//! \deprecated Do not use
-#define pe_rsc_allow_migrate            pcmk_rsc_migratable
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
