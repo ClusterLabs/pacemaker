@@ -2460,7 +2460,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
          *
          * For other resource types, is_filtered is okay.
          */
-        if (parent->variant == pcmk_rsc_variant_group) {
+        if (pcmk__is_group(parent)) {
             if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
                                    pcmk__str_star_matches)
                 && !pcmk__str_in_list(rsc_printable_id(parent), only_rsc,
@@ -3045,7 +3045,7 @@ resource_list(pcmk__output_t *out, va_list args)
 
         /* Skip primitives already counted in a brief summary */
         } else if (pcmk_is_set(show_opts, pcmk_show_brief)
-                   && (rsc->variant == pcmk_rsc_variant_primitive)) {
+                   && pcmk__is_primitive(rsc)) {
             continue;
 
         /* Skip resources that aren't at least partially active,

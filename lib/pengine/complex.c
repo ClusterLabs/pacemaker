@@ -567,7 +567,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
             value = PCMK_VALUE_QUORUM;
 
-        } else if ((rsc->variant == pcmk_rsc_variant_primitive)
+        } else if (pcmk__is_primitive(rsc)
                    && xml_contains_remote_node(rsc->xml)) {
             value = PCMK_VALUE_QUORUM;
 
@@ -1011,8 +1011,7 @@ uber_parent(pcmk_resource_t *rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while ((parent->parent != NULL)
-           && (parent->parent->variant != pcmk_rsc_variant_bundle)) {
+    while ((parent->parent != NULL) && !pcmk__is_bundle(parent->parent)) {
         parent = parent->parent;
     }
     return parent;
@@ -1038,8 +1037,7 @@ pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
         return NULL;
     }
     while (parent->parent != NULL) {
-        if (!include_bundle
-            && (parent->parent->variant == pcmk_rsc_variant_bundle)) {
+        if (!include_bundle && pcmk__is_bundle(parent->parent)) {
             break;
         }
         parent = parent->parent;

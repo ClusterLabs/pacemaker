@@ -1417,7 +1417,7 @@ get_complex_task(const pcmk_resource_t *rsc, const char *name)
 {
     enum action_tasks task = pcmk_parse_action(name);
 
-    if ((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)) {
+    if (pcmk__is_primitive(rsc)) {
         switch (task) {
             case pcmk_action_stopped:
             case pcmk_action_started:

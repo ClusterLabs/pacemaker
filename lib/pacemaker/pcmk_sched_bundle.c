@@ -115,7 +115,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk_resource_t *bundled_resource = NULL;
     struct assign_data assign_data = { prefer, stop_if_fail };
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
@@ -191,7 +191,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
     GList *containers = NULL;
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     pe__foreach_bundle_replica(rsc, create_replica_actions, NULL);
 
@@ -298,7 +298,7 @@ pcmk__bundle_internal_constraints(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
 
@@ -526,10 +526,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
      * Instead, we add its colocation constraints to its containers and bundled
      * primitive and call the apply_coloc_score() method for them as dependents.
      */
-    CRM_ASSERT((primary != NULL)
-               && (primary->variant == pcmk_rsc_variant_bundle)
-               && (dependent != NULL)
-               && (dependent->variant == pcmk_rsc_variant_primitive)
+    CRM_ASSERT(pcmk__is_bundle(primary) && pcmk__is_primitive(dependent)
                && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
@@ -588,8 +585,7 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
 {
     const pcmk_resource_t *bundled_rsc = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
-               && (orig_rsc != NULL) && (list != NULL));
+    CRM_ASSERT(pcmk__is_bundle(rsc) && (orig_rsc != NULL) && (list != NULL));
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
@@ -633,8 +629,7 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
 {
     const pcmk_resource_t *bundled_rsc = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
-               && (orig_rsc != NULL) && (list != NULL));
+    CRM_ASSERT(pcmk__is_bundle(rsc) && (orig_rsc != NULL) && (list != NULL));
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
@@ -687,8 +682,7 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
     uint32_t flags = 0;
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((action != NULL) && (action->rsc != NULL)
-               && (action->rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT((action != NULL) && pcmk__is_bundle(action->rsc));
 
     bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
@@ -750,8 +744,7 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
-               && (location != NULL));
+    CRM_ASSERT((location != NULL) && pcmk__is_bundle(rsc));
 
     pcmk__apply_location(rsc, location);
     pe__foreach_bundle_replica(rsc, apply_location_to_replica, location);
@@ -845,7 +838,7 @@ pcmk__bundle_add_actions_to_graph(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
@@ -979,7 +972,7 @@ pcmk__bundle_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
     pe__foreach_bundle_replica(rsc, create_replica_probes, &probe_data);
     return probe_data.any_created;
 }
@@ -1020,7 +1013,7 @@ output_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 void
 pcmk__output_bundle_actions(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
@@ -1032,7 +1025,7 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
 {
     pcmk_resource_t *container = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
@@ -1053,6 +1046,6 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
 void
 pcmk__bundle_shutdown_lock(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
     // Bundles currently don't support shutdown locks
 }

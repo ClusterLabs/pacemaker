@@ -398,7 +398,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
+    CRM_ASSERT(pcmk__is_primitive(rsc));
 
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
@@ -699,7 +699,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     unsigned int num_clean_active = 0;
     const char *next_role_source = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
+    CRM_ASSERT(pcmk__is_primitive(rsc));
 
     next_role_source = set_default_next_role(rsc);
     pcmk__rsc_trace(rsc,
@@ -914,7 +914,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     bool check_unfencing = false;
     bool check_utilization = false;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
+    CRM_ASSERT(pcmk__is_primitive(rsc));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__rsc_trace(rsc,
@@ -1136,8 +1136,7 @@ void
 pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
                                  const pcmk_resource_t *orig_rsc, GList **list)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
-               && (list != NULL));
+    CRM_ASSERT(pcmk__is_primitive(rsc) && (list != NULL));
 
     if (rsc == orig_rsc) {
         /* For the resource itself, add all of its own colocations and relevant
@@ -1166,8 +1165,7 @@ void
 pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
                                  const pcmk_resource_t *orig_rsc, GList **list)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
-               && (list != NULL));
+    CRM_ASSERT(pcmk__is_primitive(rsc) && (list != NULL));
 
     if (rsc == orig_rsc) {
         /* For the resource itself, add all of its own colocations and relevant
@@ -1503,8 +1501,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     char *value = NULL;
     const pcmk_resource_t *parent = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
-               && (xml != NULL));
+    CRM_ASSERT(pcmk__is_primitive(rsc) && (xml != NULL));
 
     /* Clone instance numbers get set internally as meta-attributes, and are
      * needed in the transition graph (for example, to tell unique clone
@@ -1552,7 +1549,7 @@ pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
                                 const pcmk_resource_t *orig_rsc,
                                 GList *all_rscs, GHashTable *utilization)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive)
+    CRM_ASSERT(pcmk__is_primitive(rsc)
                && (orig_rsc != NULL) && (utilization != NULL));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
@@ -1615,7 +1612,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {
     const char *class = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_primitive));
+    CRM_ASSERT(pcmk__is_primitive(rsc));
 
     class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
 

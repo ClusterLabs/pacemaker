@@ -78,10 +78,8 @@ typedef struct pe__bundle_variant_data_s {
         enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
-#define get_bundle_variant_data(data, rsc)                      \
-    CRM_ASSERT(rsc != NULL);                                    \
-    CRM_ASSERT(rsc->variant == pcmk_rsc_variant_bundle);        \
-    CRM_ASSERT(rsc->variant_opaque != NULL);                    \
+#define get_bundle_variant_data(data, rsc)                              \
+    CRM_ASSERT(pcmk__is_bundle(rsc) && (rsc->variant_opaque != NULL));  \
     data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
 
 /*!
@@ -133,7 +131,7 @@ pe__get_rsc_in_container(const pcmk_resource_t *instance)
     const pe__bundle_variant_data_t *data = NULL;
     const pcmk_resource_t *top = pe__const_top_resource(instance, true);
 
-    if ((top == NULL) || (top->variant != pcmk_rsc_variant_bundle)) {
+    if (!pcmk__is_bundle(top)) {
         return NULL;
     }
     get_bundle_variant_data(data, top);
@@ -2089,14 +2087,13 @@ pe__bundle_resource_state(const pcmk_resource_t *rsc, gboolean current)
 int
 pe_bundle_replicas(const pcmk_resource_t *rsc)
 {
-    if ((rsc == NULL) || (rsc->variant != pcmk_rsc_variant_bundle)) {
-        return 0;
-    } else {
+    if (pcmk__is_bundle(rsc)) {
         pe__bundle_variant_data_t *bundle_data = NULL;
 
         get_bundle_variant_data(bundle_data, rsc);
         return bundle_data->nreplicas;
     }
+    return 0;
 }
 
 void

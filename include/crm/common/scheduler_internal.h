@@ -21,6 +21,7 @@
 #include <crm/common/history_internal.h>
 #include <crm/common/location_internal.h>
 #include <crm/common/nodes_internal.h>
+#include <crm/common/primitive_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/common/roles_internal.h>
 #include <crm/common/rules_internal.h>

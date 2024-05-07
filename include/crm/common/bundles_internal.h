@@ -13,6 +13,7 @@
 #include <stdbool.h>                    // bool, false
 
 #include <crm/common/remote_internal.h> // pcmk__is_guest_or_bundle_node()
+#include <crm/common/resources.h>       // pcmk_rsc_variant_bundle
 #include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_node_t
 
 #ifdef __cplusplus
@@ -29,6 +30,22 @@ typedef struct {
     pcmk_resource_t *container; //!< Container associated with this instance
     pcmk_resource_t *remote;    //!< Pacemaker Remote connection into container
 } pcmk__bundle_replica_t;
+
+/*!
+ * \internal
+ * \brief Check whether a resource is a bundle resource
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is a bundle, otherwise false
+ * \note This does not return true if \p rsc is part of a bundle
+ *       (see pcmk__is_bundled()).
+ */
+static inline bool
+pcmk__is_bundle(const pcmk_resource_t *rsc)
+{
+    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle);
+}
 
 /*!
  * \internal

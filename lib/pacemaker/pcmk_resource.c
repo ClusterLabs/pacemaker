@@ -205,7 +205,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {
         return EINVAL;
     }
-    if (rsc->variant != pcmk_rsc_variant_primitive) {
+    if (!pcmk__is_primitive(rsc)) {
         // Only primitives get operation digests
         return EOPNOTSUPP;
     }
