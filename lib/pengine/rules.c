@@ -387,11 +387,5 @@ pe_test_expression(xmlNode *expr, GHashTable *node_hash, enum rsc_role_e role,
                                     next_change) == pcmk_rc_ok;
 }
 
-gboolean
-test_expression(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, NULL);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

@@ -65,10 +65,6 @@ gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             crm_time_t *next_change,
                             pe_match_data_t *match_data);
 
-//! \deprecated Use pcmk_evaluate_rule() on parent rule instead
-gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now);
-
 #ifdef __cplusplus
 }
 #endif
