@@ -184,9 +184,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_no_counts               pcmk_sched_no_counts
 
-//! \deprecated Do not use
-#define pe_flag_no_compat               pcmk_sched_no_compat
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
