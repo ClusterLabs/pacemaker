@@ -70,23 +70,6 @@ enum action_tasks text2task(const char *task);
 //! \deprecated Use pcmk_on_fail_text() instead
 const char *fail2text(enum action_fail_response fail);
 
-//! \deprecated Do not use
-static inline const char *
-recovery2text(enum rsc_recovery_type type)
-{
-    switch (type) {
-        case pcmk_multiply_active_stop:
-            return "shutting it down";
-        case pcmk_multiply_active_restart:
-            return "attempting recovery";
-        case pcmk_multiply_active_block:
-            return "waiting for an administrator";
-        case pcmk_multiply_active_unexpected:
-            return "stopping unexpected instances";
-    }
-    return "Unknown";
-}
-
 #ifdef __cplusplus
 }
 #endif
