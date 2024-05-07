@@ -243,9 +243,6 @@ typedef struct pe_tag_s tag_t;
 //! \deprecated Do not use
 typedef struct pe_tag_s pe_tag_t;
 
-//! \deprecated Do not use
-typedef struct pe_ticket_s ticket_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
