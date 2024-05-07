@@ -40,11 +40,5 @@ task2text(enum action_tasks task)
     return pcmk_action_text(task);
 }
 
-enum action_tasks
-text2task(const char *task)
-{
-    return pcmk_parse_action(task);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

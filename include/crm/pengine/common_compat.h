@@ -64,9 +64,6 @@ enum rsc_role_e text2role(const char *role);
 //! \deprecated Use pcmk_action_text() instead
 const char *task2text(enum action_tasks task);
 
-//! \deprecated Use pcmk_parse_action() instead
-enum action_tasks text2task(const char *task);
-
 #ifdef __cplusplus
 }
 #endif
