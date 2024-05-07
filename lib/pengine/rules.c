@@ -404,13 +404,5 @@ pe_test_expression_re(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e ro
     return pe_test_expression(expr, node_hash, role, now, NULL, &match_data);
 }
 
-gboolean
-pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                        enum rsc_role_e role, crm_time_t *now,
-                        pe_match_data_t *match_data)
-{
-    return pe_test_expression(expr, node_hash, role, now, NULL, match_data);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
