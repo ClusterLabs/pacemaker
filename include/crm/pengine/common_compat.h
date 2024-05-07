@@ -67,9 +67,6 @@ const char *task2text(enum action_tasks task);
 //! \deprecated Use pcmk_parse_action() instead
 enum action_tasks text2task(const char *task);
 
-//! \deprecated Use pcmk_on_fail_text() instead
-const char *fail2text(enum action_fail_response fail);
-
 #ifdef __cplusplus
 }
 #endif

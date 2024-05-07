@@ -46,11 +46,5 @@ text2task(const char *task)
     return pcmk_parse_action(task);
 }
 
-const char *
-fail2text(enum action_fail_response fail)
-{
-    return pcmk_on_fail_text(fail);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
