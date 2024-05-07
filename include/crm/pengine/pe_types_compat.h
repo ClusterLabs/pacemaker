@@ -196,16 +196,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_check_config            pcmk_sched_validate_only
 
-//!@{
-//! \deprecated Do not use (unused by Pacemaker)
-enum pe_graph_flags {
-    pe_graph_none = 0x00000,
-    pe_graph_updated_first = 0x00001,
-    pe_graph_updated_then = 0x00002,
-    pe_graph_disable = 0x00004,
-};
-//!@}
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
