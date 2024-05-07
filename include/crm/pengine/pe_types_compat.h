@@ -101,9 +101,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_failure_ignored          pcmk_rsc_ignore_failure
 
-//! \deprecated Do not use
-#define pe_rsc_replica_container        pcmk_rsc_replica_container
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
