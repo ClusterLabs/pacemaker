@@ -44,9 +44,6 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_unique                   pcmk_rsc_unique
 
-//! \deprecated Do not use
-#define pe_rsc_fence_device             pcmk_rsc_fence_device
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
