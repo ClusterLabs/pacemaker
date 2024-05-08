@@ -64,7 +64,10 @@ extern "C" {
  */
 
 // Legacy custom return codes for Pacemaker API functions (deprecated)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 #  define pcmk_ok                       0
+
 #  define PCMK_ERROR_OFFSET             190    /* Replacements on non-linux systems, see include/portability.h */
 #  define PCMK_CUSTOM_OFFSET            200    /* Purely custom codes */
 #  define pcmk_err_generic              201
@@ -72,8 +75,13 @@ extern "C" {
 #  define pcmk_err_schema_validation    203
 #  define pcmk_err_transform_failed     204
 #  define pcmk_err_old_data             205
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 #  define pcmk_err_diff_failed          206
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 #  define pcmk_err_diff_resync          207
+
 #  define pcmk_err_cib_modified         208
 #  define pcmk_err_cib_backup           209
 #  define pcmk_err_cib_save             210
@@ -150,6 +158,7 @@ enum pcmk_rc_e {
 
     // Values -1 through -1000 reserved for caller use
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     pcmk_rc_ok                  =     0
 
     // Positive values reserved for system error numbers
@@ -167,13 +176,19 @@ enum pcmk_rc_e {
  */
 enum ocf_exitcode {
     PCMK_OCF_OK                   = 0,   //!< Success
+
+    // NOTE: booth (as of at least 1.1) uses this value
     PCMK_OCF_UNKNOWN_ERROR        = 1,   //!< Unspecified error
+
     PCMK_OCF_INVALID_PARAM        = 2,   //!< Parameter invalid (in local context)
     PCMK_OCF_UNIMPLEMENT_FEATURE  = 3,   //!< Requested action not implemented
     PCMK_OCF_INSUFFICIENT_PRIV    = 4,   //!< Insufficient privileges
     PCMK_OCF_NOT_INSTALLED        = 5,   //!< Dependencies not available locally
     PCMK_OCF_NOT_CONFIGURED       = 6,   //!< Parameter invalid (inherently)
+
+    // NOTE: booth (as of at least 1.1) uses this value
     PCMK_OCF_NOT_RUNNING          = 7,   //!< Service safely stopped
+
     PCMK_OCF_RUNNING_PROMOTED     = 8,   //!< Service active and promoted
     PCMK_OCF_FAILED_PROMOTED      = 9,   //!< Service failed and possibly in promoted role
     PCMK_OCF_DEGRADED             = 190, //!< Service active but more likely to fail soon
@@ -208,6 +223,7 @@ enum ocf_exitcode {
 #endif
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /*!
  * \enum crm_exit_e
  * \brief Exit status codes for tools and daemons
@@ -355,15 +371,24 @@ enum pcmk_result_type {
 int pcmk_result_get_strings(int code, enum pcmk_result_type type,
                             const char **name, const char **desc);
 const char *pcmk_rc_name(int rc);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 const char *pcmk_rc_str(int rc);
+
 crm_exit_t pcmk_rc2exitc(int rc);
 enum ocf_exitcode pcmk_rc2ocf(int rc);
 int pcmk_rc2legacy(int rc);
 int pcmk_legacy2rc(int legacy_rc);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 const char *pcmk_strerror(int rc);
+
 const char *pcmk_errorname(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 const char *crm_exit_str(crm_exit_t exit_code);
+
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
 static inline const char *

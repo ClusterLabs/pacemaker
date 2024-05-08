@@ -121,6 +121,7 @@ void crm_enable_stderr(int enable);
 
 gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);
 
@@ -237,6 +238,7 @@ pcmk__clip_log_level(int level)
         }                                                               \
     } while(0)
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /* 'failure_action' MUST NOT be 'continue' as it will apply to the
  * macro's do-while loop
  */
@@ -311,6 +313,7 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /*!
  * \brief Send a system error message to both the log and stderr
  *
@@ -383,12 +386,21 @@ pcmk__clip_log_level(int level)
 
 #  define crm_emerg(fmt, args...)   qb_log(LOG_EMERG,       fmt , ##args)
 #  define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
-#  define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
-#  define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
-#  define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
-#  define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+#  define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+#  define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+#  define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
+
+#  define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
+                                                //
+// NOTE: sbd (as of at least 1.5.2) uses this
 #  define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+
 #  define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
 
 #  define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)

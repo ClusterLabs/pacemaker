@@ -42,10 +42,18 @@ char *pcmk_promotion_score_name(const char *rsc_id);
 int crm_default_remote_port(void);
 
 /* public string functions (from strings.c) */
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 gboolean crm_is_true(const char *s);
+
 int crm_str_to_boolean(const char *s, int *ret);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 long long crm_get_msec(const char *input);
+
 char * crm_strip_trailing_newline(char *str);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 int pcmk_parse_interval_spec(const char *input, guint *result_ms);

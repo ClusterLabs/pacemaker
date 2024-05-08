@@ -35,6 +35,7 @@ extern "C" {
  * \ingroup core
  */
 
+// NOTE: sbd (as of at least 1.5.2) uses this enum
 //! Possible responses to loss of quorum
 enum pe_quorum_policy {
     pcmk_no_quorum_freeze,  //<! Do not recover resources from outside partition
@@ -44,18 +45,22 @@ enum pe_quorum_policy {
     pcmk_no_quorum_demote,  //<! Demote promotable resources and stop all others
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated Use pcmk_no_quorum_freeze instead
     no_quorum_freeze    = pcmk_no_quorum_freeze,
 
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated Use pcmk_no_quorum_stop instead
     no_quorum_stop      = pcmk_no_quorum_stop,
 
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated Use pcmk_no_quorum_ignore instead
     no_quorum_ignore    = pcmk_no_quorum_ignore,
 
     //! \deprecated Use pcmk_no_quorum_fence instead
     no_quorum_suicide   = pcmk_no_quorum_fence,
 
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated Use pcmk_no_quorum_demote instead
     no_quorum_demote    = pcmk_no_quorum_demote,
 #endif
@@ -177,24 +182,31 @@ enum pcmk_scheduler_flags {
 struct pe_working_set_s {
     // Be careful about when each piece of information is available and final
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated To set scheduler iput, use pcmk_set_scheduler_cib() instead
     xmlNode *input;                 // CIB XML
 
     crm_time_t *now;                // Current time for evaluation purposes
     char *dc_uuid;                  // Node ID of designated controller
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_dc() instead
     pcmk_node_t *dc_node;           // Node object for DC
 
     const char *stonith_action;     // Default fencing action
     const char *placement_strategy; // Value of placement-strategy property
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     // @COMPAT Change to uint64_t at a compatibility break
-    //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
+    //! \deprecated Call pcmk_has_quorum() to check quorum
     unsigned long long flags;       // Group of enum pcmk_scheduler_flags
 
     int stonith_timeout;            // Value of stonith-timeout property
+
+    // NOTE: sbd (as of at least 1.5.2) uses this
+    //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
+
     GHashTable *config_hash;        // Cluster properties
 
     // Ticket constraints unpacked from ticket state
@@ -203,7 +215,10 @@ struct pe_working_set_s {
     // Actions for which there can be only one (such as "fence node X")
     GHashTable *singletons;
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
+    //! \deprecated Call pcmk_find_node() to find a node instead
     GList *nodes;                   // Nodes in cluster
+
     GList *resources;               // Resources in cluster
     GList *placement_constraints;   // Location constraints
     GList *ordering_constraints;    // Ordering constraints

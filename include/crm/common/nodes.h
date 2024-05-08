@@ -75,25 +75,31 @@ struct pe_node_shared_s {
 
     // @TODO Convert these into a flag group
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_online() instead
     gboolean online;            // Whether online
 
     gboolean standby;           // Whether in standby mode
     gboolean standby_onfail;    // Whether in standby mode due to on-fail
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_pending() instead
     gboolean pending;           // Whether controller membership is pending
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call !pcmk_node_is_clean() instead
     gboolean unclean;           // Whether node requires fencing
 
     gboolean unseen;            // Whether node has never joined cluster
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_shutting_down() instead
     gboolean shutdown;          // Whether shutting down
+
     gboolean expected_up;       // Whether expected join state is member
     gboolean is_dc;             // Whether node is cluster's DC
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode
 
@@ -128,7 +134,10 @@ struct pe_node_shared_s {
     // Remote connection resource for node, if it is a Pacemaker Remote node
     pcmk_resource_t *remote_rsc;
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
+    // \deprecated Call pcmk_foreach_active_resource() instead
     GList *running_rsc;             // List of resources active on node
+
     GList *allocated_rsc;           // List of resources assigned to node
     GHashTable *attrs;              // Node attributes
     GHashTable *utilization;        // Node utilization attributes
@@ -153,6 +162,8 @@ struct pe_node_s {
     int weight;         // Node score for a given resource
     gboolean fixed;     // \deprecated Do not use
     int count;          // Counter reused by assignment and promotion code
+
+    // NOTE: sbd (as of at least 1.5.2) uses this
     struct pe_node_shared_s *details;   // Basic node information
 
     // @COMPAT This should be enum pe_discover_e

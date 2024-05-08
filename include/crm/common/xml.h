@@ -43,6 +43,8 @@ typedef const xmlChar *pcmkXmlStr;
 /*
  * Searching & Modifying
  */
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 
 char *calculate_on_disk_digest(xmlNode * local_cib);
@@ -50,15 +52,19 @@ char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
                                      const char *version);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /*!
  * \brief Initialize the CRM XML subsystem
  *
  * This method sets global XML settings and loads pacemaker schemas into the cache.
  */
 void crm_xml_init(void);
+
 void crm_xml_cleanup(void);
 
 void pcmk_free_xml_subtree(xmlNode *xml);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 void free_xml(xmlNode * child);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);

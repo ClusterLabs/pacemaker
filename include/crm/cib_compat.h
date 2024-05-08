@@ -23,6 +23,7 @@ extern "C" {
  *             release.
  */
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define T_CIB_DIFF_NOTIFY "cib_diff_notify"
 

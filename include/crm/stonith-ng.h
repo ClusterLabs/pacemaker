@@ -575,6 +575,8 @@ const char *stonith_op_state_str(enum op_state state);
  * queried without mainloop or the caller understanding the full API
  *
  * At least one of nodeid and uname are required
+ *
+ * NOTE: DLM uses both of these
  */
 int stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off);
 time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);

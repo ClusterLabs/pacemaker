@@ -24,14 +24,22 @@ extern "C" {
  * \ingroup core
  */
 
+// NOTE: sbd (as of at least 1.5.2) uses this enum
 enum pcmk_pacemakerd_state {
     pcmk_pacemakerd_state_invalid = -1,
     pcmk_pacemakerd_state_init = 0,
     pcmk_pacemakerd_state_starting_daemons,
     pcmk_pacemakerd_state_wait_for_ping,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_pacemakerd_state_running,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_pacemakerd_state_shutting_down,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_pacemakerd_state_shutdown_complete,
+
     pcmk_pacemakerd_state_remote,
     pcmk_pacemakerd_state_max = pcmk_pacemakerd_state_remote,
 };
@@ -39,10 +47,14 @@ enum pcmk_pacemakerd_state {
 //! Possible types of pacemakerd replies
 enum pcmk_pacemakerd_api_reply {
     pcmk_pacemakerd_reply_unknown,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_pacemakerd_reply_ping,
+
     pcmk_pacemakerd_reply_shutdown,
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this type and some of its members
 /*!
  * Pacemakerd reply passed to event callback
  */
@@ -64,7 +76,9 @@ typedef struct {
     } data;
 } pcmk_pacemakerd_api_reply_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 int pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name);
+
 int pcmk_pacemakerd_api_shutdown(pcmk_ipc_api_t *api, const char *ipc_name);
 
 enum pcmk_pacemakerd_state

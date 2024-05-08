@@ -28,6 +28,7 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_orphan                   pcmk_rsc_removed
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define pe_rsc_managed                  pcmk_rsc_managed
 
@@ -118,6 +119,7 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_rsc_needs_unfencing          pcmk_rsc_needs_unfencing
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_sched_quorate instead
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
@@ -130,6 +132,7 @@ extern "C" {
 //! \deprecated Use pcmk_sched_fencing_enabled instead
 #define pe_flag_stonith_enabled         pcmk_sched_fencing_enabled
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_sched_have_fencing instead
 #define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
 
@@ -223,6 +226,7 @@ typedef struct pe_action_wrapper_s action_wrapper_t;
 //! \deprecated Do not use
 typedef struct pe_action_wrapper_s pe_action_wrapper_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
 
@@ -232,6 +236,7 @@ typedef struct pe_node_s pe_node_t;
 //! \deprecated Use enum pe_quorum_policy instead
 typedef enum pe_quorum_policy no_quorum_policy_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
@@ -250,6 +255,7 @@ typedef struct pe_ticket_s ticket_t;
 //! \deprecated Do not use
 typedef struct pe_ticket_s pe_ticket_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
 

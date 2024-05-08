@@ -84,11 +84,17 @@ enum pcmk_ipc_server {
     pcmk_ipc_schedulerd,    //!< Scheduler
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this enum
 //! Possible event types that an IPC event callback can be called for
 enum pcmk_ipc_event {
     pcmk_ipc_event_connect,     //!< Result of asynchronous connection attempt
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_ipc_event_disconnect,  //!< Termination of IPC connection
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_ipc_event_reply,       //!< Daemon's reply to client IPC request
+
     pcmk_ipc_event_notify,      //!< Notification from daemon
 };
 
@@ -99,6 +105,7 @@ enum pcmk_ipc_dispatch {
     pcmk_ipc_dispatch_sync, //!< Sending a command will wait for any reply
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! Client connection to Pacemaker IPC
 typedef struct pcmk_ipc_api_s pcmk_ipc_api_t;
 
@@ -121,10 +128,13 @@ typedef void (*pcmk_ipc_callback_t)(pcmk_ipc_api_t *api,
                                     crm_exit_t status,
                                     void *event_data, void *user_data);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 int pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void pcmk_free_ipc_api(pcmk_ipc_api_t *api);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 int pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type);
 
 void pcmk_disconnect_ipc(pcmk_ipc_api_t *api);
@@ -133,6 +143,7 @@ int pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms);
 
 void pcmk_dispatch_ipc(pcmk_ipc_api_t *api);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
                                 void *user_data);
 

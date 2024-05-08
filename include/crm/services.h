@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 
+// NOTE: booth (as of at least 1.1) checks for the existence of this header
+
 /*!
  * \file
  * \brief Services API
@@ -48,7 +50,10 @@ extern "C" {
 
 enum lsb_exitcode {
     PCMK_LSB_OK                  = 0,
+
+    // NOTE: booth (as of at least 1.1) uses this value
     PCMK_LSB_UNKNOWN_ERROR       = 1,
+
     PCMK_LSB_INVALID_PARAM       = 2,
     PCMK_LSB_UNIMPLEMENT_FEATURE = 3,
     PCMK_LSB_INSUFFICIENT_PRIV   = 4,

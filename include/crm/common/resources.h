@@ -390,6 +390,7 @@ typedef struct resource_object_functions_s {
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_resource_s {
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
@@ -422,6 +423,7 @@ struct pe_resource_s {
     guint remote_reconnect_ms;      // Retry interval for remote connections
     char *pending_task;             // Pending action in history, if any
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk_rsc_flags
 

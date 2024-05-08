@@ -141,6 +141,7 @@ struct crm_cluster_s {
     char *uname;
     uint32_t nodeid;
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_cluster_set_destroy_fn() to set this
     void (*destroy) (gpointer);
 
@@ -151,6 +152,7 @@ struct crm_cluster_s {
      */
     struct cpg_name group;
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     /*!
      * \deprecated Call pcmk_cpg_set_deliver_fn() and pcmk_cpg_set_confchg_fn()
      *             to set these

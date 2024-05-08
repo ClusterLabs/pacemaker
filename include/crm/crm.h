@@ -80,6 +80,7 @@ extern "C" {
 
 #  define CRM_META			"CRM_meta"
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 extern char *crm_system_name;
 
 /* Sub-systems */
