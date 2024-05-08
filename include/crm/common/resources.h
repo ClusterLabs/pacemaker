@@ -224,8 +224,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    void *variant_opaque;               // Variant-specific (and private) data
-
     enum rsc_recovery_type recovery_type;   // How to recover if failed
 
     enum pe_restart restart_type;   // \deprecated Do not use

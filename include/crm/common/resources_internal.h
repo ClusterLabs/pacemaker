@@ -201,6 +201,7 @@ typedef struct {
 // Implementation of pcmk__resource_private_t
 struct pcmk__resource_private {
     enum pcmk__rsc_variant variant; // Resource variant
+    void *variant_opaque;           // Variant-specific data
     char *history_id;               // Resource instance ID in history
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource

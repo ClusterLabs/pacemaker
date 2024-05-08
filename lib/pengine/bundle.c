@@ -78,9 +78,10 @@ typedef struct pe__bundle_variant_data_s {
         enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
-#define get_bundle_variant_data(data, rsc)                              \
-    CRM_ASSERT(pcmk__is_bundle(rsc) && (rsc->variant_opaque != NULL));  \
-    data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
+#define get_bundle_variant_data(data, rsc) do { \
+        CRM_ASSERT(pcmk__is_bundle(rsc));       \
+        data = rsc->private->variant_opaque;    \
+    } while (0)
 
 /*!
  * \internal
@@ -995,7 +996,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
-    rsc->variant_opaque = bundle_data;
+    rsc->private->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
     xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_DOCKER, NULL,
