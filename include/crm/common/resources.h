@@ -209,7 +209,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    enum pe_restart restart_type;   // \deprecated Do not use
     int priority;                   // Configured priority
     int stickiness;                 // Extra preference for current node
     int sort_index;                 // Promotion score on assigned node

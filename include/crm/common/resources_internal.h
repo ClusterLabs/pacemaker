@@ -212,6 +212,7 @@ struct pcmk__resource_private {
     char *history_id;               // Resource instance ID in history
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
+    enum pe_restart restart_type;   // Deprecated
 
     // Resource configuration (possibly expanded from template)
     xmlNode *xml;

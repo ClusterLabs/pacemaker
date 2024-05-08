@@ -390,11 +390,11 @@ clone_min_ordering(const char *id,
  *         Eventually, it will be removed, and \c pe_restart_ignore will be the
  *         only behavior, at which time this can just be removed entirely.
  */
-#define handle_restart_type(rsc, kind, flag, flags) do {        \
-        if (((kind) == pe_order_kind_optional)                  \
-            && ((rsc)->restart_type == pe_restart_restart)) {   \
-            pcmk__set_relation_flags((flags), (flag));          \
-        }                                                       \
+#define handle_restart_type(rsc, kind, flag, flags) do {                \
+        if (((kind) == pe_order_kind_optional)                          \
+            && ((rsc)->private->restart_type == pe_restart_restart)) {  \
+            pcmk__set_relation_flags((flags), (flag));                  \
+        }                                                               \
     } while (0)
 
 /*!
