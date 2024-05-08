@@ -854,7 +854,8 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
                             "already assigned",
                             instance->id, max_total);
             resource_location(instance, NULL, -PCMK_SCORE_INFINITY,
-                              "collective_limit_reached", collective->cluster);
+                              "collective_limit_reached",
+                              collective->private->scheduler);
 
         } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
             assigned++;
@@ -1436,7 +1437,7 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
         changed |= then_instance->private->cmds->update_ordered_actions(
             first_action, then_action, node,
             first_instance->private->cmds->action_flags(first_action, node),
-            filter, type, then->rsc->cluster);
+            filter, type, then->rsc->private->scheduler);
     }
     free_instance_list(then->rsc, instances);
     return changed;
@@ -1519,6 +1520,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                               uint32_t flags, uint32_t filter, uint32_t type)
 {
     pcmk_action_t *instance_action = NULL;
+    pcmk_scheduler_t *scheduler = instance->private->scheduler;
     uint32_t instance_flags = 0;
     uint32_t changed = pcmk__updated_none;
 
@@ -1541,7 +1543,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                                                               instance_action,
                                                               node, flags,
                                                               filter, type,
-                                                              instance->cluster);
+                                                              scheduler);
 
     // Propagate any changes to later actions
     if (pcmk_is_set(changed, pcmk__updated_then)) {
@@ -1549,7 +1551,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
              after_iter != NULL; after_iter = after_iter->next) {
             pcmk__related_action_t *after = after_iter->data;
 
-            pcmk__update_action_for_orderings(after->action, instance->cluster);
+            pcmk__update_action_for_orderings(after->action, scheduler);
         }
     }
 

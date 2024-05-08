@@ -340,7 +340,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
     if ((action->rsc != NULL) && (action->node != NULL)) {
         // Get the resource instance attributes, evaluated properly for node
         GHashTable *params = pe_rsc_params(action->rsc, action->node,
-                                           action->rsc->cluster);
+                                           action->rsc->private->scheduler);
 
         pcmk__substitute_remote_addr(action->rsc, params);
 
@@ -349,7 +349,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
     } else if ((action->rsc != NULL)
                && (action->rsc->variant <= pcmk_rsc_variant_primitive)) {
         GHashTable *params = pe_rsc_params(action->rsc, NULL,
-                                           action->rsc->cluster);
+                                           action->rsc->private->scheduler);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
     }
@@ -977,10 +977,11 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     GList *iter = NULL;
 
     CRM_ASSERT(rsc != NULL);
+
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
-    g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
+    g_list_foreach(rsc->actions, add_action_to_graph, rsc->private->scheduler);
 
     // Then recursively add its children's actions (appropriate to variant)
     for (iter = rsc->children; iter != NULL; iter = iter->next) {

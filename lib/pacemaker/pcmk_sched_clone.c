@@ -74,9 +74,10 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     g_list_foreach(colocations, pcmk__add_dependent_scores, rsc);
     g_list_free(colocations);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes,
+                         rsc->private->scheduler);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
     pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),

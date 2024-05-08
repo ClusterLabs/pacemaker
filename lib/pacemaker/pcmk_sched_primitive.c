@@ -345,7 +345,7 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
 static void
 remote_connection_assigned(const pcmk_resource_t *connection)
 {
-    pcmk_node_t *remote_node = pcmk_find_node(connection->cluster,
+    pcmk_node_t *remote_node = pcmk_find_node(connection->private->scheduler,
                                               connection->id);
 
     CRM_CHECK(remote_node != NULL, return);
@@ -397,8 +397,10 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     GList *with_this_colocations = NULL;
     GList *iter = NULL;
     pcmk__colocation_t *colocation = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
+    scheduler = rsc->private->scheduler;
 
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
@@ -428,7 +430,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
-                         rsc->cluster);
+                         scheduler);
 
     this_with_colocations = pcmk__this_with_colocations(rsc);
     with_this_colocations = pcmk__with_this_colocations(rsc);
@@ -452,7 +454,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     pe__show_node_scores(true, rsc, "Mandatory-colocations",
-                         rsc->allowed_nodes, rsc->cluster);
+                         rsc->allowed_nodes, scheduler);
 
     // Then apply optional colocations
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
@@ -480,11 +482,11 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                         "Banning %s from all nodes because it will be stopped",
                         rsc->id);
         resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                          PCMK_META_TARGET_ROLE, rsc->cluster);
+                          PCMK_META_TARGET_ROLE, scheduler);
 
     } else if ((rsc->next_role > rsc->role)
-               && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_quorate)
-               && (rsc->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
+               && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
+               && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
                    rsc->id, pcmk_role_text(rsc->role),
@@ -493,13 +495,13 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                           PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE);
     }
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes, scheduler);
 
     // Unmanage resource if fencing is enabled but no device is configured
-    if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
-        && !pcmk_is_set(rsc->cluster->flags, pcmk_sched_have_fencing)) {
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)
+        && !pcmk_is_set(scheduler->flags, pcmk_sched_have_fencing)) {
         pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
     }
 
@@ -524,7 +526,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
                        reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 
-    } else if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_stop_all)) {
+    } else if (pcmk_is_set(scheduler->flags, pcmk_sched_stop_all)) {
         // Must stop at some point, but be consistent with stop_if_fail
         if (stop_if_fail) {
             pcmk__rsc_debug(rsc,
@@ -915,8 +917,10 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     GList *allowed_nodes = NULL;
     bool check_unfencing = false;
     bool check_utilization = false;
+    pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
+    scheduler = rsc->private->scheduler;
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
         pcmk__rsc_trace(rsc,
@@ -927,13 +931,13 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
-                      && pcmk_is_set(rsc->cluster->flags,
+                      && pcmk_is_set(scheduler->flags,
                                      pcmk_sched_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                         && !pcmk__str_eq(rsc->cluster->placement_strategy,
+                         && !pcmk__str_eq(scheduler->placement_strategy,
                                           PCMK_VALUE_DEFAULT, pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
@@ -941,8 +945,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0), NULL,
                        pcmk__ar_ordered
                        |pcmk__ar_first_implies_then
-                       |pcmk__ar_intermediate_stop,
-                       rsc->cluster);
+                       |pcmk__ar_intermediate_stop, scheduler);
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
@@ -953,13 +956,13 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                            NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                            NULL,
-                           pcmk__ar_promoted_then_implies_first, rsc->cluster);
+                           pcmk__ar_promoted_then_implies_first, scheduler);
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                            NULL,
                            rsc, pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0),
                            NULL,
-                           pcmk__ar_unrunnable_first_blocks, rsc->cluster);
+                           pcmk__ar_unrunnable_first_blocks, scheduler);
     }
 
     // Don't clear resource history if probing on same node
@@ -968,7 +971,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                        pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0),
                        NULL,
                        pcmk__ar_if_on_same_node|pcmk__ar_then_cancels_first,
-                       rsc->cluster);
+                       scheduler);
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || (rsc->container != NULL)) {
@@ -1016,7 +1019,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
         } else if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
         } else  {
-            remote_rsc = pe__resource_contains_guest_node(rsc->cluster,
+            remote_rsc = pe__resource_contains_guest_node(scheduler,
                                                           rsc->container);
         }
 
@@ -1049,8 +1052,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                                pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
                                NULL,
                                pcmk__ar_first_implies_then
-                               |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               |pcmk__ar_unrunnable_first_blocks, scheduler);
 
             pcmk__new_ordering(rsc,
                                pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
@@ -1058,7 +1060,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                                rsc->container,
                                pcmk__op_key(rsc->container->id,
                                             PCMK_ACTION_STOP, 0),
-                               NULL, pcmk__ar_then_implies_first, rsc->cluster);
+                               NULL, pcmk__ar_then_implies_first, scheduler);
 
             if (pcmk_is_set(rsc->flags, pcmk_rsc_remote_nesting_allowed)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -1295,13 +1297,15 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
             pcmk__clear_action_flags(stop, pcmk_action_runnable);
         }
 
-        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_remove_after_stop)) {
+        if (pcmk_is_set(rsc->private->scheduler->flags,
+                        pcmk_sched_remove_after_stop)) {
             pcmk__schedule_cleanup(rsc, current, optional);
         }
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing)) {
             pcmk_action_t *unfence = pe_fence_op(current, PCMK_ACTION_ON, true,
-                                                 NULL, false, rsc->cluster);
+                                                 NULL, false,
+                                                 rsc->private->scheduler);
 
             order_actions(stop, unfence, pcmk__ar_then_implies_first);
             if (!pcmk__node_unfenced(current)) {
@@ -1607,7 +1611,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
 
     if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
         resource_location(rsc, node, -PCMK_SCORE_INFINITY,
-                          PCMK_OPT_SHUTDOWN_LOCK, rsc->cluster);
+                          PCMK_OPT_SHUTDOWN_LOCK, rsc->private->scheduler);
     }
 }
 
@@ -1616,8 +1620,10 @@ void
 pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {
     const char *class = NULL;
+    pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
+    scheduler = rsc->private->scheduler;
 
     class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
 
@@ -1664,13 +1670,13 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
         return;
     }
 
-    if (rsc->cluster->shutdown_lock > 0) {
-        time_t lock_expiration = rsc->lock_time + rsc->cluster->shutdown_lock;
+    if (scheduler->shutdown_lock > 0) {
+        time_t lock_expiration = rsc->lock_time + scheduler->shutdown_lock;
 
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
                        rsc->id, pcmk__node_name(rsc->lock_node),
                        (long long) lock_expiration);
-        pe__update_recheck_time(++lock_expiration, rsc->cluster,
+        pe__update_recheck_time(++lock_expiration, scheduler,
                                 "shutdown lock expiration");
     } else {
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown",
@@ -1678,5 +1684,5 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
     }
 
     // If resource is locked to one node, ban it from all other nodes
-    g_list_foreach(rsc->cluster->nodes, ban_if_not_locked, rsc);
+    g_list_foreach(scheduler->nodes, ban_if_not_locked, rsc);
 }

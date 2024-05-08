@@ -83,7 +83,7 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
                            NULL,
                            rsc2, pcmk__op_key(rsc2->id, PCMK_ACTION_START, 0),
                            NULL,
-                           pcmk__ar_ordered, rsc1->cluster);
+                           pcmk__ar_ordered, rsc1->private->scheduler);
     }
 }
 
@@ -134,7 +134,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
               pcmk_role_text(rsc->role), rsc->id, pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
-                          rsc->cluster);
+                          rsc->private->scheduler);
     pcmk__clear_action_flags(probe, pcmk_action_optional);
 
     pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
@@ -164,7 +164,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
-    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_probe_resources)) {
+    if (!pcmk_is_set(rsc->private->scheduler->flags,
+                     pcmk_sched_probe_resources)) {
         reason = "start-up probes are disabled";
         goto no_probe;
     }
@@ -177,7 +178,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
             goto no_probe;
 
         } else if (pcmk__is_guest_or_bundle_node(node)
-                   && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
+                   && pe__resource_contains_guest_node(rsc->private->scheduler,
+                                                       rsc)) {
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
 
@@ -249,7 +251,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
                                pcmk__op_key(guest->id, PCMK_ACTION_STOP, 0),
                                NULL, top,
                                pcmk__op_key(top->id, PCMK_ACTION_START, 0),
-                               NULL, pcmk__ar_ordered, rsc->cluster);
+                               NULL, pcmk__ar_ordered, rsc->private->scheduler);
             goto no_probe;
         }
     }
@@ -277,9 +279,9 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     // Start or reload after probing the resource
     pcmk__new_ordering(rsc, NULL, probe,
                        top, pcmk__op_key(top->id, PCMK_ACTION_START, 0), NULL,
-                       flags, rsc->cluster);
+                       flags, rsc->private->scheduler);
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
-                       pcmk__ar_ordered, rsc->cluster);
+                       pcmk__ar_ordered, rsc->private->scheduler);
 
     return true;
 
@@ -710,7 +712,7 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 
             add_start_orderings_for_probe(probe, then);
             add_restart_orderings_for_probe(probe, then->action);
-            clear_actions_tracking_flag(rsc->cluster);
+            clear_actions_tracking_flag(rsc->private->scheduler);
         }
     }
 

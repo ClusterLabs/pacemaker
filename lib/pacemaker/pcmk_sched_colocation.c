@@ -391,8 +391,9 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pcmk__add_this_with(&(dependent->rsc_cons), new_con, dependent);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con, primary);
 
-    dependent->cluster->colocation_constraints = g_list_prepend(
-        dependent->cluster->colocation_constraints, new_con);
+    dependent->private->scheduler->colocation_constraints =
+        g_list_prepend(dependent->private->scheduler->colocation_constraints,
+                       new_con);
 
     if (score <= -PCMK_SCORE_INFINITY) {
         anti_colocation_order(dependent, new_con->dependent_role, primary,
@@ -1048,7 +1049,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
             pcmk__clear_action_flags(action, pcmk_action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocation_dependents(action);
-            pcmk__update_action_for_orderings(action, rsc->cluster);
+            pcmk__update_action_for_orderings(action, rsc->private->scheduler);
         }
     }
 
@@ -1776,7 +1777,8 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                                                             constraint,
                                                             other_factor,
                                                             flags);
-            pe__show_node_scores(true, NULL, log_id, work, source_rsc->cluster);
+            pe__show_node_scores(true, NULL, log_id, work,
+                                 source_rsc->private->scheduler);
         }
         g_list_free(colocations);
 

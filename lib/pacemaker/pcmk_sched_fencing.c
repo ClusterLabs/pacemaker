@@ -201,7 +201,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                   rsc->id, pcmk__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(PCMK_ACTION_STONITH), stonith_op,
-                            pcmk__ar_ordered, rsc->cluster);
+                            pcmk__ar_ordered, rsc->private->scheduler);
 #endif
     }
 
@@ -315,7 +315,8 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
      * information to even probe or start unless the node is first unfenced.
      */
     if ((pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
-         && pcmk_is_set(rsc->cluster->flags, pcmk_sched_enable_unfencing))
+         && pcmk_is_set(rsc->private->scheduler->flags,
+                        pcmk_sched_enable_unfencing))
         || pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
@@ -468,7 +469,7 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
     pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL,
-                                         false, rsc->cluster);
+                                         false, rsc->private->scheduler);
 
     crm_debug("Ordering any stops of %s before %s, and any starts after",
               rsc->id, unfence->uuid);
@@ -491,11 +492,11 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
     pcmk__new_ordering(rsc, stop_key(rsc), NULL,
                        NULL, strdup(unfence->uuid), unfence,
                        pcmk__ar_ordered|pcmk__ar_if_on_same_node,
-                       rsc->cluster);
+                       rsc->private->scheduler);
 
     pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
                        rsc, start_key(rsc), NULL,
                        pcmk__ar_first_implies_same_node_then
                        |pcmk__ar_if_on_same_node,
-                       rsc->cluster);
+                       rsc->private->scheduler);
 }

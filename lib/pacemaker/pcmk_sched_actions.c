@@ -1529,11 +1529,11 @@ force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pcmk_action_t *required = custom_action(rsc, key, task, NULL, FALSE,
-                                            rsc->cluster);
+                                            rsc->private->scheduler);
 
     pe_action_set_reason(required, "resource definition change", true);
     trigger_unfencing(rsc, node, "Device parameters changed", NULL,
-                      rsc->cluster);
+                      rsc->private->scheduler);
 }
 
 /*!
@@ -1548,6 +1548,7 @@ schedule_reload(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
+
     pcmk_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
@@ -1576,23 +1577,23 @@ schedule_reload(gpointer data, gpointer user_data)
                         "%s: preventing agent reload because start pending",
                         rsc->id);
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
-                      rsc->cluster);
+                      rsc->private->scheduler);
         return;
     }
 
     // Schedule the reload
     pcmk__set_rsc_flags(rsc, pcmk_rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
-                           FALSE, rsc->cluster);
+                           FALSE, rsc->private->scheduler);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
     // Set orderings so that a required stop or demote cancels the reload
     pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
                        pcmk__ar_ordered|pcmk__ar_then_cancels_first,
-                       rsc->cluster);
+                       rsc->private->scheduler);
     pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
                        pcmk__ar_ordered|pcmk__ar_then_cancels_first,
-                       rsc->cluster);
+                       rsc->private->scheduler);
 }
 
 /*!
@@ -1632,7 +1633,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                             "%s-interval %s for %s on %s is in configuration",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
                             pcmk__node_name(node));
-        } else if (pcmk_is_set(rsc->cluster->flags,
+        } else if (pcmk_is_set(rsc->private->scheduler->flags,
                                pcmk_sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc,
                                   crm_element_value(xml_op, PCMK__XA_CALL_ID),
@@ -1650,11 +1651,12 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
               pcmk__readable_interval(interval_ms), task, rsc->id,
               pcmk__node_name(node));
     task = task_for_digest(task, interval_ms);
-    digest_data = rsc_action_digest_cmp(rsc, xml_op, node, rsc->cluster);
+    digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
+                                        rsc->private->scheduler);
 
-    if (only_sanitized_changed(xml_op, digest_data, rsc->cluster)) {
-        if (!pcmk__is_daemon && (rsc->cluster->priv != NULL)) {
-            pcmk__output_t *out = rsc->cluster->priv;
+    if (only_sanitized_changed(xml_op, digest_data, rsc->private->scheduler)) {
+        if (!pcmk__is_daemon && (rsc->private->scheduler->priv != NULL)) {
+            pcmk__output_t *out = rsc->private->scheduler->priv;
 
             out->info(out,
                       "Only 'private' parameters to %s-interval %s for %s "
@@ -1689,7 +1691,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 // Agent supports reload, so use it
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,
-                                  rsc->cluster);
+                                  rsc->private->scheduler);
                 crm_log_xml_debug(digest_data->params_all, "params:reload");
                 schedule_reload((gpointer) rsc, (gpointer) node);
 
@@ -1834,13 +1836,13 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                  * later in this case.
                  */
                 pe__add_param_check(rsc_op, rsc, node, pcmk__check_active,
-                                    rsc->cluster);
+                                    rsc->private->scheduler);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
                                             NULL) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
-                                    rsc->cluster);
+                                    rsc->private->scheduler);
             }
         }
     }

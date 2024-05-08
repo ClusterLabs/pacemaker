@@ -191,6 +191,7 @@ typedef struct {
 // Implementation of pcmk__resource_private_t
 struct pcmk__resource_private {
     char *history_id;               // Resource instance ID in history
+    pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
 
     // Resource configuration (possibly expanded from template)
     xmlNode *xml;

@@ -890,8 +890,8 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
         rsc_id = pe__clone_child_id(parent);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->cluster->failed, NULL,
-                                                NULL, NULL);
+    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->private->scheduler->failed,
+                                                NULL, NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
         const char *value = NULL;

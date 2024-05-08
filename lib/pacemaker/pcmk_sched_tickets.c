@@ -89,14 +89,16 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
                 resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                                  "__loss_of_ticket__", rsc->cluster);
+                                  "__loss_of_ticket__",
+                                  rsc->private->scheduler);
                 break;
 
             case loss_ticket_demote:
                 // Promotion score will be set to -INFINITY in promotion_order()
                 if (rsc_ticket->role != pcmk_role_promoted) {
                     resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                                      "__loss_of_ticket__", rsc->cluster);
+                                      "__loss_of_ticket__",
+                                      rsc->private->scheduler);
                 }
                 break;
 
@@ -106,10 +108,12 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 }
 
                 resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                                  "__loss_of_ticket__", rsc->cluster);
+                                  "__loss_of_ticket__",
+                                  rsc->private->scheduler);
 
                 for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
-                    pe_fence_node(rsc->cluster, (pcmk_node_t *) iter->data,
+                    pe_fence_node(rsc->private->scheduler,
+                                  (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
                 }
                 break;
@@ -130,7 +134,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                              "__no_ticket__", rsc->cluster);
+                              "__no_ticket__", rsc->private->scheduler);
         }
 
     } else if (rsc_ticket->ticket->standby) {
@@ -138,7 +142,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         if ((rsc_ticket->role != pcmk_role_promoted)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                              "__ticket_standby__", rsc->cluster);
+                              "__ticket_standby__", rsc->private->scheduler);
         }
     }
 }
@@ -171,7 +175,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
     new_rsc_ticket->role = pcmk_parse_role(state);
 
     if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+        if (pcmk_is_set(rsc->private->scheduler->flags,
+                        pcmk_sched_fencing_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
             pcmk__config_err("Resetting '" PCMK_XA_LOSS_POLICY "' "
@@ -224,8 +229,9 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
 
     rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
 
-    rsc->cluster->ticket_constraints = g_list_append(
-        rsc->cluster->ticket_constraints, new_rsc_ticket);
+    rsc->private->scheduler->ticket_constraints =
+        g_list_append(rsc->private->scheduler->ticket_constraints,
+                      new_rsc_ticket);
 
     if (!(new_rsc_ticket->ticket->granted) || new_rsc_ticket->ticket->standby) {
         constraints_for_ticket(rsc, new_rsc_ticket);
@@ -527,7 +533,8 @@ pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
         if ((rsc_ticket->role == pcmk_role_promoted)
             && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
             resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                              "__stateful_without_ticket__", rsc->cluster);
+                              "__stateful_without_ticket__",
+                              rsc->private->scheduler);
         }
     }
 }

@@ -121,9 +121,10 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes,
+                         rsc->private->scheduler);
 
     // Assign all containers first, so we know what nodes the bundle will be on
     containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
@@ -802,9 +803,10 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
              * will grab it from there to replace it in node-evaluated
              * parameters.
              */
-            GHashTable *params = pe_rsc_params(replica->remote,
-                                               NULL, replica->remote->cluster);
+            GHashTable *params = NULL;
 
+            params = pe_rsc_params(replica->remote, NULL,
+                                   replica->remote->private->scheduler);
             pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, calculated_addr);
         } else {
             pcmk_resource_t *bundle = user_data;
@@ -881,7 +883,7 @@ order_replica_start_after(pcmk__bundle_replica_t *replica, void *user_data)
                        pcmk__op_key(replica->container->id, PCMK_ACTION_START,
                                     0),
                        NULL, pcmk__ar_ordered|pcmk__ar_if_on_same_node,
-                       replica->container->cluster);
+                       replica->container->private->scheduler);
     return true;
 }
 
@@ -955,7 +957,8 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
-                               pcmk__ar_nested_remote_probe, bundle->cluster);
+                               pcmk__ar_nested_remote_probe,
+                               bundle->private->scheduler);
         }
     }
     return true;

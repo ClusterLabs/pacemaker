@@ -126,7 +126,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     enum rsc_role_e role = pcmk_role_unknown;
     enum pcmk__combine combine = pcmk__combine_unknown;
 
-    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->cluster->input);
+    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->private->scheduler->input);
     if (rule_xml == NULL) {
         return false; // Error already logged
     }
@@ -195,11 +195,14 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *node = iter->data;
 
         rule_input->node_attrs = node->details->attrs;
-        rule_input->rsc_params = pe_rsc_params(rsc, node, rsc->cluster);
+        rule_input->rsc_params = pe_rsc_params(rsc, node,
+                                               rsc->private->scheduler);
 
         if (pcmk_evaluate_rule(rule_xml, rule_input,
                                next_change) == pcmk_rc_ok) {
@@ -250,7 +253,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pcmk_node_t *match = pcmk_find_node(rsc->cluster, node);
+        pcmk_node_t *match = pcmk_find_node(rsc->private->scheduler, node);
         enum rsc_role_e role = pcmk_role_unknown;
         pcmk__location_t *location = NULL;
 
@@ -286,7 +289,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
         pcmk_rule_input_t rule_input = {
-            .now = rsc->cluster->now,
+            .now = rsc->private->scheduler->now,
             .rsc_meta = rsc->meta,
             .rsc_id = rsc_id_match,
             .rsc_id_submatches = rsc_id_submatches,
@@ -333,7 +336,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         if (crm_time_is_defined(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-            pe__update_recheck_time(t, rsc->cluster,
+            pe__update_recheck_time(t, rsc->private->scheduler,
                                     "location rule evaluation");
         }
         crm_time_free(next_change);
@@ -634,8 +637,8 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
         new_con->nodes = g_list_prepend(NULL, copy);
     }
 
-    rsc->cluster->placement_constraints = g_list_prepend(
-        rsc->cluster->placement_constraints, new_con);
+    rsc->private->scheduler->placement_constraints =
+        g_list_prepend(rsc->private->scheduler->placement_constraints, new_con);
     rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
 
     return new_con;

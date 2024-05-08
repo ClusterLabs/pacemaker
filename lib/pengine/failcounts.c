@@ -137,7 +137,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                                  node->details->uname, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
-                lrm_op_xpathObj = xpath_search(rsc->cluster->input, lrm_op_xpath);
+                lrm_op_xpathObj = xpath_search(rsc->private->scheduler->input,
+                                               lrm_op_xpath);
 
                 free(lrm_op_xpath);
 
@@ -250,7 +251,7 @@ generate_fail_regexes(const pcmk_resource_t *rsc,
 {
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
-    const char *version = crm_element_value(rsc->cluster->input,
+    const char *version = crm_element_value(rsc->private->scheduler->input,
                                             PCMK_XA_CRM_FEATURE_SET);
 
     // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
@@ -394,7 +395,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0) && (rsc->failure_timeout != 0)) {
 
-        time_t now = get_effective_time(rsc->cluster);
+        time_t now = get_effective_time(rsc->private->scheduler);
 
         if (now > (fc_data.last_failure + rsc->failure_timeout)) {
             pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %ds",

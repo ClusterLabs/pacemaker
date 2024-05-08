@@ -198,23 +198,23 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 
 #define delete_action(rsc, node, optional)                          \
     custom_action((rsc), delete_key(rsc), PCMK_ACTION_DELETE,       \
-                  (node), (optional), (rsc)->cluster)
+                  (node), (optional), (rsc)->private->scheduler)
 
 #define stop_action(rsc, node, optional)                            \
     custom_action((rsc), stop_key(rsc), PCMK_ACTION_STOP,           \
-                  (node), (optional), (rsc)->cluster)
+                  (node), (optional), (rsc)->private->scheduler)
 
 #define start_action(rsc, node, optional)                           \
     custom_action((rsc), start_key(rsc), PCMK_ACTION_START,         \
-                  (node), (optional), (rsc)->cluster)
+                  (node), (optional), (rsc)->private->scheduler)
 
 #define promote_action(rsc, node, optional)                         \
     custom_action((rsc), promote_key(rsc), PCMK_ACTION_PROMOTE,     \
-                  (node), (optional), (rsc)->cluster)
+                  (node), (optional), (rsc)->private->scheduler)
 
 #define demote_action(rsc, node, optional)                          \
     custom_action((rsc), demote_key(rsc), PCMK_ACTION_DEMOTE,       \
-                  (node), (optional), (rsc)->cluster)
+                  (node), (optional), (rsc)->private->scheduler)
 
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);

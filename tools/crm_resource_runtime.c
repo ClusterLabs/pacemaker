@@ -361,7 +361,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_value, gboolean recursive, cib_t *cib,
                  gboolean force, GList **results)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
+    pcmk__output_t *out = rsc->private->scheduler->priv;
     int rc = pcmk_rc_ok;
 
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
@@ -515,7 +515,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     int rc = pcmk_rc_ok;
 
     GList *results = NULL;
-    pcmk__output_t *out = rsc->cluster->priv;
+    pcmk__output_t *out = rsc->private->scheduler->priv;
 
     /* If we were asked to update the attribute in a resource element (for
      * instance, <primitive class="ocf">) there's really not much we need to do.
@@ -527,8 +527,9 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
     /* One time initialization - clear flags so we can detect loops */
     if (need_init) {
         need_init = false;
-        pcmk__unpack_constraints(rsc->cluster);
-        pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+        pcmk__unpack_constraints(rsc->private->scheduler);
+        pe__clear_resource_flags_on_all(rsc->private->scheduler,
+                                        pcmk_rsc_detect_loop);
     }
 
     rc = update_attribute(rsc, requested_name, attr_set, attr_set_type,
@@ -554,7 +555,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_id, const char *attr_name,
                               cib_t *cib, int cib_options, gboolean force)
 {
-    pcmk__output_t *out = rsc->cluster->priv;
+    pcmk__output_t *out = rsc->private->scheduler->priv;
     int rc = pcmk_rc_ok;
     GList/*<pcmk_resource_t*>*/ *resources = NULL;
 

@@ -527,6 +527,8 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 static void
 unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
+    const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
+
     if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_QUORUM, pcmk__str_casei)) {
@@ -534,7 +536,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing);
-        if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+        if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
@@ -547,8 +549,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
-        } else if (!pcmk_is_set(rsc->cluster->flags,
-                                pcmk_sched_fencing_enabled)) {
+        } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
                               "disabled", rsc->id);
@@ -570,15 +571,13 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                    && xml_contains_remote_node(rsc->private->xml)) {
             value = PCMK_VALUE_QUORUM;
 
-        } else if (pcmk_is_set(rsc->cluster->flags,
-                               pcmk_sched_enable_unfencing)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             value = PCMK_VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(rsc->cluster->flags,
-                               pcmk_sched_fencing_enabled)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             value = PCMK_VALUE_FENCING;
 
-        } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
+        } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
             value = PCMK_VALUE_NOTHING;
 
         } else {
@@ -688,7 +687,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
     rsc_private = (*rsc)->private;
 
-    (*rsc)->cluster = scheduler;
+    rsc_private->scheduler = scheduler;
 
     if (expanded_xml) {
         crm_log_xml_trace(expanded_xml, "[expanded XML]");
@@ -1246,12 +1245,12 @@ pe__count_common(pcmk_resource_t *rsc)
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
                || (rsc->role > pcmk_role_stopped)) {
-        rsc->cluster->ninstances++;
+        rsc->private->scheduler->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
-            rsc->cluster->disabled_resources++;
+            rsc->private->scheduler->disabled_resources++;
         }
         if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
-            rsc->cluster->blocked_resources++;
+            rsc->private->scheduler->blocked_resources++;
         }
     }
 }

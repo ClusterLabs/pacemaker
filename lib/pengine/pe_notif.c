@@ -287,7 +287,7 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                            pcmk__notify_key(rsc->id, notif_type, action->task),
                            notif_action, NULL,
                            pcmk_is_set(action->flags, pcmk_action_optional),
-                           rsc->cluster);
+                           rsc->private->scheduler);
     pcmk__set_action_flags(notify, pcmk_action_pseudo);
     pcmk__insert_meta(notify, "notify_key_type", notif_type);
     pcmk__insert_meta(notify, "notify_key_operation", action->task);
@@ -345,7 +345,7 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     key = pcmk__notify_key(rsc->id, value, task);
     notify_action = custom_action(rsc, key, op->task, node,
                                   pcmk_is_set(op->flags, pcmk_action_optional),
-                                  rsc->cluster);
+                                  rsc->private->scheduler);
 
     // Add meta-data to notify action
     g_hash_table_foreach(op->meta, copy_meta_to_notify, notify_action);
@@ -751,10 +751,10 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     source = g_hash_table_lookup(rsc->meta,
                                  PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     if (pcmk__str_eq(PCMK_VALUE_HOST, source, pcmk__str_none)) {
-        get_node_names(rsc->cluster->nodes, &node_list, &metal_list);
+        get_node_names(rsc->private->scheduler->nodes, &node_list, &metal_list);
         add_notify_env_free_gs(n_data, "notify_all_hosts", metal_list);
     } else {
-        get_node_names(rsc->cluster->nodes, &node_list, NULL);
+        get_node_names(rsc->private->scheduler->nodes, &node_list, NULL);
     }
     add_notify_env_free_gs(n_data, "notify_all_uname", node_list);
 

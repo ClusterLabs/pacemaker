@@ -348,7 +348,8 @@ clone_min_ordering(const char *id,
 {
     // Create a pseudo-action for when the minimum instances are active
     char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
-    pcmk_action_t *clone_min_met = get_pseudo_op(task, rsc_first->cluster);
+    pcmk_action_t *clone_min_met = get_pseudo_op(task,
+                                                 rsc_first->private->scheduler);
 
     free(task);
 
@@ -366,14 +367,14 @@ clone_min_ordering(const char *id,
                            NULL, NULL, NULL, clone_min_met,
                            pcmk__ar_min_runnable
                            |pcmk__ar_first_implies_then_graphed,
-                           rsc_first->cluster);
+                           rsc_first->private->scheduler);
     }
 
     // Order "then" action after the pseudo-action (if runnable)
     pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                        pcmk__op_key(rsc_then->id, action_then, 0),
                        NULL, flags|pcmk__ar_unrunnable_first_blocks,
-                       rsc_first->cluster);
+                       rsc_first->private->scheduler);
 }
 
 /*!
@@ -1367,7 +1368,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
                             "Creating first (%s for %s) for constraint %d ",
                             order->task1, first_rsc->id, order->id);
             first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
-                                         first_rsc->cluster);
+                                         first_rsc->private->scheduler);
             first_actions = g_list_prepend(NULL, first_action);
         }
 

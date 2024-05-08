@@ -303,7 +303,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
             if (after_key) {
                 pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
                                    pcmk__ar_unrunnable_first_blocks,
-                                   rsc->cluster);
+                                   rsc->private->scheduler);
             }
         }
 
@@ -323,7 +323,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                     pcmk__node_name(node));
 
     mon = custom_action(rsc, strdup(op->key), op->name, node, is_optional,
-                        rsc->cluster);
+                        rsc->private->scheduler);
 
     if (!pcmk_is_set(start->flags, pcmk_action_runnable)) {
         pcmk__rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
@@ -351,27 +351,27 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks,
-                           rsc->cluster);
+                           rsc->private->scheduler);
 
         pcmk__new_ordering(rsc, reload_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
                            |pcmk__ar_unrunnable_first_blocks,
-                           rsc->cluster);
+                           rsc->private->scheduler);
 
         if (rsc->next_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, promote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               rsc->private->scheduler);
 
         } else if (rsc->role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               rsc->private->scheduler);
         }
     }
 }
@@ -410,7 +410,8 @@ cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
              */
             pcmk__new_ordering(rsc, NULL, cancel_op,
                                rsc, start_key(rsc), NULL,
-                               pcmk__ar_unrunnable_first_blocks, rsc->cluster);
+                               pcmk__ar_unrunnable_first_blocks,
+                               rsc->private->scheduler);
             break;
         default:
             break;
@@ -479,7 +480,7 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
                                NULL, NULL, action,
                                pcmk__ar_first_implies_then
                                |pcmk__ar_unrunnable_first_blocks,
-                               rsc->cluster);
+                               rsc->private->scheduler);
         }
     }
     g_list_free(stop_ops);
@@ -514,7 +515,9 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                     "Creating recurring action %s for %s on nodes "
                     "where it should not be running", op->id, rsc->id);
 
-    for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *stop_node = (pcmk_node_t *) iter->data;
 
         bool is_optional = true;
@@ -540,7 +543,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
                         op->key, op->id, rsc->id, pcmk__node_name(stop_node));
 
         stopped_mon = custom_action(rsc, strdup(op->key), op->name, stop_node,
-                                    is_optional, rsc->cluster);
+                                    is_optional, rsc->private->scheduler);
 
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
@@ -658,7 +661,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
      * cancel_op->task.
      */
     cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE,
-                              rsc->cluster);
+                              rsc->private->scheduler);
 
     pcmk__str_update(&(cancel_op->task), PCMK_ACTION_CANCEL);
     pcmk__str_update(&(cancel_op->cancel_task), task);
@@ -701,7 +704,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
 
     // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
-                       pcmk__ar_ordered, rsc->cluster);
+                       pcmk__ar_ordered, rsc->private->scheduler);
 }
 
 /*!
@@ -720,9 +723,9 @@ pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
     pcmk_action_t *op = NULL;
 
     trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
-                      NULL, rsc->cluster);
+                      NULL, rsc->private->scheduler);
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
-                       task, node, TRUE, rsc->cluster);
+                       task, node, TRUE, rsc->private->scheduler);
     pcmk__set_action_flags(op, pcmk_action_reschedule);
 }
 

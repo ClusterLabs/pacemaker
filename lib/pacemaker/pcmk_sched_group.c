@@ -62,9 +62,10 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     first_member = (pcmk_resource_t *) rsc->children->data;
     rsc->role = first_member->role;
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes,
+                         rsc->private->scheduler);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
@@ -100,7 +101,8 @@ static pcmk_action_t *
 create_group_pseudo_op(pcmk_resource_t *group, const char *action)
 {
     pcmk_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
-                                      action, NULL, TRUE, group->cluster);
+                                      action, NULL, TRUE,
+                                      group->private->scheduler);
 
     pcmk__set_action_flags(op, pcmk_action_pseudo|pcmk_action_runnable);
     return op;
