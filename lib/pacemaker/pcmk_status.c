@@ -86,7 +86,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     int rc = pcmk_rc_ok;
 
-    if (!pcmk__update_configured_schema(&cib_copy, false)) {
+    if (!pcmk_update_configured_schema(&cib_copy, false)) {
         cib__clean_up_connection(&cib);
         free_xml(cib_copy);
         rc = pcmk_rc_schema_validation;

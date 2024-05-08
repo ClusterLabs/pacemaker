@@ -1235,7 +1235,6 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 }
 
 /*!
- * \internal
  * \brief Update XML from its configured schema to the latest major series
  *
  * \param[in,out] xml      XML to update
@@ -1245,7 +1244,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
  * \return true if XML was successfully updated, otherwise false
  */
 bool
-pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
+pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
 {
     bool rc = true;
     char *original_schema_name = NULL;
@@ -1717,7 +1716,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
-    bool rc = pcmk__update_configured_schema(xml, to_logs);
+    bool rc = pcmk_update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
         const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);

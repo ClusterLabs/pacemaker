@@ -1238,14 +1238,14 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  * \note On success, caller is responsible for freeing memory allocated for
  *       scheduler->now.
  * \todo This follows the example of other callers of
- *       pcmk__update_configured_schema() and returns ENOKEY ("Required key not
+ *       pcmk_update_configured_schema() and returns ENOKEY ("Required key not
  *       available") if that fails, but perhaps pcmk_rc_schema_validation would
  *       be better in that case.
  */
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
-    if (!pcmk__update_configured_schema(xml, false)) {
+    if (!pcmk_update_configured_schema(xml, false)) {
         return ENOKEY;
     }
     scheduler->input = *xml;
