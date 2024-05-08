@@ -216,13 +216,11 @@ int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_ty
  * \param[in,out] rsc        Resource to calculate digests for
  * \param[in]     node       Node whose operation history should be used
  * \param[in]     overrides  Hash table of configuration parameters to override
- * \param[in]     scheduler  Scheduler data (with status)
  *
  * \return Standard Pacemaker return code
  */
 int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
-                          const pcmk_node_t *node, GHashTable *overrides,
-                          pcmk_scheduler_t *scheduler);
+                          const pcmk_node_t *node, GHashTable *overrides);
 
 /*!
  * \brief Simulate a cluster's response to events
