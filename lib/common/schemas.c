@@ -481,6 +481,7 @@ crm_schema_init(void)
 
         pcmk__load_schemas_from_dir(base);
         pcmk__load_schemas_from_dir(remote_schema_dir);
+        free(base);
 
         // @COMPAT: Deprecated since 2.1.5
         add_schema(pcmk__schema_validator_rng, &zero, "pacemaker-next", NULL,
@@ -631,6 +632,7 @@ free_schema(gpointer data)
     free(schema->name);
     free(schema->transform);
     free(schema->transform_enter);
+    free(schema);
 }
 
 /*!
