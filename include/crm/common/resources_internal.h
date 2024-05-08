@@ -11,7 +11,6 @@
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
 #include <glib.h>                       // gboolean, GList
-#include <crm/common/resources.h>       // enum rsc_recovery_type
 #include <crm/common/roles.h>           // enum rsc_role_e
 #include <crm/common/scheduler_types.h> // pcmk_node_t, pcmk_resource_t, etc.
 
@@ -53,6 +52,14 @@ enum pcmk__rsc_variant {
     pcmk__rsc_variant_group      = 1,   //!< Group resource
     pcmk__rsc_variant_clone      = 2,   //!< Clone resource
     pcmk__rsc_variant_bundle     = 3,   //!< Bundle resource
+};
+
+//! How to recover a resource that is incorrectly active on multiple nodes
+enum pcmk__multiply_active {
+    pcmk__multiply_active_restart,      //!< Stop on all, start on desired
+    pcmk__multiply_active_stop,         //!< Stop on all and leave stopped
+    pcmk__multiply_active_block,        //!< Do nothing to resource
+    pcmk__multiply_active_unexpected,   //!< Stop unexpected instances
 };
 
 //! Resource assignment methods (implementation defined by libpacemaker)
@@ -216,7 +223,7 @@ struct pcmk__resource_private {
     xmlNode *ops_xml;
 
     // What to do if the resource is incorrectly active on multiple nodes
-    enum rsc_recovery_type multiply_active_policy;
+    enum pcmk__multiply_active multiply_active_policy;
 
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods

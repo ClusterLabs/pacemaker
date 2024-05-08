@@ -44,21 +44,6 @@ enum rsc_start_requirement {
 #endif
 };
 
-// How to recover a resource that is incorrectly active on multiple nodes
-enum rsc_recovery_type {
-    pcmk_multiply_active_restart    = 0,    // Stop on all, start on desired
-    pcmk_multiply_active_stop       = 1,    // Stop on all and leave stopped
-    pcmk_multiply_active_block      = 2,    // Do nothing to resource
-    pcmk_multiply_active_unexpected = 3,    // Stop unexpected instances
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    recovery_stop_start             = pcmk_multiply_active_restart,
-    recovery_stop_only              = pcmk_multiply_active_stop,
-    recovery_block                  = pcmk_multiply_active_block,
-    recovery_stop_unexpected        = pcmk_multiply_active_unexpected,
-#endif
-};
-
 // Resource scheduling flags
 enum pcmk_rsc_flags {
     // No resource flags set (compare with equality rather than bit set)

@@ -134,7 +134,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     if (is_multiply_active(rsc)) {
         switch (rsc->private->multiply_active_policy) {
-            case pcmk_multiply_active_stop:
+            case pcmk__multiply_active_stop:
                 {
                     GHashTableIter gIter;
                     pcmk_node_t *local_node = NULL;
@@ -150,7 +150,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     }
                 }
                 break;
-            case pcmk_multiply_active_block:
+            case pcmk__multiply_active_block:
                 pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
                 pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
 
@@ -160,7 +160,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                  */
                 if ((pcmk__is_group(parent) || pcmk__is_bundle(parent))
                     && (parent->private->multiply_active_policy
-                        == pcmk_multiply_active_block)) {
+                        == pcmk__multiply_active_block)) {
 
                     for (GList *gIter = parent->children;
                          gIter != NULL; gIter = gIter->next) {
@@ -172,7 +172,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 }
                 break;
 
-            // pcmk_multiply_active_restart, pcmk_multiply_active_unexpected
+            // pcmk__multiply_active_restart, pcmk__multiply_active_unexpected
             default:
                 /* The scheduler will do the right thing because the relevant
                  * variables and flags are set when unpacking the history.

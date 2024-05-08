@@ -793,10 +793,10 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                    "https://projects.clusterlabs.org/w/clusterlabs/faq/");
 
         switch (rsc->private->multiply_active_policy) {
-            case pcmk_multiply_active_restart:
+            case pcmk__multiply_active_restart:
                 need_stop = true;
                 break;
-            case pcmk_multiply_active_unexpected:
+            case pcmk__multiply_active_unexpected:
                 need_stop = true; // stop_resource() will skip expected node
                 pcmk__set_rsc_flags(rsc, pcmk_rsc_stop_unexpected);
                 break;

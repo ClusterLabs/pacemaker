@@ -54,13 +54,13 @@ const char *
 pcmk__multiply_active_text(const pcmk_resource_t *rsc)
 {
     switch (rsc->private->multiply_active_policy) {
-        case pcmk_multiply_active_stop:
+        case pcmk__multiply_active_stop:
             return "shutting it down";
-        case pcmk_multiply_active_restart:
+        case pcmk__multiply_active_restart:
             return "attempting recovery";
-        case pcmk_multiply_active_block:
+        case pcmk__multiply_active_block:
             return "waiting for an administrator";
-        case pcmk_multiply_active_unexpected:
+        case pcmk__multiply_active_unexpected:
             return "stopping unexpected instances";
     }
     return "Unknown";
