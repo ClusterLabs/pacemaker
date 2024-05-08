@@ -120,80 +120,80 @@ extern "C" {
 #define pe_rsc_needs_unfencing          pcmk_rsc_needs_unfencing
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-//! \deprecated Use pcmk_sched_quorate instead
+//! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
-//! \deprecated Use pcmk_sched_symmetric_cluster instead
+//! \deprecated Do not use
 #define pe_flag_symmetric_cluster       pcmk_sched_symmetric_cluster
 
-//! \deprecated Use pcmk_sched_in_maintenance instead
+//! \deprecated Do not use
 #define pe_flag_maintenance_mode        pcmk_sched_in_maintenance
 
-//! \deprecated Use pcmk_sched_fencing_enabled instead
+//! \deprecated Do not use
 #define pe_flag_stonith_enabled         pcmk_sched_fencing_enabled
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-//! \deprecated Use pcmk_sched_have_fencing instead
+//! \deprecated Do not use
 #define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
 
-//! \deprecated Use pcmk_sched_enable_unfencing instead
+//! \deprecated Do not use
 #define pe_flag_enable_unfencing        pcmk_sched_enable_unfencing
 
-//! \deprecated Use pcmk_sched_concurrent_fencing instead
+//! \deprecated Do not use
 #define pe_flag_concurrent_fencing      pcmk_sched_concurrent_fencing
 
-//! \deprecated Use pcmk_sched_stop_removed_resources instead
+//! \deprecated Do not use
 #define pe_flag_stop_rsc_orphans        pcmk_sched_stop_removed_resources
 
-//! \deprecated Use pcmk_sched_cancel_removed_actions instead
+//! \deprecated Do not use
 #define pe_flag_stop_action_orphans     pcmk_sched_cancel_removed_actions
 
-//! \deprecated Use pcmk_sched_stop_all instead
+//! \deprecated Do not use
 #define pe_flag_stop_everything         pcmk_sched_stop_all
 
-//! \deprecated Use pcmk_sched_start_failure_fatal instead
+//! \deprecated Do not use
 #define pe_flag_start_failure_fatal     pcmk_sched_start_failure_fatal
 
 //! \deprecated Do not use
 #define pe_flag_remove_after_stop       pcmk_sched_remove_after_stop
 
-//! \deprecated Use pcmk_sched_startup_fencing instead
+//! \deprecated Do not use
 #define pe_flag_startup_fencing         pcmk_sched_startup_fencing
 
-//! \deprecated Use pcmk_sched_shutdown_lock instead
+//! \deprecated Do not use
 #define pe_flag_shutdown_lock           pcmk_sched_shutdown_lock
 
-//! \deprecated Use pcmk_sched_probe_resources instead
+//! \deprecated Do not use
 #define pe_flag_startup_probes          pcmk_sched_probe_resources
 
-//! \deprecated Use pcmk_sched_have_status instead
+//! \deprecated Do not use
 #define pe_flag_have_status             pcmk_sched_have_status
 
-//! \deprecated Use pcmk_sched_have_remote_nodes instead
+//! \deprecated Do not use
 #define pe_flag_have_remote_nodes       pcmk_sched_have_remote_nodes
 
-//! \deprecated Use pcmk_sched_location_only instead
+//! \deprecated Do not use
 #define pe_flag_quick_location          pcmk_sched_location_only
 
-//! \deprecated Use pcmk_sched_sanitized instead
+//! \deprecated Do not use
 #define pe_flag_sanitized               pcmk_sched_sanitized
 
 //! \deprecated Do not use
 #define pe_flag_stdout                  (1ULL << 22)
 
-//! \deprecated Use pcmk_sched_no_counts instead
+//! \deprecated Do not use
 #define pe_flag_no_counts               pcmk_sched_no_counts
 
-//! \deprecated Use pcmk_sched_no_compat instead
+//! \deprecated Do not use
 #define pe_flag_no_compat               pcmk_sched_no_compat
 
-//! \deprecated Use pcmk_sched_output_scores instead
+//! \deprecated Do not use
 #define pe_flag_show_scores             pcmk_sched_output_scores
 
-//! \deprecated Use pcmk_sched_show_utilization instead
+//! \deprecated Do not use
 #define pe_flag_show_utilization        pcmk_sched_show_utilization
 
-//! \deprecated Use pcmk_sched_validate_only instead
+//! \deprecated Do not use
 #define pe_flag_check_config            pcmk_sched_validate_only
 
 //!@{
