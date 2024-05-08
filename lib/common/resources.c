@@ -51,7 +51,7 @@ pcmk_resource_is_managed(const pcmk_resource_t *rsc)
  * \return Static string describing \p recovery
  */
 const char *
-pcmk_multiply_active_text(enum rsc_recovery_type recovery)
+pcmk__multiply_active_text(enum rsc_recovery_type recovery)
 {
     switch (recovery) {
         case pcmk_multiply_active_stop:
