@@ -394,7 +394,4 @@
 # commands, which would otherwise leave a bunch of unremovable files in /tmp.
 #
 # Default: VALGRIND_OPTS=""
-VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25"
-VALGRIND_OPTS="$VALGRIND_OPTS --log-file=@CRM_PACEMAKER_DIR@/valgrind-%p"
-VALGRIND_OPTS="$VALGRIND_OPTS --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions"
-VALGRIND_OPTS="$VALGRIND_OPTS --gen-suppressions=all"
+VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=@CRM_PACEMAKER_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
