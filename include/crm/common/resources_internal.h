@@ -219,7 +219,7 @@ struct pcmk__resource_private {
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };
 
-const char *pcmk__multiply_active_text(enum rsc_recovery_type recovery);
+const char *pcmk__multiply_active_text(const pcmk_resource_t *rsc);
 
 /*!
  * \internal

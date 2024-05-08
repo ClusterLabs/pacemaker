@@ -46,14 +46,14 @@ pcmk_resource_is_managed(const pcmk_resource_t *rsc)
 /*!
  * \brief Get readable description of a multiply-active recovery type
  *
- * \param[in] recovery  Recovery type
+ * \param[in] rsc  Resource with recovery type to check
  *
- * \return Static string describing \p recovery
+ * \return Static string describing recovery type of \p rsc
  */
 const char *
-pcmk__multiply_active_text(enum rsc_recovery_type recovery)
+pcmk__multiply_active_text(const pcmk_resource_t *rsc)
 {
-    switch (recovery) {
+    switch (rsc->recovery_type) {
         case pcmk_multiply_active_stop:
             return "shutting it down";
         case pcmk_multiply_active_restart:

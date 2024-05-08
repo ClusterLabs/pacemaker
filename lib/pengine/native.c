@@ -180,7 +180,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
                   rsc->id, pcmk__node_name(node),
-                  pcmk__multiply_active_text(rsc->recovery_type));
+                  pcmk__multiply_active_text(rsc));
 
     } else {
         pcmk__rsc_trace(rsc, "Resource %s is active on %s",
