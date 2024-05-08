@@ -792,7 +792,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                    "resources?\" at "
                    "https://projects.clusterlabs.org/w/clusterlabs/faq/");
 
-        switch (rsc->recovery_type) {
+        switch (rsc->private->multiply_active_policy) {
             case pcmk_multiply_active_restart:
                 need_stop = true;
                 break;

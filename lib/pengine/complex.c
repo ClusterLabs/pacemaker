@@ -750,7 +750,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
-    (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
     (*rsc)->failure_timeout = 0;
@@ -846,18 +845,18 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
     if (pcmk__str_eq(value, PCMK_VALUE_STOP_ONLY, pcmk__str_casei)) {
-        (*rsc)->recovery_type = pcmk_multiply_active_stop;
+        rsc_private->multiply_active_policy = pcmk_multiply_active_stop;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
                         (*rsc)->id);
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        (*rsc)->recovery_type = pcmk_multiply_active_block;
+        rsc_private->multiply_active_policy = pcmk_multiply_active_block;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: block",
                         (*rsc)->id);
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_STOP_UNEXPECTED,
                             pcmk__str_casei)) {
-        (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
+        rsc_private->multiply_active_policy = pcmk_multiply_active_unexpected;
         pcmk__rsc_trace(*rsc,
                         "%s multiple running resource recovery: "
                         "stop unexpected instances",
@@ -872,7 +871,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "\"" PCMK_VALUE_STOP_START "\"",
                               value);
         }
-        (*rsc)->recovery_type = pcmk_multiply_active_restart;
+        rsc_private->multiply_active_policy = pcmk_multiply_active_restart;
         pcmk__rsc_trace(*rsc,
                         "%s multiple running resource recovery: stop/start",
                         (*rsc)->id);

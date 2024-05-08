@@ -215,6 +215,9 @@ struct pcmk__resource_private {
     // Configuration of resource operations (possibly expanded from template)
     xmlNode *ops_xml;
 
+    // What to do if the resource is incorrectly active on multiple nodes
+    enum rsc_recovery_type multiply_active_policy;
+
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };

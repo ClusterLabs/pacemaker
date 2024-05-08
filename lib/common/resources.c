@@ -53,7 +53,7 @@ pcmk_resource_is_managed(const pcmk_resource_t *rsc)
 const char *
 pcmk__multiply_active_text(const pcmk_resource_t *rsc)
 {
-    switch (rsc->recovery_type) {
+    switch (rsc->private->multiply_active_policy) {
         case pcmk_multiply_active_stop:
             return "shutting it down";
         case pcmk_multiply_active_restart:

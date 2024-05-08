@@ -224,8 +224,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    enum rsc_recovery_type recovery_type;   // How to recover if failed
-
     enum pe_restart restart_type;   // \deprecated Do not use
     int priority;                   // Configured priority
     int stickiness;                 // Extra preference for current node

@@ -133,7 +133,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (is_multiply_active(rsc)) {
-        switch (rsc->recovery_type) {
+        switch (rsc->private->multiply_active_policy) {
             case pcmk_multiply_active_stop:
                 {
                     GHashTableIter gIter;
@@ -159,7 +159,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * entity.
                  */
                 if ((pcmk__is_group(parent) || pcmk__is_bundle(parent))
-                    && (parent->recovery_type == pcmk_multiply_active_block)) {
+                    && (parent->private->multiply_active_policy
+                        == pcmk_multiply_active_block)) {
 
                     for (GList *gIter = parent->children;
                          gIter != NULL; gIter = gIter->next) {
