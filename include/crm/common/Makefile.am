@@ -26,7 +26,6 @@ header_HEADERS = acl.h 			\
 		 mainloop.h 		\
 		 mainloop_compat.h 	\
 		 nodes.h 		\
-		 nodes_internal.h 	\
 		 nvpair.h 		\
 		 options.h 		\
 		 output.h 		\
