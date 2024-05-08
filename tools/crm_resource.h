@@ -34,6 +34,16 @@ typedef struct node_info_s {
     bool promoted;
 } node_info_t;
 
+typedef struct {
+    char *attr_set_type;
+    char *attr_set_id;
+    char *attr_name;
+    char *attr_value;
+    char *given_rsc_id;
+    char *found_attr_id;
+    pcmk_resource_t *rsc;
+} attr_update_data_t;
+
 enum resource_check_flags {
     rsc_remain_stopped  = (1 << 0),
     rsc_unpromotable    = (1 << 1),

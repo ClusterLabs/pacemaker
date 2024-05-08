@@ -137,6 +137,88 @@ cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("attribute-changed", "attr_update_data_t *")
+static int
+attribute_changed_default(pcmk__output_t *out, va_list args)
+{
+    attr_update_data_t *ud = va_arg(args, attr_update_data_t *);
+
+    out->info(out, "Set '%s' option: "
+              PCMK_XA_ID "=%s%s%s%s%s value=%s",
+              ud->given_rsc_id, ud->found_attr_id,
+              ((ud->attr_set_id == NULL)? "" : " " PCMK__XA_SET "="),
+              pcmk__s(ud->attr_set_id, ""),
+              ((ud->attr_name == NULL)? "" : " " PCMK_XA_NAME "="),
+              pcmk__s(ud->attr_name, ""), ud->attr_value);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("attribute-changed", "attr_update_data_t *")
+static int
+attribute_changed_xml(pcmk__output_t *out, va_list args)
+{
+    attr_update_data_t *ud = va_arg(args, attr_update_data_t *);
+
+    pcmk__output_xml_create_parent(out, (const char *) ud->rsc->xml->name,
+                                   PCMK_XA_ID, ud->rsc->id,
+                                   NULL);
+
+    pcmk__output_xml_create_parent(out, ud->attr_set_type,
+                                   PCMK_XA_ID, ud->attr_set_id,
+                                   NULL);
+
+    pcmk__output_create_xml_node(out, PCMK_XE_NVPAIR,
+                                 PCMK_XA_ID, ud->found_attr_id,
+                                 PCMK_XA_VALUE, ud->attr_value,
+                                 PCMK_XA_NAME, ud->attr_name,
+                                 NULL);
+
+    pcmk__output_xml_pop_parent(out);
+    pcmk__output_xml_pop_parent(out);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("attribute-changed-list", "GList *")
+static int
+attribute_changed_list_default(pcmk__output_t *out, va_list args)
+{
+    GList *results = va_arg(args, GList *);
+
+    if (results == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    for (GList *iter = results; iter != NULL; iter = iter->next) {
+        attr_update_data_t *ud = iter->data;
+        out->message(out, "attribute-changed", ud);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("attribute-changed-list", "GList *")
+static int
+attribute_changed_list_xml(pcmk__output_t *out, va_list args)
+{
+    GList *results = va_arg(args, GList *);
+
+    if (results == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_xml_create_parent(out, PCMK__XE_RESOURCE_SETTINGS, NULL);
+
+    for (GList *iter = results; iter != NULL; iter = iter->next) {
+        attr_update_data_t *ud = iter->data;
+        out->message(out, "attribute-changed", ud);
+    }
+
+    pcmk__output_xml_pop_parent(out);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("attribute-list", "pcmk_resource_t *", "const char *",
                   "const char *")
 static int
@@ -816,6 +898,10 @@ resource_names(pcmk__output_t *out, va_list args) {
 static pcmk__message_entry_t fmt_functions[] = {
     { "agent-status", "default", agent_status_default },
     { "agent-status", "xml", agent_status_xml },
+    { "attribute-changed", "default", attribute_changed_default },
+    { "attribute-changed", "xml", attribute_changed_xml },
+    { "attribute-changed-list", "default", attribute_changed_list_default },
+    { "attribute-changed-list", "xml", attribute_changed_list_xml },
     { "attribute-list", "default", attribute_list_default },
     { "attribute-list", "text", attribute_list_text },
     { "override", "default", override_default },
