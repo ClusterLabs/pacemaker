@@ -94,9 +94,10 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if (!(call_options & cib_sync_call)) {
         crm_trace("Async call, returning %d", cib->call_id);
-        CRM_CHECK(cib->call_id != 0, return -ENOMSG);
-        free_xml(op_reply);
-        return cib->call_id;
+        CRM_CHECK(cib->call_id != 0,
+                  rc = -ENOMSG; goto done);
+        rc = cib->call_id;
+        goto done;
     }
 
     rc = pcmk_ok;
