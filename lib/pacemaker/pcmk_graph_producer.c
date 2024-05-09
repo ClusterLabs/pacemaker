@@ -854,7 +854,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
     scheduler->num_synapse++;
 
     if (action->rsc != NULL) {
-        synapse_priority = action->rsc->priority;
+        synapse_priority = action->rsc->private->priority;
     }
     if (action->priority > synapse_priority) {
         synapse_priority = action->priority;

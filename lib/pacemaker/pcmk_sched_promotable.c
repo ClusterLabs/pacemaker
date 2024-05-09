@@ -138,7 +138,7 @@ apply_promoted_locations(pcmk_resource_t *child,
                                               chosen->details->id);
         }
         if (constraint_node != NULL) {
-            int new_priority = pcmk__add_scores(child->priority,
+            int new_priority = pcmk__add_scores(child->private->priority,
                                                 constraint_node->weight);
 
             pcmk__rsc_trace(child,
@@ -146,10 +146,10 @@ apply_promoted_locations(pcmk_resource_t *child,
                             "%s: %s + %s = %s",
                             location->id, child->id,
                             pcmk__node_name(constraint_node),
-                            pcmk_readable_score(child->priority),
+                            pcmk_readable_score(child->private->priority),
                             pcmk_readable_score(constraint_node->weight),
                             pcmk_readable_score(new_priority));
-            child->priority = new_priority;
+            child->private->priority = new_priority;
         }
     }
 }
@@ -197,11 +197,11 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
             return NULL;
         }
 
-    } else if (rsc->priority < 0) {
+    } else if (rsc->private->priority < 0) {
         pcmk__rsc_trace(rsc,
                         "%s can't be promoted because its promotion priority "
                         "%d is negative",
-                        rsc->id, rsc->priority);
+                        rsc->id, rsc->private->priority);
         return NULL;
 
     } else if (!pcmk__node_available(node, false, true)) {
@@ -810,12 +810,13 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
                 }
             }
 
-            if (score > child_rsc->priority) {
+            if (score > child_rsc->private->priority) {
                 pcmk__rsc_trace(rsc,
                                 "Updating %s priority to promotion score "
                                 "(%d->%d)",
-                                child_rsc->id, child_rsc->priority, score);
-                child_rsc->priority = score;
+                                child_rsc->id, child_rsc->private->priority,
+                                score);
+                child_rsc->private->priority = score;
             }
         }
     }
@@ -907,7 +908,7 @@ show_promotion_score(pcmk_resource_t *instance)
                         instance->id,
                         ((chosen == NULL)? "none" : pcmk__node_name(chosen)),
                         pcmk_readable_score(instance->sort_index),
-                        pcmk_readable_score(instance->priority));
+                        pcmk_readable_score(instance->private->priority));
     }
 }
 
@@ -954,8 +955,8 @@ set_instance_priority(gpointer data, gpointer user_data)
             {
                 bool is_default = false;
 
-                instance->priority = promotion_score(instance, chosen,
-                                                      &is_default);
+                instance->private->priority = promotion_score(instance, chosen,
+                                                              &is_default);
                 if (is_default) {
                     /* Default to -1 if no value is set. This allows instances
                      * eligible for promotion to be specified based solely on
@@ -963,7 +964,7 @@ set_instance_priority(gpointer data, gpointer user_data)
                      * instance from being promoted if neither a constraint nor
                      * a promotion score is present.
                      */
-                    instance->priority = -1;
+                    instance->private->priority = -1;
                 }
             }
             break;
@@ -971,7 +972,7 @@ set_instance_priority(gpointer data, gpointer user_data)
         case pcmk_role_unpromoted:
         case pcmk_role_stopped:
             // Instance can't be promoted
-            instance->priority = -PCMK_SCORE_INFINITY;
+            instance->private->priority = -PCMK_SCORE_INFINITY;
             break;
 
         case pcmk_role_promoted:
@@ -997,12 +998,12 @@ set_instance_priority(gpointer data, gpointer user_data)
     }
     g_list_free(list);
 
-    instance->sort_index = instance->priority;
+    instance->sort_index = instance->private->priority;
     if (next_role == pcmk_role_promoted) {
         instance->sort_index = PCMK_SCORE_INFINITY;
     }
     pcmk__rsc_trace(clone, "Assigning %s priority = %d",
-                    instance->id, instance->priority);
+                    instance->id, instance->private->priority);
 }
 
 /*!
@@ -1121,7 +1122,7 @@ reset_instance_priorities(pcmk_resource_t *clone)
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->priority = clone->priority;
+        instance->private->priority = clone->private->priority;
     }
 }
 
@@ -1300,7 +1301,7 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
 
     if (primary_instance != NULL) {
         // Add primary instance's priority to dependent's
-        int new_priority = pcmk__add_scores(dependent->priority,
+        int new_priority = pcmk__add_scores(dependent->private->priority,
                                             colocation->score);
 
         pcmk__rsc_trace(colocation->primary,
@@ -1308,10 +1309,10 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                         "(%s + %s = %s)",
                         colocation->id, colocation->dependent->id,
                         colocation->primary->id, dependent->id,
-                        pcmk_readable_score(dependent->priority),
+                        pcmk_readable_score(dependent->private->priority),
                         pcmk_readable_score(colocation->score),
                         pcmk_readable_score(new_priority));
-        dependent->priority = new_priority;
+        dependent->private->priority = new_priority;
 
     } else if (colocation->score >= PCMK_SCORE_INFINITY) {
         // Mandatory colocation, but primary won't be here
@@ -1319,6 +1320,6 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
                         "Applying %s (%s with %s) to %s: can't be promoted",
                         colocation->id, colocation->dependent->id,
                         colocation->primary->id, dependent->id);
-        dependent->priority = -PCMK_SCORE_INFINITY;
+        dependent->private->priority = -PCMK_SCORE_INFINITY;
     }
 }

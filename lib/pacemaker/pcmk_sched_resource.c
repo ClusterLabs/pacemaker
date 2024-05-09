@@ -674,8 +674,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
     // Resources with highest priority should be assigned first
     reason = "priority";
-    r1_score = resource1->priority;
-    r2_score = resource2->priority;
+    r1_score = resource1->private->priority;
+    r2_score = resource2->private->priority;
     if (r1_score > r2_score) {
         rc = -1;
         goto done;

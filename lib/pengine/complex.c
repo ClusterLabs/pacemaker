@@ -755,7 +755,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->failure_timeout = 0;
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
-    (*rsc)->priority = char2score(value);
+    rsc_private->priority = char2score(value);
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {

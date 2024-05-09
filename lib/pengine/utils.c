@@ -284,12 +284,9 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
  * \param[in] a  First resource to compare (can be \c NULL)
  * \param[in] b  Second resource to compare (can be \c NULL)
  *
- * \retval -1 \c a->priority > \c b->priority (or \c b is \c NULL and \c a is
- *            not)
- * \retval  0 \c a->priority == \c b->priority (or both \c a and \c b are
- *            \c NULL)
- * \retval  1 \c a->priority < \c b->priority (or \c a is \c NULL and \c b is
- *            not)
+ * \retval -1 a's priority > b's priority (or \c b is \c NULL and \c a is not)
+ * \retval  0 a's priority == b's priority (or both \c a and \c b are \c NULL)
+ * \retval  1 a's priority < b's priority (or \c a is \c NULL and \c b is not)
  */
 gint
 pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
@@ -307,11 +304,11 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    if (resource1->priority > resource2->priority) {
+    if (resource1->private->priority > resource2->private->priority) {
         return -1;
     }
 
-    if (resource1->priority < resource2->priority) {
+    if (resource1->private->priority < resource2->private->priority) {
         return 1;
     }
 

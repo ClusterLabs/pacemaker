@@ -400,16 +400,16 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance with higher configured priority
-    if (instance1->priority > instance2->priority) {
+    if (instance1->private->priority > instance2->private->priority) {
         crm_trace("Assign %s before %s: priority (%d > %d)",
                   instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
+                  instance1->private->priority, instance2->private->priority);
         return -1;
 
-    } else if (instance1->priority < instance2->priority) {
+    } else if (instance1->private->priority < instance2->private->priority) {
         crm_trace("Assign %s after %s: priority (%d < %d)",
                   instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
+                  instance1->private->priority, instance2->private->priority);
         return 1;
     }
 

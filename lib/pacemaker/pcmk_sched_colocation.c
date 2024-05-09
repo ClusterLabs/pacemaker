@@ -73,10 +73,10 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
     }
     CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
 
-    if (rsc1->priority > rsc2->priority) {
+    if (rsc1->private->priority > rsc2->private->priority) {
         return -1;
     }
-    if (rsc1->priority < rsc2->priority) {
+    if (rsc1->private->priority < rsc2->private->priority) {
         return 1;
     }
 
@@ -1436,7 +1436,7 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((colocation->score == PCMK_SCORE_INFINITY)
             && (colocation->dependent_role == pcmk_role_promoted)) {
-            dependent->priority = -PCMK_SCORE_INFINITY;
+            dependent->private->priority = -PCMK_SCORE_INFINITY;
         }
         return;
     }
@@ -1450,12 +1450,13 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
         score_multiplier = -1;
     }
 
-    dependent->priority = pcmk__add_scores(score_multiplier * colocation->score,
-                                           dependent->priority);
+    dependent->private->priority =
+        pcmk__add_scores(score_multiplier * colocation->score,
+                         dependent->private->priority);
     pcmk__rsc_trace(dependent,
                     "Applied %s to %s promotion priority (now %s after %s %s)",
                     colocation->id, dependent->id,
-                    pcmk_readable_score(dependent->priority),
+                    pcmk_readable_score(dependent->private->priority),
                     ((score_multiplier == 1)? "adding" : "subtracting"),
                     pcmk_readable_score(colocation->score));
 }
