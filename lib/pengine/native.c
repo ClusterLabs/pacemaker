@@ -374,28 +374,29 @@ native_pending_state(const pcmk_resource_t *rsc)
 {
     const char *pending_state = NULL;
 
-    if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(rsc->private->pending_action, PCMK_ACTION_START,
+                     pcmk__str_none)) {
         pending_state = "Starting";
 
-    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_STOP,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->private->pending_action, PCMK_ACTION_STOP,
+                            pcmk__str_none)) {
         pending_state = "Stopping";
 
-    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MIGRATE_TO,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->private->pending_action, PCMK_ACTION_MIGRATE_TO,
+                            pcmk__str_none)) {
         pending_state = "Migrating";
 
-    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MIGRATE_FROM,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->private->pending_action,
+                            PCMK_ACTION_MIGRATE_FROM, pcmk__str_none)) {
        /* Work might be done in here. */
         pending_state = "Migrating";
 
-    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_PROMOTE,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->private->pending_action, PCMK_ACTION_PROMOTE,
+                            pcmk__str_none)) {
         pending_state = "Promoting";
 
-    } else if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_DEMOTE,
-                            pcmk__str_casei)) {
+    } else if (pcmk__str_eq(rsc->private->pending_action, PCMK_ACTION_DEMOTE,
+                            pcmk__str_none)) {
         pending_state = "Demoting";
     }
 
@@ -403,25 +404,27 @@ native_pending_state(const pcmk_resource_t *rsc)
 }
 
 static const char *
-native_pending_task(const pcmk_resource_t *rsc)
+native_pending_action(const pcmk_resource_t *rsc)
 {
-    const char *pending_task = NULL;
+    const char *pending_action = NULL;
 
-    if (pcmk__str_eq(rsc->pending_task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
-        pending_task = "Monitoring";
+    if (pcmk__str_eq(rsc->private->pending_action, PCMK_ACTION_MONITOR,
+                     pcmk__str_none)) {
+        pending_action = "Monitoring";
 
     /* Pending probes are not printed, even if pending
      * operations are requested. If someone ever requests that
      * behavior, uncomment this and the corresponding part of
      * unpack.c:unpack_rsc_op().
      */
-    /*
-    } else if (pcmk__str_eq(rsc->pending_task, "probe", pcmk__str_casei)) {
-        pending_task = "Checking";
-    */
+#if 0
+    } else if (pcmk__str_eq(rsc->private->pending_action, "probe",
+                            pcmk__str_none)) {
+        pending_action = "Checking";
+#endif
     }
 
-    return pending_task;
+    return pending_action;
 }
 
 static enum rsc_role_e
@@ -563,10 +566,10 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         have_flags = add_output_flag(outstr, "LOCKED", have_flags);
     }
     if (pcmk_is_set(show_opts, pcmk_show_pending)) {
-        const char *pending_task = native_pending_task(rsc);
+        const char *pending_action = native_pending_action(rsc);
 
-        if (pending_task) {
-            have_flags = add_output_flag(outstr, pending_task, have_flags);
+        if (pending_action != NULL) {
+            have_flags = add_output_flag(outstr, pending_action, have_flags);
         }
     }
     if (target_role != NULL) {
@@ -767,7 +770,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
     const char *ignored = pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure);
     char *nodes_running_on = NULL;
-    const char *pending = print_pending? native_pending_task(rsc) : NULL;
+    const char *pending = print_pending? native_pending_action(rsc) : NULL;
     const char *locked_to = NULL;
     const char *desc = pe__resource_description(rsc, show_opts);
 

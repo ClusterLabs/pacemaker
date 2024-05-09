@@ -692,8 +692,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         // Everything else in this block is for anonymous clones
 
         } else if (pcmk_is_set(show_opts, pcmk_show_pending)
-                   && (child_rsc->pending_task != NULL)
-                   && strcmp(child_rsc->pending_task, "probe")) {
+                   && (child_rsc->private->pending_action != NULL)
+                   && (strcmp(child_rsc->private->pending_action,
+                              "probe") != 0)) {
             // Print individual instance when non-probe action is pending
             print_full = TRUE;
 

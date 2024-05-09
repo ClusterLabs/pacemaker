@@ -4746,7 +4746,7 @@ process_pending_action(struct action_history *history,
         }
     }
 
-    if (history->rsc->pending_task != NULL) {
+    if (history->rsc->private->pending_action != NULL) {
         /* There should never be multiple pending actions, but as a failsafe,
          * just remember the first one processed for display purposes.
          */
@@ -4757,14 +4757,14 @@ process_pending_action(struct action_history *history,
         /* Pending probes are currently never displayed, even if pending
          * operations are requested. If we ever want to change that,
          * enable the below and the corresponding part of
-         * native.c:native_pending_task().
+         * native.c:native_pending_action().
          */
 #if 0
-        history->rsc->pending_task = strdup("probe");
+        history->rsc->private->pending_action = strdup("probe");
         history->rsc->pending_node = history->node;
 #endif
     } else {
-        history->rsc->pending_task = strdup(history->task);
+        history->rsc->private->pending_action = strdup(history->task);
         history->rsc->pending_node = history->node;
     }
 }

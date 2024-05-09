@@ -203,8 +203,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    char *pending_task;             // Pending action in history, if any
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk_rsc_flags
@@ -259,7 +257,7 @@ struct pe_resource_s {
     GList *fillers;                 // Resources contained by this one, if any
 
     // @COMPAT These should be made const at next API compatibility break
-    pcmk_node_t *pending_node;      // Node on which pending_task is happening
+    pcmk_node_t *pending_node;      // Node on which pending_action is happening
     pcmk_node_t *lock_node;         // Resource shutdown-locked to this node
 
     time_t lock_time;               // When shutdown lock started
