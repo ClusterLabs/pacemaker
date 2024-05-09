@@ -2249,6 +2249,8 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
 
     if (stat(ret, &sb) != 0 || !S_ISREG(sb.st_mode)) {
         const char *remote_schema_dir = pcmk__remote_schema_dir();
+
+        free(ret);
         ret = find_artefact(ns, remote_schema_dir, filespec);
     }
 

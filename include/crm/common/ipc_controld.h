@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_IPC_CONTROLD__H
-#  define PCMK__CRM_COMMON_IPC_CONTROLD__H
+#define PCMK__CRM_COMMON_IPC_CONTROLD__H
 
 
 #include <stdbool.h>                    // bool

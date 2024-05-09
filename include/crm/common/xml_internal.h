@@ -8,23 +8,23 @@
  */
 
 #ifndef PCMK__XML_INTERNAL__H
-#  define PCMK__XML_INTERNAL__H
+#define PCMK__XML_INTERNAL__H
 
 /*
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
  */
 
-#  include <stdlib.h>
-#  include <stdint.h>   // uint32_t
-#  include <stdio.h>
-#  include <string.h>
+#include <stdlib.h>
+#include <stdint.h>   // uint32_t
+#include <stdio.h>
+#include <string.h>
 
-#  include <crm/crm.h>  /* transitively imports qblog.h */
-#  include <crm/common/output_internal.h>
-#  include <crm/common/xml_io_internal.h>
-#  include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
+#include <crm/crm.h>  /* transitively imports qblog.h */
+#include <crm/common/output_internal.h>
+#include <crm/common/xml_io_internal.h>
+#include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 
-#  include <libxml/relaxng.h>
+#include <libxml/relaxng.h>
 
 /*!
  * \brief Base for directing lib{xml2,xslt} log into standard libqb backend

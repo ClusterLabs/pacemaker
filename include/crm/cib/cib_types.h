@@ -38,14 +38,21 @@ enum cib_variant {
 };
 
 enum cib_state {
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_connected_command,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_connected_query,
+
     cib_disconnected
 };
 
 enum cib_conn_type {
     cib_command,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_query,
+
     cib_no_connection,
     cib_command_nonblocking,
 };
@@ -78,6 +85,7 @@ enum cib_call_options {
      * non-legacy mode.
      */
 
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated This value will be removed in a future release
     cib_scope_local     = (1 << 8),
 
@@ -121,7 +129,9 @@ enum cib_call_options {
      */
     cib_score_update    = (1 << 11),
 
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_sync_call       = (1 << 12),
+
     cib_no_mtime        = (1 << 13),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
@@ -145,13 +155,16 @@ enum cib_call_options {
 typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
 
     //! \deprecated This method will be removed and should not be used
     int (*signon_raw) (cib_t *cib, const char *name, enum cib_conn_type type,
                        int *event_fd);
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*signoff) (cib_t *cib);
+
     int (*free) (cib_t *cib);
 
     //! \deprecated This method will be removed and should not be used
@@ -159,24 +172,32 @@ typedef struct cib_api_operations_s {
                                                           int callid, int rc,
                                                           xmlNode *output));
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*add_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));
+
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*del_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*set_connection_dnotify) (cib_t *cib,
                                    void (*dnotify) (gpointer user_data));
 
     //! \deprecated This method will be removed and should not be used
     int (*inputfd) (cib_t *cib);
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
 
     int (*ping) (cib_t *cib, xmlNode **output_data, int call_options);
+
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
+
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
@@ -357,7 +378,9 @@ typedef struct cib_api_operations_s {
 } cib_api_operations_t;
 
 struct cib_s {
+    // NOTE: sbd (as of at least 1.5.2) uses this
     enum cib_state state;
+
     enum cib_conn_type type;
     enum cib_variant variant;
 
@@ -372,6 +395,7 @@ struct cib_s {
     void (*op_callback) (const xmlNode *msg, int call_id, int rc,
                          xmlNode *output);
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     cib_api_operations_t *cmds;
 
     xmlNode *transaction;

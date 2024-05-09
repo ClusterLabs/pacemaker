@@ -205,7 +205,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {
         return EINVAL;
     }
-    if (rsc->variant != pcmk_rsc_variant_primitive) {
+    if (!pcmk__is_primitive(rsc)) {
         // Only primitives get operation digests
         return EOPNOTSUPP;
     }
@@ -232,11 +232,9 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     return rc;
 }
 
-// @COMPAT The scheduler parameter is unused and can be removed at the next break
 int
 pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
-                      const pcmk_node_t *node, GHashTable *overrides,
-                      pcmk_scheduler_t *scheduler)
+                      const pcmk_node_t *node, GHashTable *overrides)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

@@ -42,6 +42,7 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_t instead
 typedef pcmk_cluster_t crm_cluster_t;
 
@@ -100,6 +101,7 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
 
 #endif  // SUPPORT_COROSYNC
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_connect() instead
 gboolean crm_cluster_connect(pcmk_cluster_t *cluster);
 
@@ -127,18 +129,25 @@ guint crm_active_peers(void);
 //! \deprecated Do not use
 guint reap_crm_member(uint32_t id, const char *name);
 
+// NOTE: sbd (as of at least 1.5.2) uses this enum
 //!@{
 //! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead
 enum cluster_type_e {
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_cluster_unknown    = pcmk_cluster_layer_unknown,
+
     pcmk_cluster_invalid    = pcmk_cluster_layer_invalid,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_cluster_corosync   = pcmk_cluster_layer_corosync,
 };
 //!@}
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_layer_text() instead
 const char *name_for_cluster_type(enum cluster_type_e type);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_get_cluster_layer() instead
 enum cluster_type_e get_cluster_type(void);
 

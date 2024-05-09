@@ -26,7 +26,6 @@ header_HEADERS = acl.h 			\
 		 mainloop.h 		\
 		 mainloop_compat.h 	\
 		 nodes.h 		\
-		 nodes_internal.h 	\
 		 nvpair.h 		\
 		 options.h 		\
 		 output.h 		\
@@ -37,6 +36,7 @@ header_HEADERS = acl.h 			\
 		 rules.h		\
 		 scheduler.h		\
 		 scheduler_types.h	\
+		 schemas.h		\
 		 scores.h		\
 		 scores_compat.h	\
 		 tags.h			\

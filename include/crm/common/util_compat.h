@@ -8,11 +8,11 @@
  */
 
 #ifndef PCMK__CRM_COMMON_UTIL_COMPAT__H
-#  define PCMK__CRM_COMMON_UTIL_COMPAT__H
+#define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
-#  include <glib.h>
-#  include <libxml/tree.h>
-#  include <crm/common/util.h>
+#include <glib.h>
+#include <libxml/tree.h>
+#include <crm/common/util.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +40,7 @@ is_not_set(long long word, long long bit)
     return ((word & bit) == 0);
 }
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
 static inline gboolean
 is_set(long long word, long long bit)
@@ -86,7 +87,7 @@ long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
 
 //! \deprecated Use strtoll() instead
-#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
+#define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 //! \deprecated Use g_str_hash() instead
 guint g_str_hash_traditional(gconstpointer v);

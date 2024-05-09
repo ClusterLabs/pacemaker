@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_XML_COMPAT__H
-#  define PCMK__CRM_COMMON_XML_COMPAT__H
+#define PCMK__CRM_COMMON_XML_COMPAT__H
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
@@ -66,6 +66,7 @@ crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
     return crm_xml_add(node, name, (value? "true" : "false"));
 }
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use name member directly
 static inline const char *
 crm_element_name(const xmlNode *xml)
@@ -76,6 +77,7 @@ crm_element_name(const xmlNode *xml)
 //! \deprecated Do not use
 char *crm_xml_escape(const char *text);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *copy_xml(xmlNode *src_node);
 
@@ -166,6 +168,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation,
 //! \deprecated Do not use
 gboolean validate_xml_verbose(const xmlNode *xml_blob);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
 

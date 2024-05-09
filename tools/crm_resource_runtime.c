@@ -60,8 +60,8 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
     } else if (pcmk__is_clone(parent)
                && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
                && rsc->clone_name
-               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
-               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
+               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_none)
+               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_none)) {
 
         retval = build_node_info_list(parent);
 
@@ -172,7 +172,7 @@ find_matching_attr_resources_recursive(pcmk__output_t *out,
                                                attr_set, attr_set_type, attr_id,
                                                attr_name, cib, depth+1);
         /* do it only once for clones */
-        if (rsc->variant == pcmk_rsc_variant_clone) {
+        if (pcmk__is_clone(rsc)) {
             break;
         }
     }
@@ -207,8 +207,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     if(force == TRUE) {
         return g_list_append(result, rsc);
     }
-    if ((rsc->parent != NULL)
-        && (rsc->parent->variant == pcmk_rsc_variant_clone)) {
+    if (pcmk__is_clone(rsc->parent)) {
         int rc = find_resource_attr(out, cib, PCMK_XA_ID, rsc_id, attr_set_type,
                                     attr_set, attr_id, attr_name, NULL);
 
@@ -220,10 +219,10 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
         return g_list_append(result, rsc);
 
     } else if ((rsc->parent == NULL) && (rsc->children != NULL)
-               && (rsc->variant == pcmk_rsc_variant_clone)) {
+               && pcmk__is_clone(rsc)) {
         pcmk_resource_t *child = rsc->children->data;
 
-        if (child->variant == pcmk_rsc_variant_primitive) {
+        if (pcmk__is_primitive(child)) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
             rc = find_resource_attr(out, cib, PCMK_XA_ID, lookup_id,
                                     attr_set_type, attr_set, attr_id, attr_name, NULL);
@@ -654,7 +653,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         out->err(out, "Resource %s not found", rsc_id);
         return ENXIO;
 
-    } else if (rsc->variant != pcmk_rsc_variant_primitive) {
+    } else if (!pcmk__is_primitive(rsc)) {
         out->err(out, "We can only process primitive resources, not %s", rsc_id);
         return EINVAL;
     }
@@ -1252,7 +1251,7 @@ get_active_resources(const char *host, GList *rsc_list)
          * other than the first, we can't otherwise tell which resources are
          * stopping and starting.
          */
-        if (rsc->variant == pcmk_rsc_variant_group) {
+        if (pcmk__is_group(rsc)) {
             active = g_list_concat(active,
                                    get_active_resources(host, rsc->children));
         } else if (resource_is_running_on(rsc, host)) {
@@ -1294,19 +1293,16 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
  *       scheduler->now.
- * \todo This follows the example of other callers of
- *       pcmk__update_configured_schema() and returns ENOKEY ("Required key not
- *       available") if that fails, but perhaps pcmk_rc_schema_validation would
- *       be better in that case.
  */
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
-    if (!pcmk__update_configured_schema(xml, false)) {
-        return ENOKEY;
+    int rc = pcmk_update_configured_schema(xml, false);
+
+    if (rc == pcmk_rc_ok) {
+        scheduler->input = *xml;
+        scheduler->now = crm_time_new(NULL);
     }
-    scheduler->input = *xml;
-    scheduler->now = crm_time_new(NULL);
     return pcmk_rc_ok;
 }
 
@@ -2253,7 +2249,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         rsc = rsc->children->data;
     }
 
-    if (rsc->variant == pcmk_rsc_variant_group) {
+    if (pcmk__is_group(rsc)) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     } else if (pcmk__is_bundled(rsc)) {

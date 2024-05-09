@@ -256,8 +256,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
     CRM_ASSERT(!for_dependent);
 
     CRM_ASSERT((colocation != NULL) && pcmk__is_clone(primary)
-               && (dependent != NULL)
-               && (dependent->variant == pcmk_rsc_variant_primitive));
+               && pcmk__is_primitive(dependent));
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
         pcmk__rsc_trace(primary,

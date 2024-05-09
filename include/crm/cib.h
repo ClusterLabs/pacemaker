@@ -30,7 +30,10 @@ extern "C" {
 #  define CIB_FEATURE_SET "2.0"
 
 /* Core functions */
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 cib_t *cib_new(void);
+
 cib_t *cib_native_new(void);
 cib_t *cib_file_new(const char *filename);
 cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port,
@@ -42,6 +45,8 @@ cib_t *cib_shadow_new(const char *name);
 
 void cib_free_notify(cib_t *cib);
 void cib_free_callbacks(cib_t *cib);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 void cib_delete(cib_t * cib);
 
 void cib_dump_pending_callbacks(void);

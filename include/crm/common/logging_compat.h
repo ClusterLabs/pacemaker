@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_LOGGING_COMPAT__H
-#  define PCMK__CRM_COMMON_LOGGING_COMPAT__H
+#define PCMK__CRM_COMMON_LOGGING_COMPAT__H
 
 #include <stdint.h>         // uint8_t
 #include <glib.h>
@@ -55,7 +55,7 @@ enum xml_log_options {
  * \note This is a macro, and \p level may be evaluated more than once.
  *       This does nothing when level is LOG_STDOUT.
  */
-#  define do_crm_log_always(level, fmt, args...) do {                       \
+#define do_crm_log_always(level, fmt, args...) do {                         \
         switch (level) {                                                    \
             case LOG_STDOUT: case LOG_NEVER:                                \
                 break;                                                      \

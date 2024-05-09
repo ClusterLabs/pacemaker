@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_TICKETS__H
-#  define PCMK__CRM_COMMON_TICKETS__H
+#define PCMK__CRM_COMMON_TICKETS__H
 
 #include <sys/types.h>      // time_t
 #include <glib.h>           // gboolean, GHashTable

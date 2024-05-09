@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,10 +14,10 @@
 #include <stdbool.h>
 
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
-#  define PCMK__ALERT_DEFAULT_TIMEOUT_MS (30000)
+#define PCMK__ALERT_DEFAULT_TIMEOUT_MS (30000)
 
 /* Default-Format-String used to pass timestamps to the alerts scripts */
-#  define PCMK__ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
+#define PCMK__ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
 
 enum pcmk__alert_flags {
     pcmk__alert_none         = 0,

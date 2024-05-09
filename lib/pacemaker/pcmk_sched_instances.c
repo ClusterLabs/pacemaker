@@ -1017,7 +1017,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
         pcmk__set_action_flags(stop, pcmk_action_migratable);
     }
 
-    if (collective->variant == pcmk_rsc_variant_clone) {
+    if (pcmk__is_clone(collective)) {
         pe__create_clone_notif_pseudo_ops(collective, start, started, stop,
                                           stopped);
     }
@@ -1037,7 +1037,7 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 static inline GList *
 get_instance_list(const pcmk_resource_t *rsc)
 {
-    if (rsc->variant == pcmk_rsc_variant_bundle) {
+    if (pcmk__is_bundle(rsc)) {
         return pe__bundle_containers(rsc);
     } else {
         return rsc->children;
@@ -1641,7 +1641,7 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
         uint32_t instance_flags;
 
         // Node is relevant only to primitive instances
-        if (instance->variant == pcmk_rsc_variant_primitive) {
+        if (pcmk__is_primitive(instance)) {
             instance_node = node;
         }
 

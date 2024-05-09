@@ -8,22 +8,22 @@
  */
 
 #ifndef PCMK__CRM_COMMON_UTIL__H
-#  define PCMK__CRM_COMMON_UTIL__H
+#define PCMK__CRM_COMMON_UTIL__H
 
-#  include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
-#  include <stdlib.h>
-#  include <stdbool.h>
-#  include <stdint.h>       // uint32_t
-#  include <limits.h>
-#  include <signal.h>
-#  include <glib.h>
+#include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>       // uint32_t
+#include <limits.h>
+#include <signal.h>
+#include <glib.h>
 
-#  include <crm/common/acl.h>
-#  include <crm/common/actions.h>
-#  include <crm/common/agents.h>
-#  include <crm/common/results.h>
-#  include <crm/common/scores.h>
-#  include <crm/common/nvpair.h>
+#include <crm/common/acl.h>
+#include <crm/common/actions.h>
+#include <crm/common/agents.h>
+#include <crm/common/results.h>
+#include <crm/common/scores.h>
+#include <crm/common/nvpair.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,10 +42,18 @@ char *pcmk_promotion_score_name(const char *rsc_id);
 int crm_default_remote_port(void);
 
 /* public string functions (from strings.c) */
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 gboolean crm_is_true(const char *s);
+
 int crm_str_to_boolean(const char *s, int *ret);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 long long crm_get_msec(const char *input);
+
 char * crm_strip_trailing_newline(char *str);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 int pcmk_parse_interval_spec(const char *input, guint *result_ms);

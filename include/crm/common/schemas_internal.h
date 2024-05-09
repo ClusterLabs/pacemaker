@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__SCHEMAS_INTERNAL__H
-#  define PCMK__SCHEMAS_INTERNAL__H
+#define PCMK__SCHEMAS_INTERNAL__H
 
 #include <glib.h>           // GList, gboolean
 #include <libxml/tree.h>    // xmlNode, xmlRelaxNGValidityErrorFunc
@@ -30,7 +30,6 @@ bool pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
                         xmlRelaxNGValidityErrorFunc error_handler,
                         void *error_handler_context);
 bool pcmk__configured_schema_validates(xmlNode *xml);
-bool pcmk__update_configured_schema(xmlNode **xml, bool to_logs);
 int pcmk__update_schema(xmlNode **xml, const char *max_schema_name,
                         bool transform, bool to_logs);
 void pcmk__warn_if_schema_deprecated(const char *schema);

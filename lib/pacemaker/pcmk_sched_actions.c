@@ -547,7 +547,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         pcmk_node_t *first_node = first->node;
 
         if ((first->rsc != NULL)
-            && (first->rsc->variant == pcmk_rsc_variant_group)
+            && pcmk__is_group(first->rsc)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
@@ -557,8 +557,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             }
         }
 
-        if ((then->rsc != NULL)
-            && (then->rsc->variant == pcmk_rsc_variant_group)
+        if (pcmk__is_group(then->rsc)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
@@ -682,8 +681,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
 static inline bool
 is_primitive_action(const pcmk_action_t *action)
 {
-    return (action != NULL) && (action->rsc != NULL)
-           && (action->rsc->variant == pcmk_rsc_variant_primitive);
+    return (action != NULL) && pcmk__is_primitive(action->rsc);
 }
 
 /*!
@@ -1874,7 +1872,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
             for (GList *iter = result; iter != NULL; iter = iter->next) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-                if (rsc->variant == pcmk_rsc_variant_primitive) {
+                if (pcmk__is_primitive(rsc)) {
                     process_rsc_history(rsc_entry, rsc, node);
                 }
             }

@@ -75,8 +75,8 @@ pcmk__is_guest_or_bundle_node(const pcmk_node_t *node)
            && (node->details->remote_rsc->container != NULL);
 }
 
-#  ifdef HAVE_GNUTLS_GNUTLS_H
-#    include <gnutls/gnutls.h>
+#ifdef HAVE_GNUTLS_GNUTLS_H
+#include <gnutls/gnutls.h>
 
 gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
                                         gnutls_credentials_type_t cred_type,
@@ -95,5 +95,5 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
  */
 int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
 
-#  endif    // HAVE_GNUTLS_GNUTLS_H
+#endif    // HAVE_GNUTLS_GNUTLS_H
 #endif      // PCMK__CRM_COMMON_REMOTE_INTERNAL__H

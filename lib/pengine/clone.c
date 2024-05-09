@@ -47,8 +47,8 @@ typedef struct clone_variant_data_s {
     xmlNode *xml_obj_child;
 } clone_variant_data_t;
 
-#define get_clone_variant_data(data, rsc)                                  \
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone)); \
+#define get_clone_variant_data(data, rsc)                               \
+    CRM_ASSERT(pcmk__is_clone(rsc) && (rsc->variant_opaque != NULL));   \
     data = (clone_variant_data_t *) rsc->variant_opaque;
 
 /*!

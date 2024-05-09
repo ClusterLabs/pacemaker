@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,11 +8,11 @@
  */
 
 #ifndef PCMK__CRM_COMMON_MAINLOOP__H
-#  define PCMK__CRM_COMMON_MAINLOOP__H
+#define PCMK__CRM_COMMON_MAINLOOP__H
 
-#  include <signal.h> // sighandler_t
-#  include <glib.h>
-#  include <stdbool.h>
+#include <signal.h> // sighandler_t
+#include <glib.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,47 +29,57 @@ enum mainloop_child_flags {
     mainloop_leave_pid_group = 0x01,
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct trigger_s crm_trigger_t;
+
 typedef struct mainloop_io_s mainloop_io_t;
 typedef struct mainloop_child_s mainloop_child_t;
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct mainloop_timer_s mainloop_timer_t;
 
 void mainloop_cleanup(void);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 crm_trigger_t *mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
                                     gpointer userdata);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void mainloop_set_trigger(crm_trigger_t * source);
 
 void mainloop_trigger_complete(crm_trigger_t * trig);
 
 gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 
-#  ifndef HAVE_SIGHANDLER_T
+#ifndef HAVE_SIGHANDLER_T
 typedef void (*sighandler_t)(int);
-#  endif
+#endif
 
 sighandler_t crm_signal_handler(int sig, sighandler_t dispatch);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 gboolean mainloop_destroy_signal(int sig);
 
 bool mainloop_timer_running(mainloop_timer_t *t);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void mainloop_timer_start(mainloop_timer_t *t);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void mainloop_timer_stop(mainloop_timer_t *t);
 
 guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 mainloop_timer_t *mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata);
 
 void mainloop_timer_del(mainloop_timer_t *t);
 
 
-#  include <crm/common/ipc.h>
-#  include <qb/qbipcs.h>
+#include <crm/common/ipc.h>
+#include <qb/qbipcs.h>
 
 struct ipc_client_callbacks {
     /*!
@@ -179,7 +189,7 @@ void pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n);
 void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
                           bool (*check)(guint));
 
-#  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
+#define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/mainloop_compat.h>

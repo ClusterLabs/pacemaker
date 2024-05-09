@@ -885,7 +885,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
 
-    if (parent->variant == pcmk_rsc_variant_clone) {
+    if (pcmk__is_clone(parent)) {
         rsc_id = pe__clone_child_id(parent);
     }
 

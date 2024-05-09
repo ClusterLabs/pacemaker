@@ -7,7 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #ifndef PCMK__CRM_COMMON_RESULTS__H
-#  define PCMK__CRM_COMMON_RESULTS__H
+#define PCMK__CRM_COMMON_RESULTS__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +39,7 @@ extern "C" {
 # endif
 #endif
 
-#  define CRM_ASSERT(expr) do {                                              \
+#define CRM_ASSERT(expr) do {                                                \
         if (!(expr)) {                                                       \
             crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
         }                                                                    \
@@ -64,31 +64,39 @@ extern "C" {
  */
 
 // Legacy custom return codes for Pacemaker API functions (deprecated)
-#  define pcmk_ok                       0
-#  define PCMK_ERROR_OFFSET             190    /* Replacements on non-linux systems, see include/portability.h */
-#  define PCMK_CUSTOM_OFFSET            200    /* Purely custom codes */
-#  define pcmk_err_generic              201
-#  define pcmk_err_no_quorum            202
-#  define pcmk_err_schema_validation    203
-#  define pcmk_err_transform_failed     204
-#  define pcmk_err_old_data             205
-#  define pcmk_err_diff_failed          206
-#  define pcmk_err_diff_resync          207
-#  define pcmk_err_cib_modified         208
-#  define pcmk_err_cib_backup           209
-#  define pcmk_err_cib_save             210
-#  define pcmk_err_schema_unchanged     211
-#  define pcmk_err_cib_corrupt          212
-#  define pcmk_err_multiple             213
-#  define pcmk_err_node_unknown         214
-#  define pcmk_err_already              215
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+#define pcmk_ok                       0
+
+#define PCMK_ERROR_OFFSET             190    /* Replacements on non-linux systems, see include/portability.h */
+#define PCMK_CUSTOM_OFFSET            200    /* Purely custom codes */
+#define pcmk_err_generic              201
+#define pcmk_err_no_quorum            202
+#define pcmk_err_schema_validation    203
+#define pcmk_err_transform_failed     204
+#define pcmk_err_old_data             205
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+#define pcmk_err_diff_failed          206
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+#define pcmk_err_diff_resync          207
+
+#define pcmk_err_cib_modified         208
+#define pcmk_err_cib_backup           209
+#define pcmk_err_cib_save             210
+#define pcmk_err_schema_unchanged     211
+#define pcmk_err_cib_corrupt          212
+#define pcmk_err_multiple             213
+#define pcmk_err_node_unknown         214
+#define pcmk_err_already              215
 /* On HPPA 215 is ENOSYM (Unknown error 215), which hopefully never happens. */
 #ifdef __hppa__
-#  define pcmk_err_bad_nvpair           250 /* 216 is ENOTSOCK */
-#  define pcmk_err_unknown_format       252 /* 217 is EDESTADDRREQ */
+#define pcmk_err_bad_nvpair           250 /* 216 is ENOTSOCK */
+#define pcmk_err_unknown_format       252 /* 217 is EDESTADDRREQ */
 #else
-#  define pcmk_err_bad_nvpair           216
-#  define pcmk_err_unknown_format       217
+#define pcmk_err_bad_nvpair           216
+#define pcmk_err_unknown_format       217
 #endif
 
 /*!
@@ -150,6 +158,7 @@ enum pcmk_rc_e {
 
     // Values -1 through -1000 reserved for caller use
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     pcmk_rc_ok                  =     0
 
     // Positive values reserved for system error numbers
@@ -167,13 +176,19 @@ enum pcmk_rc_e {
  */
 enum ocf_exitcode {
     PCMK_OCF_OK                   = 0,   //!< Success
+
+    // NOTE: booth (as of at least 1.1) uses this value
     PCMK_OCF_UNKNOWN_ERROR        = 1,   //!< Unspecified error
+
     PCMK_OCF_INVALID_PARAM        = 2,   //!< Parameter invalid (in local context)
     PCMK_OCF_UNIMPLEMENT_FEATURE  = 3,   //!< Requested action not implemented
     PCMK_OCF_INSUFFICIENT_PRIV    = 4,   //!< Insufficient privileges
     PCMK_OCF_NOT_INSTALLED        = 5,   //!< Dependencies not available locally
     PCMK_OCF_NOT_CONFIGURED       = 6,   //!< Parameter invalid (inherently)
+
+    // NOTE: booth (as of at least 1.1) uses this value
     PCMK_OCF_NOT_RUNNING          = 7,   //!< Service safely stopped
+
     PCMK_OCF_RUNNING_PROMOTED     = 8,   //!< Service active and promoted
     PCMK_OCF_FAILED_PROMOTED      = 9,   //!< Service failed and possibly in promoted role
     PCMK_OCF_DEGRADED             = 190, //!< Service active but more likely to fail soon
@@ -208,6 +223,7 @@ enum ocf_exitcode {
 #endif
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /*!
  * \enum crm_exit_e
  * \brief Exit status codes for tools and daemons
@@ -355,15 +371,24 @@ enum pcmk_result_type {
 int pcmk_result_get_strings(int code, enum pcmk_result_type type,
                             const char **name, const char **desc);
 const char *pcmk_rc_name(int rc);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 const char *pcmk_rc_str(int rc);
+
 crm_exit_t pcmk_rc2exitc(int rc);
 enum ocf_exitcode pcmk_rc2ocf(int rc);
 int pcmk_rc2legacy(int rc);
 int pcmk_legacy2rc(int legacy_rc);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 const char *pcmk_strerror(int rc);
+
 const char *pcmk_errorname(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 const char *crm_exit_str(crm_exit_t exit_code);
+
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
 static inline const char *

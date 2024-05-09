@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_ROLES_INTERNAL__H
-#  define PCMK__CRM_COMMON_ROLES_INTERNAL__H
+#define PCMK__CRM_COMMON_ROLES_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {

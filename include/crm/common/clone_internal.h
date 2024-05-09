@@ -8,8 +8,9 @@
  */
 
 #ifndef PCMK__CRM_COMMON_CLONE_INTERNAL__H
-#  define PCMK__CRM_COMMON_CLONE_INTERNAL__H
+#define PCMK__CRM_COMMON_CLONE_INTERNAL__H
 
+#include <stdbool.h>                    // bool
 #include <crm/common/scheduler_types.h> // pcmk_resource_t
 #include <crm/common/resources.h>       // pcmk_rsc_variant_clone
 
