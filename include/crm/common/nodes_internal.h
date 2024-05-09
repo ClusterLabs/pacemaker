@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__NODES_INTERNAL__H
-#  define PCMK__NODES_INTERNAL__H
+#define PCMK__NODES_INTERNAL__H
 
 /*
  * Special node attributes

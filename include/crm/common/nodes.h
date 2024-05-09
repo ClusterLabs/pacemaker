@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_NODES__H
-#  define PCMK__CRM_COMMON_NODES__H
+#define PCMK__CRM_COMMON_NODES__H
 
 #include <stdbool.h>                    // bool
 #include <glib.h>                       // gboolean, GList, GHashTable

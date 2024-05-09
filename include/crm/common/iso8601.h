@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2020 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,12 +8,12 @@
  */
 
 #ifndef PCMK__CRM_COMMON_ISO8601__H
-#  define PCMK__CRM_COMMON_ISO8601__H
+#define PCMK__CRM_COMMON_ISO8601__H
 
-#  include <time.h>
-#  include <ctype.h>
-#  include <stdint.h>   // uint32_t
-#  include <stdbool.h>  // bool
+#include <time.h>
+#include <ctype.h>
+#include <stdint.h>   // uint32_t
+#include <stdbool.h>  // bool
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,16 +64,16 @@ void crm_time_log_alias(int log_level, const char *file, const char *function,
                         int line, const char *prefix,
                         const crm_time_t *date_time, int flags);
 
-#  define crm_time_log_date          0x001
-#  define crm_time_log_timeofday     0x002
-#  define crm_time_log_with_timezone 0x004
-#  define crm_time_log_duration      0x008
+#define crm_time_log_date          0x001
+#define crm_time_log_timeofday     0x002
+#define crm_time_log_with_timezone 0x004
+#define crm_time_log_duration      0x008
 
-#  define crm_time_ordinal           0x010
-#  define crm_time_weeks             0x020
-#  define crm_time_seconds           0x100
-#  define crm_time_epoch             0x200
-#  define crm_time_usecs             0x400
+#define crm_time_ordinal           0x010
+#define crm_time_weeks             0x020
+#define crm_time_seconds           0x100
+#define crm_time_epoch             0x200
+#define crm_time_usecs             0x400
 
 crm_time_t *crm_time_parse_duration(const char *duration_str);
 crm_time_t *crm_time_calculate_duration(const crm_time_t *dt,

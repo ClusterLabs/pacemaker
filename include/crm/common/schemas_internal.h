@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__SCHEMAS_INTERNAL__H
-#  define PCMK__SCHEMAS_INTERNAL__H
+#define PCMK__SCHEMAS_INTERNAL__H
 
 #include <glib.h>           // GList, gboolean
 #include <libxml/tree.h>    // xmlNode, xmlRelaxNGValidityErrorFunc

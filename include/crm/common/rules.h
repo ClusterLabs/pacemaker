@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_RULES__H
-#  define PCMK__CRM_COMMON_RULES__H
+#define PCMK__CRM_COMMON_RULES__H
 
 #include <glib.h>                   // guint, GHashTable
 #include <regex.h>                  // regmatch_t

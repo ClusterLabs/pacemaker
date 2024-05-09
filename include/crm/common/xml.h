@@ -8,25 +8,25 @@
  */
 
 #ifndef PCMK__CRM_COMMON_XML__H
-#  define PCMK__CRM_COMMON_XML__H
+#define PCMK__CRM_COMMON_XML__H
 
 
-#  include <stdio.h>
-#  include <sys/types.h>
-#  include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#  include <stdlib.h>
-#  include <errno.h>
-#  include <fcntl.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
 
-#  include <libxml/tree.h>
-#  include <libxml/xpath.h>
+#include <libxml/tree.h>
+#include <libxml/xpath.h>
 
-#  include <crm/crm.h>
-#  include <crm/common/nvpair.h>
-#  include <crm/common/schemas.h>
-#  include <crm/common/xml_io.h>
-#  include <crm/common/xml_names.h>
+#include <crm/crm.h>
+#include <crm/common/nvpair.h>
+#include <crm/common/schemas.h>
+#include <crm/common/xml_io.h>
+#include <crm/common/xml_names.h>
 
 #ifdef __cplusplus
 extern "C" {

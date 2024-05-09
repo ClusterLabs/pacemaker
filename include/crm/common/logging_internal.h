@@ -12,12 +12,12 @@ extern "C" {
 #endif
 
 #ifndef PCMK__LOGGING_INTERNAL_H
-#  define PCMK__LOGGING_INTERNAL_H
+#define PCMK__LOGGING_INTERNAL_H
 
-#  include <glib.h>
+#include <glib.h>
 
-#  include <crm/common/logging.h>
-#  include <crm/common/output_internal.h>
+#include <crm/common/logging.h>
+#include <crm/common/output_internal.h>
 
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow
@@ -95,7 +95,7 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  *
  * \param[in] fmt...  printf(3)-style format string and arguments
  */
-#  define pcmk__config_err(fmt...) do {                             \
+#define pcmk__config_err(fmt...) do {                               \
         crm_config_error = TRUE;                                    \
         if (pcmk__config_error_handler == NULL) {                   \
             crm_err(fmt);                                           \
@@ -110,13 +110,13 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  *
  * \param[in] fmt...  printf(3)-style format string and arguments
  */
-#  define pcmk__config_warn(fmt...) do {                            \
-        crm_config_warning = TRUE;                                  \
-        if (pcmk__config_warning_handler == NULL) {                   \
-            crm_warn(fmt);                                           \
-        } else {                                                    \
-            pcmk__config_warning_handler(pcmk__config_warning_context, fmt);   \
-        }                                                           \
+#define pcmk__config_warn(fmt...) do {                                      \
+        crm_config_warning = TRUE;                                          \
+        if (pcmk__config_warning_handler == NULL) {                         \
+            crm_warn(fmt);                                                  \
+        } else {                                                            \
+            pcmk__config_warning_handler(pcmk__config_warning_context, fmt);\
+        }                                                                   \
     } while (0)
 
 /*!
@@ -132,7 +132,7 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  * \note Neither \p if_action nor \p else_action can contain a \p break or
  *       \p continue statement.
  */
-#  define pcmk__if_tracing(if_action, else_action) do {                 \
+#define pcmk__if_tracing(if_action, else_action) do {                   \
         static struct qb_log_callsite *trace_cs = NULL;                 \
                                                                         \
         if (trace_cs == NULL) {                                         \

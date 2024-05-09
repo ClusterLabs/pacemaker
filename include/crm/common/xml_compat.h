@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_XML_COMPAT__H
-#  define PCMK__CRM_COMMON_XML_COMPAT__H
+#define PCMK__CRM_COMMON_XML_COMPAT__H
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode

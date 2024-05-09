@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
-#  define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
+#define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
 
 #include <stdint.h>                     // uint32_t
 #include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_action_t

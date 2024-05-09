@@ -7,7 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 #ifndef PCMK__CRM_COMMON_RESULTS__H
-#  define PCMK__CRM_COMMON_RESULTS__H
+#define PCMK__CRM_COMMON_RESULTS__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +39,7 @@ extern "C" {
 # endif
 #endif
 
-#  define CRM_ASSERT(expr) do {                                              \
+#define CRM_ASSERT(expr) do {                                                \
         if (!(expr)) {                                                       \
             crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
         }                                                                    \
@@ -66,37 +66,37 @@ extern "C" {
 // Legacy custom return codes for Pacemaker API functions (deprecated)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-#  define pcmk_ok                       0
+#define pcmk_ok                       0
 
-#  define PCMK_ERROR_OFFSET             190    /* Replacements on non-linux systems, see include/portability.h */
-#  define PCMK_CUSTOM_OFFSET            200    /* Purely custom codes */
-#  define pcmk_err_generic              201
-#  define pcmk_err_no_quorum            202
-#  define pcmk_err_schema_validation    203
-#  define pcmk_err_transform_failed     204
-#  define pcmk_err_old_data             205
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-#  define pcmk_err_diff_failed          206
+#define PCMK_ERROR_OFFSET             190    /* Replacements on non-linux systems, see include/portability.h */
+#define PCMK_CUSTOM_OFFSET            200    /* Purely custom codes */
+#define pcmk_err_generic              201
+#define pcmk_err_no_quorum            202
+#define pcmk_err_schema_validation    203
+#define pcmk_err_transform_failed     204
+#define pcmk_err_old_data             205
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-#  define pcmk_err_diff_resync          207
+#define pcmk_err_diff_failed          206
 
-#  define pcmk_err_cib_modified         208
-#  define pcmk_err_cib_backup           209
-#  define pcmk_err_cib_save             210
-#  define pcmk_err_schema_unchanged     211
-#  define pcmk_err_cib_corrupt          212
-#  define pcmk_err_multiple             213
-#  define pcmk_err_node_unknown         214
-#  define pcmk_err_already              215
+// NOTE: sbd (as of at least 1.5.2) uses this
+#define pcmk_err_diff_resync          207
+
+#define pcmk_err_cib_modified         208
+#define pcmk_err_cib_backup           209
+#define pcmk_err_cib_save             210
+#define pcmk_err_schema_unchanged     211
+#define pcmk_err_cib_corrupt          212
+#define pcmk_err_multiple             213
+#define pcmk_err_node_unknown         214
+#define pcmk_err_already              215
 /* On HPPA 215 is ENOSYM (Unknown error 215), which hopefully never happens. */
 #ifdef __hppa__
-#  define pcmk_err_bad_nvpair           250 /* 216 is ENOTSOCK */
-#  define pcmk_err_unknown_format       252 /* 217 is EDESTADDRREQ */
+#define pcmk_err_bad_nvpair           250 /* 216 is ENOTSOCK */
+#define pcmk_err_unknown_format       252 /* 217 is EDESTADDRREQ */
 #else
-#  define pcmk_err_bad_nvpair           216
-#  define pcmk_err_unknown_format       217
+#define pcmk_err_bad_nvpair           216
+#define pcmk_err_unknown_format       217
 #endif
 
 /*!

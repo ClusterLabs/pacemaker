@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_SCHEMAS__H
-#  define PCMK__CRM_COMMON_SCHEMAS__H
+#define PCMK__CRM_COMMON_SCHEMAS__H
 
 #include <stdbool.h>        // bool
 #include <libxml/tree.h>    // xmlNode

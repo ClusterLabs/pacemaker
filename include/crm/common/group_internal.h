@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_GROUP_INTERNAL__H
-#  define PCMK__CRM_COMMON_GROUP_INTERNAL__H
+#define PCMK__CRM_COMMON_GROUP_INTERNAL__H
 
 #include <stdbool.h>                    // bool
 #include <crm/common/scheduler_types.h> // pcmk_resource_t

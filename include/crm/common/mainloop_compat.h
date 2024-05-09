@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,10 +8,10 @@
  */
 
 #ifndef PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
-#  define PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
+#define PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
 
-#  include <glib.h>
-#  include <stdbool.h>
+#include <glib.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

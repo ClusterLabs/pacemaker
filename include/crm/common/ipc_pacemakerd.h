@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_IPC_PACEMAKERD__H
-#  define PCMK__CRM_COMMON_IPC_PACEMAKERD__H
+#define PCMK__CRM_COMMON_IPC_PACEMAKERD__H
 
 #include <sys/types.h>       // time_t
 #include <crm/common/ipc.h>  // pcmk_ipc_api_t

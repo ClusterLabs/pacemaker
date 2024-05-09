@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_BUNDLES_INTERNAL__H
-#  define PCMK__CRM_COMMON_BUNDLES_INTERNAL__H
+#define PCMK__CRM_COMMON_BUNDLES_INTERNAL__H
 
 #include <stdbool.h>                    // bool, false
 

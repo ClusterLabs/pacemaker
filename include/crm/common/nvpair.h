@@ -8,17 +8,17 @@
  */
 
 #ifndef PCMK__CRM_COMMON_NVPAIR__H
-#  define PCMK__CRM_COMMON_NVPAIR__H
+#define PCMK__CRM_COMMON_NVPAIR__H
 
-#  include <sys/time.h>     // struct timeval
-#  include <glib.h>         // gpointer, gboolean, guint, GHashTable
-#  include <libxml/tree.h>  // xmlNode
-#  include <crm/crm.h>
+#include <sys/time.h>     // struct timeval
+#include <glib.h>         // gpointer, gboolean, guint, GHashTable
+#include <libxml/tree.h>  // xmlNode
+#include <crm/crm.h>
 
 
-#  ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#  endif
+#endif
 
 /**
  * \file
@@ -83,8 +83,8 @@ crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
     return value;
 }
 
-#  ifdef __cplusplus
+#ifdef __cplusplus
 }
-#  endif
+#endif
 
 #endif // PCMK__CRM_COMMON_NVPAIR__H

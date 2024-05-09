@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
-#  define PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
+#define PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 
 #include <crm/common/action_relation_internal.h>
 #include <crm/common/actions_internal.h>

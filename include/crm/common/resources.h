@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_RESOURCES__H
-#  define PCMK__CRM_COMMON_RESOURCES__H
+#define PCMK__CRM_COMMON_RESOURCES__H
 
 #include <stdbool.h>                    // bool
 #include <sys/types.h>                  // time_t

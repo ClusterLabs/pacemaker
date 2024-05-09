@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_TAGS__H
-#  define PCMK__CRM_COMMON_TAGS__H
+#define PCMK__CRM_COMMON_TAGS__H
 
 #include <glib.h>           // GList
 

@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
-#  define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
+#define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
 #include <crm/common/resources.h>   // enum rsc_recovery_type
 

@@ -8,16 +8,16 @@
  */
 
 #ifndef PCMK__OUTPUT_INTERNAL__H
-#  define PCMK__OUTPUT_INTERNAL__H
+#define PCMK__OUTPUT_INTERNAL__H
 
-#  include <stdbool.h>
-#  include <stdint.h>
-#  include <stdio.h>
-#  include <libxml/tree.h>
-#  include <libxml/HTMLtree.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <libxml/tree.h>
+#include <libxml/HTMLtree.h>
 
-#  include <glib.h>
-#  include <crm/common/results.h>
+#include <glib.h>
+#include <crm/common/results.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,9 +29,9 @@ extern "C" {
  */
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
-#  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
+#define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
 #else
-#  define PCMK__OUTPUT_ARGS(ARGS...)
+#define PCMK__OUTPUT_ARGS(ARGS...)
 #endif
 
 typedef struct pcmk__output_s pcmk__output_t;

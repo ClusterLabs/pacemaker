@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_IPC__H
-#  define PCMK__CRM_COMMON_IPC__H
+#define PCMK__CRM_COMMON_IPC__H
 
 
 #include <sys/uio.h>

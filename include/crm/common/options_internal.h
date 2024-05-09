@@ -8,15 +8,15 @@
  */
 
 #ifndef PCMK__OPTIONS_INTERNAL__H
-#  define PCMK__OPTIONS_INTERNAL__H
+#define PCMK__OPTIONS_INTERNAL__H
 
-#  ifndef PCMK__CONFIG_H
-#    define PCMK__CONFIG_H
-#    include <config.h>   // _Noreturn
-#  endif
+#ifndef PCMK__CONFIG_H
+#define PCMK__CONFIG_H
+#include <config.h>   // _Noreturn
+#endif
 
-#  include <glib.h>     // GHashTable
-#  include <stdbool.h>  // bool
+#include <glib.h>     // GHashTable
+#include <stdbool.h>  // bool
 
 #include <crm/common/util.h>    // pcmk_parse_interval_spec()
 

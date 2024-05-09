@@ -8,22 +8,22 @@
  */
 
 #ifndef PCMK__CRM_COMMON_UTIL__H
-#  define PCMK__CRM_COMMON_UTIL__H
+#define PCMK__CRM_COMMON_UTIL__H
 
-#  include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
-#  include <stdlib.h>
-#  include <stdbool.h>
-#  include <stdint.h>       // uint32_t
-#  include <limits.h>
-#  include <signal.h>
-#  include <glib.h>
+#include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>       // uint32_t
+#include <limits.h>
+#include <signal.h>
+#include <glib.h>
 
-#  include <crm/common/acl.h>
-#  include <crm/common/actions.h>
-#  include <crm/common/agents.h>
-#  include <crm/common/results.h>
-#  include <crm/common/scores.h>
-#  include <crm/common/nvpair.h>
+#include <crm/common/acl.h>
+#include <crm/common/actions.h>
+#include <crm/common/agents.h>
+#include <crm/common/results.h>
+#include <crm/common/scores.h>
+#include <crm/common/nvpair.h>
 
 #ifdef __cplusplus
 extern "C" {

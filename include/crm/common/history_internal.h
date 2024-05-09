@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_HISTORY_INTERNAL__H
-#  define PCMK__CRM_COMMON_HISTORY_INTERNAL__H
+#define PCMK__CRM_COMMON_HISTORY_INTERNAL__H
 
 #include <stdio.h>                  // NULL
 #include <libxml/tree.h>            // xmlNode

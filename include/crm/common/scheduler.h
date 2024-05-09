@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_SCHEDULER__H
-#  define PCMK__CRM_COMMON_SCHEDULER__H
+#define PCMK__CRM_COMMON_SCHEDULER__H
 
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode

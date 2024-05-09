@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__ISO8601_INTERNAL__H
-#  define PCMK__ISO8601_INTERNAL__H
+#define PCMK__ISO8601_INTERNAL__H
 
 #include <time.h>
 #include <sys/time.h>
