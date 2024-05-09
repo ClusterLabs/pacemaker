@@ -294,7 +294,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
         NULL
     };
     const char **params;
-    int ret;
+    int rc = pcmk_rc_ok;
     xmlParserCtxtPtr parser_ctxt;
 
     /* unfortunately, the input (coming from CIB originally) was parsed with
@@ -336,10 +336,9 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
         crm_crit("Problem in parsing %s", sfile);
-        return EINVAL;
+        rc = EINVAL;
+        goto done;
     }
-    free(sfile);
-    sfile = NULL;
     xmlFreeParserCtxt(parser_ctxt);
 
     xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
@@ -380,17 +379,20 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     }
 
     if (res == NULL) {
-        ret = EINVAL;
+        rc = EINVAL;
     } else {
         int doc_txt_len;
         int temp = xsltSaveResultToString(doc_txt_ptr, &doc_txt_len, res, xslt);
         xmlFreeDoc(res);
-        if (temp == 0) {
-            ret = pcmk_rc_ok;
-        } else {
-            ret = EINVAL;
+        if (temp != 0) {
+            rc = EINVAL;
         }
     }
-    xsltFreeStylesheet(xslt);
-    return ret;
+
+done:
+    if (xslt != NULL) {
+        xsltFreeStylesheet(xslt);
+    }
+    free(sfile);
+    return rc;
 }
