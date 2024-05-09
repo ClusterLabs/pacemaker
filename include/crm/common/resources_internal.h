@@ -219,6 +219,7 @@ struct pcmk__resource_private {
     void *variant_opaque;           // Variant-specific data
     char *history_id;               // Resource instance ID in history
     int priority;                   // Priority relative other resources
+    int promotion_priority;         // Promotion priority on assigned node
     int stickiness;                 // Extra preference for current node
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
