@@ -940,12 +940,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
-            pcmk_parse_interval_spec(value, &((*rsc)->remote_reconnect_ms));
+            pcmk_parse_interval_spec(value,
+                                     &(rsc_private->remote_reconnect_ms));
 
             /* We want to override any default failure_timeout in use when remote
              * PCMK_REMOTE_RA_RECONNECT_INTERVAL is in use.
              */
-            rsc_private->failure_expiration_ms = (*rsc)->remote_reconnect_ms;
+            rsc_private->failure_expiration_ms =
+                rsc_private->remote_reconnect_ms;
         }
     }
 

@@ -223,6 +223,7 @@ struct pcmk__resource_private {
     int stickiness;                 // Extra preference for current node
     guint failure_expiration_ms;    // Failures expire after this much time
     int ban_after_failures;         // Ban from node after this many failures
+    guint remote_reconnect_ms;      // Retry interval for remote connections
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
     enum pcmk__restart restart_type;    // Deprecated

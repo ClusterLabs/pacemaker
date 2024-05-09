@@ -121,7 +121,7 @@ get_remote_node_state(const pcmk_node_t *node)
         /* Connection resource is failed */
 
         if ((remote_rsc->next_role == pcmk_role_stopped)
-            && remote_rsc->remote_reconnect_ms
+            && (remote_rsc->private->remote_reconnect_ms > 0U)
             && node->details->remote_was_fenced
             && !pe__shutdown_requested(node)) {
 

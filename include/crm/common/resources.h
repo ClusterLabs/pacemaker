@@ -203,7 +203,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    guint remote_reconnect_ms;      // Retry interval for remote connections
     char *pending_task;             // Pending action in history, if any
 
     // NOTE: sbd (as of at least 1.5.2) uses this

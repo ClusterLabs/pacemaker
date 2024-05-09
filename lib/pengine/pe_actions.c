@@ -1043,7 +1043,7 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
             break;
 
         case pcmk_on_fail_reset_remote:
-            if (rsc->remote_reconnect_ms != 0) {
+            if (rsc->private->remote_reconnect_ms != 0U) {
                 role = pcmk_role_stopped;
             }
             break;

@@ -2443,7 +2443,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
-            if (rsc->remote_reconnect_ms) {
+            if (rsc->private->remote_reconnect_ms > 0U) {
                 pe__set_next_role(rsc, pcmk_role_stopped, "remote reset");
             }
             break;
@@ -4171,7 +4171,7 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
      * reconnect interval, so in that case, we skip clearing failures
      * if the remote node hasn't been fenced.
      */
-    if (rsc->remote_reconnect_ms
+    if ((rsc->private->remote_reconnect_ms > 0U)
         && pcmk_is_set(rsc->private->scheduler->flags,
                        pcmk_sched_fencing_enabled)
         && (interval_ms != 0)
@@ -4292,7 +4292,7 @@ check_operation_expiry(struct action_history *history)
             }
 
         } else if (is_last_failure
-                   && (history->rsc->remote_reconnect_ms != 0)) {
+                   && (history->rsc->private->remote_reconnect_ms > 0U)) {
             /* Clear any expired last failure when reconnect interval is set,
              * even if there is no fail count.
              */
@@ -4314,7 +4314,7 @@ check_operation_expiry(struct action_history *history)
                                        clear_reason, scheduler);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)
-            && (history->rsc->remote_reconnect_ms != 0)) {
+            && (history->rsc->private->remote_reconnect_ms > 0)) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
              * completes.
@@ -4463,7 +4463,7 @@ update_resource_state(struct action_history *history, int exit_status,
             break;
 
         case pcmk_on_fail_reset_remote:
-            if (history->rsc->remote_reconnect_ms == 0) {
+            if (history->rsc->private->remote_reconnect_ms == 0U) {
                 /* With no reconnect interval, the connection is allowed to
                  * start again after the remote node is fenced and
                  * completely stopped. (With a reconnect interval, we wait
