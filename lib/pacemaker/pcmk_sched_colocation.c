@@ -1606,7 +1606,7 @@ add_node_scores_matching_attr(GHashTable *nodes,
              * unless stickiness uses a rule to vary by node, and that seems
              * acceptable to ignore.)
              */
-            if ((colocation->primary->stickiness >= -score)
+            if ((colocation->primary->private->stickiness >= -score)
                 || !pcmk__colocation_has_influence(colocation, NULL)
                 || !allowed_on_one(colocation->dependent)) {
                 crm_trace("%s: Filtering %d + %f * %d "

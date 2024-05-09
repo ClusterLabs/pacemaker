@@ -197,7 +197,8 @@ apply_stickiness(gpointer data, gpointer user_data)
      * active on a single node.
      */
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
-        || (rsc->stickiness < 1) || !pcmk__list_of_1(rsc->running_on)) {
+        || (rsc->private->stickiness < 1)
+        || !pcmk__list_of_1(rsc->running_on)) {
         return;
     }
 
@@ -220,8 +221,8 @@ apply_stickiness(gpointer data, gpointer user_data)
     }
 
     pcmk__rsc_debug(rsc, "Resource %s has %d stickiness on %s",
-                    rsc->id, rsc->stickiness, pcmk__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness",
+                    rsc->id, rsc->private->stickiness, pcmk__node_name(node));
+    resource_location(rsc, node, rsc->private->stickiness, "stickiness",
                       rsc->private->scheduler);
 }
 

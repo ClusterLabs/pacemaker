@@ -203,7 +203,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    int stickiness;                 // Extra preference for current node
     int sort_index;                 // Promotion score on assigned node
     int failure_timeout;            // Failure timeout
     int migration_threshold;        // Migration threshold

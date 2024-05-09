@@ -750,7 +750,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
-    (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
     (*rsc)->failure_timeout = 0;
 
@@ -887,7 +886,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
         } else {
-            (*rsc)->stickiness = char2score(value);
+            rsc_private->stickiness = char2score(value);
         }
     }
 
