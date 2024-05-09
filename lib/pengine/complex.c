@@ -750,7 +750,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
-    (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
+    rsc_private->ban_after_failures = PCMK_SCORE_INFINITY;
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
     rsc_private->priority = char2score(value);
@@ -899,8 +899,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
         } else {
-            (*rsc)->migration_threshold = char2score(value);
-            if ((*rsc)->migration_threshold < 0) {
+            rsc_private->ban_after_failures = char2score(value);
+            if (rsc_private->ban_after_failures < 0) {
                 /* @COMPAT We use 1 here to preserve previous behavior, but this
                  * should probably use the default (INFINITY) or 0 (to disable)
                  * instead.
@@ -908,7 +908,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                 pcmk__warn_once(pcmk__wo_neg_threshold,
                                 PCMK_META_MIGRATION_THRESHOLD
                                 " must be non-negative, using 1 instead");
-                (*rsc)->migration_threshold = 1;
+                rsc_private->ban_after_failures = 1;
             }
         }
     }
