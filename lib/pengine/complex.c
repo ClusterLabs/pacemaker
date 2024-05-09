@@ -751,7 +751,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->next_role = pcmk_role_unknown;
 
     (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
-    (*rsc)->failure_timeout = 0;
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
     rsc_private->priority = char2score(value);
@@ -925,11 +924,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
     if (value != NULL) {
-        guint interval_ms = 0U;
-
-        // Stored as seconds
-        pcmk_parse_interval_spec(value, &interval_ms);
-        (*rsc)->failure_timeout = (int) (interval_ms / 1000);
+        pcmk_parse_interval_spec(value, &(rsc_private->failure_expiration_ms));
     }
 
     if (remote_node) {
@@ -950,7 +945,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
             /* We want to override any default failure_timeout in use when remote
              * PCMK_REMOTE_RA_RECONNECT_INTERVAL is in use.
              */
-            (*rsc)->failure_timeout = (*rsc)->remote_reconnect_ms / 1000;
+            rsc_private->failure_expiration_ms = (*rsc)->remote_reconnect_ms;
         }
     }
 

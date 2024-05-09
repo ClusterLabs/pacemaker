@@ -4217,6 +4217,8 @@ check_operation_expiry(struct action_history *history)
     time_t last_run = 0;
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
+    const guint expiration_sec =
+        history->rsc->private->failure_expiration_ms / 1000;
     pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
 
     if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {
@@ -4227,7 +4229,7 @@ check_operation_expiry(struct action_history *history)
         return false; // "Not installed" must always be cleared manually
     }
 
-    if ((history->rsc->failure_timeout > 0)
+    if ((expiration_sec > 0)
         && (crm_element_value_epoch(history->xml, PCMK_XA_LAST_RC_CHANGE,
                                     &last_run) == 0)) {
 
@@ -4239,7 +4241,7 @@ check_operation_expiry(struct action_history *history)
         time_t last_failure = 0;
 
         // Is this particular operation history older than the failure timeout?
-        if ((now >= (last_run + history->rsc->failure_timeout))
+        if ((now >= (last_run + expiration_sec))
             && !should_ignore_failure_timeout(history->rsc, history->task,
                                               history->interval_ms,
                                               is_last_failure)) {
@@ -4253,12 +4255,13 @@ check_operation_expiry(struct action_history *history)
                                                 history->xml);
 
         // Update scheduler recheck time according to *last* failure
-        crm_trace("%s@%lld is %sexpired @%lld with unexpired_failures=%d timeout=%ds"
-                  " last-failure@%lld",
+        crm_trace("%s@%lld is %sexpired @%lld with unexpired_failures=%d "
+                  "expiration=%s last-failure@%lld",
                   history->id, (long long) last_run, (expired? "" : "not "),
                   (long long) now, unexpired_fail_count,
-                  history->rsc->failure_timeout, (long long) last_failure);
-        last_failure += history->rsc->failure_timeout + 1;
+                  pcmk__readable_interval(expiration_sec * 1000),
+                  (long long) last_failure);
+        last_failure += expiration_sec + 1;
         if (unexpired_fail_count && (now < last_failure)) {
             pe__update_recheck_time(last_failure, scheduler,
                                     "fail count expiration");

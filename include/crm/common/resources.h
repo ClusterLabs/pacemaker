@@ -203,7 +203,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    int failure_timeout;            // Failure timeout
     int migration_threshold;        // Migration threshold
     guint remote_reconnect_ms;      // Retry interval for remote connections
     char *pending_task;             // Pending action in history, if any
