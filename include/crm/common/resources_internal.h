@@ -45,6 +45,16 @@ extern "C" {
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
 
+//! Resource variants supported by Pacemaker
+enum pcmk__rsc_variant {
+    // Order matters: some code compares greater or lesser than
+    pcmk__rsc_variant_unknown    = -1,  //!< Unknown resource variant
+    pcmk__rsc_variant_primitive  = 0,   //!< Primitive resource
+    pcmk__rsc_variant_group      = 1,   //!< Group resource
+    pcmk__rsc_variant_clone      = 2,   //!< Clone resource
+    pcmk__rsc_variant_bundle     = 3,   //!< Bundle resource
+};
+
 //! Resource assignment methods (implementation defined by libpacemaker)
 typedef struct pcmk__assignment_methods pcmk__assignment_methods_t;
 
@@ -190,7 +200,7 @@ typedef struct {
 
 // Implementation of pcmk__resource_private_t
 struct pcmk__resource_private {
-    enum pe_obj_types variant;      // Resource variant
+    enum pcmk__rsc_variant variant; // Resource variant
     char *history_id;               // Resource instance ID in history
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource

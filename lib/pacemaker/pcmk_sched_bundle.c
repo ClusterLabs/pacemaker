@@ -549,7 +549,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     /* If the constraint dependent is a clone or bundle, "dependent" here is one
      * of its instances. Look for a compatible instance of this bundle.
      */
-    if (colocation->dependent->private->variant > pcmk_rsc_variant_group) {
+    if (colocation->dependent->private->variant > pcmk__rsc_variant_group) {
         const pcmk_resource_t *primary_container = NULL;
 
         primary_container = compatible_container(dependent, primary);

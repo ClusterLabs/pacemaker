@@ -10,10 +10,10 @@
 #ifndef PCMK__CRM_COMMON_PRIMITIVE_INTERNAL__H
 #define PCMK__CRM_COMMON_PRIMITIVE_INTERNAL__H
 
-#include <stdbool.h>                        // bool
+#include <stdio.h>                          // NULL
+#include <stdbool.h>                        // bool, false
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
-#include <crm/common/resources.h>           // pcmk_rsc_variant_primitive
-#include <crm/common/resources_internal.h>  // struct pcmk__resource_private
+#include <crm/common/resources_internal.h>  // pcmk__rsc_variant_primitive etc.
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +33,7 @@ pcmk__is_primitive(const pcmk_resource_t *rsc)
     if (rsc == NULL) {
         return false;
     }
-    return rsc->private->variant == pcmk_rsc_variant_primitive;
+    return rsc->private->variant == pcmk__rsc_variant_primitive;
 }
 
 #ifdef __cplusplus

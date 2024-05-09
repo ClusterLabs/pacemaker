@@ -28,25 +28,8 @@ extern "C" {
  * \ingroup core
  */
 
-// Resource variants supported by Pacemaker
 //!@{
 //! \deprecated Do not use
-enum pe_obj_types {
-    // Order matters: some code compares greater or lesser than
-    pcmk_rsc_variant_unknown    = -1,   // Unknown resource variant
-    pcmk_rsc_variant_primitive  = 0,    // Primitive resource
-    pcmk_rsc_variant_group      = 1,    // Group resource
-    pcmk_rsc_variant_clone      = 2,    // Clone resource
-    pcmk_rsc_variant_bundle     = 3,    // Bundle resource
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_unknown      = pcmk_rsc_variant_unknown,
-    pe_native       = pcmk_rsc_variant_primitive,
-    pe_group        = pcmk_rsc_variant_group,
-    pe_clone        = pcmk_rsc_variant_clone,
-    pe_container    = pcmk_rsc_variant_bundle,
-#endif
-};
 
 // What resource needs before it can be recovered from a failed node
 enum rsc_start_requirement {

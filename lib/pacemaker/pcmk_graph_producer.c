@@ -348,7 +348,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
     } else if ((rsc != NULL)
-               && (rsc->private->variant <= pcmk_rsc_variant_primitive)) {
+               && (rsc->private->variant <= pcmk__rsc_variant_primitive)) {
         GHashTable *params = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);

@@ -102,7 +102,7 @@ action_uuid_for_ordering(const char *first_uuid,
 
     // Only non-notify actions for collective resources need remapping
     if ((strstr(first_uuid, PCMK_ACTION_NOTIFY) != NULL)
-        || (first_rsc->private->variant < pcmk_rsc_variant_group)) {
+        || (first_rsc->private->variant < pcmk__rsc_variant_group)) {
         goto done;
     }
 
@@ -185,7 +185,7 @@ action_for_ordering(pcmk_action_t *action)
         return result;
     }
 
-    if ((rsc->private->variant >= pcmk_rsc_variant_group)
+    if ((rsc->private->variant >= pcmk__rsc_variant_group)
         && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
@@ -1556,7 +1556,7 @@ schedule_reload(gpointer data, gpointer user_data)
     pcmk_action_t *reload = NULL;
 
     // For collective resources, just call recursively for children
-    if (rsc->private->variant > pcmk_rsc_variant_primitive) {
+    if (rsc->private->variant > pcmk__rsc_variant_primitive) {
         g_list_foreach(rsc->children, schedule_reload, user_data);
         return;
     }

@@ -485,7 +485,7 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
      * starting unless the probe is runnable so that we don't risk starting too
      * many instances before we know the state on all nodes.
      */
-    if ((after->action->rsc->private->variant <= pcmk_rsc_variant_group)
+    if ((after->action->rsc->private->variant <= pcmk__rsc_variant_group)
         || pcmk_is_set(probe->flags, pcmk_action_runnable)
         // The order type is already enforced for its parent.
         || pcmk_is_set(after->type, pcmk__ar_unrunnable_first_blocks)
@@ -595,7 +595,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      * to add orderings only for the relevant instance.
      */
     if ((after->rsc != NULL)
-        && (after->rsc->private->variant > pcmk_rsc_variant_group)) {
+        && (after->rsc->private->variant > pcmk__rsc_variant_group)) {
         const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
                                                        PCMK_META_INTERLEAVE);
 
@@ -634,14 +634,14 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
              * its children.
              */
             if ((after->rsc == NULL)
-                || (after->rsc->private->variant < pcmk_rsc_variant_group)
+                || (after->rsc->private->variant < pcmk__rsc_variant_group)
                 || (probe->rsc->private->parent == after->rsc)
                 || (after_wrapper->action->rsc == NULL)) {
                 continue;
             }
             chained_rsc = after_wrapper->action->rsc;
 
-            if ((chained_rsc->private->variant > pcmk_rsc_variant_group)
+            if ((chained_rsc->private->variant > pcmk__rsc_variant_group)
                 || (after->rsc != chained_rsc->private->parent)) {
                 continue;
             }
@@ -649,7 +649,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
             /* Proceed to the children of a group or a non-interleaved clone.
              * For an interleaved clone, proceed only to the relevant child.
              */
-            if ((after->rsc->private->variant > pcmk_rsc_variant_group)
+            if ((after->rsc->private->variant > pcmk__rsc_variant_group)
                 && interleave
                 && ((compatible_rsc == NULL)
                     || (compatible_rsc != chained_rsc))) {

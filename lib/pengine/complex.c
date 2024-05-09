@@ -78,28 +78,28 @@ static pcmk__rsc_methods_t resource_class_functions[] = {
     }
 };
 
-static enum pe_obj_types
+static enum pcmk__rsc_variant
 get_resource_type(const char *name)
 {
     if (pcmk__str_eq(name, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
-        return pcmk_rsc_variant_primitive;
+        return pcmk__rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, PCMK_XE_GROUP, pcmk__str_casei)) {
-        return pcmk_rsc_variant_group;
+        return pcmk__rsc_variant_group;
 
     } else if (pcmk__str_eq(name, PCMK_XE_CLONE, pcmk__str_casei)) {
-        return pcmk_rsc_variant_clone;
+        return pcmk__rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
                             pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
-        return pcmk_rsc_variant_clone;
+        return pcmk__rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
-        return pcmk_rsc_variant_bundle;
+        return pcmk__rsc_variant_bundle;
     }
 
-    return pcmk_rsc_variant_unknown;
+    return pcmk__rsc_variant_unknown;
 }
 
 /*!
@@ -709,7 +709,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     rsc_private->variant = get_resource_type((const char *)
                                              rsc_private->xml->name);
-    if (rsc_private->variant == pcmk_rsc_variant_unknown) {
+    if (rsc_private->variant == pcmk__rsc_variant_unknown) {
         pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
                          id, rsc_private->xml->name);
         common_free(*rsc);
