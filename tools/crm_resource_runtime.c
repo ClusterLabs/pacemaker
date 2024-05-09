@@ -1237,19 +1237,16 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
  * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing memory allocated for
  *       scheduler->now.
- * \todo This follows the example of other callers of
- *       pcmk_update_configured_schema() and returns ENOKEY ("Required key not
- *       available") if that fails, but perhaps pcmk_rc_schema_validation would
- *       be better in that case.
  */
 int
 update_scheduler_input(pcmk_scheduler_t *scheduler, xmlNode **xml)
 {
-    if (!pcmk_update_configured_schema(xml, false)) {
-        return ENOKEY;
+    int rc = pcmk_update_configured_schema(xml, false);
+
+    if (rc == pcmk_rc_ok) {
+        scheduler->input = *xml;
+        scheduler->now = crm_time_new(NULL);
     }
-    scheduler->input = *xml;
-    scheduler->now = crm_time_new(NULL);
     return pcmk_rc_ok;
 }
 

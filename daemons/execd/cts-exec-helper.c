@@ -461,9 +461,9 @@ generate_params(void)
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-    if (!pcmk_update_configured_schema(&cib_xml_copy, false)) {
-        crm_err("Could not update CIB");
-        return pcmk_rc_cib_corrupt;
+    rc = pcmk_update_configured_schema(&cib_xml_copy, false);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     // Calculate cluster status

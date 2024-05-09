@@ -1243,12 +1243,12 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
  * \param[in]     to_logs  If false, certain validation errors will be
  *                         sent to stderr rather than logged
  *
- * \return true if XML was successfully updated, otherwise false
+ * \return Standard Pacemaker return code
  */
-bool
+int
 pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
 {
-    bool rc = true;
+    int rc = pcmk_rc_ok;
     char *original_schema_name = NULL;
 
     // @COMPAT Not specifying a schema name is deprecated since 2.1.8
@@ -1257,6 +1257,8 @@ pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
     int orig_version = -1;
     pcmk__schema_t *x_0_schema = pcmk__find_x_0_schema()->data;
     GList *entry = NULL;
+
+    CRM_CHECK(xml != NULL, return EINVAL);
 
     original_schema_name = crm_element_value_copy(*xml, PCMK_XA_VALIDATE_WITH);
     pcmk__warn_if_schema_deprecated(original_schema_name);
@@ -1326,7 +1328,7 @@ pcmk_update_configured_schema(xmlNode **xml, bool to_logs)
 
             free_xml(converted);
             converted = NULL;
-            rc = false;
+            rc = pcmk_rc_transform_failed;
 
         } else {
             // Updated configuration schema is acceptable
@@ -1718,7 +1720,7 @@ validate_xml_verbose(const xmlNode *xml_blob)
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
-    bool rc = pcmk_update_configured_schema(xml, to_logs);
+    int rc = pcmk_update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
         const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
@@ -1732,7 +1734,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             *best_version = (schema == NULL)? -1 : schema->schema_index;
         }
     }
-    return rc? TRUE: FALSE;
+    return (rc == pcmk_rc_ok)? TRUE: FALSE;
 }
 
 // LCOV_EXCL_STOP

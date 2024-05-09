@@ -23,7 +23,7 @@ extern "C" {
  * \ingroup core
  */
 
-bool pcmk_update_configured_schema(xmlNode **xml, bool to_logs);
+int pcmk_update_configured_schema(xmlNode **xml, bool to_logs);
 
 #ifdef __cplusplus
 }
