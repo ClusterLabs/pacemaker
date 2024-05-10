@@ -442,18 +442,22 @@ main(int argc, char **argv, char **envp)
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-#ifdef PCMK__COMPILE_REMOTE
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "lp");
-#else
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "l");
-#endif  // PCMK__COMPILE_REMOTE
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+    gchar **processed_args = NULL;
+    GOptionContext *context = NULL;
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
     remoted_spawn_pidone(argc, argv, envp);
 #endif
+
+    args = pcmk__new_common_args(SUMMARY);
+#ifdef PCMK__COMPILE_REMOTE
+    processed_args = pcmk__cmdline_preproc(argv, "lp");
+#else
+    processed_args = pcmk__cmdline_preproc(argv, "l");
+#endif  // PCMK__COMPILE_REMOTE
+    context = build_arg_context(args, &output_group);
 
     crm_log_preinit(EXECD_NAME, argc, argv);
 
