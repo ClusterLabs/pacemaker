@@ -25,7 +25,7 @@ static pid_t main_pid = 0;
 static void
 sigdone(void)
 {
-    exit(CRM_EX_OK);
+    crm_exit(CRM_EX_OK);
 }
 
 static void
@@ -44,9 +44,9 @@ sigreap(void)
         if (pid == main_pid) {
             /* Exit when pacemaker-remote exits and use the same return code */
             if (WIFEXITED(status)) {
-                exit(WEXITSTATUS(status));
+                crm_exit(WEXITSTATUS(status));
             }
-            exit(CRM_EX_ERROR);
+            crm_exit(CRM_EX_ERROR);
         }
     } while (pid > 0);
 }

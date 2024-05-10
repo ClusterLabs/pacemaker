@@ -112,10 +112,10 @@ panic_local(void)
 
     if(ppid > 1) {
         /* child daemon */
-        exit(CRM_EX_PANIC);
+        crm_exit(CRM_EX_PANIC);
     } else {
         /* pacemakerd or orphan child */
-        exit(CRM_EX_FATAL);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -141,10 +141,10 @@ panic_sbd(void)
 
     if(ppid > 1) {
         /* child daemon */
-        exit(CRM_EX_PANIC);
+        crm_exit(CRM_EX_PANIC);
     } else {
         /* pacemakerd or orphan child */
-        exit(CRM_EX_FATAL);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
