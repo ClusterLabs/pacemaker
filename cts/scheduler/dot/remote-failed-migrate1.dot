@@ -1,0 +1,5 @@
+ digraph "g" {
+"fastvm-fedora39-23_stop_0 fastvm-fedora39-22" [ style=bold color="green" fontcolor="black"]
+"fastvm-fedora39-23_stop_0 fastvm-fedora39-24" [ style=bold color="green" fontcolor="black"]
+"stonith 'reboot' fastvm-fedora39-23" [ style=bold color="green" fontcolor="black"]
+}

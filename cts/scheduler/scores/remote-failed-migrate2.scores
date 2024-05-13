@@ -1,0 +1,10 @@
+
+pcmk__primitive_assign: dummy allocation score on fastvm-fedora39-22: 0
+pcmk__primitive_assign: dummy allocation score on fastvm-fedora39-23: INFINITY
+pcmk__primitive_assign: dummy allocation score on fastvm-fedora39-24: 0
+pcmk__primitive_assign: fastvm-fedora39-23 allocation score on fastvm-fedora39-22: -INFINITY
+pcmk__primitive_assign: fastvm-fedora39-23 allocation score on fastvm-fedora39-23: -INFINITY
+pcmk__primitive_assign: fastvm-fedora39-23 allocation score on fastvm-fedora39-24: -INFINITY
+pcmk__primitive_assign: xvm allocation score on fastvm-fedora39-22: 1
+pcmk__primitive_assign: xvm allocation score on fastvm-fedora39-23: -INFINITY
+pcmk__primitive_assign: xvm allocation score on fastvm-fedora39-24: 0

@@ -1,0 +1,136 @@
+<cib crm_feature_set="3.19.5" validate-with="pacemaker-3.10" epoch="140" num_updates="12" admin_epoch="0" cib-last-written="Wed May 15 03:28:18 2024" update-origin="fastvm-fedora39-22" update-client="root" update-user="root" have-quorum="true" dc-uuid="1" execution-date="1715768909">
+  <configuration>
+    <!-- The essential elements of this test are:
+         * A remote connection resource failed to migrate. In particular, the
+           migrate_to action succeeded and the migrate_from action failed.
+         * The reconnect_interval parameter is set to a nonzero value.
+         * The multiple-active and on-fail meta-attributes are set to their
+           default values.
+         * A resource is thought to be active on the remote node.
+
+         In this situation, the remote connection resource should try to recover
+         on the migration target node (given that nothing else affecting
+         preferences has changed since the migration began). The remote node
+         should not be fenced.
+      -->
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="3s"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.7-166.e714f22608.git.fc39-e714f22608"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="testcluster"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-inte" name="cluster-recheck-interval" value="2min"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1715623767"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="fastvm-fedora39-22"/>
+      <node id="2" uname="fastvm-fedora39-24">
+        <instance_attributes id="nodes-2"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="fastvm-fedora39-23" class="ocf" type="remote" provider="pacemaker">
+        <instance_attributes id="fastvm-fedora39-23-instance_attributes">
+          <nvpair id="fastvm-fedora39-23-instance_attributes-server" name="server" value="fastvm-fedora39-23"/>
+          <nvpair id="fastvm-fedora39-23-instance_attributes-reconnect_interval" name="reconnect_interval" value="30s"/>
+        </instance_attributes>
+        <operations>
+          <op id="fastvm-fedora39-23-migrate_from-interval-0s" name="migrate_from" interval="0s" timeout="10s"/>
+          <op name="migrate_to" interval="0s" timeout="60s" id="fastvm-fedora39-23-migrate_to-interval-0s"/>
+          <op name="monitor" interval="60s" timeout="30s" id="fastvm-fedora39-23-monitor-interval-60s"/>
+          <op name="reload" interval="0s" timeout="60s" id="fastvm-fedora39-23-reload-interval-0s"/>
+          <op name="reload-agent" interval="0s" timeout="60s" id="fastvm-fedora39-23-reload-agent-interval-0s"/>
+          <op name="start" interval="0s" timeout="60s" id="fastvm-fedora39-23-start-interval-0s"/>
+          <op name="stop" interval="0s" timeout="60s" id="fastvm-fedora39-23-stop-interval-0s"/>
+        </operations>
+      </primitive>
+      <primitive id="xvm" class="stonith" type="fence_xvm">
+        <instance_attributes id="xvm-instance_attributes">
+          <nvpair id="xvm-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="fastvm-fedora39-23"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="60s" id="xvm-monitor-interval-60s"/>
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="Dummy" provider="pacemaker">
+        <operations>
+          <op name="migrate_from" interval="0s" timeout="20s" id="dummy-migrate_from-interval-0s"/>
+          <op name="migrate_to" interval="0s" timeout="20s" id="dummy-migrate_to-interval-0s"/>
+          <op name="monitor" interval="10s" timeout="20s" id="dummy-monitor-interval-10s"/>
+          <op name="reload" interval="0s" timeout="20s" id="dummy-reload-interval-0s"/>
+          <op name="reload-agent" interval="0s" timeout="20s" id="dummy-reload-agent-interval-0s"/>
+          <op name="start" interval="0s" timeout="20s" id="dummy-start-interval-0s"/>
+          <op name="stop" interval="0s" timeout="20s" id="dummy-stop-interval-0s"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="location-fastvm-fedora39-23-fastvm-fedora39-24-INFINITY" rsc="fastvm-fedora39-23" node="fastvm-fedora39-24" score="INFINITY"/>
+      <rsc_location id="location-dummy-fastvm-fedora39-23-INFINITY" rsc="dummy" node="fastvm-fedora39-23" score="INFINITY"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="build-resource-defaults">
+        <nvpair id="build-resource-stickiness" name="resource-stickiness" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="fastvm-fedora39-22" in_ccm="1715768857" crmd="1715768857" crm-debug-origin="controld_update_resource_history" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.19.5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="fastvm-fedora39-23" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="fastvm-fedora39-23_migrate_from_0" operation_key="fastvm-fedora39-23_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="8:3:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;8:3:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-22" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1715768887" exec-time="0" queue-time="0" migrate_source="fastvm-fedora39-24" migrate_target="fastvm-fedora39-22" op-digest="ec1fa444f597f0d3d350300816d77dc3" op-force-restart="  port server  " op-restart-digest="bc484f35ab6d20ff399cf73f8e27a356"/>
+            <lrm_rsc_op id="fastvm-fedora39-23_monitor_60000" operation_key="fastvm-fedora39-23_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="6:3:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;6:3:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-22" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1715768888" exec-time="0" queue-time="0" op-digest="64aedabc250bcf995fc49e34bca82d9c"/>
+            <lrm_rsc_op id="fastvm-fedora39-23_migrate_to_0" operation_key="fastvm-fedora39-23_migrate_to_0" operation="migrate_to" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.19.5" transition-key="7:4:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;7:4:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-22" call-id="4" rc-code="0" op-status="0" interval="0" last-rc-change="1715768899" exec-time="0" queue-time="0" migrate_source="fastvm-fedora39-22" migrate_target="fastvm-fedora39-24" op-digest="ec1fa444f597f0d3d350300816d77dc3" op-force-restart="  port server  " op-restart-digest="bc484f35ab6d20ff399cf73f8e27a356"/>
+          </lrm_resource>
+          <lrm_resource id="dummy" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="3:0:7:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:7;3:0:7:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-22" call-id="10" rc-code="7" op-status="0" interval="0" last-rc-change="1715768862" exec-time="43" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params="  passwd  " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="xvm" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="xvm_last_0" operation_key="xvm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="7:1:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;7:1:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-22" call-id="11" rc-code="0" op-status="0" interval="0" last-rc-change="1715768877" exec-time="48" queue-time="0" op-digest="9719d58755ed3f9b72db1819dbd5354a"/>
+            <lrm_rsc_op id="xvm_monitor_60000" operation_key="xvm_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="8:1:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;8:1:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-22" call-id="12" rc-code="0" op-status="0" interval="60000" last-rc-change="1715768877" exec-time="29" queue-time="0" op-digest="ff8c79afe21492fabf18d19b8f4a6c22"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="fastvm-fedora39-24" crmd="1715768874" crm-debug-origin="controld_update_resource_history" in_ccm="1715768874" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.19.5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="fastvm-fedora39-23" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="fastvm-fedora39-23_last_0" operation_key="fastvm-fedora39-23_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="4:3:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;4:3:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-24" call-id="5" rc-code="0" op-status="0" interval="0" last-rc-change="1715768888" exec-time="0" queue-time="0" op-digest="ec1fa444f597f0d3d350300816d77dc3"/>
+            <lrm_rsc_op id="fastvm-fedora39-23_migrate_from_0" operation_key="fastvm-fedora39-23_migrate_from_0" operation="migrate_from" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.19.5" transition-key="8:4:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="2:1;8:4:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-24" call-id="6" rc-code="1" op-status="2" interval="0" last-rc-change="1715768899" exec-time="0" queue-time="0" migrate_source="fastvm-fedora39-22" migrate_target="fastvm-fedora39-24" op-digest="ec1fa444f597f0d3d350300816d77dc3" op-force-restart="  port server  " op-restart-digest="bc484f35ab6d20ff399cf73f8e27a356"/>
+          </lrm_resource>
+          <lrm_resource id="dummy" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="4:1:7:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:7;4:1:7:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-24" call-id="10" rc-code="7" op-status="0" interval="0" last-rc-change="1715768877" exec-time="52" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params="  passwd  " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="xvm" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="xvm_last_0" operation_key="xvm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.19.5" transition-key="3:1:7:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:7;3:1:7:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-24" call-id="6" rc-code="7" op-status="0" interval="0" last-rc-change="1715768876" exec-time="32" queue-time="2" op-digest="9719d58755ed3f9b72db1819dbd5354a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="fastvm-fedora39-23" uname="fastvm-fedora39-23" in_ccm="1715768878" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="fastvm-fedora39-23">
+        <lrm_resources>
+          <lrm_resource id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.19.5" transition-key="8:2:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;8:2:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-24" call-id="11" rc-code="0" op-status="0" interval="0" last-rc-change="1715768879" exec-time="35" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params="  passwd  " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy_monitor_10000" operation_key="dummy_monitor_10000" operation="monitor" crm-debug-origin="controld_update_resource_history" crm_feature_set="3.19.5" transition-key="9:2:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" transition-magic="0:0;9:2:0:e641edd2-ae05-49e5-a6d9-a27c1eb0fb8a" exit-reason="" on_node="fastvm-fedora39-24" call-id="12" rc-code="0" op-status="0" interval="10000" last-rc-change="1715768879" exec-time="60" queue-time="2" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" op-secure-params="  passwd  " op-secure-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
