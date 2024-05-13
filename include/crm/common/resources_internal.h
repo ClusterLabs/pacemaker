@@ -62,6 +62,12 @@ enum pcmk__multiply_active {
     pcmk__multiply_active_unexpected,   //!< Stop unexpected instances
 };
 
+//! \deprecated
+enum pcmk__restart {
+    pcmk__restart_restart,
+    pcmk__restart_ignore,
+};
+
 //! Resource assignment methods (implementation defined by libpacemaker)
 typedef struct pcmk__assignment_methods pcmk__assignment_methods_t;
 
@@ -212,7 +218,7 @@ struct pcmk__resource_private {
     char *history_id;               // Resource instance ID in history
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
-    enum pe_restart restart_type;   // Deprecated
+    enum pcmk__restart restart_type;    // Deprecated
 
     // Resource configuration (possibly expanded from template)
     xmlNode *xml;

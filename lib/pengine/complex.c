@@ -830,7 +830,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     // @COMPAT Deprecated meta-attribute
     value = g_hash_table_lookup((*rsc)->meta, PCMK__META_RESTART_TYPE);
     if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
-        rsc_private->restart_type = pe_restart_restart;
+        rsc_private->restart_type = pcmk__restart_restart;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
                         (*rsc)->id);
         pcmk__warn_once(pcmk__wo_restart_type,
@@ -838,7 +838,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         "and will be removed in a future release");
 
     } else {
-        rsc_private->restart_type = pe_restart_ignore;
+        rsc_private->restart_type = pcmk__restart_ignore;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: ignore",
                         (*rsc)->id);
     }

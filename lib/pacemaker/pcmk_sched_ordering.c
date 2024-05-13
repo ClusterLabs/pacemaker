@@ -387,14 +387,14 @@ clone_min_ordering(const char *id,
  * \param[in,out] flags  Ordering flag set to update
  *
  * \compat The \c PCMK__META_RESTART_TYPE resource meta-attribute is deprecated.
- *         Eventually, it will be removed, and \c pe_restart_ignore will be the
- *         only behavior, at which time this can just be removed entirely.
+ *         Eventually, it will be removed, and \c pcmk__restart_ignore will be
+ *         the only behavior, at which time this can just be removed entirely.
  */
-#define handle_restart_type(rsc, kind, flag, flags) do {                \
-        if (((kind) == pe_order_kind_optional)                          \
-            && ((rsc)->private->restart_type == pe_restart_restart)) {  \
-            pcmk__set_relation_flags((flags), (flag));                  \
-        }                                                               \
+#define handle_restart_type(rsc, kind, flag, flags) do {                    \
+        if (((kind) == pe_order_kind_optional)                              \
+            && ((rsc)->private->restart_type == pcmk__restart_restart)) {   \
+            pcmk__set_relation_flags((flags), (flag));                      \
+        }                                                                   \
     } while (0)
 
 /*!

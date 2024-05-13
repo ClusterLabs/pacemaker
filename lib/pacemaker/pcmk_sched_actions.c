@@ -759,14 +759,14 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
 
 /*!
  * \internal
- * \brief Set action bits appropriately when pe_restart_order is used
+ * \brief Set action bits appropriately when pcmk__ar_intermediate_stop is used
  *
- * \param[in,out] first   'First' action in an ordering with pe_restart_order
- * \param[in,out] then    'Then' action in an ordering with pe_restart_order
+ * \param[in,out] first   'First' action in ordering
+ * \param[in,out] then    'Then' action in ordering
  * \param[in]     filter  What action flags to care about
  *
- * \note pe_restart_order is set for "stop resource before starting it" and
- *       "stop later group member before stopping earlier group member"
+ * \note pcmk__ar_intermediate_stop is set for "stop resource before starting
+ *       it" and "stop later group member before stopping earlier group member"
  */
 static void
 handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,

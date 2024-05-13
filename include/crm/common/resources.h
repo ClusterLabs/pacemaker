@@ -185,12 +185,6 @@ enum pe_find {
 #endif
 };
 
-//! \deprecated Do not use
-enum pe_restart {
-    pe_restart_restart,
-    pe_restart_ignore,
-};
-
 //! \internal Do not use
 typedef struct pcmk__resource_private pcmk__resource_private_t;
 
