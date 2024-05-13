@@ -3036,7 +3036,7 @@ resource_list(pcmk__output_t *out, va_list args)
         gboolean partially_active = rsc->private->fns->active(rsc, FALSE);
 
         /* Skip inactive orphans (deleted but still in CIB) */
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_removed) && !is_active) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {
             continue;
 
         /* Skip active resources if we already displayed them by node */

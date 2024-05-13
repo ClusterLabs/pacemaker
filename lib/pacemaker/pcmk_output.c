@@ -373,14 +373,14 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_detect_loop)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
     /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
      * directly rather than rsc->private->cmds->this_with_colocations().
      */
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
@@ -388,7 +388,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc,
                                  "Resources %s is colocated with", rsc->id);
 
-        if (pcmk_is_set(cons->primary->flags, pcmk_rsc_detect_loop)) {
+        if (pcmk_is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->primary->id, cons->id);
             continue;
@@ -422,18 +422,18 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_detect_loop)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
     /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
      * directly rather than rsc->private->cmds->this_with_colocations().
      */
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->primary->flags, pcmk_rsc_detect_loop)) {
+        if (pcmk_is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
             colocations_xml_node(out, cons->primary, cons);
             continue;
         }
@@ -458,7 +458,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_detect_loop)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
@@ -466,7 +466,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
      * rsc->rsc_cons_lhs directly rather than
      * rsc->private->cmds->with_this_colocations().
      */
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
@@ -474,7 +474,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources colocated with %s",
                                  rsc->id);
 
-        if (pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)) {
+        if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->dependent->id, cons->id);
             continue;
@@ -508,7 +508,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_detect_loop)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
@@ -516,11 +516,11 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
      * rsc->rsc_cons_lhs directly rather than
      * rsc->private->cmds->with_this_colocations().
      */
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)) {
+        if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
             colocations_xml_node(out, cons->dependent, cons);
             continue;
         }
@@ -592,11 +592,11 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
     out->message(out, "locations-list", rsc);
 
     pe__clear_resource_flags_on_all(rsc->private->scheduler,
-                                    pcmk_rsc_detect_loop);
+                                    pcmk__rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
     pe__clear_resource_flags_on_all(rsc->private->scheduler,
-                                    pcmk_rsc_detect_loop);
+                                    pcmk__rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
     return pcmk_rc_ok;
 }
@@ -621,11 +621,11 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
     do_locations_list_xml(out, rsc, false);
 
     pe__clear_resource_flags_on_all(rsc->private->scheduler,
-                                    pcmk_rsc_detect_loop);
+                                    pcmk__rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
     pe__clear_resource_flags_on_all(rsc->private->scheduler,
-                                    pcmk_rsc_detect_loop);
+                                    pcmk__rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
 
     pcmk__output_xml_pop_parent(out);
@@ -1097,9 +1097,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     pcmk_action_t *demote = NULL;
     pcmk_action_t *reason_op = NULL;
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)
         || (current == NULL && next == NULL)) {
-        const bool managed = pcmk_is_set(rsc->flags, pcmk_rsc_managed);
+        const bool managed = pcmk_is_set(rsc->flags, pcmk__rsc_managed);
 
         pcmk__rsc_info(rsc, "Leave   %s\t(%s%s)",
                        rsc->id, pcmk_role_text(rsc->role),
@@ -1128,7 +1128,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_stop_unexpected)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_stop_unexpected)) {
         /* The resource is multiply active with PCMK_META_MULTIPLE_ACTIVE set to
          * PCMK_VALUE_STOP_UNEXPECTED, and not stopping on its current node, but
          * it should be stopping elsewhere.
@@ -1172,7 +1172,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
                               next, start, NULL);
 
-        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_reload)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_reload)) {
             rc = out->message(out, "rsc-action-item", "Reload", rsc, current,
                               next, start, NULL);
 
@@ -1200,13 +1200,13 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
-            const bool failed = pcmk_is_set(rsc->flags, pcmk_rsc_failed);
+            const bool failed = pcmk_is_set(rsc->flags, pcmk__rsc_failed);
 
             rc = out->message(out, "rsc-action-item",
                               (failed? "Recover" : "Move"), rsc, current, next,
                               stop, NULL);
 
-        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                               NULL, stop, NULL);
             STOP_SANITY_ASSERT(__LINE__);
@@ -1262,7 +1262,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
 
     } else if ((stop != NULL)
                && pcmk_all_flags_set(rsc->flags,
-                                     pcmk_rsc_failed|pcmk_rsc_stop_if_failed)) {
+                                     pcmk__rsc_failed
+                                     |pcmk__rsc_stop_if_failed)) {
         /* 'stop' may be NULL if the failure was ignored */
         rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                           next, stop, start);
@@ -1273,7 +1274,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           stop, NULL);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_reload)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_reload)) {
         rc = out->message(out, "rsc-action-item", "Reload", rsc, current, next,
                           start, NULL);
 

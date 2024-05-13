@@ -27,7 +27,7 @@ extern "C" {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_rsc_managed                  pcmk_rsc_managed
+#define pe_rsc_managed                  (1ULL << 1)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use

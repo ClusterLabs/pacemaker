@@ -185,25 +185,25 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
 {
     CRM_CHECK(rsc != NULL, return false);
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_migratable)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_migratable)) {
         pcmk__rsc_trace(rsc,
                         "%s cannot migrate because "
                         "the configuration does not allow it", rsc->id);
         return false;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__rsc_trace(rsc, "%s cannot migrate because it is not managed",
                         rsc->id);
         return false;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         pcmk__rsc_trace(rsc, "%s cannot migrate because it is failed", rsc->id);
         return false;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_start_pending)) {
         pcmk__rsc_trace(rsc, "%s cannot migrate because it has a start pending",
                         rsc->id);
         return false;
@@ -277,8 +277,8 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
     }
 
     // Only orderings involving at least one migratable resource are relevant
-    first_migratable = pcmk_is_set(order->rsc1->flags, pcmk_rsc_migratable);
-    then_migratable = pcmk_is_set(order->rsc2->flags, pcmk_rsc_migratable);
+    first_migratable = pcmk_is_set(order->rsc1->flags, pcmk__rsc_migratable);
+    then_migratable = pcmk_is_set(order->rsc2->flags, pcmk__rsc_migratable);
     if (!first_migratable && !then_migratable) {
         return;
     }

@@ -352,7 +352,7 @@ valid_network(pe__bundle_variant_data_t *data)
                              data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
-            // pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
+            // pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
         }
         return TRUE;
     }
@@ -651,7 +651,7 @@ create_container_resource(pcmk_resource_t *parent,
                             parent->private->scheduler) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
-    pcmk__set_rsc_flags(replica->container, pcmk_rsc_replica_container);
+    pcmk__set_rsc_flags(replica->container, pcmk__rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
@@ -856,7 +856,7 @@ create_replica_resources(pcmk_resource_t *parent,
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        pcmk__set_rsc_flags(replica->remote, pcmk_rsc_remote_nesting_allowed);
+        pcmk__set_rsc_flags(replica->remote, pcmk__rsc_remote_nesting_allowed);
     }
     return rc;
 }
@@ -1058,7 +1058,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     value = crm_element_value(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
-        pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
+        pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     }
 
     bundle_data->container_command =
@@ -1270,8 +1270,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk_is_set(replica->child->flags, pcmk_rsc_notify)) {
-                pcmk__set_rsc_flags(bundle_data->child, pcmk_rsc_notify);
+            if (pcmk_is_set(replica->child->flags, pcmk__rsc_notify)) {
+                pcmk__set_rsc_flags(bundle_data->child, pcmk__rsc_notify);
             }
 
             allocate_ip(bundle_data, replica, buffer);
@@ -1489,11 +1489,12 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
         if (!printed_header) {
             const char *type = container_agent_str(bundle_data->agent_type);
-            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk__rsc_unique);
             const char *maintenance = pcmk__flag_text(rsc->flags,
-                                                      pcmk_rsc_maintenance);
-            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
-            const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
+                                                      pcmk__rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags,
+                                                  pcmk__rsc_managed);
+            const char *failed = pcmk__flag_text(rsc->flags, pcmk__rsc_failed);
 
             printed_header = TRUE;
 
@@ -1590,10 +1591,10 @@ pe__bundle_replica_output_html(pcmk__output_t *out,
 static const char *
 get_unmanaged_str(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
         return " (maintenance)";
     }
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         return " (unmanaged)";
     }
     return "";
@@ -1662,7 +1663,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1699,7 +1700,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1805,7 +1806,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
@@ -1842,7 +1843,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk_rsc_unique)? " (unique)" : "",
+                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 

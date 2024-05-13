@@ -196,7 +196,7 @@ apply_stickiness(gpointer data, gpointer user_data)
     /* A resource is sticky if it is managed, has stickiness configured, and is
      * active on a single node.
      */
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)
         || (rsc->private->stickiness < 1)
         || !pcmk__list_of_1(rsc->running_on)) {
         return;
@@ -359,7 +359,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         return;
     }
     crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
@@ -434,7 +434,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
 static bool
 is_managed(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -673,7 +673,7 @@ log_resource_details(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) item->data;
 
         // Log all resources except inactive orphans
-        if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
+        if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
             || (rsc->role != pcmk_role_stopped)) {
             out->message(out, pcmk__map_element_name(rsc->private->xml), 0UL,
                          rsc, all, all);

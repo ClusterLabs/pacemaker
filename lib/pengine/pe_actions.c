@@ -271,7 +271,7 @@ update_action_optional(pcmk_action_t *action, gboolean optional)
     // Force a non-recurring action to be optional if its resource is unmanaged
     if ((action->rsc != NULL) && (action->node != NULL)
         && !pcmk_is_set(action->flags, pcmk_action_pseudo)
-        && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
+        && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)
         && (g_hash_table_lookup(action->meta, PCMK_META_INTERVAL) == NULL)) {
             pcmk__rsc_debug(action->rsc,
                             "%s on %s is optional (%s is unmanaged)",
@@ -342,7 +342,7 @@ update_resource_action_runnable(pcmk_action_t *action,
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pcmk__node_name(action->node));
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
             pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
@@ -415,17 +415,17 @@ static void
 update_resource_flags_for_action(pcmk_resource_t *rsc,
                                  const pcmk_action_t *action)
 {
-    /* @COMPAT pcmk_rsc_starting and pcmk_rsc_stopping are deprecated and unused
-     * within Pacemaker, and will eventually be removed
+    /* @COMPAT pcmk__rsc_starting and pcmk__rsc_stopping are deprecated and
+     * unused within Pacemaker, and will eventually be removed
      */
     if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        pcmk__set_rsc_flags(rsc, pcmk_rsc_stopping);
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_stopping);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
         if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
-            pcmk__set_rsc_flags(rsc, pcmk_rsc_starting);
+            pcmk__set_rsc_flags(rsc, pcmk__rsc_starting);
         } else {
-            pcmk__clear_rsc_flags(rsc, pcmk_rsc_starting);
+            pcmk__clear_rsc_flags(rsc, pcmk__rsc_starting);
         }
     }
 }
@@ -861,11 +861,11 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
                               PCMK_ACTION_PROMOTE, NULL)) {
         value = "nothing (not start or promote)";
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         requires = pcmk_requires_fencing;
         value = "fencing";
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_quorum)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_quorum)) {
         requires = pcmk_requires_quorum;
         value = "quorum";
 
@@ -973,7 +973,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         && !pcmk_is_probe(action_name, interval_ms)
         && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
         needs_remote_reset = true;
-        if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             desc = NULL; // Force default for unmanaged connections
         }
     }
@@ -986,7 +986,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "restart container (and possibly migrate) (default)";
 
     } else if (needs_remote_reset) {
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
                 desc = "fence remote node (default)";
             } else {
@@ -1196,10 +1196,10 @@ find_unfencing_devices(GList *candidates, GList *matches)
         if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
 
-        } else if (!pcmk_is_set(candidate->flags, pcmk_rsc_fence_device)) {
+        } else if (!pcmk_is_set(candidate->flags, pcmk__rsc_fence_device)) {
             continue;
 
-        } else if (pcmk_is_set(candidate->flags, pcmk_rsc_needs_unfencing)) {
+        } else if (pcmk_is_set(candidate->flags, pcmk__rsc_needs_unfencing)) {
             matches = g_list_prepend(matches, candidate);
 
         } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,

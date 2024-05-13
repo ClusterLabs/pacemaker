@@ -864,7 +864,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
                               cib_conn, cib_sync_call,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
         int count = 0;
         GList *iter = NULL;
 

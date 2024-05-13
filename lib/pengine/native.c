@@ -104,19 +104,19 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     pcmk__rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pcmk__node_name(node),
-                    pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : "(unmanaged)");
+                    pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : "(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
     if (pcmk__is_primitive(rsc)) {
         node->details->running_rsc = g_list_append(node->details->running_rsc, rsc);
         native_priority_to_node(rsc, node, failed);
         if (node->details->maintenance) {
-            pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
-            pcmk__set_rsc_flags(rsc, pcmk_rsc_maintenance);
+            pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
+            pcmk__set_rsc_flags(rsc, pcmk__rsc_maintenance);
         }
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk_resource_t *p = parent;
 
         pcmk__rsc_info(rsc, "resource %s isn't managed", rsc->id);
@@ -150,8 +150,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 }
                 break;
             case pcmk__multiply_active_block:
-                pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
-                pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
+                pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
+                pcmk__set_rsc_flags(rsc, pcmk__rsc_blocked);
 
                 /* If the resource belongs to a group or bundle configured with
                  * PCMK_META_MULTIPLE_ACTIVE=PCMK_VALUE_BLOCK, block the entire
@@ -165,8 +165,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                          gIter != NULL; gIter = gIter->next) {
                         pcmk_resource_t *child = gIter->data;
 
-                        pcmk__clear_rsc_flags(child, pcmk_rsc_managed);
-                        pcmk__set_rsc_flags(child, pcmk_rsc_blocked);
+                        pcmk__clear_rsc_flags(child, pcmk__rsc_managed);
+                        pcmk__set_rsc_flags(child, pcmk__rsc_blocked);
                     }
                 }
                 break;
@@ -195,7 +195,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 static void
 recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 {
-    pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
+    pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     pcmk__insert_meta(rsc, PCMK_META_GLOBALLY_UNIQUE, PCMK_VALUE_FALSE);
     g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }
@@ -211,7 +211,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     // Only some agent standards support unique and promotable clones
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
-        && pcmk_is_set(rsc->flags, pcmk_rsc_unique)
+        && pcmk_is_set(rsc->flags, pcmk__rsc_unique)
         && pcmk__is_clone(parent)) {
 
         /* @COMPAT We should probably reject this situation as an error (as we
@@ -230,7 +230,7 @@ native_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         recursive_clear_unique(rsc, NULL);
     }
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_promotable)
-        && pcmk_is_set(parent->flags, pcmk_rsc_promotable)) {
+        && pcmk_is_set(parent->flags, pcmk__rsc_promotable)) {
 
         pcmk__config_err("Resource %s is of type %s and therefore "
                          "cannot be used as a promotable clone resource",
@@ -295,7 +295,7 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
 
     } else if (pcmk_is_set(flags, pcmk_rsc_match_basename)
                || (pcmk_is_set(flags, pcmk_rsc_match_anon_basename)
-                   && !pcmk_is_set(rsc->flags, pcmk_rsc_unique))) {
+                   && !pcmk_is_set(rsc->flags, pcmk__rsc_unique))) {
         match = pe_base_name_eq(rsc, id);
     }
 
@@ -352,7 +352,7 @@ native_active(pcmk_resource_t * rsc, gboolean all)
                             rsc->id, pcmk__node_name(a_node));
             return TRUE;
         } else if (!a_node->details->online
-                   && pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+                   && pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__rsc_trace(rsc, "Resource %s: %s is offline",
                             rsc->id, pcmk__node_name(a_node));
         } else {
@@ -434,7 +434,7 @@ native_displayable_role(const pcmk_resource_t *rsc)
 
     if ((role == pcmk_role_started)
         && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                       pcmk_rsc_promotable)) {
+                       pcmk__rsc_promotable)) {
 
         role = pcmk_role_unpromoted;
     }
@@ -526,10 +526,10 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                    pcmk__s(provider, ""), ":", kind, "):\t", NULL);
 
     // State on node
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         g_string_append(outstr, " ORPHANED");
     }
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
         g_string_append(outstr, " FAILED");
@@ -585,7 +585,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
             case pcmk_role_unpromoted:
                 if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                                pcmk_rsc_promotable)) {
+                                pcmk__rsc_promotable)) {
                     have_flags = add_output_flag(outstr,
                                                  PCMK_META_TARGET_ROLE ":",
                                                  have_flags);
@@ -604,18 +604,18 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
     // Blocked or maintenance implies unmanaged
     if (pcmk_any_flags_set(rsc->flags,
-                           pcmk_rsc_blocked|pcmk_rsc_maintenance)) {
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
+                           pcmk__rsc_blocked|pcmk__rsc_maintenance)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
             have_flags = add_output_flag(outstr, "blocked", have_flags);
 
-        } else if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
+        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
             have_flags = add_output_flag(outstr, "maintenance", have_flags);
         }
-    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         have_flags = add_output_flag(outstr, "unmanaged", have_flags);
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
 
@@ -682,10 +682,10 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
         target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         cl = PCMK__VALUE_RSC_MANAGED;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         cl = PCMK__VALUE_RSC_FAILED;
 
     } else if (pcmk__is_primitive(rsc) && (rsc->running_on == NULL)) {
@@ -694,7 +694,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     } else if (pcmk__list_of_multiple(rsc->running_on)) {
         cl = PCMK__VALUE_RSC_MULTIPLE;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
         cl = PCMK__VALUE_RSC_FAILURE_IGNORED;
 
     } else {
@@ -763,12 +763,13 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
     const char *active = pcmk__btoa(rsc->private->fns->active(rsc, TRUE));
-    const char *orphaned = pcmk__flag_text(rsc->flags, pcmk_rsc_removed);
-    const char *blocked = pcmk__flag_text(rsc->flags, pcmk_rsc_blocked);
-    const char *maintenance = pcmk__flag_text(rsc->flags, pcmk_rsc_maintenance);
-    const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
-    const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
-    const char *ignored = pcmk__flag_text(rsc->flags, pcmk_rsc_ignore_failure);
+    const char *orphaned = pcmk__flag_text(rsc->flags, pcmk__rsc_removed);
+    const char *blocked = pcmk__flag_text(rsc->flags, pcmk__rsc_blocked);
+    const char *maintenance = pcmk__flag_text(rsc->flags,
+                                              pcmk__rsc_maintenance);
+    const char *managed = pcmk__flag_text(rsc->flags, pcmk__rsc_managed);
+    const char *failed = pcmk__flag_text(rsc->flags, pcmk__rsc_failed);
+    const char *ignored = pcmk__flag_text(rsc->flags, pcmk__rsc_ignore_failure);
     char *nodes_running_on = NULL;
     const char *pending = print_pending? native_pending_action(rsc) : NULL;
     const char *locked_to = NULL;
@@ -1018,7 +1019,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
                 GHashTable *node_table = NULL;
 
                 if (node->details->unclean == FALSE && node->details->online == FALSE &&
-                    pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+                    pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
                     continue;
                 }
 

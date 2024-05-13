@@ -174,11 +174,11 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 {
     GString *attrs = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
         pcmk__add_separated_word(&attrs, 64, "promotable", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         pcmk__add_separated_word(&attrs, 64, "unique", ", ");
     }
 
@@ -186,10 +186,10 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
@@ -283,7 +283,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                     child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
     if (as_orphan) {
-        pe__set_resource_flags_recursive(child_rsc, pcmk_rsc_removed);
+        pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
 
     pcmk__insert_meta(child_rsc, PCMK_META_CLONE_MAX, inc_max);
@@ -358,7 +358,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     clone_data = pcmk__assert_alloc(1, sizeof(clone_variant_data_t));
     rsc->private->variant_opaque = clone_data;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
         // Use 1 as default but 0 for minimum and invalid
         // @COMPAT PCMK__META_PROMOTED_MAX_LEGACY deprecated since 2.0.0
         clone_data->promoted_max =
@@ -390,7 +390,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                                                "pcmk__clone_ordered");
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)
         && (clone_data->clone_node_max > 1)) {
 
         pcmk__config_err("Ignoring " PCMK_META_CLONE_NODE_MAX " of %d for %s "
@@ -403,9 +403,9 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(rsc, "\tClone max: %d", clone_data->clone_max);
     pcmk__rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
     pcmk__rsc_trace(rsc, "\tClone is unique: %s",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
+                    pcmk__flag_text(rsc->flags, pcmk__rsc_unique));
     pcmk__rsc_trace(rsc, "\tClone is promotable: %s",
-                    pcmk__flag_text(rsc->flags, pcmk_rsc_promotable));
+                    pcmk__flag_text(rsc->flags, pcmk__rsc_promotable));
 
     // Clones may contain a single group or primitive
     for (a_child = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
@@ -438,7 +438,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * environment.
      */
     pcmk__insert_meta(rsc, PCMK_META_GLOBALLY_UNIQUE,
-                      pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
+                      pcmk__flag_text(rsc->flags, pcmk__rsc_unique));
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
@@ -586,15 +586,16 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
         if (!printed_header) {
             const char *multi_state = pcmk__flag_text(rsc->flags,
-                                                      pcmk_rsc_promotable);
-            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
+                                                      pcmk__rsc_promotable);
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk__rsc_unique);
             const char *maintenance = pcmk__flag_text(rsc->flags,
-                                                      pcmk_rsc_maintenance);
-            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
+                                                      pcmk__rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags,
+                                                  pcmk__rsc_managed);
             const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
-            const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
+            const char *failed = pcmk__flag_text(rsc->flags, pcmk__rsc_failed);
             const char *ignored = pcmk__flag_text(rsc->flags,
-                                                  pcmk_rsc_ignore_failure);
+                                                  pcmk__rsc_ignore_failure);
             const char *target_role = configured_role_str(rsc);
             const char *desc = pe__resource_description(rsc, show_opts);
 
@@ -682,10 +683,10 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             print_full = TRUE;
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
             // Print individual instance when unique (except stopped orphans)
             if (partially_active
-                || !pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+                || !pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
                 print_full = TRUE;
             }
 
@@ -700,7 +701,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
-            if (!pcmk_is_set(child_rsc->flags, pcmk_rsc_removed)
+            if (!pcmk_is_set(child_rsc->flags, pcmk__rsc_removed)
                 && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 if (stopped == NULL) {
@@ -709,9 +710,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 pcmk__insert_dup(stopped, child_rsc->id, "Stopped");
             }
 
-        } else if (is_set_recursive(child_rsc, pcmk_rsc_removed, TRUE)
-                   || !is_set_recursive(child_rsc, pcmk_rsc_managed, FALSE)
-                   || is_set_recursive(child_rsc, pcmk_rsc_failed, TRUE)) {
+        } else if (is_set_recursive(child_rsc, pcmk__rsc_removed, TRUE)
+                   || !is_set_recursive(child_rsc, pcmk__rsc_managed, FALSE)
+                   || is_set_recursive(child_rsc, pcmk__rsc_failed, TRUE)) {
 
             // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;
@@ -808,7 +809,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     if ((list_text != NULL) && (list_text->len > 0)) {
         clone_header(out, &rc, rsc, clone_data, desc);
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == pcmk_role_unpromoted) {
@@ -832,7 +833,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-        if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)
+        if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;

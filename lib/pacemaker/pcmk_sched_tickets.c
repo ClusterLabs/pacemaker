@@ -123,8 +123,8 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                     return;
                 }
                 if (rsc->running_on != NULL) {
-                    pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
-                    pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
+                    pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
+                    pcmk__set_rsc_flags(rsc, pcmk__rsc_blocked);
                 }
                 break;
         }

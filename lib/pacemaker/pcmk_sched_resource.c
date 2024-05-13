@@ -138,7 +138,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
         // Make sure the resource is restarted
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
                       rsc->private->scheduler);
-        pcmk__set_rsc_flags(rsc, pcmk_rsc_start_pending);
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_start_pending);
     }
     return changed;
 }
@@ -343,7 +343,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         }
     }
 
-    if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         /* Don't log stopped orphans */
         return;
     }
@@ -447,7 +447,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         changed = (node != NULL);
     }
     pcmk__unassign_resource(rsc);
-    pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk__rsc_unassigned);
 
     if (node == NULL) {
         char *rc_stopped = NULL;
@@ -534,7 +534,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         crm_info("Unassigning %s from %s", rsc->id, pcmk__node_name(old));
     }
 
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_unassigned);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_unassigned);
 
     if (rsc->children == NULL) {
         if (old == NULL) {
@@ -582,7 +582,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
         return false;
     }
 
@@ -594,7 +594,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // If failed resource is anonymous clone instance, we'll force clone away
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         rsc_to_ban = uber_parent(rsc);
     }
 

@@ -36,7 +36,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
             ni->node_name = node->details->uname;
-            if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)
+            if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)
                 && (child->private->fns->state(child,
                                                TRUE) == pcmk_role_promoted)) {
                 ni->promoted = true;
@@ -61,7 +61,7 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
 
     /* The anonymous clone children's common ID is supplied */
     } else if (pcmk__is_clone(parent)
-               && !pcmk_is_set(rsc->flags, pcmk_rsc_unique)
+               && !pcmk_is_set(rsc->flags, pcmk__rsc_unique)
                && (rsc->private->history_id != NULL)
                && pcmk__str_eq(requested_name, rsc->private->history_id,
                                pcmk__str_none)
@@ -480,13 +480,13 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
              * colocated with this one, so we use rsc->rsc_cons_lhs directly
              * rather than the with_this_colocations() method.
              */
-            pcmk__set_rsc_flags(rsc, pcmk_rsc_detect_loop);
+            pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
             for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
 
-                if (pcmk_is_set(cons->dependent->flags, pcmk_rsc_detect_loop)
+                if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)
                     || (cons->score <= 0)) {
                     continue;
                 }
@@ -530,7 +530,7 @@ cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         need_init = false;
         pcmk__unpack_constraints(rsc->private->scheduler);
         pe__clear_resource_flags_on_all(rsc->private->scheduler,
-                                        pcmk_rsc_detect_loop);
+                                        pcmk__rsc_detect_loop);
     }
 
     rc = update_attribute(rsc, requested_name, attr_set, attr_set_type,
@@ -736,7 +736,7 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = pcmk__s(rsc->private->history_id, rsc->id);
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         return strdup(name);
     }
     return clone_strip(name);
@@ -1064,7 +1064,7 @@ check_role(resource_checks_t *checks)
 
         case pcmk_role_unpromoted:
             if (pcmk_is_set(pe__const_top_resource(checks->rsc, false)->flags,
-                            pcmk_rsc_promotable)) {
+                            pcmk__rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
             break;
@@ -1608,7 +1608,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         return ENXIO;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         out->err(out, "Unmanaged resources cannot be restarted.");
         return EAGAIN;
     }
@@ -2309,11 +2309,11 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     }
 
     if (promoted_role_only
-        && !pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
 
         const pcmk_resource_t *p = pe__const_top_resource(rsc, false);
 
-        if (pcmk_is_set(p->flags, pcmk_rsc_promotable)) {
+        if (pcmk_is_set(p->flags, pcmk__rsc_promotable)) {
             out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
@@ -2327,7 +2327,7 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
 
     current = pe__find_active_requires(rsc, &count);
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 

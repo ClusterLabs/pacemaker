@@ -93,12 +93,12 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
      * tests)
      */
     if (pcmk__is_clone(rsc1)) {
-        if (pcmk_is_set(rsc1->flags, pcmk_rsc_promotable)
-            && !pcmk_is_set(rsc2->flags, pcmk_rsc_promotable)) {
+        if (pcmk_is_set(rsc1->flags, pcmk__rsc_promotable)
+            && !pcmk_is_set(rsc2->flags, pcmk__rsc_promotable)) {
             return -1;
         }
-        if (!pcmk_is_set(rsc1->flags, pcmk_rsc_promotable)
-            && pcmk_is_set(rsc2->flags, pcmk_rsc_promotable)) {
+        if (!pcmk_is_set(rsc1->flags, pcmk__rsc_promotable)
+            && pcmk_is_set(rsc2->flags, pcmk__rsc_promotable)) {
             return 1;
         }
     }
@@ -430,7 +430,7 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
             return (influence_i == 0)? pcmk__coloc_none : pcmk__coloc_influence;
         }
     }
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_critical)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_critical)) {
         return pcmk__coloc_influence;
     }
     return pcmk__coloc_none;
@@ -1169,7 +1169,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
 static const pcmk_resource_t *
 get_resource_for_role(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_replica_container)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_replica_container)) {
         const pcmk_resource_t *child = pe__get_rsc_in_container(rsc);
 
         if (child != NULL) {
@@ -1208,7 +1208,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
-    if (!preview && pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
+    if (!preview && pcmk_is_set(primary->flags, pcmk__rsc_unassigned)) {
         // Primary resource has not been assigned yet, so we can't do anything
         return pcmk__coloc_affects_nothing;
     }
@@ -1220,8 +1220,8 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
         && (dependent_role_rsc->private->parent != NULL)
         && pcmk_is_set(dependent_role_rsc->private->parent->flags,
-                       pcmk_rsc_promotable)
-        && !pcmk_is_set(dependent_role_rsc->flags, pcmk_rsc_unassigned)) {
+                       pcmk__rsc_promotable)
+        && !pcmk_is_set(dependent_role_rsc->flags, pcmk__rsc_unassigned)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
          * that has already been assigned, so the colocation should now affect
@@ -1230,7 +1230,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
         return pcmk__coloc_affects_role;
     }
 
-    if (!preview && !pcmk_is_set(dependent->flags, pcmk_rsc_unassigned)) {
+    if (!preview && !pcmk_is_set(dependent->flags, pcmk__rsc_unassigned)) {
         /* The dependent resource has already been through assignment, so the
          * constraint no longer has any effect. Log an error if a mandatory
          * colocation constraint has been violated.
@@ -1712,12 +1712,12 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pcmk_rsc_updating_nodes)) {
+    if (pcmk_is_set(source_rsc->flags, pcmk__rsc_updating_nodes)) {
         pcmk__rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                        log_id, source_rsc->id);
         return;
     }
-    pcmk__set_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__set_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
 
     if (*nodes == NULL) {
         work = pcmk__copy_node_table(source_rsc->allowed_nodes);
@@ -1733,7 +1733,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     if (work == NULL) {
-        pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
+        pcmk__clear_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
         return;
     }
 
@@ -1789,7 +1789,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         pcmk__rsc_info(source_rsc, "%s: Rolling back optional scores from %s",
                        log_id, source_rsc->id);
         g_hash_table_destroy(work);
-        pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
+        pcmk__clear_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
         return;
     }
 
@@ -1811,7 +1811,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
     *nodes = work;
 
-    pcmk__clear_rsc_flags(source_rsc, pcmk_rsc_updating_nodes);
+    pcmk__clear_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
 }
 
 /*!

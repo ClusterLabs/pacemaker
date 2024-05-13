@@ -186,7 +186,7 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = pcmk__s(rsc->private->history_id, rsc->id);
 
-    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? strdup(name) : clone_strip(name);
+    return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
 }
 
 /*!
@@ -258,13 +258,13 @@ generate_fail_regexes(const pcmk_resource_t *rsc,
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
-                            pcmk_is_set(rsc->flags, pcmk_rsc_unique),
+                            pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
                                    is_legacy,
-                                   pcmk_is_set(rsc->flags, pcmk_rsc_unique),
+                                   pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;
         regfree(failcount_re);

@@ -261,7 +261,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 
     rsc_xml = pcmk__xe_create(action_xml,
                               (const char *) action->rsc->private->xml->name);
-    if (pcmk_is_set(action->rsc->flags, pcmk_rsc_removed)
+    if (pcmk_is_set(action->rsc->flags, pcmk__rsc_removed)
         && (action->rsc->private->history_id != NULL)) {
         /* Use the numbered instance name here, because if there is more
          * than one instance on a node, we need to make sure the command
@@ -276,7 +276,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->private->history_id);
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
-    } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
+    } else if (!pcmk_is_set(action->rsc->flags, pcmk__rsc_unique)) {
         const char *xml_id = pcmk__xe_id(action->rsc->private->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
@@ -514,7 +514,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
      * with the exception of monitors and cancellation of recurring monitors.
      */
     if ((action->rsc != NULL)
-        && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
+        && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)
         && !pcmk__str_eq(action->task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
 
         const char *interval_ms_s;
@@ -726,8 +726,8 @@ should_add_input_to_graph(const pcmk_action_t *action,
 
     } else if (input->action->rsc
                && input->action->rsc != action->rsc
-               && pcmk_is_set(input->action->rsc->flags, pcmk_rsc_failed)
-               && !pcmk_is_set(input->action->rsc->flags, pcmk_rsc_managed)
+               && pcmk_is_set(input->action->rsc->flags, pcmk__rsc_failed)
+               && !pcmk_is_set(input->action->rsc->flags, pcmk__rsc_managed)
                && pcmk__ends_with(input->action->uuid, "_stop_0")
                && pcmk__is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
@@ -1065,7 +1065,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         if ((action->rsc != NULL)
             && (action->node != NULL)
             && action->node->details->shutdown
-            && !pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)
+            && !pcmk_is_set(action->rsc->flags, pcmk__rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
                                    pcmk_action_optional|pcmk_action_runnable)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -1076,9 +1076,9 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
             if (pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
                 || (scheduler->no_quorum_policy == pcmk_no_quorum_ignore)) {
                 const bool managed = pcmk_is_set(action->rsc->flags,
-                                                 pcmk_rsc_managed);
+                                                 pcmk__rsc_managed);
                 const bool failed = pcmk_is_set(action->rsc->flags,
-                                                pcmk_rsc_failed);
+                                                pcmk__rsc_failed);
 
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",

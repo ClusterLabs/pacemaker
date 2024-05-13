@@ -626,8 +626,8 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * perpetually swap places.
      */
     if (pcmk_is_set(colocation->dependent->flags,
-                    pcmk_rsc_remote_nesting_allowed)
-        && !pcmk_is_set(rsc->flags, pcmk_rsc_failed)
+                    pcmk__rsc_remote_nesting_allowed)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
         && pcmk__list_of_1(rsc->running_on)) {
         return false;
     }

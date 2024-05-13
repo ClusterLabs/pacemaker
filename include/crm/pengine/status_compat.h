@@ -12,7 +12,7 @@
 
 #include <stdbool.h>                // bool
 #include <crm/common/util.h>        // pcmk_is_set()
-#include <crm/common/scheduler.h>   // pcmk_resource_t, pcmk_rsc_unique, etc.
+#include <crm/common/scheduler.h>   // pcmk_resource_t, pcmk__rsc_unique, etc.
 
 #ifdef __cplusplus
 extern "C" {
