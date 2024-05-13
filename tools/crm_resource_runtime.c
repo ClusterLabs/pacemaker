@@ -477,11 +477,13 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             && pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_casei)) {
             /* We want to set the attribute only on resources explicitly
-             * colocated with this one, so we use rsc->rsc_cons_lhs directly
-             * rather than the with_this_colocations() method.
+             * colocated with this one, so we use
+             * rsc->private->with_this_colocations directly rather than the
+             * with_this_colocations() method.
              */
             pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-            for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+            for (GList *lpc = rsc->private->with_this_colocations;
+                 lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);

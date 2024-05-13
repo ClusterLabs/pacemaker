@@ -1151,14 +1151,16 @@ pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
         /* For the resource itself, add all of its own colocations and relevant
          * colocations from its parent (if any).
          */
-        pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+        pcmk__add_with_this_list(list, rsc->private->with_this_colocations,
+                                 orig_rsc);
         if (parent != NULL) {
             parent->private->cmds->with_this_colocations(parent, orig_rsc,
                                                          list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
-        for (GList *iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->private->with_this_colocations;
+             iter != NULL; iter = iter->next) {
             pcmk__colocation_t *colocation = iter->data;
 
             if (pcmk_is_set(colocation->flags, pcmk__coloc_explicit)) {

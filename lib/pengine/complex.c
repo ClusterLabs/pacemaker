@@ -1063,7 +1063,6 @@ common_free(pcmk_resource_t * rsc)
                     (const char *) rsc->private->xml->name, rsc->id);
 
     g_list_free(rsc->rsc_cons);
-    g_list_free(rsc->rsc_cons_lhs);
     g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
@@ -1114,6 +1113,7 @@ common_free(pcmk_resource_t * rsc)
     free(rsc->private->variant_opaque);
     free(rsc->private->history_id);
     free(rsc->private->pending_action);
+    g_list_free(rsc->private->with_this_colocations);
     free(rsc->private);
 
     free(rsc);

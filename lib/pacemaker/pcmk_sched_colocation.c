@@ -389,7 +389,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->flags = flags;
 
     pcmk__add_this_with(&(dependent->rsc_cons), new_con, dependent);
-    pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con, primary);
+    pcmk__add_with_this(&(primary->private->with_this_colocations), new_con,
+                        primary);
 
     dependent->private->scheduler->colocation_constraints =
         g_list_prepend(dependent->private->scheduler->colocation_constraints,

@@ -726,7 +726,8 @@ pcmk__with_group_colocations(const pcmk_resource_t *rsc,
                     rsc->id, orig_rsc->id);
 
     // Add the group's own colocations
-    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+    pcmk__add_with_this_list(list, rsc->private->with_this_colocations,
+                             orig_rsc);
 
     // If cloned, add any relevant colocations with the clone
     if (parent != NULL) {

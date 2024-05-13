@@ -340,6 +340,17 @@ struct pcmk__resource_private {
     // What to do if the resource is incorrectly active on multiple nodes
     enum pcmk__multiply_active multiply_active_policy;
 
+    /* Pay special attention to whether you want to use with_this_colocations
+     * and this_with_colocations directly, which include only colocations
+     * explicitly involving this resource, or call libpacemaker's
+     * pcmk__with_this_colocations() and pcmk__this_with_colocations()
+     * functions, which may return relevant colocations involving the resource's
+     * ancestors as well.
+     */
+
+    // Colocations of other resources with this one
+    GList *with_this_colocations;
+
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };

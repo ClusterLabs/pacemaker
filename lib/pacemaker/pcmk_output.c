@@ -463,11 +463,12 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     }
 
     /* We're listing constraints explicitly involving rsc, so use
-     * rsc->rsc_cons_lhs directly rather than
+     * rsc->private->with_this_colocations directly rather than
      * rsc->private->cmds->with_this_colocations().
      */
     pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-    for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = rsc->private->with_this_colocations;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
@@ -513,11 +514,12 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     /* We're listing constraints explicitly involving rsc, so use
-     * rsc->rsc_cons_lhs directly rather than
+     * rsc->private->with_this_colocations directly rather than
      * rsc->private->cmds->with_this_colocations().
      */
     pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-    for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = rsc->private->with_this_colocations;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
         if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {

@@ -363,7 +363,8 @@ pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
     parent = rsc->private->parent;
 
-    pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
+    pcmk__add_with_this_list(list, rsc->private->with_this_colocations,
+                             orig_rsc);
 
     if (parent != NULL) {
         parent->private->cmds->with_this_colocations(parent, orig_rsc, list);

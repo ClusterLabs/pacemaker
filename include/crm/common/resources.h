@@ -105,14 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    /* Pay special attention to whether you want to use rsc_cons_lhs and
-     * rsc_cons directly, which include only colocations explicitly involving
-     * this resource, or call libpacemaker's pcmk__with_this_colocations() and
-     * pcmk__this_with_colocations() functions, which may return relevant
-     * colocations involving the resource's ancestors as well.
-     */
-
-    GList *rsc_cons_lhs;      // Colocations of other resources with this one
     GList *rsc_cons;          // Colocations of this resource with others
     GList *rsc_location;      // Location constraints for resource
     GList *actions;           // Actions scheduled for resource
