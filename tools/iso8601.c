@@ -112,16 +112,167 @@ static GOptionEntry modifier_entries[] = {
     { NULL }
 };
 
-static void
-log_time_period(int log_level, crm_time_period_t * dtp, int flags)
+PCMK__OUTPUT_ARGS("date", "const char *", "crm_time_t *", "int")
+static int
+date_default(pcmk__output_t *out, va_list args)
 {
-    char *start = crm_time_as_string(dtp->start, flags);
-    char *end = crm_time_as_string(dtp->end, flags);
+    const char *prefix = va_arg(args, const char *);
+    crm_time_t *date = va_arg(args, crm_time_t *);
+    int opts = va_arg(args, int);
 
-    CRM_ASSERT(start != NULL && end != NULL);
-    do_crm_log(log_level, "Period: %s to %s", start, end);
+    char *date_s = NULL;
+
+    opts |= crm_time_log_date | crm_time_log_timeofday;
+    date_s = crm_time_as_string(date, opts);
+
+    out->info(out, "%s: %s", prefix, date_s);
+
+    free(date_s);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("date", "const char *", "crm_time_t *", "int")
+static int
+date_xml(pcmk__output_t *out, va_list args)
+{
+    const char *prefix G_GNUC_UNUSED = va_arg(args, const char *);
+    crm_time_t *date = va_arg(args, crm_time_t *);
+    int opts = va_arg(args, int);
+
+    char *date_s = NULL;
+
+    opts |= crm_time_log_date | crm_time_log_timeofday;
+    date_s = crm_time_as_string(date, opts);
+
+    pcmk__output_create_xml_text_node(out, PCMK_XE_DATE, date_s);
+    free(date_s);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("duration", "crm_time_t *", "int")
+static int
+duration_default(pcmk__output_t *out, va_list args)
+{
+    crm_time_t *time = va_arg(args, crm_time_t *);
+    int opts = va_arg(args, int);
+
+    char *date_s = crm_time_as_string(time, opts | crm_time_log_duration);
+
+    out->info(out, "Duration: %s", date_s);
+
+    free(date_s);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("duration", "crm_time_t *", "int")
+static int
+duration_xml(pcmk__output_t *out, va_list args)
+{
+    crm_time_t *time = va_arg(args, crm_time_t *);
+    int opts = va_arg(args, int);
+
+    char *date_s = crm_time_as_string(time, opts | crm_time_log_duration);
+
+    pcmk__output_create_xml_text_node(out, PCMK_XE_DURATION, date_s);
+    free(date_s);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("duration_ends", "crm_time_t *", "int")
+static int
+duration_ends_default(pcmk__output_t *out, va_list args)
+{
+    crm_time_t *time = va_arg(args, crm_time_t *);
+    int opts = va_arg(args, int);
+
+    char *date_s = NULL;
+
+    opts |= crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone;
+    date_s = crm_time_as_string(time, opts);
+
+    out->info(out, "Duration ends at: %s", date_s);
+
+    free(date_s);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("duration_ends", "crm_time_t *", "int")
+static int
+duration_ends_xml(pcmk__output_t *out, va_list args)
+{
+    crm_time_t *time = va_arg(args, crm_time_t *);
+    int opts = va_arg(args, int);
+
+    char *date_s = NULL;
+
+    opts |= crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone;
+    date_s = crm_time_as_string(time, opts);
+
+    pcmk__output_create_xml_text_node(out, PCMK_XE_DURATION_ENDS, date_s);
+    free(date_s);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("period", "crm_time_period_t *", "int")
+static int
+period_default(pcmk__output_t *out, va_list args)
+{
+    crm_time_period_t *period = va_arg(args, crm_time_period_t *);
+    int opts = va_arg(args, int);
+
+    char *start = NULL;
+    char *end = NULL;
+
+    opts |= crm_time_log_date | crm_time_log_timeofday;
+
+    start = crm_time_as_string(period->start, opts);
+    if (start == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    end = crm_time_as_string(period->end, opts);
+    if (end == NULL) {
+        free(start);
+        return pcmk_rc_no_output;
+    }
+
+    out->info(out, "Period: %s to %s", start, end);
+
     free(start);
     free(end);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("period", "crm_time_period_t *", "int")
+static int
+period_xml(pcmk__output_t *out, va_list args)
+{
+    crm_time_period_t *period = va_arg(args, crm_time_period_t *);
+    int opts = va_arg(args, int);
+
+    char *start = NULL;
+    char *end = NULL;
+
+    opts |= crm_time_log_date | crm_time_log_timeofday;
+
+    start = crm_time_as_string(period->start, opts);
+    if (start == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    end = crm_time_as_string(period->end, opts);
+    if (end == NULL) {
+        free(start);
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_xml_create_parent(out, PCMK_XE_PERIOD, NULL);
+    pcmk__output_create_xml_text_node(out, PCMK_XE_START, start);
+    pcmk__output_create_xml_text_node(out, PCMK_XE_END, end);
+
+    free(start);
+    free(end);
+    return pcmk_rc_ok;
 }
 
 static GOptionContext *
@@ -142,6 +293,19 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 
     return context;
 }
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "date", "default", date_default },
+    { "date", "xml", date_xml },
+    { "duration", "default", duration_default },
+    { "duration", "xml", duration_xml },
+    { "duration_ends", "default", duration_ends_default },
+    { "duration_ends", "xml", duration_ends_xml },
+    { "period", "default", period_default },
+    { "period", "xml", period_xml },
+
+    { NULL, NULL, NULL }
+};
 
 int
 main(int argc, char **argv)
@@ -181,6 +345,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__register_messages(out, fmt_functions);
+
     if (pcmk__str_eq("now", options.date_time_s, pcmk__str_casei)) {
         date_time = crm_time_new(NULL);
 
@@ -191,10 +357,8 @@ main(int argc, char **argv)
             goto done;
         }
 
-        crm_time_log(LOG_TRACE, "Current date/time", date_time,
-                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(LOG_STDOUT, "Current date/time", date_time,
-                     options.print_options | crm_time_log_date | crm_time_log_timeofday);
+        out->message(out, "date", "Current date/time", date_time,
+                     options.print_options);
 
     } else if (options.date_time_s) {
         date_time = crm_time_new(options.date_time_s);
@@ -206,10 +370,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        crm_time_log(LOG_TRACE, "Date", date_time,
-                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(LOG_STDOUT, "Date", date_time,
-                     options.print_options | crm_time_log_date | crm_time_log_timeofday);
+        out->message(out, "date", "Date", date_time, options.print_options);
     }
 
     if (options.duration_s) {
@@ -222,9 +383,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
-        crm_time_log(LOG_STDOUT, "Duration", duration,
-                     options.print_options | crm_time_log_duration);
+        out->message(out, "duration", duration, options.print_options);
     }
 
     if (options.period_s) {
@@ -237,10 +396,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        log_time_period(LOG_TRACE, period,
-                        options.print_options | crm_time_log_date | crm_time_log_timeofday);
-        log_time_period(LOG_STDOUT, period,
-                        options.print_options | crm_time_log_date | crm_time_log_timeofday);
+        out->message(out, "period", period, options.print_options);
         crm_time_free_period(period);
     }
 
@@ -255,11 +411,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        crm_time_log(LOG_TRACE, "Duration ends at", later,
-                     crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
-        crm_time_log(LOG_STDOUT, "Duration ends at", later,
-                     options.print_options | crm_time_log_date | crm_time_log_timeofday |
-                     crm_time_log_with_timezone);
+        out->message(out, "duration_ends", later, options.print_options);
 
         if (options.expected_s) {
             char *dt_s = crm_time_as_string(later,
