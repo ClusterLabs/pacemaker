@@ -910,7 +910,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         if(nodes == NULL && force) {
             nodes = pcmk__copy_node_list(scheduler->nodes, false);
 
-        } else if(nodes == NULL && rsc->exclusive_discover) {
+        } else if ((nodes == NULL)
+                   && pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
             GHashTableIter iter;
             pcmk_node_t *node = NULL;
 

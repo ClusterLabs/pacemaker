@@ -138,6 +138,9 @@ enum pcmk__rsc_flags {
     // Whether resource has pending start action in history
     pcmk__rsc_start_pending          = (1ULL << 19),
 
+    // Whether resource is probed only on nodes marked exclusive
+    pcmk__rsc_exclusive_probes       = (1ULL << 20),
+
     /*
      * Whether resource is multiply active with recovery set to
      * \c PCMK_VALUE_STOP_UNEXPECTED

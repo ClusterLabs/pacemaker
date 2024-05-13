@@ -321,7 +321,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
 {
     pcmk_node_t *match = NULL;
 
-    if ((rsc->exclusive_discover
+    if ((pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
          || (node->rsc_discover_mode == pcmk_probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and

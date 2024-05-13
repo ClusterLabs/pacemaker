@@ -210,7 +210,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
-    if (rsc->exclusive_discover || top->exclusive_discover) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+        || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
         // Exclusive discovery is enabled ...
 
         if (allowed == NULL) {

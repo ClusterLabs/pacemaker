@@ -159,8 +159,9 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
 
-    if (rsc->exclusive_discover
-        || pe__const_top_resource(rsc, false)->exclusive_discover) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+        || pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
+                       pcmk__rsc_exclusive_probes)) {
         pcmk_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children

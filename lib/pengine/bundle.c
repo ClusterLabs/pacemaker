@@ -1266,7 +1266,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
             replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
             replica->child = childIter->data;
-            replica->child->exclusive_discover = TRUE;
+            pcmk__set_rsc_flags(replica->child, pcmk__rsc_exclusive_probes);
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value

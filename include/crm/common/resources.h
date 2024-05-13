@@ -105,9 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    // @TODO Merge these into flags
-    gboolean exclusive_discover;    // Whether exclusive probing is enabled
-
     /* Pay special attention to whether you want to use rsc_cons_lhs and
      * rsc_cons directly, which include only colocations explicitly involving
      * this resource, or call libpacemaker's pcmk__with_this_colocations() and

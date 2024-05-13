@@ -569,7 +569,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     CRM_ASSERT((node != NULL) && pcmk__is_clone(rsc));
 
-    if (rsc->exclusive_discover) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)) {
         /* The clone is configured to be probed only where a location constraint
          * exists with PCMK_XA_RESOURCE_DISCOVERY set to exclusive.
          *
