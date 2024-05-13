@@ -1,6 +1,38 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="fastvm-fedora39-23_monitor_60000" on_node="fastvm-fedora39-24" on_node_uuid="2">
+        <primitive id="fastvm-fedora39-23" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="fastvm-fedora39-24" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000"  reconnect_interval="30s" server="fastvm-fedora39-23"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="start" operation_key="fastvm-fedora39-23_start_0" on_node="fastvm-fedora39-24" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="6" operation="start" operation_key="fastvm-fedora39-23_start_0" on_node="fastvm-fedora39-24" on_node_uuid="2">
+        <primitive id="fastvm-fedora39-23" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="fastvm-fedora39-24" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="30s" server="fastvm-fedora39-23"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="stop" operation_key="fastvm-fedora39-23_stop_0" on_node="fastvm-fedora39-24" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="stop" operation_key="fastvm-fedora39-23_stop_0" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
       <rsc_op id="5" operation="stop" operation_key="fastvm-fedora39-23_stop_0" on_node="fastvm-fedora39-22" on_node_uuid="1">
         <primitive id="fastvm-fedora39-23" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  reconnect_interval="30s" server="fastvm-fedora39-23"/>
@@ -9,11 +41,15 @@
         </downed>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="10" operation="stop" operation_key="dummy_stop_0"/>
+      </trigger>
+    </inputs>
   </synapse>
-  <synapse id="1">
+  <synapse id="3">
     <action_set>
-      <rsc_op id="4" operation="stop" operation_key="fastvm-fedora39-23_stop_0" on_node="fastvm-fedora39-24" on_node_uuid="2">
+      <rsc_op id="3" operation="stop" operation_key="fastvm-fedora39-23_stop_0" on_node="fastvm-fedora39-24" on_node_uuid="2">
         <primitive id="fastvm-fedora39-23" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_node="fastvm-fedora39-24" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="30s" server="fastvm-fedora39-23"/>
         <downed>
@@ -21,52 +57,56 @@
         </downed>
       </rsc_op>
     </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="2">
-    <action_set>
-      <rsc_op id="10" operation="monitor" operation_key="dummy_monitor_10000" on_node="fastvm-fedora39-24" on_node_uuid="2">
-        <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="fastvm-fedora39-24" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="start" operation_key="dummy_start_0" on_node="fastvm-fedora39-24" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="3">
-    <action_set>
-      <rsc_op id="9" operation="start" operation_key="dummy_start_0" on_node="fastvm-fedora39-24" on_node_uuid="2">
-        <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="fastvm-fedora39-24" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="3" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="8" operation="stop" operation_key="dummy_stop_0"/>
+        <pseudo_event id="10" operation="stop" operation_key="dummy_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <pseudo_event id="8" operation="stop" operation_key="dummy_stop_0">
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
-      </pseudo_event>
+      <rsc_op id="12" operation="monitor" operation_key="dummy_monitor_10000" on_node="fastvm-fedora39-22" on_node_uuid="1">
+        <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="3" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23"/>
+        <rsc_op id="11" operation="start" operation_key="dummy_start_0" on_node="fastvm-fedora39-22" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <crm_event id="3" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23">
+      <rsc_op id="11" operation="start" operation_key="dummy_start_0" on_node="fastvm-fedora39-22" on_node_uuid="1">
+        <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="fastvm-fedora39-22" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="10" operation="stop" operation_key="dummy_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="10" operation="stop" operation_key="dummy_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <crm_event id="4" operation="stonith" operation_key="stonith-fastvm-fedora39-23-reboot" on_node="fastvm-fedora39-23" on_node_uuid="fastvm-fedora39-23">
         <attributes CRM_meta_on_node="fastvm-fedora39-23" CRM_meta_on_node_uuid="fastvm-fedora39-23" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="fastvm-fedora39-23"/>
