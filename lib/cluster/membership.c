@@ -476,7 +476,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
     } else {
         crm_info("No inactive cluster nodes%s%s to remove from the membership "
                  "cache",
-                 ((criterion != NULL)? " with" : ""), pcmk__s(criterion, ""));
+                 ((criterion != NULL)? " with " : ""), pcmk__s(criterion, ""));
     }
 
     free(search.uname);
