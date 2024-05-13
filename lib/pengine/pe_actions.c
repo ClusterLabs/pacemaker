@@ -962,13 +962,16 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     /* Remote node connections are handled specially. Failures that result
      * in dropping an active connection must result in fencing. The only
-     * failures that don't are probes and starts. The user can explicitly set
-     * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start failures.
+     * failures that don't are probes, starts, and migrate_froms (which are
+     * essentially starts during a migration). The user can explicitly set
+     * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start and migrate_from
+     * failures.
      */
     if (rsc->is_remote_node
         && pcmk__is_remote_node(pcmk_find_node(rsc->cluster, rsc->id))
         && !pcmk_is_probe(action_name, interval_ms)
-        && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
+        && !pcmk__str_any_of(action_name, PCMK_ACTION_START,
+                             PCMK_ACTION_MIGRATE_FROM, NULL)) {
         needs_remote_reset = true;
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
             desc = NULL; // Force default for unmanaged connections
