@@ -642,8 +642,10 @@ free_schema(gpointer data)
 void
 crm_schema_cleanup(void)
 {
-    g_list_free_full(known_schemas, free_schema);
-    known_schemas = NULL;
+    if (known_schemas != NULL) {
+        g_list_free_full(known_schemas, free_schema);
+        known_schemas = NULL;
+    }
     initialized = false;
 
     wrap_libxslt(true);

@@ -170,6 +170,7 @@ lrmd_remote_client_destroy(gpointer user_data)
         gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(*client->remote->tls_session);
         gnutls_free(client->remote->tls_session);
+        client->remote->tls_session = NULL;
         close(csock);
     }
 

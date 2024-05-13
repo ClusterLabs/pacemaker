@@ -605,6 +605,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
         gnutls_bye(*native->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
+        native->remote->tls_session = NULL;
     }
     if (native->psk_cred_c) {
         gnutls_psk_free_client_credentials(native->psk_cred_c);
@@ -628,7 +629,6 @@ lrmd_tls_connection_destroy(gpointer userdata)
     native->source = 0;
     native->sock = 0;
     native->psk_cred_c = NULL;
-    native->remote->tls_session = NULL;
     native->sock = 0;
 
     if (native->callback) {
@@ -1688,7 +1688,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
         gnutls_bye(*native->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = 0;
+        native->remote->tls_session = NULL;
     }
 
     if (native->async_timer) {
