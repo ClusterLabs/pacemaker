@@ -688,7 +688,6 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (container) {
             rsc->container = container;
-            pcmk__set_rsc_flags(container, pcmk__rsc_has_filler);
             container->fillers = g_list_append(container->fillers, rsc);
             pcmk__rsc_trace(rsc, "Resource %s's container is %s",
                             rsc->id, container_id);

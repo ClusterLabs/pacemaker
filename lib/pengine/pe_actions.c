@@ -404,32 +404,6 @@ update_resource_action_runnable(pcmk_action_t *action,
     }
 }
 
-/*!
- * \internal
- * \brief Update a resource object's flags for a new action on it
- *
- * \param[in,out] rsc     Resource that action is for (if any)
- * \param[in]     action  New action
- */
-static void
-update_resource_flags_for_action(pcmk_resource_t *rsc,
-                                 const pcmk_action_t *action)
-{
-    /* @COMPAT pcmk__rsc_starting and pcmk__rsc_stopping are deprecated and
-     * unused within Pacemaker, and will eventually be removed
-     */
-    if (pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        pcmk__set_rsc_flags(rsc, pcmk__rsc_stopping);
-
-    } else if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_casei)) {
-        if (pcmk_is_set(action->flags, pcmk_action_runnable)) {
-            pcmk__set_rsc_flags(rsc, pcmk__rsc_starting);
-        } else {
-            pcmk__clear_rsc_flags(rsc, pcmk__rsc_starting);
-        }
-    }
-}
-
 static bool
 valid_stop_on_fail(const char *value)
 {
@@ -1165,7 +1139,6 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
         }
 
         update_resource_action_runnable(action, scheduler);
-        update_resource_flags_for_action(rsc, action);
     }
 
     if (action->extra == NULL) {

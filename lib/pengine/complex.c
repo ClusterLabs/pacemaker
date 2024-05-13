@@ -738,7 +738,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
 
     (*rsc)->flags = 0;
-    pcmk__set_rsc_flags(*rsc, pcmk__rsc_runnable|pcmk__rsc_unassigned);
+    pcmk__set_rsc_flags(*rsc, pcmk__rsc_unassigned);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);

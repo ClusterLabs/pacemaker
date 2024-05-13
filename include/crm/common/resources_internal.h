@@ -132,17 +132,8 @@ enum pcmk__rsc_flags {
     // Flag for non-scheduler code to use to detect recursion loops
     pcmk__rsc_detect_loop            = (1ULL << 17),
 
-    // \deprecated Do not use
-    pcmk__rsc_runnable               = (1ULL << 18),
-
     // Whether resource has pending start action in history
     pcmk__rsc_start_pending          = (1ULL << 19),
-
-    // \deprecated Do not use
-    pcmk__rsc_starting               = (1ULL << 20),
-
-    // \deprecated Do not use
-    pcmk__rsc_stopping               = (1ULL << 21),
 
     /*
      * Whether resource is multiply active with recovery set to
@@ -161,9 +152,6 @@ enum pcmk__rsc_flags {
 
     // Whether resource, its node, or entire cluster is in maintenance mode
     pcmk__rsc_maintenance            = (1ULL << 26),
-
-    // \deprecated Do not use
-    pcmk__rsc_has_filler             = (1ULL << 27),
 
     // Whether resource can be started or promoted only on quorate nodes
     pcmk__rsc_needs_quorum           = (1ULL << 28),
