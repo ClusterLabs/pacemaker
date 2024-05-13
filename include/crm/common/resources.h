@@ -105,7 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    GList *rsc_cons;          // Colocations of this resource with others
     GList *rsc_location;      // Location constraints for resource
     GList *actions;           // Actions scheduled for resource
     GList *rsc_tickets;       // Ticket constraints for resource

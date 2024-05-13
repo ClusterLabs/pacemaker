@@ -388,7 +388,8 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->node_attribute = pcmk__s(node_attr, CRM_ATTR_UNAME);
     new_con->flags = flags;
 
-    pcmk__add_this_with(&(dependent->rsc_cons), new_con, dependent);
+    pcmk__add_this_with(&(dependent->private->this_with_colocations), new_con,
+                        dependent);
     pcmk__add_with_this(&(primary->private->with_this_colocations), new_con,
                         primary);
 

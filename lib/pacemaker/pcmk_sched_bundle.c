@@ -645,7 +645,8 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
     if ((orig_rsc == rsc)
         || pcmk_is_set(orig_rsc->flags, pcmk__rsc_replica_container)) {
 
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        pcmk__add_this_with_list(list, rsc->private->this_with_colocations,
+                                 orig_rsc);
         return;
     }
 
@@ -665,14 +666,16 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
             /* orig_rsc is the clone and we're setting roles (or have already
              * done so)
              */
-            pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+            pcmk__add_this_with_list(list, rsc->private->this_with_colocations,
+                                     orig_rsc);
         }
 
     } else if (!pcmk_is_set(orig_rsc->flags, pcmk__rsc_unassigned)) {
         /* orig_rsc is an instance and is already assigned. If something
          * requests colocations for orig_rsc now, it's for setting roles.
          */
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        pcmk__add_this_with_list(list, rsc->private->this_with_colocations,
+                                 orig_rsc);
     }
 }
 

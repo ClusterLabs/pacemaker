@@ -775,7 +775,8 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
                         rsc->id, orig_rsc->id);
 
         // Add the group's own colocations
-        pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
+        pcmk__add_this_with_list(list, rsc->private->this_with_colocations,
+                                 orig_rsc);
 
         // If cloned, add any relevant colocations involving the clone
         if (parent != NULL) {
@@ -816,8 +817,8 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
             crm_trace("Adding mandatory '%s with' colocations to list for "
                       "member %s because earlier member %s is unmanaged",
                       rsc->id, orig_rsc->id, member->id);
-            for (const GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
-                 cons_iter = cons_iter->next) {
+            for (const GList *cons_iter = rsc->private->this_with_colocations;
+                 cons_iter != NULL; cons_iter = cons_iter->next) {
                 const pcmk__colocation_t *colocation = NULL;
 
                 colocation = (const pcmk__colocation_t *) cons_iter->data;
