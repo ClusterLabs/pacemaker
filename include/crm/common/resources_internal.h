@@ -132,6 +132,9 @@ enum pcmk__rsc_flags {
     // Flag for non-scheduler code to use to detect recursion loops
     pcmk__rsc_detect_loop            = (1ULL << 17),
 
+    // Whether resource is a Pacemaker Remote connection
+    pcmk__rsc_is_remote_connection   = (1ULL << 18),
+
     // Whether resource has pending start action in history
     pcmk__rsc_start_pending          = (1ULL << 19),
 

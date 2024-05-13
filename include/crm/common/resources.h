@@ -106,7 +106,6 @@ struct pe_resource_s {
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
     // @TODO Merge these into flags
-    gboolean is_remote_node;        // Whether this is a remote connection
     gboolean exclusive_discover;    // Whether exclusive probing is enabled
 
     /* Pay special attention to whether you want to use rsc_cons_lhs and

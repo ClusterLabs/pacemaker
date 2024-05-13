@@ -546,7 +546,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_assigning);
 
-    if (rsc->is_remote_node) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         remote_connection_assigned(rsc);
     }
 
@@ -989,7 +989,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     if (rsc->container != NULL) {
         pcmk_resource_t *remote_rsc = NULL;
 
-        if (rsc->is_remote_node) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             // rsc is the implicit remote connection for a guest or bundle node
 
             /* Guest resources are not allowed to run on Pacemaker Remote nodes,
@@ -1016,7 +1016,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
          * we check whether a resource (that is not itself a remote connection)
          * has container set to a remote node or guest node resource.
          */
-        } else if (rsc->container->is_remote_node) {
+        } else if (pcmk_is_set(rsc->container->flags,
+                               pcmk__rsc_is_remote_connection)) {
             remote_rsc = rsc->container;
         } else  {
             remote_rsc = pe__resource_contains_guest_node(scheduler,
@@ -1073,7 +1074,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
         }
     }
 
-    if (rsc->is_remote_node
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)
         || pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
         /* Remote connections and fencing devices are not allowed to run on
          * Pacemaker Remote nodes
@@ -1635,7 +1636,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
     // Fence devices and remote connections can't be locked
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
-        || rsc->is_remote_node) {
+        || pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         return;
     }
 

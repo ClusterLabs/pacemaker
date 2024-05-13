@@ -418,9 +418,9 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * remote connection resource, then make sure this happens before
          * any start of the resource in this transition.
          */
-        if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
-                         pcmk__str_none)) {
+        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_is_remote_connection)
+            && pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
+                            pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, PCMK_ACTION_START,

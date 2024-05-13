@@ -159,7 +159,9 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
                                   action->node, add_node_to_xml, downed);
         }
 
-    } else if (action->rsc && action->rsc->is_remote_node
+    } else if ((action->rsc != NULL)
+               && pcmk_is_set(action->rsc->flags,
+                              pcmk__rsc_is_remote_connection)
                && pcmk__str_eq(action->task, PCMK_ACTION_STOP,
                                pcmk__str_none)) {
 

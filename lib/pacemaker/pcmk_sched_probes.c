@@ -183,7 +183,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
 
-        } else if (rsc->is_remote_node) {
+        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             reason = "Pacemaker Remote nodes cannot host remote connections";
             goto no_probe;
         }
@@ -194,7 +194,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         return pcmk__probe_resource_list(rsc->children, node);
     }
 
-    if ((rsc->container != NULL) && !rsc->is_remote_node) {
+    if ((rsc->container != NULL)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         reason = "resource is inside a container";
         goto no_probe;
 

@@ -123,7 +123,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     if (migrate_to != NULL) {
         add_migration_meta(migrate_to, current, rsc->allocated_to);
 
-        if (!rsc->is_remote_node) {
+        if (!pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             /* migrate_to takes place on the source node, but can affect the
              * target node depending on how the agent is written. Because of
              * this, pending migrate_to actions must be recorded in the CIB,

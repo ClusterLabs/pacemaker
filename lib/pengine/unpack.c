@@ -787,7 +787,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
 {
     pcmk_node_t *remote_node = NULL;
 
-    if (new_rsc->is_remote_node == FALSE) {
+    if (!pcmk_is_set(new_rsc->flags, pcmk__rsc_is_remote_connection)) {
         return;
     }
 
@@ -2422,7 +2422,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             pcmk__set_rsc_flags(rsc, pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
             if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
-                if (rsc->is_remote_node) {
+                if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
                     tmpnode = pcmk_find_node(scheduler, rsc->id);
                 }
                 if (pcmk__is_remote_node(tmpnode)
@@ -2452,7 +2452,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
      * to be fenced. By setting unseen = FALSE, the remote-node failure will
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed) && rsc->is_remote_node) {
+    if (pcmk_all_flags_set(rsc->flags,
+                           pcmk__rsc_failed|pcmk__rsc_is_remote_connection)) {
         tmpnode = pcmk_find_node(scheduler, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
