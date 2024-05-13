@@ -211,7 +211,28 @@ By default, an alert agent will be called for node events, fencing events, and
 resource events. An agent may choose to ignore certain types of events, but
 there is still the overhead of calling it for those events. To eliminate that
 overhead, you may select which types of events the agent should receive.
-   
+
+Alert filters are configured within a ``select`` element inside an ``alert``
+element.
+
+.. list-table:: **Possible alert filters**
+   :class: longtable
+   :widths: 1 3
+   :header-rows: 1
+
+   * - Name
+     - Events alerted
+   * - select_nodes
+     - A node joins or leaves the cluster (whether at the cluster layer for
+       cluster nodes, or via a remote connection for Pacemaker Remote nodes).
+   * - select_fencing
+     - Fencing or unfencing of a node completes (whether successfully or not).
+   * - select_resources
+     - A resource action other than meta-data completes (whether successfully
+       or not).
+   * - select_attributes
+     - A transient attribute value update is sent to the CIB.
+
 .. topic:: Alert configuration to receive only node events and fencing events
 
    .. code-block:: xml
@@ -229,9 +250,6 @@ overhead, you may select which types of events the agent should receive.
          </alerts>
       </configuration>
    
-The possible options within ``<select>`` are ``<select_nodes>``,
-``<select_fencing>``, ``<select_resources>``, and ``<select_attributes>``.
-
 With ``<select_attributes>`` (the only event type not enabled by default), the
 agent will receive alerts when a node attribute changes. If you wish the agent
 to be called only when certain attributes change, you can configure that as well.
