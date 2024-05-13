@@ -16,6 +16,13 @@
 
 #define SUMMARY "Display and parse ISO 8601 dates and times"
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 struct {
     char *date_time_s;
     gchar *duration_s;
@@ -118,13 +125,14 @@ log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
     GOptionContext *context = NULL;
 
     const char *description = "For more information on the ISO 8601 standard, see " \
                               "https://en.wikipedia.org/wiki/ISO_8601";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "commands", "Commands:",
@@ -138,16 +146,20 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
     crm_time_t *duration = NULL;
     crm_time_t *date_time = NULL;
 
     GError *error = NULL;
+    pcmk__output_t *out = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "dpDE");
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -155,11 +167,18 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("iso8601", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When iso8601 is converted to use formatted output, this can go. */
-        pcmk__cli_help('v');
+        out->version(out, false);
+        goto done;
     }
 
     if (pcmk__str_eq("now", options.date_time_s, pcmk__str_casei)) {
@@ -277,6 +296,13 @@ done:
     g_free(options.expected_s);
     g_free(options.period_s);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
