@@ -365,6 +365,13 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         cib_object = pcmk__xml_read(input);
     }
 
+    if (cib_object == NULL) {
+        rc = pcmk_rc_bad_input;
+        g_set_error(error, PCMK__EXITC_ERROR, pcmk_rc2exitc(rc),
+                    "Could not read input XML: %s", pcmk_rc_str(rc));
+        return rc;
+    }
+
     if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
         pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
