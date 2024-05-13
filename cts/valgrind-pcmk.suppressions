@@ -7,14 +7,6 @@
 }
 
 {
-   Ignore option parsing
-   Memcheck:Leak
-   fun:realloc
-   fun:crm_get_option_long
-   fun:main
-}
-
-{
    dlopen internals
    Memcheck:Leak
    fun:calloc
