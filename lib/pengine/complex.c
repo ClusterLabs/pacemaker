@@ -1104,7 +1104,6 @@ common_free(pcmk_resource_t * rsc)
         rsc->allowed_nodes = NULL;
     }
     g_list_free(rsc->fillers);
-    g_list_free(rsc->rsc_location);
     free(rsc->id);
     free(rsc->allocated_to);
 
@@ -1113,6 +1112,7 @@ common_free(pcmk_resource_t * rsc)
     free(rsc->private->pending_action);
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);
+    g_list_free(rsc->private->location_constraints);
     free(rsc->private);
 
     free(rsc);

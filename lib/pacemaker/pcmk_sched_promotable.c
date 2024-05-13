@@ -999,8 +999,10 @@ set_instance_priority(gpointer data, gpointer user_data)
     }
 
     // Add relevant location constraint scores for promoted role
-    apply_promoted_locations(instance, instance->rsc_location, chosen);
-    apply_promoted_locations(instance, clone->rsc_location, chosen);
+    apply_promoted_locations(instance, instance->private->location_constraints,
+                             chosen);
+    apply_promoted_locations(instance, clone->private->location_constraints,
+                             chosen);
 
     // Consider instance's role-based colocations with other resources
     list = pcmk__this_with_colocations(instance);

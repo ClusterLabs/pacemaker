@@ -354,6 +354,8 @@ struct pcmk__resource_private {
     // Colocations of this resource with others
     GList *this_with_colocations;
 
+    GList *location_constraints;        // Location constraints for resource
+
     const pcmk__rsc_methods_t *fns;         // Resource object methods
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };

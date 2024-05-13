@@ -639,7 +639,8 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
 
     rsc->private->scheduler->placement_constraints =
         g_list_prepend(rsc->private->scheduler->placement_constraints, new_con);
-    rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
+    rsc->private->location_constraints =
+        g_list_prepend(rsc->private->location_constraints, new_con);
 
     return new_con;
 }

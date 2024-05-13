@@ -73,10 +73,10 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
                       bool add_header)
 {
     GList *lpc = NULL;
-    GList *list = rsc->rsc_location;
     int rc = pcmk_rc_no_output;
 
-    for (lpc = list; lpc != NULL; lpc = lpc->next) {
+    for (lpc = rsc->private->location_constraints;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__location_t *cons = lpc->data;
 
         GList *lpc2 = NULL;
@@ -549,10 +549,10 @@ locations_list(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
 
     GList *lpc = NULL;
-    GList *list = rsc->rsc_location;
     int rc = pcmk_rc_no_output;
 
-    for (lpc = list; lpc != NULL; lpc = lpc->next) {
+    for (lpc = rsc->private->location_constraints;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__location_t *cons = lpc->data;
 
         GList *lpc2 = NULL;

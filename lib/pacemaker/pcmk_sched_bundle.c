@@ -768,8 +768,9 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
         bundled_resource->private->cmds->apply_location(bundled_resource,
                                                         location);
-        bundled_resource->rsc_location = g_list_prepend(
-            bundled_resource->rsc_location, location);
+        bundled_resource->private->location_constraints =
+            g_list_prepend(bundled_resource->private->location_constraints,
+                           location);
     }
 }
 
