@@ -1,3 +1,465 @@
+* Wed May 15 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.8-rc1
+- 2480 commits with 507 files changed, 45891 insertions(+), 22991 deletions(-)
+
+- Features added since Pacemaker-2.1.7
+  + CIB: deprecate omitting validate-with from the CIB or setting it to "none"
+    or an unknown schema
+  + CIB: deprecate "default" and "#default" as explicit meta-attribute values
+  + CIB: deprecate resource-discovery-enabled node attribute
+  + CIB: deprecate support for multiple top-level rules within a location
+    constraint (a single rule may still contain multiple sub-rules)
+  + CIB: deprecate support for node attribute expressions in rules beneath op,
+    op_defaults, or fence device meta-attributes
+  + CIB: deprecate support for rkt in bundles
+  + CIB: drop support for (nonworking) rules based on the #role node attribute
+    (role-based location constraints may still contain rules)
+  + CIB manager,controller,fencer,scheduler: deprecate "metadata" command-line
+    option (instead, use crm_attribute --list-options mentioned below)
+  + pacemaker-remoted: newer schema files are now downloaded from the cluster,
+    allowing more command-line tools to work when the Pacemaker Remote node
+    has an older Pacemaker version
+  + agents: deprecate the ocf:pacemaker:o2cb resource agent
+  + tools: crm_attribute --list-options lists all possible cluster options
+  + tools: crm_resource --list-options lists all possible primitive
+    meta-attributes or special fence device parameters
+  + tools: new --score option for cibadmin --modify and crm_attribute --update
+    enables expansion of "++" and "+=" in attribute values without a warning
+    (using such expansions without --score is now deprecated)
+  + tools: crm_ticket supports standard --output-as/--output-to arguments
+  + tools: deprecate --text-fancy standard command-line option
+
+- Fixes since Pacemaker-2.1.7
+  + tools: restore the (deprecated) ability to automatically correct malformed
+    XML passed via standard input (regression introduced in 2.1.7)
+  + CIB: restore the (deprecated) ability to use validate-with="pacemaker-next"
+    (regression introduced in 2.1.6)
+  + controller: avoid zombie children when asynchronous actions exit while a
+    synchronous meta-data action is in progress
+    (regression introduced in 2.1.5)
+  + libcrmcommon: avoid file descriptor leak in asynchronous IPC clients
+    (regression introduced in 2.1.3)
+  + tools: crm_mon no longer crashes on some platforms when the fencer
+    connection is lost (regression introduced in 2.1.0)
+  + attribute manager: write Pacemaker Remote node attributes even if node is
+    not cached
+  + attribute manager: avoid use-after-free when remote node in cluster node
+    cache
+  + attribute manager: correctly propagate utilization attributes to peers
+    to avoid the possibility of later being written out as regular node
+    attributes
+  + fencer: correctly parse action-specific timeouts with units other than
+    seconds
+  + fencer: avoid unnecessary timeouts when the watchdog timeout is greater
+    than a query timeout, per-device fencing timeout, or stonith-timeout
+  + libcrmcommon: don't assume next schema will validate when not transforming
+  + libcrmcommon: when displaying XML, don't show "<null>" for empty attribute
+    values, and properly escape special characters
+  + scheduler: if the user specifies a timeout of 0, use the default 20s as
+    documented
+  + agents: ocf:pacemaker:SysInfo respects attrd_updater dampening
+  + agents: ocf:pacemaker:HealthSMART properly handles SMART data missing
+    temperature
+  + tools: cibadmin --replace now leaves "++" and "+=" unexpanded in XML
+    attribute values rather than wrongly treat them as 0
+  + tools: cibsecret avoids possible truncation issue in process listing
+  + tools: crm_attribute --node localhost or --node auto works
+  + tools: crm_resource ignores resource meta-attribute node expressions
+    for consistency with how the cluster works
+  + tools: crm_resource honors rules when getting utilization attributes
+  + tools: crm_verify --output-as=xml includes detailed messages
+  + tools: crm_mon exits upon loss of an attached pseudo-terminal to avoid
+    possibility of 100% CPU usage (seen when run via sudo with use_pty
+    configured)
+
+- Public API changes since Pacemaker-2.1.7
+  + libcib: add cib_score_update cib_call_options value
+  + libcib: deprecate functions cib_get_generation(), cib_metadata(),
+    cib_pref(), query_node_uname(), and set_standby()
+  + libcib: deprecate T_CIB_DIFF_NOTIFY
+  + libcib: deprecate `<failed>` element in CIB create reply
+  + libcrmcluster: add enum pcmk_cluster_layer
+  + libcrmcluster: add functions pcmk_cluster_connect(),
+    pcmk_cluster_disconnect(), pcmk_cluster_layer_text(),
+    pcmk_cluster_set_destroy_fn(), pcmk_cpg_set_confchg_fn(),
+    pcmk_cpg_set_deliver_fn(), and pcmk_get_cluster_layer()
+  + libcrmcluster: add type pcmk_cluster_t
+  + libcrmcluster: deprecate functions cluster_connect_cpg(),
+    cluster_disconnect_cpg(), crm_active_peers(), crm_cluster_connect(),
+    crm_cluster_disconnect(), crm_get_peer(), crm_get_peer_full(),
+    crm_is_corosync_peer_active(), crm_is_peer_active(), crm_join_phase_str(),
+    crm_peer_destroy(), crm_peer_init(), crm_peer_uname(),
+    crm_peer_uuid(), crm_remote_node_cache_size(),
+    crm_remote_peer_cache_refresh(), crm_remote_peer_cache_remove(),
+    crm_remote_peer_get(), crm_set_autoreap(), crm_set_status_callback(),
+    get_cluster_type(), get_local_nodeid(), get_local_node_name(),
+    get_node_name(), is_corosync_cluster(), name_for_cluster_type(),
+    pcmk_cpg_membership(), pcmk_message_common_cs(), reap_crm_member(),
+    send_cluster_message(), send_cluster_text(), and text2msg_type()
+  + libcrmcluster: deprecate enums crm_ais_msg_types, crm_status_type,
+    cluster_type_e, crm_ais_msg_class, crm_get_peer_flags, crm_join_phase,
+    and crm_node_flags, including all their values
+  + libcrmcluster: deprecate global variables crm_have_quorum, crm_peer_cache,
+    crm_peer_seq, and crm_remote_peer_cache
+  + libcrmcluster: deprecate crm_cluster_t and struct crm_cluster_s, including
+    all its members
+  + libcrmcluster: deprecate crm_node_t and struct crm_peer_node_s, including
+    all its members
+  + libcrmcluster: deprecate constants CRM_NODE_LOST and CRM_NODE_MEMBER
+  + libcrmcommon: add constants PCMK_ACTION_METADATA, PCMK_META_ALLOW_MIGRATE,
+    PCMK_META_ALLOW_UNHEALTHY_NODES, PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+    PCMK_META_CRITICAL, PCMK_META_GLOBALLY_UNIQUE, PCMK_META_INTERLEAVE,
+    PCMK_META_INTERVAL, PCMK_META_INTERVAL_ORIGIN, PCMK_META_IS_MANAGED,
+    PCMK_META_MAINTENANCE, PCMK_META_MULTIPLE_ACTIVE, PCMK_META_NOTIFY,
+    PCMK_META_ON_FAIL, PCMK_META_ORDERED, PCMK_META_PRIORITY,
+    PCMK_META_PROMOTABLE, PCMK_META_RECORD_PENDING, PCMK_META_REMOTE_ADDR,
+    PCMK_META_REMOTE_ALLOW_MIGRATE, PCMK_META_REMOTE_CONNECT_TIMEOUT,
+    PCMK_META_REMOTE_NODE, PCMK_META_REMOTE_PORT, PCMK_META_REQUIRES,
+    PCMK_META_RESOURCE_STICKINESS, PCMK_META_START_DELAY,
+    PCMK_META_TARGET_ROLE, PCMK_META_TIMEOUT, PCMK_META_TIMESTAMP_FORMAT,
+    PCMK_NODE_ATTR_MAINTENANCE, PCMK_NODE_ATTR_STANDBY, PCMK_OPT_BATCH_LIMIT,
+    PCMK_OPT_CLUSTER_DELAY, PCMK_OPT_CLUSTER_INFRASTRUCTURE,
+    PCMK_OPT_CLUSTER_IPC_LIMIT, PCMK_OPT_CLUSTER_NAME,
+    PCMK_OPT_CLUSTER_RECHECK_INTERVAL, PCMK_OPT_CONCURRENT_FENCING,
+    PCMK_OPT_DC_DEADTIME, PCMK_OPT_DC_VERSION, PCMK_OPT_ELECTION_TIMEOUT,
+    PCMK_OPT_ENABLE_ACL, PCMK_OPT_ENABLE_STARTUP_PROBES,
+    PCMK_OPT_FENCE_REACTION, PCMK_OPT_HAVE_WATCHDOG,
+    PCMK_OPT_JOIN_FINALIZATION_TIMEOUT, PCMK_OPT_JOIN_INTEGRATION_TIMEOUT,
+    PCMK_OPT_LOAD_THRESHOLD, PCMK_OPT_MAINTENANCE_MODE,
+    PCMK_OPT_MIGRATION_LIMIT, PCMK_OPT_NODE_ACTION_LIMIT,
+    PCMK_OPT_NODE_HEALTH_BASE, PCMK_OPT_NODE_HEALTH_GREEN,
+    PCMK_OPT_NODE_HEALTH_RED, PCMK_OPT_NODE_HEALTH_STRATEGY,
+    PCMK_OPT_NODE_HEALTH_YELLOW, PCMK_OPT_NODE_PENDING_TIMEOUT,
+    PCMK_OPT_NO_QUORUM_POLICY, PCMK_OPT_PE_ERROR_SERIES_MAX,
+    PCMK_OPT_PE_INPUT_SERIES_MAX, PCMK_OPT_PE_WARN_SERIES_MAX,
+    PCMK_OPT_PLACEMENT_STRATEGY, PCMK_OPT_PRIORITY_FENCING_DELAY,
+    PCMK_OPT_SHUTDOWN_ESCALATION, PCMK_OPT_SHUTDOWN_LOCK,
+    PCMK_OPT_SHUTDOWN_LOCK_LIMIT, PCMK_OPT_STARTUP_FENCING,
+    PCMK_OPT_START_FAILURE_IS_FATAL, PCMK_OPT_STONITH_ACTION,
+    PCMK_OPT_STONITH_ENABLED, PCMK_OPT_STONITH_MAX_ATTEMPTS,
+    PCMK_OPT_STONITH_TIMEOUT, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT,
+    PCMK_OPT_STOP_ALL_RESOURCES, PCMK_OPT_STOP_ORPHAN_ACTIONS,
+    PCMK_OPT_STOP_ORPHAN_RESOURCES, PCMK_OPT_SYMMETRIC_CLUSTER,
+    PCMK_OPT_TRANSITION_DELAY, PCMK_REMOTE_RA_ADDR, PCMK_REMOTE_RA_PORT,
+    PCMK_REMOTE_RA_RECONNECT_INTERVAL, PCMK_REMOTE_RA_SERVER,
+    PCMK_ROLE_PROMOTED, PCMK_ROLE_STARTED, PCMK_ROLE_STOPPED,
+    PCMK_ROLE_UNPROMOTED, PCMK_SCORE_INFINITY, PCMK_VALUE_ALWAYS,
+    PCMK_VALUE_AND, PCMK_VALUE_BALANCED, PCMK_VALUE_BLOCK, PCMK_VALUE_BOOLEAN,
+    PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, PCMK_VALUE_COROSYNC, PCMK_VALUE_CREATE,
+    PCMK_VALUE_CUSTOM, PCMK_VALUE_DATE_SPEC, PCMK_VALUE_DEFAULT,
+    PCMK_VALUE_DEFINED, PCMK_VALUE_DELETE, PCMK_VALUE_DEMOTE, PCMK_VALUE_DENY,
+    PCMK_VALUE_DURATION, PCMK_VALUE_DYNAMIC_LIST, PCMK_VALUE_EQ,
+    PCMK_VALUE_EXCLUSIVE, PCMK_VALUE_FAILED, PCMK_VALUE_FALSE,
+    PCMK_VALUE_FENCE, PCMK_VALUE_FENCE_LEGACY, PCMK_VALUE_FENCING,
+    PCMK_VALUE_FREEZE, PCMK_VALUE_GRANTED, PCMK_VALUE_GREEN, PCMK_VALUE_GT,
+    PCMK_VALUE_GTE, PCMK_VALUE_HOST, PCMK_VALUE_IGNORE, PCMK_VALUE_IN_RANGE,
+    PCMK_VALUE_INFINITY, PCMK_VALUE_INTEGER, PCMK_VALUE_LITERAL,
+    PCMK_VALUE_LT, PCMK_VALUE_LTE, PCMK_VALUE_MANDATORY, PCMK_VALUE_MEMBER,
+    PCMK_VALUE_META, PCMK_VALUE_MIGRATE_ON_RED, PCMK_VALUE_MINIMAL,
+    PCMK_VALUE_MINUS_INFINITY, PCMK_VALUE_MODIFY, PCMK_VALUE_MOVE,
+    PCMK_VALUE_NE, PCMK_VALUE_NEVER, PCMK_VALUE_NONE,
+    PCMK_VALUE_NONNEGATIVE_INTEGER, PCMK_VALUE_NOTHING,
+    PCMK_VALUE_NOT_DEFINED, PCMK_VALUE_NUMBER, PCMK_VALUE_OFFLINE,
+    PCMK_VALUE_ONLINE, PCMK_VALUE_ONLY_GREEN, PCMK_VALUE_OPTIONAL,
+    PCMK_VALUE_OR, PCMK_VALUE_PANIC, PCMK_VALUE_PARAM, PCMK_VALUE_PENDING,
+    PCMK_VALUE_PERCENTAGE, PCMK_VALUE_PLUS_INFINITY, PCMK_VALUE_PORT,
+    PCMK_VALUE_PROGRESSIVE, PCMK_VALUE_QUORUM, PCMK_VALUE_READ,
+    PCMK_VALUE_RED, PCMK_VALUE_REMOTE, PCMK_VALUE_RESTART,
+    PCMK_VALUE_RESTART_CONTAINER, PCMK_VALUE_REVOKED, PCMK_VALUE_SCORE,
+    PCMK_VALUE_SELECT, PCMK_VALUE_SERIALIZE, PCMK_VALUE_STANDBY,
+    PCMK_VALUE_STATIC_LIST, PCMK_VALUE_STATUS, PCMK_VALUE_STOP,
+    PCMK_VALUE_STOP_ONLY, PCMK_VALUE_STOP_START, PCMK_VALUE_STOP_UNEXPECTED,
+    PCMK_VALUE_STRING, PCMK_VALUE_SUCCESS, PCMK_VALUE_TIMEOUT,
+    PCMK_VALUE_TRUE, PCMK_VALUE_UNFENCING, PCMK_VALUE_UNKNOWN,
+    PCMK_VALUE_UTILIZATION, PCMK_VALUE_VERSION, PCMK_VALUE_WRITE,
+    PCMK_VALUE_YELLOW, PCMK_XA_ACTION, PCMK_XA_ACTIVE, PCMK_XA_ADD_HOST,
+    PCMK_XA_ADMIN_EPOCH, PCMK_XA_ADVANCED, PCMK_XA_AGENT, PCMK_XA_API_VERSION,
+    PCMK_XA_ATTRIBUTE, PCMK_XA_AUTHOR, PCMK_XA_AUTOMATIC, PCMK_XA_BLOCKED,
+    PCMK_XA_BOOLEAN_OP, PCMK_XA_BUILD, PCMK_XA_CACHED, PCMK_XA_CALL,
+    PCMK_XA_CIB_LAST_WRITTEN, PCMK_XA_CIB_NODE, PCMK_XA_CLASS, PCMK_XA_CLIENT,
+    PCMK_XA_CODE, PCMK_XA_COMMENT, PCMK_XA_COMPLETED, PCMK_XA_CONTROL_PORT,
+    PCMK_XA_COUNT, PCMK_XA_CRMD, PCMK_XA_CRM_DEBUG_ORIGIN,
+    PCMK_XA_CRM_FEATURE_SET, PCMK_XA_CRM_TIMESTAMP, PCMK_XA_DAYS,
+    PCMK_XA_DC_UUID, PCMK_XA_DEFAULT, PCMK_XA_DELEGATE, PCMK_XA_DESCRIPTION,
+    PCMK_XA_DEST, PCMK_XA_DEVICE, PCMK_XA_DEVICES, PCMK_XA_DISABLED,
+    PCMK_XA_DURATION, PCMK_XA_END, PCMK_XA_EPOCH, PCMK_XA_EXEC,
+    PCMK_XA_EXECUTION_CODE, PCMK_XA_EXECUTION_DATE, PCMK_XA_EXECUTION_MESSAGE,
+    PCMK_XA_EXEC_TIME, PCMK_XA_EXITCODE, PCMK_XA_EXITREASON,
+    PCMK_XA_EXITSTATUS, PCMK_XA_EXIT_REASON, PCMK_XA_EXPECTED,
+    PCMK_XA_EXPECTED_UP, PCMK_XA_EXTENDED_STATUS, PCMK_XA_FAILED,
+    PCMK_XA_FAILURE_IGNORED, PCMK_XA_FAIL_COUNT, PCMK_XA_FEATURES,
+    PCMK_XA_FEATURE_SET, PCMK_XA_FILE, PCMK_XA_FIRST, PCMK_XA_FIRST_ACTION,
+    PCMK_XA_FOR, PCMK_XA_FUNCTION, PCMK_XA_GENERATED, PCMK_XA_HASH,
+    PCMK_XA_HAVE_QUORUM, PCMK_XA_HEALTH, PCMK_XA_HOST, PCMK_XA_HOST_INTERFACE,
+    PCMK_XA_HOST_NETMASK, PCMK_XA_HOURS, PCMK_XA_ID, PCMK_XA_ID_AS_RESOURCE,
+    PCMK_XA_ID_REF, PCMK_XA_IMAGE, PCMK_XA_INDEX, PCMK_XA_INFLUENCE,
+    PCMK_XA_INSTANCE, PCMK_XA_INTERNAL_PORT, PCMK_XA_INTERVAL,
+    PCMK_XA_IP_RANGE_START, PCMK_XA_IS_DC, PCMK_XA_KIND, PCMK_XA_LANG,
+    PCMK_XA_LAST_FAILURE, PCMK_XA_LAST_GRANTED, PCMK_XA_LAST_RC_CHANGE,
+    PCMK_XA_LAST_UPDATED, PCMK_XA_LOCKED_TO, PCMK_XA_LOCKED_TO_HYPHEN,
+    PCMK_XA_LOSS_POLICY, PCMK_XA_MAINTENANCE, PCMK_XA_MAINTENANCE_MODE,
+    PCMK_XA_MANAGED, PCMK_XA_MESSAGE, PCMK_XA_MINUTES, PCMK_XA_MIXED_VERSION,
+    PCMK_XA_MONTHDAYS, PCMK_XA_MONTHS, PCMK_XA_MULTI_STATE, PCMK_XA_NAME,
+    PCMK_XA_NETWORK, PCMK_XA_NEXT_ROLE, PCMK_XA_NODE, PCMK_XA_NODEID,
+    PCMK_XA_NODES_RUNNING_ON, PCMK_XA_NODE_ATTRIBUTE, PCMK_XA_NODE_NAME,
+    PCMK_XA_NODE_PATH, PCMK_XA_NO_QUORUM_PANIC, PCMK_XA_NO_QUORUM_POLICY,
+    PCMK_XA_NUMBER, PCMK_XA_NUMBER_RESOURCES, PCMK_XA_NUM_UPDATES,
+    PCMK_XA_OBJECT_TYPE, PCMK_XA_ONLINE, PCMK_XA_ON_TARGET, PCMK_XA_OP,
+    PCMK_XA_OPERATION, PCMK_XA_OPTIONS, PCMK_XA_OP_KEY, PCMK_XA_ORIGIN,
+    PCMK_XA_ORPHAN, PCMK_XA_ORPHANED, PCMK_XA_PACEMAKERD_STATE, PCMK_XA_PATH,
+    PCMK_XA_PENDING, PCMK_XA_PORT, PCMK_XA_PRESENT,
+    PCMK_XA_PRIORITY_FENCING_DELAY_MS, PCMK_XA_PROGRAM, PCMK_XA_PROMOTABLE,
+    PCMK_XA_PROMOTED_MAX, PCMK_XA_PROMOTED_ONLY, PCMK_XA_PROVIDER,
+    PCMK_XA_QUEUED, PCMK_XA_QUEUE_TIME, PCMK_XA_QUORUM, PCMK_XA_RANGE,
+    PCMK_XA_RC, PCMK_XA_RC_TEXT, PCMK_XA_REASON, PCMK_XA_REFERENCE,
+    PCMK_XA_RELOADABLE, PCMK_XA_REMAIN_STOPPED, PCMK_XA_REMOTE_CLEAR_PORT,
+    PCMK_XA_REMOTE_NODE, PCMK_XA_REMOTE_TLS_PORT, PCMK_XA_REPLICAS,
+    PCMK_XA_REPLICAS_PER_HOST, PCMK_XA_REQUEST, PCMK_XA_REQUIRE_ALL,
+    PCMK_XA_RESOURCE, PCMK_XA_RESOURCES_RUNNING, PCMK_XA_RESOURCE_AGENT,
+    PCMK_XA_RESOURCE_DISCOVERY, PCMK_XA_RESULT, PCMK_XA_ROLE, PCMK_XA_RSC,
+    PCMK_XA_RSC_PATTERN, PCMK_XA_RSC_ROLE, PCMK_XA_RULE_ID, PCMK_XA_RUNNING,
+    PCMK_XA_RUNNING_ON, PCMK_XA_RUN_COMMAND, PCMK_XA_SCOPE, PCMK_XA_SCORE,
+    PCMK_XA_SCORE_ATTRIBUTE, PCMK_XA_SECONDS, PCMK_XA_SEQUENTIAL,
+    PCMK_XA_SHUTDOWN, PCMK_XA_SOURCE, PCMK_XA_SOURCE_DIR,
+    PCMK_XA_SOURCE_DIR_ROOT, PCMK_XA_SPEC, PCMK_XA_STANDARD, PCMK_XA_STANDBY,
+    PCMK_XA_STANDBY_ONFAIL, PCMK_XA_START, PCMK_XA_STATE, PCMK_XA_STATUS,
+    PCMK_XA_STONITH_ENABLED, PCMK_XA_STONITH_TIMEOUT_MS,
+    PCMK_XA_STOP_ALL_RESOURCES, PCMK_XA_SYMMETRICAL,
+    PCMK_XA_SYMMETRIC_CLUSTER, PCMK_XA_SYS_FROM, PCMK_XA_TAG, PCMK_XA_TARGET,
+    PCMK_XA_TARGET_ATTRIBUTE, PCMK_XA_TARGET_DIR, PCMK_XA_TARGET_PATTERN,
+    PCMK_XA_TARGET_ROLE, PCMK_XA_TARGET_VALUE, PCMK_XA_TASK, PCMK_XA_TEMPLATE,
+    PCMK_XA_THEN, PCMK_XA_THEN_ACTION, PCMK_XA_TICKET, PCMK_XA_TIME,
+    PCMK_XA_TYPE, PCMK_XA_UNAME, PCMK_XA_UNCLEAN, PCMK_XA_UNHEALTHY,
+    PCMK_XA_UNIQUE, PCMK_XA_UNMANAGED, PCMK_XA_UPDATE_CLIENT,
+    PCMK_XA_UPDATE_ORIGIN, PCMK_XA_UPDATE_USER, PCMK_XA_USER, PCMK_XA_VALID,
+    PCMK_XA_VALIDATE_WITH, PCMK_XA_VALUE, PCMK_XA_VALUE_SOURCE,
+    PCMK_XA_VERSION, PCMK_XA_WATCHDOG, PCMK_XA_WEEKDAYS, PCMK_XA_WEEKS,
+    PCMK_XA_WEEKYEARS, PCMK_XA_WEIGHT, PCMK_XA_WHEN, PCMK_XA_WITH_QUORUM,
+    PCMK_XA_WITH_RSC, PCMK_XA_WITH_RSC_ROLE, PCMK_XA_XPATH, PCMK_XA_YEARDAYS,
+    PCMK_XA_YEARS, PCMK_XE_ACLS, PCMK_XE_ACL_GROUP, PCMK_XE_ACL_PERMISSION,
+    PCMK_XE_ACL_ROLE, PCMK_XE_ACL_TARGET, PCMK_XE_ACTION, PCMK_XE_ACTIONS,
+    PCMK_XE_AGENT, PCMK_XE_AGENTS, PCMK_XE_AGENT_STATUS, PCMK_XE_ALERT,
+    PCMK_XE_ALERTS, PCMK_XE_ALLOCATIONS, PCMK_XE_ALLOCATIONS_UTILIZATIONS,
+    PCMK_XE_ATTRIBUTE, PCMK_XE_BAN, PCMK_XE_BANS, PCMK_XE_BUNDLE,
+    PCMK_XE_CAPACITY, PCMK_XE_CHANGE, PCMK_XE_CHANGE_ATTR,
+    PCMK_XE_CHANGE_LIST, PCMK_XE_CHANGE_RESULT, PCMK_XE_CHECK, PCMK_XE_CIB,
+    PCMK_XE_CLONE, PCMK_XE_CLUSTER_ACTION, PCMK_XE_CLUSTER_INFO,
+    PCMK_XE_CLUSTER_OPTIONS, PCMK_XE_CLUSTER_PROPERTY_SET,
+    PCMK_XE_CLUSTER_STATUS, PCMK_XE_COMMAND, PCMK_XE_CONFIGURATION,
+    PCMK_XE_CONSTRAINTS, PCMK_XE_CONTENT, PCMK_XE_CRM_CONFIG, PCMK_XE_CRM_MON,
+    PCMK_XE_CRM_MON_DISCONNECTED, PCMK_XE_CURRENT_DC, PCMK_XE_DATE_SPEC,
+    PCMK_XE_DC, PCMK_XE_DEPRECATED, PCMK_XE_DIFF, PCMK_XE_DIGEST,
+    PCMK_XE_DIGESTS, PCMK_XE_DOCKER, PCMK_XE_DURATION, PCMK_XE_ERROR,
+    PCMK_XE_ERRORS, PCMK_XE_EXPRESSION, PCMK_XE_FAILURE, PCMK_XE_FAILURES,
+    PCMK_XE_FEATURE, PCMK_XE_FEATURES, PCMK_XE_FENCE_EVENT,
+    PCMK_XE_FENCE_HISTORY, PCMK_XE_FENCING_ACTION, PCMK_XE_FENCING_LEVEL,
+    PCMK_XE_FENCING_TOPOLOGY, PCMK_XE_GROUP, PCMK_XE_INJECT_ATTR,
+    PCMK_XE_INJECT_SPEC, PCMK_XE_INSTANCE_ATTRIBUTES, PCMK_XE_INSTRUCTION,
+    PCMK_XE_ITEM, PCMK_XE_LAST_CHANGE, PCMK_XE_LAST_FENCED,
+    PCMK_XE_LAST_UPDATE, PCMK_XE_LIST, PCMK_XE_LONGDESC, PCMK_XE_METADATA,
+    PCMK_XE_META_ATTRIBUTES, PCMK_XE_MODIFICATIONS, PCMK_XE_MODIFY_NODE,
+    PCMK_XE_MODIFY_TICKET, PCMK_XE_NETWORK, PCMK_XE_NODE, PCMK_XE_NODES,
+    PCMK_XE_NODES_CONFIGURED, PCMK_XE_NODE_ACTION, PCMK_XE_NODE_ATTRIBUTES,
+    PCMK_XE_NODE_HISTORY, PCMK_XE_NODE_INFO, PCMK_XE_NODE_WEIGHT,
+    PCMK_XE_NVPAIR, PCMK_XE_OBJ_REF, PCMK_XE_OP, PCMK_XE_OPERATION,
+    PCMK_XE_OPERATIONS, PCMK_XE_OPERATION_HISTORY, PCMK_XE_OPTION,
+    PCMK_XE_OP_DEFAULTS, PCMK_XE_OUTPUT, PCMK_XE_OVERRIDE, PCMK_XE_OVERRIDES,
+    PCMK_XE_PACEMAKERD, PCMK_XE_PACEMAKER_RESULT, PCMK_XE_PARAMETER,
+    PCMK_XE_PARAMETERS, PCMK_XE_PODMAN, PCMK_XE_PORT_MAPPING,
+    PCMK_XE_POSITION, PCMK_XE_PRIMITIVE, PCMK_XE_PROMOTION_SCORE,
+    PCMK_XE_PROVIDER, PCMK_XE_PROVIDERS, PCMK_XE_PSEUDO_ACTION,
+    PCMK_XE_REASON, PCMK_XE_RECIPIENT, PCMK_XE_REPLICA, PCMK_XE_RESOURCE,
+    PCMK_XE_RESOURCES, PCMK_XE_RESOURCES_CONFIGURED, PCMK_XE_RESOURCE_AGENT,
+    PCMK_XE_RESOURCE_AGENT_ACTION, PCMK_XE_RESOURCE_CONFIG,
+    PCMK_XE_RESOURCE_HISTORY, PCMK_XE_RESOURCE_REF, PCMK_XE_RESOURCE_SET,
+    PCMK_XE_RESULT_CODE, PCMK_XE_REVISED_CLUSTER_STATUS,
+    PCMK_XE_ROLE, PCMK_XE_RSC_ACTION, PCMK_XE_RSC_COLOCATION,
+    PCMK_XE_RSC_DEFAULTS, PCMK_XE_RSC_LOCATION, PCMK_XE_RSC_ORDER,
+    PCMK_XE_RSC_TICKET, PCMK_XE_RULE, PCMK_XE_RULE_CHECK, PCMK_XE_SELECT,
+    PCMK_XE_SELECT_ATTRIBUTES, PCMK_XE_SELECT_FENCING, PCMK_XE_SELECT_NODES,
+    PCMK_XE_SELECT_RESOURCES, PCMK_XE_SHADOW, PCMK_XE_SHORTDESC,
+    PCMK_XE_SOURCE, PCMK_XE_SPECIAL, PCMK_XE_STACK, PCMK_XE_STATUS,
+    PCMK_XE_STORAGE, PCMK_XE_STORAGE_MAPPING, PCMK_XE_SUMMARY, PCMK_XE_TAG,
+    PCMK_XE_TAGS, PCMK_XE_TARGET, PCMK_XE_TEMPLATE, PCMK_XE_TICKET,
+    PCMK_XE_TICKETS, PCMK_XE_TIMING, PCMK_XE_TIMINGS, PCMK_XE_TRANSITION,
+    PCMK_XE_UTILIZATION, PCMK_XE_UTILIZATIONS, PCMK_XE_VALIDATE,
+    PCMK_XE_VERSION, PCMK_XE_XML, PCMK_XE_XML_PATCHSET, and
+    XML_CIB_TAG_ALERT_ATTRIBUTES
+  + libcrmcommon: add functions pcmk_action_text(), pcmk_find_node(),
+    pcmk_foreach_active_resource(), pcmk_get_dc(), pcmk_parse_interval_spec(),
+    pcmk_get_no_quorum_policy(), pcmk_has_quorum(),
+    pcmk_node_is_clean(), pcmk_update_configured_schema(),
+    pcmk_node_is_in_maintenance(), pcmk_node_is_online(),
+    pcmk_node_is_pending(), pcmk_node_is_shutting_down(), pcmk_on_fail_text(),
+    pcmk_parse_action(), pcmk_parse_role(), pcmk_resource_id(),
+    pcmk_resource_is_managed(), pcmk_role_text(), and pcmk_set_scheduler_cib()
+  + libcrmcommon: add type pcmk_rule_input_t
+  + libcrmcommon: deprecate globals crm_log_level, crm_trace_nonlog,
+    was_processing_error, and was_processing_warning
+  + libcrmcommon: deprecate functions add_message_xml(), add_node_copy(),
+    can_prune_leaf(), cli_config_update(), copy_in_properties(), copy_xml(),
+    create_hello_message(), pcmk_parse_action(), create_reply(),
+    create_reply_adv(), create_request(), create_request_adv(),
+    create_xml_node(), crm_map_element_name(), crm_next_same_xml(),
+    crm_parse_interval_spec(), crm_xml_escape(), diff_xml_object(),
+    dump_xml_formatted(), dump_xml_formatted_with_text(),
+    dump_xml_unformatted(), expand_plus_plus(), filename2xml(),
+    find_xml_children(), find_xml_node(), first_named_child(),
+    fix_plus_plus_recursive(), get_message_xml(), get_schema_name(),
+    get_schema_version(), get_xpath_object_relative(), ID(),
+    pcmk_action_text(), pcmk_create_html_node(), pcmk_create_xml_text_node(),
+    pcmk_hostname(), pcmk_on_fail_text(), purge_diff_markers(),
+    replace_xml_child(), stdin2xml(), string2xml(), subtract_xml_object(),
+    update_validation(), update_xml_child(), validate_xml(),
+    validate_xml_verbose(), write_xml_fd(), write_xml_file(),
+    xml_latest_schema(), and xml_remove_prop()
+  + libcrmcommon: deprecate constants CIB_OPTIONS_FIRST, CRM_INFINITY_S,
+    CRM_MINUS_INFINITY_S, CRM_OP_LOCAL_SHUTDOWN, CRM_PLUS_INFINITY_S,
+    CRM_SCORE_INFINITY, F_CLIENTNAME, F_CRM_DATA, F_CRM_DC_LEAVING,
+    F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, F_CRM_ELECTION_ID,
+    F_CRM_ELECTION_OWNER, F_CRM_HOST_FROM, F_CRM_HOST_TO, F_CRM_JOIN_ID,
+    F_CRM_MSG_TYPE, F_CRM_ORIGIN, F_CRM_REFERENCE, F_CRM_SYS_FROM,
+    F_CRM_SYS_TO, F_CRM_TASK, F_CRM_TGRAPH, F_CRM_TGRAPH_INPUT,
+    F_CRM_THROTTLE_MAX, F_CRM_THROTTLE_MODE, F_CRM_USER, F_CRM_VERSION,
+    F_ORIG, F_SEQ, F_SUBTYPE, F_TYPE, F_XML_TAGNAME, INFINITY, INFINITY_S,
+    MINUS_INFINITY_S, OFFLINESTATUS, ONLINESTATUS,
+    PCMK_XA_PROMOTED_MAX_LEGACY, PCMK_XA_PROMOTED_NODE_MAX_LEGACY,
+    PCMK_XA_TARGET_PATTERN, PCMK_XA_UNAME, PCMK_XE_PROMOTABLE_LEGACY,
+    SUPPORT_UPSTART, T_ATTRD, T_CRM, XML_ACL_ATTR_ATTRIBUTE,
+    XML_ACL_ATTR_KIND, XML_ACL_ATTR_REF, XML_ACL_ATTR_REFv1, XML_ACL_ATTR_TAG,
+    XML_ACL_ATTR_TAGv1, XML_ACL_ATTR_XPATH, XML_ACL_TAG_DENY,
+    XML_ACL_TAG_GROUP, XML_ACL_TAG_PERMISSION, XML_ACL_TAG_READ,
+    XML_ACL_TAG_ROLE, XML_ACL_TAG_ROLE_REF, XML_ACL_TAG_ROLE_REFv1,
+    XML_ACL_TAG_USER, XML_ACL_TAG_USERv1, XML_ACL_TAG_WRITE,
+    XML_AGENT_ATTR_CLASS, XML_AGENT_ATTR_PROVIDER, XML_ALERT_ATTR_PATH,
+    XML_ALERT_ATTR_REC_VALUE, XML_ALERT_ATTR_TIMEOUT,
+    XML_ALERT_ATTR_TSTAMP_FORMAT, XML_ATTR_CRM_VERSION, XML_ATTR_DC_UUID,
+    XML_ATTR_DESC, XML_ATTR_DIGEST, XML_ATTR_GENERATION,
+    XML_ATTR_GENERATION_ADMIN, XML_ATTR_HAVE_QUORUM, XML_ATTR_HAVE_WATCHDOG,
+    XML_ATTR_ID, XML_ATTR_IDREF, XML_ATTR_ID_LONG, XML_ATTR_NAME,
+    XML_ATTR_NUMUPDATES, XML_ATTR_OP, XML_ATTR_ORIGIN, XML_ATTR_QUORUM_PANIC,
+    XML_ATTR_REFERENCE, XML_ATTR_REQUEST, XML_ATTR_RESPONSE,
+    XML_ATTR_STONITH_DEVICES, XML_ATTR_STONITH_INDEX, XML_ATTR_STONITH_TARGET,
+    XML_ATTR_STONITH_TARGET_ATTRIBUTE, XML_ATTR_STONITH_TARGET_VALUE,
+    XML_ATTR_TE_NOWAIT, XML_ATTR_TE_TARGET_RC, XML_ATTR_TIMEOUT,
+    XML_ATTR_TRANSITION_KEY, XML_ATTR_TRANSITION_MAGIC, XML_ATTR_TSTAMP,
+    XML_ATTR_TYPE, XML_ATTR_UPDATE_CLIENT, XML_ATTR_UPDATE_ORIGIN,
+    XML_ATTR_UPDATE_USER, XML_ATTR_VALIDATION, XML_ATTR_VERSION,
+    XML_BOOLEAN_FALSE, XML_BOOLEAN_NO, XML_BOOLEAN_TRUE, XML_BOOLEAN_YES,
+    XML_CIB_ATTR_PRIORITY, XML_CIB_ATTR_SHUTDOWN, XML_CIB_ATTR_WRITTEN,
+    XML_CIB_TAG_ACLS, XML_CIB_TAG_ALERT, XML_CIB_TAG_ALERTS,
+    XML_CIB_TAG_ALERT_ATTR, XML_CIB_TAG_ALERT_FENCING,
+    XML_CIB_TAG_ALERT_NODES, XML_CIB_TAG_ALERT_RECIPIENT,
+    XML_CIB_TAG_ALERT_RESOURCES, XML_CIB_TAG_ALERT_SELECT,
+    XML_CIB_TAG_CONFIGURATION, XML_CIB_TAG_CONSTRAINTS, XML_CIB_TAG_CONTAINER,
+    XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_GENERATION_TUPPLE, XML_CIB_TAG_GROUP,
+    XML_CIB_TAG_INCARNATION, XML_CIB_TAG_LRM, XML_CIB_TAG_NODE,
+    XML_CIB_TAG_NODES, XML_CIB_TAG_NVPAIR, XML_CIB_TAG_OBJ_REF,
+    XML_CIB_TAG_OPCONFIG, XML_CIB_TAG_PROPSET, XML_CIB_TAG_RESOURCE,
+    XML_CIB_TAG_RESOURCES, XML_CIB_TAG_RSCCONFIG, XML_CIB_TAG_RSC_TEMPLATE,
+    XML_CIB_TAG_SECTION_ALL, XML_CIB_TAG_STATE, XML_CIB_TAG_STATUS,
+    XML_CIB_TAG_TAG, XML_CIB_TAG_TAGS, XML_CIB_TAG_TICKETS,
+    XML_CIB_TAG_TICKET_STATE, XML_COLOC_ATTR_INFLUENCE,
+    XML_COLOC_ATTR_NODE_ATTR, XML_COLOC_ATTR_SOURCE,
+    XML_COLOC_ATTR_SOURCE_INSTANCE, XML_COLOC_ATTR_SOURCE_ROLE,
+    XML_COLOC_ATTR_TARGET, XML_COLOC_ATTR_TARGET_INSTANCE,
+    XML_COLOC_ATTR_TARGET_ROLE, XML_CONFIG_ATTR_DC_DEADTIME,
+    XML_CONFIG_ATTR_ELECTION_FAIL, XML_CONFIG_ATTR_FENCE_REACTION,
+    XML_CONFIG_ATTR_FORCE_QUIT, XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT,
+    XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY, XML_CONFIG_ATTR_RECHECK,
+    XML_CONFIG_ATTR_SHUTDOWN_LOCK, XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT,
+    XML_CONS_ATTR_SYMMETRICAL, XML_CONS_TAG_RSC_DEPEND,
+    XML_CONS_TAG_RSC_LOCATION, XML_CONS_TAG_RSC_ORDER, XML_CONS_TAG_RSC_SET,
+    XML_CONS_TAG_RSC_TICKET, XML_CRM_TAG_PING, XML_DIFF_ATTR, XML_DIFF_CHANGE,
+    XML_DIFF_LIST, XML_DIFF_MARKER, XML_DIFF_OP, XML_DIFF_PATH,
+    XML_DIFF_POSITION, XML_DIFF_RESULT, XML_DIFF_VERSION, XML_DIFF_VSOURCE,
+    XML_DIFF_VTARGET, XML_EXPR_ATTR_ATTRIBUTE, XML_EXPR_ATTR_OPERATION,
+    XML_EXPR_ATTR_TYPE, XML_EXPR_ATTR_VALUE, XML_EXPR_ATTR_VALUE_SOURCE,
+    XML_FAILCIB_ATTR_ID, XML_FAILCIB_ATTR_OBJTYPE, XML_FAILCIB_ATTR_OP,
+    XML_FAILCIB_ATTR_REASON, XML_FAIL_TAG_CIB, XML_GRAPH_TAG_CRM_EVENT,
+    XML_GRAPH_TAG_DOWNED, XML_GRAPH_TAG_MAINTENANCE,
+    XML_GRAPH_TAG_PSEUDO_EVENT, XML_GRAPH_TAG_RSC_OP,
+    XML_LOCATION_ATTR_DISCOVERY, XML_LOC_ATTR_SOURCE,
+    XML_LOC_ATTR_SOURCE_PATTERN, XML_LRM_ATTR_CALLID,
+    XML_LRM_ATTR_EXIT_REASON, XML_LRM_ATTR_INTERVAL, XML_LRM_ATTR_INTERVAL_MS,
+    XML_LRM_ATTR_MIGRATE_SOURCE, XML_LRM_ATTR_MIGRATE_TARGET,
+    XML_LRM_ATTR_OPSTATUS, XML_LRM_ATTR_OP_DIGEST, XML_LRM_ATTR_OP_RESTART,
+    XML_LRM_ATTR_OP_SECURE, XML_LRM_ATTR_RC, XML_LRM_ATTR_RESTART_DIGEST,
+    XML_LRM_ATTR_ROUTER_NODE, XML_LRM_ATTR_RSCID, XML_LRM_ATTR_SECURE_DIGEST,
+    XML_LRM_ATTR_TARGET, XML_LRM_ATTR_TARGET_UUID, XML_LRM_ATTR_TASK,
+    XML_LRM_ATTR_TASK_KEY, XML_LRM_TAG_RESOURCE, XML_LRM_TAG_RESOURCES,
+    XML_LRM_TAG_RSC_OP, XML_NODE_ATTR_RSC_DISCOVERY, XML_NODE_IS_FENCED,
+    XML_NODE_IS_MAINTENANCE, XML_NODE_IS_REMOTE, XML_NVPAIR_ATTR_NAME,
+    XML_NVPAIR_ATTR_VALUE, XML_OP_ATTR_ALLOW_MIGRATE, XML_OP_ATTR_DIGESTS_ALL,
+    XML_OP_ATTR_DIGESTS_SECURE, XML_OP_ATTR_INTERVAL_ORIGIN,
+    XML_OP_ATTR_ON_FAIL, XML_OP_ATTR_PENDING, XML_OP_ATTR_START_DELAY,
+    XML_ORDER_ATTR_FIRST, XML_ORDER_ATTR_FIRST_ACTION, XML_ORDER_ATTR_KIND,
+    XML_ORDER_ATTR_THEN, XML_ORDER_ATTR_THEN_ACTION, XML_PING_ATTR_CRMDSTATE,
+    XML_PING_ATTR_PACEMAKERDSTATE, XML_PING_ATTR_PACEMAKERDSTATE_INIT,
+    XML_PING_ATTR_PACEMAKERDSTATE_REMOTE,
+    XML_PING_ATTR_PACEMAKERDSTATE_RUNNING,
+    XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
+    XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN,
+    XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS,
+    XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, XML_PING_ATTR_STATUS,
+    XML_PING_ATTR_SYSFROM, XML_REMOTE_ATTR_RECONNECT_INTERVAL,
+    XML_RSC_ATTR_CLEAR_INTERVAL, XML_RSC_ATTR_CLEAR_OP,
+    XML_RSC_ATTR_CONTAINER, XML_RSC_ATTR_CRITICAL, XML_RSC_ATTR_INCARNATION,
+    XML_RSC_ATTR_INTERLEAVE, XML_RSC_ATTR_INTERNAL_RSC,
+    XML_RSC_ATTR_MAINTENANCE, XML_RSC_ATTR_MANAGED, XML_RSC_ATTR_MULTIPLE,
+    XML_RSC_ATTR_NOTIFY, XML_RSC_ATTR_ORDERED, XML_RSC_ATTR_PROMOTABLE,
+    XML_RSC_ATTR_REMOTE_NODE, XML_RSC_ATTR_REMOTE_RA_ADDR,
+    XML_RSC_ATTR_REMOTE_RA_PORT, XML_RSC_ATTR_REMOTE_RA_SERVER,
+    XML_RSC_ATTR_REQUIRES, XML_RSC_ATTR_RESTART, XML_RSC_ATTR_STICKINESS,
+    XML_RSC_ATTR_TARGET, XML_RSC_ATTR_TARGET_ROLE, XML_RSC_ATTR_UNIQUE,
+    XML_RSC_OP_LAST_CHANGE, XML_RSC_OP_T_EXEC, XML_RSC_OP_T_QUEUE,
+    XML_RULE_ATTR_BOOLEAN_OP, XML_RULE_ATTR_ROLE, XML_RULE_ATTR_SCORE,
+    XML_RULE_ATTR_SCORE_ATTRIBUTE, XML_TAG_ATTRS, XML_TAG_ATTR_SETS,
+    XML_TAG_CIB, XML_TAG_DIFF, XML_TAG_EXPRESSION, XML_TAG_FAILED,
+    XML_TAG_FENCING_LEVEL, XML_TAG_FENCING_TOPOLOGY, XML_TAG_GRAPH,
+    XML_TAG_META_SETS, XML_TAG_OPTIONS, XML_TAG_PARAM, XML_TAG_PARAMS,
+    XML_TAG_RESOURCE_REF, XML_TAG_RULE, XML_TAG_TRANSIENT_NODEATTRS,
+    XML_TAG_UTILIZATION, XML_TICKET_ATTR_LOSS_POLICY, and
+    XML_TICKET_ATTR_TICKET
+  + libcrmcommon: deprecate direct access to all members of pcmk_scheduler_t,
+    pcmk_tag_t, and pcmk_ticket_t
+  + libcrmcommon: deprecate pcmk_rsc_methods_t, pcmk_assignment_methods_t,
+    struct pe_action_s, struct pe_resource_s, struct resource_alloc_functions_s,
+    struct resource_object_functions_s, struct pe_node_s, and
+    struct pe_node_shared_s, including all their members
+  + libcrmcommon: deprecate enums action_fail_response, action_tasks,
+    expression_type, node_type, pcmk_rsc_flags, pcmk_scheduler_flags,
+    pe_action_flags, pe_discover_e, pe_obj_types, rsc_recovery_type, and
+    rsc_start_requirement, including all their values
+  + liblrmd: deprecate constants F_LRMD_ALERT, F_LRMD_ALERT_ID,
+    F_LRMD_ALERT_PATH, F_LRMD_CALLBACK_TOKEN, F_LRMD_CALLDATA, F_LRMD_CALLID,
+    F_LRMD_CALLOPTS, F_LRMD_CLASS, F_LRMD_CLIENTID, F_LRMD_CLIENTNAME,
+    F_LRMD_EXEC_RC, F_LRMD_IPC_CLIENT, F_LRMD_IPC_IPC_SERVER, F_LRMD_IPC_MSG,
+    F_LRMD_IPC_MSG_FLAGS, F_LRMD_IPC_MSG_ID, F_LRMD_IPC_OP, F_LRMD_IPC_USER,
+    F_LRMD_IS_IPC_PROVIDER, F_LRMD_OPERATION, F_LRMD_OP_STATUS, F_LRMD_ORIGIN,
+    F_LRMD_PROTOCOL_VERSION, F_LRMD_PROVIDER, F_LRMD_RC, F_LRMD_REMOTE_MSG_ID,
+    F_LRMD_REMOTE_MSG_TYPE, F_LRMD_RSC, F_LRMD_RSC_ACTION, F_LRMD_RSC_DELETED,
+    F_LRMD_RSC_EXEC_TIME, F_LRMD_RSC_EXIT_REASON, F_LRMD_RSC_ID,
+    F_LRMD_RSC_INTERVAL, F_LRMD_RSC_OUTPUT, F_LRMD_RSC_QUEUE_TIME,
+    F_LRMD_RSC_RCCHANGE_TIME, F_LRMD_RSC_RUN_TIME, F_LRMD_RSC_START_DELAY,
+    F_LRMD_RSC_USERDATA_STR, F_LRMD_TIMEOUT, F_LRMD_TYPE, F_LRMD_WATCHDOG,
+    T_LRMD, T_LRMD_IPC_PROXY, T_LRMD_NOTIFY, T_LRMD_REPLY, and T_LRMD_RSC_OP
+  + libpacemaker: distribute pacemaker.h header to allow high-level API usage
+  + libpe_rules: deprecate functions find_expression_type(),
+    pe_evaluate_rules(), pe_eval_expr(), pe_eval_rules(), pe_eval_subexpr(),
+    pe_expand_re_matches(), pe_test_expression(), and pe_test_rule()
+  + libpe_rules,libpe_status: move enum expression_type and globals
+    was_processing_error and was_processing_warning to libcrmcommon
+  + libpe_rules,libpe_status: deprecate role member of pe_op_eval_data
+  + libpe_rules,libpe_status: deprecate functions text2task(), fail2text(),
+    recovery2text(), role2text(), task2text(), and text2role()
+  + libpe_status: deprecate functions pe_find_node(), pe_pref(),
+    pe_rsc_is_anon_clone(), pe_rsc_is_bundled(), pe_rsc_is_clone(),
+    pe_rsc_is_unique_clone(),
+  + libpe_status: deprecate global resource_class_functions
+  + libstonithd: deprecate constants T_STONITH_NOTIFY_DISCONNECT,
+    T_STONITH_NOTIFY_FENCE, T_STONITH_NOTIFY_HISTORY, and
+    T_STONITH_NOTIFY_HISTORY_SYNCED
+
 * Tue Dec 19 2023 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.7
 - 1388 commits with 358 files changed, 23771 insertions(+), 17219 deletions(-)
 
