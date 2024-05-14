@@ -384,7 +384,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (n_data->post_done == NULL) {
         return;
     }
-    for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *mon = (pcmk_action_t *) iter->data;
         const char *interval_ms_s = NULL;
 
@@ -602,7 +602,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
     }
 
     // Add notification entries for each of the resource's actions
-    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         const pcmk_action_t *op = (const pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
@@ -784,7 +784,7 @@ find_remote_start(pcmk_action_t *action)
         pcmk_resource_t *remote_rsc = action->node->details->remote_rsc;
 
         if (remote_rsc != NULL) {
-            return find_first_action(remote_rsc->actions, NULL,
+            return find_first_action(remote_rsc->private->actions, NULL,
                                      PCMK_ACTION_START,
                                      NULL);
         }
@@ -814,7 +814,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     }
 
     // Add notification meta-attributes to original actions
-    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
@@ -870,7 +870,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     if ((rsc->role != pcmk_role_stopped)
         && ((task == pcmk_action_stop) || (task == pcmk_action_demote))) {
 
-        stop = find_first_action(rsc->actions, NULL, PCMK_ACTION_STOP, NULL);
+        stop = find_first_action(rsc->private->actions, NULL, PCMK_ACTION_STOP,
+                                 NULL);
 
         for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
             pcmk_node_t *current_node = (pcmk_node_t *) iter->data;
@@ -899,7 +900,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     if ((rsc->next_role != pcmk_role_stopped)
         && ((task == pcmk_action_start) || (task == pcmk_action_promote))) {
 
-        start = find_first_action(rsc->actions, NULL, PCMK_ACTION_START, NULL);
+        start = find_first_action(rsc->private->actions, NULL,
+                                  PCMK_ACTION_START, NULL);
         if (start != NULL) {
             pcmk_action_t *remote_start = find_remote_start(start);
 

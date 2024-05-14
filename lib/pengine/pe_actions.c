@@ -55,14 +55,13 @@ static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
-    GList *matches = NULL;
-    pcmk_action_t *action = NULL;
-
     /* When rsc is NULL, it would be quicker to check scheduler->singletons,
      * but checking all scheduler->actions takes the node into account.
      */
-    matches = find_actions(((rsc == NULL)? scheduler->actions : rsc->actions),
-                           key, node);
+    GList *actions = (rsc == NULL)? scheduler->actions : rsc->private->actions;
+    GList *matches = find_actions(actions, key, node);
+    pcmk_action_t *action = NULL;
+
     if (matches == NULL) {
         return NULL;
     }
@@ -222,7 +221,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     if (rsc == NULL) {
         add_singleton(scheduler, action);
     } else {
-        rsc->actions = g_list_prepend(rsc->actions, action);
+        rsc->private->actions = g_list_prepend(rsc->private->actions, action);
     }
     return action;
 }
@@ -1530,9 +1529,9 @@ pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     char *key = pcmk__op_key(rsc->id, task, 0);
 
     if (require_node) {
-        result = find_actions_exact(rsc->actions, key, node);
+        result = find_actions_exact(rsc->private->actions, key, node);
     } else {
-        result = find_actions(rsc->actions, key, node);
+        result = find_actions(rsc->private->actions, key, node);
     }
     free(key);
     return result;

@@ -215,7 +215,7 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
         return false;
     }
 
-    possible_matches = find_actions_exact(rsc->actions, key, node);
+    possible_matches = find_actions_exact(rsc->private->actions, key, node);
     if (possible_matches == NULL) {
         pcmk__rsc_trace(rsc,
                         "%s will be mandatory because it is not active on %s",
@@ -390,7 +390,8 @@ static void
 cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
                   const char *key, const char *name, guint interval_ms)
 {
-    GList *possible_matches = find_actions_exact(rsc->actions, key, node);
+    GList *possible_matches = find_actions_exact(rsc->private->actions, key,
+                                                 node);
     pcmk_action_t *cancel_op = NULL;
 
     if (possible_matches == NULL) {
@@ -532,7 +533,8 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         }
 
         // Recurring action on this node is optional if it's already active here
-        possible_matches = find_actions_exact(rsc->actions, op->key, stop_node);
+        possible_matches = find_actions_exact(rsc->private->actions, op->key,
+                                              stop_node);
         is_optional = (possible_matches != NULL);
         g_list_free(possible_matches);
 

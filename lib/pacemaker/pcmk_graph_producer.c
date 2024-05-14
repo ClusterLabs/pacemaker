@@ -982,7 +982,8 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
-    g_list_foreach(rsc->actions, add_action_to_graph, rsc->private->scheduler);
+    g_list_foreach(rsc->private->actions, add_action_to_graph,
+                   rsc->private->scheduler);
 
     // Then recursively add its children's actions (appropriate to variant)
     for (iter = rsc->children; iter != NULL; iter = iter->next) {

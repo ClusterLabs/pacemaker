@@ -60,7 +60,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
 
-    for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
         switch (action->needs) {
@@ -136,8 +136,8 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
     }
 
     if (action_list && order_implicit) {
-        parent_stop = find_first_action(top->actions, NULL, PCMK_ACTION_STOP,
-                                        NULL);
+        parent_stop = find_first_action(top->private->actions, NULL,
+                                        PCMK_ACTION_STOP, NULL);
     }
 
     for (iter = action_list; iter != NULL; iter = iter->next) {
@@ -369,11 +369,11 @@ pcmk__fence_guest(pcmk_node_t *node)
      */
     container = node->details->remote_rsc->container;
     if (container) {
-        stop = find_first_action(container->actions, NULL, PCMK_ACTION_STOP,
-                                 NULL);
+        stop = find_first_action(container->private->actions, NULL,
+                                 PCMK_ACTION_STOP, NULL);
 
-        if (find_first_action(container->actions, NULL, PCMK_ACTION_START,
-                              NULL)) {
+        if (find_first_action(container->private->actions, NULL,
+                              PCMK_ACTION_START, NULL)) {
             fence_action = PCMK_ACTION_REBOOT;
         }
     }
@@ -417,8 +417,8 @@ pcmk__fence_guest(pcmk_node_t *node)
          * order the pseudo-fencing after any stop of the connection resource,
          * which will be ordered after any container (re-)probe.
          */
-        stop = find_first_action(node->details->remote_rsc->actions, NULL,
-                                 PCMK_ACTION_STOP, NULL);
+        stop = find_first_action(node->details->remote_rsc->private->actions,
+                                 NULL, PCMK_ACTION_STOP, NULL);
 
         if (stop) {
             order_actions(stop, stonith_op, pcmk__ar_ordered);

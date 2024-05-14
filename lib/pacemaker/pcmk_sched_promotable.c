@@ -92,7 +92,7 @@ check_for_role_change(const pcmk_resource_t *rsc, bool *demoting,
         return;
     }
 
-    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
 
         if (*promoting && *demoting) {

@@ -461,7 +461,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * start, we leave the resource running on the original node.
          */
         if (pcmk__str_eq(action->task, PCMK_ACTION_START, pcmk__str_none)) {
-            for (GList *item = action->rsc->actions; item != NULL;
+            for (GList *item = action->rsc->private->actions; item != NULL;
                  item = item->next) {
                 pcmk_action_t *rsc_action = item->data;
 

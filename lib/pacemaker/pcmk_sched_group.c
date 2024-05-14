@@ -513,9 +513,10 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
         // Check whether member has the same action
         enum action_tasks task = get_complex_task(member, action->task);
         const char *task_s = pcmk_action_text(task);
-        pcmk_action_t *member_action = find_first_action(member->actions, NULL,
-                                                         task_s, node);
+        pcmk_action_t *member_action = NULL;
 
+        member_action = find_first_action(member->private->actions, NULL,
+                                          task_s, node);
         if (member_action != NULL) {
             uint32_t member_flags = 0U;
 
@@ -600,10 +601,10 @@ pcmk__group_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
     // Update the actions for each group member
     for (GList *iter = then->rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *member = (pcmk_resource_t *) iter->data;
+        pcmk_action_t *member_action = NULL;
 
-        pcmk_action_t *member_action = find_first_action(member->actions, NULL,
-                                                         then->task, node);
-
+        member_action = find_first_action(member->private->actions, NULL,
+                                          then->task, node);
         if (member_action == NULL) {
             continue;
         }

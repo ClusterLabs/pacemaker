@@ -324,6 +324,7 @@ struct pcmk__resource_private {
     int ban_after_failures;         // Ban from node after this many failures
     guint remote_reconnect_ms;      // Retry interval for remote connections
     char *pending_action;           // Pending action in history, if any
+    GList *actions;                 // Actions scheduled for resource
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
     enum pcmk__restart restart_type;    // Deprecated

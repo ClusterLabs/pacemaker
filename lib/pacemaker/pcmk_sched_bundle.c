@@ -952,10 +952,10 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
          */
         char *probe_uuid = pcmk__op_key(replica->remote->id,
                                         PCMK_ACTION_MONITOR, 0);
-        pcmk_action_t *probe = find_first_action(replica->remote->actions,
-                                                 probe_uuid, NULL,
-                                                 probe_data->node);
+        pcmk_action_t *probe = NULL;
 
+        probe = find_first_action(replica->remote->private->actions, probe_uuid,
+                                  NULL, probe_data->node);
         free(probe_uuid);
         if (probe != NULL) {
             probe_data->any_created = true;

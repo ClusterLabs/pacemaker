@@ -426,8 +426,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
             then_actions = g_list_prepend(NULL, then);
 
         } else if (order->rsc2 != NULL) {
-            then_actions = find_actions(order->rsc2->actions, order->task2,
-                                        NULL);
+            then_actions = find_actions(order->rsc2->private->actions,
+                                        order->task2, NULL);
             if (then_actions == NULL) { // There aren't any
                 g_list_free(probes);
                 continue;

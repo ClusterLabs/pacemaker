@@ -919,7 +919,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
     }
 
     // Check each of the instance's actions for runnable start or stop
-    for (iter = instance->actions;
+    for (iter = instance->private->actions;
          (iter != NULL) && !pcmk_all_flags_set(instance_state,
                                                instance_starting
                                                |instance_stopping);
@@ -1303,7 +1303,8 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
         node = NULL; // Containerized actions are on bundle-created guest
     }
 
-    matching_action = find_first_action(rsc->actions, NULL, action_name, node);
+    matching_action = find_first_action(rsc->private->actions, NULL,
+                                        action_name, node);
     if (matching_action != NULL) {
         return matching_action;
     }
@@ -1525,8 +1526,8 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
     uint32_t changed = pcmk__updated_none;
 
     // Check whether instance has an equivalent of "then" action
-    instance_action = find_first_action(instance->actions, NULL, then->task,
-                                        node);
+    instance_action = find_first_action(instance->private->actions, NULL,
+                                        then->task, node);
     if (instance_action == NULL) {
         return changed;
     }
@@ -1654,7 +1655,7 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
             instance_node = node;
         }
 
-        instance_action = find_first_action(instance->actions, NULL,
+        instance_action = find_first_action(instance->private->actions, NULL,
                                             action_name, instance_node);
         if (instance_action == NULL) {
             pcmk__rsc_trace(action->rsc, "%s has no %s action on %s",

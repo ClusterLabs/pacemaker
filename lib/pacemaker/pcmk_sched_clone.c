@@ -447,7 +447,7 @@ pcmk__clone_add_actions_to_graph(pcmk_resource_t *rsc)
 {
     CRM_ASSERT(pcmk__is_clone(rsc));
 
-    g_list_foreach(rsc->actions, call_action_flags, rsc);
+    g_list_foreach(rsc->private->actions, call_action_flags, rsc);
     pe__create_clone_notifications(rsc);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

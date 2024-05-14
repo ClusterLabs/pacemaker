@@ -1243,7 +1243,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             pcmk_action_t *stop_op = NULL;
 
             reason_op = start;
-            possible_matches = find_actions(rsc->actions, key, node);
+            possible_matches = find_actions(rsc->private->actions, key, node);
             if (possible_matches) {
                 stop_op = possible_matches->data;
                 g_list_free(possible_matches);

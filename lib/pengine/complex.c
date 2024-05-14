@@ -745,7 +745,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     (*rsc)->rsc_tickets = NULL;
-    (*rsc)->actions = NULL;
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
@@ -1095,10 +1094,6 @@ common_free(pcmk_resource_t * rsc)
         g_hash_table_destroy(rsc->known_on);
         rsc->known_on = NULL;
     }
-    if (rsc->actions) {
-        g_list_free(rsc->actions);
-        rsc->actions = NULL;
-    }
     if (rsc->allowed_nodes) {
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = NULL;
@@ -1110,6 +1105,7 @@ common_free(pcmk_resource_t * rsc)
     free(rsc->private->variant_opaque);
     free(rsc->private->history_id);
     free(rsc->private->pending_action);
+    g_list_free(rsc->private->actions);
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);
     g_list_free(rsc->private->location_constraints);
