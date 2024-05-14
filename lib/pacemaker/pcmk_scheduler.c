@@ -324,12 +324,12 @@ assign_resources(pcmk_scheduler_t *scheduler)
          */
         for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
+            const pcmk_node_t *target = rsc->private->partial_migration_target;
 
             if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
                 pcmk__rsc_trace(rsc, "Assigning remote connection resource '%s'",
                                 rsc->id);
-                rsc->private->cmds->assign(rsc, rsc->partial_migration_target,
-                                           true);
+                rsc->private->cmds->assign(rsc, target, true);
             }
         }
     }

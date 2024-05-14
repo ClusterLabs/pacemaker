@@ -698,6 +698,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     bool multiply_active = false;
 
     pcmk_node_t *current = NULL;
+    pcmk_node_t *migration_target = NULL;
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
     const char *next_role_source = NULL;
@@ -733,22 +734,21 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     }
 
     // Check whether resource is partially migrated and/or multiply active
+    migration_target = rsc->private->partial_migration_target;
     if ((rsc->partial_migration_source != NULL)
-        && (rsc->partial_migration_target != NULL)
-        && allow_migrate && (num_all_active == 2)
+        && (migration_target != NULL) && allow_migrate && (num_all_active == 2)
         && pcmk__same_node(current, rsc->partial_migration_source)
-        && pcmk__same_node(rsc->private->assigned_node,
-                           rsc->partial_migration_target)) {
+        && pcmk__same_node(rsc->private->assigned_node, migration_target)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
         pcmk__rsc_trace(rsc,
                         "Partial migration of %s from %s to %s will continue",
                         rsc->id, pcmk__node_name(rsc->partial_migration_source),
-                        pcmk__node_name(rsc->partial_migration_target));
+                        pcmk__node_name(migration_target));
 
     } else if ((rsc->partial_migration_source != NULL)
-               || (rsc->partial_migration_target != NULL)) {
+               || (migration_target != NULL)) {
         // A partial migration is in progress but can't be continued
 
         if (num_all_active > 2) {
@@ -756,16 +756,17 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
             crm_notice("Forcing recovery of %s because it is migrating "
                        "from %s to %s and possibly active elsewhere",
                        rsc->id, pcmk__node_name(rsc->partial_migration_source),
-                       pcmk__node_name(rsc->partial_migration_target));
+                       pcmk__node_name(migration_target));
         } else {
             // The migration source or target isn't available
             crm_notice("Forcing recovery of %s because it can no longer "
                        "migrate from %s to %s",
                        rsc->id, pcmk__node_name(rsc->partial_migration_source),
-                       pcmk__node_name(rsc->partial_migration_target));
+                       pcmk__node_name(migration_target));
         }
         need_stop = true;
-        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
+        rsc->partial_migration_source = NULL;
+        rsc->private->partial_migration_target = NULL;
         allow_migrate = false;
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
@@ -1272,9 +1273,9 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
             continue;
         }
 
-        if (rsc->partial_migration_target != NULL) {
+        if (rsc->private->partial_migration_target != NULL) {
             // Continue migration if node originally was and remains target
-            if (pcmk__same_node(current, rsc->partial_migration_target)
+            if (pcmk__same_node(current, rsc->private->partial_migration_target)
                 && pcmk__same_node(current, rsc->private->assigned_node)) {
                 pcmk__rsc_trace(rsc,
                                 "Skipping stop of %s on %s "

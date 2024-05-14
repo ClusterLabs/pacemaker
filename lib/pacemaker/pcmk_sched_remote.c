@@ -150,7 +150,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
     } else if (pcmk__list_of_multiple(remote_rsc->running_on)
                && (remote_rsc->partial_migration_source != NULL)
-               && (remote_rsc->partial_migration_target != NULL)) {
+               && (remote_rsc->private->partial_migration_target != NULL)) {
         /* We're in the middle of migrating a connection resource, so wait until
          * after the migration completes before performing any actions.
          */
@@ -550,19 +550,20 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     pcmk_node_t *ended_on = NULL;
     bool partial_migration = false;
     const char *task = action->task;
+    pcmk_resource_t *remote = NULL;
 
     if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
         || !pcmk__is_pacemaker_remote_node(action->node)) {
         return NULL;
     }
 
-    CRM_ASSERT(action->node->details->remote_rsc != NULL);
+    remote = action->node->details->remote_rsc;
+    CRM_ASSERT(remote != NULL);
 
-    began_on = pcmk__current_node(action->node->details->remote_rsc);
-    ended_on = action->node->details->remote_rsc->private->assigned_node;
-    if (action->node->details->remote_rsc
-        && (action->node->details->remote_rsc->container == NULL)
-        && action->node->details->remote_rsc->partial_migration_target) {
+    began_on = pcmk__current_node(remote);
+    ended_on = remote->private->assigned_node;
+    if ((remote->container == NULL)
+        && (remote->private->partial_migration_target != NULL)) {
         partial_migration = true;
     }
 

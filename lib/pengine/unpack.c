@@ -2519,7 +2519,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     if ((rsc->role == pcmk_role_stopped)
         && rsc->partial_migration_source
         && rsc->partial_migration_source->details == node->details
-        && rsc->partial_migration_target
+        && (rsc->private->partial_migration_target != NULL)
         && rsc->running_on) {
 
         rsc->role = pcmk_role_started;
@@ -3342,7 +3342,7 @@ unpack_migrate_to_success(struct action_history *history)
              * chosen target remains the same when we schedule actions
              * later, we may continue with the migration.
              */
-            history->rsc->partial_migration_target = target_node;
+            history->rsc->private->partial_migration_target = target_node;
             history->rsc->partial_migration_source = source_node;
         }
 
