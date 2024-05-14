@@ -76,7 +76,7 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes,
+                         rsc, __func__, rsc->private->allowed_nodes,
                          rsc->private->scheduler);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
@@ -581,20 +581,20 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
          * instances), and affects the CRM_meta_notify_available_uname variable
          * passed with notify actions.
          */
-        pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+        pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
                                                    node->details->id);
 
         if ((allowed == NULL)
             || (allowed->rsc_discover_mode != pcmk_probe_exclusive)) {
             /* This node is not marked for resource discovery. Remove it from
-             * allowed_nodes so that notifications contain only nodes that the
+             * allowed nodes so that notifications contain only nodes that the
              * clone can possibly run on.
              */
             pcmk__rsc_trace(rsc,
                             "Skipping probe for %s on %s because resource has "
                             "exclusive discovery but is not allowed on node",
                             rsc->id, pcmk__node_name(node));
-            g_hash_table_remove(rsc->allowed_nodes, node->details->id);
+            g_hash_table_remove(rsc->private->allowed_nodes, node->details->id);
             return false;
         }
     }

@@ -702,14 +702,15 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
     for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = iter->data;
-        pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
-                                                        node->details->id);
+        pcmk_node_t *allowed_node = NULL;
 
+        allowed_node = g_hash_table_lookup(rsc->private->allowed_nodes,
+                                           node->details->id);
         if (allowed_node == NULL) {
             pcmk__rsc_trace(rsc, "* = %d on %s",
                             node->weight, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
-            g_hash_table_insert(rsc->allowed_nodes,
+            g_hash_table_insert(rsc->private->allowed_nodes,
                                 (gpointer) allowed_node->details->id,
                                 allowed_node);
         } else {

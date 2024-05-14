@@ -718,8 +718,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     (*rsc)->meta = pcmk__strkey_table(free, free);
-    (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     rsc_private->probed_nodes = pcmk__strkey_table(NULL, free);
+    rsc_private->allowed_nodes = pcmk__strkey_table(NULL, free);
 
     value = crm_element_value(rsc_private->xml, PCMK__META_CLONE);
     if (value) {
@@ -1084,10 +1084,6 @@ common_free(pcmk_resource_t * rsc)
         pcmk__xml_free(rsc->private->xml);
         rsc->private->xml = NULL;
     }
-    if (rsc->allowed_nodes) {
-        g_hash_table_destroy(rsc->allowed_nodes);
-        rsc->allowed_nodes = NULL;
-    }
     g_list_free(rsc->fillers);
     free(rsc->id);
 
@@ -1103,6 +1099,9 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->private->ticket_constraints);
     if (rsc->private->probed_nodes != NULL) {
         g_hash_table_destroy(rsc->private->probed_nodes);
+    }
+    if (rsc->private->allowed_nodes != NULL) {
+        g_hash_table_destroy(rsc->private->allowed_nodes);
     }
     free(rsc->private);
 

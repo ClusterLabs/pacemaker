@@ -362,6 +362,9 @@ struct pcmk__resource_private {
     // Nodes where resource has been probed (key is node ID, not name)
     GHashTable *probed_nodes;
 
+    // Nodes where resource is allowed to run (key is node ID, not name)
+    GHashTable *allowed_nodes;
+
     // The source node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_source;
 

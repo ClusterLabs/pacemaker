@@ -666,7 +666,7 @@ create_container_resource(pcmk_resource_t *parent,
 static void
 disallow_node(pcmk_resource_t *rsc, const char *uname)
 {
-    gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
+    gpointer match = g_hash_table_lookup(rsc->private->allowed_nodes, uname);
 
     if (match) {
         ((pcmk_node_t *) match)->weight = -PCMK_SCORE_INFINITY;
@@ -769,18 +769,20 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->rsc_discover_mode = pcmk_probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
-        if (replica->child->allowed_nodes != NULL) {
-            g_hash_table_destroy(replica->child->allowed_nodes);
+        if (replica->child->private->allowed_nodes != NULL) {
+            g_hash_table_destroy(replica->child->private->allowed_nodes);
         }
-        replica->child->allowed_nodes = pcmk__strkey_table(NULL, free);
-        g_hash_table_insert(replica->child->allowed_nodes,
+        replica->child->private->allowed_nodes = pcmk__strkey_table(NULL, free);
+        g_hash_table_insert(replica->child->private->allowed_nodes,
                             (gpointer) replica->node->details->id,
                             pe__copy_node(replica->node));
 
         {
+            const pcmk_resource_t *parent = replica->child->private->parent;
             pcmk_node_t *copy = pe__copy_node(replica->node);
+
             copy->weight = -PCMK_SCORE_INFINITY;
-            g_hash_table_insert(replica->child->private->parent->allowed_nodes,
+            g_hash_table_insert(parent->private->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
@@ -788,7 +790,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             return pcmk_rc_unpack_error;
         }
 
-        g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
+        g_hash_table_iter_init(&gIter, replica->remote->private->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
             if (pcmk__is_pacemaker_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */

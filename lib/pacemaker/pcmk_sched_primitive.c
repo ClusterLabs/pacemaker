@@ -133,8 +133,8 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 static GList *
 sorted_allowed_nodes(const pcmk_resource_t *rsc)
 {
-    if (rsc->allowed_nodes != NULL) {
-        GList *nodes = g_hash_table_get_values(rsc->allowed_nodes);
+    if (rsc->private->allowed_nodes != NULL) {
+        GList *nodes = g_hash_table_get_values(rsc->private->allowed_nodes);
 
         if (nodes != NULL) {
             return pcmk__sort_nodes(nodes, pcmk__current_node(rsc));
@@ -188,7 +188,8 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     if ((prefer != NULL) && (nodes != NULL)) {
         // Get the allowed node version of prefer
-        chosen = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
+        chosen = g_hash_table_lookup(rsc->private->allowed_nodes,
+                                     prefer->details->id);
 
         if (chosen == NULL) {
             pcmk__rsc_trace(rsc, "Preferred node %s for %s was unknown",
@@ -306,7 +307,7 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
     if ((colocation->dependent_role >= pcmk_role_promoted)
         || ((colocation->score < 0)
             && (colocation->score > -PCMK_SCORE_INFINITY))) {
-        archive = pcmk__copy_node_table(rsc->allowed_nodes);
+        archive = pcmk__copy_node_table(rsc->private->allowed_nodes);
     }
 
     if (pcmk_is_set(other->flags, pcmk__rsc_unassigned)) {
@@ -322,13 +323,13 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
     // Apply the colocation score to this resource's allowed node scores
     rsc->private->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
-        && !pcmk__any_node_available(rsc->allowed_nodes)) {
+        && !pcmk__any_node_available(rsc->private->allowed_nodes)) {
         pcmk__rsc_info(rsc,
                        "%s: Reverting scores from colocation with %s "
                        "because no nodes allowed",
                        rsc->id, other->id);
-        g_hash_table_destroy(rsc->allowed_nodes);
-        rsc->allowed_nodes = archive;
+        g_hash_table_destroy(rsc->private->allowed_nodes);
+        rsc->private->allowed_nodes = archive;
         archive = NULL;
     }
     if (archive != NULL) {
@@ -429,8 +430,8 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
     pcmk__set_rsc_flags(rsc, pcmk__rsc_assigning);
 
-    pe__show_node_scores(true, rsc, "Pre-assignment", rsc->allowed_nodes,
-                         scheduler);
+    pe__show_node_scores(true, rsc, "Pre-assignment",
+                         rsc->private->allowed_nodes, scheduler);
 
     this_with_colocations = pcmk__this_with_colocations(rsc);
     with_this_colocations = pcmk__with_this_colocations(rsc);
@@ -454,7 +455,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     }
 
     pe__show_node_scores(true, rsc, "Mandatory-colocations",
-                         rsc->allowed_nodes, scheduler);
+                         rsc->private->allowed_nodes, scheduler);
 
     // Then apply optional colocations
     for (iter = this_with_colocations; iter != NULL; iter = iter->next) {
@@ -497,7 +498,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pe__show_node_scores(!pcmk_is_set(scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, scheduler);
+                         rsc, __func__, rsc->private->allowed_nodes, scheduler);
 
     // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)
@@ -873,7 +874,7 @@ rsc_avoids_remote_nodes(const pcmk_resource_t *rsc)
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
 
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (node->details->remote_rsc != NULL) {
             node->weight = -PCMK_SCORE_INFINITY;
@@ -899,8 +900,8 @@ allowed_nodes_as_list(const pcmk_resource_t *rsc)
 {
     GList *allowed_nodes = NULL;
 
-    if (rsc->allowed_nodes) {
-        allowed_nodes = g_hash_table_get_values(rsc->allowed_nodes);
+    if (rsc->private->allowed_nodes != NULL) {
+        allowed_nodes = g_hash_table_get_values(rsc->private->allowed_nodes);
     }
 
     if (!pcmk__is_daemon) {

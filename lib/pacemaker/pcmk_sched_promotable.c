@@ -212,7 +212,8 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
     }
 
     parent = pe__const_top_resource(rsc, false);
-    local_node = g_hash_table_lookup(parent->allowed_nodes, node->details->id);
+    local_node = g_hash_table_lookup(parent->private->allowed_nodes,
+                                     node->details->id);
 
     if (local_node == NULL) {
         /* It should not be possible for the scheduler to have assigned the
@@ -335,7 +336,8 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
         return;
     }
 
-    node = g_hash_table_lookup(clone->allowed_nodes, chosen->details->id);
+    node = g_hash_table_lookup(clone->private->allowed_nodes,
+                               chosen->details->id);
     CRM_ASSERT(node != NULL);
 
     node->weight = pcmk__add_scores(promotion_priority, node->weight);
@@ -373,7 +375,7 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
                     colocation->primary->id,
                     pcmk_readable_score(colocation->score));
     primary->private->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                                      &clone->allowed_nodes,
+                                                      &(clone->private->allowed_nodes),
                                                       colocation, factor,
                                                       flags);
 }
@@ -406,7 +408,7 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                     pcmk_readable_score(colocation->score));
     dependent->private->cmds->add_colocated_node_scores(dependent, clone,
                                                         clone->id,
-                                                        &clone->allowed_nodes,
+                                                        &(clone->private->allowed_nodes),
                                                         colocation, factor,
                                                         flags);
 }
@@ -442,8 +444,10 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
                         pcmk_readable_score(child->private->promotion_priority));
 
     } else {
-        const pcmk_node_t *node = g_hash_table_lookup(clone->allowed_nodes,
-                                                      chosen->details->id);
+        const pcmk_node_t *node = NULL;
+
+        node = g_hash_table_lookup(clone->private->allowed_nodes,
+                                   chosen->details->id);
 
         CRM_ASSERT(node != NULL);
         child->private->promotion_priority = node->weight;
@@ -481,7 +485,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
                         clone->id, child->id,
                         pcmk_readable_score(child->private->promotion_priority));
     }
-    pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
+    pe__show_node_scores(true, clone, "Before", clone->private->allowed_nodes,
                          clone->private->scheduler);
 
     g_list_foreach(clone->children, add_promotion_priority_to_node_score,
@@ -498,7 +502,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
     // Ban resource from all nodes if it needs a ticket but doesn't have it
     pcmk__require_promotion_tickets(clone);
 
-    pe__show_node_scores(true, clone, "After", clone->allowed_nodes,
+    pe__show_node_scores(true, clone, "After", clone->private->allowed_nodes,
                          clone->private->scheduler);
 
     // Reset promotion priorities to final node scores
@@ -584,7 +588,7 @@ anonymous_known_on(const pcmk_resource_t *clone, const char *id,
 static bool
 is_allowed(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+    pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
                                                node->details->id);
 
     return (allowed != NULL) && (allowed->weight >= 0);
@@ -805,7 +809,7 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
         pcmk_node_t *node = NULL;
         int score, new_score;
 
-        g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, child_rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (!pcmk__node_available(node, false, false)) {
                 /* This node will never be promoted, so don't apply the
@@ -1090,7 +1094,7 @@ pcmk__set_instance_roles(pcmk_resource_t *rsc)
     pcmk_node_t *node = NULL;
 
     // Repurpose count to track the number of promoted instances assigned
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         node->count = 0;
     }
@@ -1227,7 +1231,7 @@ update_dependent_allowed_nodes(pcmk_resource_t *dependent,
                     colocation->primary->id, pcmk__node_name(primary_node),
                     attr, colocation->score, dependent->id);
 
-    g_hash_table_iter_init(&iter, dependent->allowed_nodes);
+    g_hash_table_iter_init(&iter, dependent->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         const char *dependent_value = pcmk__colocation_node_attr(node, attr,
                                                                  dependent);

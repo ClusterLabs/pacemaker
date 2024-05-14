@@ -3634,28 +3634,27 @@ static void
 ban_from_all_nodes(pcmk_resource_t *rsc)
 {
     int score = -PCMK_SCORE_INFINITY;
-    pcmk_resource_t *fail_rsc = rsc;
     const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
 
-    if (fail_rsc->private->parent != NULL) {
-        pcmk_resource_t *parent = uber_parent(fail_rsc);
+    if (rsc->private->parent != NULL) {
+        pcmk_resource_t *parent = uber_parent(rsc);
 
         if (pcmk__is_anonymous_clone(parent)) {
             /* For anonymous clones, if an operation with
              * PCMK_META_ON_FAIL=PCMK_VALUE_STOP fails for any instance, the
              * entire clone must stop.
              */
-            fail_rsc = parent;
+            rsc = parent;
         }
     }
 
     // Ban the resource from all nodes
-    crm_notice("%s will not be started under current conditions", fail_rsc->id);
-    if (fail_rsc->allowed_nodes != NULL) {
-        g_hash_table_destroy(fail_rsc->allowed_nodes);
+    crm_notice("%s will not be started under current conditions", rsc->id);
+    if (rsc->private->allowed_nodes != NULL) {
+        g_hash_table_destroy(rsc->private->allowed_nodes);
     }
-    fail_rsc->allowed_nodes = pe__node_list2table(scheduler->nodes);
-    g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
+    rsc->private->allowed_nodes = pe__node_list2table(scheduler->nodes);
+    g_hash_table_foreach(rsc->private->allowed_nodes, set_node_score, &score);
 }
 
 /*!

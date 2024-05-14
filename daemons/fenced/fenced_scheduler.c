@@ -86,7 +86,7 @@ local_node_allowed_for(const pcmk_resource_t *rsc)
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
 
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__str_eq(node->details->uname, stonith_our_uname,
                              pcmk__str_casei)) {

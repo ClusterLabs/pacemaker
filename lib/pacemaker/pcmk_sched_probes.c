@@ -212,7 +212,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
     }
 
-    allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
+                                  node->details->id);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {

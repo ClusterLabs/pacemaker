@@ -167,7 +167,8 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
         // If this is a collective resource, apply recursively to children
         g_list_foreach(rsc->children, apply_exclusive_discovery, user_data);
 
-        match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        match = g_hash_table_lookup(rsc->private->allowed_nodes,
+                                    node->details->id);
         if ((match != NULL)
             && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
             match->weight = -PCMK_SCORE_INFINITY;
@@ -212,7 +213,7 @@ apply_stickiness(gpointer data, gpointer user_data)
      */
     if (!pcmk_is_set(rsc->private->scheduler->flags,
                      pcmk_sched_symmetric_cluster)
-        && (g_hash_table_lookup(rsc->allowed_nodes,
+        && (g_hash_table_lookup(rsc->private->allowed_nodes,
                                 node->details->id) == NULL)) {
         pcmk__rsc_debug(rsc,
                         "Ignoring %s stickiness because the cluster is "

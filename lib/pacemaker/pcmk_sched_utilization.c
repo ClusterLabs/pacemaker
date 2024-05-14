@@ -329,7 +329,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     unassigned_utilization = sum_resource_utilization(rsc, colocated_rscs);
 
     // Check whether any node has enough capacity for all the resources
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (!pcmk__node_available(node, true, false)) {
             continue;
@@ -348,7 +348,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 
     if (any_capable) {
         // If so, ban resource from any node with insufficient capacity
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
@@ -364,7 +364,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 
     } else {
         // Otherwise, ban from nodes with insufficient capacity for rsc alone
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
@@ -381,8 +381,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     g_list_free(colocated_rscs);
     free(rscs_id);
 
-    pe__show_node_scores(true, rsc, "Post-utilization", rsc->allowed_nodes,
-                         rsc->private->scheduler);
+    pe__show_node_scores(true, rsc, "Post-utilization",
+                         rsc->private->allowed_nodes, rsc->private->scheduler);
     return most_capable_node;
 }
 

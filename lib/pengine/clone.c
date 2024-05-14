@@ -829,7 +829,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;
-            GList *list = g_hash_table_get_values(rsc->allowed_nodes);
+            GList *list = g_hash_table_get_values(rsc->private->allowed_nodes);
 
             /* Custom stopped table for non-unique clones */
             if (stopped != NULL) {
@@ -839,7 +839,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
             if (list == NULL) {
                 /* Clusters with PCMK_OPT_SYMMETRIC_CLUSTER=false haven't
-                 * calculated allowed_nodes yet. If we've not probed for them
+                 * calculated allowed nodes yet. If we've not probed for them
                  * yet, the Stopped list will be empty.
                  */
                 list = g_hash_table_get_values(rsc->private->probed_nodes);

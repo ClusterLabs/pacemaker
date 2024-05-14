@@ -120,7 +120,7 @@ pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
     }
 
     g_hash_table_insert(*copy, rsc->id,
-                        pcmk__copy_node_table(rsc->allowed_nodes));
+                        pcmk__copy_node_table(rsc->private->allowed_nodes));
 
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk__copy_node_tables((const pcmk_resource_t *) iter->data, copy);
@@ -146,11 +146,11 @@ pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
 {
     CRM_ASSERT((rsc != NULL) && (backup != NULL));
 
-    g_hash_table_destroy(rsc->allowed_nodes);
+    g_hash_table_destroy(rsc->private->allowed_nodes);
 
     // Copy to avoid danger with multiple restores
-    rsc->allowed_nodes = g_hash_table_lookup(backup, rsc->id);
-    rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
+    rsc->private->allowed_nodes =
+        pcmk__copy_node_table(g_hash_table_lookup(backup, rsc->id));
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk__restore_node_tables((pcmk_resource_t *) iter->data, backup);
@@ -431,9 +431,9 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     }
 
     if (rsc->private->parent == NULL) {
-        allowed_nodes = rsc->allowed_nodes;
+        allowed_nodes = rsc->private->allowed_nodes;
     } else {
-        allowed_nodes = rsc->private->parent->allowed_nodes;
+        allowed_nodes = rsc->private->parent->private->allowed_nodes;
     }
     return g_hash_table_lookup(allowed_nodes, node->details->id);
 }

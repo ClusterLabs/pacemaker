@@ -64,7 +64,7 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes,
+                         rsc, __func__, rsc->private->allowed_nodes,
                          rsc->private->scheduler);
 
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

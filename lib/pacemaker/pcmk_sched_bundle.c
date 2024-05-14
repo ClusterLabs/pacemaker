@@ -70,7 +70,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
-        g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
+        g_hash_table_iter_init(&iter, replica->child->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (!pcmk__same_node(node, replica->node)) {
                 node->weight = -PCMK_SCORE_INFINITY;
@@ -125,7 +125,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes,
+                         rsc, __func__, rsc->private->allowed_nodes,
                          rsc->private->scheduler);
 
     // Assign all containers first, so we know what nodes the bundle will be on
@@ -143,7 +143,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         pcmk_node_t *node = NULL;
         GHashTableIter iter;
 
-        g_hash_table_iter_init(&iter, bundled_resource->allowed_nodes);
+        g_hash_table_iter_init(&iter, bundled_resource->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
                 node->weight = 0;
@@ -436,7 +436,7 @@ compatible_container(const pcmk_resource_t *dependent,
     }
 
     // Otherwise, check for any of the dependent's allowed nodes
-    scratch = g_hash_table_get_values(dependent->allowed_nodes);
+    scratch = g_hash_table_get_values(dependent->private->allowed_nodes);
     scratch = pcmk__sort_nodes(scratch, NULL);
     for (const GList *iter = scratch; iter != NULL; iter = iter->next) {
         match_data.node = iter->data;

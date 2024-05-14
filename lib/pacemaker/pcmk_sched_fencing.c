@@ -76,7 +76,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             case pcmk_requires_quorum:
                 if (pcmk__str_eq(action->task, PCMK_ACTION_START,
                                  pcmk__str_none)
-                    && (g_hash_table_lookup(rsc->allowed_nodes,
+                    && (g_hash_table_lookup(rsc->private->allowed_nodes,
                                             target->details->id) != NULL)
                     && !rsc_is_known_on(rsc, target)) {
 

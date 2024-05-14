@@ -550,7 +550,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
     }
 
     if (n_data->allowed_nodes == NULL) {
-        n_data->allowed_nodes = rsc->allowed_nodes;
+        n_data->allowed_nodes = rsc->private->allowed_nodes;
     }
 
     // If this is a clone, call recursively for each instance

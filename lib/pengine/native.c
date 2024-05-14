@@ -139,11 +139,12 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     pcmk_node_t *local_node = NULL;
 
                     /* make sure it doesn't come up again */
-                    if (rsc->allowed_nodes != NULL) {
-                        g_hash_table_destroy(rsc->allowed_nodes);
+                    if (rsc->private->allowed_nodes != NULL) {
+                        g_hash_table_destroy(rsc->private->allowed_nodes);
                     }
-                    rsc->allowed_nodes = pe__node_list2table(scheduler->nodes);
-                    g_hash_table_iter_init(&gIter, rsc->allowed_nodes);
+                    rsc->private->allowed_nodes =
+                        pe__node_list2table(scheduler->nodes);
+                    g_hash_table_iter_init(&gIter, rsc->private->allowed_nodes);
                     while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
                         local_node->weight = -PCMK_SCORE_INFINITY;
                     }

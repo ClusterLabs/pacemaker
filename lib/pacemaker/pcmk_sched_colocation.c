@@ -1327,7 +1327,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
         return;
     }
 
-    work = pcmk__copy_node_table(dependent->allowed_nodes);
+    work = pcmk__copy_node_table(dependent->private->allowed_nodes);
 
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
@@ -1385,8 +1385,8 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
         || (colocation->score >= PCMK_SCORE_INFINITY)
         || pcmk__any_node_available(work)) {
 
-        g_hash_table_destroy(dependent->allowed_nodes);
-        dependent->allowed_nodes = work;
+        g_hash_table_destroy(dependent->private->allowed_nodes);
+        dependent->private->allowed_nodes = work;
         work = NULL;
 
     } else {
@@ -1487,7 +1487,7 @@ best_node_score_matching_attr(const pcmk_resource_t *rsc, const char *attr,
     const char *best_node = NULL;
 
     // Find best allowed node with matching attribute
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
         if ((node->weight > best_score)
@@ -1528,7 +1528,7 @@ allowed_on_one(const pcmk_resource_t *rsc)
     pcmk_node_t *allowed_node = NULL;
     int allowed_nodes = 0;
 
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &allowed_node)) {
         if ((allowed_node->weight >= 0) && (++allowed_nodes > 1)) {
             pcmk__rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
@@ -1728,7 +1728,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     pcmk__set_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);
 
     if (*nodes == NULL) {
-        work = pcmk__copy_node_table(source_rsc->allowed_nodes);
+        work = pcmk__copy_node_table(source_rsc->private->allowed_nodes);
         target_rsc = source_rsc;
     } else {
         const bool pos = pcmk_is_set(flags, pcmk__coloc_select_nonnegative);
@@ -1851,7 +1851,7 @@ pcmk__add_dependent_scores(gpointer data, gpointer user_data)
                     primary->id, dependent->id, colocation->id);
     dependent->private->cmds->add_colocated_node_scores(dependent, primary,
                                                         dependent->id,
-                                                        &primary->allowed_nodes,
+                                                        &(primary->private->allowed_nodes),
                                                         colocation, factor,
                                                         flags);
 }
@@ -1885,7 +1885,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
     CRM_ASSERT((dependent != NULL) && (primary != NULL)
                && (colocation != NULL));
 
-    g_hash_table_iter_init(&iter, dependent->allowed_nodes);
+    g_hash_table_iter_init(&iter, dependent->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {
         const pcmk_node_t *primary_node = NULL;
 

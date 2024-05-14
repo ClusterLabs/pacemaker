@@ -272,7 +272,8 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
             pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
             pe__show_node_scores_as(file, function, line, to_log, child,
-                                    comment, child->allowed_nodes, scheduler);
+                                    comment, child->private->allowed_nodes,
+                                    scheduler);
         }
     }
 }
@@ -340,10 +341,11 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    match = g_hash_table_lookup(rsc->private->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = pe__copy_node(node);
-        g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
+        g_hash_table_insert(rsc->private->allowed_nodes,
+                            (gpointer) match->details->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
     pcmk__rsc_trace(rsc,
@@ -372,7 +374,7 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         GHashTableIter iter;
         pcmk_node_t *node_iter = NULL;
 
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node_iter)) {
             resource_node_score(rsc, node_iter, score, tag);
         }
@@ -612,7 +614,7 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
     } else if(rsc) {
         GHashTableIter iter;
 
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             if(node->details->online && node->details->unclean == FALSE && node->details->shutdown == FALSE) {
                 trigger_unfencing(rsc, node, reason, dependency, scheduler);

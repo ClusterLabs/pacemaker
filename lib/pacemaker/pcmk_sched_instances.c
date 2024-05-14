@@ -83,11 +83,11 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 static void
 ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
 {
-    if (instance->allowed_nodes != NULL) {
+    if (instance->private->allowed_nodes != NULL) {
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
 
-        g_hash_table_iter_init(&iter, instance->allowed_nodes);
+        g_hash_table_iter_init(&iter, instance->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (!can_run_instance(instance, node, max_per_node)) {
                 pcmk__rsc_trace(instance, "Banning %s from unavailable node %s",
@@ -98,8 +98,9 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
                     pcmk_resource_t *child = child_iter->data;
                     pcmk_node_t *child_node = NULL;
 
-                    child_node = g_hash_table_lookup(child->allowed_nodes,
-                                                     node->details->id);
+                    child_node =
+                        g_hash_table_lookup(child->private->allowed_nodes,
+                                            node->details->id);
                     if (child_node != NULL) {
                         pcmk__rsc_trace(instance,
                                         "Banning %s child %s "
@@ -272,7 +273,7 @@ static bool
 node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
 {
     if (*node != NULL) {
-        pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+        pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
                                                    (*node)->details->id);
 
         if ((allowed == NULL) || (allowed->weight < 0)) {
@@ -601,13 +602,13 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
 
     pcmk_resource_t *parent = instance->private->parent;
     GHashTable *allowed_orig = NULL;
-    GHashTable *allowed_orig_parent = parent->allowed_nodes;
+    GHashTable *allowed_orig_parent = parent->private->allowed_nodes;
     const pcmk_node_t *allowed_node = NULL;
 
     pcmk__rsc_trace(instance, "Trying to assign %s to its current node %s",
                     instance->id, pcmk__node_name(current));
 
-    allowed_node = g_hash_table_lookup(instance->allowed_nodes,
+    allowed_node = g_hash_table_lookup(instance->private->allowed_nodes,
                                        current->details->id);
     if (!pcmk__node_available(allowed_node, true, false)) {
         pcmk__rsc_info(instance,
@@ -624,20 +625,21 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
      * assigned instances at all, it preferentially receives instances that are
      * currently active there.
      *
-     * parent->allowed_nodes tracks the number of instances assigned to each
-     * node. If a node already has max_per_node instances assigned,
+     * parent->private->allowed_nodes tracks the number of instances assigned to
+     * each node. If a node already has max_per_node instances assigned,
      * ban_unavailable_allowed_nodes() marks it as unavailable.
      *
-     * In the end, we restore the original parent->allowed_nodes to undo the
-     * changes to counts during tentative assignments. If we successfully
-     * assigned instance to its current node, we increment that node's counter.
+     * In the end, we restore the original parent->private->allowed_nodes to
+     * undo the changes to counts during tentative assignments. If we
+     * successfully assigned an instance to its current node, we increment that
+     * node's counter.
      */
 
     // Back up the allowed node tables of instance and its children recursively
     pcmk__copy_node_tables(instance, &allowed_orig);
 
     // Update instances-per-node counts in a scratch table
-    parent->allowed_nodes = pcmk__copy_node_table(parent->allowed_nodes);
+    parent->private->allowed_nodes = pcmk__copy_node_table(allowed_orig_parent);
 
     while (reserved < available) {
         chosen = assign_instance(instance, current, max_per_node);
@@ -690,8 +692,8 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     g_hash_table_destroy(allowed_orig);
 
     // Restore original instances-per-node counts
-    g_hash_table_destroy(parent->allowed_nodes);
-    parent->allowed_nodes = allowed_orig_parent;
+    g_hash_table_destroy(parent->private->allowed_nodes);
+    parent->private->allowed_nodes = allowed_orig_parent;
 
     if (chosen == NULL) {
         // Couldn't assign instance to current node
@@ -718,7 +720,7 @@ reset_allowed_node_counts(pcmk_resource_t *rsc)
     pcmk_node_t *node = NULL;
     GHashTableIter iter;
 
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         node->count = 0;
         if (pcmk__node_available(node, false, false)) {
@@ -1185,6 +1187,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     pcmk_resource_t *instance = NULL;
     GList *nodes = NULL;
     const pcmk_node_t *node = NULL;
+    GHashTable *allowed_nodes = match_rsc->private->allowed_nodes;
 
     // If match_rsc has a node, check only that node
     node = match_rsc->private->fns->location(match_rsc, NULL, current);
@@ -1194,8 +1197,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     }
 
     // Otherwise check for an instance matching any of match_rsc's allowed nodes
-    nodes = pcmk__sort_nodes(g_hash_table_get_values(match_rsc->allowed_nodes),
-                             NULL);
+    nodes = pcmk__sort_nodes(g_hash_table_get_values(allowed_nodes), NULL);
     for (GList *iter = nodes; (iter != NULL) && (instance == NULL);
          iter = iter->next) {
         instance = find_compatible_instance_on_node(match_rsc, rsc,

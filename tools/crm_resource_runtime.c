@@ -919,7 +919,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             GHashTableIter iter;
             pcmk_node_t *node = NULL;
 
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
                 if(node->weight >= 0) {
                     nodes = g_list_prepend(nodes, node);
@@ -927,7 +927,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             }
 
         } else if(nodes == NULL) {
-            nodes = g_hash_table_get_values(rsc->allowed_nodes);
+            nodes = g_hash_table_get_values(rsc->private->allowed_nodes);
         }
 
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
@@ -1137,7 +1137,7 @@ check_node_health(resource_checks_t *checks, pcmk_node_t *node)
         bool allowed = false;
         bool all_nodes_unhealthy = true;
 
-        g_hash_table_iter_init(&iter, checks->rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, checks->rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             allowed = true;
             if (!node_is_unhealthy(node)) {
