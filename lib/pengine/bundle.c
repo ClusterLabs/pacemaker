@@ -954,7 +954,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
         return NULL;
     }
 
-    node = replica->container->allocated_to;
+    node = replica->container->private->assigned_node;
     if (node == NULL) {
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.

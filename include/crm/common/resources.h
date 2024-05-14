@@ -105,8 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    pcmk_node_t *allocated_to;  // Node resource is assigned to
-
     // The destination node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_target;
 

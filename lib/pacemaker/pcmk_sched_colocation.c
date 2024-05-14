@@ -1239,27 +1239,28 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
          * colocation constraint has been violated.
          */
 
-        const pcmk_node_t *primary_node = primary->allocated_to;
+        const pcmk_node_t *primary_node = primary->private->assigned_node;
+        const pcmk_node_t *dependent_node = dependent->private->assigned_node;
 
-        if (dependent->allocated_to == NULL) {
+        if (dependent_node == NULL) {
             crm_trace("Skipping colocation '%s': %s will not run anywhere",
                       colocation->id, dependent->id);
 
         } else if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Dependent resource must colocate with primary resource
 
-            if (!pcmk__same_node(primary_node, dependent->allocated_to)) {
+            if (!pcmk__same_node(primary_node, dependent_node)) {
                 pcmk__sched_err("%s must be colocated with %s but is not "
                                 "(%s vs. %s)",
                                 dependent->id, primary->id,
-                                pcmk__node_name(dependent->allocated_to),
+                                pcmk__node_name(dependent_node),
                                 pcmk__node_name(primary_node));
             }
 
         } else if (colocation->score <= -PCMK_SCORE_INFINITY) {
             // Dependent resource must anti-colocate with primary resource
 
-            if (pcmk__same_node(dependent->allocated_to, primary_node)) {
+            if (pcmk__same_node(dependent_node, primary_node)) {
                 pcmk__sched_err("%s and %s must be anti-colocated but are "
                                 "assigned to the same node (%s)",
                                 dependent->id, primary->id,
@@ -1317,9 +1318,9 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
 
-    if (primary->allocated_to != NULL) {
-        value = pcmk__colocation_node_attr(primary->allocated_to, attr,
-                                           primary);
+    if (primary->private->assigned_node != NULL) {
+        value = pcmk__colocation_node_attr(primary->private->assigned_node,
+                                           attr, primary);
 
     } else if (colocation->score < 0) {
         // Nothing to do (anti-colocation with something that is not running)
@@ -1330,7 +1331,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
 
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (primary->allocated_to == NULL) {
+        if (primary->private->assigned_node == NULL) {
             node->weight = pcmk__add_scores(-colocation->score, node->weight);
             pcmk__rsc_trace(dependent,
                             "Applied %s to %s score on %s (now %s after "
@@ -1419,20 +1420,24 @@ pcmk__apply_coloc_to_priority(pcmk_resource_t *dependent,
     const char *primary_value = NULL;
     const char *attr = colocation->node_attribute;
     int score_multiplier = 1;
+    const pcmk_node_t *primary_node = NULL;
+    const pcmk_node_t *dependent_node = NULL;
 
     const pcmk_resource_t *primary_role_rsc = NULL;
 
     CRM_ASSERT((dependent != NULL) && (primary != NULL) &&
                (colocation != NULL));
 
-    if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
+    primary_node = primary->private->assigned_node;
+    dependent_node = dependent->private->assigned_node;
+
+    if ((primary_node == NULL) || (dependent_node == NULL)) {
         return;
     }
 
-    dependent_value = pcmk__colocation_node_attr(dependent->allocated_to, attr,
+    dependent_value = pcmk__colocation_node_attr(dependent_node, attr,
                                                  dependent);
-    primary_value = pcmk__colocation_node_attr(primary->allocated_to, attr,
-                                               primary);
+    primary_value = pcmk__colocation_node_attr(primary_node, attr, primary);
 
     primary_role_rsc = get_resource_for_role(primary);
 

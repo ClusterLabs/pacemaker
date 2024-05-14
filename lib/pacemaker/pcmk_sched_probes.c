@@ -74,9 +74,11 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
 static void
 probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 {
-    if ((rsc1->allocated_to != NULL)
+    const pcmk_node_t *rsc1_node = rsc1->private->assigned_node;
+
+    if ((rsc1_node != NULL)
         && (g_hash_table_lookup(rsc1->known_on,
-                                rsc1->allocated_to->details->id) == NULL)) {
+                                rsc1_node->details->id) == NULL)) {
 
         pcmk__new_ordering(rsc1,
                            pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
@@ -99,6 +101,7 @@ static bool
 guest_resource_will_stop(const pcmk_node_t *node)
 {
     const pcmk_resource_t *guest_rsc = node->details->remote_rsc->container;
+    const pcmk_node_t *guest_node = guest_rsc->private->assigned_node;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
@@ -109,10 +112,9 @@ guest_resource_will_stop(const pcmk_node_t *node)
            || (guest_rsc->next_role == pcmk_role_stopped)
 
            // Guest is moving
-           || ((guest_rsc->role > pcmk_role_stopped)
-               && (guest_rsc->allocated_to != NULL)
-               && (pcmk__find_node_in_list(guest_rsc->running_on,
-                   guest_rsc->allocated_to->details->uname) == NULL));
+           || ((guest_rsc->role > pcmk_role_stopped) && (guest_node != NULL)
+               && pcmk__find_node_in_list(guest_rsc->running_on,
+                                          guest_node->details->uname) == NULL);
 }
 
 /*!

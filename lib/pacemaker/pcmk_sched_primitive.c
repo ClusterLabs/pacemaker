@@ -177,7 +177,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
         // We've already finished assignment of resources to nodes
-        return rsc->allocated_to != NULL;
+        return rsc->private->assigned_node != NULL;
     }
 
     // Sort allowed nodes by score
@@ -286,7 +286,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pcmk__assign_resource(rsc, chosen, false, stop_if_fail);
     g_list_free(nodes);
-    return rsc->allocated_to != NULL;
+    return rsc->private->assigned_node != NULL;
 }
 
 /*!
@@ -350,7 +350,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
 
     CRM_CHECK(remote_node != NULL, return);
 
-    if ((connection->allocated_to != NULL)
+    if ((connection->private->assigned_node != NULL)
         && (connection->next_role != pcmk_role_stopped)) {
 
         crm_trace("Pacemaker Remote node %s will be online",
@@ -365,7 +365,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
         crm_trace("Pacemaker Remote node %s will be shut down "
                   "(%sassigned connection's next role is %s)",
                   remote_node->details->id,
-                  ((connection->allocated_to == NULL)? "un" : ""),
+                  ((connection->private->assigned_node == NULL)? "un" : ""),
                   pcmk_role_text(connection->next_role));
         remote_node->details->shutdown = TRUE;
     }
@@ -415,11 +415,11 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         // Assignment has already been done
         const char *node_name = "no node";
 
-        if (rsc->allocated_to != NULL) {
-            node_name = pcmk__node_name(rsc->allocated_to);
+        if (rsc->private->assigned_node != NULL) {
+            node_name = pcmk__node_name(rsc->private->assigned_node);
         }
         pcmk__rsc_debug(rsc, "%s: pre-assigned to %s", rsc->id, node_name);
-        return rsc->allocated_to;
+        return rsc->private->assigned_node;
     }
 
     // Ensure we detect assignment loops
@@ -550,7 +550,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         remote_connection_assigned(rsc);
     }
 
-    return rsc->allocated_to;
+    return rsc->private->assigned_node;
 }
 
 /*!
@@ -604,7 +604,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
         if (fn == NULL) {
             break;
         }
-        fn(rsc, rsc->allocated_to, !required);
+        fn(rsc, rsc->private->assigned_node, !required);
         role = next_role;
     }
 
@@ -626,7 +626,7 @@ set_default_next_role(pcmk_resource_t *rsc)
         return "explicit";
     }
 
-    if (rsc->allocated_to == NULL) {
+    if (rsc->private->assigned_node == NULL) {
         pe__set_next_role(rsc, pcmk_role_stopped, "assignment");
     } else {
         pe__set_next_role(rsc, pcmk_role_started, "assignment");
@@ -648,7 +648,7 @@ create_pending_start(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc,
                     "Creating action for %s to represent already pending start",
                     rsc->id);
-    start = start_action(rsc, rsc->allocated_to, TRUE);
+    start = start_action(rsc, rsc->private->assigned_node, TRUE);
     pcmk__set_action_flags(start, pcmk_action_always_in_graph);
 }
 
@@ -677,7 +677,7 @@ schedule_role_transition_actions(pcmk_resource_t *rsc)
         if (fn == NULL) {
             break;
         }
-        fn(rsc, rsc->allocated_to, false);
+        fn(rsc, rsc->private->assigned_node, false);
         role = next_role;
     }
 }
@@ -710,7 +710,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                     "(%s) on %s",
                     rsc->id, pcmk_role_text(rsc->role),
                     pcmk_role_text(rsc->next_role), next_role_source,
-                    pcmk__node_name(rsc->allocated_to));
+                    pcmk__node_name(rsc->private->assigned_node));
 
     current = rsc->private->fns->active_node(rsc, &num_all_active,
                                              &num_clean_active);
@@ -718,13 +718,13 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
                    rsc);
 
-    if ((current != NULL) && (rsc->allocated_to != NULL)
-        && !pcmk__same_node(current, rsc->allocated_to)
+    if ((current != NULL) && (rsc->private->assigned_node != NULL)
+        && !pcmk__same_node(current, rsc->private->assigned_node)
         && (rsc->next_role >= pcmk_role_started)) {
 
         pcmk__rsc_trace(rsc, "Moving %s from %s to %s",
                         rsc->id, pcmk__node_name(current),
-                        pcmk__node_name(rsc->allocated_to));
+                        pcmk__node_name(rsc->private->assigned_node));
         is_moving = true;
         allow_migrate = pcmk__rsc_can_migrate(rsc, current);
 
@@ -737,7 +737,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         && (rsc->partial_migration_target != NULL)
         && allow_migrate && (num_all_active == 2)
         && pcmk__same_node(current, rsc->partial_migration_source)
-        && pcmk__same_node(rsc->allocated_to, rsc->partial_migration_target)) {
+        && pcmk__same_node(rsc->private->assigned_node,
+                           rsc->partial_migration_target)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
@@ -830,12 +831,12 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         need_stop = true;
 
     } else if ((rsc->role > pcmk_role_started) && (current != NULL)
-               && (rsc->allocated_to != NULL)) {
+               && (rsc->private->assigned_node != NULL)) {
         pcmk_action_t *start = NULL;
 
         pcmk__rsc_trace(rsc, "Creating start action for promoted resource %s",
                         rsc->id);
-        start = start_action(rsc, rsc->allocated_to, TRUE);
+        start = start_action(rsc, rsc->private->assigned_node, TRUE);
         if (!pcmk_is_set(start->flags, pcmk_action_optional)) {
             // Recovery of a promoted resource
             pcmk__rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
@@ -1241,7 +1242,7 @@ is_expected_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     return pcmk_all_flags_set(rsc->flags,
                               pcmk__rsc_stop_unexpected|pcmk__rsc_restarting)
            && (rsc->next_role > pcmk_role_stopped)
-           && pcmk__same_node(rsc->allocated_to, node);
+           && pcmk__same_node(rsc->private->assigned_node, node);
 }
 
 /*!
@@ -1274,7 +1275,7 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
         if (rsc->partial_migration_target != NULL) {
             // Continue migration if node originally was and remains target
             if (pcmk__same_node(current, rsc->partial_migration_target)
-                && pcmk__same_node(current, rsc->allocated_to)) {
+                && pcmk__same_node(current, rsc->private->assigned_node)) {
                 pcmk__rsc_trace(rsc,
                                 "Skipping stop of %s on %s "
                                 "because partial migration there will continue",
@@ -1293,7 +1294,7 @@ stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
                         rsc->id, pcmk__node_name(current));
         stop = stop_action(rsc, current, optional);
 
-        if (rsc->allocated_to == NULL) {
+        if (rsc->private->assigned_node == NULL) {
             pe_action_set_reason(stop, "node availability", true);
         } else if (pcmk_all_flags_set(rsc->flags, pcmk__rsc_restarting
                                                   |pcmk__rsc_stop_unexpected)) {

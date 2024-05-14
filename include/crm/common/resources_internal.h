@@ -341,6 +341,14 @@ struct pcmk__resource_private {
     // What to do if the resource is incorrectly active on multiple nodes
     enum pcmk__multiply_active multiply_active_policy;
 
+    /* The assigned node (if not NULL) is the one where the resource *should*
+     * be active by the end of the current scheduler transition. Only primitive
+     * resources have an assigned node.
+     *
+     * @TODO This should probably be part of the primitive variant data.
+     */
+    pcmk_node_t *assigned_node;
+
     /* Pay special attention to whether you want to use with_this_colocations
      * and this_with_colocations directly, which include only colocations
      * explicitly involving this resource, or call libpacemaker's

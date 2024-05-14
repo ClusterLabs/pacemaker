@@ -102,7 +102,7 @@ get_remote_node_state(const pcmk_node_t *node)
      * on that remote node until after it starts elsewhere.
      */
     if ((remote_rsc->next_role == pcmk_role_stopped)
-        || (remote_rsc->allocated_to == NULL)) {
+        || (remote_rsc->private->assigned_node == NULL)) {
 
         // The connection resource is not going to run anywhere
 
@@ -559,7 +559,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     CRM_ASSERT(action->node->details->remote_rsc != NULL);
 
     began_on = pcmk__current_node(action->node->details->remote_rsc);
-    ended_on = action->node->details->remote_rsc->allocated_to;
+    ended_on = action->node->details->remote_rsc->private->assigned_node;
     if (action->node->details->remote_rsc
         && (action->node->details->remote_rsc->container == NULL)
         && action->node->details->remote_rsc->partial_migration_target) {
@@ -687,11 +687,13 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;
+    const pcmk_resource_t *container = NULL;
     enum action_tasks task;
 
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
+    container = guest->details->remote_rsc->container;
 
     task = pcmk_parse_action(action->task);
     if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
@@ -705,7 +707,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk_action_demote:
         case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
-            host = pcmk__current_node(guest->details->remote_rsc->container);
+            host = pcmk__current_node(container);
             break;
 
         case pcmk_action_start:
@@ -714,7 +716,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk_action_promote:
         case pcmk_action_promoted:
             // "Up" actions take place on guest's next host
-            host = guest->details->remote_rsc->container->allocated_to;
+            host = container->private->assigned_node;
             break;
 
         default:

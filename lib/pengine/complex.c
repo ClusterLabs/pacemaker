@@ -1098,11 +1098,11 @@ common_free(pcmk_resource_t * rsc)
     }
     g_list_free(rsc->fillers);
     free(rsc->id);
-    free(rsc->allocated_to);
 
     free(rsc->private->variant_opaque);
     free(rsc->private->history_id);
     free(rsc->private->pending_action);
+    free(rsc->private->assigned_node);
     g_list_free(rsc->private->actions);
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);

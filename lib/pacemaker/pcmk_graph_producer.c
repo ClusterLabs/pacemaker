@@ -670,7 +670,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
 
-            pcmk_node_t *assigned = action->rsc->allocated_to;
+            pcmk_node_t *assigned = action->rsc->private->assigned_node;
 
             /* For load_stopped -> migrate_to orderings, we care about where
              * the resource has been assigned, not where migrate_to will be

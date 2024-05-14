@@ -146,7 +146,7 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
 
     switch (node_type) {
         case pcmk__rsc_node_assigned:
-            host = container->allocated_to;
+            host = container->private->assigned_node;
             if (host == NULL) {
                 crm_trace("Skipping %s lookup for %s because "
                           "its container %s is unassigned",

@@ -332,7 +332,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         return;
     }
 
-    next = rsc->allocated_to;
+    next = rsc->private->assigned_node;
     if (rsc->running_on) {
         current = pcmk__current_node(rsc);
         if (rsc->role == pcmk_role_stopped) {
@@ -441,8 +441,8 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         node = NULL;
     }
 
-    if (rsc->allocated_to != NULL) {
-        changed = !pcmk__same_node(rsc->allocated_to, node);
+    if (rsc->private->assigned_node != NULL) {
+        changed = !pcmk__same_node(rsc->private->assigned_node, node);
     } else {
         changed = (node != NULL);
     }
@@ -499,7 +499,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     }
 
     pcmk__rsc_debug(rsc, "Assigning %s to %s", rsc->id, pcmk__node_name(node));
-    rsc->allocated_to = pe__copy_node(node);
+    rsc->private->assigned_node = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
     node->details->num_resources++;
@@ -528,7 +528,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
 void
 pcmk__unassign_resource(pcmk_resource_t *rsc)
 {
-    pcmk_node_t *old = rsc->allocated_to;
+    pcmk_node_t *old = rsc->private->assigned_node;
 
     if (old == NULL) {
         crm_info("Unassigning %s", rsc->id);
@@ -542,7 +542,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         if (old == NULL) {
             return;
         }
-        rsc->allocated_to = NULL;
+        rsc->private->assigned_node = NULL;
 
         /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.

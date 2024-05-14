@@ -254,8 +254,8 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
         return true;
 
     } else if (!pcmk_is_set(flags, pcmk_rsc_match_current_node)
-               && (rsc->allocated_to != NULL)
-               && pcmk__same_node(rsc->allocated_to, node)) {
+               && (rsc->private->assigned_node != NULL)
+               && pcmk__same_node(rsc->private->assigned_node, node)) {
         return true;
     }
     return false;
@@ -937,8 +937,8 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
                 result = g_list_append(result, rsc->pending_node);
         }
 
-    } else if (current == FALSE && rsc->allocated_to) {
-        result = g_list_append(NULL, rsc->allocated_to);
+    } else if (!current && (rsc->private->assigned_node != NULL)) {
+        result = g_list_append(NULL, rsc->private->assigned_node);
     }
 
     if (result && (result->next == NULL)) {

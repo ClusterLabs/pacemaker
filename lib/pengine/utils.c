@@ -378,13 +378,14 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    if ((node == NULL) && (score == -PCMK_SCORE_INFINITY)) {
-        if (rsc->allocated_to) {
-            crm_info("Deallocating %s from %s",
-                     rsc->id, pcmk__node_name(rsc->allocated_to));
-            free(rsc->allocated_to);
-            rsc->allocated_to = NULL;
-        }
+    if ((node == NULL) && (score == -PCMK_SCORE_INFINITY)
+        && (rsc->private->assigned_node != NULL)) {
+
+        // @TODO Should this be more like pcmk__unassign_resource()?
+        crm_info("Unassigning %s from %s",
+                 rsc->id, pcmk__node_name(rsc->private->assigned_node));
+        free(rsc->private->assigned_node);
+        rsc->private->assigned_node = NULL;
     }
 }
 

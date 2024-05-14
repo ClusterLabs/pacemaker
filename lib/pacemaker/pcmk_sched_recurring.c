@@ -599,19 +599,19 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         return;
     }
 
-    if (rsc->allocated_to == NULL) {
+    if (rsc->private->assigned_node == NULL) {
         // Recurring actions for active roles not needed
 
-    } else if (rsc->allocated_to->details->maintenance) {
+    } else if (rsc->private->assigned_node->details->maintenance) {
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for %s on %s "
                         "in maintenance mode",
-                        rsc->id, pcmk__node_name(rsc->allocated_to));
+                        rsc->id, pcmk__node_name(rsc->private->assigned_node));
 
     } else if ((rsc->next_role != pcmk_role_stopped)
         || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         // Recurring actions for active roles needed
-        start = start_action(rsc, rsc->allocated_to, TRUE);
+        start = start_action(rsc, rsc->private->assigned_node, TRUE);
     }
 
     pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
@@ -628,9 +628,11 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
         }
 
         if (start != NULL) {
-            recurring_op_for_active(rsc, start, rsc->allocated_to, &op_history);
+            recurring_op_for_active(rsc, start, rsc->private->assigned_node,
+                                    &op_history);
         }
-        recurring_op_for_inactive(rsc, rsc->allocated_to, &op_history);
+        recurring_op_for_inactive(rsc, rsc->private->assigned_node,
+                                  &op_history);
 
         free(op_history.key);
     }

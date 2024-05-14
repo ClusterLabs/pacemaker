@@ -53,8 +53,8 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     pcmk__rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
                     ((rsc->partial_migration_target == NULL)? "" : "partially "),
                     rsc->id, pcmk__node_name(current),
-                    pcmk__node_name(rsc->allocated_to));
-    start = start_action(rsc, rsc->allocated_to, TRUE);
+                    pcmk__node_name(rsc->private->assigned_node));
+    start = start_action(rsc, rsc->private->assigned_node, TRUE);
     stop = stop_action(rsc, current, TRUE);
 
     if (rsc->partial_migration_target == NULL) {
@@ -65,8 +65,9 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     }
     migrate_from = custom_action(rsc, pcmk__op_key(rsc->id,
                                                    PCMK_ACTION_MIGRATE_FROM, 0),
-                                 PCMK_ACTION_MIGRATE_FROM, rsc->allocated_to,
-                                 TRUE, rsc->private->scheduler);
+                                 PCMK_ACTION_MIGRATE_FROM,
+                                 rsc->private->assigned_node, TRUE,
+                                 rsc->private->scheduler);
 
     pcmk__set_action_flags(start, pcmk_action_migratable);
     pcmk__set_action_flags(stop, pcmk_action_migratable);
@@ -121,7 +122,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                        rsc->private->scheduler);
 
     if (migrate_to != NULL) {
-        add_migration_meta(migrate_to, current, rsc->allocated_to);
+        add_migration_meta(migrate_to, current, rsc->private->assigned_node);
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             /* migrate_to takes place on the source node, but can affect the
@@ -140,7 +141,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
         }
     }
 
-    add_migration_meta(migrate_from, current, rsc->allocated_to);
+    add_migration_meta(migrate_from, current, rsc->private->assigned_node);
 }
 
 /*!
@@ -217,11 +218,13 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
         return false;
     }
 
-    if ((rsc->allocated_to == NULL) || rsc->allocated_to->details->unclean) {
+    if ((rsc->private->assigned_node == NULL)
+        || rsc->private->assigned_node->details->unclean) {
+
         pcmk__rsc_trace(rsc,
                         "%s cannot migrate because "
                         "its next node (%s) is unclean",
-                        rsc->id, pcmk__node_name(rsc->allocated_to));
+                        rsc->id, pcmk__node_name(rsc->private->assigned_node));
         return false;
     }
 

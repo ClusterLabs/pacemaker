@@ -48,7 +48,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         replica->ip->private->cmds->assign(replica->ip, prefer, stop_if_fail);
     }
 
-    container_host = replica->container->allocated_to;
+    container_host = replica->container->private->assigned_node;
     if (replica->remote != NULL) {
         if (pcmk__is_pacemaker_remote_node(container_host)) {
             /* REMOTE_CONTAINER_HACK: "Nested" connection resources must be on

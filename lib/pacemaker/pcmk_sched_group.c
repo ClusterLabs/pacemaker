@@ -44,7 +44,7 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     CRM_ASSERT(pcmk__is_group(rsc));
 
     if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
-        return rsc->allocated_to; // Assignment already done
+        return rsc->private->assigned_node; // Assignment already done
     }
     if (pcmk_is_set(rsc->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(rsc, "Assignment dependency loop detected involving %s",
