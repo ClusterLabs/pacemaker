@@ -1238,7 +1238,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                 && !pcmk_is_set(start->flags, pcmk_action_runnable)))) {
 
         key = stop_key(rsc);
-        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             pcmk_node_t *node = iter->data;
             pcmk_action_t *stop_op = NULL;
 

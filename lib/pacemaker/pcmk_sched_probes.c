@@ -29,7 +29,8 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
                     const pcmk_node_t *node)
 {
     // Check whether resource is currently active on node
-    pcmk_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+    pcmk_node_t *running = pe_find_node_id(rsc->private->active_nodes,
+                                           node->details->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
@@ -113,7 +114,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
 
            // Guest is moving
            || ((guest_rsc->role > pcmk_role_stopped) && (guest_node != NULL)
-               && pcmk__find_node_in_list(guest_rsc->running_on,
+               && pcmk__find_node_in_list(guest_rsc->private->active_nodes,
                                           guest_node->details->uname) == NULL);
 }
 
@@ -276,7 +277,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
      * resource or entire clone to stop if already active.
      */
     if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
-        && (top->running_on == NULL)) {
+        && (top->private->active_nodes == NULL)) {
         pcmk__set_relation_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
 
@@ -509,7 +510,7 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
 
         pcmk__related_action_t *then = then_iter->data;
 
-        if (then->action->rsc->running_on
+        if ((then->action->rsc->private->active_nodes != NULL)
             || (pe__const_top_resource(then->action->rsc, false)
                 != after->action->rsc)
             || !pcmk__str_eq(then->action->task, PCMK_ACTION_START,

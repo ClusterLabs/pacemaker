@@ -157,8 +157,8 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
             break;
 
         case pcmk__rsc_node_current:
-            if (container->running_on != NULL) {
-                host = container->running_on->data;
+            if (container->private->active_nodes != NULL) {
+                host = container->private->active_nodes->data;
             }
             if (host == NULL) {
                 crm_trace("Skipping %s lookup for %s because "

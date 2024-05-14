@@ -2073,7 +2073,7 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
     for (iter = data->replicas; iter != NULL; iter = iter->next) {
         pcmk__bundle_replica_t *replica = iter->data;
 
-        if (replica->container->running_on != NULL) {
+        if (replica->container->private->active_nodes != NULL) {
             containers = g_list_append(containers, replica->container);
         }
     }
@@ -2099,9 +2099,9 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
     nodes = g_hash_table_new(NULL, NULL);
     for (iter = containers; iter != NULL; iter = iter->next) {
         container = iter->data;
+        for (GList *node_iter = container->private->active_nodes;
+             node_iter != NULL; node_iter = node_iter->next) {
 
-        for (GList *node_iter = container->running_on; node_iter != NULL;
-             node_iter = node_iter->next) {
             node = node_iter->data;
 
             // If insert returns true, we haven't counted this node yet

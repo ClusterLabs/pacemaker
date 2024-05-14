@@ -29,7 +29,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
     for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
 
-        for (const GList *iter2 = child->running_on;
+        for (const GList *iter2 = child->private->active_nodes;
              iter2 != NULL; iter2 = iter2->next) {
 
             const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
@@ -69,8 +69,10 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
 
         retval = build_node_info_list(parent);
 
-    } else if (rsc->running_on != NULL) {
-        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    } else {
+        for (GList *iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 

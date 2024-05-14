@@ -1084,10 +1084,6 @@ common_free(pcmk_resource_t * rsc)
         pcmk__xml_free(rsc->private->xml);
         rsc->private->xml = NULL;
     }
-    if (rsc->running_on) {
-        g_list_free(rsc->running_on);
-        rsc->running_on = NULL;
-    }
     if (rsc->known_on) {
         g_hash_table_destroy(rsc->known_on);
         rsc->known_on = NULL;
@@ -1104,6 +1100,7 @@ common_free(pcmk_resource_t * rsc)
     free(rsc->private->pending_action);
     free(rsc->private->assigned_node);
     g_list_free(rsc->private->actions);
+    g_list_free(rsc->private->active_nodes);
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);
     g_list_free(rsc->private->location_constraints);
@@ -1186,7 +1183,9 @@ active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
     if (rsc == NULL) {
         return NULL;
     }
-    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->active_nodes;
+         iter != NULL; iter = iter->next) {
+
         if (!pe__count_active_node(rsc, (pcmk_node_t *) iter->data, &active,
                                    count_all, count_clean)) {
             break; // Don't waste time iterating if we don't have to

@@ -539,7 +539,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         // Assignment failed
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
             pcmk__rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
-        } else if ((rsc->running_on != NULL) && stop_if_fail) {
+        } else if ((rsc->private->active_nodes != NULL) && stop_if_fail) {
             pcmk__rsc_info(rsc, "Stopping removed resource %s", rsc->id);
         }
     }
@@ -1260,7 +1260,9 @@ is_expected_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 static void
 stop_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
 {
-    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->active_nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *current = (pcmk_node_t *) iter->data;
         pcmk_action_t *stop = NULL;
 
@@ -1445,7 +1447,9 @@ demote_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
      * running on more than one node, so we want to demote on all of them as
      * part of recovery, regardless of which one is the desired node.
      */
-    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->active_nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *current = (pcmk_node_t *) iter->data;
 
         if (is_expected_node(rsc, current)) {
@@ -1652,7 +1656,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
     if (rsc->lock_node != NULL) {
         // The lock was obtained from resource history
 
-        if (rsc->running_on != NULL) {
+        if (rsc->private->active_nodes != NULL) {
             /* The resource was started elsewhere even though it is now
              * considered locked. This shouldn't be possible, but as a
              * failsafe, we don't want to disturb the resource now.
@@ -1666,8 +1670,8 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
         }
 
     // Only a resource active on exactly one node can be locked
-    } else if (pcmk__list_of_1(rsc->running_on)) {
-        pcmk_node_t *node = rsc->running_on->data;
+    } else if (pcmk__list_of_1(rsc->private->active_nodes)) {
+        pcmk_node_t *node = rsc->private->active_nodes->data;
 
         if (node->details->shutdown) {
             if (node->details->unclean) {

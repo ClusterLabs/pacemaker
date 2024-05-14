@@ -148,7 +148,7 @@ get_remote_node_state(const pcmk_node_t *node)
         // Connection is running on a dead node, see if we can recover it first
         return remote_state_resting;
 
-    } else if (pcmk__list_of_multiple(remote_rsc->running_on)
+    } else if (pcmk__list_of_multiple(remote_rsc->private->active_nodes)
                && (remote_rsc->private->partial_migration_source != NULL)
                && (remote_rsc->private->partial_migration_target != NULL)) {
         /* We're in the middle of migrating a connection resource, so wait until

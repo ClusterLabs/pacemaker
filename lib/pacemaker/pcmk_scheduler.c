@@ -199,11 +199,11 @@ apply_stickiness(gpointer data, gpointer user_data)
      */
     if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)
         || (rsc->private->stickiness < 1)
-        || !pcmk__list_of_1(rsc->running_on)) {
+        || !pcmk__list_of_1(rsc->private->active_nodes)) {
         return;
     }
 
-    node = rsc->running_on->data;
+    node = rsc->private->active_nodes->data;
 
     /* In a symmetric cluster, stickiness can always be used. In an
      * asymmetric cluster, we have to check whether the resource is still

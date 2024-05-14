@@ -14,9 +14,19 @@
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
-#include <crm/lrmd_events.h>      // lrmd_event_data_t
-#include <crm/common/scheduler.h> // pcmk_action_t, pcmk_node_t, etc.
-#include <crm/pengine/internal.h> // pcmk__location_t
+#include <stdio.h>                  // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdbool.h>                // bool, false
+#include <glib.h>                   // guint, gpointer, GList, GHashTable
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/common/scheduler.h>   // pcmk_action_t, pcmk_node_t, etc.
+#include <crm/common/scheduler_internal.h>  // pcmk__location_t, etc.
+#include <crm/cib.h>                // cib_t
+#include <crm/lrmd_events.h>        // lrmd_event_data_t
+#include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.
+#include <pacemaker.h>              // pcmk_injections_t
+#include <pacemaker-internal.h>     // pcmk__colocation_t
 
 // Colocation flags
 enum pcmk__coloc_flags {
@@ -628,7 +638,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     if (pcmk_is_set(colocation->dependent->flags,
                     pcmk__rsc_remote_nesting_allowed)
         && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
-        && pcmk__list_of_1(rsc->running_on)) {
+        && pcmk__list_of_1(rsc->private->active_nodes)) {
         return false;
     }
 
@@ -636,7 +646,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
     return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
-           || (rsc->running_on == NULL);
+           || (rsc->private->active_nodes == NULL);
 }
 
 

@@ -349,6 +349,16 @@ struct pcmk__resource_private {
      */
     pcmk_node_t *assigned_node;
 
+    /* The active nodes are ones where the resource is (or might be, if
+     * insufficient information is available to be sure) already active at the
+     * start of the current scheduler transition.
+     *
+     * For primitive resources, there should be at most one, but could be more
+     * if it is (incorrectly) multiply active. For collective resources, this
+     * combines active nodes of all descendants.
+     */
+    GList *active_nodes;
+
     // The source node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_source;
 

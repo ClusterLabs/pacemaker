@@ -269,8 +269,8 @@ member_internal_constraints(gpointer data, gpointer user_data)
          * usual restart orderings will be irrelevant, so we need to order this
          * member's stop before the previous member's start.
          */
-        if ((member->running_on != NULL)
-            && (member_data->previous_member->running_on == NULL)) {
+        if ((member->private->active_nodes != NULL)
+            && (member_data->previous_member->private->active_nodes == NULL)) {
             pcmk__order_resource_actions(member, PCMK_ACTION_STOP,
                                          member_data->previous_member,
                                          PCMK_ACTION_START,
@@ -291,11 +291,11 @@ member_internal_constraints(gpointer data, gpointer user_data)
     }
 
     // Make sure partially active groups shut down in sequence
-    if (member->running_on != NULL) {
+    if (member->private->active_nodes != NULL) {
         if (member_data->ordered && (member_data->previous_member != NULL)
-            && (member_data->previous_member->running_on == NULL)
+            && (member_data->previous_member->private->active_nodes == NULL)
             && (member_data->last_active != NULL)
-            && (member_data->last_active->running_on != NULL)) {
+            && (member_data->last_active->private->active_nodes != NULL)) {
             pcmk__order_stops(member, member_data->last_active,
                               pcmk__ar_ordered);
         }

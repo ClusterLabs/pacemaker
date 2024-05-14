@@ -362,7 +362,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         && (then->rsc != NULL)) {
 
         if (!pcmk_is_set(first_flags, pcmk_action_runnable)
-            && (first->rsc != NULL) && (first->rsc->running_on != NULL)) {
+            && (first->rsc != NULL)
+            && (first->rsc->private->active_nodes != NULL)) {
 
             pcmk__rsc_trace(then->rsc,
                             "%s then %s: ignoring because first is stopping",
@@ -1778,7 +1779,8 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         return;
     }
 
-    if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
+    if (pe_find_node_id(rsc->private->active_nodes,
+                        node->details->id) == NULL) {
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
             pcmk__schedule_cleanup(rsc, node, false);
         }

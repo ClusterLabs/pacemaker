@@ -429,7 +429,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
                     rsc->id, rsc->private->scheduler->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
-    for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->active_nodes; iter != NULL; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
                            pcmk__ar_if_on_same_node_or_target,

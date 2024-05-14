@@ -744,7 +744,7 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
     const pcmk_node_t *parent_node = NULL;
 
     // Check whether instance is active, healthy, and not yet assigned
-    if ((instance->running_on == NULL)
+    if ((instance->private->active_nodes == NULL)
         || !pcmk_is_set(instance->flags, pcmk__rsc_unassigned)
         || pcmk_is_set(instance->flags, pcmk__rsc_failed)) {
         return NULL;
@@ -835,7 +835,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
             continue; // Already assigned
         }
 
-        if (instance->running_on != NULL) {
+        if (instance->private->active_nodes != NULL) {
             current = pcmk__current_node(instance);
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
@@ -914,7 +914,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 
     // If we get here, instance is a primitive
 
-    if (instance->running_on != NULL) {
+    if (instance->private->active_nodes != NULL) {
         instance_state |= instance_active;
     }
 

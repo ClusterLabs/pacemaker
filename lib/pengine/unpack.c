@@ -1744,8 +1744,8 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
 
     container = rsc->container;
 
-    if (container && pcmk__list_of_1(rsc->running_on)) {
-        host = rsc->running_on->data;
+    if ((container != NULL) && pcmk__list_of_1(rsc->private->active_nodes)) {
+        host = rsc->private->active_nodes->data;
     }
 
     /* If the resource is currently started, mark it online. */
@@ -2094,7 +2094,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                      * first as orphans, even if there are inactive instance
                      * numbers available.
                      */
-                    if (rsc->running_on) {
+                    if (rsc->private->active_nodes != NULL) {
                         crm_notice("Active (now-)anonymous clone %s has "
                                    "multiple (orphan) instance histories on %s",
                                    parent->id, pcmk__node_name(node));
@@ -2517,9 +2517,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
      * the partially migrated resource stopped on the migration target.
      */
     if ((rsc->role == pcmk_role_stopped)
+        && (rsc->private->active_nodes != NULL)
         && (rsc->private->partial_migration_target != NULL)
-        && pcmk__same_node(rsc->private->partial_migration_source, node)
-        && rsc->running_on) {
+        && pcmk__same_node(rsc->private->partial_migration_source, node)) {
 
         rsc->role = pcmk_role_started;
     }

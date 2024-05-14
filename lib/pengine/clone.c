@@ -849,7 +849,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pcmk_node_t *node = (pcmk_node_t *) nIter->data;
 
-                if ((pcmk__find_node_in_list(rsc->running_on,
+                if ((pcmk__find_node_in_list(rsc->private->active_nodes,
                                              node->details->uname) == NULL)
                     && pcmk__str_in_list(node->details->uname, only_node,
                                          pcmk__str_star_matches|pcmk__str_casei)) {

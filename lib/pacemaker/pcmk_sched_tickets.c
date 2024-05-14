@@ -84,7 +84,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                     rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
                     pcmk_role_text(rsc_ticket->role));
 
-    if (!rsc_ticket->ticket->granted && (rsc->running_on != NULL)) {
+    if (!rsc_ticket->ticket->granted && (rsc->private->active_nodes != NULL)) {
 
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
@@ -111,7 +111,9 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                                   "__loss_of_ticket__",
                                   rsc->private->scheduler);
 
-                for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+                for (iter = rsc->private->active_nodes;
+                     iter != NULL; iter = iter->next) {
+
                     pe_fence_node(rsc->private->scheduler,
                                   (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
@@ -122,7 +124,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 if (!ticket_role_matches(rsc, rsc_ticket)) {
                     return;
                 }
-                if (rsc->running_on != NULL) {
+                if (rsc->private->active_nodes != NULL) {
                     pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
                     pcmk__set_rsc_flags(rsc, pcmk__rsc_blocked);
                 }

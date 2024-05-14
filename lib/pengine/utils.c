@@ -41,7 +41,7 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
          */
         pcmk_resource_t *rsc = node->details->remote_rsc->container;
 
-        for (GList *n = rsc->running_on; n != NULL; n = n->next) {
+        for (GList *n = rsc->private->active_nodes; n != NULL; n = n->next) {
             pcmk_node_t *container_node = n->data;
 
             if (!container_node->details->online
@@ -764,22 +764,23 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
 bool
 pe__rsc_running_on_only(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
-            && pcmk__same_node((const pcmk_node_t *) rsc->running_on->data,
-                               node);
+    return (rsc != NULL) && pcmk__list_of_1(rsc->private->active_nodes)
+           && pcmk__same_node((const pcmk_node_t *)
+                              rsc->private->active_nodes->data, node);
 }
 
 bool
 pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 {
-    for (GList *ele = rsc->running_on; ele; ele = ele->next) {
-        pcmk_node_t *node = (pcmk_node_t *) ele->data;
-        if (pcmk__str_in_list(node->details->uname, node_list,
-                              pcmk__str_star_matches|pcmk__str_casei)) {
-            return true;
+    if (rsc != NULL) {
+        for (GList *ele = rsc->private->active_nodes; ele; ele = ele->next) {
+            pcmk_node_t *node = (pcmk_node_t *) ele->data;
+            if (pcmk__str_in_list(node->details->uname, node_list,
+                                  pcmk__str_star_matches|pcmk__str_casei)) {
+                return true;
+            }
         }
     }
-
     return false;
 }
 

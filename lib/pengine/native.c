@@ -62,9 +62,11 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
      * node as well. */
     if (node->details->remote_rsc
         && node->details->remote_rsc->container) {
-        GList *gIter = node->details->remote_rsc->container->running_on;
+        const pcmk_resource_t *container = node->details->remote_rsc->container;
 
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (GList *gIter = container->private->active_nodes;
+             gIter != NULL; gIter = gIter->next) {
+
             pcmk_node_t *a_node = gIter->data;
 
             a_node->details->priority += priority;
@@ -85,10 +87,12 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                    pcmk_scheduler_t *scheduler, gboolean failed)
 {
     pcmk_resource_t *parent = rsc->private->parent;
-    GList *gIter = rsc->running_on;
 
     CRM_CHECK(node != NULL, return);
-    for (; gIter != NULL; gIter = gIter->next) {
+
+    for (GList *gIter = rsc->private->active_nodes;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
 
         CRM_CHECK(a_node != NULL, return);
@@ -100,7 +104,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
     pcmk__rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pcmk__node_name(node),
                     pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : "(unmanaged)");
 
-    rsc->running_on = g_list_append(rsc->running_on, node);
+    rsc->private->active_nodes = g_list_append(rsc->private->active_nodes,
+                                               node);
     if (pcmk__is_primitive(rsc)) {
         node->details->running_rsc = g_list_append(node->details->running_rsc, rsc);
         native_priority_to_node(rsc, node, failed);
@@ -119,7 +124,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         while(p && node->details->online) {
             /* add without the additional location constraint */
-            p->running_on = g_list_append(p->running_on, node);
+            p->private->active_nodes = g_list_append(p->private->active_nodes,
+                                                     node);
             p = p->private->parent;
         }
         return;
@@ -241,16 +247,18 @@ rsc_is_on_node(pcmk_resource_t *rsc, const pcmk_node_t *node, int flags)
                     rsc->id, pcmk__node_name(node));
 
     if (pcmk_is_set(flags, pcmk_rsc_match_current_node)
-        && (rsc->running_on != NULL)) {
+        && (rsc->private->active_nodes != NULL)) {
 
-        for (GList *iter = rsc->running_on; iter; iter = iter->next) {
+        for (GList *iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             if (pcmk__same_node((pcmk_node_t *) iter->data, node)) {
                 return true;
             }
         }
 
     } else if (pcmk_is_set(flags, pe_find_inactive) // @COMPAT deprecated
-               && (rsc->running_on == NULL)) {
+               && (rsc->private->active_nodes == NULL)) {
         return true;
 
     } else if (!pcmk_is_set(flags, pcmk_rsc_match_current_node)
@@ -338,7 +346,9 @@ native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
 gboolean
 native_active(pcmk_resource_t * rsc, gboolean all)
 {
-    for (GList *gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->active_nodes;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
 
         if (a_node->details->unclean) {
@@ -508,7 +518,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         node = rsc->lock_node;
     }
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only)
-        || pcmk__list_of_multiple(rsc->running_on)) {
+        || pcmk__list_of_multiple(rsc->private->active_nodes)) {
         node = NULL;
     }
 
@@ -620,7 +630,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
     // User-supplied description
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only|pcmk_show_description)
-        || pcmk__list_of_multiple(rsc->running_on)) {
+        || pcmk__list_of_multiple(rsc->private->active_nodes)) {
         const char *desc = crm_element_value(rsc->private->xml,
                                              PCMK_XA_DESCRIPTION);
 
@@ -633,10 +643,12 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     }
 
     if (show_nodes && !pcmk_is_set(show_opts, pcmk_show_rsc_only)
-        && pcmk__list_of_multiple(rsc->running_on)) {
+        && pcmk__list_of_multiple(rsc->private->active_nodes)) {
         bool have_nodes = false;
 
-        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             pcmk_node_t *n = (pcmk_node_t *) iter->data;
 
             have_nodes = add_output_node(outstr, n->details->uname, have_nodes);
@@ -682,10 +694,11 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         cl = PCMK__VALUE_RSC_FAILED;
 
-    } else if (pcmk__is_primitive(rsc) && (rsc->running_on == NULL)) {
+    } else if (pcmk__is_primitive(rsc)
+               && (rsc->private->active_nodes == NULL)) {
         cl = PCMK__VALUE_RSC_FAILED;
 
-    } else if (pcmk__list_of_multiple(rsc->running_on)) {
+    } else if (pcmk__list_of_multiple(rsc->private->active_nodes)) {
         cl = PCMK__VALUE_RSC_MULTIPLE;
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
@@ -784,7 +797,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     }
 
-    nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
+    nodes_running_on = pcmk__itoa(g_list_length(rsc->private->active_nodes));
 
     if (rsc->lock_node != NULL) {
         locked_to = rsc->lock_node->details->uname;
@@ -811,20 +824,18 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     CRM_ASSERT(rc == pcmk_rc_ok);
 
-    if (rsc->running_on != NULL) {
-        GList *gIter = rsc->running_on;
+    for (GList *gIter = rsc->private->active_nodes;
+         gIter != NULL; gIter = gIter->next) {
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pcmk_node_t *node = (pcmk_node_t *) gIter->data;
-            const char *cached = pcmk__btoa(node->details->online);
+        pcmk_node_t *node = (pcmk_node_t *) gIter->data;
+        const char *cached = pcmk__btoa(node->details->online);
 
-            rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
-                                          PCMK_XA_NAME, node->details->uname,
-                                          PCMK_XA_ID, node->details->id,
-                                          PCMK_XA_CACHED, cached,
-                                          NULL);
-            CRM_ASSERT(rc == pcmk_rc_ok);
-        }
+        rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
+                                      PCMK_XA_NAME, node->details->uname,
+                                      PCMK_XA_ID, node->details->id,
+                                      PCMK_XA_CACHED, cached,
+                                      NULL);
+        CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
     pcmk__output_xml_pop_parent(out);
@@ -929,9 +940,7 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
 
     } else if (current) {
 
-        if (rsc->running_on) {
-            result = g_list_copy(rsc->running_on);
-        }
+        result = g_list_copy(rsc->private->active_nodes);
         if ((current == 2) && rsc->pending_node
             && !pe_find_node_id(result, rsc->pending_node->details->id)) {
                 result = g_list_append(result, rsc->pending_node);
@@ -1006,9 +1015,9 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
         }
 
         if (active_table) {
-            GList *gIter2 = rsc->running_on;
+            for (GList *gIter2 = rsc->private->active_nodes;
+                 gIter2 != NULL; gIter2 = gIter2->next) {
 
-            for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
                 GHashTable *node_table = NULL;
 

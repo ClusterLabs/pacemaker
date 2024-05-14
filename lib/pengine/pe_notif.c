@@ -140,11 +140,15 @@ get_node_names(const GList *list, GString **all_node_names,
 
         // Add to host node name list if appropriate
         if (host_node_names != NULL) {
-            if (pcmk__is_guest_or_bundle_node(node)
-                && (node->details->remote_rsc->container->running_on != NULL)) {
-                node = pcmk__current_node(node->details->remote_rsc->container);
-                if (node->details->uname == NULL) {
-                    continue;
+            if (pcmk__is_guest_or_bundle_node(node)) {
+                const pcmk_resource_t *container = NULL;
+
+                container = node->details->remote_rsc->container;
+                if (container->private->active_nodes != NULL) {
+                    node = pcmk__current_node(container);
+                    if (node->details->uname == NULL) {
+                        continue;
+                    }
                 }
             }
             pcmk__add_word(host_node_names, 1024, node->details->uname);
@@ -561,8 +565,8 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
 
     // This is a notification for a single clone instance
 
-    if (rsc->running_on != NULL) {
-        node = rsc->running_on->data; // First is sufficient
+    if (rsc->private->active_nodes != NULL) {
+        node = rsc->private->active_nodes->data; // First is sufficient
     }
     entry = new_notify_entry(rsc, node);
 
@@ -873,7 +877,9 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
         stop = find_first_action(rsc->private->actions, NULL, PCMK_ACTION_STOP,
                                  NULL);
 
-        for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        for (iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             pcmk_node_t *current_node = (pcmk_node_t *) iter->data;
 
             /* If a stop is a pseudo-action implied by fencing, don't try to

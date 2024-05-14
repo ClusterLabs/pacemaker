@@ -629,7 +629,8 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
      * take all instances' scores into account, to make sure we use any
      * permanent promotion scores.
      */
-    if ((rsc->running_on == NULL) && (g_hash_table_size(rsc->known_on) == 0)) {
+    if ((rsc->private->active_nodes == NULL)
+        && (g_hash_table_size(rsc->known_on) == 0)) {
         reason = "none probed";
         goto check_allowed;
     }
@@ -638,7 +639,8 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
      * consider promotion scores on nodes where we know the status.
      */
     if ((g_hash_table_lookup(rsc->known_on, node->details->id) != NULL)
-        || (pe_find_node_id(rsc->running_on, node->details->id) != NULL)) {
+        || (pe_find_node_id(rsc->private->active_nodes,
+                            node->details->id) != NULL)) {
         reason = "known";
     } else {
         pcmk__rsc_trace(rsc,
