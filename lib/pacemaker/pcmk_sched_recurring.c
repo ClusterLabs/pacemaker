@@ -652,14 +652,16 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
 
     CRM_ASSERT((rsc != NULL) && (task != NULL) && (node != NULL));
 
-    // @TODO dangerous if possible to schedule another action with this key
     key = pcmk__op_key(rsc->id, task, interval_ms);
 
+    /* This finds an existing action by key, so custom_action() does not change
+     * cancel_op->task.
+     */
     cancel_op = custom_action(rsc, key, PCMK_ACTION_CANCEL, node, FALSE,
                               rsc->cluster);
 
-    cancel_op->task = pcmk__str_copy(PCMK_ACTION_CANCEL);
-    cancel_op->cancel_task = pcmk__str_copy(task);
+    pcmk__str_update(&(cancel_op->task), PCMK_ACTION_CANCEL);
+    pcmk__str_update(&(cancel_op->cancel_task), task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);
     pcmk__insert_meta(cancel_op, PCMK_XA_OPERATION, task);
