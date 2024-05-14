@@ -105,9 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    // The source node, if migrate_to completed but migrate_from has not
-    pcmk_node_t *partial_migration_source;
-
     // Nodes where resource may be active
     GList *running_on;
 

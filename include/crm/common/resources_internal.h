@@ -349,6 +349,9 @@ struct pcmk__resource_private {
      */
     pcmk_node_t *assigned_node;
 
+    // The source node, if migrate_to completed but migrate_from has not
+    pcmk_node_t *partial_migration_source;
+
     // The destination node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_target;
 

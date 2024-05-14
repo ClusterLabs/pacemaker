@@ -149,7 +149,7 @@ get_remote_node_state(const pcmk_node_t *node)
         return remote_state_resting;
 
     } else if (pcmk__list_of_multiple(remote_rsc->running_on)
-               && (remote_rsc->partial_migration_source != NULL)
+               && (remote_rsc->private->partial_migration_source != NULL)
                && (remote_rsc->private->partial_migration_target != NULL)) {
         /* We're in the middle of migrating a connection resource, so wait until
          * after the migration completes before performing any actions.
