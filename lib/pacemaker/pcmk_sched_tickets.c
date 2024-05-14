@@ -227,7 +227,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
     pcmk__rsc_trace(rsc, "%s (%s) ==> %s",
                     rsc->id, pcmk_role_text(new_rsc_ticket->role), ticket->id);
 
-    rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
+    rsc->private->ticket_constraints =
+        g_list_append(rsc->private->ticket_constraints, new_rsc_ticket);
 
     rsc->private->scheduler->ticket_constraints =
         g_list_append(rsc->private->scheduler->ticket_constraints,
@@ -527,7 +528,9 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 void
 pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
 {
-    for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
+    for (GList *item = rsc->private->ticket_constraints;
+         item != NULL; item = item->next) {
+
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
 
         if ((rsc_ticket->role == pcmk_role_promoted)

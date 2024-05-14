@@ -744,7 +744,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
     }
 
-    (*rsc)->rsc_tickets = NULL;
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
@@ -1060,7 +1059,6 @@ common_free(pcmk_resource_t * rsc)
     pcmk__rsc_trace(rsc, "Freeing %s %s",
                     (const char *) rsc->private->xml->name, rsc->id);
 
-    g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
     if (rsc->parameter_cache != NULL) {
@@ -1109,6 +1107,7 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);
     g_list_free(rsc->private->location_constraints);
+    g_list_free(rsc->private->ticket_constraints);
     free(rsc->private);
 
     free(rsc);
