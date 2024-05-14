@@ -105,9 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    // Nodes where resource has been probed (key is node ID, not name)
-    GHashTable *known_on;
-
     // Nodes where resource may run (key is node ID, not name)
     GHashTable *allowed_nodes;
 

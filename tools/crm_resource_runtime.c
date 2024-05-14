@@ -909,7 +909,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
     } else if (host_uname == NULL) {
         GList *lpc = NULL;
-        GList *nodes = g_hash_table_get_values(rsc->known_on);
+        GList *nodes = g_hash_table_get_values(rsc->private->probed_nodes);
 
         if(nodes == NULL && force) {
             nodes = pcmk__copy_node_list(scheduler->nodes, false);

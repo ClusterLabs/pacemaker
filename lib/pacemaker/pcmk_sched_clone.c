@@ -467,7 +467,7 @@ pcmk__clone_add_actions_to_graph(pcmk_resource_t *rsc)
  * \param[in] rsc   Resource to check
  * \param[in] node  Node to check
  *
- * \return true if \p node is in the known_on table of \p rsc or any of its
+ * \return true if \p node is in the probed_nodes table of \p rsc or any of its
  *         children, otherwise false
  */
 static bool
@@ -486,11 +486,11 @@ rsc_probed_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         return false;
     }
 
-    if (rsc->known_on != NULL) {
+    if (rsc->private->probed_nodes != NULL) {
         GHashTableIter iter;
         pcmk_node_t *known_node = NULL;
 
-        g_hash_table_iter_init(&iter, rsc->known_on);
+        g_hash_table_iter_init(&iter, rsc->private->probed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
             if (pcmk__same_node(node, known_node)) {
                 return true;

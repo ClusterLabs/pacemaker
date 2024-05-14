@@ -30,11 +30,12 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     const pcmk_resource_t *parent = rsc->private->parent;
 
-    if (g_hash_table_lookup(rsc->known_on, node->details->id) != NULL) {
+    if (g_hash_table_lookup(rsc->private->probed_nodes,
+                            node->details->id) != NULL) {
         return TRUE;
 
     } else if (pcmk__is_primitive(rsc) && pcmk__is_anonymous_clone(parent)
-               && (g_hash_table_lookup(parent->known_on,
+               && (g_hash_table_lookup(parent->private->probed_nodes,
                                        node->details->id) != NULL)) {
         /* We check only the parent, not the uber-parent, because we cannot
          * assume that the resource is known if it is in an anonymously cloned

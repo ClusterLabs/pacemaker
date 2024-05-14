@@ -842,7 +842,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                  * calculated allowed_nodes yet. If we've not probed for them
                  * yet, the Stopped list will be empty.
                  */
-                list = g_hash_table_get_values(rsc->known_on);
+                list = g_hash_table_get_values(rsc->private->probed_nodes);
             }
 
             list = g_list_sort(list, pe__cmp_node_name);

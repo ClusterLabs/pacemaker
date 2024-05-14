@@ -563,7 +563,8 @@ anonymous_known_on(const pcmk_resource_t *clone, const char *id,
                                               pcmk_rsc_match_clone_only);
         CRM_LOG_ASSERT(child != NULL);
         if (child != NULL) {
-            if (g_hash_table_lookup(child->known_on, node->details->id)) {
+            if (g_hash_table_lookup(child->private->probed_nodes,
+                                    node->details->id)) {
                 return true;
             }
         }
@@ -630,7 +631,7 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
      * permanent promotion scores.
      */
     if ((rsc->private->active_nodes == NULL)
-        && (g_hash_table_size(rsc->known_on) == 0)) {
+        && (g_hash_table_size(rsc->private->probed_nodes) == 0)) {
         reason = "none probed";
         goto check_allowed;
     }
@@ -638,7 +639,8 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     /* Otherwise, we've probed and/or started the resource *somewhere*, so
      * consider promotion scores on nodes where we know the status.
      */
-    if ((g_hash_table_lookup(rsc->known_on, node->details->id) != NULL)
+    if ((g_hash_table_lookup(rsc->private->probed_nodes,
+                             node->details->id) != NULL)
         || (pe_find_node_id(rsc->private->active_nodes,
                             node->details->id) != NULL)) {
         reason = "known";

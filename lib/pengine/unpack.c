@@ -2271,14 +2271,16 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
         pcmk_resource_t *iter = rsc;
 
         while (iter) {
-            if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
+            if (g_hash_table_lookup(iter->private->probed_nodes,
+                                    node->details->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
                 pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
                                 rsc->id,
                                 pcmk__s(rsc->private->history_id, "the same"),
                                 pcmk__node_name(n));
-                g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
+                g_hash_table_insert(iter->private->probed_nodes,
+                                    (gpointer) n->details->id, n);
             }
             if (pcmk_is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
