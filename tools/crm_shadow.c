@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <crm/msg_xml.h>
 
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
@@ -86,12 +85,12 @@ static struct {
  * \internal
  * \brief Display an instruction to the user
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instructional message
  */
 PCMK__OUTPUT_ARGS("instruction", "const char *")
@@ -110,12 +109,12 @@ instruction_default(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display an instruction to the user
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instructional message
  */
 PCMK__OUTPUT_ARGS("instruction", "const char *")
@@ -135,12 +134,12 @@ instruction_xml(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display information about a shadow CIB instance
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instance name (can be \p NULL)
  *       -# Shadow file name (can be \p NULL)
  *       -# Shadow file content (can be \p NULL)
@@ -170,12 +169,18 @@ shadow_default(pcmk__output_t *out, va_list args)
         rc = out->info(out, "Content:");
 
         if (content != NULL) {
-            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+            GString *buf = g_string_sized_new(1024);
+            gchar *str = NULL;
 
-            if (!pcmk__str_empty(buf)) {
-                out->info(out, "%s", buf);
+            pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                             buf, 0);
+
+            str = g_string_free(buf, FALSE);
+            str = pcmk__trim(str);
+            if (!pcmk__str_empty(str)) {
+                out->info(out, "%s", str);
             }
-            free(buf);
+            g_free(str);
 
         } else {
             out->info(out, "<unknown>");
@@ -198,12 +203,12 @@ shadow_default(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display information about a shadow CIB instance
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instance name (can be \p NULL)
  *       -# Shadow file name (can be \p NULL)
  *       -# Shadow file content (can be \p NULL)
@@ -240,10 +245,16 @@ shadow_text(pcmk__output_t *out, va_list args)
             rc = out->info(out, "%s", filename);
         }
         if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
-            char *buf = pcmk__trim(dump_xml_formatted_with_text(content));
+            GString *buf = g_string_sized_new(1024);
+            gchar *str = NULL;
 
-            rc = out->info(out, "%s", pcmk__trim(buf));
-            free(buf);
+            pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text,
+                             buf, 0);
+
+            str = g_string_free(buf, FALSE);
+            str = pcmk__trim(str);
+            rc = out->info(out, "%s", str);
+            g_free(str);
         }
         if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
             rc = out->message(out, "xml-patchset", diff);
@@ -258,12 +269,12 @@ shadow_text(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Display information about a shadow CIB instance
  *
- * \param[in,out] out  Output object
- * \param[in]     ...  Message arguments
+ * \param[in,out] out   Output object
+ * \param[in]     args  Message-specific arguments
  *
  * \return Standard Pacemaker return code
  *
- * \note The variadic message arguments are of the following format:
+ * \note \p args should contain the following:
  *       -# Instance name (can be \p NULL)
  *       -# Shadow file name (can be \p NULL)
  *       -# Shadow file content (can be \p NULL)
@@ -283,16 +294,19 @@ shadow_xml(pcmk__output_t *out, va_list args)
     enum shadow_disp_flags flags G_GNUC_UNUSED =
         (enum shadow_disp_flags) va_arg(args, int);
 
-    pcmk__output_xml_create_parent(out, "shadow",
-                                   "instance", instance,
-                                   "file", filename,
+    pcmk__output_xml_create_parent(out, PCMK_XE_SHADOW,
+                                   PCMK_XA_INSTANCE, instance,
+                                   PCMK_XA_FILE, filename,
                                    NULL);
 
     if (content != NULL) {
-        char *buf = dump_xml_formatted_with_text(content);
+        GString *buf = g_string_sized_new(1024);
 
-        out->output_xml(out, "content", buf);
-        free(buf);
+        pcmk__xml_string(content, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buf,
+                         0);
+
+        out->output_xml(out, PCMK_XE_CONTENT, buf->str);
+        g_string_free(buf, TRUE);
     }
 
     if (diff != NULL) {
@@ -498,7 +512,7 @@ read_xml(const char *filename, xmlNode **output, GError **error)
 {
     int rc = pcmk_rc_ok;
 
-    *output = filename2xml(filename);
+    *output = pcmk__xml_read(filename);
     if (*output == NULL) {
         rc = pcmk_rc_no_input;
         exit_code = pcmk_rc2exitc(rc);
@@ -521,18 +535,16 @@ static int
 write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
                   GError **error)
 {
-    int rc = write_xml_file(xml, filename, FALSE);
+    int rc = pcmk__xml_write_file(xml, filename, false, NULL);
 
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
                     "Could not %s the shadow instance '%s': %s",
                     reset? "reset" : "create", options.instance,
                     pcmk_rc_str(rc));
-        return rc;
     }
-    return pcmk_rc_ok;
+    return rc;
 }
 
 /*!
@@ -577,7 +589,7 @@ shadow_setup(pcmk__output_t *out, bool do_switch, GError **error)
         setenv("PS1", new_prompt, 1);
         setenv("CIB_shadow", options.instance, 1);
 
-        out->message(out, "instruction",
+        out->message(out, PCMK_XE_INSTRUCTION,
                      "Press Ctrl+D to exit the crm_shadow shell");
 
         if (pcmk__str_eq(shell, "(^|/)bash$", pcmk__str_regex)) {
@@ -683,8 +695,8 @@ commit_shadow_file(GError **error)
     section_xml = input;
 
     if (!options.full_upload) {
-        section = XML_CIB_TAG_CONFIGURATION;
-        section_xml = first_named_child(input, section);
+        section = PCMK_XE_CONFIGURATION;
+        section_xml = pcmk__xe_first_child(input, section, NULL, NULL);
     }
 
     rc = real_cib->cmds->replace(real_cib, section, section_xml,
@@ -726,9 +738,9 @@ create_shadow_empty(pcmk__output_t *out, GError **error)
     }
 
     output = createEmptyCib(0);
-    crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
+    crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
     out->info(out, "Created new %s configuration",
-              crm_element_value(output, XML_ATTR_VALIDATION));
+              crm_element_value(output, PCMK_XA_VALIDATE_WITH));
 
     if (write_shadow_file(output, filename, false, error) != pcmk_rc_ok) {
         goto done;

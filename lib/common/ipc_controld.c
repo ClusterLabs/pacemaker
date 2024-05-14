@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,6 @@
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
@@ -70,8 +69,8 @@ new_data(pcmk_ipc_api_t *api)
 
     /* This is set to the PID because that's how it was always done, but PIDs
      * are not unique because clients can be remote. The value appears to be
-     * unused other than as part of F_CRM_SYS_FROM in IPC requests, which is
-     * only compared against the internal system names (CRM_SYSTEM_TENGINE,
+     * unused other than as part of PCMK__XA_CRM_SYS_FROM in IPC requests, which
+     * is only compared against the internal system names (CRM_SYSTEM_TENGINE,
      * etc.), so it shouldn't be a problem.
      */
     private->client_uuid = pcmk__getpid_s();
@@ -123,19 +122,21 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     if (msg_data == NULL) {
         return;
     }
-    data->data.node_info.have_quorum = pcmk__xe_attr_is_true(msg_data, XML_ATTR_HAVE_QUORUM);
-    data->data.node_info.is_remote = pcmk__xe_attr_is_true(msg_data, XML_NODE_IS_REMOTE);
+    data->data.node_info.have_quorum =
+        pcmk__xe_attr_is_true(msg_data, PCMK_XA_HAVE_QUORUM);
+    data->data.node_info.is_remote =
+        pcmk__xe_attr_is_true(msg_data, PCMK_XA_REMOTE_NODE);
 
     /* Integer node_info.id is currently valid only for Corosync nodes.
      *
      * @TODO: Improve handling after crm_node_t is refactored to handle layer-
      * specific data better.
      */
-    crm_element_value_int(msg_data, XML_ATTR_ID, &(data->data.node_info.id));
+    crm_element_value_int(msg_data, PCMK_XA_ID, &(data->data.node_info.id));
 
-    data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_ID);
-    data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
-    data->data.node_info.state = crm_element_value(msg_data, PCMK__XA_CRMD);
+    data->data.node_info.uuid = crm_element_value(msg_data, PCMK_XA_ID);
+    data->data.node_info.uname = crm_element_value(msg_data, PCMK_XA_UNAME);
+    data->data.node_info.state = crm_element_value(msg_data, PCMK_XA_CRMD);
 }
 
 static void
@@ -146,10 +147,10 @@ set_ping_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
         return;
     }
     data->data.ping.sys_from = crm_element_value(msg_data,
-                                                 XML_PING_ATTR_SYSFROM);
+                                                 PCMK__XA_CRM_SUBSYSTEM);
     data->data.ping.fsa_state = crm_element_value(msg_data,
-                                                  XML_PING_ATTR_CRMDSTATE);
-    data->data.ping.result = crm_element_value(msg_data, XML_PING_ATTR_STATUS);
+                                                  PCMK__XA_CRMD_STATE);
+    data->data.ping.result = crm_element_value(msg_data, PCMK_XA_RESULT);
 }
 
 static void
@@ -158,17 +159,18 @@ set_nodes_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     pcmk_controld_api_node_t *node_info;
 
     data->reply_type = pcmk_controld_reply_nodes;
-    for (xmlNode *node = first_named_child(msg_data, XML_CIB_TAG_NODE);
-         node != NULL; node = crm_next_same_xml(node)) {
+    for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
+                                              NULL);
+         node != NULL; node = pcmk__xe_next_same(node)) {
 
         long long id_ll = 0;
 
-        node_info = calloc(1, sizeof(pcmk_controld_api_node_t));
-        crm_element_value_ll(node, XML_ATTR_ID, &id_ll);
+        node_info = pcmk__assert_alloc(1, sizeof(pcmk_controld_api_node_t));
+        crm_element_value_ll(node, PCMK_XA_ID, &id_ll);
         if (id_ll > 0) {
             node_info->id = id_ll;
         }
-        node_info->uname = crm_element_value(node, XML_ATTR_UNAME);
+        node_info->uname = crm_element_value(node, PCMK_XA_UNAME);
         node_info->state = crm_element_value(node, PCMK__XA_IN_CCM);
         data->data.nodes = g_list_prepend(data->data.nodes, node_info);
     }
@@ -178,7 +180,7 @@ static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     // We only need to handle commands that API functions can send
-    return pcmk__str_any_of(crm_element_value(request, F_CRM_TASK),
+    return pcmk__str_any_of(crm_element_value(request, PCMK__XA_CRM_TASK),
                             PCMK__CONTROLD_CMD_NODES,
                             CRM_OP_LRM_DELETE,
                             CRM_OP_LRM_FAIL,
@@ -194,13 +196,14 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     struct controld_api_private_s *private = api->api_data;
     crm_exit_t status = CRM_EX_OK;
+    xmlNode *wrapper = NULL;
     xmlNode *msg_data = NULL;
     const char *value = NULL;
     pcmk_controld_api_reply_t reply_data = {
         pcmk_controld_reply_unknown, NULL, NULL,
     };
 
-    if (pcmk__xe_is(reply, "ack")) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         /* ACKs are trivial responses that do not count toward expected replies,
          * and do not have all the fields that validation requires, so skip that
          * processing.
@@ -219,22 +222,22 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      *       if we fix the controller, we'll still need to handle replies from
      *       old versions (feature set could be used to differentiate).
      */
-    value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if (pcmk__str_empty(value)
-        || !pcmk__str_any_of(value, XML_ATTR_REQUEST, XML_ATTR_RESPONSE, NULL)) {
+    value = crm_element_value(reply, PCMK__XA_SUBT);
+    if (!pcmk__str_any_of(value, PCMK__VALUE_REQUEST, PCMK__VALUE_RESPONSE,
+                          NULL)) {
         crm_info("Unrecognizable message from controller: "
                  "invalid message type '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from controller: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
     if (pcmk__str_empty(value)) {
         crm_info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
@@ -243,9 +246,11 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     // Parse useful info from reply
 
-    reply_data.feature_set = crm_element_value(reply, XML_ATTR_VERSION);
-    reply_data.host_from = crm_element_value(reply, F_CRM_HOST_FROM);
-    msg_data = get_message_xml(reply, F_CRM_DATA);
+    reply_data.feature_set = crm_element_value(reply, PCMK_XA_VERSION);
+    reply_data.host_from = crm_element_value(reply, PCMK__XA_SRC);
+
+    wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
+    msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (!strcmp(value, CRM_OP_REPROBE)) {
         reply_data.reply_type = pcmk_controld_reply_reprobe;
@@ -332,7 +337,7 @@ static int
 send_controller_request(pcmk_ipc_api_t *api, const xmlNode *request,
                         bool reply_is_expected)
 {
-    if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {
+    if (crm_element_value(request, PCMK_XA_REFERENCE) == NULL) {
         return EINVAL;
     }
     if (reply_is_expected) {
@@ -348,10 +353,10 @@ create_reprobe_message_data(const char *target_node, const char *router_node)
 {
     xmlNode *msg_data;
 
-    msg_data = create_xml_node(NULL, "data_for_" CRM_OP_REPROBE);
-    crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, target_node);
+    msg_data = pcmk__xe_create(NULL, "data_for_" CRM_OP_REPROBE);
+    crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
     if ((router_node != NULL) && !pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
-        crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+        crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
     }
     return msg_data;
 }
@@ -486,7 +491,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
         router_node = target_node;
     }
 
-    msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+    msg_data = pcmk__xe_create(NULL, PCMK__XE_RSC_OP);
 
     /* The controller logs the transition key from resource op requests, so we
      * need to have *something* for it.
@@ -494,31 +499,31 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
      */
     key = pcmk__transition_key(0, getpid(), 0,
                                "xxxxxxxx-xrsc-opxx-xcrm-resourcexxxx");
-    crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
+    crm_xml_add(msg_data, PCMK__XA_TRANSITION_KEY, key);
     free(key);
 
-    crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, target_node);
+    crm_xml_add(msg_data, PCMK__META_ON_NODE, target_node);
     if (!pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
-        crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
+        crm_xml_add(msg_data, PCMK__XA_ROUTER_NODE, router_node);
     }
 
     if (cib_only) {
         // Indicate that only the CIB needs to be cleaned
-        crm_xml_add(msg_data, PCMK__XA_MODE, XML_TAG_CIB);
+        crm_xml_add(msg_data, PCMK__XA_MODE, PCMK__VALUE_CIB);
     }
 
-    xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
-    crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
-    crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc_long_id);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, standard);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, provider);
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, type);
+    xml_rsc = pcmk__xe_create(msg_data, PCMK_XE_PRIMITIVE);
+    crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
+    crm_xml_add(xml_rsc, PCMK__XA_LONG_ID, rsc_long_id);
+    crm_xml_add(xml_rsc, PCMK_XA_CLASS, standard);
+    crm_xml_add(xml_rsc, PCMK_XA_PROVIDER, provider);
+    crm_xml_add(xml_rsc, PCMK_XA_TYPE, type);
 
-    params = create_xml_node(msg_data, XML_TAG_ATTRS);
-    crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    params = pcmk__xe_create(msg_data, PCMK__XE_ATTRIBUTES);
+    crm_xml_add(params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     // The controller parses the timeout from the request
-    key = crm_meta_name(XML_ATTR_TIMEOUT);
+    key = crm_meta_name(PCMK_META_TIMEOUT);
     crm_xml_add(params, key, "60000");  /* 1 minute */ //@TODO pass as arg
     free(key);
 
@@ -631,17 +636,13 @@ create_hello_message(const char *uuid, const char *client_name,
         return NULL;
     }
 
-    hello_node = create_xml_node(NULL, XML_TAG_OPTIONS);
-    if (hello_node == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Message data creation failed", client_name, uuid);
-        return NULL;
-    }
+    hello_node = pcmk__xe_create(NULL, PCMK__XE_OPTIONS);
+    crm_xml_add(hello_node, PCMK__XA_MAJOR_VERSION, major_version);
+    crm_xml_add(hello_node, PCMK__XA_MINOR_VERSION, minor_version);
+    crm_xml_add(hello_node, PCMK__XA_CLIENT_NAME, client_name);
 
-    crm_xml_add(hello_node, "major_version", major_version);
-    crm_xml_add(hello_node, "minor_version", minor_version);
-    crm_xml_add(hello_node, "client_name", client_name);
-    crm_xml_add(hello_node, "client_uuid", uuid);
+    // @TODO Nothing uses this. Drop, or keep for debugging?
+    crm_xml_add(hello_node, PCMK__XA_CLIENT_UUID, uuid);
 
     hello = create_request(CRM_OP_HELLO, hello_node, NULL, NULL, client_name, uuid);
     if (hello == NULL) {

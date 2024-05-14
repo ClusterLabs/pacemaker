@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_ROLES__H
-#  define PCMK__CRM_COMMON_ROLES__H
+#define PCMK__CRM_COMMON_ROLES__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,6 +19,13 @@ extern "C" {
  * \brief Scheduler API for resource roles
  * \ingroup core
  */
+
+// String equivalents of enum rsc_role_e
+
+#define PCMK_ROLE_STOPPED       "Stopped"
+#define PCMK_ROLE_STARTED       "Started"
+#define PCMK_ROLE_UNPROMOTED    "Unpromoted"
+#define PCMK_ROLE_PROMOTED      "Promoted"
 
 /*!
  * Possible roles that a resource can be in
@@ -54,6 +61,9 @@ enum rsc_role_e {
     RSC_ROLE_MASTER             = pcmk_role_promoted,
 #endif
 };
+
+const char *pcmk_role_text(enum rsc_role_e role);
+enum rsc_role_e pcmk_parse_role(const char *role);
 
 #ifdef __cplusplus
 }

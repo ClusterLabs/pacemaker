@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -633,20 +633,13 @@ pcmk__close_fds_in_child(bool all)
 char *
 pcmk__full_path(const char *filename, const char *dirname)
 {
-    char *path = NULL;
-
     CRM_ASSERT(filename != NULL);
 
     if (filename[0] == '/') {
-        path = strdup(filename);
-        CRM_ASSERT(path != NULL);
-
-    } else {
-        CRM_ASSERT(dirname != NULL);
-        path = crm_strdup_printf("%s/%s", dirname, filename);
+        return pcmk__str_copy(filename);
     }
-
-    return path;
+    CRM_ASSERT(dirname != NULL);
+    return crm_strdup_printf("%s/%s", dirname, filename);
 }
 
 // Deprecated functions kept only for backward API compatibility

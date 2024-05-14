@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -63,6 +63,7 @@ API_request_base	= command-output	\
 			  crm_rule 		\
 			  crm_shadow		\
 			  crm_simulate		\
+			  crm_ticket 		\
 			  crmadmin		\
 			  digests		\
 			  pacemakerd 		\
@@ -90,10 +91,13 @@ API_base		= $(API_request_base)	\
 			  node-attrs		\
 			  node-history		\
 			  nodes			\
+			  ocf-ra		\
+			  options		\
 			  patchset		\
 			  resources		\
 			  status		\
-			  subprocess-output
+			  subprocess-output 	\
+			  ticket
 
 CIB_base		= cib 			\
 			  $(CIB_cfg_base) 	\
@@ -162,9 +166,9 @@ nodist_CIB_DATA		= $(CIB_generated)
 nodist_MON_DATA		= $(MON_generated)
 
 EXTRA_DIST		= README.md			\
-			  best-match.sh			\
 			  cibtr-2.rng			\
 			  context-of.xsl		\
+			  rng-helper			\
 			  ocf-meta2man.xsl		\
 			  regression.sh			\
 			  upgrade-2.10-roundtrip.xsl	\
@@ -191,22 +195,9 @@ api/api-result.rng: api/api-result-$(API_max).rng
 	$(AM_V_at)$(MKDIR_P) api # might not exist in VPATH build
 	$(AM_V_SCHEMA)cp $(top_builddir)/xml/$< $@
 
-api/api-result-%.rng: $(API_build_copies) best-match.sh Makefile.am
-	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
-	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
-	$(AM_V_at)echo '  <start>' >> $@
-	$(AM_V_at)echo '    <element name="pacemaker-result">' >> $@
-	$(AM_V_at)echo '      <attribute name="api-version"> <text /> </attribute>' >> $@
-	$(AM_V_at)echo '      <attribute name="request"> <text /> </attribute>' >> $@
-	$(AM_V_at)echo '      <optional>' >> $@
-	$(AM_V_at)echo '        <choice>' >> $@
-	$(AM_V_at)for rng in $(API_request_base); do $(srcdir)/best-match.sh api/$$rng $(*) $(@) "          " || :; done
-	$(AM_V_at)echo '        </choice>' >> $@
-	$(AM_V_at)echo '      </optional>' >> $@
-	$(AM_V_at)$(srcdir)/best-match.sh api/status $(*) $(@) "      " || :
-	$(AM_V_at)echo '    </element>' >> $@
-	$(AM_V_at)echo '  </start>' >> $@
-	$(AM_V_SCHEMA)echo '</grammar>' >> $@
+api/api-result-%.rng: $(API_build_copies) rng-helper Makefile.am
+	$(AM_V_SCHEMA)$(builddir)/rng-helper build_api_rng "$@" "$*" \
+		$(API_request_base)
 
 crm_mon.rng: api/crm_mon-$(MON_max).rng
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
@@ -227,27 +218,15 @@ crm_mon.rng: api/crm_mon-$(MON_max).rng
 pacemaker.rng: pacemaker-$(CIB_max).rng
 	$(AM_V_SCHEMA)cp $(top_builddir)/xml/$< $@
 
-pacemaker-%.rng: $(CIB_build_copies) best-match.sh Makefile.am
-	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
-	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
-	$(AM_V_at)echo '  <start>' >> $@
-	$(AM_V_at)echo '    <element name="cib">' >> $@
-	$(AM_V_at)$(srcdir)/best-match.sh cib $(*) $(@) "      "
-	$(AM_V_at)echo '      <element name="configuration">' >> $@
-	$(AM_V_at)echo '        <interleave>' >> $@
-	$(AM_V_at)for rng in $(CIB_cfg_base); do $(srcdir)/best-match.sh $$rng $(*) $(@) "          " || :; done
-	$(AM_V_at)echo '        </interleave>' >> $@
-	$(AM_V_at)echo '      </element>' >> $@
-	$(AM_V_at)echo '      <optional>' >> $@
-	$(AM_V_at)echo '        <element name="status">' >> $@
-	$(AM_V_at)$(srcdir)/best-match.sh status $(*) $(@) "          "
-	$(AM_V_at)echo '        </element>' >> $@
-	$(AM_V_at)echo '      </optional>' >> $@
-	$(AM_V_at)echo '    </element>' >> $@
-	$(AM_V_at)echo '  </start>' >> $@
-	$(AM_V_SCHEMA)echo '</grammar>' >> $@
+pacemaker-%.rng: $(CIB_build_copies) rng-helper Makefile.am
+	$(AM_V_SCHEMA)$(builddir)/rng-helper build_cib_rng "$@" "$*" \
+		$(CIB_cfg_base)
 
 # Dynamically generated CIB schema listing all pacemaker versions
+#
+# @COMPAT none, pacemaker-0.6, pacemaker-0.7, pacemaker-1.1, and
+# transitional-0.6 are deprecated since 2.1.8, as is validate-with being
+# optional
 versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
 	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
@@ -273,14 +252,14 @@ versions.rng: pacemaker-$(CIB_max).rng Makefile.am
 	$(AM_V_SCHEMA)echo '</grammar>' >> $@
 
 .PHONY: diff
-diff: best-match.sh
+diff: rng-helper
 	@echo "#  Comparing changes in + since $(CIB_max)"
-	@./version-diff.sh ${CIB_version_pairs_last}
+	@$(builddir)/rng-helper diff ${CIB_version_pairs_last}
 
 .PHONY: fulldiff
-fulldiff: best-match.sh
+fulldiff: rng-helper
 	@echo "#  Comparing all changes across all the subsequent increments"
-	@./version-diff.sh ${CIB_version_pairs}
+	@$(builddir)/rng-helper diff ${CIB_version_pairs}
 
 CLEANFILES = $(API_generated) \
 	     $(CIB_generated) \

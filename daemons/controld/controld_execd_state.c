@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,8 +12,8 @@
 #include <errno.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
@@ -116,12 +116,9 @@ lrm_state_create(const char *node_name)
         return NULL;
     }
 
-    state = calloc(1, sizeof(lrm_state_t));
-    if (!state) {
-        return NULL;
-    }
+    state = pcmk__assert_alloc(1, sizeof(lrm_state_t));
 
-    state->node_name = strdup(node_name);
+    state->node_name = pcmk__str_copy(node_name);
     state->rsc_info_cache = pcmk__strkey_table(NULL, free_rsc_info);
     state->deletion_ops = pcmk__strkey_table(free, free_deletion_op);
     state->active_ops = pcmk__strkey_table(free, free_recurring_op);
@@ -453,7 +450,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
     crm_trace("Processing proxied IPC message from session %s", session);
     crm_log_xml_trace(msg, "controller[inbound]");
-    crm_xml_add(msg, F_CRM_SYS_FROM, session);
+    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
@@ -477,8 +474,9 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 
-        pe_unpack_nvpairs(output, output, XML_CIB_TAG_PROPSET, NULL,
-                          config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
+        pe_unpack_nvpairs(output, output, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
+                          config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE,
+                          now, NULL);
 
         /* Now send it to the remote peer */
         lrmd__validate_remote_settings(lrmd, config_hash);
@@ -492,20 +490,22 @@ static void
 crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
+    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
-        const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
+        const char *channel = crm_element_value(msg, PCMK__XA_LRMD_IPC_SERVER);
 
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
         if (!remote_ra_controlling_guest(lrm_state)) {
             if (proxy != NULL) {
                 cib_t *cib_conn = controld_globals.cib_conn;
 
-                /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
-                int rc = cib_conn->cmds->query(cib_conn, XML_CIB_TAG_CRMCONFIG,
+                /* Look up PCMK_OPT_STONITH_WATCHDOG_TIMEOUT and send to the
+                 * remote peer for validation
+                 */
+                int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
                                                NULL, cib_scope_local);
                 cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
                                                        lrmd,
@@ -525,7 +525,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
             now_s = pcmk__ttoa(time(NULL));
-            update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
+            update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
+                         NULL, TRUE);
             free(now_s);
 
             remote_proxy_ack_shutdown(lrmd);
@@ -545,39 +546,43 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * to send to ourselves over IPC -- do it directly.
          */
         int flags = 0;
-        xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
+                                                NULL, NULL);
+        xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);
-        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
-        pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
+        crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
+        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
+                              lrm_state->node_name);
 
         /* Pacemaker Remote nodes don't know their own names (as known to the
          * cluster). When getting a node info request with no name or ID, add
          * the name, so we don't return info for ourselves instead of the
          * Pacemaker Remote node.
          */
-        if (pcmk__str_eq(crm_element_value(request, F_CRM_TASK), CRM_OP_NODE_INFO, pcmk__str_casei)) {
+        if (pcmk__str_eq(crm_element_value(request, PCMK__XA_CRM_TASK),
+                         CRM_OP_NODE_INFO, pcmk__str_none)) {
             int node_id = 0;
 
-            crm_element_value_int(request, XML_ATTR_ID, &node_id);
+            crm_element_value_int(request, PCMK_XA_ID, &node_id);
             if ((node_id <= 0)
-                && (crm_element_value(request, XML_ATTR_UNAME) == NULL)) {
-                crm_xml_add(request, XML_ATTR_UNAME, lrm_state->node_name);
+                && (crm_element_value(request, PCMK_XA_UNAME) == NULL)) {
+                crm_xml_add(request, PCMK_XA_UNAME, lrm_state->node_name);
             }
         }
 
         crmd_proxy_dispatch(session, request);
 
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
+        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
         if (flags & crm_ipc_client_response) {
             int msg_id = 0;
-            xmlNode *op_reply = create_xml_node(NULL, "ack");
+            xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
 
-            crm_xml_add(op_reply, "function", __func__);
-            crm_xml_add_int(op_reply, "line", __LINE__);
+            crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
+            crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
 
-            crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
+            crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
             remote_proxy_relay_response(proxy, op_reply, msg_id);
 
             free_xml(op_reply);
@@ -650,7 +655,7 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
      * @TODO Make meta-data calls asynchronous. (This will be part of a larger
      * project to make meta-data calls via the executor rather than directly.)
      */
-    params = lrmd_key_value_add(params, CRM_META "_" XML_LRM_ATTR_TARGET,
+    params = lrmd_key_value_add(params, CRM_META "_" PCMK__META_ON_NODE,
                                 lrm_state->node_name);
 
     return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata_params(lrm_state->conn,

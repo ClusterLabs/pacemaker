@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -34,8 +33,9 @@ static void
 update_dc_expected(const xmlNode *msg)
 {
     if ((controld_globals.dc_name != NULL)
-        && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
-        crm_node_t *dc_node = crm_get_peer(0, controld_globals.dc_name);
+        && pcmk__xe_attr_is_true(msg, PCMK__XA_DC_LEAVING)) {
+        crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
+                                             pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
@@ -55,7 +55,7 @@ do_cl_join_query(long long action,
     sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
-    send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, req);
     free_xml(req);
 }
 
@@ -84,7 +84,7 @@ do_cl_join_announce(long long action,
 
         crm_debug("Announcing availability");
         update_dc(NULL);
-        send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
+        pcmk__cluster_send_message(NULL, crm_msg_crmd, req);
         free_xml(req);
 
     } else {
@@ -112,10 +112,10 @@ do_cl_join_offer_respond(long long action,
 
     CRM_CHECK(input != NULL, return);
 
-    welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
-    join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
+    welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
+    join_id = crm_element_value(input->msg, PCMK__XA_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
-              welcome_from, crm_element_value(input->msg, F_CRM_JOIN_ID));
+              welcome_from, crm_element_value(input->msg, PCMK__XA_JOIN_ID));
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
@@ -134,7 +134,7 @@ do_cl_join_offer_respond(long long action,
 
     query_call_id = cib_conn->cmds->query(cib_conn, NULL, NULL,
                                           cib_scope_local|cib_no_children);
-    fsa_register_cib_callback(query_call_id, strdup(join_id),
+    fsa_register_cib_callback(query_call_id, pcmk__str_copy(join_id),
                               join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);
 
@@ -146,7 +146,7 @@ void
 join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     char *join_id = user_data;
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
 
     CRM_LOG_ASSERT(join_id != NULL);
 
@@ -166,19 +166,21 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
     } else {
         xmlNode *reply = NULL;
+        const crm_node_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
 
         crm_debug("Respond to join offer join-%s from %s",
                   join_id, controld_globals.dc_name);
-        copy_in_properties(generation, output);
+        pcmk__xe_copy_attrs(generation, output, pcmk__xaf_none);
 
         reply = create_request(CRM_OP_JOIN_REQUEST, generation,
                                controld_globals.dc_name, CRM_SYSTEM_DC,
                                CRM_SYSTEM_CRMD, NULL);
 
-        crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
-        crm_xml_add(reply, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
-                             crm_msg_crmd, reply, TRUE);
+        crm_xml_add(reply, PCMK__XA_JOIN_ID, join_id);
+        crm_xml_add(reply, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+        pcmk__cluster_send_message(dc_node, crm_msg_crmd, reply);
         free_xml(reply);
     }
 
@@ -190,29 +192,32 @@ void
 set_join_state(const char *start_state, const char *node_name, const char *node_uuid,
                bool remote)
 {
-    if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
+    if (pcmk__str_eq(start_state, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, node_uuid,
-                              NULL, NULL, NULL, "standby", "on", NULL,
-                              remote ? "remote" : NULL);
+                              PCMK_XE_NODES, node_uuid,
+                              NULL, NULL, NULL, PCMK_NODE_ATTR_STANDBY,
+                              PCMK_VALUE_TRUE, NULL,
+                              (remote? PCMK_VALUE_REMOTE : NULL));
 
-    } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(start_state, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured "
                    "environment", node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
-                              XML_CIB_TAG_NODES, node_uuid,
-                              NULL, NULL, NULL, "standby", "off", NULL,
-                              remote ? "remote" : NULL);
+                              PCMK_XE_NODES, node_uuid,
+                              NULL, NULL, NULL, PCMK_NODE_ATTR_STANDBY,
+                              PCMK_VALUE_FALSE, NULL,
+                              (remote? PCMK_VALUE_REMOTE : NULL));
 
-    } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(start_state, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", node_name);
 
     } else {
-        crm_warn("Unrecognized start state '%s', using 'default' (%s)",
+        crm_warn("Unrecognized start state '%s', using "
+                 "'" PCMK_VALUE_DEFAULT "' (%s)",
                  start_state, node_name);
     }
 }
@@ -220,11 +225,11 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
 static int
 update_conn_host_cache(xmlNode *node, void *userdata)
 {
-    const char *remote = crm_element_value(node, XML_ATTR_ID);
-    const char *conn_host = crm_element_value(node, PCMK__XA_CONN_HOST);
-    const char *state = crm_element_value(node, XML_CIB_TAG_STATE);
+    const char *remote = crm_element_value(node, PCMK_XA_ID);
+    const char *conn_host = crm_element_value(node, PCMK__XA_CONNECTION_HOST);
+    const char *state = crm_element_value(node, PCMK__XA_NODE_STATE);
 
-    crm_node_t *remote_peer = crm_remote_peer_get(remote);
+    crm_node_t *remote_peer = pcmk__cluster_lookup_remote_node(remote);
 
     if (remote_peer == NULL) {
         return pcmk_rc_ok;
@@ -256,8 +261,8 @@ do_cl_join_finalize_respond(long long action,
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     int join_id = -1;
-    const char *op = crm_element_value(input->msg, F_CRM_TASK);
-    const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
+    const char *op = crm_element_value(input->msg, PCMK__XA_CRM_TASK);
+    const char *welcome_from = crm_element_value(input->msg, PCMK__XA_SRC);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
         crm_trace("Ignoring op=%s message", op);
@@ -269,7 +274,7 @@ do_cl_join_finalize_respond(long long action,
         was_nack = FALSE;
     }
 
-    crm_element_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
+    crm_element_value_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "
@@ -305,8 +310,11 @@ do_cl_join_finalize_respond(long long action,
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1,
                                         controld_globals.dc_name, CRM_SYSTEM_DC,
                                         CRM_SYSTEM_CRMD, NULL);
+        const crm_node_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
 
-        crm_xml_add_int(reply, F_CRM_JOIN_ID, join_id);
+        crm_xml_add_int(reply, PCMK__XA_JOIN_ID, join_id);
 
         crm_debug("Confirming join-%d: sending local operation history to %s",
                   join_id, controld_globals.dc_name);
@@ -333,8 +341,7 @@ do_cl_join_finalize_respond(long long action,
             }
         }
 
-        send_cluster_message(crm_get_peer(0, controld_globals.dc_name),
-                             crm_msg_crmd, reply, TRUE);
+        pcmk__cluster_send_message(dc_node, crm_msg_crmd, reply);
         free_xml(reply);
 
         if (AM_I_DC == FALSE) {
@@ -347,9 +354,10 @@ do_cl_join_finalize_respond(long long action,
         /* Update the remote node cache with information about which node
          * is hosting the connection.
          */
-        remotes = pcmk__xe_match(input->msg, XML_CIB_TAG_NODES, NULL, NULL);
+        remotes = pcmk__xe_first_child(input->msg, PCMK_XE_NODES, NULL, NULL);
         if (remotes != NULL) {
-            pcmk__xe_foreach_child(remotes, XML_CIB_TAG_NODE, update_conn_host_cache, NULL);
+            pcmk__xe_foreach_child(remotes, PCMK_XE_NODE,
+                                   update_conn_host_cache, NULL);
         }
 
     } else {

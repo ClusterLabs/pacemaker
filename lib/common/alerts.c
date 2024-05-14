@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/lrmd.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml_internal.h>
@@ -94,11 +94,11 @@ const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3] =
 pcmk__alert_t *
 pcmk__alert_new(const char *id, const char *path)
 {
-    pcmk__alert_t *entry = calloc(1, sizeof(pcmk__alert_t));
+    pcmk__alert_t *entry = pcmk__assert_alloc(1, sizeof(pcmk__alert_t));
 
-    CRM_ASSERT(entry && id && path);
-    entry->id = strdup(id);
-    entry->path = strdup(path);
+    CRM_ASSERT((id != NULL) && (path != NULL));
+    entry->id = pcmk__str_copy(id);
+    entry->path = pcmk__str_copy(path);
     entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
     entry->flags = pcmk__alert_default;
     return entry;
@@ -137,8 +137,8 @@ pcmk__dup_alert(const pcmk__alert_t *entry)
     new_entry->timeout = entry->timeout;
     new_entry->flags = entry->flags;
     new_entry->envvars = pcmk__str_table_dup(entry->envvars);
-    pcmk__str_update(&new_entry->tstamp_format, entry->tstamp_format);
-    pcmk__str_update(&new_entry->recipient, entry->recipient);
+    new_entry->tstamp_format = pcmk__str_copy(entry->tstamp_format);
+    new_entry->recipient = pcmk__str_copy(entry->recipient);
     if (entry->select_attribute_name) {
         new_entry->select_attribute_name = g_strdupv(entry->select_attribute_name);
     }
@@ -152,7 +152,7 @@ pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
     for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = '%s'", *key, value);
         if (value) {
-            g_hash_table_insert(table, strdup(*key), strdup(value));
+            pcmk__insert_dup(table, *key, value);
         } else {
             g_hash_table_remove(table, *key);
         }
@@ -165,6 +165,6 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
 {
     for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = %d", *key, value);
-        g_hash_table_insert(table, strdup(*key), pcmk__itoa(value));
+        g_hash_table_insert(table, pcmk__str_copy(*key), pcmk__itoa(value));
     }
 }

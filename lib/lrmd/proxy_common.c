@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 
@@ -29,9 +29,9 @@ static void
 remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 {
     /* sending to the remote node that an ipc connection has been destroyed */
-    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
-    crm_xml_add(msg, F_LRMD_IPC_SESSION, session_id);
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
+    crm_xml_add(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
     lrmd_internal_proxy_send(lrmd, msg);
     free_xml(msg);
 }
@@ -45,8 +45,8 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 void
 remote_proxy_ack_shutdown(lrmd_t *lrmd)
 {
-    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_ACK);
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_ACK);
     lrmd_internal_proxy_send(lrmd, msg);
     free_xml(msg);
 }
@@ -60,8 +60,8 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd)
 void
 remote_proxy_nack_shutdown(lrmd_t *lrmd)
 {
-    xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_NACK);
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    crm_xml_add(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_NACK);
     lrmd_internal_proxy_send(lrmd, msg);
     free_xml(msg);
 }
@@ -70,10 +70,15 @@ void
 remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
 {
     /* sending to the remote node an event msg. */
-    xmlNode *event = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(event, F_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
-    crm_xml_add(event, F_LRMD_IPC_SESSION, proxy->session_id);
-    add_message_xml(event, F_LRMD_IPC_MSG, msg);
+    xmlNode *event = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *wrapper = NULL;
+
+    crm_xml_add(event, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
+    crm_xml_add(event, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
+
+    wrapper = pcmk__xe_create(event, PCMK__XE_LRMD_IPC_MSG);
+    pcmk__xml_copy(wrapper, msg);
+
     crm_log_xml_explicit(event, "EventForProxy");
     lrmd_internal_proxy_send(proxy->lrm, event);
     free_xml(event);
@@ -83,11 +88,16 @@ void
 remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
 {
     /* sending to the remote node a response msg. */
-    xmlNode *response = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-    crm_xml_add(response, F_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
-    crm_xml_add(response, F_LRMD_IPC_SESSION, proxy->session_id);
-    crm_xml_add_int(response, F_LRMD_IPC_MSG_ID, msg_id);
-    add_message_xml(response, F_LRMD_IPC_MSG, msg);
+    xmlNode *response = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *wrapper = NULL;
+
+    crm_xml_add(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
+    crm_xml_add(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
+    crm_xml_add_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
+
+    wrapper = pcmk__xe_create(response, PCMK__XE_LRMD_IPC_MSG);
+    pcmk__xml_copy(wrapper, msg);
+
     lrmd_internal_proxy_send(proxy->lrm, response);
     free_xml(response);
 }
@@ -124,7 +134,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     uint32_t flags = 0;
     remote_proxy_t *proxy = userdata;
 
-    xml = string2xml(buffer);
+    xml = pcmk__xml_parse(buffer);
     if (xml == NULL) {
         crm_warn("Received a NULL msg from IPC service.");
         return 1;
@@ -175,7 +185,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
         return NULL;
     }
 
-    proxy = calloc(1, sizeof(remote_proxy_t));
+    proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));
 
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);
@@ -206,8 +216,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
 void
 remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 {
-    const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
-    const char *session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
+    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
     int msg_id = 0;
 
@@ -218,7 +228,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     CRM_CHECK(op != NULL, return);
     CRM_CHECK(session != NULL, return);
 
-    crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
+    crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
     /* This is msg from remote ipc client going to real ipc server */
 
     if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {
@@ -226,8 +236,11 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
         int flags = 0;
-        xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
-        const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
+        const char *name = crm_element_value(msg, PCMK__XA_LRMD_IPC_CLIENT);
+
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
+                                                NULL, NULL);
+        xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         CRM_CHECK(request != NULL, return);
 
@@ -246,20 +259,19 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             return;
         }
         proxy->last_request_id = 0;
-        crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
-        crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
+        crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags);
+        crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
 
         CRM_ASSERT(node_name);
-        pcmk__update_acl_user(request, F_LRMD_IPC_USER, node_name);
+        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER, node_name);
 
         if (pcmk_is_set(flags, crm_ipc_proxied)) {
-            const char *type = crm_element_value(request, F_TYPE);
+            const char *type = crm_element_value(request, PCMK__XA_T);
             int rc = 0;
 
-            if (pcmk__str_eq(type, T_ATTRD, pcmk__str_casei)
-                && crm_element_value(request,
-                                     PCMK__XA_ATTR_NODE_NAME) == NULL
-                && pcmk__str_any_of(crm_element_value(request, PCMK__XA_TASK),
+            if (pcmk__str_eq(type, PCMK__VALUE_ATTRD, pcmk__str_none)
+                && (crm_element_value(request, PCMK__XA_ATTR_HOST) == NULL)
+                && pcmk__str_any_of(crm_element_value(request, PCMK_XA_TASK),
                                     PCMK__ATTRD_CMD_UPDATE,
                                     PCMK__ATTRD_CMD_UPDATE_BOTH,
                                     PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
@@ -269,15 +281,15 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
 
             if(rc < 0) {
-                xmlNode *op_reply = create_xml_node(NULL, "nack");
+                xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_NACK);
 
                 crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
 
                 /* Send a n'ack so the caller doesn't block */
-                crm_xml_add(op_reply, "function", __func__);
-                crm_xml_add_int(op_reply, "line", __LINE__);
-                crm_xml_add_int(op_reply, "rc", rc);
+                crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
+                crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
+                crm_xml_add_int(op_reply, PCMK_XA_RC, rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);
                 free_xml(op_reply);
 

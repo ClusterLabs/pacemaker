@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,10 +21,164 @@
 
 #include <crm/crm.h>
 #include <crm/lrmd.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
+#include <crm/common/scheduler.h>
+
+/*!
+ * \brief Get string equivalent of an action type
+ *
+ * \param[in] action  Action type
+ *
+ * \return Static string describing \p action
+ */
+const char *
+pcmk_action_text(enum action_tasks action)
+{
+    switch (action) {
+        case pcmk_action_stop:
+            return PCMK_ACTION_STOP;
+
+        case pcmk_action_stopped:
+            return PCMK_ACTION_STOPPED;
+
+        case pcmk_action_start:
+            return PCMK_ACTION_START;
+
+        case pcmk_action_started:
+            return PCMK_ACTION_RUNNING;
+
+        case pcmk_action_shutdown:
+            return PCMK_ACTION_DO_SHUTDOWN;
+
+        case pcmk_action_fence:
+            return PCMK_ACTION_STONITH;
+
+        case pcmk_action_monitor:
+            return PCMK_ACTION_MONITOR;
+
+        case pcmk_action_notify:
+            return PCMK_ACTION_NOTIFY;
+
+        case pcmk_action_notified:
+            return PCMK_ACTION_NOTIFIED;
+
+        case pcmk_action_promote:
+            return PCMK_ACTION_PROMOTE;
+
+        case pcmk_action_promoted:
+            return PCMK_ACTION_PROMOTED;
+
+        case pcmk_action_demote:
+            return PCMK_ACTION_DEMOTE;
+
+        case pcmk_action_demoted:
+            return PCMK_ACTION_DEMOTED;
+
+        default: // pcmk_action_unspecified or invalid
+            return "no_action";
+    }
+}
+
+/*!
+ * \brief Parse an action type from an action name
+ *
+ * \param[in] action_name  Action name
+ *
+ * \return Action type corresponding to \p action_name
+ */
+enum action_tasks
+pcmk_parse_action(const char *action_name)
+{
+    if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
+        return pcmk_action_stop;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOPPED, pcmk__str_none)) {
+        return pcmk_action_stopped;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
+        return pcmk_action_start;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_RUNNING, pcmk__str_none)) {
+        return pcmk_action_started;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DO_SHUTDOWN,
+                            pcmk__str_none)) {
+        return pcmk_action_shutdown;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_STONITH, pcmk__str_none)) {
+        return pcmk_action_fence;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_MONITOR, pcmk__str_none)) {
+        return pcmk_action_monitor;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
+        return pcmk_action_notify;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_NOTIFIED,
+                            pcmk__str_none)) {
+        return pcmk_action_notified;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTE, pcmk__str_none)) {
+        return pcmk_action_promote;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTE, pcmk__str_none)) {
+        return pcmk_action_demote;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_PROMOTED,
+                            pcmk__str_none)) {
+        return pcmk_action_promoted;
+
+    } else if (pcmk__str_eq(action_name, PCMK_ACTION_DEMOTED, pcmk__str_none)) {
+        return pcmk_action_demoted;
+    }
+    return pcmk_action_unspecified;
+}
+
+/*!
+ * \brief Get string equivalent of a failure handling type
+ *
+ * \param[in] on_fail  Failure handling type
+ *
+ * \return Static string describing \p on_fail
+ */
+const char *
+pcmk_on_fail_text(enum action_fail_response on_fail)
+{
+    switch (on_fail) {
+        case pcmk_on_fail_ignore:
+            return "ignore";
+
+        case pcmk_on_fail_demote:
+            return "demote";
+
+        case pcmk_on_fail_block:
+            return "block";
+
+        case pcmk_on_fail_restart:
+            return "recover";
+
+        case pcmk_on_fail_ban:
+            return "migrate";
+
+        case pcmk_on_fail_stop:
+            return "stop";
+
+        case pcmk_on_fail_fence_node:
+            return "fence";
+
+        case pcmk_on_fail_standby_node:
+            return "standby";
+
+        case pcmk_on_fail_restart_container:
+            return "restart-container";
+
+        case pcmk_on_fail_reset_remote:
+            return "reset-remote";
+    }
+    return "<unknown>";
+}
 
 /*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
@@ -166,12 +320,12 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     // Set output variables
     if (rsc_id != NULL) {
         *rsc_id = strndup(key, action_underbar);
-        CRM_ASSERT(*rsc_id != NULL);
+        pcmk__mem_assert(*rsc_id);
     }
     if (op_type != NULL) {
         *op_type = strndup(key + action_underbar + 1,
                            interval_underbar - action_underbar - 1);
-        CRM_ASSERT(*op_type != NULL);
+        pcmk__mem_assert(*op_type);
     }
     if (interval_ms != NULL) {
         *interval_ms = local_interval_ms;
@@ -220,8 +374,8 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 #ifdef HAVE_SSCANF_M
     res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
 #else
-    key = calloc(1, strlen(magic) - 3); // magic must have >=4 other characters
-    CRM_ASSERT(key);
+    // magic must have >=4 other characters
+    key = pcmk__assert_alloc(1, strlen(magic) - 3);
     res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
 #endif
     if (res == EOF) {
@@ -301,8 +455,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
         crm_warn("Invalid UUID '%s' in transition key '%s'", local_uuid, key);
     }
     if (uuid) {
-        *uuid = strdup(local_uuid);
-        CRM_ASSERT(*uuid);
+        *uuid = pcmk__str_copy(local_uuid);
     }
     if (transition_id) {
         *transition_id = local_transition_id;
@@ -314,66 +467,6 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
         *target_rc = local_target_rc;
     }
     return TRUE;
-}
-
-// Return true if a is an attribute that should be filtered
-static bool
-should_filter_for_digest(xmlAttrPtr a, void *user_data)
-{
-    if (strncmp((const char *) a->name, CRM_META "_",
-                sizeof(CRM_META " ") - 1) == 0) {
-        return true;
-    }
-    return pcmk__str_any_of((const char *) a->name,
-                            XML_ATTR_ID,
-                            XML_ATTR_CRM_VERSION,
-                            XML_LRM_ATTR_OP_DIGEST,
-                            XML_LRM_ATTR_TARGET,
-                            XML_LRM_ATTR_TARGET_UUID,
-                            "pcmk_external_ip",
-                            NULL);
-}
-
-/*!
- * \internal
- * \brief Remove XML attributes not needed for operation digest
- *
- * \param[in,out] param_set  XML with operation parameters
- */
-void
-pcmk__filter_op_for_digest(xmlNode *param_set)
-{
-    char *key = NULL;
-    char *timeout = NULL;
-    guint interval_ms = 0;
-
-    if (param_set == NULL) {
-        return;
-    }
-
-    /* Timeout is useful for recurring operation digests, so grab it before
-     * removing meta-attributes
-     */
-    key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
-    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
-        interval_ms = 0;
-    }
-    free(key);
-    key = NULL;
-    if (interval_ms != 0) {
-        key = crm_meta_name(XML_ATTR_TIMEOUT);
-        timeout = crm_element_value_copy(param_set, key);
-    }
-
-    // Remove all CRM_meta_* attributes and certain other attributes
-    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
-
-    // Add timeout back for recurring operation digests
-    if (timeout != NULL) {
-        crm_xml_add(param_set, key, timeout);
-    }
-    free(timeout);
-    free(key);
 }
 
 int
@@ -432,12 +525,12 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
 
     CRM_CHECK(prefix && task && interval_spec, return NULL);
 
-    xml_op = create_xml_node(parent, XML_ATTR_OP);
+    xml_op = pcmk__xe_create(parent, PCMK_XE_OP);
     crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval_spec);
-    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval_spec);
-    crm_xml_add(xml_op, "name", task);
+    crm_xml_add(xml_op, PCMK_META_INTERVAL, interval_spec);
+    crm_xml_add(xml_op, PCMK_XA_NAME, task);
     if (timeout) {
-        crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
+        crm_xml_add(xml_op, PCMK_META_TIMEOUT, timeout);
     }
     return xml_op;
 }
@@ -483,50 +576,12 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
  *
  * \param[in] action  Action name to check
  *
- * \return true if \p action is "off", "reboot", or "poweroff", otherwise false
+ * \return \c true if \p action is \c PCMK_ACTION_OFF, \c PCMK_ACTION_REBOOT,
+ *         or \c PCMK__ACTION_POWEROFF, otherwise \c false
  */
 bool
 pcmk__is_fencing_action(const char *action)
 {
     return pcmk__str_any_of(action, PCMK_ACTION_OFF, PCMK_ACTION_REBOOT,
-                            "poweroff", NULL);
-}
-
-bool
-pcmk_is_probe(const char *task, guint interval)
-{
-    if (task == NULL) {
-        return false;
-    }
-
-    return (interval == 0)
-           && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none);
-}
-
-bool
-pcmk_xe_is_probe(const xmlNode *xml_op)
-{
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
-    int interval_ms;
-
-    pcmk__scan_min_int(interval_ms_s, &interval_ms, 0);
-    return pcmk_is_probe(task, interval_ms);
-}
-
-bool
-pcmk_xe_mask_probe_failure(const xmlNode *xml_op)
-{
-    int status = PCMK_EXEC_UNKNOWN;
-    int rc = PCMK_OCF_OK;
-
-    if (!pcmk_xe_is_probe(xml_op)) {
-        return false;
-    }
-
-    crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
-
-    return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
-           status == PCMK_EXEC_NOT_INSTALLED;
+                            PCMK__ACTION_POWEROFF, NULL);
 }

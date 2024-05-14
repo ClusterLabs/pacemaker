@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,14 +31,14 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
 {
     uint32_t kind = 0;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;
     }
     if (kind == crm_class_cluster) {
         crm_node_t *peer = NULL;
-        xmlNode *xml = string2xml(data);
+        xmlNode *xml = pcmk__xml_parse(data);
 
         if (xml == NULL) {
             crm_err("Could not parse message content (%d): %.100s", kind, data);
@@ -46,10 +46,9 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
             return;
         }
 
-        crm_xml_add(xml, F_ORIG, from);
-        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
+        crm_xml_add(xml, PCMK__XA_SRC, from);
 
-        peer = crm_get_peer(0, from);
+        peer = pcmk__get_node(0, from, NULL, pcmk__node_search_cluster_member);
         if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
             /* If we can still talk to our peer process on that node,
              * then it must be part of the corosync membership
@@ -57,7 +56,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
             crm_warn("Receiving messages from a node we think is dead: %s[%d]",
                      peer->uname, peer->id);
             crm_update_peer_proc(__func__, peer, crm_proc_cpg,
-                                 ONLINESTATUS);
+                                 PCMK_VALUE_ONLINE);
         }
         crmd_ha_msg_filter(xml);
         free_xml(xml);
@@ -119,8 +118,8 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     if (controld_globals.dc_name != NULL) {
         crm_node_t *peer = NULL;
 
-        peer = pcmk__search_cluster_node_cache(0, controld_globals.dc_name,
-                                               NULL);
+        peer = pcmk__search_node_caches(0, controld_globals.dc_name,
+                                        pcmk__node_search_cluster_member);
         if (peer != NULL) {
             for (int i = 0; i < left_list_entries; ++i) {
                 if (left_list[i].nodeid == peer->id) {
@@ -132,25 +131,26 @@ cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
     }
 
     // Process the change normally, which will call the peer callback as needed
-    pcmk_cpg_membership(handle, cpg_name, member_list, member_list_entries,
-                        left_list, left_list_entries,
-                        joined_list, joined_list_entries);
+    pcmk__cpg_confchg_cb(handle, cpg_name, member_list, member_list_entries,
+                         left_list, left_list_entries,
+                         joined_list, joined_list_entries);
 
     controld_clear_global_flags(controld_dc_left);
 }
 
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
+extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 
 gboolean
-crm_connect_corosync(crm_cluster_t * cluster)
+crm_connect_corosync(pcmk_cluster_t *cluster)
 {
-    if (is_corosync_cluster()) {
-        crm_set_status_callback(&peer_update_callback);
-        cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
-        cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
-        cluster->destroy = crmd_cs_destroy;
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        pcmk__cluster_set_status_callback(&peer_update_callback);
 
-        if (crm_cluster_connect(cluster)) {
+        pcmk_cluster_set_destroy_fn(cluster, crmd_cs_destroy);
+        pcmk_cpg_set_deliver_fn(cluster, crmd_cs_dispatch);
+        pcmk_cpg_set_confchg_fn(cluster, cpg_membership_callback);
+
+        if (pcmk_cluster_connect(cluster) == pcmk_rc_ok) {
             pcmk__corosync_quorum_connect(crmd_quorum_callback,
                                           crmd_cs_destroy);
             return TRUE;

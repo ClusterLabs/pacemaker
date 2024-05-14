@@ -1,7 +1,7 @@
-""" Move a connection resource from one node to another """
+"""Move a connection resource from one node to another."""
 
 __all__ = ["RemoteMigrate"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.remotedriver import RemoteDriver
@@ -16,23 +16,21 @@ from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
 class RemoteMigrate(RemoteDriver):
-    """ A concrete test that moves a connection resource from one node to another """
+    """Move a connection resource from one node to another."""
 
     def __init__(self, cm):
-        """ Create a new RemoteMigrate instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new RemoteMigrate instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         RemoteDriver.__init__(self, cm)
 
         self.name = "RemoteMigrate"
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         # This code is very similar to __call__ in remotestonithd.py, but I don't think
         # it's worth turning into a library function nor making one a subclass of the
         # other.  I think that's more confusing than leaving the duplication.
@@ -52,8 +50,7 @@ class RemoteMigrate(RemoteDriver):
         return self.success()
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration. """
-
+        """Return True if this test is applicable in the current test configuration."""
         if not RemoteDriver.is_applicable(self):
             return False
 

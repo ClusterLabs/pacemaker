@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -694,8 +693,8 @@ update_dc(xmlNode * msg)
     if (msg != NULL) {
         gboolean invalid = FALSE;
 
-        dc_version = crm_element_value(msg, F_CRM_VERSION);
-        welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
+        dc_version = crm_element_value(msg, PCMK_XA_VERSION);
+        welcome_from = crm_element_value(msg, PCMK__XA_SRC);
 
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);
@@ -734,7 +733,8 @@ update_dc(xmlNode * msg)
         /* do nothing */
 
     } else if (controld_globals.dc_name != NULL) {
-        crm_node_t *dc_node = crm_get_peer(0, controld_globals.dc_name);
+        crm_node_t *dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
+                                             pcmk__node_search_cluster_member);
 
         crm_info("Set DC to %s (%s)",
                  controld_globals.dc_name,
@@ -828,10 +828,10 @@ get_node_id(xmlNode *lrm_rsc_op)
 {
     xmlNode *node = lrm_rsc_op;
 
-    while ((node != NULL) && !pcmk__xe_is(node, XML_CIB_TAG_STATE)) {
+    while ((node != NULL) && !pcmk__xe_is(node, PCMK__XE_NODE_STATE)) {
         node = node->parent;
     }
 
     CRM_CHECK(node != NULL, return NULL);
-    return ID(node);
+    return pcmk__xe_id(node);
 }

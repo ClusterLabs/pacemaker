@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/scheduler_internal.h>
 
@@ -85,30 +85,53 @@ pcmk_rsc_methods_t resource_class_functions[] = {
 static enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
+    if (pcmk__str_eq(name, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
         return pcmk_rsc_variant_primitive;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_GROUP, pcmk__str_casei)) {
         return pcmk_rsc_variant_group;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_CLONE, pcmk__str_casei)) {
         return pcmk_rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
+                            pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
         return pcmk_rsc_variant_clone;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
         return pcmk_rsc_variant_bundle;
     }
 
     return pcmk_rsc_variant_unknown;
 }
 
+/*!
+ * \internal
+ * \brief Insert a meta-attribute if not already present
+ *
+ * \param[in]     key    Meta-attribute name
+ * \param[in]     value  Meta-attribute value to add if not already present
+ * \param[in,out] table  Meta-attribute hash table to insert into
+ *
+ * \note This is like pcmk__insert_meta() except it won't overwrite existing
+ *       values.
+ */
 static void
 dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-    add_hash_param(user_data, key, value);
+    GHashTable *table = user_data;
+
+    CRM_CHECK((key != NULL) && (table != NULL), return);
+    if (pcmk__str_eq((const char *) value, "#default", pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting meta-attributes (such as %s) to "
+                          "the explicit value '#default' is deprecated and "
+                          "will be removed in a future release",
+                          (const char *) key);
+    } else if ((value != NULL) && (g_hash_table_lookup(table, key) == NULL)) {
+        pcmk__insert_dup(table, (const char *) key, (const char *) value);
+    }
 }
 
 static void
@@ -123,27 +146,21 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         return ;
     }
 
-    /* Search all parent resources, get the fixed value of "meta_attributes" set only in the original xml, and stack it in the hash table. */
-    /* The fixed value of the lower parent resource takes precedence and is not overwritten. */
+    /* Search all parent resources, get the fixed value of
+     * PCMK_XE_META_ATTRIBUTES set only in the original xml, and stack it in the
+     * hash table. The fixed value of the lower parent resource takes precedence
+     * and is not overwritten.
+     */
     while(p != NULL) {
         /* A hash table for comparison is generated, including the id-ref. */
-        pe__unpack_dataset_nvpairs(p->xml, XML_TAG_META_SETS, rule_data,
+        pe__unpack_dataset_nvpairs(p->xml, PCMK_XE_META_ATTRIBUTES, rule_data,
                                    parent_orig_meta, NULL, FALSE, scheduler);
         p = p->parent; 
     }
 
-    /* If there is a fixed value of "meta_attributes" of the parent resource, it will be processed. */
     if (parent_orig_meta != NULL) {
-        GHashTableIter iter;
-        char *key = NULL;
-        char *value = NULL;
-
-        g_hash_table_iter_init(&iter, parent_orig_meta);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-            /* Parameters set in the original xml of the parent resource will also try to overwrite the child resource. */
-            /* Attributes that already exist in the child lease are not updated. */
-            dup_attr(key, value, meta_hash);
-        }
+        // This will not overwrite any values already existing for child
+        g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
     }
 
     if (parent_orig_meta != NULL) {
@@ -158,14 +175,13 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS),
-        .provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
-        .agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE)
+        .standard = crm_element_value(rsc->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE)
     };
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
@@ -173,31 +189,39 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
     };
 
     if (node) {
+        /* @COMPAT Support for node attribute expressions in rules for
+         * meta-attributes is deprecated. When we can break behavioral backward
+         * compatibility, drop this block.
+         */
         rule_data.node_hash = node->details->attrs;
     }
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->xml); a != NULL; a = a->next) {
-        const char *prop_name = (const char *) a->name;
-        const char *prop_value = pcmk__xml_attr_value(a);
-
-        add_hash_param(meta_hash, prop_name, prop_value);
+        if (a->children != NULL) {
+            dup_attr((gpointer) a->name, (gpointer) a->children->content,
+                     meta_hash);
+        }
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
+    pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_META_ATTRIBUTES, &rule_data,
                                meta_hash, NULL, FALSE, scheduler);
 
-    /* Set the "meta_attributes" explicitly set in the parent resource to the hash table of the child resource. */
-    /* If it is already explicitly set as a child, it will not be overwritten. */
+    /* Set the PCMK_XE_META_ATTRIBUTES explicitly set in the parent resource to
+     * the hash table of the child resource. If it is already explicitly set as
+     * a child, it will not be overwritten.
+     */
     if (rsc->parent != NULL) {
         expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
     }
 
     /* check the defaults */
-    pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_META_SETS,
+    pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, PCMK_XE_META_ATTRIBUTES,
                                &rule_data, meta_hash, NULL, FALSE, scheduler);
 
-    /* If there is "meta_attributes" that the parent resource has not explicitly set, set a value that is not set from rsc_default either. */
-    /* The values already set up to this point will not be overwritten. */
+    /* If there is PCMK_XE_META_ATTRIBUTES that the parent resource has not
+     * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
+     * either. The values already set up to this point will not be overwritten.
+     */
     if (rsc->parent) {
         g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
     }
@@ -209,7 +233,6 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = scheduler->now,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -220,30 +243,44 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         rule_data.node_hash = node->details->attrs;
     }
 
-    pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_ATTR_SETS, &rule_data,
-                               meta_hash, NULL, FALSE, scheduler);
+    pe__unpack_dataset_nvpairs(rsc->xml, PCMK_XE_INSTANCE_ATTRIBUTES,
+                               &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
         get_rsc_attributes(meta_hash, rsc->parent, node, scheduler);
 
     } else {
+        if (pcmk__xe_first_child(scheduler->rsc_defaults,
+                                 PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
+                                 NULL) != NULL) {
+            /* Not possible with schema validation enabled
+             *
+             * @COMPAT Drop support when we can break behavioral
+             * backward compatibility
+             */
+            pcmk__warn_once(pcmk__wo_instance_defaults,
+                            "Support for " PCMK_XE_INSTANCE_ATTRIBUTES " in "
+                            PCMK_XE_RSC_DEFAULTS " is deprecated and will be "
+                            "removed in a future release");
+        }
+
         /* and finally check the defaults */
-        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults, XML_TAG_ATTR_SETS,
-                                   &rule_data, meta_hash, NULL, FALSE,
-                                   scheduler);
+        pe__unpack_dataset_nvpairs(scheduler->rsc_defaults,
+                                   PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
+                                   meta_hash, NULL, FALSE, scheduler);
     }
 }
 
 static char *
 template_op_key(xmlNode * op)
 {
-    const char *name = crm_element_value(op, "name");
-    const char *role = crm_element_value(op, "role");
+    const char *name = crm_element_value(op, PCMK_XA_NAME);
+    const char *role = crm_element_value(op, PCMK_XA_ROLE);
     char *key = NULL;
 
     if ((role == NULL)
-        || pcmk__strcase_any_of(role, PCMK__ROLE_STARTED, PCMK__ROLE_UNPROMOTED,
+        || pcmk__strcase_any_of(role, PCMK_ROLE_STARTED, PCMK_ROLE_UNPROMOTED,
                                 PCMK__ROLE_UNPROMOTED_LEGACY, NULL)) {
         role = PCMK__ROLE_UNKNOWN;
     }
@@ -263,62 +300,59 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     xmlNode *rsc_ops = NULL;
     xmlNode *template_ops = NULL;
     const char *template_ref = NULL;
-    const char *clone = NULL;
     const char *id = NULL;
 
     if (xml_obj == NULL) {
-        pe_err("No resource object for template unpacking");
+        pcmk__config_err("No resource object for template unpacking");
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", xml_obj->name);
+        pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
-        pe_err("The resource object '%s' should not reference itself", id);
+        pcmk__config_err("The resource object '%s' should not reference itself",
+                         id);
         return FALSE;
     }
 
-    cib_resources = get_xpath_object("//" XML_CIB_TAG_RESOURCES,
-                                     scheduler->input, LOG_TRACE);
+    cib_resources = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
+                                     LOG_TRACE);
     if (cib_resources == NULL) {
-        pe_err("No resources configured");
+        pcmk__config_err("No resources configured");
         return FALSE;
     }
 
-    template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
-                              XML_ATTR_ID, template_ref);
+    template = pcmk__xe_first_child(cib_resources, PCMK_XE_TEMPLATE,
+                                    PCMK_XA_ID, template_ref);
     if (template == NULL) {
-        pe_err("No template named '%s'", template_ref);
+        pcmk__config_err("No template named '%s'", template_ref);
         return FALSE;
     }
 
-    new_xml = copy_xml(template);
+    new_xml = pcmk__xml_copy(NULL, template);
     xmlNodeSetName(new_xml, xml_obj->name);
-    crm_xml_add(new_xml, XML_ATTR_ID, id);
+    crm_xml_add(new_xml, PCMK_XA_ID, id);
+    crm_xml_add(new_xml, PCMK__META_CLONE,
+                crm_element_value(xml_obj, PCMK__META_CLONE));
 
-    clone = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
-    if(clone) {
-        crm_xml_add(new_xml, XML_RSC_ATTR_INCARNATION, clone);
-    }
+    template_ops = pcmk__xe_first_child(new_xml, PCMK_XE_OPERATIONS, NULL,
+                                        NULL);
 
-    template_ops = find_xml_node(new_xml, "operations", FALSE);
+    for (child_xml = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         child_xml != NULL; child_xml = pcmk__xe_next(child_xml)) {
 
-    for (child_xml = pcmk__xe_first_child(xml_obj); child_xml != NULL;
-         child_xml = pcmk__xe_next(child_xml)) {
-        xmlNode *new_child = NULL;
+        xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
-        new_child = add_node_copy(new_xml, child_xml);
-
-        if (pcmk__str_eq((const char *)new_child->name, "operations", pcmk__str_none)) {
+        if (pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
             rsc_ops = new_child;
         }
     }
@@ -327,7 +361,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         xmlNode *op = NULL;
         GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
 
-        for (op = pcmk__xe_first_child(rsc_ops); op != NULL;
+        for (op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL); op != NULL;
              op = pcmk__xe_next(op)) {
 
             char *key = template_op_key(op);
@@ -335,13 +369,13 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
             g_hash_table_insert(rsc_ops_hash, key, op);
         }
 
-        for (op = pcmk__xe_first_child(template_ops); op != NULL;
-             op = pcmk__xe_next(op)) {
+        for (op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
+             op != NULL; op = pcmk__xe_next(op)) {
 
             char *key = template_op_key(op);
 
             if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
-                add_node_copy(rsc_ops, op);
+                pcmk__xml_copy(rsc_ops, op);
             }
 
             free(key);
@@ -375,23 +409,25 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *id = NULL;
 
     if (xml_obj == NULL) {
-        pe_err("No resource object for processing resource list of template");
+        pcmk__config_err("No resource object for processing resource list "
+                         "of template");
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, XML_CIB_TAG_RSC_TEMPLATE);
+    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
-        pe_err("'%s' object must have a id", xml_obj->name);
+        pcmk__config_err("'%s' object must have a id", xml_obj->name);
         return FALSE;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
-        pe_err("The resource object '%s' should not reference itself", id);
+        pcmk__config_err("The resource object '%s' should not reference itself",
+                         id);
         return FALSE;
     }
 
@@ -406,19 +442,21 @@ static bool
 detect_promotable(pcmk_resource_t *rsc)
 {
     const char *promotable = g_hash_table_lookup(rsc->meta,
-                                                 XML_RSC_ATTR_PROMOTABLE);
+                                                 PCMK_META_PROMOTABLE);
 
     if (crm_is_true(promotable)) {
         return TRUE;
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (pcmk__xe_is(rsc->xml, PCMK_XE_PROMOTABLE_LEGACY)) {
-        /* @TODO in some future version, pe_warn_once() here,
-         *       then drop support in even later version
-         */
-        g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
-                            strdup(XML_BOOLEAN_TRUE));
+    if (pcmk__xe_is(rsc->xml, PCMK__XE_PROMOTABLE_LEGACY)) {
+        pcmk__warn_once(pcmk__wo_master_element,
+                        "Support for <" PCMK__XE_PROMOTABLE_LEGACY "> (such "
+                        "as in %s) is deprecated and will be removed in a "
+                        "future release. Use <" PCMK_XE_CLONE "> with a "
+                        PCMK_META_PROMOTABLE " meta-attribute instead.",
+                        rsc->id);
+        pcmk__insert_dup(rsc->meta, PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
         return TRUE;
     }
     return FALSE;
@@ -481,75 +519,75 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
 /*!
  * \internal
- * \brief Unpack a resource's "requires" meta-attribute
+ * \brief Unpack a resource's \c PCMK_META_REQUIRES meta-attribute
  *
  * \param[in,out] rsc         Resource being unpacked
- * \param[in]     value       Value of "requires" meta-attribute
+ * \param[in]     value       Value of \c PCMK_META_REQUIRES meta-attribute
  * \param[in]     is_default  Whether \p value was selected by default
  */
 static void
 unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
-    if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
-    } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pcmk_rsc_needs_quorum);
+    } else if (pcmk__str_eq(value, PCMK_VALUE_QUORUM, pcmk__str_casei)) {
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_quorum);
 
-    } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
-        pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing);
+    } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
+        pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing);
         if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
 
-    } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
-            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
-                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
+            pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
+                              "to \"" PCMK_VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
-            unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
+            unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
         } else if (!pcmk_is_set(rsc->cluster->flags,
                                 pcmk_sched_fencing_enabled)) {
-            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
-                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
-                              "is disabled", rsc->id);
-            unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
+            pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
+                              "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
+                              "disabled", rsc->id);
+            unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
         } else {
-            pe__set_resource_flags(rsc, pcmk_rsc_needs_fencing
-                                        |pcmk_rsc_needs_unfencing);
+            pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing
+                                     |pcmk_rsc_needs_unfencing);
         }
 
     } else {
         const char *orig_value = value;
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
-            value = PCMK__VALUE_QUORUM;
+            value = PCMK_VALUE_QUORUM;
 
-        } else if ((rsc->variant == pcmk_rsc_variant_primitive)
+        } else if (pcmk__is_primitive(rsc)
                    && xml_contains_remote_node(rsc->xml)) {
-            value = PCMK__VALUE_QUORUM;
+            value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_enable_unfencing)) {
-            value = PCMK__VALUE_UNFENCING;
+            value = PCMK_VALUE_UNFENCING;
 
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pcmk_sched_fencing_enabled)) {
-            value = PCMK__VALUE_FENCING;
+            value = PCMK_VALUE_FENCING;
 
         } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
-            value = PCMK__VALUE_NOTHING;
+            value = PCMK_VALUE_NOTHING;
 
         } else {
-            value = PCMK__VALUE_QUORUM;
+            value = PCMK_VALUE_QUORUM;
         }
 
         if (orig_value != NULL) {
-            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+            pcmk__config_err("Resetting '" PCMK_META_REQUIRES "' for %s "
                              "to '%s' because '%s' is not valid",
                               rsc->id, value, orig_value);
         }
@@ -557,30 +595,28 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
         return;
     }
 
-    pe_rsc_trace(rsc, "\tRequired to start: %s%s", value,
-                 (is_default? " (default)" : ""));
+    pcmk__rsc_trace(rsc, "\tRequired to start: %s%s", value,
+                    (is_default? " (default)" : ""));
 }
 
-#ifndef PCMK__COMPAT_2_0
 static void
 warn_about_deprecated_classes(pcmk_resource_t *rsc)
 {
-    const char *std = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *std = crm_element_value(rsc->xml, PCMK_XA_CLASS);
 
     if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_none)) {
-        pe_warn_once(pcmk__wo_upstart,
-                     "Support for Upstart resources (such as %s) is deprecated "
-                     "and will be removed in a future release of Pacemaker",
-                     rsc->id);
+        pcmk__warn_once(pcmk__wo_upstart,
+                        "Support for Upstart resources (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        rsc->id);
 
     } else if (pcmk__str_eq(std, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_none)) {
-        pe_warn_once(pcmk__wo_nagios,
-                     "Support for Nagios resources (such as %s) is deprecated "
-                     "and will be removed in a future release of Pacemaker",
-                     rsc->id);
+        pcmk__warn_once(pcmk__wo_nagios,
+                        "Support for Nagios resources (such as %s) is "
+                        "deprecated and will be removed in a future release",
+                        rsc->id);
     }
 }
-#endif
 
 /*!
  * \internal
@@ -612,7 +648,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
-        .role = pcmk_role_unknown,
         .now = NULL,
         .match_data = NULL,
         .rsc_data = NULL,
@@ -628,10 +663,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     crm_log_xml_trace(xml_obj, "[raw XML]");
 
-    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    id = crm_element_value(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
-        pe_err("Ignoring <%s> configuration without " XML_ATTR_ID,
-               xml_obj->name);
+        pcmk__config_err("Ignoring <%s> configuration without " PCMK_XA_ID,
+                         xml_obj->name);
         return pcmk_rc_unpack_error;
     }
 
@@ -641,7 +676,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
-        crm_crit("Unable to allocate memory for resource '%s'", id);
+        pcmk__sched_err("Unable to allocate memory for resource '%s'", id);
         return ENOMEM;
     }
     (*rsc)->cluster = scheduler;
@@ -660,34 +695,32 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->parent = parent;
 
-    ops = find_xml_node((*rsc)->xml, "operations", FALSE);
+    ops = pcmk__xe_first_child((*rsc)->xml, PCMK_XE_OPERATIONS, NULL, NULL);
     (*rsc)->ops_xml = expand_idref(ops, scheduler->input);
 
     (*rsc)->variant = get_resource_type((const char *) (*rsc)->xml->name);
     if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
-        pe_err("Ignoring resource '%s' of unknown type '%s'",
-               id, (*rsc)->xml->name);
+        pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
+                         id, (*rsc)->xml->name);
         common_free(*rsc);
         *rsc = NULL;
         return pcmk_rc_unpack_error;
     }
 
-#ifndef PCMK__COMPAT_2_0
-    warn_about_deprecated_classes(*rsc);
-#endif
-
     (*rsc)->meta = pcmk__strkey_table(free, free);
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     (*rsc)->known_on = pcmk__strkey_table(NULL, free);
 
-    value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
+    value = crm_element_value((*rsc)->xml, PCMK__META_CLONE);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
-        add_hash_param((*rsc)->meta, XML_RSC_ATTR_INCARNATION, value);
+        pcmk__insert_meta(*rsc, PCMK__META_CLONE, value);
 
     } else {
         (*rsc)->id = strdup(id);
     }
+
+    warn_about_deprecated_classes(*rsc);
 
     (*rsc)->fns = &resource_class_functions[(*rsc)->variant];
 
@@ -695,10 +728,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
 
     (*rsc)->flags = 0;
-    pe__set_resource_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
+    pcmk__set_rsc_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
@@ -709,151 +742,186 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
-    (*rsc)->migration_threshold = INFINITY;
+    (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
     (*rsc)->failure_timeout = 0;
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
     (*rsc)->priority = char2score(value);
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_critical);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_critical);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_NOTIFY);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_notify);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_notify);
     }
 
     if (xml_contains_remote_node((*rsc)->xml)) {
         (*rsc)->is_remote_node = TRUE;
-        if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
+        if (g_hash_table_lookup((*rsc)->meta, PCMK__META_CONTAINER)) {
             guest_node = true;
         } else {
             remote_node = true;
         }
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
-        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
          * resources within the remote-node before moving. Allowing
          * migration support enables this feature. If this ever causes
          * problems, migration support can be explicitly turned off with
-         * allow-migrate=false.
+         * PCMK_META_ALLOW_MIGRATE=false.
          */
-        pe__set_resource_flags(*rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_migratable);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
-    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
-        if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pcmk_rsc_managed);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_IS_MANAGED);
+    if (value != NULL) {
+        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting " PCMK_META_IS_MANAGED
+                              " to the explicit value '" PCMK_VALUE_DEFAULT
+                              "' is deprecated and will be removed in a "
+                              "future release (just leave it unset)");
+        } else if (crm_is_true(value)) {
+            pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
         } else {
-            pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
+            pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
         }
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MAINTENANCE);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MAINTENANCE);
     if (crm_is_true(value)) {
-        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
-        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
     }
     if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
-        pe__clear_resource_flags(*rsc, pcmk_rsc_managed);
-        pe__set_resource_flags(*rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
     }
 
-    if (pe_rsc_is_clone(pe__const_top_resource(*rsc, false))) {
-        value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
+    if (pcmk__is_clone(pe__const_top_resource(*rsc, false))) {
+        value = g_hash_table_lookup((*rsc)->meta, PCMK_META_GLOBALLY_UNIQUE);
         if (crm_is_true(value)) {
-            pe__set_resource_flags(*rsc, pcmk_rsc_unique);
+            pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            pe__set_resource_flags(*rsc, pcmk_rsc_promotable);
+            pcmk__set_rsc_flags(*rsc, pcmk_rsc_promotable);
         }
     } else {
-        pe__set_resource_flags(*rsc, pcmk_rsc_unique);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
-    if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
+    // @COMPAT Deprecated meta-attribute
+    value = g_hash_table_lookup((*rsc)->meta, PCMK__META_RESTART_TYPE);
+    if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
         (*rsc)->restart_type = pe_restart_restart;
-        pe_rsc_trace((*rsc), "%s dependency restart handling: restart",
-                     (*rsc)->id);
-        pe_warn_once(pcmk__wo_restart_type,
-                     "Support for restart-type is deprecated and will be removed in a future release");
+        pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
+                        (*rsc)->id);
+        pcmk__warn_once(pcmk__wo_restart_type,
+                        "Support for " PCMK__META_RESTART_TYPE " is deprecated "
+                        "and will be removed in a future release");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
-        pe_rsc_trace((*rsc), "%s dependency restart handling: ignore",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc, "%s dependency restart handling: ignore",
+                        (*rsc)->id);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
-    if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
+    if (pcmk__str_eq(value, PCMK_VALUE_STOP_ONLY, pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_stop;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: stop only",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
+                        (*rsc)->id);
 
-    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_block;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: block",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: block",
+                        (*rsc)->id);
 
-    } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK_VALUE_STOP_UNEXPECTED,
+                            pcmk__str_casei)) {
         (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
-                             "stop unexpected instances",
-                     (*rsc)->id);
+        pcmk__rsc_trace(*rsc,
+                        "%s multiple running resource recovery: "
+                        "stop unexpected instances",
+                        (*rsc)->id);
 
-    } else { // "stop_start"
-        if (!pcmk__str_eq(value, "stop_start",
+    } else { // PCMK_VALUE_STOP_START
+        if (!pcmk__str_eq(value, PCMK_VALUE_STOP_START,
                           pcmk__str_casei|pcmk__str_null_matches)) {
-            pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
-                    ", using default of \"stop_start\"", value);
+            pcmk__config_warn("%s is not a valid value for "
+                              PCMK_META_MULTIPLE_ACTIVE
+                              ", using default of "
+                              "\"" PCMK_VALUE_STOP_START "\"",
+                              value);
         }
         (*rsc)->recovery_type = pcmk_multiply_active_restart;
-        pe_rsc_trace((*rsc), "%s multiple running resource recovery: "
-                             "stop/start", (*rsc)->id);
+        pcmk__rsc_trace(*rsc,
+                        "%s multiple running resource recovery: stop/start",
+                        (*rsc)->id);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
-    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
-        (*rsc)->stickiness = char2score(value);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_RESOURCE_STICKINESS);
+    if (value != NULL) {
+        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting "
+                              PCMK_META_RESOURCE_STICKINESS
+                              " to the explicit value '" PCMK_VALUE_DEFAULT
+                              "' is deprecated and will be removed in a "
+                              "future release (just leave it unset)");
+        } else {
+            (*rsc)->stickiness = char2score(value);
+        }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MIGRATION_THRESHOLD);
-    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
-        (*rsc)->migration_threshold = char2score(value);
-        if ((*rsc)->migration_threshold < 0) {
-            /* @TODO We use 1 here to preserve previous behavior, but this
-             * should probably use the default (INFINITY) or 0 (to disable)
-             * instead.
-             */
-            pe_warn_once(pcmk__wo_neg_threshold,
-                         PCMK_META_MIGRATION_THRESHOLD
-                         " must be non-negative, using 1 instead");
-            (*rsc)->migration_threshold = 1;
+    if (value != NULL) {
+        if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+            // @COMPAT Deprecated since 2.1.8
+            pcmk__config_warn("Support for setting "
+                              PCMK_META_MIGRATION_THRESHOLD
+                              " to the explicit value '" PCMK_VALUE_DEFAULT
+                              "' is deprecated and will be removed in a "
+                              "future release (just leave it unset)");
+        } else {
+            (*rsc)->migration_threshold = char2score(value);
+            if ((*rsc)->migration_threshold < 0) {
+                /* @COMPAT We use 1 here to preserve previous behavior, but this
+                 * should probably use the default (INFINITY) or 0 (to disable)
+                 * instead.
+                 */
+                pcmk__warn_once(pcmk__wo_neg_threshold,
+                                PCMK_META_MIGRATION_THRESHOLD
+                                " must be non-negative, using 1 instead");
+                (*rsc)->migration_threshold = 1;
+            }
         }
     }
 
-    if (pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
+    if (pcmk__str_eq(crm_element_value((*rsc)->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_have_fencing);
-        pe__set_resource_flags(*rsc, pcmk_rsc_fence_device);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
+        pcmk__set_rsc_flags(*rsc, pcmk_rsc_fence_device);
     }
 
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
+    value = g_hash_table_lookup((*rsc)->meta, PCMK_META_REQUIRES);
     unpack_requires(*rsc, value, false);
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
     if (value != NULL) {
+        guint interval_ms = 0U;
+
         // Stored as seconds
-        (*rsc)->failure_timeout = (int) (crm_parse_interval_spec(value) / 1000);
+        pcmk_parse_interval_spec(value, &interval_ms);
+        (*rsc)->failure_timeout = (int) (interval_ms / 1000);
     }
 
     if (remote_node) {
@@ -861,24 +929,27 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
         /* Grabbing the value now means that any rules based on node attributes
          * will evaluate to false, so such rules should not be used with
-         * reconnect_interval.
+         * PCMK_REMOTE_RA_RECONNECT_INTERVAL.
          *
          * @TODO Evaluate per node before using
          */
-        value = g_hash_table_lookup(params, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
+        value = g_hash_table_lookup(params, PCMK_REMOTE_RA_RECONNECT_INTERVAL);
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
-            (*rsc)->remote_reconnect_ms = crm_parse_interval_spec(value);
-            /* we want to override any default failure_timeout in use when remote
-             * reconnect_interval is in use. */ 
+            pcmk_parse_interval_spec(value, &((*rsc)->remote_reconnect_ms));
+
+            /* We want to override any default failure_timeout in use when remote
+             * PCMK_REMOTE_RA_RECONNECT_INTERVAL is in use.
+             */
             (*rsc)->failure_timeout = (*rsc)->remote_reconnect_ms / 1000;
         }
     }
 
     get_target_role(*rsc, &((*rsc)->next_role));
-    pe_rsc_trace((*rsc), "%s desired next state: %s", (*rsc)->id,
-                 (*rsc)->next_role != pcmk_role_unknown? role2text((*rsc)->next_role) : "default");
+    pcmk__rsc_trace(*rsc, "%s desired next state: %s", (*rsc)->id,
+                    ((*rsc)->next_role == pcmk_role_unknown)?
+                        "default" : pcmk_role_text((*rsc)->next_role));
 
     if ((*rsc)->fns->unpack(*rsc, scheduler) == FALSE) {
         (*rsc)->fns->free(*rsc);
@@ -897,12 +968,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                           scheduler);
     }
 
-    pe_rsc_trace((*rsc), "%s action notification: %s", (*rsc)->id,
-                 pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
+    pcmk__rsc_trace(*rsc, "%s action notification: %s", (*rsc)->id,
+                    pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
-    pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
+    pe__unpack_dataset_nvpairs((*rsc)->xml, PCMK_XE_UTILIZATION, &rule_data,
                                (*rsc)->utilization, NULL, FALSE, scheduler);
 
     if (expanded_xml) {
@@ -940,8 +1011,7 @@ uber_parent(pcmk_resource_t *rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while ((parent->parent != NULL)
-           && (parent->parent->variant != pcmk_rsc_variant_bundle)) {
+    while ((parent->parent != NULL) && !pcmk__is_bundle(parent->parent)) {
         parent = parent->parent;
     }
     return parent;
@@ -967,8 +1037,7 @@ pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
         return NULL;
     }
     while (parent->parent != NULL) {
-        if (!include_bundle
-            && (parent->parent->variant == pcmk_rsc_variant_bundle)) {
+        if (!include_bundle && pcmk__is_bundle(parent->parent)) {
             break;
         }
         parent = parent->parent;
@@ -983,7 +1052,7 @@ common_free(pcmk_resource_t * rsc)
         return;
     }
 
-    pe_rsc_trace(rsc, "Freeing %s %d", rsc->id, rsc->variant);
+    pcmk__rsc_trace(rsc, "Freeing %s %d", rsc->id, rsc->variant);
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
@@ -1031,7 +1100,7 @@ common_free(pcmk_resource_t * rsc)
     }
     g_list_free(rsc->fillers);
     g_list_free(rsc->rsc_location);
-    pe_rsc_trace(rsc, "Resource freed");
+    pcmk__rsc_trace(rsc, "Resource freed");
     free(rsc->id);
     free(rsc->clone_name);
     free(rsc->allocated_to);
@@ -1078,7 +1147,7 @@ pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (rsc->partial_migration_source != NULL) {
-        if (node->details == rsc->partial_migration_source->details) {
+        if (pcmk__same_node(node, rsc->partial_migration_source)) {
             *active = node; // This is the migration source
         } else {
             keep_looking = true;
@@ -1124,7 +1193,7 @@ active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
 
 /*!
  * \brief
- * \internal Find and count active nodes according to "requires"
+ * \internal Find and count active nodes according to \c PCMK_META_REQUIRES
  *
  * \param[in]  rsc    Resource to check
  * \param[out] count  If not NULL, will be set to count of active nodes
@@ -1133,7 +1202,7 @@ active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
  *
  * \note This is a convenience wrapper for active_node() where the count of all
  *       active nodes or only clean active nodes is desired according to the
- *       "requires" meta-attribute.
+ *       \c PCMK_META_REQUIRES meta-attribute.
  */
 pcmk_node_t *
 pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
@@ -1185,8 +1254,9 @@ pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
     CRM_ASSERT((rsc != NULL) && (why != NULL));
     if (rsc->next_role != role) {
-        pe_rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
-                     rsc->id, role2text(rsc->next_role), role2text(role), why);
+        pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
+                        rsc->id, pcmk_role_text(rsc->next_role),
+                        pcmk_role_text(role), why);
         rsc->next_role = role;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,11 +31,6 @@ extern "C" {
 #  include <stdbool.h>  // bool
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
-
-#  define T_STONITH_NOTIFY_DISCONNECT     "st_notify_disconnect"
-#  define T_STONITH_NOTIFY_FENCE          "st_notify_fence"
-#  define T_STONITH_NOTIFY_HISTORY        "st_notify_history"
-#  define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
 
 /* *INDENT-OFF* */
 enum stonith_state {
@@ -192,21 +187,21 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register a fence device with the local fencer
      *
-     * \param[in,out] st         Fencer connection to use
-     * \param[in]     options    Group of enum stonith_call_options
-     * \param[in]     id         ID of fence device to register
-     * \param[in]     namespace  Type of fence agent to search for ("redhat"
-     *                           or "stonith-ng" for RHCS-style, "internal" for
-     *                           Pacemaker-internal devices, "heartbeat" for
-     *                           LHA-style, or "any" or NULL for any)
-     * \param[in]     agent      Name of fence agent for device
-     * \param[in]     params     Fence agent parameters for device
+     * \param[in,out] st           Fencer connection to use
+     * \param[in]     options      Group of enum stonith_call_options
+     * \param[in]     id           ID of fence device to register
+     * \param[in]     namespace_s  Type of fence agent to search for ("redhat"
+     *                             or "stonith-ng" for RHCS-style, "internal"
+     *                             for Pacemaker-internal devices, "heartbeat"
+     *                             for LHA-style, or "any" or NULL for any)
+     * \param[in]     agent        Name of fence agent for device
+     * \param[in]     params       Fence agent parameters for device
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*register_device)(stonith_t *st, int options, const char *id,
-                           const char *namespace, const char *agent,
+                           const char *namespace_s, const char *agent,
                            const stonith_key_value_t *params);
 
     /*!
@@ -245,7 +240,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     call_options  Group of enum stonith_call_options
      *                              (currently ignored)
      * \param[in]     agent         Fence agent to query
-     * \param[in]     namespace     Type of fence agent to search for ("redhat"
+     * \param[in]     namespace_s   Type of fence agent to search for ("redhat"
      *                              or "stonith-ng" for RHCS-style, "internal"
      *                              for Pacemaker-internal devices, "heartbeat"
      *                              for LHA-style, or "any" or NULL for any)
@@ -256,7 +251,7 @@ typedef struct stonith_api_operations_s
      * \note The caller is responsible for freeing *output using free().
      */
     int (*metadata)(stonith_t *stonith, int call_options, const char *agent,
-                    const char *namespace, char **output, int timeout_sec);
+                    const char *namespace_s, char **output, int timeout_sec);
 
     /*!
      * \brief Retrieve a list of installed fence agents
@@ -264,7 +259,7 @@ typedef struct stonith_api_operations_s
      * \param[in,out] stonith       Fencer connection to use
      * \param[in]     call_options  Group of enum stonith_call_options
      *                              (currently ignored)
-     * \param[in]     namespace     Type of fence agents to list ("redhat"
+     * \param[in]     namespace_s   Type of fence agents to list ("redhat"
      *                              or "stonith-ng" for RHCS-style, "internal" for
      *                              Pacemaker-internal devices, "heartbeat" for
      *                              LHA-style, or "any" or NULL for all)
@@ -277,7 +272,7 @@ typedef struct stonith_api_operations_s
      *       stonith_key_value_freeall().
      */
     int (*list_agents)(stonith_t *stonith, int call_options,
-                       const char *namespace, stonith_key_value_t **devices,
+                       const char *namespace_s, stonith_key_value_t **devices,
                        int timeout);
 
     /*!
@@ -580,6 +575,8 @@ const char *stonith_op_state_str(enum op_state state);
  * queried without mainloop or the caller understanding the full API
  *
  * At least one of nodeid and uname are required
+ *
+ * NOTE: DLM uses both of these
  */
 int stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off);
 time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
@@ -694,6 +691,18 @@ const char *stonith_action_str(const char *action);
  * we can't do that for the reason noted at the top of this file. That does mean
  * we have to duplicate these declarations where they're implemented.
  */
+
+//! \deprecated Do not use
+#define T_STONITH_NOTIFY_DISCONNECT "st_notify_disconnect"
+
+//! \deprecated Do not use
+#define T_STONITH_NOTIFY_FENCE "st_notify_fence"
+
+//! \deprecated Do not use
+#define T_STONITH_NOTIFY_HISTORY "st_notify_history"
+
+//! \deprecated Do not use
+#define T_STONITH_NOTIFY_HISTORY_SYNCED "st_notify_history_synced"
 
 //! \deprecated Use stonith_get_namespace() instead
 const char *get_stonith_provider(const char *agent, const char *provider);

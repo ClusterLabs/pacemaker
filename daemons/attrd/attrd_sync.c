@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,8 @@
 
 #include <crm_internal.h>
 
-#include <crm/msg_xml.h>
-#include <crm/common/attrd_internal.h>
+#include <crm/common/xml.h>
+#include <crm/common/attrs_internal.h>
 
 #include "pacemaker-attrd.h"
 
@@ -113,7 +113,7 @@ sync_point_str(enum attrd_sync_point sync_point)
     } else if  (sync_point == attrd_sync_point_cluster) {
         return PCMK__VALUE_CLUSTER;
     } else {
-        return "unknown";
+        return PCMK_VALUE_UNKNOWN;
     }
 }
 
@@ -145,13 +145,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
         waitlist = pcmk__intkey_table(free_waitlist_node);
     }
 
-    wl = calloc(sizeof(struct waitlist_node), 1);
-
-    CRM_ASSERT(wl != NULL);
-
-    wl->client_id = strdup(request->ipc_client->id);
-
-    CRM_ASSERT(wl->client_id);
+    wl = pcmk__assert_alloc(1, sizeof(struct waitlist_node));
 
     if (pcmk__str_eq(sync_point, PCMK__VALUE_LOCAL, pcmk__str_none)) {
         wl->sync_point = attrd_sync_point_local;
@@ -162,6 +156,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
         return;
     }
 
+    wl->client_id = pcmk__str_copy(request->ipc_client->id);
     wl->ipc_id = request->ipc_id;
     wl->flags = request->flags;
 
@@ -175,7 +170,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     /* And then add the key to the request XML so we can uniquely identify
      * it when it comes time to issue the ACK.
      */
-    crm_xml_add_int(request->xml, XML_LRM_ATTR_CALLID, waitlist_client);
+    crm_xml_add_int(request->xml, PCMK__XA_CALL_ID, waitlist_client);
 }
 
 /*!
@@ -245,7 +240,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
         return;
     }
 
-    if (crm_element_value_int(xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+    if (crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid) == -1) {
         crm_warn("Could not get callid from request XML");
         return;
     }
@@ -316,7 +311,8 @@ attrd_request_sync_point(xmlNode *xml)
     CRM_CHECK(xml != NULL, return NULL);
 
     if (xml->children != NULL) {
-        xmlNode *child = pcmk__xe_match(xml, XML_ATTR_OP, PCMK__XA_ATTR_SYNC_POINT, NULL);
+        xmlNode *child = pcmk__xe_first_child(xml, PCMK_XE_OP,
+                                              PCMK__XA_ATTR_SYNC_POINT, NULL);
 
         if (child) {
             return crm_element_value(child, PCMK__XA_ATTR_SYNC_POINT);
@@ -381,8 +377,10 @@ confirmation_timeout_cb(gpointer data)
             }
 
             crm_trace("Timed out waiting for confirmations for client %s", client->id);
-            pcmk__ipc_send_ack(client, action->ipc_id, action->flags | crm_ipc_client_response,
-                               "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_TIMEOUT);
+            pcmk__ipc_send_ack(client, action->ipc_id,
+                               action->flags|crm_ipc_client_response,
+                               PCMK__XE_ACK, ATTRD_PROTOCOL_VERSION,
+                               CRM_EX_TIMEOUT);
 
             g_hash_table_iter_remove(&iter);
             crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
@@ -486,7 +484,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
         expected_confirmations = pcmk__intkey_table((GDestroyNotify) free_action);
     }
 
-    if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+    if (crm_element_value_int(request->xml, PCMK__XA_CALL_ID, &callid) == -1) {
         crm_err("Could not get callid from xml");
         return;
     }
@@ -499,23 +497,17 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     g_hash_table_iter_init(&iter, peer_protocol_vers);
     while (g_hash_table_iter_next(&iter, &host, &ver)) {
         if (ATTRD_SUPPORTS_CONFIRMATION(GPOINTER_TO_INT(ver))) {
-            char *s = strdup((char *) host);
-
-            CRM_ASSERT(s != NULL);
-            respondents = g_list_prepend(respondents, s);
+            respondents = g_list_prepend(respondents,
+                                         pcmk__str_copy((char *) host));
         }
     }
 
-    action = calloc(1, sizeof(struct confirmation_action));
-    CRM_ASSERT(action != NULL);
+    action = pcmk__assert_alloc(1, sizeof(struct confirmation_action));
 
     action->respondents = respondents;
     action->fn = fn;
-    action->xml = copy_xml(request->xml);
-
-    action->client_id = strdup(request->ipc_client->id);
-    CRM_ASSERT(action->client_id != NULL);
-
+    action->xml = pcmk__xml_copy(NULL, request->xml);
+    action->client_id = pcmk__str_copy(request->ipc_client->id);
     action->ipc_id = request->ipc_id;
     action->flags = request->flags;
 

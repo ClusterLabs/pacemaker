@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_TICKETS__H
-#  define PCMK__CRM_COMMON_TICKETS__H
+#define PCMK__CRM_COMMON_TICKETS__H
 
 #include <sys/types.h>      // time_t
 #include <glib.h>           // gboolean, GHashTable
@@ -23,14 +23,18 @@ extern "C" {
  * \ingroup core
  */
 
-//! Ticket constraint object
+// Ticket constraint object
+// @COMPAT Make internal when we can break API backward compatibility
+//!@{
+//! \deprecated Do not use (public access will be removed in a future release)
 typedef struct pe_ticket_s {
-    char *id;               //!< XML ID of ticket constraint or state
-    gboolean granted;       //!< Whether cluster has been granted the ticket
-    time_t last_granted;    //!< When cluster was last granted the ticket
-    gboolean standby;       //!< Whether ticket is temporarily suspended
-    GHashTable *state;      //!< XML attributes from ticket state
+    char *id;               // XML ID of ticket constraint or state
+    gboolean granted;       // Whether cluster has been granted the ticket
+    time_t last_granted;    // When cluster was last granted the ticket
+    gboolean standby;       // Whether ticket is temporarily suspended
+    GHashTable *state;      // XML attributes from ticket state
 } pcmk_ticket_t;
+//!@}
 
 #ifdef __cplusplus
 }

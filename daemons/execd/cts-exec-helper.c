@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -56,8 +56,8 @@ static struct {
 
 static gboolean
 interval_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.interval_ms = crm_parse_interval_spec(optarg);
-    return errno == 0;
+    return pcmk_parse_interval_spec(optarg,
+                                    &options.interval_ms) == pcmk_rc_ok;
 }
 
 static gboolean
@@ -461,9 +461,9 @@ generate_params(void)
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-    if (!cli_config_update(&cib_xml_copy, NULL, FALSE)) {
-        crm_err("Could not update CIB");
-        return pcmk_rc_cib_corrupt;
+    rc = pcmk_update_configured_schema(&cib_xml_copy, false);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
     // Calculate cluster status
@@ -472,7 +472,7 @@ generate_params(void)
         crm_crit("Could not allocate scheduler data");
         return ENOMEM;
     }
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
     scheduler->input = cib_xml_copy;
     scheduler->now = crm_time_new(NULL);

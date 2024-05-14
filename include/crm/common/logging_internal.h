@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,12 +12,70 @@ extern "C" {
 #endif
 
 #ifndef PCMK__LOGGING_INTERNAL_H
-#  define PCMK__LOGGING_INTERNAL_H
+#define PCMK__LOGGING_INTERNAL_H
 
-#  include <glib.h>
+#include <glib.h>
 
-#  include <crm/common/logging.h>
-#  include <crm/common/output_internal.h>
+#include <crm/common/logging.h>
+#include <crm/common/output_internal.h>
+
+/* Some warnings are too noisy when logged every time a given function is called
+ * (for example, using a deprecated feature). As an alternative, we allow
+ * warnings to be logged once per invocation of the calling program. Each of
+ * those warnings needs a flag defined here.
+ */
+enum pcmk__warnings {
+    pcmk__wo_blind          = (1 << 0),
+    pcmk__wo_restart_type   = (1 << 1),
+    pcmk__wo_role_after     = (1 << 2),
+    pcmk__wo_poweroff       = (1 << 3),
+    pcmk__wo_require_all    = (1 << 4),
+    pcmk__wo_order_score    = (1 << 5),
+    pcmk__wo_neg_threshold  = (1 << 6),
+    pcmk__wo_remove_after   = (1 << 7),
+    pcmk__wo_ping_node      = (1 << 8),
+    pcmk__wo_order_inst     = (1 << 9),
+    pcmk__wo_coloc_inst     = (1 << 10),
+    pcmk__wo_group_order    = (1 << 11),
+    pcmk__wo_group_coloc    = (1 << 12),
+    pcmk__wo_upstart        = (1 << 13),
+    pcmk__wo_nagios         = (1 << 14),
+    pcmk__wo_set_ordering   = (1 << 15),
+    pcmk__wo_rdisc_enabled  = (1 << 16),
+    pcmk__wo_rkt            = (1 << 17),
+    pcmk__wo_location_rules = (1 << 18),
+    pcmk__wo_op_attr_expr   = (1 << 19),
+    pcmk__wo_instance_defaults  = (1 << 20),
+    pcmk__wo_multiple_rules     = (1 << 21),
+    pcmk__wo_master_element = (1 << 22),
+    pcmk__wo_clone_master_max       = (1 << 23),
+    pcmk__wo_clone_master_node_max  = (1 << 24),
+    pcmk__wo_bundle_master  = (1 << 25),
+    pcmk__wo_master_role    = (1 << 26),
+    pcmk__wo_slave_role     = (1 << 27),
+};
+
+/*!
+ * \internal
+ * \brief Log a warning once per invocation of calling program
+ *
+ * \param[in] wo_flag  enum pcmk__warnings value for this warning
+ * \param[in] fmt...   printf(3)-style format and arguments
+ */
+#define pcmk__warn_once(wo_flag, fmt...) do {                           \
+        if (!pcmk_is_set(pcmk__warnings, wo_flag)) {                    \
+            if (wo_flag == pcmk__wo_blind) {                            \
+                crm_warn(fmt);                                          \
+            } else {                                                    \
+                pcmk__config_warn(fmt);                                 \
+            }                                                           \
+            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,     \
+                                                LOG_TRACE,              \
+                                                "Warn-once", "logging", \
+                                                pcmk__warnings,         \
+                                                (wo_flag), #wo_flag);   \
+        }                                                               \
+    } while (0)
 
 typedef void (*pcmk__config_error_func) (void *ctx, const char *msg, ...);
 typedef void (*pcmk__config_warning_func) (void *ctx, const char *msg, ...);
@@ -33,12 +91,11 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
 
 /*!
  * \internal
- * \brief Log a configuration error
+ * \brief Log an error and make crm_verify return failure status
  *
- * \param[in] fmt   printf(3)-style format string
- * \param[in] ...   Arguments for format string
+ * \param[in] fmt...  printf(3)-style format string and arguments
  */
-#  define pcmk__config_err(fmt...) do {                             \
+#define pcmk__config_err(fmt...) do {                               \
         crm_config_error = TRUE;                                    \
         if (pcmk__config_error_handler == NULL) {                   \
             crm_err(fmt);                                           \
@@ -49,18 +106,17 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
 
 /*!
  * \internal
- * \brief Log a configuration warning
+ * \brief Log a warning and make crm_verify return failure status
  *
- * \param[in] fmt   printf(3)-style format string
- * \param[in] ...   Arguments for format string
+ * \param[in] fmt...  printf(3)-style format string and arguments
  */
-#  define pcmk__config_warn(fmt...) do {                            \
-        crm_config_warning = TRUE;                                  \
-        if (pcmk__config_warning_handler == NULL) {                   \
-            crm_warn(fmt);                                           \
-        } else {                                                    \
-            pcmk__config_warning_handler(pcmk__config_warning_context, fmt);   \
-        }                                                           \
+#define pcmk__config_warn(fmt...) do {                                      \
+        crm_config_warning = TRUE;                                          \
+        if (pcmk__config_warning_handler == NULL) {                         \
+            crm_warn(fmt);                                                  \
+        } else {                                                            \
+            pcmk__config_warning_handler(pcmk__config_warning_context, fmt);\
+        }                                                                   \
     } while (0)
 
 /*!
@@ -76,7 +132,7 @@ void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler,
  * \note Neither \p if_action nor \p else_action can contain a \p break or
  *       \p continue statement.
  */
-#  define pcmk__if_tracing(if_action, else_action) do {                 \
+#define pcmk__if_tracing(if_action, else_action) do {                   \
         static struct qb_log_callsite *trace_cs = NULL;                 \
                                                                         \
         if (trace_cs == NULL) {                                         \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,10 +8,10 @@
  */
 
 #ifndef PCMK__CRM_COMMON_ACL__H
-#  define PCMK__CRM_COMMON_ACL__H
+#define PCMK__CRM_COMMON_ACL__H
 
-#  include <libxml/tree.h> // xmlNode
-#  include <stdbool.h>
+#include <libxml/tree.h> // xmlNode
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

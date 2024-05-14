@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,6 @@
 #include <libxml/xmlIO.h>  /* xmlAllocOutputBuffer */
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
@@ -62,8 +61,9 @@ pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data)
 void
 pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
-    char *p_value = NULL;
-    const char *p_name = NULL;
+    const char *name = NULL;
+    const char *value = NULL;
+    gchar *value_esc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     if (attr == NULL || attr->children == NULL) {
@@ -75,10 +75,21 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         return;
     }
 
-    p_name = (const char *) attr->name;
-    p_value = crm_xml_escape((const char *)attr->children->content);
-    pcmk__g_strcat(buffer, " ", p_name, "=\"", pcmk__s(p_value, "<null>"), "\"",
-                   NULL);
+    name = (const char *) attr->name;
+    value = (const char *) attr->children->content;
+    if (value == NULL) {
+        /* Don't print anything for unset attribute. Any null-indicator value,
+         * including the empty string, could also be a real value that needs to
+         * be treated differently from "unset".
+         */
+        return;
+    }
 
-    free(p_value);
+    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr)) {
+        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr);
+        value = value_esc;
+    }
+
+    pcmk__g_strcat(buffer, " ", name, "=\"", value, "\"", NULL);
+    g_free(value_esc);
 }

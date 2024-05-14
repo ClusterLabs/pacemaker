@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,13 +18,13 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_internal.h>
 
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 
 #include <pcmki/pcmki_output.h>
 
@@ -85,9 +85,9 @@ private_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
 
 static gboolean
 section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (pcmk__str_any_of(optarg, "nodes", "forever", NULL)) {
+    if (pcmk__str_any_of(optarg, PCMK_XE_NODES, "forever", NULL)) {
         pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
-    } else if (pcmk__str_any_of(optarg, "status", "reboot", NULL)) {
+    } else if (pcmk__str_any_of(optarg, PCMK_XE_STATUS, "reboot", NULL)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
     } else {
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE, "Unknown value for --lifetime: %s",
@@ -398,7 +398,7 @@ print_attrd_values(pcmk__output_t *out, const GList *reply)
         const pcmk__attrd_query_pair_t *pair = iter->data;
 
         out->message(out, "attribute", NULL, NULL, pair->name, pair->value,
-                     pair->node);
+                     pair->node, false, false);
         printed_values = true;
     }
 }

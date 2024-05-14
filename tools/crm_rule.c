@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/iso8601.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
@@ -174,21 +174,22 @@ main(int argc, char **argv)
     }
 
     // Parse the input XML specified by the command-line options, if any
-    if (pcmk__str_eq(options.input_xml, "-", pcmk__str_casei)) {
-        input = stdin2xml();
-
-        if (input == NULL) {
-            exit_code = CRM_EX_DATAERR;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Couldn't parse input from STDIN\n");
-            goto done;
-        }
-    } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+    if (pcmk__str_eq(options.input_xml, "-", pcmk__str_none)) {
+        input = pcmk__xml_read(NULL);
 
         if (input == NULL) {
             exit_code = CRM_EX_DATAERR;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Couldn't parse input string: %s\n", options.input_xml);
+                        "Couldn't parse input from STDIN");
+            goto done;
+        }
+    } else if (options.input_xml != NULL) {
+        input = pcmk__xml_parse(options.input_xml);
+
+        if (input == NULL) {
+            exit_code = CRM_EX_DATAERR;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Couldn't parse input string: %s", options.input_xml);
             goto done;
         }
     }

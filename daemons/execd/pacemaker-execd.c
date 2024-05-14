@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/services.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
@@ -89,9 +89,11 @@ get_stonith_connection(void)
             stonith_api_delete(stonith_api);
             stonith_api = NULL;
         } else {
-            stonith_api->cmds->register_notification(stonith_api,
-                                                     T_STONITH_NOTIFY_DISCONNECT,
-                                                     stonith_connection_destroy_cb);
+            stonith_api_operations_t *cmds = stonith_api->cmds;
+
+            cmds->register_notification(stonith_api,
+                                        PCMK__VALUE_ST_NOTIFY_DISCONNECT,
+                                        stonith_connection_destroy_cb);
         }
     }
     return stonith_api;
@@ -102,7 +104,7 @@ lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
+        return -ENOMEM;
     }
     return 0;
 }
@@ -141,12 +143,13 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     if (!client->name) {
-        const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
+        const char *value = crm_element_value(request,
+                                              PCMK__XA_LRMD_CLIENTNAME);
 
         if (value == NULL) {
             client->name = pcmk__itoa(pcmk__client_pid(c));
         } else {
-            client->name = strdup(value);
+            client->name = pcmk__str_copy(value);
         }
     }
 
@@ -155,9 +158,9 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         lrmd_call_id = 1;
     }
 
-    crm_xml_add(request, F_LRMD_CLIENTID, client->id);
-    crm_xml_add(request, F_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, F_LRMD_CALLID, lrmd_call_id);
+    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
+    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
+    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
     process_lrmd_message(client, id, request);
 
@@ -281,11 +284,7 @@ static gboolean
 lrmd_exit(gpointer data)
 {
     crm_info("Terminating with %d clients", pcmk__ipc_client_count());
-    if (stonith_api) {
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
-        stonith_api->cmds->disconnect(stonith_api);
-        stonith_api_delete(stonith_api);
-    }
+    stonith_api_delete(stonith_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
@@ -443,18 +442,22 @@ main(int argc, char **argv, char **envp)
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-#ifdef PCMK__COMPILE_REMOTE
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "lp");
-#else
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "l");
-#endif  // PCMK__COMPILE_REMOTE
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+    gchar **processed_args = NULL;
+    GOptionContext *context = NULL;
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
     remoted_spawn_pidone(argc, argv, envp);
 #endif
+
+    args = pcmk__new_common_args(SUMMARY);
+#ifdef PCMK__COMPILE_REMOTE
+    processed_args = pcmk__cmdline_preproc(argv, "lp");
+#else
+    processed_args = pcmk__cmdline_preproc(argv, "l");
+#endif  // PCMK__COMPILE_REMOTE
+    context = build_arg_context(args, &output_group);
 
     crm_log_preinit(EXECD_NAME, argc, argv);
 
@@ -495,7 +498,7 @@ main(int argc, char **argv, char **envp)
 
     // ocf_log() (in resource-agents) uses the capitalized env options below
     option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
-    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+    if (!pcmk__str_eq(option, PCMK_VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)
         && !pcmk__str_eq(option, "/dev/null", pcmk__str_none)) {
 
@@ -503,7 +506,7 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option(PCMK__ENV_LOGFILE);
-    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+    if (!pcmk__str_eq(option, PCMK_VALUE_NONE,
                       pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__set_env_option("LOGFILE", option, true);
 

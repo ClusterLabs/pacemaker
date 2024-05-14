@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,8 @@
 
 /*!
  * \internal
- * \brief Set the node health values to use for "red", "yellow", and "green"
+ * \brief Set the node health values to use for \c PCMK_VALUE_RED,
+ *        \c PCMK_VALUE_YELLOW, and \c PCMK_VALUE_GREEN
  *
  * \param[in,out] scheduler  Scheduler data
  */
@@ -30,23 +31,23 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
             break;
 
         case pcmk__health_strategy_no_red:
-            pcmk__score_red = -INFINITY;
+            pcmk__score_red = -PCMK_SCORE_INFINITY;
             pcmk__score_yellow = 0;
             pcmk__score_green = 0;
             break;
 
         case pcmk__health_strategy_only_green:
-            pcmk__score_red = -INFINITY;
-            pcmk__score_yellow = -INFINITY;
+            pcmk__score_red = -PCMK_SCORE_INFINITY;
+            pcmk__score_yellow = -PCMK_SCORE_INFINITY;
             pcmk__score_green = 0;
             break;
 
         default: // progressive or custom
-            pcmk__score_red = pe__health_score(PCMK__OPT_NODE_HEALTH_RED,
+            pcmk__score_red = pe__health_score(PCMK_OPT_NODE_HEALTH_RED,
                                                scheduler);
-            pcmk__score_green = pe__health_score(PCMK__OPT_NODE_HEALTH_GREEN,
+            pcmk__score_green = pe__health_score(PCMK_OPT_NODE_HEALTH_GREEN,
                                                  scheduler);
-            pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
+            pcmk__score_yellow = pe__health_score(PCMK_OPT_NODE_HEALTH_YELLOW,
                                                   scheduler);
             break;
     }
@@ -54,9 +55,9 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
         || (pcmk__score_green != 0)) {
         crm_debug("Values of node health scores: "
-                  PCMK__VALUE_RED "=%d "
-                  PCMK__VALUE_YELLOW "=%d "
-                  PCMK__VALUE_GREEN "=%d",
+                  PCMK_VALUE_RED "=%d "
+                  PCMK_VALUE_YELLOW "=%d "
+                  PCMK_VALUE_GREEN "=%d",
                   pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }
@@ -135,9 +136,9 @@ pe__node_health(pcmk_node_t *node)
              * or pcmk__score_yellow equals pcmk__score_green, so check the
              * textual value first to be able to distinguish those.
              */
-            if (pcmk__str_eq(value, PCMK__VALUE_RED, pcmk__str_casei)) {
+            if (pcmk__str_eq(value, PCMK_VALUE_RED, pcmk__str_casei)) {
                 return -1;
-            } else if (pcmk__str_eq(value, PCMK__VALUE_YELLOW,
+            } else if (pcmk__str_eq(value, PCMK_VALUE_YELLOW,
                                     pcmk__str_casei)) {
                 rc = 0;
                 continue;

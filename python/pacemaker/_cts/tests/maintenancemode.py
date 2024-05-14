@@ -1,7 +1,7 @@
-""" Toggle nodes in and out of maintenance mode """
+"""Toggle nodes in and out of maintenance mode."""
 
 __all__ = ["MaintenanceMode"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -22,16 +22,15 @@ from pacemaker._cts.timer import Timer
 
 
 class MaintenanceMode(CTSTest):
-    """ A concrete test that toggles nodes in and out of maintenance mode """
+    """Toggle nodes in and ount of maintenance mode."""
 
     def __init__(self, cm):
-        """ Create a new MaintenanceMode instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new MaintenanceMode instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.benchmark = True
@@ -43,8 +42,7 @@ class MaintenanceMode(CTSTest):
         self._startall = SimulStartLite(cm)
 
     def _toggle_maintenance_mode(self, node, enabled):
-        """ Toggle maintenance mode on the given node """
-
+        """Toggle maintenance mode on the given node."""
         pats = [
             self.templates["Pat:DC_IDLE"]
         ]
@@ -83,8 +81,7 @@ class MaintenanceMode(CTSTest):
         return ""
 
     def _insert_maintenance_dummy(self, node):
-        """ Create a dummy resource on the given node """
-
+        """Create a dummy resource on the given node."""
         pats = [
             ("%s.*" % node) + (self.templates["Pat:RscOpOK"] % ("start", self._rid))
         ]
@@ -104,8 +101,7 @@ class MaintenanceMode(CTSTest):
         return ""
 
     def _remove_maintenance_dummy(self, node):
-        """ Remove the previously created dummy resource on the given node """
-
+        """Remove the previously created dummy resource on the given node."""
         pats = [
             self.templates["Pat:RscOpOK"] % ("stop", self._rid)
         ]
@@ -124,8 +120,7 @@ class MaintenanceMode(CTSTest):
         return ""
 
     def _managed_rscs(self, node):
-        """ Return a list of all resources managed by the cluster """
-
+        """Return a list of all resources managed by the cluster."""
         rscs = []
         (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
 
@@ -139,10 +134,7 @@ class MaintenanceMode(CTSTest):
         return rscs
 
     def _verify_resources(self, node, rscs, managed):
-        """ Verify that all resources in rscList are managed if they are expected
-            to be, or unmanaged if they are expected to be.
-        """
-
+        """Verify that all resources are managed or unmanaged as expected."""
         managed_rscs = rscs
         managed_str = "managed"
 
@@ -171,8 +163,7 @@ class MaintenanceMode(CTSTest):
         return False
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         verify_managed = False
         verify_unmanaged = False
@@ -227,8 +218,7 @@ class MaintenanceMode(CTSTest):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         return [
             r"Updating failcount for %s" % self._rid,
             r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self._rid,

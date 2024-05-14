@@ -1,7 +1,7 @@
-""" Base classes for CTS tests """
+"""Base classes for CTS tests."""
 
 __all__ = ["RemoteDriver"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -25,21 +25,22 @@ from pacemaker._cts.timer import Timer
 
 
 class RemoteDriver(CTSTest):
-    """ A specialized base class for cluster tests that run on Pacemaker
-        Remote nodes.  This builds on top of CTSTest to provide methods
-        for starting and stopping services and resources, and managing
-        remote nodes.  This is still just an abstract class -- specific
-        tests need to implement their own specialized behavior.
+    """
+    A specialized base class for cluster tests that run on Pacemaker Remote nodes.
+
+    This builds on top of CTSTest to provide methods for starting and stopping
+    services and resources, and managing remote nodes.  This is still just an
+    abstract class -- specific tests need to implement their own specialized
+    behavior.
     """
 
     def __init__(self, cm):
-        """ Create a new RemoteDriver instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new RemoteDriver instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "RemoteDriver"
 
@@ -54,10 +55,7 @@ class RemoteDriver(CTSTest):
         self.reset()
 
     def reset(self):
-        """ Reset the state of this test back to what it was before the test
-            was run
-        """
-
+        """Reset the state of this test back to what it was before the test was run."""
         self.failed = False
         self.fail_string = ""
 
@@ -67,8 +65,7 @@ class RemoteDriver(CTSTest):
         self._remote_use_reconnect_interval = self._env.random_gen.choice([True, False])
 
     def fail(self, msg):
-        """ Mark test as failed """
-
+        """Mark test as failed."""
         self.failed = True
 
         # Always log the failure.
@@ -79,11 +76,12 @@ class RemoteDriver(CTSTest):
             self.fail_string = msg
 
     def _get_other_node(self, node):
-        """ Get the first cluster node out of the environment that is not the
-            given node.  Typically, this is used to find some node that will
-            still be active that we can run cluster commands on.
         """
+        Get the first cluster node out of the environment that is not the given node.
 
+        Typically, this is used to find some node that will still be active that
+        we can run cluster commands on.
+        """
         for othernode in self._env["nodes"]:
             if othernode == node:
                 # we don't want to try and use the cib that we just shutdown.
@@ -93,58 +91,60 @@ class RemoteDriver(CTSTest):
             return othernode
 
     def _del_rsc(self, node, rsc):
-        """ Delete the given named resource from the cluster.  The given `node`
-            is the cluster node on which we should *not* run the delete command.
         """
+        Delete the given named resource from the cluster.
 
+        The given `node` is the cluster node on which we should *not* run the
+        delete command.
+        """
         othernode = self._get_other_node(node)
         (rc, _) = self._rsh(othernode, "crm_resource -D -r %s -t primitive" % rsc)
         if rc != 0:
             self.fail("Removal of resource '%s' failed" % rsc)
 
     def _add_rsc(self, node, rsc_xml):
-        """ Add a resource given in XML format to the cluster.  The given `node`
-            is the cluster node on which we should *not* run the add command.
         """
+        Add a resource given in XML format to the cluster.
 
+        The given `node` is the cluster node on which we should *not* run the
+        add command.
+        """
         othernode = self._get_other_node(node)
         (rc, _) = self._rsh(othernode, "cibadmin -C -o resources -X '%s'" % rsc_xml)
         if rc != 0:
             self.fail("resource creation failed")
 
     def _add_primitive_rsc(self, node):
-        """ Add a primitive heartbeat resource for the remote node to the
-            cluster.  The given `node` is the cluster node on which we should
-            *not* run the add command.
         """
+        Add a primitive heartbeat resource for the remote node to the cluster.
 
+        The given `node` is the cluster node on which we should *not* run the
+        add command.
+        """
         rsc_xml = """
 <primitive class="ocf" id="%(node)s" provider="heartbeat" type="Dummy">
   <meta_attributes id="%(node)s-meta_attributes"/>
   <operations>
     <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
   </operations>
-</primitive>""" % {
-    "node": self._remote_rsc
-}
+</primitive>""" % {"node": self._remote_rsc}
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
             self._remote_rsc_added = True
 
     def _add_connection_rsc(self, node):
-        """ Add a primitive connection resource for the remote node to the
-            cluster.  The given `node` is teh cluster node on which we should
-            *not* run the add command.
         """
+        Add a primitive connection resource for the remote node to the cluster.
 
+        The given `node` is the cluster node on which we should *not* run the
+        add command.
+        """
         rsc_xml = """
 <primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
   <instance_attributes id="%(node)s-instance_attributes">
     <nvpair id="%(node)s-instance_attributes-server" name="server" value="%(server)s"/>
-""" % {
-    "node": self._remote_node, "server": node
-}
+""" % {"node": self._remote_node, "server": node}
 
         if self._remote_use_reconnect_interval:
             # Set reconnect interval on resource
@@ -159,17 +159,14 @@ class RemoteDriver(CTSTest):
     <op id="%(node)s-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
   </operations>
 </primitive>
-""" % {
-    "node": self._remote_node
-}
+""" % {"node": self._remote_node}
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
             self._remote_node_added = True
 
     def _disable_services(self, node):
-        """ Disable the corosync and pacemaker services on the given node """
-
+        """Disable the corosync and pacemaker services on the given node."""
         self._corosync_enabled = self._env.service_is_enabled(node, "corosync")
         if self._corosync_enabled:
             self._env.disable_service(node, "corosync")
@@ -179,8 +176,7 @@ class RemoteDriver(CTSTest):
             self._env.disable_service(node, "pacemaker")
 
     def _enable_services(self, node):
-        """ Enable the corosync and pacemaker services on the given node """
-
+        """Enable the corosync and pacemaker services on the given node."""
         if self._corosync_enabled:
             self._env.enable_service(node, "corosync")
 
@@ -188,8 +184,7 @@ class RemoteDriver(CTSTest):
             self._env.enable_service(node, "pacemaker")
 
     def _stop_pcmk_remote(self, node):
-        """ Stop the Pacemaker Remote service on the given node """
-
+        """Stop the Pacemaker Remote service on the given node."""
         for _ in range(10):
             (rc, _) = self._rsh(node, "service pacemaker_remote stop")
             if rc != 0:
@@ -198,8 +193,7 @@ class RemoteDriver(CTSTest):
                 break
 
     def _start_pcmk_remote(self, node):
-        """ Start the Pacemaker Remote service on the given node """
-
+        """Start the Pacemaker Remote service on the given node."""
         for _ in range(10):
             (rc, _) = self._rsh(node, "service pacemaker_remote start")
             if rc != 0:
@@ -209,21 +203,20 @@ class RemoteDriver(CTSTest):
                 break
 
     def _freeze_pcmk_remote(self, node):
-        """ Simulate a Pacemaker Remote daemon failure """
-
+        """Simulate a Pacemaker Remote daemon failure."""
         self._rsh(node, "killall -STOP pacemaker-remoted")
 
     def _resume_pcmk_remote(self, node):
-        """ Simulate the Pacemaker Remote daemon recovering """
-
+        """Simulate the Pacemaker Remote daemon recovering."""
         self._rsh(node, "killall -CONT pacemaker-remoted")
 
     def _start_metal(self, node):
-        """ Setup a Pacemaker Remote configuration.  Remove any existing
-            connection resources or nodes.  Start the pacemaker_remote service.
-            Create a connection resource.
         """
+        Set up a Pacemaker Remote configuration.
 
+        Remove any existing connection resources or nodes.  Start the
+        pacemaker_remote service.  Create a connection resource.
+        """
         # Cluster nodes are reused as remote nodes in remote tests. If cluster
         # services were enabled at boot, in case the remote node got fenced, the
         # cluster node would join instead of the expected remote one. Meanwhile
@@ -266,10 +259,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def migrate_connection(self, node):
-        """ Move the remote connection resource from the node it's currently
-            running on to any other available node
-        """
-
+        """Move the remote connection resource to any other available node."""
         if self.failed:
             return
 
@@ -294,10 +284,11 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def fail_rsc(self, node):
-        """ Cause the dummy resource running on a Pacemaker Remote node to fail
-            and verify that the failure is logged correctly
         """
+        Cause the dummy resource running on a Pacemaker Remote node to fail.
 
+        Verify that the failure is logged correctly.
+        """
         if self.failed:
             return
 
@@ -321,11 +312,12 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
 
     def fail_connection(self, node):
-        """ Cause the remote connection resource to fail and verify that the
-            node is fenced and the connection resource is restarted on another
-            node.
         """
+        Cause the remote connection resource to fail.
 
+        Verify that the node is fenced and the connection resource is restarted
+        on another node.
+        """
         if self.failed:
             return
 
@@ -378,8 +370,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def _add_dummy_rsc(self, node):
-        """ Add a dummy resource that runs on the Pacemaker Remote node """
-
+        """Add a dummy resource that runs on the Pacemaker Remote node."""
         if self.failed:
             return
 
@@ -409,8 +400,7 @@ class RemoteDriver(CTSTest):
             self.fail("Unmatched patterns: %s" % watch.unmatched)
 
     def test_attributes(self, node):
-        """ Verify that attributes can be set on the Pacemaker Remote node """
-
+        """Verify that attributes can be set on the Pacemaker Remote node."""
         if self.failed:
             return
 
@@ -431,11 +421,12 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to delete remote-node attribute")
 
     def cleanup_metal(self, node):
-        """ Clean up the Pacemaker Remote node configuration previously created by
-            _setup_metal.  Stop and remove dummy resources and connection resources.
-            Stop the pacemaker_remote service.  Remove the remote node itself.
         """
+        Clean up the Pacemaker Remote node configuration previously created by _setup_metal.
 
+        Stop and remove dummy resources and connection resources.  Stop the
+        pacemaker_remote service.  Remove the remote node itself.
+        """
         self._enable_services(node)
 
         if not self._pcmk_started:
@@ -483,10 +474,11 @@ class RemoteDriver(CTSTest):
             self._rsh(self._get_other_node(node), "crm_node --force --remove %s" % self._remote_node)
 
     def _setup_env(self, node):
-        """ Setup the environment to allow Pacemaker Remote to function.  This
-            involves generating a key and copying it to all nodes in the cluster.
         """
+        Set up the environment to allow Pacemaker Remote to function.
 
+        This involves generating a key and copying it to all nodes in the cluster.
+        """
         self._remote_node = "remote-%s" % node
 
         # we are assuming if all nodes have a key, that it is
@@ -511,8 +503,7 @@ class RemoteDriver(CTSTest):
         os.unlink(keyfile)
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration. """
-
+        """Return True if this test is applicable in the current test configuration."""
         if not CTSTest.is_applicable(self):
             return False
 
@@ -524,10 +515,7 @@ class RemoteDriver(CTSTest):
         return True
 
     def start_new_test(self, node):
-        """ Prepare a remote test for running by setting up its environment
-            and resources
-        """
-
+        """Prepare a remote test for running by setting up its environment and resources."""
         self.incr("calls")
         self.reset()
 
@@ -541,14 +529,12 @@ class RemoteDriver(CTSTest):
         return True
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         raise NotImplementedError
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return list of errors which should be ignored."""
         return [
             r"""is running on remote.*which isn't allowed""",
             r"""Connection terminated""",

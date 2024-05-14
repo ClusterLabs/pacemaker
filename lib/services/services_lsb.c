@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,63 +18,67 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/common/xml.h>
 #include <crm/services.h>
 #include "services_private.h"
 #include "services_lsb.h"
 
+// @TODO Use XML string constants and maybe a real XML object
 #define lsb_metadata_template  \
-    "<?xml version='1.0'?>\n"                                           \
-    "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"                 \
-    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
-    "  <version>1.0</version>\n"                                        \
-    "  <longdesc lang='en'>\n"                                          \
-    "%s"                                                                \
-    "  </longdesc>\n"                                                   \
-    "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
-    "  <parameters>\n"                                                  \
-    "  </parameters>\n"                                                 \
-    "  <actions>\n"                                                     \
-    "    <action name='meta-data'    timeout='5' />\n"                  \
-    "    <action name='start'        timeout='15' />\n"                 \
-    "    <action name='stop'         timeout='15' />\n"                 \
-    "    <action name='status'       timeout='15' />\n"                 \
-    "    <action name='restart'      timeout='15' />\n"                 \
-    "    <action name='force-reload' timeout='15' />\n"                 \
-    "    <action name='monitor'      timeout='15' interval='15' />\n"   \
-    "  </actions>\n"                                                    \
-    "  <special tag='LSB'>\n"                                           \
-    "    <Provides>%s</Provides>\n"                                     \
-    "    <Required-Start>%s</Required-Start>\n"                         \
-    "    <Required-Stop>%s</Required-Stop>\n"                           \
-    "    <Should-Start>%s</Should-Start>\n"                             \
-    "    <Should-Stop>%s</Should-Stop>\n"                               \
-    "    <Default-Start>%s</Default-Start>\n"                           \
-    "    <Default-Stop>%s</Default-Stop>\n"                             \
-    "  </special>\n"                                                    \
-    "</resource-agent>\n"
+    "<?xml " PCMK_XA_VERSION "='1.0'?>\n"                                     \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                            \
+        PCMK_XA_NAME "='%s' "                                                 \
+        PCMK_XA_VERSION "='" PCMK_DEFAULT_AGENT_VERSION "'>\n"                \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                      \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "='" PCMK__VALUE_EN "'>\n"        \
+        "%s"                                                                  \
+    "  </" PCMK_XE_LONGDESC ">\n"                                             \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "='" PCMK__VALUE_EN "'>"         \
+        "%s"                                                                  \
+      "</" PCMK_XE_SHORTDESC ">\n"                                            \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                           \
+    "  <" PCMK_XE_ACTIONS ">\n"                                               \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='" PCMK_ACTION_META_DATA "'"    \
+                           " " PCMK_META_TIMEOUT "='5s' />\n"                 \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='" PCMK_ACTION_START "'"        \
+                           " " PCMK_META_TIMEOUT "='15s' />\n"                \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='" PCMK_ACTION_STOP "'"         \
+                           " " PCMK_META_TIMEOUT "='15s' />\n"                \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='" PCMK_ACTION_STATUS "'"       \
+                           " " PCMK_META_TIMEOUT "='15s' />\n"                \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='restart'"                      \
+                           " " PCMK_META_TIMEOUT "='15s' />\n"                \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='force-reload'"                 \
+                           " " PCMK_META_TIMEOUT "='15s' />\n"                \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "='" PCMK_ACTION_MONITOR "'"      \
+                           " " PCMK_META_TIMEOUT "='15s'"                     \
+                           " " PCMK_META_INTERVAL "='15s' />\n"               \
+    "  </" PCMK_XE_ACTIONS ">\n"                                              \
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "='LSB'>\n"                         \
+    "    <Provides>%s</Provides>\n"                                           \
+    "    <Required-Start>%s</Required-Start>\n"                               \
+    "    <Required-Stop>%s</Required-Stop>\n"                                 \
+    "    <Should-Start>%s</Should-Start>\n"                                   \
+    "    <Should-Stop>%s</Should-Stop>\n"                                     \
+    "    <Default-Start>%s</Default-Start>\n"                                 \
+    "    <Default-Stop>%s</Default-Stop>\n"                                   \
+    "  </" PCMK_XE_SPECIAL ">\n"                                              \
+    "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 /* See "Comment Conventions for Init Scripts" in the LSB core specification at:
  * http://refspecs.linuxfoundation.org/lsb.shtml
  */
-#define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
-#define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
-#define PROVIDES    "# Provides:"
-#define REQ_START   "# Required-Start:"
-#define REQ_STOP    "# Required-Stop:"
-#define SHLD_START  "# Should-Start:"
-#define SHLD_STOP   "# Should-Stop:"
-#define DFLT_START  "# Default-Start:"
-#define DFLT_STOP   "# Default-Stop:"
-#define SHORT_DSCR  "# Short-Description:"
-#define DESCRIPTION "# Description:"
-
-#define lsb_meta_helper_free_value(m)           \
-    do {                                        \
-        if ((m) != NULL) {                      \
-            xmlFree(m);                         \
-            (m) = NULL;                         \
-        }                                       \
-    } while(0)
+#define LSB_INITSCRIPT_INFOBEGIN_TAG    "### BEGIN INIT INFO"
+#define LSB_INITSCRIPT_INFOEND_TAG      "### END INIT INFO"
+#define PROVIDES                        "# Provides:"
+#define REQUIRED_START                  "# Required-Start:"
+#define REQUIRED_STOP                   "# Required-Stop:"
+#define SHOULD_START                    "# Should-Start:"
+#define SHOULD_STOP                     "# Should-Stop:"
+#define DEFAULT_START                   "# Default-Start:"
+#define DEFAULT_STOP                    "# Default-Stop:"
+#define SHORT_DESC                      "# Short-Description:"
+#define DESCRIPTION                     "# Description:"
 
 /*!
  * \internal
@@ -87,10 +91,13 @@
  * \return TRUE if value was set, FALSE otherwise
  */
 static inline gboolean
-lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
+lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
 {
-    if (!*value && pcmk__starts_with(line, prefix)) {
-        *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
+    /* @TODO Perhaps update later to use pcmk__xml_needs_escape(). Involves many
+     * extra variables in the caller.
+     */
+    if ((*value == NULL) && pcmk__starts_with(line, prefix)) {
+        *value = pcmk__xml_escape(line + strlen(prefix), pcmk__xml_escape_text);
         return TRUE;
     }
     return FALSE;
@@ -102,15 +109,15 @@ services__get_lsb_metadata(const char *type, char **output)
     char ra_pathname[PATH_MAX] = { 0, };
     FILE *fp = NULL;
     char buffer[1024] = { 0, };
-    char *provides = NULL;
-    char *req_start = NULL;
-    char *req_stop = NULL;
-    char *shld_start = NULL;
-    char *shld_stop = NULL;
-    char *dflt_start = NULL;
-    char *dflt_stop = NULL;
-    char *s_dscrpt = NULL;
-    char *xml_l_dscrpt = NULL;
+    gchar *provides = NULL;
+    gchar *required_start = NULL;
+    gchar *required_stop = NULL;
+    gchar *should_start = NULL;
+    gchar *should_stop = NULL;
+    gchar *default_start = NULL;
+    gchar *default_stop = NULL;
+    gchar *short_desc = NULL;
+    gchar *long_desc = NULL;
     bool in_header = FALSE;
 
     if (type[0] == '/') {
@@ -142,30 +149,31 @@ services__get_lsb_metadata(const char *type, char **output)
         if (lsb_meta_helper_get_value(buffer, &provides, PROVIDES)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &req_start, REQ_START)) {
+        if (lsb_meta_helper_get_value(buffer, &required_start,
+                                      REQUIRED_START)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &req_stop, REQ_STOP)) {
+        if (lsb_meta_helper_get_value(buffer, &required_stop, REQUIRED_STOP)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &shld_start, SHLD_START)) {
+        if (lsb_meta_helper_get_value(buffer, &should_start, SHOULD_START)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &shld_stop, SHLD_STOP)) {
+        if (lsb_meta_helper_get_value(buffer, &should_stop, SHOULD_STOP)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &dflt_start, DFLT_START)) {
+        if (lsb_meta_helper_get_value(buffer, &default_start, DEFAULT_START)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &dflt_stop, DFLT_STOP)) {
+        if (lsb_meta_helper_get_value(buffer, &default_stop, DEFAULT_STOP)) {
             continue;
         }
-        if (lsb_meta_helper_get_value(buffer, &s_dscrpt, SHORT_DSCR)) {
+        if (lsb_meta_helper_get_value(buffer, &short_desc, SHORT_DESC)) {
             continue;
         }
 
         /* Long description may cross multiple lines */
-        if ((xml_l_dscrpt == NULL) // haven't already found long description
+        if ((long_desc == NULL)  // Haven't already found long description
             && pcmk__starts_with(buffer, DESCRIPTION)) {
             bool processed_line = TRUE;
             GString *desc = g_string_sized_new(2048);
@@ -192,9 +200,7 @@ services__get_lsb_metadata(const char *type, char **output)
             }
 
             // Make long description safe to use in XML
-            xml_l_dscrpt =
-                (char *) xmlEncodeEntitiesReentrant(NULL,
-                                                    (pcmkXmlStr) desc->str);
+            long_desc = pcmk__xml_escape(desc->str, pcmk__xml_escape_text);
             g_string_free(desc, TRUE);
 
             if (processed_line) {
@@ -214,28 +220,25 @@ services__get_lsb_metadata(const char *type, char **output)
     fclose(fp);
 
     *output = crm_strdup_printf(lsb_metadata_template, type,
-                                (xml_l_dscrpt? xml_l_dscrpt : type),
-                                (s_dscrpt? s_dscrpt : type),
-                                (provides? provides : ""),
-                                (req_start? req_start : ""),
-                                (req_stop? req_stop : ""),
-                                (shld_start? shld_start : ""),
-                                (shld_stop? shld_stop : ""),
-                                (dflt_start? dflt_start : ""),
-                                (dflt_stop? dflt_stop : ""));
+                                pcmk__s(long_desc, type),
+                                pcmk__s(short_desc, type),
+                                pcmk__s(provides, ""),
+                                pcmk__s(required_start, ""),
+                                pcmk__s(required_stop, ""),
+                                pcmk__s(should_start, ""),
+                                pcmk__s(should_stop, ""),
+                                pcmk__s(default_start, ""),
+                                pcmk__s(default_stop, ""));
 
-    lsb_meta_helper_free_value(xml_l_dscrpt);
-    lsb_meta_helper_free_value(s_dscrpt);
-    lsb_meta_helper_free_value(provides);
-    lsb_meta_helper_free_value(req_start);
-    lsb_meta_helper_free_value(req_stop);
-    lsb_meta_helper_free_value(shld_start);
-    lsb_meta_helper_free_value(shld_stop);
-    lsb_meta_helper_free_value(dflt_start);
-    lsb_meta_helper_free_value(dflt_stop);
-
-    crm_trace("Created fake metadata: %llu",
-              (unsigned long long) strlen(*output));
+    g_free(long_desc);
+    g_free(short_desc);
+    g_free(provides);
+    g_free(required_start);
+    g_free(required_stop);
+    g_free(should_start);
+    g_free(should_stop);
+    g_free(default_start);
+    g_free(default_stop);
     return pcmk_ok;
 }
 

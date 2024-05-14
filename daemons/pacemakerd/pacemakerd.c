@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,10 @@
 
 #include <crm_internal.h>
 #include "pacemakerd.h"
+
+#if SUPPORT_COROSYNC
+#include "pcmkd_corosync.h"
+#endif
 
 #include <pwd.h>
 #include <errno.h>
@@ -21,8 +25,8 @@
 #include <sys/resource.h>
 
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
-#include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc_pacemakerd.h>
 #include <crm/common/output_internal.h>
@@ -60,18 +64,20 @@ static int
 pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
 
-    pcmk__output_xml_create_parent(out, "pacemakerd",
-                                   "version", PACEMAKER_VERSION,
-                                   "build", BUILD_VERSION,
-                                   "feature_set", CRM_FEATURE_SET,
+    pcmk__output_xml_create_parent(out, PCMK_XE_PACEMAKERD,
+                                   PCMK_XA_VERSION, PACEMAKER_VERSION,
+                                   PCMK_XA_BUILD, BUILD_VERSION,
+                                   PCMK_XA_FEATURE_SET, CRM_FEATURE_SET,
                                    NULL);
-    out->begin_list(out, NULL, NULL, "features");
+    out->begin_list(out, NULL, NULL, PCMK_XE_FEATURES);
 
     for (char **s = feature_list; *s != NULL; s++) {
-        pcmk__output_create_xml_text_node(out, "feature", *s);
+        pcmk__output_create_xml_text_node(out, PCMK_XE_FEATURE, *s);
     }
 
     out->end_list(out);
+
+    pcmk__output_xml_pop_parent(out);
 
     g_strfreev(feature_list);
     return pcmk_rc_ok;
@@ -92,7 +98,7 @@ pid_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 static gboolean
 standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.standby = TRUE;
-    pcmk__set_env_option(PCMK__ENV_NODE_START_STATE, "standby", false);
+    pcmk__set_env_option(PCMK__ENV_NODE_START_STATE, PCMK_VALUE_STANDBY, false);
     return TRUE;
 }
 
@@ -297,8 +303,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname());
-
     pcmk__register_messages(out, fmt_functions);
 
     if (options.features) {
@@ -313,7 +317,7 @@ main(int argc, char **argv)
     }
 
     // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
-    pcmk__set_env_option(PCMK__ENV_MCP, "true", true);
+    pcmk__set_env_option(PCMK__ENV_MCP, PCMK_VALUE_TRUE, true);
 
     if (options.shutdown) {
         pcmk__cli_init_logging("pacemakerd", args->verbosity);
@@ -402,7 +406,7 @@ main(int argc, char **argv)
     {
         const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
-        if (!pcmk__str_eq(facility, PCMK__VALUE_NONE,
+        if (!pcmk__str_eq(facility, PCMK_VALUE_NONE,
                           pcmk__str_casei|pcmk__str_null_matches)) {
             pcmk__set_env_option("LOGFACILITY", facility, true);
         }
@@ -444,7 +448,7 @@ main(int argc, char **argv)
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
         crm_notice("Waiting for startup-trigger from SBD.");
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_WAITPING;
+        pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
         if (running_with_sbd) {
@@ -452,7 +456,7 @@ main(int argc, char **argv)
                      "by your SBD version) improve reliability of "
                      "interworking between SBD & pacemaker.");
         }
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+        pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
         init_children_processes(NULL);
     }
 

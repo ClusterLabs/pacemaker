@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ setup(void **state) {
     crm_xml_init();
 
     path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
-    input = filename2xml(path);
+    input = pcmk__xml_read(path);
     free(path);
 
     if (input == NULL) {
@@ -43,16 +43,16 @@ setup(void **state) {
         return 1;
     }
 
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_no_counts|pcmk_sched_no_compat);
     scheduler->input = input;
 
     cluster_status(scheduler);
 
     /* Get references to the cluster nodes so we don't have to find them repeatedly. */
-    cluster01 = pe_find_node(scheduler->nodes, "cluster01");
-    cluster02 = pe_find_node(scheduler->nodes, "cluster02");
-    httpd_bundle_0 = pe_find_node(scheduler->nodes, "httpd-bundle-0");
+    cluster01 = pcmk_find_node(scheduler, "cluster01");
+    cluster02 = pcmk_find_node(scheduler, "cluster02");
+    httpd_bundle_0 = pcmk_find_node(scheduler, "httpd-bundle-0");
 
     /* Get references to several resources we use frequently. */
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
@@ -539,7 +539,7 @@ bundle_rsc(void **state) {
 }
 
 static bool
-bundle_first_replica(pe__bundle_replica_t *replica, void *user_data)
+bundle_first_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_resource_t *ip_0 = replica->ip;
     pcmk_resource_t *child_0 = replica->child;

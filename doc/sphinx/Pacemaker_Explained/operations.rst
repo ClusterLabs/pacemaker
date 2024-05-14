@@ -38,113 +38,160 @@ two operations for the same resource with the same name and interval.
 Operation Properties
 ####################
 
-Operation properties may be specified directly in the ``op`` element as
-XML attributes, or in a separate ``meta_attributes`` block as ``nvpair`` elements.
-XML attributes take precedence over ``nvpair`` elements if both are specified.
+The ``id``, ``name``, ``interval``, and ``role`` operation properties may be
+specified only as XML attributes of the ``op`` element. Other operation
+properties may be specified in any of the following ways, from highest
+precedence to lowest:
 
-.. table:: **Properties of an Operation**
+* directly in the ``op`` element as an XML attribute
+* in an ``nvpair`` element within a ``meta_attributes`` element within the
+  ``op`` element
+* in an ``nvpair`` element within a ``meta_attributes`` element within
+  :ref:`operation defaults <s-operation-defaults>`
+
+If not specified, the default from the table below is used.
+
+.. list-table:: **Operation Properties**
    :class: longtable
-   :widths: 1 2 3
+   :widths: 2 2 3 4
+   :header-rows: 1
 
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | Field          | Default                           | Description                                         |
-   +================+===================================+=====================================================+
-   | id             |                                   | .. index::                                          |
-   |                |                                   |    single: id; action property                      |
-   |                |                                   |    single: action; property, id                     |
-   |                |                                   |                                                     |
-   |                |                                   | A unique name for the operation.                    |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | name           |                                   | .. index::                                          |
-   |                |                                   |    single: name; action property                    |
-   |                |                                   |    single: action; property, name                   |
-   |                |                                   |                                                     |
-   |                |                                   | The action to perform. This can be any action       |
-   |                |                                   | supported by the agent; common values include       |
-   |                |                                   | ``monitor``, ``start``, and ``stop``.               |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | interval       | 0                                 | .. index::                                          |
-   |                |                                   |    single: interval; action property                |
-   |                |                                   |    single: action; property, interval               |
-   |                |                                   |                                                     |
-   |                |                                   | How frequently (in seconds) to perform the          |
-   |                |                                   | operation. A value of 0 means "when needed".        |
-   |                |                                   | A positive value defines a *recurring action*,      |
-   |                |                                   | which is typically used with                        |
-   |                |                                   | :ref:`monitor <s-resource-monitoring>`.             |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | timeout        |                                   | .. index::                                          |
-   |                |                                   |    single: timeout; action property                 |
-   |                |                                   |    single: action; property, timeout                |
-   |                |                                   |                                                     |
-   |                |                                   | How long to wait before declaring the action        |
-   |                |                                   | has failed                                          |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | on-fail        | Varies by action:                 | .. index::                                          |
-   |                |                                   |    single: on-fail; action property                 |
-   |                | * ``stop``: ``fence`` if          |    single: action; property, on-fail                |
-   |                |   ``stonith-enabled`` is true     |                                                     |
-   |                |   or ``block`` otherwise          | The action to take if this action ever fails.       |
-   |                | * ``demote``: ``on-fail`` of the  | Allowed values:                                     |
-   |                |   ``monitor`` action with         |                                                     |
-   |                |   ``role`` set to ``Promoted``,   | * ``ignore:`` Pretend the resource did not fail.    |
-   |                |   if present, enabled, and        | * ``block:`` Don't perform any further operations   |
-   |                |   configured to a value other     |   on the resource.                                  |
-   |                |   than ``demote``, or ``restart`` | * ``stop:`` Stop the resource and do not start      |
-   |                |   otherwise                       |   it elsewhere.                                     |
-   |                | * all other actions: ``restart``  | * ``demote:`` Demote the resource, without a        |
-   |                |                                   |   full restart. This is valid only for ``promote``  |
-   |                |                                   |   actions, and for ``monitor`` actions with both    |
-   |                |                                   |   a nonzero ``interval`` and ``role`` set to        |
-   |                |                                   |   ``Promoted``; for any other action, a             |
-   |                |                                   |   configuration error will be logged, and the       |
-   |                |                                   |   default behavior will be used. *(since 2.0.5)*    |
-   |                |                                   | * ``restart:`` Stop the resource and start it       |
-   |                |                                   |   again (possibly on a different node).             |
-   |                |                                   | * ``fence:`` STONITH the node on which the          |
-   |                |                                   |   resource failed.                                  |
-   |                |                                   | * ``standby:`` Move *all* resources away from the   |
-   |                |                                   |   node on which the resource failed.                |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | enabled        | TRUE                              | .. _op_enabled:                                     |
-   |                |                                   |                                                     |
-   |                |                                   | .. index::                                          |
-   |                |                                   |    single: enabled; action property                 |
-   |                |                                   |    single: action; property, enabled                |
-   |                |                                   |                                                     |
-   |                |                                   | If ``false``, ignore this operation definition.     |
-   |                |                                   | This does not suppress all actions of this type,    |
-   |                |                                   | but is typically used to pause a recurring monitor. |
-   |                |                                   | This can complement the resource being unmanaged    |
-   |                |                                   | (:ref:`is-managed <is_managed>` set to ``false``),  |
-   |                |                                   | which does not stop recurring operations.           |
-   |                |                                   | Maintenance mode, which does stop configured this   |
-   |                |                                   | monitors, overrides this setting. Allowed values:   |
-   |                |                                   | ``true``, ``false``.                                |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | record-pending | TRUE                              | .. index::                                          |
-   |                |                                   |    single: record-pending; action property          |
-   |                |                                   |    single: action; property, record-pending         |
-   |                |                                   |                                                     |
-   |                |                                   | If ``true``, the intention to perform the operation |
-   |                |                                   | is recorded so that GUIs and CLI tools can indicate |
-   |                |                                   | that an operation is in progress.  This is best set |
-   |                |                                   | as an *operation default*                           |
-   |                |                                   | (see :ref:`s-operation-defaults`).  Allowed values: |
-   |                |                                   | ``true``, ``false``.                                |
-   +----------------+-----------------------------------+-----------------------------------------------------+
-   | role           |                                   | .. index::                                          |
-   |                |                                   |    single: role; action property                    |
-   |                |                                   |    single: action; property, role                   |
-   |                |                                   |                                                     |
-   |                |                                   | Run the operation only on node(s) that the cluster  |
-   |                |                                   | thinks should be in the specified role. This only   |
-   |                |                                   | makes sense for recurring ``monitor`` operations.   |
-   |                |                                   | Allowed (case-sensitive) values: ``Stopped``,       |
-   |                |                                   | ``Started``, and in the case of :ref:`promotable    |
-   |                |                                   | clone resources <s-resource-promotable>`,           |
-   |                |                                   | ``Unpromoted`` and ``Promoted``.                    |
-   +----------------+-----------------------------------+-----------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _op_id:
+       
+       .. index::
+          pair: op; id
+          single: id; action property
+          single: action; property, id
+       
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique identifier for the XML element *(required)*
+   * - .. _op_name:
+       
+       .. index::
+          pair: op; name
+          single: name; action property
+          single: action; property, name
+       
+       name
+     - :ref:`text <text>`
+     - 
+     - An action name supported by the resource agent *(required)*
+   * - .. _op_interval:
+       
+       .. index::
+          pair: op; interval
+          single: interval; action property
+          single: action; property, interval
+       
+       interval
+     - :ref:`duration <duration>`
+     - 0
+     - If this is a positive value, Pacemaker will schedule recurring instances
+       of this operation at the given interval (which makes sense only with
+       :ref:`name <op_name>` set to :ref:`monitor <s-resource-monitoring>`). If
+       this is 0, Pacemaker will apply other properties configured for this
+       operation to instances that are scheduled as needed during normal
+       cluster operation. *(required)*
+   * - .. _op_role:
+       
+       .. index::
+          pair: op; role
+          single: role; action property
+          single: action; property, role
+       
+       role
+     - :ref:`enumeration <enumeration>`
+     - 
+     - If this is set, the operation configuration applies only on nodes where
+       the cluster expects the resource to be in the specified role. This makes
+       sense only for recurring monitors. Allowed values: ``Started``,
+       ``Stopped``, and in the case of :ref:`promotable clone resources
+       <s-resource-promotable>`, ``Unpromoted`` and ``Promoted``.
+   * - .. _op_timeout:
+       
+       .. index::
+          pair: op; timeout
+          single: timeout; action property
+          single: action; property, timeout
+       
+       timeout
+     - :ref:`timeout <timeout>`
+     - 20s
+     - If resource agent execution does not complete within this amount of
+       time, the action will be considered failed. **Note:** timeouts for
+       fencing agents are handled specially (see the :ref:`fencing` chapter).
+   * - .. _op_on_fail:
+       
+       .. index::
+          pair: op; on-fail
+          single: on-fail; action property
+          single: action; property, on-fail
+       
+       on-fail
+     - :ref:`enumeration <enumeration>`
+     - * If ``name`` is ``stop``: ``fence`` if
+         :ref:`stonith-enabled <stonith_enabled>` is true, otherwise ``block``
+       * If ``name`` is ``demote``: ``on-fail`` of the ``monitor`` action with
+         ``role`` set to ``Promoted``, if present, enabled, and configured to a
+         value other than ``demote``, or ``restart`` otherwise
+       * Otherwise: ``restart``
+     - How the cluster should respond to a failure of this action. Allowed
+       values:
+       
+       * ``ignore:`` Pretend the resource did not fail
+       * ``block:`` Do not perform any further operations on the resource
+       * ``stop:`` Stop the resource and leave it stopped
+       * ``demote:`` Demote the resource, without a full restart. This is valid
+         only for ``promote`` actions, and for ``monitor`` actions with both a
+         nonzero ``interval`` and ``role`` set to ``Promoted``; for any other
+         action, a configuration error will be logged, and the default behavior
+         will be used. *(since 2.0.5)*
+       * ``restart:`` Stop the resource, and start it again if allowed
+         (possibly on a different node)
+       * ``fence:`` Fence the node on which the resource failed
+       * ``standby:`` Put the node on which the resource failed in standby mode
+         (forcing *all* resources away)
+   * - .. _op_enabled:
+       
+       .. index::
+          pair: op; enabled
+          single: enabled; action property
+          single: action; property, enabled
+       
+       enabled
+     - :ref:`boolean <boolean>`
+     - true
+     - If ``false``, ignore this operation definition. This does not suppress
+       all actions of this type, but is typically used to pause a recurring
+       monitor. This can complement the resource being unmanaged
+       (:ref:`is-managed <is_managed>` set to ``false``), which does not stop
+       recurring operations. Maintenance mode, which does stop configured
+       monitors, overrides this setting.
+   * - .. _op_record_pending:
+       
+       .. index::
+          pair: op; record-pending
+          single: record-pending; action property
+          single: action; property, record-pending
+       
+       record-pending
+     - :ref:`boolean <boolean>`
+     - true
+     - Operation results are always recorded when the operation completes
+       (successful or not). If this is ``true``, operations will also be
+       recorded when initiated, so that status output can indicate that the
+       operation is in progress.
+
+.. note::
+
+   Only one action can be configured for any given combination of ``name`` and
+   ``interval``.
 
 .. note::
 

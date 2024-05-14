@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the Pacemaker project contributors
+ * Copyright 2017-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,20 +8,23 @@
  */
 
 #ifndef PCMK__XML_INTERNAL__H
-#  define PCMK__XML_INTERNAL__H
+#define PCMK__XML_INTERNAL__H
 
 /*
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
  */
 
-#  include <stdlib.h>
-#  include <stdio.h>
-#  include <string.h>
+#include <stdlib.h>
+#include <stdint.h>   // uint32_t
+#include <stdio.h>
+#include <string.h>
 
-#  include <crm/crm.h>  /* transitively imports qblog.h */
-#  include <crm/common/output_internal.h>
+#include <crm/crm.h>  /* transitively imports qblog.h */
+#include <crm/common/output_internal.h>
+#include <crm/common/xml_io_internal.h>
+#include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
 
-#  include <libxml/relaxng.h>
+#include <libxml/relaxng.h>
 
 /*!
  * \brief Base for directing lib{xml2,xslt} log into standard libqb backend
@@ -145,6 +148,7 @@ enum pcmk__xml_fmt_options {
     //! Include the closing tag of an XML element
     pcmk__xml_fmt_close      = (1 << 5),
 
+    // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
 
@@ -168,25 +172,27 @@ int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 
 /* search string to find CIB resources entries for cluster nodes */
-#define PCMK__XP_MEMBER_NODE_CONFIG \
-    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
+#define PCMK__XP_MEMBER_NODE_CONFIG                                 \
+    "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES    \
+    "/" PCMK_XE_NODE                                                \
+    "[not(@" PCMK_XA_TYPE ") or @" PCMK_XA_TYPE "='" PCMK_VALUE_MEMBER "']"
 
 /* search string to find CIB resources entries for guest nodes */
 #define PCMK__XP_GUEST_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
-    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
+    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" PCMK_XE_PRIMITIVE  \
+    "//" PCMK_XE_META_ATTRIBUTES "//" PCMK_XE_NVPAIR                    \
+    "[@" PCMK_XA_NAME "='" PCMK_META_REMOTE_NODE "']"
 
 /* search string to find CIB resources entries for remote nodes */
-#define PCMK__XP_REMOTE_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "[@type='remote'][@provider='pacemaker']"
+#define PCMK__XP_REMOTE_NODE_CONFIG                                     \
+    "//" PCMK_XE_CIB "//" PCMK_XE_CONFIGURATION "//" PCMK_XE_PRIMITIVE  \
+    "[@" PCMK_XA_TYPE "='" PCMK_VALUE_REMOTE "']"                       \
+    "[@" PCMK_XA_PROVIDER "='pacemaker']"
 
 /* search string to find CIB node status entries for pacemaker_remote nodes */
-#define PCMK__XP_REMOTE_NODE_STATUS \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
-    "[@" XML_NODE_IS_REMOTE "='true']"
+#define PCMK__XP_REMOTE_NODE_STATUS                                 \
+    "//" PCMK_XE_CIB "//" PCMK_XE_STATUS "//" PCMK__XE_NODE_STATE   \
+    "[@" PCMK_XA_REMOTE_NODE "='" PCMK_VALUE_TRUE "']"
 /*!
  * \internal
  * \brief Serialize XML (using libxml) into provided descriptor
@@ -208,14 +214,102 @@ enum pcmk__xml_artefact_ns {
 void pcmk__strip_xml_text(xmlNode *xml);
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
-xmlNode *pcmk__xe_match(const xmlNode *parent, const char *node_name,
-                        const char *attr_n, const char *attr_v);
+xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
+                              const char *attr_n, const char *attr_v);
 
+
+void pcmk__xe_remove_attr(xmlNode *element, const char *name);
+bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
+int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
+int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
+int pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags);
 
 GString *pcmk__element_xpath(const xmlNode *xml);
+
+/*!
+ * \internal
+ * \enum pcmk__xml_escape_type
+ * \brief Indicators of which XML characters to escape
+ *
+ * XML allows the escaping of special characters by replacing them with entity
+ * references (for example, <tt>"&quot;"</tt>) or character references (for
+ * example, <tt>"&#13;"</tt>).
+ *
+ * The special characters <tt>'&'</tt> (except as the beginning of an entity
+ * reference) and <tt>'<'</tt> are not allowed in their literal forms in XML
+ * character data. Character data is non-markup text (for example, the content
+ * of a text node). <tt>'>'</tt> is allowed under most circumstances; we escape
+ * it for safety and symmetry.
+ *
+ * For more details, see the "Character Data and Markup" section of the XML
+ * spec, currently section 2.4:
+ * https://www.w3.org/TR/xml/#dt-markup
+ *
+ * Attribute values are handled specially.
+ * * If an attribute value is delimited by single quotes, then single quotes
+ *   must be escaped within the value.
+ * * Similarly, if an attribute value is delimited by double quotes, then double
+ *   quotes must be escaped within the value.
+ * * A conformant XML processor replaces a literal whitespace character (tab,
+ *   newline, carriage return, space) in an attribute value with a space
+ *   (\c '#x20') character. However, a reference to a whitespace character (for
+ *   example, \c "&#x0A;" for \c '\n') does not get replaced.
+ *   * For more details, see the "Attribute-Value Normalization" section of the
+ *     XML spec, currently section 3.3.3. Note that the default attribute type
+ *     is CDATA; we don't deal with NMTOKENS, etc.:
+ *     https://www.w3.org/TR/xml/#AVNormalize
+ *
+ * Pacemaker always delimits attribute values with double quotes, so there's no
+ * need to escape single quotes.
+ *
+ * Newlines and tabs should be escaped in attribute values when XML is
+ * serialized to text, so that future parsing preserves them rather than
+ * normalizing them to spaces.
+ *
+ * We always escape carriage returns, so that they're not converted to spaces
+ * during attribute-value normalization and because displaying them as literals
+ * is messy.
+ */
+enum pcmk__xml_escape_type {
+    /*!
+     * For text nodes.
+     * * Escape \c '<', \c '>', and \c '&' using entity references.
+     * * Do not escape \c '\n' and \c '\t'.
+     * * Escape other non-printing characters using character references.
+     */
+    pcmk__xml_escape_text,
+
+    /*!
+     * For attribute values.
+     * * Escape \c '<', \c '>', \c '&', and \c '"' using entity references.
+     * * Escape \c '\n', \c '\t', and other non-printing characters using
+     *   character references.
+     */
+    pcmk__xml_escape_attr,
+
+    /* @COMPAT Drop escaping of at least '\n' and '\t' for
+     * pcmk__xml_escape_attr_pretty when openstack-info, openstack-floating-ip,
+     * and openstack-virtual-ip resource agents no longer depend on it.
+     *
+     * At time of writing, openstack-info may set a multiline value for the
+     * openstack_ports node attribute. The other two agents query the value and
+     * require it to be on one line with no spaces.
+     */
+    /*!
+     * For attribute values displayed in text output delimited by double quotes.
+     * * Escape \c '\n' as \c "\\n"
+     * * Escape \c '\r' as \c "\\r"
+     * * Escape \c '\t' as \c "\\t"
+     * * Escape \c '"' as \c "\\""
+     */
+    pcmk__xml_escape_attr_pretty,
+};
+
+bool pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type);
+char *pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type);
 
 /*!
  * \internal
@@ -239,6 +333,20 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
  */
 char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
                               const char *filespec);
+
+/*!
+ * \internal
+ * \brief Retrieve the value of the \c PCMK_XA_ID XML attribute
+ *
+ * \param[in] xml  XML element to check
+ *
+ * \return Value of the \c PCMK_XA_ID attribute (may be \c NULL)
+ */
+static inline const char *
+pcmk__xe_id(const xmlNode *xml)
+{
+    return crm_element_value(xml, PCMK_XA_ID);
+}
 
 /*!
  * \internal
@@ -296,25 +404,6 @@ pcmk__xml_next(const xmlNode *child)
 
 /*!
  * \internal
- * \brief Return first non-text child element of an XML node
- *
- * \param[in] parent  XML node to check
- *
- * \return First child element of \p parent (or NULL if none)
- */
-static inline xmlNode *
-pcmk__xe_first_child(const xmlNode *parent)
-{
-    xmlNode *child = (parent? parent->children : NULL);
-
-    while (child && (child->type != XML_ELEMENT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-/*!
- * \internal
  * \brief Return next non-text sibling element of an XML element
  *
  * \param[in] child  XML element to check
@@ -331,6 +420,34 @@ pcmk__xe_next(const xmlNode *child)
     }
     return next;
 }
+
+xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+xmlNode *pcmk__xe_next_same(const xmlNode *node);
+
+void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
+    G_GNUC_PRINTF(2, 3);
+
+/*!
+ * \internal
+ * \enum pcmk__xa_flags
+ * \brief Flags for operations affecting XML attributes
+ */
+enum pcmk__xa_flags {
+    //! Flag has no effect
+    pcmk__xaf_none          = 0U,
+
+    //! Don't overwrite existing values
+    pcmk__xaf_no_overwrite  = (1U << 0),
+
+    /*!
+     * Treat values as score updates where possible (see
+     * \c pcmk__xe_set_score())
+     */
+    pcmk__xaf_score_update  = (1U << 1),
+};
+
+int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
 
 /*!
  * \internal
@@ -383,6 +500,20 @@ pcmk__xe_first_attr(const xmlNode *xe)
 char *
 pcmk__xpath_node_id(const char *xpath, const char *node);
 
+/*!
+ * \internal
+ * \brief Print an informational message if an xpath query returned multiple
+ *        items with the same ID.
+ *
+ * \param[in,out] out       The output object
+ * \param[in]     search    The xpath search result, most typically the result of
+ *                          calling cib->cmds->query().
+ * \param[in]     name      The name searched for
+ */
+void
+pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
+                                 const char *name);
+
 /* internal XML-related utilities */
 
 enum xml_private_flags {
@@ -434,6 +565,9 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
                        int (*handler)(xmlNode *xml, void *userdata),
                        void *userdata);
 
+bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                            void *user_data);
+
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)
 {
@@ -441,8 +575,20 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
-gboolean pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
-                            xmlRelaxNGValidityErrorFunc error_handler, 
-                            void *error_handler_context);
+// @COMPAT Remove when v1 patchsets are removed
+xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
+
+// @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
+static inline const char *
+pcmk__map_element_name(const xmlNode *xml)
+{
+    if (xml == NULL) {
+        return NULL;
+    } else if (pcmk__xe_is(xml, PCMK__XE_PROMOTABLE_LEGACY)) {
+        return PCMK_XE_CLONE;
+    } else {
+        return (const char *) xml->name;
+    }
+}
 
 #endif // PCMK__XML_INTERNAL__H

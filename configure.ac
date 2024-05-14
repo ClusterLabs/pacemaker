@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2023 the Pacemaker project contributors
+dnl Copyright 2009-2024 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -533,6 +533,9 @@ AC_ARG_WITH([coverage],
 yes_no_try "$with_coverage" "no"
 with_coverage=$?
 
+AC_DEFINE_UNQUOTED([PCMK__WITH_COVERAGE], [$with_coverage], [Build with code coverage])
+AM_CONDITIONAL([BUILD_COVERAGE], [test $with_coverage -ne $DISABLED])
+
 AC_ARG_WITH([sanitizers],
   [AS_HELP_STRING([--with-sanitizers=...,...],
     [enable SANitizer build, do *NOT* use for production. Only ASAN/UBSAN/TSAN are currently supported])],
@@ -837,6 +840,11 @@ CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
 AC_DEFINE_UNQUOTED([CRM_SCHEMA_DIRECTORY], ["$CRM_SCHEMA_DIRECTORY"],
                    [Location for the Pacemaker Relax-NG Schema])
 AC_SUBST(CRM_SCHEMA_DIRECTORY)
+
+PCMK__REMOTE_SCHEMA_DIR="${localstatedir}/lib/pacemaker/schemas"
+AC_DEFINE_UNQUOTED([PCMK__REMOTE_SCHEMA_DIR], ["$PCMK__REMOTE_SCHEMA_DIR"],
+                   [Location to store Relax-NG Schema files on remote nodes])
+AC_SUBST(PCMK__REMOTE_SCHEMA_DIR)
 
 CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
@@ -1195,26 +1203,24 @@ AC_CHECK_DECLS([assert_float_equal], [], [], [[
     #include <cmocka.h>
 ]])
 
-cc_temp_flags "$CFLAGS -Wl,--wrap=uname"
+dnl ========================================================================
+dnl Byte size
+dnl ========================================================================
 
-WRAPPABLE_UNAME="no"
-
-AC_MSG_CHECKING([if uname() can be wrapped])
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <sys/utsname.h>
-int __wrap_uname(struct utsname *buf) {
-return 100;
-}
-int main(int argc, char **argv) {
-struct utsname x;
-return uname(&x) == 100 ? 0 : 1;
-}
-]])],
-                   [ WRAPPABLE_UNAME="yes" ], [ WRAPPABLE_UNAME="no"])
-AC_MSG_RESULT([$WRAPPABLE_UNAME])
-AM_CONDITIONAL([WRAPPABLE_UNAME], [test x"$WRAPPABLE_UNAME" = x"yes"])
-
-cc_restore_flags
+# Compile-time assert hack
+# https://jonjagger.blogspot.com/2017/07/compile-time-assertions-in-c.html
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <limits.h>]],
+                                   [[
+                                        switch (0) {
+                                            case 0:
+                                            case (CHAR_BIT == 8):
+                                                break;
+                                        }
+                                   ]])],
+                  [],
+                  [AC_MSG_FAILURE(m4_normalize([Pacemaker is not supported on
+                                                platforms where char is not 8
+                                                bits]))])
 
 dnl ========================================================================
 dnl Structures
@@ -2086,7 +2092,7 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [tools/crm_standby],
                   [tools/cibsecret],
                   [tools/pcmk_simtimes],
-                  [xml/version-diff.sh])
+                  [xml/rng-helper])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
@@ -2137,6 +2143,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/Makefile                                        \
                 lib/cib/Makefile                                    \
                 lib/cluster/Makefile                                \
+                lib/cluster/tests/Makefile                          \
+                lib/cluster/tests/cluster/Makefile                  \
+                lib/cluster/tests/cpg/Makefile                      \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
                 lib/common/tests/acl/Makefile                       \
@@ -2148,11 +2157,17 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
+                lib/common/tests/nodes/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/options/Makefile                   \
                 lib/common/tests/output/Makefile                    \
+                lib/common/tests/probes/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
+                lib/common/tests/resources/Makefile                 \
                 lib/common/tests/results/Makefile                   \
+                lib/common/tests/rules/Makefile                     \
+                lib/common/tests/scheduler/Makefile                 \
+                lib/common/tests/schemas/Makefile                   \
                 lib/common/tests/scores/Makefile                    \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
@@ -2163,6 +2178,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/libpacemaker.pc                                 \
                 lib/lrmd/Makefile                                   \
                 lib/pacemaker/Makefile                              \
+                lib/pacemaker/tests/Makefile                        \
+                lib/pacemaker/tests/pcmk_resource/Makefile          \
+                lib/pacemaker/tests/pcmk_ticket/Makefile            \
                 lib/pacemaker.pc                                    \
                 lib/pacemaker-cib.pc                                \
                 lib/pacemaker-cluster.pc                            \
@@ -2174,7 +2192,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pengine/Makefile                                \
                 lib/pengine/tests/Makefile                          \
                 lib/pengine/tests/native/Makefile                   \
-                lib/pengine/tests/rules/Makefile                    \
                 lib/pengine/tests/status/Makefile                   \
                 lib/pengine/tests/unpack/Makefile                   \
                 lib/pengine/tests/utils/Makefile                    \

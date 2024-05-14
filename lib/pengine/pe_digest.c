@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
@@ -33,7 +32,7 @@ extern bool pcmk__is_daemon;
 void
 pe__free_digests(gpointer ptr)
 {
-    op_digest_cache_t *data = ptr;
+    pcmk__op_digest_t *data = ptr;
 
     if (data != NULL) {
         free_xml(data->params_all);
@@ -96,7 +95,7 @@ attr_in_string(xmlAttrPtr a, void *user_data)
  * \param[in,out] scheduler    Scheduler data
  */
 static void
-calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
+calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *params,
                       const char *task, guint *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
@@ -104,18 +103,18 @@ calculate_main_digest(op_digest_cache_t *data, pcmk_resource_t *rsc,
 {
     xmlNode *action_config = NULL;
 
-    data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
+    data->params_all = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
 
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
      */
-    (void) pe__add_bundle_remote_name(rsc, scheduler, data->params_all,
-                                      XML_RSC_ATTR_REMOTE_RA_ADDR);
+    (void) pe__add_bundle_remote_name(rsc, data->params_all,
+                                      PCMK_REMOTE_RA_ADDR);
 
     if (overrides != NULL) {
         // If interval was overridden, reset it
-        const char *interval_s = g_hash_table_lookup(overrides, CRM_META "_"
-                                                     XML_LRM_ATTR_INTERVAL);
+        const char *meta_name = CRM_META "_" PCMK_META_INTERVAL;
+        const char *interval_s = g_hash_table_lookup(overrides, meta_name);
 
         if (interval_s != NULL) {
             long long value_ll;
@@ -185,22 +184,22 @@ is_fence_param(xmlAttrPtr attr, void *user_data)
  * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
-calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
+calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
     } else {
-        secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
+        secure_list = crm_element_value(xml_op, PCMK__XA_OP_SECURE_PARAMS);
     }
 
     if (old_version) {
-        data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+        data->params_secure = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
         if (overrides != NULL) {
             g_hash_table_foreach(overrides, hash2field, data->params_secure);
         }
@@ -209,7 +208,7 @@ calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
 
     } else {
         // Start with a copy of all parameters
-        data->params_secure = copy_xml(data->params_all);
+        data->params_secure = pcmk__xml_copy(NULL, data->params_all);
     }
 
     if (secure_list != NULL) {
@@ -236,7 +235,8 @@ calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
      * Remove any timeout that made it this far, to match.
      */
     if (old_version) {
-        xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+        pcmk__xe_remove_attr(data->params_secure,
+                             CRM_META "_" PCMK_META_TIMEOUT);
     }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
@@ -255,7 +255,7 @@ calculate_secure_digest(op_digest_cache_t *data, const pcmk_resource_t *rsc,
  *       data->params_all, which already has overrides applied.
  */
 static void
-calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
+calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
                          const char *op_version)
 {
     const char *value = NULL;
@@ -266,21 +266,21 @@ calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
     }
 
     // And the history must have a restart digest to compare against
-    if (crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST) == NULL) {
+    if (crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST) == NULL) {
         return;
     }
 
     // Start with a copy of all parameters
-    data->params_restart = copy_xml(data->params_all);
+    data->params_restart = pcmk__xml_copy(NULL, data->params_all);
 
     // Then filter out reloadable parameters, if any
-    value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
+    value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
         pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
                                        (void *) value);
     }
 
-    value = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     data->digest_restart_calc = calculate_operation_digest(data->params_restart,
                                                            value);
 }
@@ -302,28 +302,33 @@ calculate_restart_digest(op_digest_cache_t *data, const xmlNode *xml_op,
  * \note It is the caller's responsibility to free the result using
  *       pe__free_digests().
  */
-op_digest_cache_t *
+pcmk__op_digest_t *
 pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                       guint *interval_ms, const pcmk_node_t *node,
                       const xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pcmk_scheduler_t *scheduler)
 {
-    op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
+    pcmk__op_digest_t *data = NULL;
     const char *op_version = NULL;
     GHashTable *params = NULL;
 
+    CRM_CHECK(scheduler != NULL, return NULL);
+
+    data = calloc(1, sizeof(pcmk__op_digest_t));
     if (data == NULL) {
+        pcmk__sched_err("Could not allocate memory for operation digest");
         return NULL;
     }
 
     data->rc = pcmk__digest_match;
 
     if (xml_op != NULL) {
-        op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+        op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     }
 
-    if (op_version == NULL && scheduler != NULL && scheduler->input != NULL) {
-        op_version = crm_element_value(scheduler->input, XML_ATTR_CRM_VERSION);
+    if ((op_version == NULL) && (scheduler->input != NULL)) {
+        op_version = crm_element_value(scheduler->input,
+                                       PCMK_XA_CRM_FEATURE_SET);
     }
 
     if (op_version == NULL) {
@@ -355,12 +360,12 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
  *
  * \return Pointer to node's digest cache entry
  */
-static op_digest_cache_t *
+static pcmk__op_digest_t *
 rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
                   pcmk_node_t *node, const xmlNode *xml_op,
                   bool calc_secure, pcmk_scheduler_t *scheduler)
 {
-    op_digest_cache_t *data = NULL;
+    pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
     data = g_hash_table_lookup(node->details->digest_cache, key);
@@ -385,38 +390,38 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
  *
  * \return Pointer to node's digest cache entry, with comparison result set
  */
-op_digest_cache_t *
+pcmk__op_digest_t *
 rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                       pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    op_digest_cache_t *data = NULL;
+    pcmk__op_digest_t *data = NULL;
     guint interval_ms = 0;
 
     const char *op_version;
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
     const char *digest_all;
     const char *digest_restart;
 
     CRM_ASSERT(node != NULL);
 
-    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
-    digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
-    digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
+    op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
+    digest_all = crm_element_value(xml_op, PCMK__XA_OP_DIGEST);
+    digest_restart = crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST);
 
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
                              pcmk_is_set(scheduler->flags,
                                          pcmk_sched_sanitized),
                              scheduler);
 
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
-        pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
-                         "changed: hash was %s vs. now %s (restart:%s) %s",
-                    interval_ms, task, rsc->id, pe__node_name(node),
-                    pcmk__s(digest_restart, "missing"),
-                    data->digest_restart_calc,
-                    op_version,
-                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        pcmk__rsc_info(rsc,
+                       "Parameters to %ums-interval %s action for %s on %s "
+                       "changed: hash was %s vs. now %s (restart:%s) %s",
+                       interval_ms, task, rsc->id, pcmk__node_name(node),
+                       pcmk__s(digest_restart, "missing"),
+                       data->digest_restart_calc, op_version,
+                       crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 
     } else if (digest_all == NULL) {
@@ -429,27 +434,32 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
          * digest matches, enforce a restart rather than a reload-agent anyway.
          * So that it ensures any changes of the extra parameters get applied
          * for this specific operation, and the digests calculated for the
-         * resulting lrm_rsc_op will be correct.
+         * resulting PCMK__XE_LRM_RSC_OP will be correct.
          * Preserve the implied rc pcmk__digest_restart for the case that the
          * main digest doesn't match.
          */
         if ((interval_ms == 0) && (data->rc == pcmk__digest_restart)) {
-            pe_rsc_info(rsc, "Parameters containing extra ones to %ums-interval"
-                             " %s action for %s on %s "
-                             "changed: hash was %s vs. now %s (restart:%s) %s",
-                        interval_ms, task, rsc->id, pe__node_name(node),
-                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
-                        op_version,
-                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+            pcmk__rsc_info(rsc,
+                           "Parameters containing extra ones to %ums-interval"
+                           " %s action for %s on %s "
+                           "changed: hash was %s vs. now %s (restart:%s) %s",
+                           interval_ms, task, rsc->id, pcmk__node_name(node),
+                           pcmk__s(digest_all, "missing"),
+                           data->digest_all_calc, op_version,
+                           crm_element_value(xml_op,
+                                             PCMK__XA_TRANSITION_MAGIC));
 
         } else {
-            pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
-                             "changed: hash was %s vs. now %s (%s:%s) %s",
-                        interval_ms, task, rsc->id, pe__node_name(node),
-                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
-                        (interval_ms > 0)? "reschedule" : "reload",
-                        op_version,
-                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+            pcmk__rsc_info(rsc,
+                           "Parameters to %ums-interval %s action for %s on %s "
+                           "changed: hash was %s vs. now %s (%s:%s) %s",
+                           interval_ms, task, rsc->id, pcmk__node_name(node),
+                           pcmk__s(digest_all, "missing"),
+                           data->digest_all_calc,
+                           (interval_ms > 0)? "reschedule" : "reload",
+                           op_version,
+                           crm_element_value(xml_op,
+                                             PCMK__XA_TRANSITION_MAGIC));
             data->rc = pcmk__digest_mismatch;
         }
 
@@ -537,18 +547,19 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  *
  * \return Node's digest cache entry
  */
-op_digest_cache_t *
+pcmk__op_digest_t *
 pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
                            pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     const char *node_summary = NULL;
 
     // Calculate device's current parameter digests
-    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, 0U,
+    pcmk__op_digest_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, 0U,
                                                 node, NULL, TRUE, scheduler);
 
     // Check whether node has special unfencing summary node attribute
-    node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
+    node_summary = pcmk__node_attr(node, CRM_ATTR_DIGESTS_ALL, NULL,
+                                   pcmk__rsc_node_current);
     if (node_summary == NULL) {
         data->rc = pcmk__digest_unknown;
         return data;
@@ -562,7 +573,8 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
     }
 
     // Check whether secure parameter digest matches
-    node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
+    node_summary = pcmk__node_attr(node, CRM_ATTR_DIGESTS_SECURE, NULL,
+                                   pcmk__rsc_node_current);
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = pcmk__digest_match;
@@ -570,7 +582,7 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
             pcmk__output_t *out = scheduler->priv;
             out->info(out, "Only 'private' parameters to %s "
                       "for unfencing %s changed", rsc->id,
-                      pe__node_name(node));
+                      pcmk__node_name(node));
         }
         return data;
     }
@@ -587,14 +599,14 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
 
             out->info(out, "Parameters to %s for unfencing "
                       "%s changed, try '%s'", rsc->id,
-                      pe__node_name(node), digest);
+                      pcmk__node_name(node), digest);
             free(digest);
         } else if (!pcmk__is_daemon) {
             char *digest = create_unfencing_summary(rsc->id, agent,
                                                     data->digest_secure_calc);
 
             printf("Parameters to %s for unfencing %s changed, try '%s'\n",
-                   rsc->id, pe__node_name(node), digest);
+                   rsc->id, pcmk__node_name(node), digest);
             free(digest);
         }
     }

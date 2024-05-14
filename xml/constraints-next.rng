@@ -48,7 +48,7 @@
         </group>
         <oneOrMore>
           <grammar>
-            <include href="rule-3.9.rng">
+            <include href="rule-3.10.rng">
               <start>
                 <ref name="element-rule-location"/>
               </start>
@@ -276,7 +276,7 @@
     <element name="lifetime">
       <oneOrMore>
         <grammar>
-          <include href="rule-3.9.rng">
+          <include href="rule-3.10.rng">
             <start>
               <ref name="element-rule-location"/>
             </start>

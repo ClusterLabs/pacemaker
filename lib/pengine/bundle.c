@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
@@ -71,17 +71,15 @@ typedef struct pe__bundle_variant_data_s {
 
         pcmk_resource_t *child;
 
-        GList *replicas;    // pe__bundle_replica_t *
+        GList *replicas;    // pcmk__bundle_replica_t *
         GList *ports;       // pe__bundle_port_t *
         GList *mounts;      // pe__bundle_mount_t *
 
         enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
-#define get_bundle_variant_data(data, rsc)                      \
-    CRM_ASSERT(rsc != NULL);                                    \
-    CRM_ASSERT(rsc->variant == pcmk_rsc_variant_bundle);        \
-    CRM_ASSERT(rsc->variant_opaque != NULL);                    \
+#define get_bundle_variant_data(data, rsc)                              \
+    CRM_ASSERT(pcmk__is_bundle(rsc) && (rsc->variant_opaque != NULL));  \
     data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
 
 /*!
@@ -133,13 +131,13 @@ pe__get_rsc_in_container(const pcmk_resource_t *instance)
     const pe__bundle_variant_data_t *data = NULL;
     const pcmk_resource_t *top = pe__const_top_resource(instance, true);
 
-    if ((top == NULL) || (top->variant != pcmk_rsc_variant_bundle)) {
+    if (!pcmk__is_bundle(top)) {
         return NULL;
     }
     get_bundle_variant_data(data, top);
 
     for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
-        const pe__bundle_replica_t *replica = iter->data;
+        const pcmk__bundle_replica_t *replica = iter->data;
 
         if (instance == replica->container) {
             return replica->child;
@@ -165,9 +163,9 @@ pe__node_is_bundle_instance(const pcmk_resource_t *bundle,
 
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
 
-        if (pe__same_node(node, replica->node)) {
+        if (pcmk__same_node(node, replica->node)) {
             return true;
         }
     }
@@ -187,7 +185,7 @@ pcmk_resource_t *
 pe__first_container(const pcmk_resource_t *bundle)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
-    const pe__bundle_replica_t *replica = NULL;
+    const pcmk__bundle_replica_t *replica = NULL;
 
     get_bundle_variant_data(bundle_data, bundle);
     if (bundle_data->replicas == NULL) {
@@ -208,14 +206,14 @@ pe__first_container(const pcmk_resource_t *bundle)
  */
 void
 pe__foreach_bundle_replica(pcmk_resource_t *bundle,
-                           bool (*fn)(pe__bundle_replica_t *, void *),
+                           bool (*fn)(pcmk__bundle_replica_t *, void *),
                            void *user_data)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
-        if (!fn((pe__bundle_replica_t *) iter->data, user_data)) {
+        if (!fn((pcmk__bundle_replica_t *) iter->data, user_data)) {
             break;
         }
     }
@@ -232,7 +230,7 @@ pe__foreach_bundle_replica(pcmk_resource_t *bundle,
  */
 void
 pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
-                                 bool (*fn)(const pe__bundle_replica_t *,
+                                 bool (*fn)(const pcmk__bundle_replica_t *,
                                             void *),
                                  void *user_data)
 {
@@ -242,7 +240,7 @@ pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
     for (const GList *iter = bundle_data->replicas; iter != NULL;
          iter = iter->next) {
 
-        if (!fn((const pe__bundle_replica_t *) iter->data, user_data)) {
+        if (!fn((const pcmk__bundle_replica_t *) iter->data, user_data)) {
             break;
         }
     }
@@ -276,7 +274,7 @@ next_ip(const char *last_ip)
 }
 
 static void
-allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
+allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
             GString *buffer)
 {
     if(data->ip_range_start == NULL) {
@@ -318,12 +316,12 @@ allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
 static xmlNode *
 create_resource(const char *name, const char *provider, const char *kind)
 {
-    xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
+    xmlNode *rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
-    crm_xml_add(rsc, XML_ATTR_ID, name);
-    crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(rsc, XML_AGENT_ATTR_PROVIDER, provider);
-    crm_xml_add(rsc, XML_ATTR_TYPE, kind);
+    crm_xml_add(rsc, PCMK_XA_ID, name);
+    crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    crm_xml_add(rsc, PCMK_XA_PROVIDER, provider);
+    crm_xml_add(rsc, PCMK_XA_TYPE, kind);
 
     return rsc;
 }
@@ -348,10 +346,12 @@ valid_network(pe__bundle_variant_data_t *data)
     }
     if(data->control_port) {
         if(data->nreplicas_per_host > 1) {
-            pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
+            pcmk__config_err("Specifying the '" PCMK_XA_CONTROL_PORT "' for %s "
+                             "requires '" PCMK_XA_REPLICAS_PER_HOST "=1'",
+                             data->prefix);
             data->nreplicas_per_host = 1;
             // @TODO to be sure:
-            // pe__clear_resource_flags(rsc, pcmk_rsc_unique);
+            // pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
         }
         return TRUE;
     }
@@ -360,7 +360,7 @@ valid_network(pe__bundle_variant_data_t *data)
 
 static int
 create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                   pe__bundle_replica_t *replica)
+                   pcmk__bundle_replica_t *replica)
 {
     if(data->ip_range_start) {
         char *id = NULL;
@@ -372,7 +372,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
 
-        xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
+        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
         crm_xml_set_id(xml_obj, "%s-attributes-%d",
                        data->prefix, replica->offset);
 
@@ -389,9 +389,9 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
         }
 
-        xml_obj = create_xml_node(xml_ip, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_ip), PCMK_ACTION_MONITOR, "60s",
-                          NULL);
+        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
+        crm_create_op_xml(xml_obj, pcmk__xe_id(xml_ip), PCMK_ACTION_MONITOR,
+                          "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -421,7 +421,7 @@ container_agent_str(enum pe__container_agent t)
 static int
 create_container_resource(pcmk_resource_t *parent,
                           const pe__bundle_variant_data_t *data,
-                          pe__bundle_replica_t *replica)
+                          pcmk__bundle_replica_t *replica)
 {
     char *id = NULL;
     xmlNode *xml_container = NULL;
@@ -460,13 +460,13 @@ create_container_resource(pcmk_resource_t *parent,
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
 
-    xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
+    xml_obj = pcmk__xe_create(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
     crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
-    crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
-    crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
-    crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
+    crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", PCMK_VALUE_TRUE);
+    crm_create_nvpair_xml(xml_obj, NULL, "force_kill", PCMK_VALUE_FALSE);
+    crm_create_nvpair_xml(xml_obj, NULL, "reuse", PCMK_VALUE_FALSE);
 
     if (data->agent_type == PE__CONTAINER_AGENT_DOCKER) {
         g_string_append(buffer, " --restart=no");
@@ -544,8 +544,8 @@ create_container_resource(pcmk_resource_t *parent,
                                    " -p ", replica->ipaddr, ":", port->source,
                                    ":", port->target, NULL);
 
-                } else if (!pcmk__str_eq(data->container_network, "host",
-                                         pcmk__str_none)) {
+                } else if (!pcmk__str_eq(data->container_network,
+                                         PCMK_VALUE_HOST, pcmk__str_none)) {
                     // No need to do port mapping if net == host
                     pcmk__g_strcat(buffer,
                                    " -p ", port->source, ":", port->target,
@@ -641,16 +641,16 @@ create_container_resource(pcmk_resource_t *parent,
         crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
     }
 
-    xml_obj = create_xml_node(xml_container, "operations");
-    crm_create_op_xml(xml_obj, ID(xml_container), PCMK_ACTION_MONITOR, "60s",
-                      NULL);
+    xml_obj = pcmk__xe_create(xml_container, PCMK_XE_OPERATIONS);
+    crm_create_op_xml(xml_obj, pcmk__xe_id(xml_container), PCMK_ACTION_MONITOR,
+                      "60s", NULL);
 
     // TODO: Other ops? Timeouts and intervals from underlying resource?
     if (pe__unpack_resource(xml_container, &replica->container, parent,
                             parent->cluster) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
-    pe__set_resource_flags(replica->container, pcmk_rsc_replica_container);
+    pcmk__set_rsc_flags(replica->container, pcmk_rsc_replica_container);
     parent->children = g_list_append(parent->children, replica->container);
 
     return pcmk_rc_ok;
@@ -668,7 +668,7 @@ disallow_node(pcmk_resource_t *rsc, const char *uname)
     gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
 
     if (match) {
-        ((pcmk_node_t *) match)->weight = -INFINITY;
+        ((pcmk_node_t *) match)->weight = -PCMK_SCORE_INFINITY;
         ((pcmk_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
     }
     if (rsc->children) {
@@ -678,7 +678,7 @@ disallow_node(pcmk_resource_t *rsc, const char *uname)
 
 static int
 create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pe__bundle_replica_t *replica)
+                       pcmk__bundle_replica_t *replica)
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
@@ -726,18 +726,18 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         free(id);
         id = NULL;
-        uname = ID(xml_remote);
+        uname = pcmk__xe_id(xml_remote);
 
         /* Ensure a node has been created for the guest (it may have already
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pe_find_node(parent->cluster->nodes, uname);
+        node = pcmk_find_node(parent->cluster, uname);
         if (node == NULL) {
-            node = pe_create_node(uname, uname, "remote", "-INFINITY",
-                                  parent->cluster);
+            node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
+                                  PCMK_VALUE_MINUS_INFINITY, parent->cluster);
         } else {
-            node->weight = -INFINITY;
+            node->weight = -PCMK_SCORE_INFINITY;
         }
         node->rsc_discover_mode = pcmk_probe_never;
 
@@ -776,7 +776,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
         {
             pcmk_node_t *copy = pe__copy_node(replica->node);
-            copy->weight = -INFINITY;
+            copy->weight = -PCMK_SCORE_INFINITY;
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
@@ -787,22 +787,22 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
         g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
-            if (pe__is_guest_or_remote_node(node)) {
+            if (pcmk__is_pacemaker_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */
-                node->weight = -INFINITY;
+                node->weight = -PCMK_SCORE_INFINITY;
             }
         }
 
         replica->node->details->remote_rsc = replica->remote;
 
-        // Ensure pe__is_guest_node() functions correctly immediately
+        // Ensure pcmk__is_guest_or_bundle_node() functions correctly
         replica->remote->container = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
          */
-        g_hash_table_insert(replica->node->details->attrs,
-                            strdup(CRM_ATTR_KIND), strdup("container"));
+        pcmk__insert_dup(replica->node->details->attrs,
+                         CRM_ATTR_KIND, "container");
 
         /* One effect of this is that setup_container() will add
          * replica->remote to replica->container's fillers, which will make
@@ -819,8 +819,9 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 }
 
 static int
-create_replica_resources(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                         pe__bundle_replica_t *replica)
+create_replica_resources(pcmk_resource_t *parent,
+                         pe__bundle_variant_data_t *data,
+                         pcmk__bundle_replica_t *replica)
 {
     int rc = pcmk_rc_ok;
 
@@ -840,7 +841,7 @@ create_replica_resources(pcmk_resource_t *parent, pe__bundle_variant_data_t *dat
     }
 
     if ((replica->child != NULL) && (replica->ipaddr != NULL)) {
-        add_hash_param(replica->child->meta, "external-ip", replica->ipaddr);
+        pcmk__insert_meta(replica->child, "external-ip", replica->ipaddr);
     }
 
     if (replica->remote != NULL) {
@@ -852,8 +853,7 @@ create_replica_resources(pcmk_resource_t *parent, pe__bundle_variant_data_t *dat
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        pe__set_resource_flags(replica->remote,
-                               pcmk_rsc_remote_nesting_allowed);
+        pcmk__set_rsc_flags(replica->remote, pcmk_rsc_remote_nesting_allowed);
     }
     return rc;
 }
@@ -862,12 +862,12 @@ static void
 mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
           const char *target, const char *options, uint32_t flags)
 {
-    pe__bundle_mount_t *mount = calloc(1, sizeof(pe__bundle_mount_t));
+    pe__bundle_mount_t *mount = pcmk__assert_alloc(1,
+                                                   sizeof(pe__bundle_mount_t));
 
-    CRM_ASSERT(mount != NULL);
-    mount->source = strdup(source);
-    mount->target = strdup(target);
-    pcmk__str_update(&mount->options, options);
+    mount->source = pcmk__str_copy(source);
+    mount->target = pcmk__str_copy(target);
+    mount->options = pcmk__str_copy(options);
     mount->flags = flags;
     bundle_data->mounts = g_list_append(bundle_data->mounts, mount);
 }
@@ -889,7 +889,7 @@ port_free(pe__bundle_port_t *port)
     free(port);
 }
 
-static pe__bundle_replica_t *
+static pcmk__bundle_replica_t *
 replica_for_remote(pcmk_resource_t *remote)
 {
     pcmk_resource_t *top = remote;
@@ -906,7 +906,7 @@ replica_for_remote(pcmk_resource_t *remote)
     get_bundle_variant_data(bundle_data, top);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         if (replica->remote == remote) {
             return replica;
@@ -928,20 +928,20 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
 
     // Use NULL node since pcmk__bundle_expand() uses that to set value
     params = pe_rsc_params(rsc, NULL, rsc->cluster);
-    value = g_hash_table_lookup(params, XML_RSC_ATTR_REMOTE_RA_ADDR);
+    value = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
            && xml_contains_remote_node(rsc->xml);
 }
 
 const char *
-pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
-                           xmlNode *xml, const char *field)
+pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
+                           const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
     pcmk_node_t *node = NULL;
-    pe__bundle_replica_t *replica = NULL;
+    pcmk__bundle_replica_t *replica = NULL;
 
     if (!pe__bundle_needs_remote_name(rsc)) {
         return NULL;
@@ -957,7 +957,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.
          */
-        node = pe__current_node(replica->container);
+        node = pcmk__current_node(replica->container);
     }
 
     if(node == NULL) {
@@ -966,7 +966,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
     }
 
     crm_trace("Setting address for bundle connection %s to bundle host %s",
-              rsc->id, pe__node_name(node));
+              rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
         crm_xml_add(xml, field, node->details->uname);
     }
@@ -976,8 +976,8 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
 
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
         flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
-                                   "Bundle mount", ID(mount_xml), flags,    \
-                                   (flags_to_set), #flags_to_set);          \
+                                   "Bundle mount", pcmk__xe_id(mount_xml),  \
+                                   flags, (flags_to_set), #flags_to_set);   \
     } while (0)
 
 gboolean
@@ -985,26 +985,32 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
+    const xmlNode *xml_child = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     bool need_log_mount = TRUE;
 
     CRM_ASSERT(rsc != NULL);
-    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
+    pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
-    bundle_data = calloc(1, sizeof(pe__bundle_variant_data_t));
+    bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
     rsc->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
-    xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_DOCKER_S);
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_DOCKER, NULL, NULL);
     if (xml_obj != NULL) {
         bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
     } else {
-        xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_RKT_S);
+        xml_obj = pcmk__xe_first_child(rsc->xml, PCMK__XE_RKT, NULL, NULL);
         if (xml_obj != NULL) {
+            pcmk__warn_once(pcmk__wo_rkt,
+                            "Support for " PCMK__XE_RKT " in bundles "
+                            "(such as %s) is deprecated and will be "
+                            "removed in a future release", rsc->id);
             bundle_data->agent_type = PE__CONTAINER_AGENT_RKT;
         } else {
-            xml_obj = first_named_child(rsc->xml, PE__CONTAINER_AGENT_PODMAN_S);
+            xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_PODMAN, NULL,
+                                           NULL);
             if (xml_obj != NULL) {
                 bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
             } else {
@@ -1013,16 +1019,27 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         }
     }
 
-    // Use 0 for default, minimum, and invalid promoted-max
-    value = crm_element_value(xml_obj, PCMK_META_PROMOTED_MAX);
+    // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX
+    value = crm_element_value(xml_obj, PCMK_XA_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
-        value = crm_element_value(xml_obj, "masters");
+        value = crm_element_value(xml_obj, PCMK__XA_PROMOTED_MAX_LEGACY);
+
+        if (value != NULL) {
+            pcmk__warn_once(pcmk__wo_bundle_master,
+                            "Support for the " PCMK__XA_PROMOTED_MAX_LEGACY
+                            " attribute (such as in %s) is deprecated and "
+                            "will be removed in a future release. Use "
+                            PCMK_XA_PROMOTED_MAX " instead.",
+                            rsc->id);
+        }
     }
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
-    // Default replicas to promoted-max if it was specified and 1 otherwise
-    value = crm_element_value(xml_obj, "replicas");
+    /* Default replicas to PCMK_XA_PROMOTED_MAX if it was specified and 1
+     * otherwise
+     */
+    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS);
     if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
@@ -1034,39 +1051,49 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * floating IPs only works if the container is started with:
      *   --userland-proxy=false --ip-masq=false
      */
-    value = crm_element_value(xml_obj, "replicas-per-host");
+    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
-        pe__clear_resource_flags(rsc, pcmk_rsc_unique);
+        pcmk__clear_rsc_flags(rsc, pcmk_rsc_unique);
     }
 
-    bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
-    bundle_data->launcher_options = crm_element_value_copy(xml_obj, "options");
-    bundle_data->image = crm_element_value_copy(xml_obj, "image");
-    bundle_data->container_network = crm_element_value_copy(xml_obj, "network");
+    bundle_data->container_command =
+        crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
+    bundle_data->launcher_options = crm_element_value_copy(xml_obj,
+                                                           PCMK_XA_OPTIONS);
+    bundle_data->image = crm_element_value_copy(xml_obj, PCMK_XA_IMAGE);
+    bundle_data->container_network = crm_element_value_copy(xml_obj,
+                                                            PCMK_XA_NETWORK);
 
-    xml_obj = first_named_child(rsc->xml, "network");
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_NETWORK, NULL, NULL);
     if(xml_obj) {
-
-        bundle_data->ip_range_start = crm_element_value_copy(xml_obj, "ip-range-start");
-        bundle_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
-        bundle_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
-        bundle_data->control_port = crm_element_value_copy(xml_obj, "control-port");
-        value = crm_element_value(xml_obj, "add-host");
+        bundle_data->ip_range_start =
+            crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
+        bundle_data->host_netmask =
+            crm_element_value_copy(xml_obj, PCMK_XA_HOST_NETMASK);
+        bundle_data->host_network =
+            crm_element_value_copy(xml_obj, PCMK_XA_HOST_INTERFACE);
+        bundle_data->control_port =
+            crm_element_value_copy(xml_obj, PCMK_XA_CONTROL_PORT);
+        value = crm_element_value(xml_obj, PCMK_XA_ADD_HOST);
         if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
             bundle_data->add_host = TRUE;
         }
 
-        for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
-             xml_child = pcmk__xe_next(xml_child)) {
+        for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_PORT_MAPPING,
+                                              NULL, NULL);
+             xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
 
-            pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
-            port->source = crm_element_value_copy(xml_child, "port");
+            pe__bundle_port_t *port =
+                pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
+
+            port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
-                port->source = crm_element_value_copy(xml_child, "range");
+                port->source = crm_element_value_copy(xml_child, PCMK_XA_RANGE);
             } else {
-                port->target = crm_element_value_copy(xml_child, "internal-port");
+                port->target = crm_element_value_copy(xml_child,
+                                                      PCMK_XA_INTERNAL_PORT);
             }
 
             if(port->source != NULL && strlen(port->source) > 0) {
@@ -1076,23 +1103,25 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 bundle_data->ports = g_list_append(bundle_data->ports, port);
 
             } else {
-                pe_err("Invalid port directive %s", ID(xml_child));
+                pcmk__config_err("Invalid " PCMK_XA_PORT " directive %s",
+                                 pcmk__xe_id(xml_child));
                 port_free(port);
             }
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, "storage");
-    for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
-         xml_child = pcmk__xe_next(xml_child)) {
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_STORAGE, NULL, NULL);
+    for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_STORAGE_MAPPING,
+                                          NULL, NULL);
+         xml_child != NULL; xml_child = pcmk__xe_next_same(xml_child)) {
 
-        const char *source = crm_element_value(xml_child, "source-dir");
-        const char *target = crm_element_value(xml_child, "target-dir");
-        const char *options = crm_element_value(xml_child, "options");
+        const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
+        const char *target = crm_element_value(xml_child, PCMK_XA_TARGET_DIR);
+        const char *options = crm_element_value(xml_child, PCMK_XA_OPTIONS);
         int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
-            source = crm_element_value(xml_child, "source-dir-root");
+            source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR_ROOT);
             pe__set_bundle_mount_flags(xml_child, flags,
                                        pe__bundle_mount_subdir);
         }
@@ -1103,16 +1132,17 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                 need_log_mount = FALSE;
             }
         } else {
-            pe_err("Invalid mount directive %s", ID(xml_child));
+            pcmk__config_err("Invalid mount directive %s",
+                             pcmk__xe_id(xml_child));
         }
     }
 
-    xml_obj = first_named_child(rsc->xml, "primitive");
+    xml_obj = pcmk__xe_first_child(rsc->xml, PCMK_XE_PRIMITIVE, NULL, NULL);
     if (xml_obj && valid_network(bundle_data)) {
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
-        xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
+        xml_resource = pcmk__xe_create(NULL, PCMK_XE_CLONE);
 
         /* @COMPAT We no longer use the <master> tag, but we need to keep it as
          * part of the resource name, so that bundles don't restart in a rolling
@@ -1122,11 +1152,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                       (bundle_data->promoted_max? "master"
                       : (const char *)xml_resource->name));
 
-        xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
+        xml_set = pcmk__xe_create(xml_resource, PCMK_XE_META_ATTRIBUTES);
         crm_xml_set_id(xml_set, "%s-%s-meta", bundle_data->prefix, xml_resource->name);
 
         crm_create_nvpair_xml(xml_set, NULL,
-                              XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
+                              PCMK_META_ORDERED, PCMK_VALUE_TRUE);
 
         value = pcmk__itoa(bundle_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
@@ -1136,24 +1166,25 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX, value);
         free(value);
 
-        crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
+        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
                               pcmk__btoa(bundle_data->nreplicas_per_host > 1));
 
         if (bundle_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
-                                  XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
+                                  PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
 
             value = pcmk__itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);
             free(value);
         }
 
-        //crm_xml_add(xml_obj, XML_ATTR_ID, bundle_data->prefix);
-        add_node_copy(xml_resource, xml_obj);
+        //crm_xml_add(xml_obj, PCMK_XA_ID, bundle_data->prefix);
+        pcmk__xml_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {
-        pe_err("Cannot control %s inside %s without either ip-range-start or control-port",
-               rsc->id, ID(xml_obj));
+        pcmk__config_err("Cannot control %s inside %s without either "
+                         PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
+                         rsc->id, pcmk__xe_id(xml_obj));
         return FALSE;
     }
 
@@ -1197,7 +1228,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
                       pe__bundle_mount_subdir);
         }
 
-        port = calloc(1, sizeof(pe__bundle_port_t));
+        port = pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
         if(bundle_data->control_port) {
             port->source = strdup(bundle_data->control_port);
         } else {
@@ -1207,7 +1238,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
              *
              * However, it gains nothing, since we control both the container
              * environment and the connection resource parameters, and the user
-             * can use a different port if desired by setting control-port.
+             * can use a different port if desired by setting
+             * PCMK_XA_CONTROL_PORT.
              */
             port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
@@ -1218,31 +1250,33 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         for (childIter = bundle_data->child->children; childIter != NULL;
              childIter = childIter->next) {
 
-            pe__bundle_replica_t *replica = calloc(1, sizeof(pe__bundle_replica_t));
+            pcmk__bundle_replica_t *replica = NULL;
 
+            replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
             replica->child = childIter->data;
             replica->child->exclusive_discover = TRUE;
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
             if (pcmk_is_set(replica->child->flags, pcmk_rsc_notify)) {
-                pe__set_resource_flags(bundle_data->child, pcmk_rsc_notify);
+                pcmk__set_rsc_flags(bundle_data->child, pcmk_rsc_notify);
             }
 
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
-            bundle_data->attribute_target = g_hash_table_lookup(replica->child->meta,
-                                                                XML_RSC_ATTR_TARGET);
+            bundle_data->attribute_target =
+                g_hash_table_lookup(replica->child->meta,
+                                    PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
         }
         bundle_data->container_host_options = g_string_free(buffer, FALSE);
 
         if (bundle_data->attribute_target) {
-            g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET),
-                                 strdup(bundle_data->attribute_target));
-            g_hash_table_replace(bundle_data->child->meta,
-                                 strdup(XML_RSC_ATTR_TARGET),
-                                 strdup(bundle_data->attribute_target));
+            pcmk__insert_dup(rsc->meta, PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                             bundle_data->attribute_target);
+            pcmk__insert_dup(bundle_data->child->meta,
+                             PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                             bundle_data->attribute_target);
         }
 
     } else {
@@ -1250,8 +1284,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         GString *buffer = g_string_sized_new(1024);
 
         for (int lpc = 0; lpc < bundle_data->nreplicas; lpc++) {
-            pe__bundle_replica_t *replica = calloc(1, sizeof(pe__bundle_replica_t));
+            pcmk__bundle_replica_t *replica = NULL;
 
+            replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
             replica->offset = lpc;
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
@@ -1262,10 +1297,10 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
-            pe_err("Failed unpacking resource %s", rsc->id);
+            pcmk__config_err("Failed unpacking resource %s", rsc->id);
             rsc->fns->free(rsc);
             return FALSE;
         }
@@ -1323,7 +1358,7 @@ pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
 
     get_bundle_variant_data(bundle_data, rsc);
     for (iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
         int rsc_active;
 
         rsc_active = replica_resource_active(replica->ip, all);
@@ -1372,10 +1407,10 @@ pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica && replica->node);
-        if (replica->node->details == node->details) {
+        if (pcmk__same_node(replica->node, node)) {
             return replica->child;
         }
     }
@@ -1421,21 +1456,23 @@ bundle_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     get_bundle_variant_data(bundle_data, rsc);
 
     status_print("%s<bundle ", pre_text);
-    status_print(XML_ATTR_ID "=\"%s\" ", rsc->id);
+    status_print(PCMK_XA_ID "=\"%s\" ", rsc->id);
     status_print("type=\"%s\" ", container_agent_str(bundle_data->agent_type));
     status_print("image=\"%s\" ", bundle_data->image);
-    status_print("unique=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_unique));
+    status_print("unique=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_unique));
     status_print("managed=\"%s\" ",
-                 pe__rsc_bool_str(rsc, pcmk_rsc_managed));
-    status_print("failed=\"%s\" ", pe__rsc_bool_str(rsc, pcmk_rsc_failed));
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_managed));
+    status_print("failed=\"%s\" ",
+                 pcmk__flag_text(rsc->flags, pcmk_rsc_failed));
     status_print(">\n");
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        status_print("%s    <replica " XML_ATTR_ID "=\"%d\">\n",
+        status_print("%s    <replica " PCMK_XA_ID "=\"%d\">\n",
                      pre_text, replica->offset);
         print_rsc_in_list(replica->ip, child_text, options, print_data);
         print_rsc_in_list(replica->child, child_text, options, print_data);
@@ -1476,7 +1513,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
         char *id = NULL;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
@@ -1499,46 +1536,55 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            const char *type = container_agent_str(bundle_data->agent_type);
+            const char *unique = pcmk__flag_text(rsc->flags, pcmk_rsc_unique);
+            const char *maintenance = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
+            const char *failed = pcmk__flag_text(rsc->flags, pcmk_rsc_failed);
+
             printed_header = TRUE;
 
             desc = pe__resource_description(rsc, show_opts);
 
-            rc = pe__name_and_nvpairs_xml(out, true, "bundle", 8,
-                     "id", rsc->id,
-                     "type", container_agent_str(bundle_data->agent_type),
-                     "image", bundle_data->image,
-                     "unique", pe__rsc_bool_str(rsc, pcmk_rsc_unique),
-                     "maintenance",
-                     pe__rsc_bool_str(rsc, pcmk_rsc_maintenance),
-                     "managed", pe__rsc_bool_str(rsc, pcmk_rsc_managed),
-                     "failed", pe__rsc_bool_str(rsc, pcmk_rsc_failed),
-                     "description", desc);
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE,
+                                          PCMK_XA_ID, rsc->id,
+                                          PCMK_XA_TYPE, type,
+                                          PCMK_XA_IMAGE, bundle_data->image,
+                                          PCMK_XA_UNIQUE, unique,
+                                          PCMK_XA_MAINTENANCE, maintenance,
+                                          PCMK_XA_MANAGED, managed,
+                                          PCMK_XA_FAILED, failed,
+                                          PCMK_XA_DESCRIPTION, desc,
+                                          NULL);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
+        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA,
+                                      PCMK_XA_ID, id,
+                                      NULL);
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (print_ip) {
-            out->message(out, crm_map_element_name(replica->ip->xml), show_opts,
+            out->message(out, (const char *) replica->ip->xml->name, show_opts,
                          replica->ip, only_node, only_rsc);
         }
 
         if (print_child) {
-            out->message(out, crm_map_element_name(replica->child->xml), show_opts,
-                         replica->child, only_node, only_rsc);
+            out->message(out, (const char *) replica->child->xml->name,
+                         show_opts, replica->child, only_node, only_rsc);
         }
 
         if (print_ctnr) {
-            out->message(out, crm_map_element_name(replica->container->xml), show_opts,
-                         replica->container, only_node, only_rsc);
+            out->message(out, (const char *) replica->container->xml->name,
+                         show_opts, replica->container, only_node, only_rsc);
         }
 
         if (print_remote) {
-            out->message(out, crm_map_element_name(replica->remote->xml), show_opts,
-                         replica->remote, only_node, only_rsc);
+            out->message(out, (const char *) replica->remote->xml->name,
+                         show_opts, replica->remote, only_node, only_rsc);
         }
 
         pcmk__output_xml_pop_parent(out); // replica
@@ -1552,7 +1598,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
+pe__bundle_replica_output_html(pcmk__output_t *out,
+                               pcmk__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
     pcmk_resource_t *rsc = replica->child;
@@ -1629,7 +1676,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
@@ -1665,23 +1712,26 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             }
 
             if (print_ip) {
-                out->message(out, crm_map_element_name(replica->ip->xml),
+                out->message(out, (const char *) replica->ip->xml->name,
                              new_show_opts, replica->ip, only_node, only_rsc);
             }
 
             if (print_child) {
-                out->message(out, crm_map_element_name(replica->child->xml),
-                             new_show_opts, replica->child, only_node, only_rsc);
+                out->message(out, (const char *) replica->child->xml->name,
+                             new_show_opts, replica->child, only_node,
+                             only_rsc);
             }
 
             if (print_ctnr) {
-                out->message(out, crm_map_element_name(replica->container->xml),
-                             new_show_opts, replica->container, only_node, only_rsc);
+                out->message(out, (const char *) replica->container->xml->name,
+                             new_show_opts, replica->container, only_node,
+                             only_rsc);
             }
 
             if (print_remote) {
-                out->message(out, crm_map_element_name(replica->remote->xml),
-                             new_show_opts, replica->remote, only_node, only_rsc);
+                out->message(out, (const char *) replica->remote->xml->name,
+                             new_show_opts, replica->remote, only_node,
+                             only_rsc);
             }
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1697,7 +1747,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
-            pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
+            pe__bundle_replica_output_html(out, replica,
+                                           pcmk__current_node(replica->container),
                                            show_opts);
         }
     }
@@ -1707,7 +1758,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 }
 
 static void
-pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
+pe__bundle_replica_output_text(pcmk__output_t *out,
+                               pcmk__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
     const pcmk_resource_t *rsc = replica->child;
@@ -1763,7 +1815,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
@@ -1801,23 +1853,26 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {
-                out->message(out, crm_map_element_name(replica->ip->xml),
+                out->message(out, (const char *) replica->ip->xml->name,
                              new_show_opts, replica->ip, only_node, only_rsc);
             }
 
             if (print_child) {
-                out->message(out, crm_map_element_name(replica->child->xml),
-                             new_show_opts, replica->child, only_node, only_rsc);
+                out->message(out, (const char *) replica->child->xml->name,
+                             new_show_opts, replica->child, only_node,
+                             only_rsc);
             }
 
             if (print_ctnr) {
-                out->message(out, crm_map_element_name(replica->container->xml),
-                             new_show_opts, replica->container, only_node, only_rsc);
+                out->message(out, (const char *) replica->container->xml->name,
+                             new_show_opts, replica->container, only_node,
+                             only_rsc);
             }
 
             if (print_remote) {
-                out->message(out, crm_map_element_name(replica->remote->xml),
-                             new_show_opts, replica->remote, only_node, only_rsc);
+                out->message(out, (const char *) replica->remote->xml->name,
+                             new_show_opts, replica->remote, only_node,
+                             only_rsc);
             }
 
             out->end_list(out);
@@ -1831,7 +1886,8 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                                      desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
                                      get_unmanaged_str(rsc));
 
-            pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
+            pe__bundle_replica_output_text(out, replica,
+                                           pcmk__current_node(replica->container),
                                            show_opts);
         }
     }
@@ -1845,7 +1901,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
  * \deprecated This function will be removed in a future release
  */
 static void
-print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
+print_bundle_replica(pcmk__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
 {
     pcmk_node_t *node = NULL;
@@ -1870,7 +1926,7 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                            replica->ipaddr);
     }
 
-    node = pe__current_node(replica->container);
+    node = pcmk__current_node(replica->container);
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 
@@ -1909,7 +1965,7 @@ pe__print_bundle(pcmk_resource_t *rsc, const char *pre_text, long options,
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
-        pe__bundle_replica_t *replica = gIter->data;
+        pcmk__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
         if (options & pe_print_html) {
@@ -1947,7 +2003,7 @@ pe__print_bundle(pcmk_resource_t *rsc, const char *pre_text, long options,
 }
 
 static void
-free_bundle_replica(pe__bundle_replica_t *replica)
+free_bundle_replica(pcmk__bundle_replica_t *replica)
 {
     if (replica == NULL) {
         return;
@@ -1987,7 +2043,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return);
 
     get_bundle_variant_data(bundle_data, rsc);
-    pe_rsc_trace(rsc, "Freeing %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
     free(bundle_data->prefix);
     free(bundle_data->image);
@@ -2031,14 +2087,13 @@ pe__bundle_resource_state(const pcmk_resource_t *rsc, gboolean current)
 int
 pe_bundle_replicas(const pcmk_resource_t *rsc)
 {
-    if ((rsc == NULL) || (rsc->variant != pcmk_rsc_variant_bundle)) {
-        return 0;
-    } else {
+    if (pcmk__is_bundle(rsc)) {
         pe__bundle_variant_data_t *bundle_data = NULL;
 
         get_bundle_variant_data(bundle_data, rsc);
         return bundle_data->nreplicas;
     }
+    return 0;
 }
 
 void
@@ -2048,7 +2103,7 @@ pe__count_bundle(pcmk_resource_t *rsc)
 
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *item = bundle_data->replicas; item != NULL; item = item->next) {
-        pe__bundle_replica_t *replica = item->data;
+        pcmk__bundle_replica_t *replica = item->data;
 
         if (replica->ip) {
             replica->ip->fns->count(replica->ip);
@@ -2078,7 +2133,7 @@ pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
         get_bundle_variant_data(bundle_data, rsc);
 
         for (GList *gIter = bundle_data->replicas; gIter != NULL; gIter = gIter->next) {
-            pe__bundle_replica_t *replica = gIter->data;
+            pcmk__bundle_replica_t *replica = gIter->data;
 
             if (replica->ip != NULL && !replica->ip->fns->is_filtered(replica->ip, only_rsc, FALSE)) {
                 passes = TRUE;
@@ -2117,7 +2172,7 @@ pe__bundle_containers(const pcmk_resource_t *bundle)
 
     get_bundle_variant_data(data, bundle);
     for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
 
         containers = g_list_append(containers, replica->container);
     }
@@ -2152,7 +2207,7 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
      */
     get_bundle_variant_data(data, rsc);
     for (iter = data->replicas; iter != NULL; iter = iter->next) {
-        pe__bundle_replica_t *replica = iter->data;
+        pcmk__bundle_replica_t *replica = iter->data;
 
         if (replica->container->running_on != NULL) {
             containers = g_list_append(containers, replica->container);

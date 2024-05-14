@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,9 +8,9 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 
@@ -23,7 +23,7 @@ attrd_election_cb(gpointer user_data)
     attrd_declare_winner();
 
     /* Update the peers after an election */
-    attrd_peer_sync(NULL, NULL);
+    attrd_peer_sync(NULL);
 
     /* After winning an election, update the CIB with the values of all
      * attributes as the winner knows them.
@@ -35,7 +35,7 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_election_init(void)
 {
-    writer = election_init(T_ATTRD, attrd_cluster->uname, 120000,
+    writer = election_init(PCMK__VALUE_ATTRD, attrd_cluster->uname, 120000,
                            attrd_election_cb);
 }
 
@@ -69,7 +69,7 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
     enum election_result rc = 0;
     enum election_result previous = election_state(writer);
 
-    crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
+    crm_xml_add(xml, PCMK__XA_SRC, peer->uname);
 
     // Don't become writer if we're shutting down
     rc = election_count_vote(writer, xml, !attrd_shutting_down(false));

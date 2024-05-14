@@ -105,6 +105,44 @@ To read back the value that was just set:
 The ``--type nodes`` indicates that this is a permanent node attribute;
 ``--type status`` would indicate a transient node attribute.
 
+.. warning::
+
+   Attribute values with newline or tab characters are currently displayed with
+   newlines as ``"\n"`` and tabs as ``"\t"``, when ``crm_attribute`` or
+   ``attrd_updater`` query commands use ``--output-as=text`` or leave
+   ``--output-as`` unspecified:
+
+   .. code-block:: none
+
+      # crm_attribute -N node1 -n test_attr -v "$(echo -e "a\nb\tc")" -t status
+      # crm_attribute -N node1 -n test_attr --query -t status
+      scope=status  name=test_attr value=a\nb\tc
+
+   This format is deprecated. In a future release, the values will be displayed
+   with literal whitespace characters:
+
+   .. code-block:: none
+
+      # crm_attribute -N node1 -n test_attr --query -t status
+      scope=status  name=test_attr value=a
+      b	c
+
+   Users should either avoid attribute values with newlines and tabs, or ensure
+   that they can handle both formats.
+
+   However, it's best to use ``--output-as=xml`` when parsing attribute values
+   from output. Newlines, tabs, and special characters are replaced with XML
+   character references that a conforming XML processor can recognize and
+   convert to literals *(since 2.1.8)*:
+
+   .. code-block:: none
+
+      # crm_attribute -N node1 -n test_attr --query -t status --output-as=xml
+      <pacemaker-result api-version="2.35" request="crm_attribute -N laptop -n test_attr --query -t status --output-as=xml">
+        <attribute name="test_attr" value="a&#10;b&#9;c" scope="status"/>
+        <status code="0" message="OK"/>
+      </pacemaker-result>
+
 
 .. _special_node_attributes:
 

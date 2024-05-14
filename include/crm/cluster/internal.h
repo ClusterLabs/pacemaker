@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,28 +7,49 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_CLUSTER_INTERNAL__H
-#  define CRM_CLUSTER_INTERNAL__H
+#ifndef PCMK__CRM_CLUSTER_INTERNAL__H
+#  define PCMK__CRM_CLUSTER_INTERNAL__H
 
+#  include <stdbool.h>
 #  include <stdint.h>       // uint32_t, uint64_t
+
+#  include <glib.h>         // gboolean
+
 #  include <crm/cluster.h>
 
-/* *INDENT-OFF* */
 enum crm_proc_flag {
+    /* @COMPAT When crm_node_t:processes is made internal, we can merge this
+     * into node flags or turn it into a boolean. Until then, in theory
+     * something could depend on these particular numeric values.
+     */
     crm_proc_none       = 0x00000001,
 
     // Cluster layers
     crm_proc_cpg        = 0x04000000,
-
-    // Daemons
-    crm_proc_execd      = 0x00000010,
-    crm_proc_based      = 0x00000100,
-    crm_proc_controld   = 0x00000200,
-    crm_proc_attrd      = 0x00001000,
-    crm_proc_schedulerd = 0x00010000,
-    crm_proc_fenced     = 0x00100000,
 };
-/* *INDENT-ON* */
+
+// Used with node cache search functions
+enum pcmk__node_search_flags {
+    //! Does not affect search
+    pcmk__node_search_none              = 0,
+
+    //! Search for cluster nodes from membership cache
+    pcmk__node_search_cluster_member    = (1 << 0),
+
+    //! Search for remote nodes
+    pcmk__node_search_remote            = (1 << 1),
+
+    //! Search for cluster member nodes and remote nodes
+    pcmk__node_search_any               = pcmk__node_search_cluster_member
+                                          |pcmk__node_search_remote,
+
+    /* @COMPAT The values before this must stay the same until we can drop
+     * support for enum crm_get_peer_flags
+     */
+
+    //! Search for cluster nodes from CIB (as of last cache refresh)
+    pcmk__node_search_cluster_cib       = (1 << 2),
+};
 
 /*!
  * \internal
@@ -39,8 +60,8 @@ enum crm_proc_flag {
 static inline uint32_t
 crm_get_cluster_proc(void)
 {
-    switch (get_cluster_type()) {
-        case pcmk_cluster_corosync:
+    switch (pcmk_get_cluster_layer()) {
+        case pcmk_cluster_layer_corosync:
             return crm_proc_cpg;
 
         default:
@@ -108,7 +129,26 @@ pcmk__cs_err_str(int error)
 
 char *pcmk__corosync_cluster_name(void);
 bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
+
+void pcmk__cpg_confchg_cb(cpg_handle_t handle,
+                          const struct cpg_name *group_name,
+                          const struct cpg_address *member_list,
+                          size_t member_list_entries,
+                          const struct cpg_address *left_list,
+                          size_t left_list_entries,
+                          const struct cpg_address *joined_list,
+                          size_t joined_list_entries);
+
+char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
+                             uint32_t pid, void *content, uint32_t *kind,
+                             const char **from);
+
 #  endif
+
+const char *pcmk__cluster_node_uuid(crm_node_t *node);
+char *pcmk__cluster_node_name(uint32_t nodeid);
+const char *pcmk__cluster_local_node_name(void);
+const char *pcmk__node_name_from_uuid(const char *uuid);
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
                                  uint32_t flag, const char *status);
@@ -122,18 +162,36 @@ void pcmk__reap_unseen_nodes(uint64_t ring_id);
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
+
+enum crm_ais_msg_types pcmk__cluster_parse_msg_type(const char *text);
+bool pcmk__cluster_send_message(const crm_node_t *node,
+                                enum crm_ais_msg_types service,
+                                const xmlNode *data);
+
+// Membership
+
+void pcmk__cluster_init_node_caches(void);
+void pcmk__cluster_destroy_node_caches(void);
+
+void pcmk__cluster_set_autoreap(bool enable);
+void pcmk__cluster_set_status_callback(void (*dispatch)(enum crm_status_type,
+                                                        crm_node_t *,
+                                                        const void *));
+
+bool pcmk__cluster_is_node_active(const crm_node_t *node);
+unsigned int pcmk__cluster_num_active_nodes(void);
+unsigned int pcmk__cluster_num_remote_nodes(void);
+
+crm_node_t *pcmk__cluster_lookup_remote_node(const char *node_name);
+void pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name);
+void pcmk__cluster_forget_remote_node(const char *node_name);
 crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
                                      uint32_t flags);
-crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname,
-                                            const char *uuid);
+void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 
 void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
-crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
-                                          uint32_t flags);
 
-crm_node_t *pcmk__get_peer(unsigned int id, const char *uname,
-                           const char *uuid);
-crm_node_t *pcmk__get_peer_full(unsigned int id, const char *uname,
-                                const char *uuid, int flags);
+crm_node_t *pcmk__get_node(unsigned int id, const char *uname,
+                           const char *uuid, uint32_t flags);
 
-#endif
+#endif // PCMK__CRM_CLUSTER_INTERNAL__H

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,6 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/common/xml.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/lrmd_internal.h>
 
 #include <pacemaker-controld.h>
@@ -59,8 +58,8 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_CRMCONFIG)) {
+    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)
+        || cib__element_in_patchset(patchset, PCMK_XE_CRM_CONFIG)) {
 
         controld_trigger_config();
     }
@@ -70,21 +69,21 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
+    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
         // The CIB is still accurate
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
+    if (cib__element_in_patchset(patchset, PCMK_XE_NODES)
+        || cib__element_in_patchset(patchset, PCMK_XE_STATUS)) {
 
-        /* An unsafe client modified the nodes or status section. Ensure the
-         * node list is up-to-date, and start the join process again so we get
-         * everyone's current resource history.
+        /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
+         * section. Ensure the node list is up-to-date, and start the join
+         * process again so we get everyone's current resource history.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, F_CIB_CLIENTID);
+            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Populating nodes and starting an election after %s event "
                    "triggered by %s",
@@ -106,7 +105,7 @@ controld_disconnect_cib_manager(void)
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
-    cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
+    cib_conn->cmds->del_notify_callback(cib_conn, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                         do_cib_updated);
     cib_free_callbacks(cib_conn);
 
@@ -175,7 +174,7 @@ do_cib_control(long long action,
         crm_err("Could not set dnotify callback");
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
-                                                   T_CIB_DIFF_NOTIFY,
+                                                   PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                    update_cb) != pcmk_ok) {
         crm_err("Could not set CIB notification callback (update)");
 
@@ -226,12 +225,9 @@ cib_op_timeout(void)
                   env_timeout, (env? env : "none"));
     }
 
-    calculated_timeout = 1 + crm_active_peers();
-    if (crm_remote_peer_cache) {
-        calculated_timeout += g_hash_table_size(crm_remote_peer_cache);
-    }
-    calculated_timeout *= 10;
-
+    calculated_timeout = 10U * (1U
+                                + pcmk__cluster_num_active_nodes()
+                                + pcmk__cluster_num_remote_nodes());
     calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
     crm_trace("Calculated timeout: %us", calculated_timeout);
 
@@ -275,32 +271,32 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 }
 
-// Searches for various portions of node_state to delete
+// Searches for various portions of PCMK__XE_NODE_STATE to delete
 
-// Match a particular node's node_state (takes node name 1x)
-#define XPATH_NODE_STATE        "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+// Match a particular node's PCMK__XE_NODE_STATE (takes node name 1x)
+#define XPATH_NODE_STATE "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
 
 // Node's lrm section (name 1x)
-#define XPATH_NODE_LRM          XPATH_NODE_STATE "/" XML_CIB_TAG_LRM
+#define XPATH_NODE_LRM XPATH_NODE_STATE "/" PCMK__XE_LRM
 
-/* Node's lrm_rsc_op entries and lrm_resource entries without unexpired lock
- * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x)
+/* Node's PCMK__XE_LRM_RSC_OP entries and PCMK__XE_LRM_RESOURCE entries without
+ * unexpired lock
+ * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x)
  */
-#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" XML_LRM_TAG_RSC_OP    \
+#define XPATH_NODE_LRM_UNLOCKED XPATH_NODE_STATE "//" PCMK__XE_LRM_RSC_OP   \
                                 "|" XPATH_NODE_STATE                        \
-                                "//" XML_LRM_TAG_RESOURCE                   \
-                                "[not(@" XML_CONFIG_ATTR_SHUTDOWN_LOCK ") " \
-                                "or " XML_CONFIG_ATTR_SHUTDOWN_LOCK "<%lld]"
+                                "//" PCMK__XE_LRM_RESOURCE                  \
+                                "[not(@" PCMK_OPT_SHUTDOWN_LOCK ") "        \
+                                    "or " PCMK_OPT_SHUTDOWN_LOCK "<%lld]"
 
-// Node's transient_attributes section (name 1x)
-#define XPATH_NODE_ATTRS        XPATH_NODE_STATE "/" XML_TAG_TRANSIENT_NODEATTRS
+// Node's PCMK__XE_TRANSIENT_ATTRIBUTES section (name 1x)
+#define XPATH_NODE_ATTRS XPATH_NODE_STATE "/" PCMK__XE_TRANSIENT_ATTRIBUTES
 
-// Everything under node_state (name 1x)
+// Everything under PCMK__XE_NODE_STATE (name 1x)
 #define XPATH_NODE_ALL          XPATH_NODE_STATE "/*"
 
 /* Unlocked history + transient attributes
- * (name 2x, (seconds_since_epoch - XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT) 1x,
- * name 1x)
+ * (name 2x, (seconds_since_epoch - PCMK_OPT_SHUTDOWN_LOCK_LIMIT) 1x, name 1x)
  */
 #define XPATH_NODE_ALL_UNLOCKED XPATH_NODE_LRM_UNLOCKED "|" XPATH_NODE_ATTRS
 
@@ -309,7 +305,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
  * \brief Get the XPath and description of a node state section to be deleted
  *
  * \param[in]  uname    Desired node
- * \param[in]  section  Subsection of node_state to be deleted
+ * \param[in]  section  Subsection of \c PCMK__XE_NODE_STATE to be deleted
  * \param[out] xpath    Where to store XPath of \p section
  * \param[out] desc     If not \c NULL, where to store description of \p section
  */
@@ -360,10 +356,10 @@ controld_node_state_deletion_strings(const char *uname,
 
 /*!
  * \internal
- * \brief Delete subsection of a node's CIB node_state
+ * \brief Delete subsection of a node's CIB \c PCMK__XE_NODE_STATE
  *
  * \param[in] uname    Desired node
- * \param[in] section  Subsection of node_state to delete
+ * \param[in] section  Subsection of \c PCMK__XE_NODE_STATE to delete
  * \param[in] options  CIB call options to use
  */
 void
@@ -391,12 +387,12 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
 }
 
 // Takes node name and resource ID
-#define XPATH_RESOURCE_HISTORY "//" XML_CIB_TAG_STATE                       \
-                               "[@" XML_ATTR_UNAME "='%s']/"                \
-                               XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES    \
-                               "/" XML_LRM_TAG_RESOURCE                     \
-                               "[@" XML_ATTR_ID "='%s']"
-// @TODO could add "and @XML_CONFIG_ATTR_SHUTDOWN_LOCK" to limit to locks
+#define XPATH_RESOURCE_HISTORY "//" PCMK__XE_NODE_STATE                 \
+                               "[@" PCMK_XA_UNAME "='%s']/"             \
+                               PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES  \
+                               "/" PCMK__XE_LRM_RESOURCE                \
+                               "[@" PCMK_XA_ID "='%s']"
+// @TODO could add "and @PCMK_OPT_SHUTDOWN_LOCK" to limit to locks
 
 /*!
  * \internal
@@ -490,7 +486,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 {
     GString *list = NULL;
 
-    *result = create_xml_node(NULL, XML_TAG_PARAMS);
+    *result = pcmk__xe_create(NULL, PCMK_XE_PARAMETERS);
 
     /* Consider all parameters only except private ones to be consistent with
      * what scheduler does with calculate_secure_digest().
@@ -547,7 +543,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 
         } else {
             crm_trace("Removing attr %s from the xml result", param->rap_name);
-            xml_remove_prop(*result, param->rap_name);
+            pcmk__xe_remove_attr(*result, param->rap_name);
         }
     }
 
@@ -574,7 +570,9 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     if (pcmk_is_set(metadata->ra_flags, ra_supports_reload_agent)) {
-        // Add parameters not marked reloadable to the "op-force-restart" list
+        /* Add parameters not marked reloadable to the PCMK__XA_OP_FORCE_RESTART
+         * list
+         */
         list = build_parameter_list(op, metadata, ra_param_reloadable,
                                     &restart);
 
@@ -583,7 +581,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
          *
          * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
          * reloadability. Add any parameters with unique="1" to the
-         * "op-force-restart" list.
+         * PCMK__XA_OP_FORCE_RESTART list.
          */
         list = build_parameter_list(op, metadata, ra_param_unique, &restart);
 
@@ -593,11 +591,13 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     digest = calculate_operation_digest(restart, version);
-    /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
-     * no matter if it actually supports any parameters with unique="1"). */
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART,
+    /* Add PCMK__XA_OP_FORCE_RESTART and PCMK__XA_OP_RESTART_DIGEST to indicate
+     * the resource supports reload, no matter if it actually supports any
+     * reloadable parameters
+     */
+    crm_xml_add(update, PCMK__XA_OP_FORCE_RESTART,
                 (list == NULL)? "" : (const char *) list->str);
-    crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
+    crm_xml_add(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
@@ -622,17 +622,16 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     CRM_LOG_ASSERT(op->params != NULL);
 
-    /*
-     * To keep XML_LRM_ATTR_OP_SECURE short, we want it to contain the
-     * secure parameters but XML_LRM_ATTR_SECURE_DIGEST to be based on
-     * the insecure ones
+    /* To keep PCMK__XA_OP_SECURE_PARAMS short, we want it to contain the secure
+     * parameters but PCMK__XA_OP_SECURE_DIGEST to be based on the insecure ones
      */
     list = build_parameter_list(op, metadata, ra_param_private, &secure);
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
-        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, (const char *) list->str);
-        crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);
+        crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
+                    (const char *) list->str);
+        crm_xml_add(update, PCMK__XA_OP_SECURE_DIGEST, digest);
 
         crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
         g_string_free(list, TRUE);
@@ -672,7 +671,7 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
 
     target_rc = rsc_op_expected_rc(op);
 
-    caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
+    caller_version = g_hash_table_lookup(op->params, PCMK_XA_CRM_FEATURE_SET);
     CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
@@ -742,8 +741,8 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
         return false;
     }
 
-    // Check action's record-pending meta-attribute (defaults to true)
-    record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
+    // Check action's PCMK_META_RECORD_PENDING meta-attribute (defaults to true)
+    record_pending = crm_meta_value(op->params, PCMK_META_RECORD_PENDING);
     if ((record_pending != NULL) && !crm_is_true(record_pending)) {
         return false;
     }
@@ -890,34 +889,34 @@ controld_update_resource_history(const char *node_name,
     }
 
     // <status>
-    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
     //   <node_state ...>
-    xml = create_xml_node(update, XML_CIB_TAG_STATE);
+    xml = pcmk__xe_create(update, PCMK__XE_NODE_STATE);
     if (pcmk__str_eq(node_name, controld_globals.our_nodename,
                      pcmk__str_casei)) {
         node_id = controld_globals.our_uuid;
     } else {
         node_id = node_name;
-        pcmk__xe_set_bool_attr(xml, XML_NODE_IS_REMOTE, true);
+        pcmk__xe_set_bool_attr(xml, PCMK_XA_REMOTE_NODE, true);
     }
-    crm_xml_add(xml, XML_ATTR_ID, node_id);
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
-    crm_xml_add(xml, XML_ATTR_ORIGIN, __func__);
+    crm_xml_add(xml, PCMK_XA_ID, node_id);
+    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
+    crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
-    xml = create_xml_node(xml, XML_CIB_TAG_LRM);
-    crm_xml_add(xml, XML_ATTR_ID, node_id);
+    xml = pcmk__xe_create(xml, PCMK__XE_LRM);
+    crm_xml_add(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
-    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCES);
+    xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
-    xml = create_xml_node(xml, XML_LRM_TAG_RESOURCE);
-    crm_xml_add(xml, XML_ATTR_ID, op->rsc_id);
-    crm_xml_add(xml, XML_AGENT_ATTR_CLASS, rsc->standard);
-    crm_xml_add(xml, XML_AGENT_ATTR_PROVIDER, rsc->provider);
-    crm_xml_add(xml, XML_ATTR_TYPE, rsc->type);
+    xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCE);
+    crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
+    crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
+    crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
+    crm_xml_add(xml, PCMK_XA_TYPE, rsc->type);
     if (lock_time != 0) {
         /* Actions on a locked resource should either preserve the lock by
          * recording it with the action result, or clear it.
@@ -925,16 +924,15 @@ controld_update_resource_history(const char *node_name,
         if (!should_preserve_lock(op)) {
             lock_time = 0;
         }
-        crm_xml_add_ll(xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
-                       (long long) lock_time);
+        crm_xml_add_ll(xml, PCMK_OPT_SHUTDOWN_LOCK, (long long) lock_time);
     }
     if (op->params != NULL) {
         container = g_hash_table_lookup(op->params,
-                                        CRM_META "_" XML_RSC_ATTR_CONTAINER);
+                                        CRM_META "_" PCMK__META_CONTAINER);
         if (container != NULL) {
             crm_trace("Resource %s is a part of container resource %s",
                       op->rsc_id, container);
-            crm_xml_add(xml, XML_RSC_ATTR_CONTAINER, container);
+            crm_xml_add(xml, PCMK__META_CONTAINER, container);
         }
     }
 
@@ -946,7 +944,7 @@ controld_update_resource_history(const char *node_name,
      * fenced for running a resource it isn't.
      */
     crm_log_xml_trace(update, __func__);
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, cib_rsc_callback);
+    controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
     free_xml(update);
 }
 
@@ -963,15 +961,15 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     CRM_CHECK(op != NULL, return);
 
-    xml_top = create_xml_node(NULL, XML_LRM_TAG_RSC_OP);
-    crm_xml_add_int(xml_top, XML_LRM_ATTR_CALLID, op->call_id);
-    crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+    xml_top = pcmk__xe_create(NULL, PCMK__XE_LRM_RSC_OP);
+    crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
+    crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
         char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
 
         /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-        crm_xml_add(xml_top, XML_ATTR_ID, op_id);
+        crm_xml_add(xml_top, PCMK_XA_ID, op_id);
         free(op_id);
     }
 
@@ -979,31 +977,29 @@ controld_delete_action_history(const lrmd_event_data_t *op)
               op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
-                                            XML_CIB_TAG_STATUS, xml_top,
-                                            cib_none);
+                                            PCMK_XE_STATUS, xml_top, cib_none);
     crm_log_xml_trace(xml_top, "op:cancel");
     free_xml(xml_top);
 }
 
 /* Define xpath to find LRM resource history entry by node and resource */
 #define XPATH_HISTORY                                   \
-    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS              \
-    "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"  \
-    "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES       \
-    "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"  \
-    "/" XML_LRM_TAG_RSC_OP
+    "/" PCMK_XE_CIB "/" PCMK_XE_STATUS                  \
+    "/" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']" \
+    "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES         \
+    "/" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"  \
+    "/" PCMK__XE_LRM_RSC_OP
 
 /* ... and also by operation key */
-#define XPATH_HISTORY_ID XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s']"
+#define XPATH_HISTORY_ID XPATH_HISTORY "[@" PCMK_XA_ID "='%s']"
 
 /* ... and also by operation key and operation call ID */
 #define XPATH_HISTORY_CALL XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_CALLID "='%d']"
+    "[@" PCMK_XA_ID "='%s' and @" PCMK__XA_CALL_ID "='%d']"
 
 /* ... and also by operation key and original operation key */
 #define XPATH_HISTORY_ORIG XPATH_HISTORY \
-    "[@" XML_ATTR_ID "='%s' and @" XML_LRM_ATTR_TASK_KEY "='%s']"
+    "[@" PCMK_XA_ID "='%s' and @" PCMK__XA_OPERATION_KEY "='%s']"
 
 /*!
  * \internal

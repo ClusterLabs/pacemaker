@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,11 +19,11 @@
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 
 #include <pacemaker-internal.h>
 
@@ -159,17 +159,17 @@ node_id_xml(pcmk__output_t *out, va_list args) {
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
-                                 "nodeid", id_s,
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
+                                 PCMK_XA_NODEID, id_s,
                                  NULL);
 
     free(id_s);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *")
+PCMK__OUTPUT_ARGS("simple-node-list", "GList *")
 static int
-node_list_default(pcmk__output_t *out, va_list args)
+simple_node_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
@@ -182,22 +182,22 @@ node_list_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *")
+PCMK__OUTPUT_ARGS("simple-node-list", "GList *")
 static int
-node_list_xml(pcmk__output_t *out, va_list args)
+simple_node_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
-    out->begin_list(out, NULL, NULL, "nodes");
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
         char *id_s = crm_strdup_printf("%" PRIu32, node->id);
 
-        pcmk__output_create_xml_node(out, "node",
-                                     "id", id_s,
-                                     "name", node->uname,
-                                     "state", node->state,
+        pcmk__output_create_xml_node(out, PCMK_XE_NODE,
+                                     PCMK_XA_ID, id_s,
+                                     PCMK_XA_NAME, node->uname,
+                                     PCMK_XA_STATE, node->state,
                                      NULL);
 
         free(id_s);
@@ -226,9 +226,9 @@ node_name_xml(pcmk__output_t *out, va_list args) {
 
     char *id_s = crm_strdup_printf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, "node-info",
-                                 "nodeid", id_s,
-                                 XML_ATTR_UNAME, node_name,
+    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
+                                 PCMK_XA_NODEID, id_s,
+                                 PCMK_XA_UNAME, node_name,
                                  NULL);
 
     free(id_s);
@@ -265,7 +265,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
 
-    out->begin_list(out, NULL, NULL, "nodes");
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
@@ -273,10 +273,10 @@ partition_list_xml(pcmk__output_t *out, va_list args)
         if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
             char *id_s = crm_strdup_printf("%" PRIu32, node->id);
 
-            pcmk__output_create_xml_node(out, "node",
-                                         "id", id_s,
-                                         "name", node->uname,
-                                         "state", node->state,
+            pcmk__output_create_xml_node(out, PCMK_XE_NODE,
+                                         PCMK_XA_ID, id_s,
+                                         PCMK_XA_NAME, node->uname,
+                                         PCMK_XA_STATE, node->state,
                                          NULL);
             free(id_s);
         }
@@ -300,8 +300,8 @@ static int
 quorum_xml(pcmk__output_t *out, va_list args) {
     bool have_quorum = va_arg(args, int);
 
-    pcmk__output_create_xml_node(out, "cluster-info",
-                                 "quorum", have_quorum ? "true" : "false",
+    pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_INFO,
+                                 PCMK_XA_QUORUM, pcmk__btoa(have_quorum),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -309,14 +309,14 @@ quorum_xml(pcmk__output_t *out, va_list args) {
 static pcmk__message_entry_t fmt_functions[] = {
     { "node-id", "default", node_id_default },
     { "node-id", "xml", node_id_xml },
-    { "node-list", "default", node_list_default },
-    { "node-list", "xml", node_list_xml },
     { "node-name", "default", node_name_default },
     { "node-name", "xml", node_name_xml },
-    { "quorum", "default", quorum_default },
-    { "quorum", "xml", quorum_xml },
     { "partition-list", "default", partition_list_default },
     { "partition-list", "xml", partition_list_xml },
+    { "quorum", "default", quorum_default },
+    { "quorum", "xml", quorum_xml },
+    { "simple-node-list", "default", simple_node_list_default },
+    { "simple-node-list", "xml", simple_node_list_xml },
 
     { NULL, NULL, NULL }
 };
@@ -374,7 +374,7 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     if (options.command == 'p') {
         out->message(out, "partition-list", reply->data.nodes);
     } else if (options.command == 'l') {
-        out->message(out, "node-list", reply->data.nodes);
+        out->message(out, "simple-node-list", reply->data.nodes);
     }
 
     // Success
@@ -465,10 +465,11 @@ print_node_name(uint32_t nodeid)
 
     if (nodeid == 0) {
         // Check environment first (i.e. when called by resource agent)
-        const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+        const char *name = getenv("OCF_RESKEY_" CRM_META "_"
+                                  PCMK__META_ON_NODE);
 
         if (name != NULL) {
-            rc = out->message(out, "node-name", 0, name);
+            rc = out->message(out, "node-name", 0UL, name);
             goto done;
         }
     }
@@ -485,7 +486,7 @@ print_node_name(uint32_t nodeid)
         return;
     }
 
-    rc = out->message(out, "node-name", 0, node_name);
+    rc = out->message(out, "node-name", 0UL, node_name);
 
 done:
     if (node_name != NULL) {
@@ -543,17 +544,14 @@ static int
 remove_from_section(cib_t *cib, const char *element, const char *section,
                     const char *node_name, long node_id)
 {
-    xmlNode *xml = NULL;
     int rc = pcmk_rc_ok;
+    xmlNode *xml = pcmk__xe_create(NULL, element);
 
-    xml = create_xml_node(NULL, element);
-    if (xml == NULL) {
-        return pcmk_rc_error;
-    }
-    crm_xml_add(xml, XML_ATTR_UNAME, node_name);
+    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
         crm_xml_set_id(xml, "%ld", node_id);
     }
+
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
     free_xml(xml);
     return (rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(rc);
@@ -592,10 +590,10 @@ purge_node_from_cib(const char *node_name, long node_id)
     }
 
     // Remove from configuration and status
-    rc = remove_from_section(cib, XML_CIB_TAG_NODE, XML_CIB_TAG_NODES,
-                             node_name, node_id);
+    rc = remove_from_section(cib, PCMK_XE_NODE, PCMK_XE_NODES, node_name,
+                             node_id);
     if (rc == pcmk_rc_ok) {
-        rc = remove_from_section(cib, XML_CIB_TAG_STATE, XML_CIB_TAG_STATUS,
+        rc = remove_from_section(cib, PCMK__XE_NODE_STATE, PCMK_XE_STATUS,
                                  node_name, node_id);
     }
 
@@ -693,7 +691,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
     if (node_id > 0) {
         crm_xml_set_id(cmd, "%ld", node_id);
     }
-    crm_xml_add(cmd, XML_ATTR_UNAME, node_name);
+    crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {
@@ -803,11 +801,6 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error creating output format %s: %s", args->output_ty,
                     pcmk_rc_str(rc));
-        goto done;
-    }
-
-    if (!pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname())) {
-        exit_code = CRM_EX_SOFTWARE;
         goto done;
     }
 

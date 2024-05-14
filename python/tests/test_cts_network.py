@@ -8,6 +8,7 @@ import unittest
 
 from pacemaker._cts.network import next_ip
 
+
 # next_ip makes a bunch of assumptions that we are not going to test here:
 #
 # * The env argument actually contains an "IPBase" key with a string in it

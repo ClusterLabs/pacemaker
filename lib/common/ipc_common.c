@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <stdint.h>         // uint64_t
 #include <sys/types.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
 #define MIN_MSG_SIZE    12336    // sizeof(struct qb_ipc_connection_response)

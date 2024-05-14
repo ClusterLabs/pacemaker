@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,16 +8,16 @@
  */
 
 #ifndef PCMK__OUTPUT_INTERNAL__H
-#  define PCMK__OUTPUT_INTERNAL__H
+#define PCMK__OUTPUT_INTERNAL__H
 
-#  include <stdbool.h>
-#  include <stdint.h>
-#  include <stdio.h>
-#  include <libxml/tree.h>
-#  include <libxml/HTMLtree.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <libxml/tree.h>
+#include <libxml/HTMLtree.h>
 
-#  include <glib.h>
-#  include <crm/common/results.h>
+#include <glib.h>
+#include <crm/common/results.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,9 +29,9 @@ extern "C" {
  */
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
-#  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
+#define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
 #else
-#  define PCMK__OUTPUT_ARGS(ARGS...)
+#define PCMK__OUTPUT_ARGS(ARGS...)
 #endif
 
 typedef struct pcmk__output_s pcmk__output_t;
@@ -143,10 +143,7 @@ typedef struct pcmk__supported_format_s {
  */
 
 extern GOptionEntry pcmk__html_output_entries[];
-extern GOptionEntry pcmk__log_output_entries[];
-extern GOptionEntry pcmk__none_output_entries[];
 extern GOptionEntry pcmk__text_output_entries[];
-extern GOptionEntry pcmk__xml_output_entries[];
 
 pcmk__output_t *pcmk__mk_html_output(char **argv);
 pcmk__output_t *pcmk__mk_log_output(char **argv);
@@ -155,11 +152,10 @@ pcmk__output_t *pcmk__mk_text_output(char **argv);
 pcmk__output_t *pcmk__mk_xml_output(char **argv);
 
 #define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
-#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, pcmk__log_output_entries }
-#define PCMK__SUPPORTED_FORMAT_NONE { PCMK__VALUE_NONE, pcmk__mk_none_output,   \
-                                      pcmk__none_output_entries }
+#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, NULL }
+#define PCMK__SUPPORTED_FORMAT_NONE { PCMK_VALUE_NONE, pcmk__mk_none_output, NULL }
 #define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
-#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
+#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, NULL }
 
 /*!
  * \brief This structure contains everything that makes up a single output
@@ -658,6 +654,8 @@ pcmk__register_messages(pcmk__output_t *out,
 
 /* Functions that are useful for implementing custom message formatters */
 
+void pcmk__output_text_set_fancy(pcmk__output_t *out, bool enabled);
+
 /*!
  * \internal
  * \brief A printf-like function.
@@ -737,29 +735,9 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G
 void
 pcmk__text_prompt(const char *prompt, bool echo, char **dest);
 
-/*!
- * \internal
- * \brief Get the log level used by the formatted output logger
- *
- * \param[in] out  Output object
- *
- * \return Log level used by \p out
- */
 uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out);
 
-/*!
- * \internal
- * \brief Set the log level used by the formatted output logger.
- *
- * \param[in,out] out       The output functions structure.
- * \param[in]     log_level The log level constant (LOG_INFO, LOG_ERR, etc.)
- *                          to use.
- *
- * \note By default, LOG_INFO is used.
- * \note Almost all formatted output messages will respect this setting.
- *       However, out->err will always log at LOG_ERR.
- */
 void
 pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level);
 
@@ -887,16 +865,23 @@ xmlNodePtr
 pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
                               const char *class_name, const char *text);
 
+xmlNode *pcmk__html_create(xmlNode *parent, const char *name, const char *id,
+                           const char *class);
+
 /*!
  * \internal
  * \brief Add an HTML tag to the <head> section.
  *
  * The arguments after name are a NULL-terminated list of keys and values,
  * all of which will be added as attributes to the given tag.  For instance,
- * the following code would generate the tag "<meta http-equiv='refresh' content='19'>":
+ * the following code would generate the tag
+ * "<meta http-equiv='refresh' content='19'>":
  *
  * \code
- * pcmk__html_add_header("meta", "http-equiv", "refresh", "content", "19", NULL);
+ * pcmk__html_add_header(PCMK__XE_META,
+ *                       PCMK__XA_HTTP_EQUIV, PCMK__VALUE_REFRESH,
+ *                       PCMK__XA_CONTENT, "19",
+ *                       NULL);
  * \endcode
  *
  * \param[in]     name   The HTML tag for the new node.
@@ -918,9 +903,49 @@ G_GNUC_NULL_TERMINATED;
 void pcmk__output_and_clear_error(GError **error, pcmk__output_t *out);
 
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
-void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
+void pcmk__xml_output_finish(pcmk__output_t *out, crm_exit_t exit_status, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
 int pcmk__text_output_new(pcmk__output_t **out, const char *filename);
+
+/*!
+ * \internal
+ * \brief Check whether older style XML output is enabled
+ *
+ * The legacy flag should be used sparingly. Its meaning depends on the context
+ * in which it's used.
+ *
+ * \param[in] out  Output object
+ *
+ * \return \c true if the \c legacy_xml flag is enabled for \p out, or \c false
+ *         otherwise
+ */
+// @COMPAT This can be removed when `crm_mon -X` and daemon metadata are removed
+bool pcmk__output_get_legacy_xml(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Enable older style XML output
+ *
+ * The legacy flag should be used sparingly. Its meaning depends on the context
+ * in which it's used.
+ *
+ * \param[in,out] out  Output object
+ */
+// @COMPAT This can be removed when `crm_mon -X` and daemon metadata are removed
+void pcmk__output_set_legacy_xml(pcmk__output_t *out);
+
+/*!
+ * \internal
+ * \brief Enable using the <list> element for lists
+ *
+ * \note This function is only used in limited places and should not be
+ * used anywhere new.  We are trying to discourage and ultimately remove
+ * uses of this style of list.
+ *
+ * @COMPAT This can be removed when the stonith_admin and crm_resource
+ * schemas can be changed
+ */
+void pcmk__output_enable_list_element(pcmk__output_t *out);
 
 /*!
  * \internal

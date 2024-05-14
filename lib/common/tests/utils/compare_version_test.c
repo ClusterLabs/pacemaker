@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2023 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,6 +46,9 @@ shorter_versions(void **state)
 {
     assert_int_equal(compare_version("1.0", "1.0.1"), -1);
     assert_int_equal(compare_version("1.0.1", "1.0"), 1);
+    assert_int_equal(compare_version("1.0", "1"), 0);
+    assert_int_equal(compare_version("1", "1.2"), -1);
+    assert_int_equal(compare_version("1.2", "1"), 1);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

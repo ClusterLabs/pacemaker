@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/common/xml.h>
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
@@ -663,25 +664,35 @@ systemd_unit_exists(const char *name)
     return FALSE;
 }
 
-#define METADATA_FORMAT                                                     \
-    "<?xml version=\"1.0\"?>\n"                                             \
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
-    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
-    "  <version>1.1</version>\n"                                            \
-    "  <longdesc lang=\"en\">\n"                                            \
-    "    %s\n"                                                              \
-    "  </longdesc>\n"                                                       \
-    "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"       \
-    "  <parameters/>\n"                                                     \
-    "  <actions>\n"                                                         \
-    "    <action name=\"start\"     timeout=\"100\" />\n"                   \
-    "    <action name=\"stop\"      timeout=\"100\" />\n"                   \
-    "    <action name=\"status\"    timeout=\"100\" />\n"                   \
-    "    <action name=\"monitor\"   timeout=\"100\" interval=\"60\"/>\n"    \
-    "    <action name=\"meta-data\" timeout=\"5\"   />\n"                   \
-    "  </actions>\n"                                                        \
-    "  <special tag=\"systemd\"/>\n"                                        \
-    "</resource-agent>\n"
+// @TODO Use XML string constants and maybe a real XML object
+#define METADATA_FORMAT                                                        \
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                    \
+    "<" PCMK_XE_RESOURCE_AGENT " "                                             \
+        PCMK_XA_NAME "=\"%s\" "                                                \
+        PCMK_XA_VERSION "=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"               \
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"                       \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"       \
+    "    %s\n"                                                                 \
+    "  </" PCMK_XE_LONGDESC ">\n"                                              \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"        \
+        "systemd unit file for %s"                                             \
+      "</" PCMK_XE_SHORTDESC ">\n"                                             \
+    "  <" PCMK_XE_PARAMETERS "/>\n"                                            \
+    "  <" PCMK_XE_ACTIONS ">\n"                                                \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""       \
+                           " " PCMK_META_TIMEOUT "=\"100s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STOP "\""        \
+                           " " PCMK_META_TIMEOUT "=\"100s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STATUS "\""      \
+                           " " PCMK_META_TIMEOUT "=\"100s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_MONITOR "\""     \
+                           " " PCMK_META_TIMEOUT "=\"100s\""                   \
+                           " " PCMK_META_INTERVAL "=\"60s\" />\n"              \
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_META_DATA "\""   \
+                           " " PCMK_META_TIMEOUT "=\"5s\" />\n"                \
+    "  </" PCMK_XE_ACTIONS ">\n"                                               \
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "=\"systemd\"/>\n"                   \
+    "</" PCMK_XE_RESOURCE_AGENT ">\n"
 
 static char *
 systemd_unit_metadata(const char *name, int timeout)
@@ -689,8 +700,6 @@ systemd_unit_metadata(const char *name, int timeout)
     char *meta = NULL;
     char *desc = NULL;
     char *path = NULL;
-
-    char *escaped = NULL;
 
     if (invoke_unit_by_name(name, NULL, &path) == pcmk_rc_ok) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
@@ -700,12 +709,18 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    escaped = crm_xml_escape(desc);
+    if (pcmk__xml_needs_escape(desc, pcmk__xml_escape_text)) {
+        gchar *escaped = pcmk__xml_escape(desc, pcmk__xml_escape_text);
 
-    meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
+        meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
+        g_free(escaped);
+
+    } else {
+        meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
+    }
+
     free(desc);
     free(path);
-    free(escaped);
     return meta;
 }
 

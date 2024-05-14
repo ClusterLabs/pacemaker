@@ -34,8 +34,8 @@ build: init
 # Pass option depending on whether automake has been run or not
 USE_FILE = $(shell test -e rpm/Makefile || echo "-f Makefile.am")
 
-.PHONY: $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm
-$(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:
+.PHONY: $(PACKAGE).spec chroot dirty export mock rc release rpm srpm
+$(PACKAGE).spec chroot dirty export mock rc release rpm srpm:
 	$(MAKE) $(AM_MAKEFLAGS) -C rpm $(USE_FILE) "$@"
 
 mock-% rpm-% spec-% srpm-%: FORCE

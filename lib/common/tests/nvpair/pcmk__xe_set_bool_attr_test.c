@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,21 +11,21 @@
 
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 static void
 set_attr(void **state)
 {
-    xmlNode *node = string2xml("<node/>");
+    xmlNode *node = pcmk__xml_parse("<node/>");
 
     pcmk__xe_set_bool_attr(node, "a", true);
     pcmk__xe_set_bool_attr(node, "b", false);
 
-    assert_string_equal(crm_element_value(node, "a"), XML_BOOLEAN_TRUE);
-    assert_string_equal(crm_element_value(node, "b"), XML_BOOLEAN_FALSE);
+    assert_string_equal(crm_element_value(node, "a"), PCMK_VALUE_TRUE);
+    assert_string_equal(crm_element_value(node, "b"), PCMK_VALUE_FALSE);
 
     free_xml(node);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(set_attr))

@@ -1,7 +1,7 @@
-""" Simultaneously start stopped nodes """
+"""Simultaneously start stopped nodes."""
 
 __all__ = ["SimulStartLite"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -16,29 +16,25 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class SimulStartLite(CTSTest):
-    """ A pseudo-test that is only used to set up conditions before running
-        some other test.  This class starts any stopped nodes more or less
-        simultaneously.
+    """
+    A pseudo-test that sets up conditions before running some other test.
 
-        Other test classes should not use this one as a superclass.
+    This class starts any stopped nodes more or less simultaneously.  Other test
+    classes should not use this one as a superclass.
     """
 
     def __init__(self, cm):
-        """ Create a new SimulStartLite instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new SimulStartLite instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "SimulStartLite"
 
     def __call__(self, dummy):
-        """ Start all stopped nodes more or less simultaneously, returning
-            whether this succeeded or not.
-        """
-
+        """Return whether starting all stopped nodes more or less simultaneously succeeds."""
         self.incr("calls")
         self.debug("Setup: %s" % self.name)
 
@@ -65,7 +61,7 @@ class SimulStartLite(CTSTest):
                                   self.templates["Pat:PacemakerUp"] % node])
 
             #   Start all the nodes - at about the same time...
-            watch = self.create_watch(watchpats, self._env["DeadTime"]+10)
+            watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
             watch.set_watch()
 
             stonith = self._cm.prepare_fencing_watcher()
@@ -128,6 +124,5 @@ class SimulStartLite(CTSTest):
         return self.success()
 
     def is_applicable(self):
-        """ SimulStartLite is a setup test and never applicable """
-
+        """Return True if this test is applicable in the current test configuration."""
         return False

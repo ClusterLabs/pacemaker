@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/ipc_internal.h>
@@ -45,11 +44,11 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                          xmlNode ** answer)
 {
-    const char *host = crm_element_value(req, F_ORIG);
+    const char *host = crm_element_value(req, PCMK__XA_SRC);
 
     *answer = NULL;
 
-    if (crm_element_value(req, F_CIB_ISREPLY) == NULL) {
+    if (crm_element_value(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
         crm_info("Peer %s is requesting to shut down", host);
         return pcmk_ok;
     }
@@ -117,17 +116,21 @@ static int sync_in_progress = 0;
 void
 send_sync_request(const char *host)
 {
-    xmlNode *sync_me = create_xml_node(NULL, "sync-me");
+    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
+    crm_node_t *peer = NULL;
 
     crm_info("Requesting re-sync from %s", (host? host : "all peers"));
     sync_in_progress = 1;
 
-    crm_xml_add(sync_me, F_TYPE, "cib");
-    crm_xml_add(sync_me, F_CIB_OPERATION, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    crm_xml_add(sync_me, F_CIB_DELEGATED,
+    crm_xml_add(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
+    crm_xml_add(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
+    crm_xml_add(sync_me, PCMK__XA_CIB_DELEGATED_FROM,
                 stand_alone? "localhost" : crm_cluster->uname);
 
-    send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
+    if (host != NULL) {
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
+    }
+    pcmk__cluster_send_message(peer, crm_msg_cib, sync_me);
     free_xml(sync_me);
 }
 
@@ -135,38 +138,44 @@ int
 cib_process_ping(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    const char *host = crm_element_value(req, F_ORIG);
-    const char *seq = crm_element_value(req, F_CIB_PING_ID);
+    const char *host = crm_element_value(req, PCMK__XA_SRC);
+    const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
     char *digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
 
+    xmlNode *wrapper = NULL;
+
     crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
-    *answer = create_xml_node(NULL, XML_CRM_TAG_PING);
+    *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
-    crm_xml_add(*answer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(*answer, XML_ATTR_DIGEST, digest);
-    crm_xml_add(*answer, F_CIB_PING_ID, seq);
+    crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    crm_xml_add(*answer, PCMK__XA_DIGEST, digest);
+    crm_xml_add(*answer, PCMK__XA_CIB_PING_ID, seq);
 
-    pcmk__if_tracing(
-        {
-            // Append additional detail so the receiver can log the differences
-            add_message_xml(*answer, F_CIB_CALLDATA, the_cib);
-        },
-        if (the_cib != NULL) {
-            // Always include at least the version details
-            xmlNode *shallow = create_xml_node(NULL,
-                                               (const char *) the_cib->name);
+    wrapper = pcmk__xe_create(*answer, PCMK__XE_CIB_CALLDATA);
 
-            copy_in_properties(shallow, the_cib);
-            add_message_xml(*answer, F_CIB_CALLDATA, shallow);
-            free_xml(shallow);
-        }
-    );
+    if (the_cib != NULL) {
+        pcmk__if_tracing(
+            {
+                /* Append additional detail so the receiver can log the
+                 * differences
+                 */
+                pcmk__xml_copy(wrapper, the_cib);
+            },
+            {
+                // Always include at least the version details
+                const char *name = (const char *) the_cib->name;
+                xmlNode *shallow = pcmk__xe_create(wrapper, name);
+
+                pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
+            }
+        );
+    }
 
     crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
              host, digest,
-             crm_element_value(existing_cib, XML_ATTR_GENERATION_ADMIN),
-             crm_element_value(existing_cib, XML_ATTR_GENERATION),
-             crm_element_value(existing_cib, XML_ATTR_NUMUPDATES));
+             crm_element_value(existing_cib, PCMK_XA_ADMIN_EPOCH),
+             crm_element_value(existing_cib, PCMK_XA_EPOCH),
+             crm_element_value(existing_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
@@ -188,51 +197,51 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
     *answer = NULL;
 
-    if(crm_element_value(req, F_CIB_SCHEMA_MAX)) {
+    if (crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX) != NULL) {
         /* The originator of an upgrade request sends it to the DC, without
-         * F_CIB_SCHEMA_MAX. If an upgrade is needed, the DC re-broadcasts the
-         * request with F_CIB_SCHEMA_MAX, and each node performs the upgrade
-         * (and notifies its local clients) here.
+         * PCMK__XA_CIB_SCHEMA_MAX. If an upgrade is needed, the DC
+         * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
+         * performs the upgrade (and notifies its local clients) here.
          */
         return cib_process_upgrade(
             op, options, section, req, input, existing_cib, result_cib, answer);
 
     } else {
-        int new_version = 0;
-        int current_version = 0;
-        xmlNode *scratch = copy_xml(existing_cib);
-        const char *host = crm_element_value(req, F_ORIG);
-        const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
-        const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-        const char *call_opts = crm_element_value(req, F_CIB_CALLOPTS);
-        const char *call_id = crm_element_value(req, F_CIB_CALLID);
+        xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);
+        const char *host = crm_element_value(req, PCMK__XA_SRC);
+        const char *original_schema = NULL;
+        const char *new_schema = NULL;
+        const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
+        const char *call_opts = crm_element_value(req, PCMK__XA_CIB_CALLOPT);
+        const char *call_id = crm_element_value(req, PCMK__XA_CIB_CALLID);
 
         crm_trace("Processing \"%s\" event", op);
-        if (value != NULL) {
-            current_version = get_schema_version(value);
-        }
+        original_schema = crm_element_value(existing_cib,
+                                            PCMK_XA_VALIDATE_WITH);
+        rc = pcmk__update_schema(&scratch, NULL, true, true);
+        rc = pcmk_rc2legacy(rc);
+        new_schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
-        rc = update_validation(&scratch, &new_version, 0, TRUE, TRUE);
-        if (new_version > current_version) {
-            xmlNode *up = create_xml_node(NULL, __func__);
+        if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
+            xmlNode *up = pcmk__xe_create(NULL, __func__);
 
             rc = pcmk_ok;
             crm_notice("Upgrade request from %s verified", host);
 
-            crm_xml_add(up, F_TYPE, "cib");
-            crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
-            crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
-            crm_xml_add(up, F_CIB_DELEGATED, host);
-            crm_xml_add(up, F_CIB_CLIENTID, client_id);
-            crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
-            crm_xml_add(up, F_CIB_CALLID, call_id);
+            crm_xml_add(up, PCMK__XA_T, PCMK__VALUE_CIB);
+            crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
+            crm_xml_add(up, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
+            crm_xml_add(up, PCMK__XA_CIB_DELEGATED_FROM, host);
+            crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
+            crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
+            crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
 
             if (cib_legacy_mode() && based_is_primary) {
                 rc = cib_process_upgrade(
                     op, options, section, up, input, existing_cib, result_cib, answer);
 
             } else {
-                send_cluster_message(NULL, crm_msg_cib, up, FALSE);
+                pcmk__cluster_send_message(NULL, crm_msg_cib, up);
             }
 
             free_xml(up);
@@ -243,25 +252,27 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
 
         if (rc != pcmk_ok) {
             // Notify originating peer so it can notify its local clients
-            crm_node_t *origin = pcmk__search_cluster_node_cache(0, host, NULL);
+            crm_node_t *origin = NULL;
+
+            origin = pcmk__search_node_caches(0, host,
+                                              pcmk__node_search_cluster_member);
 
             crm_info("Rejecting upgrade request from %s: %s "
                      CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
                      (origin? origin->uname : "lost"));
 
             if (origin) {
-                xmlNode *up = create_xml_node(NULL, __func__);
+                xmlNode *up = pcmk__xe_create(NULL, __func__);
 
-                crm_xml_add(up, F_TYPE, "cib");
-                crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
-                crm_xml_add(up, F_CIB_DELEGATED, host);
-                crm_xml_add(up, F_CIB_ISREPLY, host);
-                crm_xml_add(up, F_CIB_CLIENTID, client_id);
-                crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
-                crm_xml_add(up, F_CIB_CALLID, call_id);
-                crm_xml_add_int(up, F_CIB_UPGRADE_RC, rc);
-                if (send_cluster_message(origin, crm_msg_cib, up, TRUE)
-                    == FALSE) {
+                crm_xml_add(up, PCMK__XA_T, PCMK__VALUE_CIB);
+                crm_xml_add(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
+                crm_xml_add(up, PCMK__XA_CIB_DELEGATED_FROM, host);
+                crm_xml_add(up, PCMK__XA_CIB_ISREPLYTO, host);
+                crm_xml_add(up, PCMK__XA_CIB_CLIENTID, client_id);
+                crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
+                crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
+                crm_xml_add_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
+                if (!pcmk__cluster_send_message(origin, crm_msg_cib, up)) {
                     crm_warn("Could not send CIB upgrade result to %s", host);
                 }
                 free_xml(up);
@@ -351,7 +362,7 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
     int rc =
         cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
 
-    if ((rc == pcmk_ok) && pcmk__xe_is(input, XML_TAG_CIB)) {
+    if ((rc == pcmk_ok) && pcmk__xe_is(input, PCMK_XE_CIB)) {
         sync_in_progress = 0;
     }
     return rc;
@@ -370,32 +381,26 @@ static xmlNode *
 cib_msg_copy(xmlNode *msg)
 {
     static const char *field_list[] = {
-        F_XML_TAGNAME,
-        F_TYPE,
-        F_CIB_CLIENTID,
-        F_CIB_CALLOPTS,
-        F_CIB_CALLID,
-        F_CIB_OPERATION,
-        F_CIB_ISREPLY,
-        F_CIB_SECTION,
-        F_CIB_HOST,
-        F_CIB_RC,
-        F_CIB_DELEGATED,
-        F_CIB_OBJID,
-        F_CIB_OBJTYPE,
-        F_CIB_EXISTING,
-        F_CIB_SEENCOUNT,
-        F_CIB_TIMEOUT,
-        F_CIB_GLOBAL_UPDATE,
-        F_CIB_CLIENTNAME,
-        F_CIB_USER,
-        F_CIB_NOTIFY_TYPE,
-        F_CIB_NOTIFY_ACTIVATE
+        PCMK__XA_T,
+        PCMK__XA_CIB_CLIENTID,
+        PCMK__XA_CIB_CALLOPT,
+        PCMK__XA_CIB_CALLID,
+        PCMK__XA_CIB_OP,
+        PCMK__XA_CIB_ISREPLYTO,
+        PCMK__XA_CIB_SECTION,
+        PCMK__XA_CIB_HOST,
+        PCMK__XA_CIB_RC,
+        PCMK__XA_CIB_DELEGATED_FROM,
+        PCMK__XA_CIB_OBJECT,
+        PCMK__XA_CIB_OBJECT_TYPE,
+        PCMK__XA_CIB_UPDATE,
+        PCMK__XA_CIB_CLIENTNAME,
+        PCMK__XA_CIB_USER,
+        PCMK__XA_CIB_NOTIFY_TYPE,
+        PCMK__XA_CIB_NOTIFY_ACTIVATE,
     };
 
-    xmlNode *copy = create_xml_node(NULL, "copy");
-
-    CRM_ASSERT(copy != NULL);
+    xmlNode *copy = pcmk__xe_create(NULL, PCMK__XE_COPY);
 
     for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
         const char *field = field_list[lpc];
@@ -414,10 +419,11 @@ sync_our_cib(xmlNode * request, gboolean all)
 {
     int result = pcmk_ok;
     char *digest = NULL;
-    const char *host = crm_element_value(request, F_ORIG);
-    const char *op = crm_element_value(request, F_CIB_OPERATION);
-
+    const char *host = crm_element_value(request, PCMK__XA_SRC);
+    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+    crm_node_t *peer = NULL;
     xmlNode *replace_request = NULL;
+    xmlNode *wrapper = NULL;
 
     CRM_CHECK(the_cib != NULL, return -EINVAL);
     CRM_CHECK(all || (host != NULL), return -EINVAL);
@@ -427,24 +433,30 @@ sync_our_cib(xmlNode * request, gboolean all)
     replace_request = cib_msg_copy(request);
 
     if (host != NULL) {
-        crm_xml_add(replace_request, F_CIB_ISREPLY, host);
+        crm_xml_add(replace_request, PCMK__XA_CIB_ISREPLYTO, host);
     }
     if (all) {
-        xml_remove_prop(replace_request, F_CIB_HOST);
+        pcmk__xe_remove_attr(replace_request, PCMK__XA_CIB_HOST);
     }
 
-    crm_xml_add(replace_request, F_CIB_OPERATION, PCMK__CIB_REQUEST_REPLACE);
-    crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
-    pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
+    crm_xml_add(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
 
-    crm_xml_add(replace_request, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    // @TODO Keep for tracing, or drop?
+    crm_xml_add(replace_request, PCMK__XA_ORIGINAL_CIB_OP, op);
+
+    pcmk__xe_set_bool_attr(replace_request, PCMK__XA_CIB_UPDATE, true);
+
+    crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);
-    crm_xml_add(replace_request, XML_ATTR_DIGEST, digest);
+    crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
-    add_message_xml(replace_request, F_CIB_CALLDATA, the_cib);
+    wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);
+    pcmk__xml_copy(wrapper, the_cib);
 
-    if (send_cluster_message
-        (all ? NULL : crm_get_peer(0, host), crm_msg_cib, replace_request, FALSE) == FALSE) {
+    if (!all) {
+        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
+    }
+    if (!pcmk__cluster_send_message(peer, crm_msg_cib, replace_request)) {
         result = -ENOTCONN;
     }
     free_xml(replace_request);
@@ -463,8 +475,8 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
      * On failure, our caller will free *result_cib.
      */
     int rc = pcmk_rc_ok;
-    const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
-    const char *origin = crm_element_value(req, F_ORIG);
+    const char *client_id = crm_element_value(req, PCMK__XA_CIB_CLIENTID);
+    const char *origin = crm_element_value(req, PCMK__XA_SRC);
     pcmk__client_t *client = pcmk__find_client_by_id(client_id);
 
     rc = based_commit_transaction(input, client, origin, result_cib);
@@ -477,4 +489,50 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
         free(source);
     }
     return pcmk_rc2legacy(rc);
+}
+
+int
+cib_process_schemas(const char *op, int options, const char *section, xmlNode *req,
+                    xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
+                    xmlNode **answer)
+{
+    xmlNode *wrapper = NULL;
+    xmlNode *data = NULL;
+
+    const char *after_ver = NULL;
+    GList *schemas = NULL;
+    GList *already_included = NULL;
+
+    *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
+
+    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    if (data == NULL) {
+        crm_warn("No data specified in request");
+        return -EPROTO;
+    }
+
+    after_ver = crm_element_value(data, PCMK_XA_VERSION);
+    if (after_ver == NULL) {
+        crm_warn("No version specified in request");
+        return -EPROTO;
+    }
+
+    /* The client requested all schemas after the latest one we know about, which
+     * means the client is fully up-to-date.  Return a properly formatted reply
+     * with no schemas.
+     */
+    if (pcmk__str_eq(after_ver, pcmk__highest_schema_name(), pcmk__str_none)) {
+        return pcmk_ok;
+    }
+
+    schemas = pcmk__schema_files_later_than(after_ver);
+
+    for (GList *iter = schemas; iter != NULL; iter = iter->next) {
+        pcmk__build_schema_xml_node(*answer, iter->data, &already_included);
+    }
+
+    g_list_free_full(schemas, free);
+    g_list_free_full(already_included, free);
+    return pcmk_ok;
 }

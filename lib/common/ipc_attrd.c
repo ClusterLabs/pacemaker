@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 the Pacemaker project contributors
+ * Copyright 2011-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,10 +16,10 @@
 #include <stdio.h>
 
 #include <crm/crm.h>
+#include <crm/common/attrs_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_attrd_internal.h>
-#include <crm/common/attrd_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
 static void
@@ -30,13 +30,13 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
     name = crm_element_value(msg_data, PCMK__XA_ATTR_NAME);
 
-    for (xmlNode *node = first_named_child(msg_data, XML_CIB_TAG_NODE);
-         node != NULL; node = crm_next_same_xml(node)) {
-        pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
+    for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
+                                              NULL);
+         node != NULL; node = pcmk__xe_next_same(node)) {
 
-        CRM_ASSERT(pair != NULL);
+        pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
-        pair->node = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
+        pair->node = crm_element_value(node, PCMK__XA_ATTR_HOST);
         pair->name = name;
         pair->value = crm_element_value(node, PCMK__XA_ATTR_VALUE);
         data->data.pairs = g_list_prepend(data->data.pairs, pair);
@@ -46,7 +46,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, PCMK__XA_TASK);
+    const char *command = crm_element_value(request, PCMK_XA_TASK);
 
     return pcmk__str_any_of(command,
                             PCMK__ATTRD_CMD_CLEAR_FAILURE,
@@ -68,21 +68,22 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk__attrd_reply_unknown
     };
 
-    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         return false;
     }
 
     /* Do some basic validation of the reply */
-    value = crm_element_value(reply, F_TYPE);
+    value = crm_element_value(reply, PCMK__XA_T);
     if (pcmk__str_empty(value)
-        || !pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
+        || !pcmk__str_eq(value, PCMK__VALUE_ATTRD, pcmk__str_none)) {
         crm_info("Unrecognizable message from attribute manager: "
-                 "message type '%s' not '" T_ATTRD "'", pcmk__s(value, ""));
+                 "message type '%s' not '" PCMK__VALUE_ATTRD "'",
+                 pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    value = crm_element_value(reply, F_SUBTYPE);
+    value = crm_element_value(reply, PCMK__XA_SUBT);
 
     /* Only the query command gets a reply for now. NULL counts as query for
      * backward compatibility with attribute managers <2.1.3 that didn't set it.
@@ -139,61 +140,38 @@ pcmk__attrd_api_methods(void)
 static xmlNode *
 create_attrd_op(const char *user_name)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __func__);
+    xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
-    crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
+    crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    crm_xml_add(attrd_op, PCMK__XA_SRC, pcmk__s(crm_system_name, "unknown"));
     crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
 
     return attrd_op;
 }
 
 static int
-create_api(pcmk_ipc_api_t **api)
-{
-    int rc = pcmk_new_ipc_api(api, pcmk_ipc_attrd);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
-    }
-
-    return rc;
-}
-
-static void
-destroy_api(pcmk_ipc_api_t *api)
-{
-    pcmk_disconnect_ipc(api);
-    pcmk_free_ipc_api(api);
-    api = NULL;
-}
-
-static int
 connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
     int rc = pcmk_rc_ok;
+    bool created_api = false;
+
+    if (api == NULL) {
+        rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+        created_api = true;
+    }
 
     rc = pcmk__connect_ipc(api, pcmk_ipc_dispatch_sync, 5);
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to %s: %s",
-                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
-        return rc;
+    if (rc == pcmk_rc_ok) {
+        rc = pcmk__send_ipc_request(api, request);
     }
 
-    rc = pcmk__send_ipc_request(api, request);
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not send request to %s: %s",
-                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
-        return rc;
+    if (created_api) {
+        pcmk_free_ipc_api(api);
     }
-
-    return pcmk_rc_ok;
-}
-
-static int
-send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
-{
-    return pcmk__send_ipc_request(api, request);
+    return rc;
 }
 
 int
@@ -212,44 +190,28 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
         node = target;
     }
 
-    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
-    pcmk__xe_add_node(request, node, 0);
-    crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
-    crm_xml_add(request, PCMK__XA_ATTR_OPERATION, operation);
-    crm_xml_add(request, PCMK__XA_ATTR_INTERVAL, interval_spec);
-    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
-                    pcmk_is_set(options, pcmk__node_attr_remote));
-
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
-
-    } else {
-        rc = send_attrd_request(api, request);
-    }
-
-    free_xml(request);
-
     if (operation) {
-        interval_desc = interval_spec? interval_spec : "nonrecurring";
+        interval_desc = pcmk__s(interval_spec, "nonrecurring");
         op_desc = operation;
     } else {
         interval_desc = "all";
         op_desc = "operations";
     }
+    crm_debug("Asking %s to clear failure of %s %s for %s on %s",
+              pcmk_ipc_name(api, true), interval_desc, op_desc,
+              pcmk__s(resource, "all resources"), pcmk__s(node, "all nodes"));
 
-    crm_debug("Asked pacemaker-attrd to clear failure of %s %s for %s on %s: %s (%d)",
-              interval_desc, op_desc, (resource? resource : "all resources"),
-              (node? node : "all nodes"), pcmk_rc_str(rc), rc);
+    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
+    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
+    crm_xml_add(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
+    crm_xml_add(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
+    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
+                    pcmk_is_set(options, pcmk__node_attr_remote));
 
+    rc = connect_and_send_attrd_request(api, request);
+
+    free_xml(request);
     return rc;
 }
 
@@ -277,43 +239,30 @@ pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
 }
 
 int
-pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
+pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
-    const char *display_host = (node ? node : "localhost");
     const char *target = pcmk__node_attr_target(node);
 
     if (target != NULL) {
         node = target;
     }
 
+    crm_debug("Asking %s to purge transient attributes%s for %s",
+              pcmk_ipc_name(api, true),
+              (reap? " and node cache entries" : ""),
+              pcmk__s(node, "local node"));
+
     request = create_attrd_op(NULL);
 
-    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+    pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
     pcmk__xe_add_node(request, node, 0);
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
-
-    } else {
-        rc = send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    crm_debug("Asked pacemaker-attrd to purge %s: %s (%d)",
-              display_host, pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
@@ -339,23 +288,18 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         }
     }
 
+    crm_debug("Querying %s for value of '%s'%s%s",
+              pcmk_ipc_name(api, true), name,
+              ((node == NULL)? "" : " on "), pcmk__s(node, ""));
+
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
-    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
+    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_QUERY);
     pcmk__xe_add_node(request, node, 0);
 
-    rc = send_attrd_request(api, request);
+    rc = connect_and_send_attrd_request(api, request);
     free_xml(request);
-
-    if (node) {
-        crm_debug("Queried pacemaker-attrd for %s on %s: %s (%d)",
-                  name, node, pcmk_rc_str(rc), rc);
-    } else {
-        crm_debug("Queried pacemaker-attrd for %s: %s (%d)",
-                  name, pcmk_rc_str(rc), rc);
-    }
-
     return rc;
 }
 
@@ -364,39 +308,23 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
-    const char *display_host = (node ? node : "localhost");
     const char *target = pcmk__node_attr_target(node);
 
     if (target != NULL) {
         node = target;
     }
 
+    crm_debug("Asking %s to write all transient attributes for %s to CIB",
+              pcmk_ipc_name(api, true), pcmk__s(node, "local node"));
+
     request = create_attrd_op(NULL);
 
-    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_REFRESH);
+    crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_REFRESH);
     pcmk__xe_add_node(request, node, 0);
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
-
-    } else {
-        rc = send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    crm_debug("Asked pacemaker-attrd to refresh %s: %s (%d)",
-              display_host, pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
@@ -404,11 +332,11 @@ static void
 add_op_attr(xmlNode *op, uint32_t options)
 {
     if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
-        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
+        crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
     } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
-        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+        crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
-        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
+        crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
     }
 }
 
@@ -417,15 +345,15 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
                    const char *dampen, const char *set, uint32_t options)
 {
     if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
-        crm_xml_add(op, PCMK__XA_ATTR_PATTERN, name);
+        crm_xml_add(op, PCMK__XA_ATTR_REGEX, name);
     } else {
         crm_xml_add(op, PCMK__XA_ATTR_NAME, name);
     }
 
     if (pcmk_is_set(options, pcmk__node_attr_utilization)) {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_UTILIZATION);
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_UTILIZATION);
     } else {
-        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, XML_TAG_ATTR_SETS);
+        crm_xml_add(op, PCMK__XA_ATTR_SET_TYPE, PCMK_XE_INSTANCE_ATTRIBUTES);
     }
 
     add_op_attr(op, options);
@@ -453,7 +381,6 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
-    const char *display_host = (node ? node : "localhost");
     const char *target = NULL;
 
     if (name == NULL) {
@@ -466,30 +393,16 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
         node = target;
     }
 
+    crm_debug("Asking %s to update '%s' to '%s' for %s",
+              pcmk_ipc_name(api, true), name, pcmk__s(value, "(null)"),
+              pcmk__s(node, "local node"));
+
     request = create_attrd_op(user_name);
     populate_update_op(request, node, name, value, dampen, set, options);
 
-    if (api == NULL) {
-        rc = create_api(&api);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        rc = connect_and_send_attrd_request(api, request);
-        destroy_api(api);
-
-    } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
-
-    } else {
-        rc = send_attrd_request(api, request);
-    }
+    rc = connect_and_send_attrd_request(api, request);
 
     free_xml(request);
-
-    crm_debug("Asked pacemaker-attrd to update %s on %s: %s (%d)",
-              name, display_host, pcmk_rc_str(rc), rc);
-
     return rc;
 }
 
@@ -545,7 +458,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
              * then we also add the task to each child node in populate_update_op
              * so attrd_client_update knows what form of update is taking place.
              */
-            child = create_xml_node(request, XML_ATTR_OP);
+            child = pcmk__xe_create(request, PCMK_XE_OP);
             target = pcmk__node_attr_target(pair->node);
 
             if (target != NULL) {
@@ -564,23 +477,8 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
      * request.  Do that now, creating and destroying the API object if needed.
      */
     if (pcmk__is_daemon) {
-        bool created_api = false;
-
-        if (api == NULL) {
-            rc = create_api(&api);
-            if (rc != pcmk_rc_ok) {
-                return rc;
-            }
-
-            created_api = true;
-        }
-
         rc = connect_and_send_attrd_request(api, request);
         free_xml(request);
-
-        if (created_api) {
-            destroy_api(api);
-        }
     }
 
     return rc;

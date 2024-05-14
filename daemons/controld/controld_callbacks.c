@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 #include <crm/cib.h>
@@ -27,15 +26,15 @@ void
 crmd_ha_msg_filter(xmlNode * msg)
 {
     if (AM_I_DC) {
-        const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
+        const char *sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
 
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
-            const char *from = crm_element_value(msg, F_ORIG);
+            const char *from = crm_element_value(msg, PCMK__XA_SRC);
 
             if (!pcmk__str_eq(from, controld_globals.our_nodename,
                               pcmk__str_casei)) {
                 int level = LOG_INFO;
-                const char *op = crm_element_value(msg, F_CRM_TASK);
+                const char *op = crm_element_value(msg, PCMK__XA_CRM_TASK);
 
                 /* make sure the election happens NOW */
                 if (controld_globals.fsa_state != S_ELECTION) {
@@ -53,7 +52,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
 
     } else {
-        const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+        const char *sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
 
         if (pcmk__str_eq(sys_to, CRM_SYSTEM_DC, pcmk__str_casei)) {
             return;
@@ -84,7 +83,7 @@ node_alive(const crm_node_t *node)
         // Pacemaker Remote nodes can't be partially alive
         return pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei) ? 1: -1;
 
-    } else if (crm_is_peer_active(node)) {
+    } else if (pcmk__cluster_is_node_active(node)) {
         // Completely up cluster node: both cluster member and peer
         return 1;
 
@@ -128,7 +127,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
         crm_debug("Sending hello to node %u so that it learns our node name", node->id);
-        send_cluster_message(node, crm_msg_crmd, query, FALSE);
+        pcmk__cluster_send_message(node, crm_msg_crmd, query);
 
         free_xml(query);
     }
@@ -178,7 +177,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 const char *dc_s = controld_globals.dc_name;
 
                 if ((dc_s == NULL) && AM_I_DC) {
-                    dc_s = "true";
+                    dc_s = PCMK_VALUE_TRUE;
                 }
 
                 crm_info("Node %s is %s a peer " CRM_XS
@@ -222,7 +221,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             } else if (pcmk__str_eq(node->uname, controld_globals.dc_name,
                                     pcmk__str_casei)
-                       && !crm_is_peer_active(node)) {
+                       && !pcmk__cluster_is_node_active(node)) {
                 /* Did the DC leave us? */
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);
@@ -274,7 +273,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         if (down) {
-            const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
+            const char *task = crm_element_value(down->xml, PCMK_XA_OPERATION);
 
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
 
@@ -322,8 +321,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_update_peer_join(__func__, node, crm_join_none);
                 check_join_state(controld_globals.fsa_state, __func__);
             }
-            abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
-                             NULL);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Node failure", NULL);
             fail_incompletable_actions(controld_globals.transition_graph,
                                        node->uuid);
 
@@ -340,7 +339,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             /* Trigger resource placement on newly integrated nodes */
             if (appeared) {
-                abort_transition(INFINITY, pcmk__graph_restart,
+                abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                                  "Pacemaker Remote node integrated", NULL);
             }
         }
@@ -349,7 +348,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             && (node->when_member > 1)) {
             /* The node left CPG but is still a cluster member. Set its
              * membership time to 1 to record it in the cluster state as a
-             * boolean, so we don't fence it due to node-pending-timeout.
+             * boolean, so we don't fence it due to
+             * PCMK_OPT_NODE_PENDING_TIMEOUT.
              */
             node->when_member = 1;
             flags |= node_update_cluster;
@@ -361,7 +361,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         if (update == NULL) {
             crm_debug("Node state update not yet possible for %s", node->uname);
         } else {
-            fsa_cib_anon_update(XML_CIB_TAG_STATUS, update);
+            fsa_cib_anon_update(PCMK_XE_STATUS, update);
         }
         free_xml(update);
     }

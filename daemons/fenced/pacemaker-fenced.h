@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -111,8 +111,8 @@ typedef struct remote_fencing_op_s {
 
     /*!
      * Fencing delay (in seconds) requested by API client (used by controller to
-     * implement priority-fencing-delay). A value of -1 means disable all
-     * configured delays.
+     * implement \c PCMK_OPT_PRIORITY_FENCING_DELAY). A value of -1 means
+     * disable all configured delays.
      */
     int client_delay;
 
@@ -253,12 +253,9 @@ void
 void fenced_send_notification(const char *type,
                               const pcmk__action_result_t *result,
                               xmlNode *data);
-void fenced_send_device_notification(const char *op,
+void fenced_send_config_notification(const char *op,
                                      const pcmk__action_result_t *result,
                                      const char *desc);
-void fenced_send_level_notification(const char *op,
-                                    const pcmk__action_result_t *result,
-                                    const char *desc);
 
 remote_fencing_op_t *initiate_remote_stonith_op(const pcmk__client_t *client,
                                                 xmlNode *request,
@@ -281,7 +278,6 @@ void set_fencing_completed(remote_fencing_op_t * op);
 
 int fenced_handle_manual_confirmation(const pcmk__client_t *client,
                                       xmlNode *msg);
-void fencer_metadata(void);
 
 const char *fenced_device_reboot_action(const char *device_id);
 bool fenced_device_supports_on(const char *device_id);
@@ -327,7 +323,7 @@ extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
-extern long stonith_watchdog_timeout_ms;
+extern long long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;

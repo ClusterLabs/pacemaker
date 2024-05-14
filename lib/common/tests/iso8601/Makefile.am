@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2020-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,6 +11,8 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__readable_interval_test
+check_PROGRAMS = pcmk__add_time_from_xml_test		\
+		 pcmk__readable_interval_test		\
+		 pcmk__set_time_if_earlier_test
 
 TESTS = $(check_PROGRAMS)

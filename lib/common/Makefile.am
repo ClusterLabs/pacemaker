@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -33,7 +33,7 @@ SUBDIRS = . tests
 noinst_HEADERS		= crmcommon_private.h \
 			  mock_private.h
 
-libcrmcommon_la_LDFLAGS	= -version-info 46:0:12
+libcrmcommon_la_LDFLAGS	= -version-info 47:0:13
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -70,7 +70,7 @@ libcrmcommon_la_SOURCES	+= ipc_client.c
 libcrmcommon_la_SOURCES	+= ipc_common.c
 libcrmcommon_la_SOURCES	+= ipc_controld.c
 libcrmcommon_la_SOURCES	+= ipc_pacemakerd.c
-libcrmcommon_la_SOURCES 	+= ipc_schedulerd.c
+libcrmcommon_la_SOURCES	+= ipc_schedulerd.c
 libcrmcommon_la_SOURCES	+= ipc_server.c
 libcrmcommon_la_SOURCES	+= iso8601.c
 libcrmcommon_la_SOURCES	+= lists.c
@@ -80,6 +80,7 @@ libcrmcommon_la_SOURCES	+= messages.c
 libcrmcommon_la_SOURCES	+= nodes.c
 libcrmcommon_la_SOURCES	+= nvpair.c
 libcrmcommon_la_SOURCES	+= options.c
+libcrmcommon_la_SOURCES	+= options_display.c
 libcrmcommon_la_SOURCES	+= output.c
 libcrmcommon_la_SOURCES	+= output_html.c
 libcrmcommon_la_SOURCES	+= output_log.c
@@ -89,9 +90,13 @@ libcrmcommon_la_SOURCES	+= output_xml.c
 libcrmcommon_la_SOURCES	+= patchset.c
 libcrmcommon_la_SOURCES	+= patchset_display.c
 libcrmcommon_la_SOURCES	+= pid.c
+libcrmcommon_la_SOURCES	+= probes.c
 libcrmcommon_la_SOURCES	+= procfs.c
 libcrmcommon_la_SOURCES	+= remote.c
+libcrmcommon_la_SOURCES	+= resources.c
 libcrmcommon_la_SOURCES	+= results.c
+libcrmcommon_la_SOURCES	+= roles.c
+libcrmcommon_la_SOURCES	+= rules.c
 libcrmcommon_la_SOURCES	+= scheduler.c
 libcrmcommon_la_SOURCES	+= schemas.c
 libcrmcommon_la_SOURCES	+= scores.c
@@ -101,6 +106,7 @@ libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
 libcrmcommon_la_SOURCES	+= xml_attr.c
 libcrmcommon_la_SOURCES	+= xml_display.c
+libcrmcommon_la_SOURCES	+= xml_io.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
 #
@@ -112,6 +118,7 @@ include $(top_srcdir)/mk/tap.mk
 
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c
+libcrmcommon_test_la_SOURCES	+= unittest.c
 libcrmcommon_test_la_LDFLAGS	= $(libcrmcommon_la_LDFLAGS) 	\
 				  -rpath $(libdir) 		\
 				  $(LDFLAGS_WRAP)
@@ -126,8 +133,11 @@ libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) 	\
 				  -fno-inline
 # If -fno-builtin is used, -lm also needs to be added.  See the comment at
 # BUILD_PROFILING above.
-libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) 	\
-				  -lcmocka 			\
-				  -lm
+libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)
+if BUILD_COVERAGE
+libcrmcommon_test_la_LIBADD 	+= -lgcov
+endif
+libcrmcommon_test_la_LIBADD 	+= -lcmocka
+libcrmcommon_test_la_LIBADD 	+= -lm
 
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)

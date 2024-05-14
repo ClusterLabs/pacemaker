@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <glib.h>
@@ -47,8 +46,8 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
 {
     xmlNode *node_xml;
 
-    node_xml = create_xml_node(xml, XML_CIB_TAG_NODE);
-    crm_xml_add(node_xml, XML_ATTR_ID, id);
+    node_xml = pcmk__xe_create(xml, PCMK_XE_NODE);
+    crm_xml_add(node_xml, PCMK_XA_ID, id);
 
     return node_xml;
 }
@@ -83,19 +82,19 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
     int count = 0;
 
     if (xml != NULL) {
-        maintenance = create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE);
+        maintenance = pcmk__xe_create(xml, PCMK__XE_MAINTENANCE);
     }
     for (const GList *iter = scheduler->nodes;
          iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = iter->data;
 
-        if (pe__is_guest_or_remote_node(node) &&
+        if (pcmk__is_pacemaker_remote_node(node) &&
             (node->details->maintenance != node->details->remote_maintenance)) {
 
             if (maintenance != NULL) {
                 crm_xml_add(add_node_to_xml_by_id(node->details->id,
                                                   maintenance),
-                            XML_NODE_IS_MAINTENANCE,
+                            PCMK__XA_NODE_IN_MAINTENANCE,
                             (node->details->maintenance? "1" : "0"));
             }
             count++;
@@ -119,7 +118,7 @@ add_maintenance_update(pcmk_scheduler_t *scheduler)
 
     if (add_maintenance_nodes(NULL, scheduler) != 0) {
         action = get_pseudo_op(PCMK_ACTION_MAINTENANCE_NODES, scheduler);
-        pe__set_action_flags(action, pcmk_action_always_in_graph);
+        pcmk__set_action_flags(action, pcmk_action_always_in_graph);
     }
 }
 
@@ -143,17 +142,18 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
     if (pcmk__str_eq(action->task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
 
         /* Shutdown makes the action's node down */
-        xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+        xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                             pcmk__str_none)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
-        const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
+        const char *fence = g_hash_table_lookup(action->meta,
+                                                PCMK__META_STONITH_ACTION);
 
         if (pcmk__is_fencing_action(fence)) {
-            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
             pe_foreach_guest_node(action->node->details->data_set,
                                   action->node, add_node_to_xml, downed);
@@ -181,7 +181,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
             }
         }
         if (!migrating) {
-            xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
+            xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->rsc->id, downed);
         }
     }
@@ -227,10 +227,10 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
 {
     pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
-    crm_xml_add(xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
-    crm_xml_add(xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
+    crm_xml_add(xml, PCMK__META_ON_NODE, action->node->details->uname);
+    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->details->id);
     if (router_node != NULL) {
-        crm_xml_add(xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+        crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->details->uname);
     }
 }
 
@@ -246,22 +246,23 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 {
     xmlNode *rsc_xml = NULL;
     const char *attr_list[] = {
-        XML_AGENT_ATTR_CLASS,
-        XML_AGENT_ATTR_PROVIDER,
-        XML_ATTR_TYPE
+        PCMK_XA_CLASS,
+        PCMK_XA_PROVIDER,
+        PCMK_XA_TYPE,
     };
 
-    /* If a resource is locked to a node via shutdown-lock, mark its actions
-     * so the controller can preserve the lock when the action completes.
+    /* If a resource is locked to a node via PCMK_OPT_SHUTDOWN_LOCK, mark its
+     * actions so the controller can preserve the lock when the action
+     * completes.
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
-        crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+        crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
                        (long long) action->rsc->lock_time);
     }
 
     // List affected resource
 
-    rsc_xml = create_xml_node(action_xml,
+    rsc_xml = pcmk__xe_create(action_xml,
                               (const char *) action->rsc->xml->name);
     if (pcmk_is_set(action->rsc->flags, pcmk_rsc_removed)
         && (action->rsc->clone_name != NULL)) {
@@ -275,19 +276,19 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          */
         crm_debug("Using orphan clone name %s instead of %s",
                   action->rsc->id, action->rsc->clone_name);
-        crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
-        crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->clone_name);
+        crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk_is_set(action->rsc->flags, pcmk_rsc_unique)) {
-        const char *xml_id = ID(action->rsc->xml);
+        const char *xml_id = pcmk__xe_id(action->rsc->xml);
 
         crm_debug("Using anonymous clone name %s for %s (aka %s)",
                   xml_id, action->rsc->id, action->rsc->clone_name);
 
         /* ID is what we'd like client to use
-         * ID_LONG is what they might know it as instead
+         * LONG_ID is what they might know it as instead
          *
-         * ID_LONG is only strictly needed /here/ during the
+         * LONG_ID is only strictly needed /here/ during the
          * transition period until all nodes in the cluster
          * are running the new software /and/ have rebooted
          * once (meaning that they've only ever spoken to a DC
@@ -297,18 +298,18 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * 'instance free' name will correspond to an orphan
          * and fall into the clause above instead
          */
-        crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);
         if ((action->rsc->clone_name != NULL)
             && !pcmk__str_eq(xml_id, action->rsc->clone_name,
                              pcmk__str_none)) {
-            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
+            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->clone_name);
         } else {
-            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+            crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
         }
 
     } else {
         CRM_ASSERT(action->rsc->clone_name == NULL);
-        crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+        crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
     for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
@@ -333,9 +334,9 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
      * before adding it to action_xml, which keeps the scheduler regression
      * test graphs comparable.
      */
-    args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
+    args_xml = pcmk__xe_create(NULL, PCMK__XE_ATTRIBUTES);
 
-    crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(args_xml, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     g_hash_table_foreach(action->extra, hash2field, args_xml);
 
     if ((action->rsc != NULL) && (action->node != NULL)) {
@@ -364,7 +365,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
             parent = parent->parent;
         }
 
-        pcmk__add_bundle_meta_to_xml(args_xml, action);
+        pcmk__add_guest_meta_to_xml(args_xml, action);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)
                && (action->node != NULL)) {
@@ -408,60 +409,60 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
     if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH, pcmk__str_none)) {
         /* All fences need node info; guest node fences are pseudo-events */
         if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
-            action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+            action_xml = pcmk__xe_create(parent, PCMK__XE_PSEUDO_EVENT);
         } else {
-            action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+            action_xml = pcmk__xe_create(parent, PCMK__XE_CRM_EVENT);
         }
 
     } else if (pcmk__str_any_of(action->task,
                                 PCMK_ACTION_DO_SHUTDOWN,
                                 PCMK_ACTION_CLEAR_FAILCOUNT, NULL)) {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = pcmk__xe_create(parent, PCMK__XE_CRM_EVENT);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_LRM_DELETE,
                             pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
-        crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
+        action_xml = pcmk__xe_create(parent, PCMK__XE_CRM_EVENT);
+        crm_xml_add(action_xml, PCMK__XA_MODE, PCMK__VALUE_CIB);
 
     } else if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (pcmk__str_eq(action->task, PCMK_ACTION_MAINTENANCE_NODES,
                          pcmk__str_none)) {
             needs_maintenance_info = true;
         }
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
+        action_xml = pcmk__xe_create(parent, PCMK__XE_PSEUDO_EVENT);
         needs_node_info = false;
 
     } else {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
+        action_xml = pcmk__xe_create(parent, PCMK__XE_RSC_OP);
     }
 
-    crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
-    crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
+    crm_xml_add_int(action_xml, PCMK_XA_ID, action->id);
+    crm_xml_add(action_xml, PCMK_XA_OPERATION, action->task);
 
     if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
         char *clone_key = NULL;
         guint interval_ms;
 
-        if (pcmk__guint_from_hash(action->meta, XML_LRM_ATTR_INTERVAL_MS, 0,
+        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
         clone_key = clone_op_key(action, interval_ms);
-        crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
-        crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY,
+        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, clone_key);
+        crm_xml_add(action_xml, "internal_" PCMK__XA_OPERATION_KEY,
                     action->uuid);
         free(clone_key);
     } else {
-        crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
+        crm_xml_add(action_xml, PCMK__XA_OPERATION_KEY, action->uuid);
     }
 
     if (needs_node_info && (action->node != NULL)) {
         add_node_details(action, action_xml);
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET),
-                            strdup(action->node->details->uname));
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID),
-                            strdup(action->node->details->id));
+        pcmk__insert_dup(action->meta, PCMK__META_ON_NODE,
+                         action->node->details->uname);
+        pcmk__insert_dup(action->meta, PCMK__META_ON_NODE_UUID,
+                         action->node->details->id);
     }
 
     if (skip_details) {
@@ -526,8 +527,7 @@ should_add_action_to_graph(const pcmk_action_t *action)
          * recognize it. The interval has been normalized to milliseconds by
          * this point, so a string comparison is sufficient.
          */
-        interval_ms_s = g_hash_table_lookup(action->meta,
-                                            XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms_s = g_hash_table_lookup(action->meta, PCMK_META_INTERVAL);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)) {
             crm_trace("Ignoring action %s (%d): for unmanaged resource (%s)",
                       action->uuid, action->id, action->rsc->id);
@@ -545,9 +545,9 @@ should_add_action_to_graph(const pcmk_action_t *action)
     }
 
     if (action->node == NULL) {
-        pe_err("Skipping action %s (%d) "
-               "because it was not assigned to a node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was not assigned to a node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Unassigned", action, false);
         return false;
     }
@@ -555,25 +555,25 @@ should_add_action_to_graph(const pcmk_action_t *action)
     if (pcmk_is_set(action->flags, pcmk_action_on_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
-                  action->uuid, action->id, pe__node_name(action->node));
+                  action->uuid, action->id, pcmk__node_name(action->node));
 
-    } else if (pe__is_guest_node(action->node)
+    } else if (pcmk__is_guest_or_bundle_node(action->node)
                && !action->node->details->remote_requires_reset) {
         crm_trace("Action %s (%d) should be dumped: "
                   "assuming will be runnable on guest %s",
-                  action->uuid, action->id, pe__node_name(action->node));
+                  action->uuid, action->id, pcmk__node_name(action->node));
 
     } else if (!action->node->details->online) {
-        pe_err("Skipping action %s (%d) "
-               "because it was scheduled for offline node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was scheduled for offline node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Offline node", action, false);
         return false;
 
     } else if (action->node->details->unclean) {
-        pe_err("Skipping action %s (%d) "
-               "because it was scheduled for unclean node (bug?)",
-               action->uuid, action->id);
+        pcmk__sched_err("Skipping action %s (%d) "
+                        "because it was scheduled for unclean node (bug?)",
+                        action->uuid, action->id);
         pcmk__log_action("Unclean node", action, false);
         return false;
     }
@@ -677,7 +677,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
              * the resource has been assigned, not where migrate_to will be
              * executed.
              */
-            if (!pe__same_node(input_node, assigned)) {
+            if (!pcmk__same_node(input_node, assigned)) {
                 crm_trace("Ignoring %s (%d) input %s (%d): "
                           "migration target %s is not same as input node %s",
                           action->uuid, action->id,
@@ -688,7 +688,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                 return false;
             }
 
-        } else if (!pe__same_node(input_node, action->node)) {
+        } else if (!pcmk__same_node(input_node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "not on same node (%s vs %s)",
                       action->uuid, action->id,
@@ -709,13 +709,13 @@ should_add_input_to_graph(const pcmk_action_t *action,
 
     } else if ((uint32_t) input->type == pcmk__ar_if_required_on_same_node) {
         if (input->action->node && action->node
-            && !pe__same_node(input->action->node, action->node)) {
+            && !pcmk__same_node(input->action->node, action->node)) {
             crm_trace("Ignoring %s (%d) input %s (%d): "
                       "not on same node (%s vs %s)",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
-                      pe__node_name(action->node),
-                      pe__node_name(input->action->node));
+                      pcmk__node_name(action->node),
+                      pcmk__node_name(input->action->node));
             input->type = (enum pe_ordering) pcmk__ar_none;
             return false;
 
@@ -732,7 +732,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                && pcmk_is_set(input->action->rsc->flags, pcmk_rsc_failed)
                && !pcmk_is_set(input->action->rsc->flags, pcmk_rsc_managed)
                && pcmk__ends_with(input->action->uuid, "_stop_0")
-               && action->rsc && pe_rsc_is_clone(action->rsc)) {
+               && pcmk__is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",
                  input->action->uuid, action->uuid);
@@ -801,7 +801,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
         return true;
     }
 
-    pe__set_action_flags(input->action, pcmk_action_detect_loop);
+    pcmk__set_action_flags(input->action, pcmk_action_detect_loop);
 
     crm_trace("Checking inputs of action %s@%s input %s@%s (%#.6x)"
               "for graph loop with %s@%s ",
@@ -825,7 +825,7 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
         }
     }
 
-    pe__clear_action_flags(input->action, pcmk_action_detect_loop);
+    pcmk__clear_action_flags(input->action, pcmk_action_detect_loop);
 
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (%#.6x)",
@@ -851,9 +851,9 @@ static xmlNode *
 create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
 {
     int synapse_priority = 0;
-    xmlNode *syn = create_xml_node(scheduler->graph, "synapse");
+    xmlNode *syn = pcmk__xe_create(scheduler->graph, "synapse");
 
-    crm_xml_add_int(syn, XML_ATTR_ID, scheduler->num_synapse);
+    crm_xml_add_int(syn, PCMK_XA_ID, scheduler->num_synapse);
     scheduler->num_synapse++;
 
     if (action->rsc != NULL) {
@@ -863,7 +863,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
         synapse_priority = action->priority;
     }
     if (synapse_priority > 0) {
-        crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
+        crm_xml_add_int(syn, PCMK__XA_PRIORITY, synapse_priority);
     }
     return syn;
 }
@@ -900,14 +900,14 @@ add_action_to_graph(gpointer data, gpointer user_data)
      */
     if (!pcmk_is_set(action->flags, pcmk_action_inputs_deduplicated)) {
         pcmk__deduplicate_action_inputs(action);
-        pe__set_action_flags(action, pcmk_action_inputs_deduplicated);
+        pcmk__set_action_flags(action, pcmk_action_inputs_deduplicated);
     }
 
     if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)
         || !should_add_action_to_graph(action)) {
         return; // Already added, or shouldn't be
     }
-    pe__set_action_flags(action, pcmk_action_added_to_graph);
+    pcmk__set_action_flags(action, pcmk_action_added_to_graph);
 
     crm_trace("Adding action %d (%s%s%s) to graph",
               action->id, action->uuid,
@@ -915,8 +915,8 @@ add_action_to_graph(gpointer data, gpointer user_data)
               ((action->node == NULL)? "" : action->node->details->uname));
 
     syn = create_graph_synapse(action, scheduler);
-    set = create_xml_node(syn, "action_set");
-    in = create_xml_node(syn, "inputs");
+    set = pcmk__xe_create(syn, "action_set");
+    in = pcmk__xe_create(syn, "inputs");
 
     create_graph_action(set, action, false, scheduler);
 
@@ -924,7 +924,7 @@ add_action_to_graph(gpointer data, gpointer user_data)
         pcmk__related_action_t *input = lpc->data;
 
         if (should_add_input_to_graph(action, input)) {
-            xmlNode *input_xml = create_xml_node(in, "trigger");
+            xmlNode *input_xml = pcmk__xe_create(in, "trigger");
 
             input->state = pe_link_dumped;
             create_graph_action(input_xml, input->action, true, scheduler);
@@ -943,13 +943,13 @@ static int transition_id = -1;
 void
 pcmk__log_transition_summary(const char *filename)
 {
-    if (was_processing_error) {
+    if (was_processing_error || crm_config_error) {
         crm_err("Calculated transition %d (with errors)%s%s",
                 transition_id,
                 (filename == NULL)? "" : ", saving inputs in ",
                 (filename == NULL)? "" : filename);
 
-    } else if (was_processing_warning) {
+    } else if (was_processing_warning || crm_config_warning) {
         crm_warn("Calculated transition %d (with warnings)%s%s",
                  transition_id,
                  (filename == NULL)? "" : ", saving inputs in ",
@@ -979,7 +979,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     GList *iter = NULL;
 
     CRM_ASSERT(rsc != NULL);
-    pe_rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
+    pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
     g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
@@ -1004,17 +1004,18 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     GList *iter = NULL;
     const char *value = NULL;
     long long limit = 0LL;
+    GHashTable *config_hash = scheduler->config_hash;
 
     transition_id++;
     crm_trace("Creating transition graph %d", transition_id);
 
-    scheduler->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+    scheduler->graph = pcmk__xe_create(NULL, PCMK__XE_TRANSITION_GRAPH);
 
-    value = pe_pref(scheduler->config_hash, "cluster-delay");
-    crm_xml_add(scheduler->graph, "cluster-delay", value);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_CLUSTER_DELAY);
+    crm_xml_add(scheduler->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
-    value = pe_pref(scheduler->config_hash, "stonith-timeout");
-    crm_xml_add(scheduler->graph, "stonith-timeout", value);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    crm_xml_add(scheduler->graph, PCMK_OPT_STONITH_TIMEOUT, value);
 
     crm_xml_add(scheduler->graph, "failed-stop-offset", "INFINITY");
 
@@ -1024,14 +1025,14 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         crm_xml_add(scheduler->graph, "failed-start-offset", "1");
     }
 
-    value = pe_pref(scheduler->config_hash, "batch-limit");
-    crm_xml_add(scheduler->graph, "batch-limit", value);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_BATCH_LIMIT);
+    crm_xml_add(scheduler->graph, PCMK_OPT_BATCH_LIMIT, value);
 
     crm_xml_add_int(scheduler->graph, "transition_id", transition_id);
 
-    value = pe_pref(scheduler->config_hash, "migration-limit");
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
     if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
-        crm_xml_add(scheduler->graph, "migration-limit", value);
+        crm_xml_add(scheduler->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }
 
     if (scheduler->recheck_by > 0) {
@@ -1052,7 +1053,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     for (iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
+        pcmk__rsc_trace(rsc, "Processing actions for %s", rsc->id);
         rsc->cmds->add_actions_to_graph(rsc);
     }
 
@@ -1083,7 +1084,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
 
                 crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",
-                         pe__node_name(action->node), action->rsc->id,
+                         pcmk__node_name(action->node), action->rsc->id,
                          (managed? " blocked" : " unmanaged"),
                          (failed? " failed" : ""), action->uuid);
             }

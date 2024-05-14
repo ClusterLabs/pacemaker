@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,15 +50,7 @@ int delete_attr_delegate(cib_t * the_cib, int options,
 
 int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node);
 
-int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
-
-int set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value);
-
-xmlNode *cib_get_generation(cib_t * cib);
-
-void cib_metadata(void);
-const char *cib_pref(GHashTable * options, const char *name);
-
+// NOTE: sbd (as of at least 1.5.2) uses this
 int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                           int level);
 

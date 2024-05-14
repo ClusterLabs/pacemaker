@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 #include <dlfcn.h>
 
+#include <inttypes.h>               // PRIu32
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -17,128 +19,182 @@
 #include <time.h>
 #include <sys/param.h>
 #include <sys/types.h>
+#include <sys/utsname.h>            // uname()
+
+#include <glib.h>                   // gboolean
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 
 #include <crm/common/ipc.h>
+#include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include "crmcluster_private.h"
 
 CRM_TRACE_INIT_DATA(cluster);
 
 /*!
- * \brief Get (and set if needed) a node's UUID
+ * \internal
+ * \brief Get the message type equivalent of a string
  *
- * \param[in,out] peer  Node to check
+ * \param[in] text  String of message type
  *
- * \return Node UUID of \p peer, or NULL if unknown
+ * \return Message type equivalent of \p text
  */
-const char *
-crm_peer_uuid(crm_node_t *peer)
+enum crm_ais_msg_types
+pcmk__cluster_parse_msg_type(const char *text)
 {
-    char *uuid = NULL;
+    CRM_CHECK(text != NULL, return crm_msg_none);
 
-    // Check simple cases first, to avoid any calls that might block
-    if (peer == NULL) {
-        return NULL;
+    text = pcmk__message_name(text);
+
+    if (pcmk__str_eq(text, "ais", pcmk__str_none)) {
+        return crm_msg_ais;
     }
-    if (peer->uuid != NULL) {
-        return peer->uuid;
+    if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_none)) {
+        return crm_msg_cib;
     }
-
-    switch (get_cluster_type()) {
-        case pcmk_cluster_corosync:
-#if SUPPORT_COROSYNC
-            uuid = pcmk__corosync_uuid(peer);
-#endif
-            break;
-
-        case pcmk_cluster_unknown:
-        case pcmk_cluster_invalid:
-            crm_err("Unsupported cluster type");
-            break;
+    if (pcmk__str_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
+        return crm_msg_crmd;
     }
-
-    peer->uuid = uuid;
-    return peer->uuid;
+    if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
+        return crm_msg_te;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
+        return crm_msg_pe;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_none)) {
+        return crm_msg_lrmd;
+    }
+    if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_none)) {
+        return crm_msg_stonithd;
+    }
+    if (pcmk__str_eq(text, "stonith-ng", pcmk__str_none)) {
+        return crm_msg_stonith_ng;
+    }
+    if (pcmk__str_eq(text, "attrd", pcmk__str_none)) {
+        return crm_msg_attrd;
+    }
+    return crm_msg_none;
 }
 
 /*!
+ * \internal
+ * \brief Get a node's cluster-layer UUID, setting it if not already set
+ *
+ * \param[in,out] node  Node to check
+ *
+ * \return Cluster-layer node UUID of \p node, or \c NULL if unknown
+ */
+const char *
+pcmk__cluster_node_uuid(crm_node_t *node)
+{
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+
+    if (node == NULL) {
+        return NULL;
+    }
+    if (node->uuid != NULL) {
+        return node->uuid;
+    }
+
+    switch (cluster_layer) {
+#if SUPPORT_COROSYNC
+        case pcmk_cluster_layer_corosync:
+            node->uuid = pcmk__corosync_uuid(node);
+            return node->uuid;
+#endif  // SUPPORT_COROSYNC
+
+        default:
+            crm_err("Unsupported cluster layer %s",
+                    pcmk_cluster_layer_text(cluster_layer));
+            return NULL;
+    }
+}
+
+/*!
+ * \internal
  * \brief Connect to the cluster layer
  *
- * \param[in,out] Initialized cluster object to connect
+ * \param[in,out] cluster  Initialized cluster object to connect
  *
- * \return TRUE on success, otherwise FALSE
+ * \return Standard Pacemaker return code
  */
-gboolean
-crm_cluster_connect(crm_cluster_t *cluster)
+int
+pcmk_cluster_connect(pcmk_cluster_t *cluster)
 {
-    enum cluster_type_e type = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    crm_notice("Connecting to %s cluster infrastructure",
-               name_for_cluster_type(type));
-    switch (type) {
-        case pcmk_cluster_corosync:
+    // cts-lab looks for this message
+    crm_notice("Connecting to %s cluster layer", cluster_layer_s);
+
+    switch (cluster_layer) {
 #if SUPPORT_COROSYNC
-            crm_peer_init();
+        case pcmk_cluster_layer_corosync:
             return pcmk__corosync_connect(cluster);
-#else
-            break;
 #endif // SUPPORT_COROSYNC
+
         default:
             break;
     }
-    return FALSE;
+
+    crm_err("Failed to connect to unsupported cluster layer %s",
+            cluster_layer_s);
+    return EPROTONOSUPPORT;
 }
 
 /*!
  * \brief Disconnect from the cluster layer
  *
  * \param[in,out] cluster  Cluster object to disconnect
+ *
+ * \return Standard Pacemaker return code
  */
-void
-crm_cluster_disconnect(crm_cluster_t *cluster)
+int
+pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
 {
-    enum cluster_type_e type = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    crm_info("Disconnecting from %s cluster infrastructure",
-             name_for_cluster_type(type));
-    switch (type) {
-        case pcmk_cluster_corosync:
+    crm_info("Disconnecting from %s cluster layer", cluster_layer_s);
+
+    switch (cluster_layer) {
 #if SUPPORT_COROSYNC
-            crm_peer_destroy();
+        case pcmk_cluster_layer_corosync:
             pcmk__corosync_disconnect(cluster);
+            pcmk__cluster_destroy_node_caches();
+            return pcmk_rc_ok;
 #endif // SUPPORT_COROSYNC
-            break;
+
         default:
             break;
     }
+
+    crm_err("Failed to disconnect from unsupported cluster layer %s",
+            cluster_layer_s);
+    return EPROTONOSUPPORT;
 }
 
 /*!
- * \brief Allocate a new \p crm_cluster_t object
+ * \brief Allocate a new \p pcmk_cluster_t object
  *
- * \return A newly allocated \p crm_cluster_t object (guaranteed not \p NULL)
+ * \return A newly allocated \p pcmk_cluster_t object (guaranteed not \c NULL)
  * \note The caller is responsible for freeing the return value using
  *       \p pcmk_cluster_free().
  */
-crm_cluster_t *
+pcmk_cluster_t *
 pcmk_cluster_new(void)
 {
-    crm_cluster_t *cluster = calloc(1, sizeof(crm_cluster_t));
-
-    CRM_ASSERT(cluster != NULL);
-    return cluster;
+    return (pcmk_cluster_t *) pcmk__assert_alloc(1, sizeof(pcmk_cluster_t));
 }
 
 /*!
- * \brief Free a \p crm_cluster_t object and its dynamically allocated members
+ * \brief Free a \p pcmk_cluster_t object and its dynamically allocated members
  *
  * \param[in,out] cluster  Cluster object to free
  */
 void
-pcmk_cluster_free(crm_cluster_t *cluster)
+pcmk_cluster_free(pcmk_cluster_t *cluster)
 {
     if (cluster == NULL) {
         return;
@@ -149,157 +205,283 @@ pcmk_cluster_free(crm_cluster_t *cluster)
 }
 
 /*!
+ * \brief Set the destroy function for a cluster object
+ *
+ * \param[in,out] cluster  Cluster object
+ * \param[in]     fn       Destroy function to set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
+{
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+    cluster->destroy = fn;
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Send an XML message via the cluster messaging layer
  *
  * \param[in] node     Cluster node to send message to
  * \param[in] service  Message type to use in message host info
  * \param[in] data     XML message to send
- * \param[in] ordered  Ignored for currently supported messaging layers
  *
- * \return TRUE on success, otherwise FALSE
+ * \return \c true on success, or \c false otherwise
  */
-gboolean
-send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
-                     const xmlNode *data, gboolean ordered)
+bool
+pcmk__cluster_send_message(const crm_node_t *node,
+                           enum crm_ais_msg_types service, const xmlNode *data)
 {
-    switch (get_cluster_type()) {
-        case pcmk_cluster_corosync:
+    // @TODO Return standard Pacemaker return code
+    switch (pcmk_get_cluster_layer()) {
 #if SUPPORT_COROSYNC
+        case pcmk_cluster_layer_corosync:
             return pcmk__cpg_send_xml(data, node, service);
-#endif
-            break;
+#endif  // SUPPORT_COROSYNC
+
         default:
             break;
     }
-    return FALSE;
+    return false;
 }
 
 /*!
- * \brief Get the local node's name
+ * \internal
+ * \brief Get the node name corresponding to a cluster-layer node ID
  *
- * \return Local node's name
- * \note This will fatally exit if local node name cannot be known.
- */
-const char *
-get_local_node_name(void)
-{
-    static char *name = NULL;
-
-    if (name == NULL) {
-        name = get_node_name(0);
-    }
-    return name;
-}
-
-/*!
- * \brief Get the node name corresponding to a cluster node ID
+ * Get the node name from the cluster layer if possible. Otherwise, if for the
+ * local node, call \c uname() and get the \c nodename member from the
+ * <tt>struct utsname</tt> object.
  *
- * \param[in] nodeid  Node ID to check (or 0 for local node)
+ * \param[in] nodeid  Node ID to check (or 0 for the local node)
  *
  * \return Node name corresponding to \p nodeid
- * \note This will fatally exit if \p nodeid is 0 and local node name cannot be
- *       known.
+ *
+ * \note This will fatally exit if \c uname() fails to get the local node name
+ *       or we run out of memory.
+ * \note The caller is responsible for freeing the return value using \c free().
  */
 char *
-get_node_name(uint32_t nodeid)
+pcmk__cluster_node_name(uint32_t nodeid)
 {
-    char *name = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    switch (stack) {
-        case pcmk_cluster_corosync:
+    switch (cluster_layer) {
 #if SUPPORT_COROSYNC
-            name = pcmk__corosync_name(0, nodeid);
+        case pcmk_cluster_layer_corosync:
+            return pcmk__corosync_name(0, nodeid);
+#else
             break;
 #endif // SUPPORT_COROSYNC
 
         default:
-            crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+            crm_err("Unsupported cluster layer: %s", cluster_layer_s);
+            break;
     }
 
-    if ((name == NULL) && (nodeid == 0)) {
-        name = pcmk_hostname();
-        if (name == NULL) {
+    if (nodeid == 0) {
+        struct utsname hostinfo;
+
+        crm_notice("Could not get local node name from %s cluster layer, "
+                   "defaulting to local hostname",
+                   cluster_layer_s);
+
+        if (uname(&hostinfo) < 0) {
             // @TODO Maybe let the caller decide what to do
-            crm_err("Could not obtain the local %s node name",
-                    name_for_cluster_type(stack));
+            crm_err("Failed to get the local hostname");
             crm_exit(CRM_EX_FATAL);
         }
-        crm_notice("Defaulting to uname -n for the local %s node name",
-                   name_for_cluster_type(stack));
+        return pcmk__str_copy(hostinfo.nodename);
     }
 
+    crm_notice("Could not obtain a node name for node with "
+               PCMK_XA_ID "=" PRIu32,
+               nodeid);
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Get the local node's cluster-layer node name
+ *
+ * If getting the node name from the cluster layer is impossible, call
+ * \c uname() and get the \c nodename member from the <tt>struct utsname</tt>
+ * object.
+ *
+ * \return Local node's name
+ *
+ * \note This will fatally exit if \c uname() fails to get the local node name
+ *       or we run out of memory.
+ */
+const char *
+pcmk__cluster_local_node_name(void)
+{
+    // @TODO Refactor to avoid trivially leaking name at exit
+    static char *name = NULL;
+
     if (name == NULL) {
-        crm_notice("Could not obtain a node name for %s node with id %u",
-                   name_for_cluster_type(stack), nodeid);
+        name = pcmk__cluster_node_name(0);
     }
     return name;
 }
 
 /*!
- * \brief Get the node name corresponding to a node UUID
+ * \internal
+ * \brief Get the node name corresonding to a node UUID
  *
- * \param[in] uuid  UUID of desired node
+ * Look for the UUID in both the remote node cache and the cluster member cache.
  *
- * \return name of desired node
+ * \param[in] uuid  UUID to search for
  *
- * \note This relies on the remote peer cache being populated with all
- *       remote nodes in the cluster, so callers should maintain that cache.
+ * \return Node name corresponding to \p uuid if found, or \c NULL otherwise
  */
 const char *
-crm_peer_uname(const char *uuid)
+pcmk__node_name_from_uuid(const char *uuid)
 {
+    /* @TODO There are too many functions in libcrmcluster that look up a node
+     * from the node caches (possibly creating a cache entry if none exists).
+     * There are at least the following:
+     * * pcmk__cluster_lookup_remote_node()
+     * * pcmk__get_node()
+     * * pcmk__node_name_from_uuid()
+     * * pcmk__search_node_caches()
+     *
+     * There's a lot of duplication among them, but they all do slightly
+     * different things. We should try to clean them up and consolidate them to
+     * the extent possible, likely with new helper functions.
+     */
     GHashTableIter iter;
     crm_node_t *node = NULL;
 
     CRM_CHECK(uuid != NULL, return NULL);
 
-    /* remote nodes have the same uname and uuid */
+    // Remote nodes have the same uname and uuid
     if (g_hash_table_lookup(crm_remote_peer_cache, uuid)) {
         return uuid;
     }
 
-    /* avoid blocking calls where possible */
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
-            if (node->uname != NULL) {
-                return node->uname;
-            }
-            break;
-        }
-    }
-    node = NULL;
-
-    if (is_corosync_cluster()) {
-        long long id;
-
-        if ((pcmk__scan_ll(uuid, &id, 0LL) != pcmk_rc_ok)
-            || (id < 1LL) || (id > UINT32_MAX))  {
-            crm_err("Invalid Corosync node ID '%s'", uuid);
-            return NULL;
-        }
-
-        node = pcmk__search_cluster_node_cache((uint32_t) id, NULL, NULL);
-        if (node != NULL) {
-            crm_info("Setting uuid for node %s[%u] to %s",
-                     node->uname, node->id, uuid);
-            node->uuid = strdup(uuid);
             return node->uname;
         }
-        return NULL;
     }
-
     return NULL;
 }
 
 /*!
- * \brief  Get a log-friendly string equivalent of a cluster type
+ * \brief Get a log-friendly string equivalent of a cluster layer
  *
- * \param[in] type  Cluster type
+ * \param[in] layer  Cluster layer
  *
- * \return Log-friendly string corresponding to \p type
+ * \return Log-friendly string corresponding to \p layer
  */
+const char *
+pcmk_cluster_layer_text(enum pcmk_cluster_layer layer)
+{
+    switch (layer) {
+        case pcmk_cluster_layer_corosync:
+            return "corosync";
+        case pcmk_cluster_layer_unknown:
+            return "unknown";
+        case pcmk_cluster_layer_invalid:
+            return "invalid";
+        default:
+            crm_err("Invalid cluster layer: %d", layer);
+            return "invalid";
+    }
+}
+
+/*!
+ * \brief Get and validate the local cluster layer
+ *
+ * If a cluster layer is not configured via the \c PCMK__ENV_CLUSTER_TYPE local
+ * option, this will try to detect an active cluster from among the supported
+ * cluster layers.
+ *
+ * \return Local cluster layer
+ *
+ * \note This will fatally exit if the configured cluster layer is invalid.
+ */
+enum pcmk_cluster_layer
+pcmk_get_cluster_layer(void)
+{
+    static enum pcmk_cluster_layer cluster_layer = pcmk_cluster_layer_unknown;
+    const char *cluster = NULL;
+
+    // Cluster layer is stable once set
+    if (cluster_layer != pcmk_cluster_layer_unknown) {
+        return cluster_layer;
+    }
+
+    cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
+
+    if (cluster != NULL) {
+        crm_info("Verifying configured cluster layer '%s'", cluster);
+        cluster_layer = pcmk_cluster_layer_invalid;
+
+#if SUPPORT_COROSYNC
+        if (pcmk__str_eq(cluster, PCMK_VALUE_COROSYNC, pcmk__str_casei)) {
+            cluster_layer = pcmk_cluster_layer_corosync;
+        }
+#endif  // SUPPORT_COROSYNC
+
+        if (cluster_layer == pcmk_cluster_layer_invalid) {
+            crm_notice("This installation does not support the '%s' cluster "
+                       "infrastructure: terminating",
+                       cluster);
+            crm_exit(CRM_EX_FATAL);
+        }
+        crm_info("Assuming an active '%s' cluster", cluster);
+
+    } else {
+        // Nothing configured, so test supported cluster layers
+#if SUPPORT_COROSYNC
+        crm_debug("Testing with Corosync");
+        if (pcmk__corosync_is_active()) {
+            cluster_layer = pcmk_cluster_layer_corosync;
+        }
+#endif  // SUPPORT_COROSYNC
+
+        if (cluster_layer == pcmk_cluster_layer_unknown) {
+            crm_notice("Could not determine the current cluster layer");
+        } else {
+            crm_info("Detected an active '%s' cluster",
+                     pcmk_cluster_layer_text(cluster_layer));
+        }
+    }
+
+    return cluster_layer;
+}
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+void
+set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
+{
+    crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node));
+}
+
+gboolean
+crm_cluster_connect(pcmk_cluster_t *cluster)
+{
+    return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
+}
+
+void
+crm_cluster_disconnect(pcmk_cluster_t *cluster)
+{
+    pcmk_cluster_disconnect(cluster);
+}
+
 const char *
 name_for_cluster_type(enum cluster_type_e type)
 {
@@ -315,91 +497,47 @@ name_for_cluster_type(enum cluster_type_e type)
     return "invalid";
 }
 
-/*!
- * \brief Get (and validate) the local cluster type
- *
- * \return Local cluster type
- * \note This will fatally exit if the local cluster type is invalid.
- */
 enum cluster_type_e
 get_cluster_type(void)
 {
-    bool detected = false;
-    const char *cluster = NULL;
-    static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
-
-    /* Return the previous calculation, if any */
-    if (cluster_type != pcmk_cluster_unknown) {
-        return cluster_type;
-    }
-
-    cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
-
-#if SUPPORT_COROSYNC
-    /* If nothing is defined in the environment, try corosync (if supported) */
-    if (cluster == NULL) {
-        crm_debug("Testing with Corosync");
-        cluster_type = pcmk__corosync_detect();
-        if (cluster_type != pcmk_cluster_unknown) {
-            detected = true;
-            goto done;
-        }
-    }
-#endif
-
-    /* Something was defined in the environment, test it against what we support */
-    crm_info("Verifying cluster type: '%s'",
-             ((cluster == NULL)? "-unspecified-" : cluster));
-    if (cluster == NULL) {
-
-#if SUPPORT_COROSYNC
-    } else if (pcmk__str_eq(cluster, "corosync", pcmk__str_casei)) {
-        cluster_type = pcmk_cluster_corosync;
-#endif
-
-    } else {
-        cluster_type = pcmk_cluster_invalid;
-        goto done; /* Keep the compiler happy when no stacks are supported */
-    }
-
-  done:
-    if (cluster_type == pcmk_cluster_unknown) {
-        crm_notice("Could not determine the current cluster type");
-
-    } else if (cluster_type == pcmk_cluster_invalid) {
-        crm_notice("This installation does not support the '%s' cluster infrastructure: terminating.",
-                   cluster);
-        crm_exit(CRM_EX_FATAL);
-
-    } else {
-        crm_info("%s an active '%s' cluster",
-                 (detected? "Detected" : "Assuming"),
-                 name_for_cluster_type(cluster_type));
-    }
-
-    return cluster_type;
+    return (enum cluster_type_e) pcmk_get_cluster_layer();
 }
 
-/*!
- * \brief Check whether the local cluster is a Corosync cluster
- *
- * \return TRUE if the local cluster is a Corosync cluster, otherwise FALSE
- */
 gboolean
 is_corosync_cluster(void)
 {
-    return get_cluster_type() == pcmk_cluster_corosync;
+    return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
 }
 
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cluster/compat.h>
-
-void
-set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
+gboolean
+send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
+                     const xmlNode *data, gboolean ordered)
 {
-    crm_xml_add(xml, attr, crm_peer_uuid(node));
+    return pcmk__cluster_send_message(node, service, data);
+}
+
+const char *
+crm_peer_uuid(crm_node_t *peer)
+{
+    return pcmk__cluster_node_uuid(peer);
+}
+
+char *
+get_node_name(uint32_t nodeid)
+{
+    return pcmk__cluster_node_name(nodeid);
+}
+
+const char *
+get_local_node_name(void)
+{
+    return pcmk__cluster_local_node_name();
+}
+
+const char *
+crm_peer_uname(const char *uuid)
+{
+    return pcmk__node_name_from_uuid(uuid);
 }
 
 // LCOV_EXCL_STOP

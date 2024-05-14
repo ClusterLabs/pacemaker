@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,6 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/cluster.h>
@@ -198,7 +197,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     if ((controld_globals.fsa_message_queue == NULL)
         && (controld_globals.fsa_actions != A_NOTHING)) {
         /* fake the first message so we can get into the loop */
-        fsa_data = calloc(1, sizeof(fsa_data_t));
+        fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
@@ -283,8 +282,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
                   g_list_length(controld_globals.fsa_message_queue),
                   (unsigned long long) controld_globals.fsa_actions,
-                  pcmk__btoa(pcmk_is_set(controld_globals.flags,
-                                         controld_fsa_is_stalled)));
+                  pcmk__flag_text(controld_globals.flags,
+                                  controld_fsa_is_stalled));
     } else {
         crm_trace("Exiting the FSA");
     }
@@ -549,7 +548,7 @@ check_join_counts(fsa_data_t *msg_data)
         return;
     }
 
-    npeers = crm_active_peers();
+    npeers = pcmk__cluster_num_active_nodes();
     count = crmd_join_phase_count(crm_join_confirmed);
     if (count == npeers) {
         if (npeers == 1) {

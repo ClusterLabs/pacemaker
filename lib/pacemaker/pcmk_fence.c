@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <crm/common/output.h>
 #include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__*
 
 #include <glib.h>
 #include <libxml/tree.h>
@@ -156,7 +156,7 @@ async_fence_helper(gpointer user_data)
         return TRUE;
     }
 
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE,
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     notify_callback);
 
     call_id = st->cmds->fence_with_delay(st,
@@ -320,7 +320,7 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, const char *target,
 
     rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast,
                              cleanup);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -364,7 +364,7 @@ pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout)
     stonith__register_messages(out);
 
     rc = pcmk__fence_installed(out, st, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -402,7 +402,7 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid)
     stonith__register_messages(out);
 
     rc = pcmk__fence_last(out, target, as_nodeid);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -449,7 +449,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
     stonith__register_messages(out);
 
     rc = pcmk__fence_list_targets(out, st, device_id, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -466,7 +466,7 @@ pcmk__fence_metadata(pcmk__output_t *out, stonith_t *st, const char *agent,
         return pcmk_legacy2rc(rc);
     }
 
-    out->output_xml(out, "metadata", buffer);
+    out->output_xml(out, PCMK_XE_METADATA, buffer);
     free(buffer);
     return rc;
 }
@@ -487,7 +487,7 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, const char *agent,
     stonith__register_messages(out);
 
     rc = pcmk__fence_metadata(out, st, agent, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -536,7 +536,7 @@ pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, const char *target,
     stonith__register_messages(out);
 
     rc = pcmk__fence_registered(out, st, target, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif
@@ -603,7 +603,7 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     stonith__register_messages(out);
 
     rc = pcmk__fence_validate(out, st, agent, id, params, timeout);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,11 +8,11 @@
  */
 
 #ifndef PCMK__CRM_COMMON_UTIL_COMPAT__H
-#  define PCMK__CRM_COMMON_UTIL_COMPAT__H
+#define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
-#  include <glib.h>
-#  include <libxml/tree.h>
-#  include <crm/common/util.h>
+#include <glib.h>
+#include <libxml/tree.h>
+#include <crm/common/util.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,7 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Use crm_parse_interval_spec() instead
+//! \deprecated Do not use
 #define crm_get_interval crm_parse_interval_spec
 
 //! \deprecated Do not use
@@ -40,6 +40,7 @@ is_not_set(long long word, long long bit)
     return ((word & bit) == 0);
 }
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
 static inline gboolean
 is_set(long long word, long long bit)
@@ -86,7 +87,7 @@ long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
 
 //! \deprecated Use strtoll() instead
-#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
+#define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 //! \deprecated Use g_str_hash() instead
 guint g_str_hash_traditional(gconstpointer v);
@@ -158,11 +159,17 @@ crm_ttoa(time_t epoch_time)
 //! \deprecated Do not use Pacemaker libraries for generic I/O
 void crm_build_path(const char *path_c, mode_t mode);
 
-//! \deprecated Use pcmk_readable_score() instead
-char *score2char(int score);
+//! \deprecated Use \c pcmk_parse_interval_spec() instead
+guint crm_parse_interval_spec(const char *input);
 
-//! \deprecated Use pcmk_readable_score() instead
-char *score2char_stack(int score, char *buf, size_t len);
+//! \deprecated Use \c PCMK_VALUE_ONLINE instead
+#define ONLINESTATUS PCMK_VALUE_ONLINE
+
+//! \deprecated Use \c PCMK_VALUE_OFFLINE instead
+#define OFFLINESTATUS PCMK_VALUE_OFFLINE
+
+//! \deprecated Use \c uname() instead
+char *pcmk_hostname(void);
 
 #ifdef __cplusplus
 }

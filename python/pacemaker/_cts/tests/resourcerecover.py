@@ -1,6 +1,6 @@
-""" Fail a random resource and verify its fail count increases """
+"""Fail a random resource and verify its fail count increases."""
 
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.audits import AuditResource
@@ -19,16 +19,15 @@ from pacemaker._cts.timer import Timer
 
 
 class ResourceRecover(CTSTest):
-    """ A concrete test that fails a random resource """
+    """Fail a random resource."""
 
     def __init__(self, cm):
-        """ Create a new ResourceRecover instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new ResourceRecover instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.benchmark = True
@@ -42,8 +41,7 @@ class ResourceRecover(CTSTest):
         self._startall = SimulStartLite(cm)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         if not self._startall(None):
@@ -90,8 +88,7 @@ class ResourceRecover(CTSTest):
         return self.success()
 
     def _choose_resource(self, node, resourcelist):
-        """ Choose a random resource to target """
-
+        """Choose a random resource to target."""
         self._rid = self._env.random_gen.choice(resourcelist)
         self._rid_alt = self._rid
         (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
@@ -108,14 +105,13 @@ class ResourceRecover(CTSTest):
         return None
 
     def _get_failcount(self, node):
-        """ Check the fail count of targeted resource on given node """
-
+        """Check the fail count of targeted resource on given node."""
         cmd = "crm_failcount --quiet --query --resource %s --operation %s --interval %d --node %s"
         (rc, lines) = self._rsh(node, cmd % (self._rid, self._action, self._interval, node),
                                 verbose=1)
 
         if rc != 0 or len(lines) != 1:
-            lines = [l.strip() for l in lines]
+            lines = [line.strip() for line in lines]
             self._logger.log("crm_failcount on %s failed (%d): %s" % (node, rc, " // ".join(lines)))
             return -1
 
@@ -128,8 +124,7 @@ class ResourceRecover(CTSTest):
         return failcount
 
     def _fail_resource(self, rsc, node, pats):
-        """ Fail the targeted resource, and verify as expected """
-
+        """Fail the targeted resource, and verify as expected."""
         orig_failcount = self._get_failcount(node)
 
         watch = self.create_watch(pats, 60)
@@ -160,12 +155,12 @@ class ResourceRecover(CTSTest):
             return self.failure("%s fail count is %d not %d"
                                 % (self._rid, new_failcount, orig_failcount + 1))
 
-        return 0 # Anything but None is success
+        # Anything but None is success
+        return 0
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         return [
             r"Updating failcount for %s" % self._rid,
             r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self._rid, self._rid_alt),

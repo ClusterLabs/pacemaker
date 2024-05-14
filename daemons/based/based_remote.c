@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,6 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
@@ -224,20 +223,20 @@ cib_remote_auth(xmlNode * login)
         return FALSE;
     }
 
-    if (!pcmk__xe_is(login, T_CIB_COMMAND)) {
+    if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
         crm_err("Unrecognizable message from remote client");
         crm_log_xml_info(login, "bad");
         return FALSE;
     }
 
-    tmp = crm_element_value(login, "op");
+    tmp = crm_element_value(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_err("Wrong operation: %s", tmp);
         return FALSE;
     }
 
-    user = crm_element_value(login, "user");
-    pass = crm_element_value(login, "password");
+    user = crm_element_value(login, PCMK_XA_USER);
+    pass = crm_element_value(login, PCMK__XA_PASSWORD);
 
     if (!user || !pass) {
         crm_err("missing auth credentials");
@@ -317,7 +316,7 @@ cib_remote_listen(gpointer data)
     num_clients++;
 
     new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -411,42 +410,35 @@ cib_remote_connection_destroy(gpointer user_data)
 static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
-    const char *value = NULL;
-
-    if (!pcmk__xe_is(command, T_CIB_COMMAND)) {
+    if (!pcmk__xe_is(command, PCMK__XE_CIB_COMMAND)) {
         crm_log_xml_trace(command, "bad");
         return;
     }
 
     if (client->name == NULL) {
-        value = crm_element_value(command, F_CLIENTNAME);
-        if (value == NULL) {
-            client->name = strdup(client->id);
-        } else {
-            client->name = strdup(value);
-        }
+        client->name = pcmk__str_copy(client->id);
     }
 
     /* unset dangerous options */
-    xml_remove_prop(command, F_ORIG);
-    xml_remove_prop(command, F_CIB_HOST);
-    xml_remove_prop(command, F_CIB_GLOBAL_UPDATE);
+    pcmk__xe_remove_attr(command, PCMK__XA_SRC);
+    pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
+    pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
 
-    crm_xml_add(command, F_TYPE, T_CIB);
-    crm_xml_add(command, F_CIB_CLIENTID, client->id);
-    crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
-    crm_xml_add(command, F_CIB_USER, client->user);
+    crm_xml_add(command, PCMK__XA_T, PCMK__VALUE_CIB);
+    crm_xml_add(command, PCMK__XA_CIB_CLIENTID, client->id);
+    crm_xml_add(command, PCMK__XA_CIB_CLIENTNAME, client->name);
+    crm_xml_add(command, PCMK__XA_CIB_USER, client->user);
 
-    if (crm_element_value(command, F_CIB_CALLID) == NULL) {
+    if (crm_element_value(command, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
 
         /* fix the command */
-        crm_xml_add(command, F_CIB_CALLID, call_uuid);
+        crm_xml_add(command, PCMK__XA_CIB_CALLID, call_uuid);
         free(call_uuid);
     }
 
-    if (crm_element_value(command, F_CIB_CALLOPTS) == NULL) {
-        crm_xml_add_int(command, F_CIB_CALLOPTS, 0);
+    if (crm_element_value(command, PCMK__XA_CIB_CALLOPT) == NULL) {
+        crm_xml_add_int(command, PCMK__XA_CIB_CALLOPT, 0);
     }
 
     crm_log_xml_trace(command, "Remote command: ");
@@ -515,17 +507,17 @@ cib_remote_msg(gpointer data)
         pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
-        client->name = crm_element_value_copy(command, "name");
+        client->name = crm_element_value_copy(command, PCMK_XA_NAME);
 
-        user = crm_element_value(command, "user");
+        user = crm_element_value(command, PCMK_XA_USER);
         if (user) {
-            client->user = strdup(user);
+            client->user = pcmk__str_copy(user);
         }
 
         /* send ACK */
-        reg = create_xml_node(NULL, "cib_result");
-        crm_xml_add(reg, F_CIB_OPERATION, CRM_OP_REGISTER);
-        crm_xml_add(reg, F_CIB_CLIENTID, client->id);
+        reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
+        crm_xml_add(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        crm_xml_add(reg, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__remote_send_xml(client->remote, reg);
         free_xml(reg);
         free_xml(command);
@@ -559,8 +551,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
     CRM_CHECK(data, return PAM_CONV_ERR);
     CRM_CHECK(num_msg == 1, return PAM_CONV_ERR);       /* We only want to handle one message */
 
-    reply = calloc(1, sizeof(struct pam_response));
-    CRM_ASSERT(reply != NULL);
+    reply = pcmk__assert_alloc(1, sizeof(struct pam_response));
 
     for (count = 0; count < num_msg; ++count) {
         switch (msg[count]->msg_style) {
@@ -634,7 +625,7 @@ authenticate_user(const char *user, const char *passwd)
     }
 
     p_conv.conv = construct_pam_passwd;
-    p_conv.appdata_ptr = strdup(passwd);
+    p_conv.appdata_ptr = pcmk__str_copy(passwd);
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {

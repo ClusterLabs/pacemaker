@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -68,8 +68,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         char *key = NULL;
         guint interval_ms = 0;
 
-        if (pcmk__guint_from_hash(action->meta,
-                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
@@ -98,7 +97,8 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                             pcmk__str_none)) {
-        const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+        const char *op = g_hash_table_lookup(action->meta,
+                                             PCMK__META_STONITH_ACTION);
 
         action_name = crm_strdup_printf("%s%s '%s' %s",
                                         prefix, action->task, op, action_host);
@@ -153,7 +153,8 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
     out->begin_list(out, NULL, NULL, "%s", title);
     out->message(out, "cluster-status",
                  scheduler, state, stonith_rc, NULL,
-                 false, section_opts, show_opts, NULL, all, all);
+                 pcmk__fence_history_none, section_opts, show_opts, NULL,
+                 all, all);
     out->end_list(out);
 
     g_list_free(all);
@@ -195,13 +196,13 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     scheduler->priv = out;
     set_effective_date(scheduler, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_sanitized);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
     }
 }
 
@@ -242,7 +243,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         }
 
         if (pcmk_is_set(action->flags, pcmk_action_added_to_graph)) {
-            style = "bold";
+            style = PCMK__VALUE_BOLD;
             color = "green";
 
         } else if ((action->rsc != NULL)
@@ -264,7 +265,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk_action_runnable));
         }
 
-        pe__set_action_flags(action, pcmk_action_added_to_graph);
+        pcmk__set_action_flags(action, pcmk_action_added_to_graph);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:
@@ -286,7 +287,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
             if (before->state == pe_link_dumped) {
                 optional = false;
-                style = "bold";
+                style = PCMK__VALUE_BOLD;
             } else if ((uint32_t) before->type == pcmk__ar_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags,
@@ -337,19 +338,19 @@ profile_file(const char *xml_file, long long repeat,
 
     CRM_ASSERT(out != NULL);
 
-    cib_object = filename2xml(xml_file);
+    cib_object = pcmk__xml_read(xml_file);
     start = clock();
 
-    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+    if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
+        pcmk__xe_create(cib_object, PCMK_XE_STATUS);
     }
 
-    if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
+    if (pcmk_update_configured_schema(&cib_object, false) != pcmk_rc_ok) {
         free_xml(cib_object);
         return;
     }
 
-    if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
         free_xml(cib_object);
         return;
     }
@@ -362,8 +363,11 @@ profile_file(const char *xml_file, long long repeat,
     }
 
     for (int i = 0; i < repeat; ++i) {
-        xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
+        xmlNode *input = cib_object;
 
+        if (repeat > 1) {
+            input = pcmk__xml_copy(NULL, cib_object);
+        }
         scheduler->input = input;
         set_effective_date(scheduler, false, use_date);
         pcmk__schedule_actions(input, scheduler_flags, scheduler);
@@ -416,14 +420,14 @@ pcmk__profile_dir(const char *dir, long long repeat,
 
 /*!
  * \brief Set the date of the cluster, either to the value given by
- *        \p use_date, or to the "execution-date" value in the CIB.
+ *        \p use_date, or to the \c PCMK_XA_EXECUTION_DATE value in the CIB.
  *
  * \note \p scheduler->priv must have been set to a valid \p pcmk__output_t
  *       object before this function is called.
  *
  * \param[in,out] scheduler       Scheduler data
- * \param[in]     print_original  If \p true, the "execution-date" should
- *                                also be printed
+ * \param[in]     print_original  If \p true, the \c PCMK_XA_EXECUTION_DATE
+ *                                should also be printed
  * \param[in]     use_date        The date to set the cluster's time to
  *                                (may be NULL)
  */
@@ -436,7 +440,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 
     CRM_ASSERT(out != NULL);
 
-    crm_element_value_epoch(scheduler->input, "execution-date", &original_date);
+    crm_element_value_epoch(scheduler->input, PCMK_XA_EXECUTION_DATE,
+                            &original_date);
 
     if (use_date) {
         scheduler->now = crm_time_new(use_date);
@@ -469,8 +474,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 static int
 simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
@@ -500,18 +505,19 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *resource = NULL;
     const char *rprovider = NULL;
     const char *resource_config_name = NULL;
-    const char *operation = crm_element_value(action->xml, "operation");
+    const char *operation = crm_element_value(action->xml, PCMK_XA_OPERATION);
     const char *target_rc_s = crm_meta_value(action->params,
-                                             XML_ATTR_TE_TARGET_RC);
+                                             PCMK__META_OP_TARGET_RC);
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
-    xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+    xmlNode *action_rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE,
+                                               NULL, NULL);
 
-    char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
     const char *router_node = crm_element_value(action->xml,
-                                                XML_LRM_ATTR_ROUTER_NODE);
+                                                PCMK__XA_ROUTER_NODE);
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
@@ -530,7 +536,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * (which is preferred when writing history), and if necessary, the instance
      * name.
      */
-    resource_config_name = crm_element_value(action_rsc, XML_ATTR_ID);
+    resource_config_name = crm_element_value(action_rsc, PCMK_XA_ID);
     if (resource_config_name == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "No ID");
         free(node);
@@ -538,7 +544,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
-        const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
+        const char *longname = crm_element_value(action_rsc, PCMK__XA_LONG_ID);
 
         if ((longname != NULL)
             && (pe_find_resource(fake_resource_list, longname) != NULL)) {
@@ -554,9 +560,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         goto done; // Confirm action and update graph
     }
 
-    rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
-    rtype = crm_element_value(action_rsc, XML_ATTR_TYPE);
-    rprovider = crm_element_value(action_rsc, XML_AGENT_ATTR_PROVIDER);
+    rclass = crm_element_value(action_rsc, PCMK_XA_CLASS);
+    rtype = crm_element_value(action_rsc, PCMK_XA_TYPE);
+    rprovider = crm_element_value(action_rsc, PCMK_XA_PROVIDER);
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
@@ -564,7 +570,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                      cib_sync_call|cib_scope_local) == pcmk_ok);
 
     // Ensure the action node is in the CIB
-    uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
+    uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
     free(uuid);
@@ -630,15 +636,15 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         out->info(out, "Pretending action %d failed with rc=%d",
                   action->id, op->rc);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
-        graph->abort_priority = INFINITY;
-        pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
+        graph->abort_priority = PCMK_SCORE_INFINITY;
+        pcmk__inject_failcount(out, fake_cib, cib_node, match_name, op->op_type,
                                op->interval_ms, op->rc);
         break;
     }
 
     pcmk__inject_action_result(cib_resource, op, target_outcome);
     lrmd_free_event(op);
-    rc = fake_cib->cmds->modify(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+    rc = fake_cib->cmds->modify(fake_cib, PCMK_XE_STATUS, cib_node,
                                 cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);
 
@@ -662,9 +668,10 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-    xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
+    xmlNode *rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
+                                        NULL);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
@@ -684,8 +691,8 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *op = crm_meta_value(action->params, "stonith_action");
-    char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    const char *op = crm_meta_value(action->params, PCMK__META_STONITH_ACTION);
+    char *target = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
 
     out->message(out, "inject-fencing-action", target, op);
 
@@ -698,24 +705,24 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                            false);
 
         CRM_ASSERT(cib_node != NULL);
-        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
-        rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+        crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
+        rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
                                      cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
 
         // Simulate controller clearing node's resource history and attributes
         pcmk__g_strcat(xpath,
-                       "//" XML_CIB_TAG_STATE
-                       "[@" XML_ATTR_UNAME "='", target, "']/" XML_CIB_TAG_LRM,
+                       "//" PCMK__XE_NODE_STATE
+                       "[@" PCMK_XA_UNAME "='", target, "']/" PCMK__XE_LRM,
                        NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
         g_string_truncate(xpath, 0);
         pcmk__g_strcat(xpath,
-                       "//" XML_CIB_TAG_STATE
-                       "[@" XML_ATTR_UNAME "='", target, "']"
-                       "/" XML_TAG_TRANSIENT_NODEATTRS, NULL);
+                       "//" PCMK__XE_NODE_STATE
+                       "[@" PCMK_XA_UNAME "='", target, "']"
+                       "/" PCMK__XE_TRANSIENT_ATTRIBUTES, NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
                                cib_xpath|cib_sync_call|cib_scope_local);
 
@@ -866,9 +873,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     }
 
     if (input_file != NULL) {
-        rc = write_xml_file(input, input_file, FALSE);
-        if (rc < 0) {
-            rc = pcmk_legacy2rc(rc);
+        rc = pcmk__xml_write_file(input, input_file, false, NULL);
+        if (rc != pcmk_rc_ok) {
             goto simulate_done;
         }
     }
@@ -925,8 +931,9 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            rc = write_xml_file(scheduler->graph, graph_file, FALSE);
-            if (rc < 0) {
+            rc = pcmk__xml_write_file(scheduler->graph, graph_file, false,
+                                      NULL);
+            if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_graph_error;
                 goto simulate_done;
             }
@@ -966,10 +973,10 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     set_effective_date(scheduler, true, use_date);
 
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
     }
 
     cluster_status(scheduler);
@@ -1001,6 +1008,6 @@ pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
 
     rc = pcmk__simulate(scheduler, out, injections, flags, section_opts,
                         use_date, input_file, graph_file, dot_file);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

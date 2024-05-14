@@ -32,21 +32,20 @@ Frequently Asked Questions
 
 :Q: What are the different Git branches and repositories used for?
 :A: * The `main branch <https://github.com/ClusterLabs/pacemaker/tree/main>`_
-      is the primary branch used for development.
-    * The `2.1 branch <https://github.com/ClusterLabs/pacemaker/tree/2.1>`_ is
-      the current release branch. Normally, it does not receive any changes, but
-      during the release cycle for a new release, it will contain release
-      candidates. During the release cycle, certain bug fixes will go to the
-      2.1 branch first (and be pulled into main later).
+      is used for all new development.
+    * The `3.0 <https://github.com/ClusterLabs/pacemaker/tree/3.0>`_ and
+      `2.1 <https://github.com/ClusterLabs/pacemaker/tree/2.1>`_ branches are
+      for the currently supported major and minor version release series.
+      Normally, they do not receive any changes, but during the release cycle
+      for a new release, they will contain release candidates. The main branch
+      is pulled into 3.0 just before the first release candidate of a new
+      release, but otherwise, separate pull requests must be submitted to
+      backport changes from the main branch into a release branch.
     * The `2.0 branch <https://github.com/ClusterLabs/pacemaker/tree/2.0>`_,
       `1.1 branch <https://github.com/ClusterLabs/pacemaker/tree/1.1>`_,
       and separate
       `1.0 repository <https://github.com/ClusterLabs/pacemaker-1.0>`_
       are frozen snapshots of earlier release series, no longer being developed.
-    * Messages will be posted to the
-      `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
-      mailing list during the release cycle, with instructions about which
-      branches to use when submitting requests.
 
 ----
 
@@ -163,9 +162,5 @@ Frequently Asked Questions
 
 :Q: What if I still have questions?
 :A: Ask on the
-    `developers@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/developers>`_
-    mailing list for development-related questions, or on the
-    `users@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/users>`_
-    mailing list for general questions about using Pacemaker.
-    Developers often also hang out on the
-    [ClusterLabs IRC channel](https://wiki.clusterlabs.org/wiki/ClusterLabs_IRC_channel).
+    `ClusterLabs mailing lists
+    <https://projects.clusterlabs.org/w/clusterlabs/clusterlabs_mailing_lists/>`_.

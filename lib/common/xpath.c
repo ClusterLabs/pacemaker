@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 #include <stdio.h>
 #include <string.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
@@ -147,7 +147,7 @@ xpath_search(const xmlNode *xml_top, const char *path)
     CRM_CHECK(strlen(path) > 0, return NULL);
 
     xpathCtx = xmlXPathNewContext(xml_top->doc);
-    CRM_ASSERT(xpathCtx != NULL);
+    pcmk__mem_assert(xpathCtx);
 
     xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
     xmlXPathFreeContext(xpathCtx);
@@ -183,28 +183,6 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
         }
     }
     freeXpathObject(xpathObj);
-}
-
-xmlNode *
-get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
-{
-    xmlNode *result = NULL;
-    char *xpath_full = NULL;
-    char *xpath_prefix = NULL;
-
-    if (xml_obj == NULL || xpath == NULL) {
-        return NULL;
-    }
-
-    xpath_prefix = (char *)xmlGetNodePath(xml_obj);
-
-    xpath_full = crm_strdup_printf("%s%s", xpath_prefix, xpath);
-
-    result = get_xpath_object(xpath_full, xml_obj, error_level);
-
-    free(xpath_prefix);
-    free(xpath_full);
-    return result;
 }
 
 xmlNode *
@@ -300,9 +278,9 @@ pcmk__element_xpath(const xmlNode *xml)
         pcmk__g_strcat(xpath, "/", (const char *) xml->name, NULL);
     }
 
-    id = ID(xml);
+    id = pcmk__xe_id(xml);
     if (id != NULL) {
-        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", id, "']", NULL);
+        pcmk__g_strcat(xpath, "[@" PCMK_XA_ID "='", id, "']", NULL);
     }
 
     return xpath;
@@ -320,7 +298,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
         return retval;
     }
 
-    patt = crm_strdup_printf("/%s[@" XML_ATTR_ID "=", node);
+    patt = crm_strdup_printf("/%s[@" PCMK_XA_ID "=", node);
     start = strstr(xpath, patt);
 
     if (!start) {
@@ -337,6 +315,30 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
 
     free(patt);
     return retval;
+}
+
+static int
+output_attr_child(xmlNode *child, void *userdata)
+{
+    pcmk__output_t *out = userdata;
+
+    out->info(out, "  Value: %s \t(id=%s)",
+              crm_element_value(child, PCMK_XA_VALUE),
+              pcmk__s(pcmk__xe_id(child), "<none>"));
+    return pcmk_rc_ok;
+}
+
+void
+pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
+                                 const char *name)
+{
+    if (out == NULL || name == NULL || search == NULL ||
+        search->children == NULL) {
+        return;
+    }
+
+    out->info(out, "Multiple attributes match " PCMK_XA_NAME "=%s", name);
+    pcmk__xe_foreach_child(search, NULL, output_attr_child, out);
 }
 
 // Deprecated functions kept only for backward API compatibility
@@ -363,12 +365,31 @@ xml_get_path(const xmlNode *xml)
     if (g_path == NULL) {
         return NULL;
     }
-
-    path = strdup((const char *) g_path->str);
-    CRM_ASSERT(path != NULL);
-
+    path = pcmk__str_copy(g_path->str);
     g_string_free(g_path, TRUE);
     return path;
+}
+
+xmlNode *
+get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
+{
+    xmlNode *result = NULL;
+    char *xpath_full = NULL;
+    char *xpath_prefix = NULL;
+
+    if (xml_obj == NULL || xpath == NULL) {
+        return NULL;
+    }
+
+    xpath_prefix = (char *)xmlGetNodePath(xml_obj);
+
+    xpath_full = crm_strdup_printf("%s%s", xpath_prefix, xpath);
+
+    result = get_xpath_object(xpath_full, xml_obj, error_level);
+
+    free(xpath_prefix);
+    free(xpath_full);
+    return result;
 }
 
 // LCOV_EXCL_STOP

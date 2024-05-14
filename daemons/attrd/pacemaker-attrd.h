@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/common/messages_internal.h>
-#include <crm/cib/internal.h>
+#include <crm/cib/cib_types.h>
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
@@ -31,9 +31,8 @@
  * --------  ---------  -------------------
  *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
  *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
- *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC,
- *                      PCMK__ATTRD_CMD_SYNC_RESPONSE
- *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_PATTERN),
+ *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_REGEX),
  *                      PCMK__ATTRD_CMD_QUERY
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
  *                      PCMK__ATTRD_CMD_UPDATE_DELAY
@@ -42,14 +41,16 @@
  *     4       2.1.5    Multiple attributes can be updated in a single IPC
  *                      message
  *     5       2.1.5    Peers can request confirmation of a sent message
+ *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
  */
-#define ATTRD_PROTOCOL_VERSION "5"
+#define ATTRD_PROTOCOL_VERSION "6"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
 
-#define attrd_send_ack(client, id, flags) \
-    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
+#define attrd_send_ack(client, id, flags)                       \
+    pcmk__ipc_send_ack((client), (id), (flags), PCMK__XE_ACK,   \
+                       ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
@@ -65,6 +66,7 @@ void attrd_ipc_fini(void);
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
 void attrd_cib_init(void);
+void attrd_cib_erase_transient_attrs(const char *node);
 
 bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
@@ -116,47 +118,75 @@ void attrd_declare_winner(void);
 void attrd_remove_voter(const crm_node_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
 
+enum attrd_attr_flags {
+    attrd_attr_none         = 0U,
+    attrd_attr_changed      = (1U << 0),    // Attribute value has changed since last write
+    attrd_attr_uuid_missing = (1U << 1),    // Whether we know we're missing a peer UUID
+    attrd_attr_is_private   = (1U << 2),    // Whether to keep this attribute out of the CIB
+    attrd_attr_force_write  = (1U << 3),    // Update attribute by ignoring delay
+};
+
 typedef struct attribute_s {
-    char *uuid; /* TODO: Remove if at all possible */
-    char *id;
-    char *set_id;
-    char *set_type;
-    GHashTable *values;
-    int update;
-    int timeout_ms;
-
-    /* TODO: refactor these three as a bitmask */
-    bool changed; /* whether attribute value has changed since last write */
-    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
-    gboolean is_private; /* whether to keep this attribute out of the CIB */
-
-    mainloop_timer_t *timer;
-
-    char *user;
-
-    gboolean force_write; /* Flag for updating attribute by ignoring delay */
-
+    char *id;       // Attribute name
+    char *set_type; // PCMK_XE_INSTANCE_ATTRIBUTES or PCMK_XE_UTILIZATION
+    char *set_id;   // Set's XML ID to use when writing
+    char *user;     // ACL user to use for CIB writes
+    int update;     // Call ID of pending write
+    int timeout_ms; // How long to wait for more changes before writing
+    uint32_t flags; // Group of enum attrd_attr_flags
+    GHashTable *values;         // Key: node name, value: attribute_value_t
+    mainloop_timer_t *timer;    // Timer to use for timeout_ms
 } attribute_t;
 
+#define attrd_set_attr_flags(attr, flags_to_set) do {               \
+        (attr)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
+            LOG_TRACE, "Value for attribute", (attr)->id,           \
+            (attr)->flags, (flags_to_set), #flags_to_set);          \
+    } while (0)
+
+#define attrd_clear_attr_flags(attr, flags_to_clear) do {           \
+        (attr)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
+            LOG_TRACE, "Value for attribute", (attr)->id,           \
+            (attr)->flags, (flags_to_clear), #flags_to_clear);      \
+    } while (0)
+
+enum attrd_value_flags {
+    attrd_value_none        = 0U,
+    attrd_value_remote      = (1U << 0),  // Value is for Pacemaker Remote node
+    attrd_value_from_peer   = (1U << 1),  // Value is from peer sync response
+};
+
 typedef struct attribute_value_s {
-        uint32_t nodeid;
-        gboolean is_remote;
-        char *nodename;
-        char *current;
-        char *requested;
-        gboolean seen;
+    char *nodename;     // Node that this value is for
+    char *current;      // Attribute value
+    char *requested;    // Value specified in pending CIB write, if any
+    uint32_t nodeid;    // Cluster node ID of node that this value is for
+    uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
-extern crm_cluster_t *attrd_cluster;
+#define attrd_set_value_flags(attr_value, flags_to_set) do {            \
+        (attr_value)->flags = pcmk__set_flags_as(__func__, __LINE__,    \
+            LOG_TRACE, "Value for node", (attr_value)->nodename,        \
+            (attr_value)->flags, (flags_to_set), #flags_to_set);        \
+    } while (0)
+
+#define attrd_clear_value_flags(attr_value, flags_to_clear) do {        \
+        (attr_value)->flags = pcmk__clear_flags_as(__func__, __LINE__,  \
+            LOG_TRACE, "Value for node", (attr_value)->nodename,        \
+            (attr_value)->flags, (flags_to_clear), #flags_to_clear);    \
+    } while (0)
+
+extern pcmk_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 extern GHashTable *peer_protocol_vers;
 
 #define CIB_OP_TIMEOUT_S 120
 
 int attrd_cluster_connect(void);
+void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
 void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
                        bool filter);
-void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_sync(crm_node_t *peer);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
 void attrd_peer_clear_failure(pcmk__request_t *request);
 void attrd_peer_sync_response(const crm_node_t *peer, bool peer_won,
@@ -176,6 +206,8 @@ void attrd_clear_value_seen(void);
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
+char *attrd_set_id(const attribute_t *attr, const char *node_state_id);
+char *attrd_nvpair_id(const attribute_t *attr, const char *node_state_id);
 
 enum attrd_write_options {
     attrd_write_changed         = 0,
@@ -213,8 +245,6 @@ void attrd_handle_confirmation(int callid, const char *host);
 void attrd_remove_client_from_waitlist(pcmk__client_t *client);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
-
-void attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest);
 
 extern gboolean stand_alone;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/remote_internal.h>
@@ -53,25 +52,27 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    type = crm_element_value(update->msg, F_SUBTYPE);
+    type = crm_element_value(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
     if (pcmk_is_set(client->flags, cib_notify_diff)
-        && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+        && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_confirm)
-               && pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
+                               pcmk__str_none)) {
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_pre)
-               && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
+                               pcmk__str_none)) {
         do_send = TRUE;
 
     } else if (pcmk_is_set(client->flags, cib_notify_post)
-               && pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
-
+               && pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY,
+                               pcmk__str_none)) {
         do_send = TRUE;
     }
 
@@ -125,15 +126,14 @@ cib_notify_send(const xmlNode *xml)
 }
 
 static void
-attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib)
+attach_cib_generation(xmlNode *msg)
 {
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
+    xmlNode *wrapper = pcmk__xe_create(msg, PCMK__XE_CIB_GENERATION);
+    xmlNode *generation = pcmk__xe_create(wrapper, PCMK__XE_GENERATION_TUPLE);
 
-    if (a_cib != NULL) {
-        copy_in_properties(generation, a_cib);
+    if (the_cib != NULL) {
+        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
     }
-    add_message_xml(msg, field, generation);
-    free_xml(generation);
 }
 
 void
@@ -152,6 +152,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     uint8_t log_level = LOG_TRACE;
 
     xmlNode *update_msg = NULL;
+    xmlNode *wrapper = NULL;
     const char *type = NULL;
 
     if (diff == NULL) {
@@ -191,17 +192,18 @@ cib_diff_notify(const char *op, int result, const char *call_id,
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
 
-    update_msg = create_xml_node(NULL, "notify");
+    update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
-    crm_xml_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-    crm_xml_add(update_msg, F_SUBTYPE, T_CIB_DIFF_NOTIFY);
-    crm_xml_add(update_msg, F_CIB_OPERATION, op);
-    crm_xml_add(update_msg, F_CIB_CLIENTID, client_id);
-    crm_xml_add(update_msg, F_CIB_CLIENTNAME, client_name);
-    crm_xml_add(update_msg, F_CIB_CALLID, call_id);
-    crm_xml_add(update_msg, F_ORIG, origin);
-    crm_xml_add_int(update_msg, F_CIB_RC, result);
+    crm_xml_add(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
+    crm_xml_add(update_msg, PCMK__XA_CIB_OP, op);
+    crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
+    crm_xml_add(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
+    crm_xml_add(update_msg, PCMK__XA_CIB_CALLID, call_id);
+    crm_xml_add(update_msg, PCMK__XA_SRC, origin);
+    crm_xml_add_int(update_msg, PCMK__XA_CIB_RC, result);
 
+    // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
         type = (const char *) update->name;
         crm_trace("Setting type to update->name: %s", type);
@@ -209,14 +211,20 @@ cib_diff_notify(const char *op, int result, const char *call_id,
         type = (const char *) diff->name;
         crm_trace("Setting type to new_obj->name: %s", type);
     }
-    crm_xml_add(update_msg, F_CIB_OBJID, ID(diff));
-    crm_xml_add(update_msg, F_CIB_OBJTYPE, type);
-    attach_cib_generation(update_msg, "cib_generation", the_cib);
 
+    // @COMPAT Unused internally, drop at 3.0.0
+    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT, pcmk__xe_id(diff));
+    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT_TYPE, type);
+    attach_cib_generation(update_msg);
+
+    // @COMPAT Unused internally, drop at 3.0.0
     if (update != NULL) {
-        add_message_xml(update_msg, F_CIB_UPDATE, update);
+        wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE);
+        pcmk__xml_copy(wrapper, update);
     }
-    add_message_xml(update_msg, F_CIB_UPDATE_RESULT, diff);
+
+    wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
+    pcmk__xml_copy(wrapper, diff);
 
     crm_log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);

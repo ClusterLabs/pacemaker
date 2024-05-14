@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@ extern "C" {
 #include <sys/types.h>              // uid_t, gid_t, pid_t, size_t
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  include <gnutls/gnutls.h>        // gnutls_session_t
+#include <gnutls/gnutls.h>        // gnutls_session_t
 #endif
 
 #include <glib.h>                   // guint, gpointer, GQueue, ...
@@ -122,9 +122,9 @@ struct pcmk__remote_s {
     char *token;
 
     /* TLS only */
-#  ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session_t *tls_session;
-#  endif
+#endif
 };
 
 enum pcmk__client_flags {
@@ -138,10 +138,10 @@ enum pcmk__client_flags {
     //! Client uses TCP connection
     pcmk__client_tcp                    = (UINT64_C(1) << 33),
 
-#  ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef HAVE_GNUTLS_GNUTLS_H
     //! Client uses TCP with TLS
     pcmk__client_tls                    = (UINT64_C(1) << 34),
-#  endif
+#endif
 
     // The rest are client attributes
 
@@ -157,14 +157,14 @@ enum pcmk__client_flags {
     /*!
      * \brief Client IPC connection accepted
      *
-     * Used only for remote CIB connections via \c remote-tls-port.
+     * Used only for remote CIB connections via \c PCMK_XA_REMOTE_TLS_PORT.
      */
     pcmk__client_authenticated          = (UINT64_C(1) << 43),
 
-#  ifdef HAVE_GNUTLS_GNUTLS_H
+#ifdef HAVE_GNUTLS_GNUTLS_H
     //! Client TLS handshake is complete
     pcmk__client_tls_handshake_complete = (UINT64_C(1) << 44),
-#  endif
+#endif
 };
 
 #define PCMK__CLIENT_TYPE(client) ((client)->flags & UINT64_C(0xff00000000))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2023 the Pacemaker project contributors
+ * Copyright 2006-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,12 +35,17 @@
 #define PCMK_ALLOW_DEPRECATED 0
 
 #  include <crm/lrmd.h>
+#  include <crm/cluster/internal.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/logging_internal.h>
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
+#  include <crm/common/scheduler_internal.h>
+#  include <crm/common/schemas_internal.h>
 #  include <crm/common/xml_internal.h>
+#  include <crm/common/xml_io_internal.h>
+#  include <crm/common/xml_names_internal.h>
 #  include <crm/common/internal.h>
 #  include <locale.h>
 #  include <gettext.h>
@@ -52,46 +57,6 @@
 #else
 #  define _(String) (String)
 #endif
-
-
-/*
- * XML attribute names used only by internal code
- */
-
-#define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
-#define PCMK__XA_ATTR_FORCE             "attrd_is_force_write"
-#define PCMK__XA_ATTR_INTERVAL          "attr_clear_interval"
-#define PCMK__XA_ATTR_IS_PRIVATE        "attr_is_private"
-#define PCMK__XA_ATTR_IS_REMOTE         "attr_is_remote"
-#define PCMK__XA_ATTR_NAME              "attr_name"
-#define PCMK__XA_ATTR_NODE_ID           "attr_host_id"
-#define PCMK__XA_ATTR_NODE_NAME         "attr_host"
-#define PCMK__XA_ATTR_OPERATION         "attr_clear_operation"
-#define PCMK__XA_ATTR_PATTERN           "attr_regex"
-#define PCMK__XA_ATTR_RESOURCE          "attr_resource"
-#define PCMK__XA_ATTR_SECTION           "attr_section"
-#define PCMK__XA_ATTR_SET               "attr_set"
-#define PCMK__XA_ATTR_SET_TYPE          "attr_set_type"
-#define PCMK__XA_ATTR_SYNC_POINT        "attr_sync_point"
-#define PCMK__XA_ATTR_USER              "attr_user"
-#define PCMK__XA_ATTR_UUID              "attr_key"
-#define PCMK__XA_ATTR_VALUE             "attr_value"
-#define PCMK__XA_ATTR_VERSION           "attr_version"
-#define PCMK__XA_ATTR_WRITER            "attr_writer"
-#define PCMK__XA_CONFIG_ERRORS          "config-errors"
-#define PCMK__XA_CONFIG_WARNINGS        "config-warnings"
-#define PCMK__XA_CONFIRM                "confirm"
-#define PCMK__XA_CRMD                   "crmd"
-#define PCMK__XA_EXPECTED               "expected"
-#define PCMK__XA_GRAPH_ERRORS           "graph-errors"
-#define PCMK__XA_GRAPH_WARNINGS         "graph-warnings"
-#define PCMK__XA_IN_CCM                 "in_ccm"
-#define PCMK__XA_JOIN                   "join"
-#define PCMK__XA_MODE                   "mode"
-#define PCMK__XA_NODE_START_STATE       "node_start_state"
-#define PCMK__XA_TASK                   "task"
-#define PCMK__XA_UPTIME                 "uptime"
-#define PCMK__XA_CONN_HOST              "connection_host"
 
 
 /*
@@ -113,7 +78,6 @@
 #define PCMK__ATTRD_CMD_QUERY           "query"
 #define PCMK__ATTRD_CMD_REFRESH         "refresh"
 #define PCMK__ATTRD_CMD_FLUSH           "flush"
-#define PCMK__ATTRD_CMD_SYNC            "sync"
 #define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 #define PCMK__ATTRD_CMD_CONFIRM         "confirm"

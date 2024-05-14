@@ -1,7 +1,7 @@
-""" Stop running nodes, and start stopped nodes """
+"""Stop running nodes, and start stopped nodes."""
 
 __all__ = ["FlipTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
@@ -20,16 +20,15 @@ from pacemaker._cts.tests.stoptest import StopTest
 
 
 class FlipTest(CTSTest):
-    """ A concrete test that stops running nodes and starts stopped nodes """
+    """Stop running nodes and start stopped nodes."""
 
     def __init__(self, cm):
-        """ Create a new FlipTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new FlipTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "Flip"
 
@@ -37,8 +36,7 @@ class FlipTest(CTSTest):
         self._stop = StopTest(cm)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         if self._cm.expected_status[node] == "up":

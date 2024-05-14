@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
@@ -284,7 +283,7 @@ node_info_event_cb(pcmk_ipc_api_t *controld_api, enum pcmk_ipc_event event_type,
 
     if (data->show_output) {
         out->message(out, "node-info",
-                     reply->data.node_info.id, reply->data.node_info.uname,
+                     (uint32_t) reply->data.node_info.id, reply->data.node_info.uname,
                      reply->data.node_info.uuid, reply->data.node_info.state,
                      reply->data.node_info.have_quorum,
                      reply->data.node_info.is_remote);
@@ -509,7 +508,7 @@ pcmk_controller_status(xmlNodePtr *xml, const char *node_name,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__controller_status(out, node_name, message_timeout_ms);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -577,7 +576,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
     pcmk__register_lib_messages(out);
 
     rc = pcmk__designated_controller(out, message_timeout_ms);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -707,7 +706,7 @@ pcmk_query_node_info(xmlNodePtr *xml, uint32_t *node_id, char **node_name,
     rc = pcmk__query_node_info(out, node_id, node_name, uuid, state,
                                have_quorum, is_remote, show_output,
                                message_timeout_ms);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -797,7 +796,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__pacemakerd_status(out, ipc_name, message_timeout_ms, true, NULL);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
 
@@ -815,7 +814,7 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 {
     struct node_data *data = user_data;
     pcmk__output_t *out = data->out;
-    const char *name = crm_element_value(result, XML_ATTR_UNAME);
+    const char *name = crm_element_value(result, PCMK_XA_UNAME);
     const char *id = crm_element_value(result, data->field);
 
     // node name and node id are the same for remote/guest nodes
@@ -840,21 +839,25 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
             .bash_export = bash_export
         };
 
-        out->begin_list(out, NULL, NULL, "nodes");
+        /* PCMK_XE_NODES acts as the list's element name for CLI tools that
+         * use pcmk__output_enable_list_element.  Otherwise PCMK_XE_NODES is
+         * the value of the list's PCMK_XA_NAME attribute.
+         */
+        out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
         if (!pcmk__str_empty(node_types) && strstr(node_types, "all")) {
             node_types = NULL;
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
-            data.field = "id";
+            data.field = PCMK_XA_ID;
             data.type = "cluster";
             crm_foreach_xpath_result(xml_node, PCMK__XP_MEMBER_NODE_CONFIG,
                                      remote_node_print_helper, &data);
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
-            data.field = "value";
+            data.field = PCMK_XA_VALUE;
             data.type = "guest";
             crm_foreach_xpath_result(xml_node, PCMK__XP_GUEST_NODE_CONFIG,
                                      remote_node_print_helper, &data);
@@ -862,7 +865,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
 
         if (pcmk__str_empty(node_types)
             || pcmk__str_eq(node_types, ",|^remote", pcmk__str_regex)) {
-            data.field = "id";
+            data.field = PCMK_XA_ID;
             data.type = "remote";
             crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_CONFIG,
                                      remote_node_print_helper, &data);
@@ -894,6 +897,6 @@ pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
     pcmk__register_lib_messages(out);
 
     rc = pcmk__list_nodes(out, node_types, FALSE);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

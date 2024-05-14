@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,8 +12,8 @@
 #include <sys/param.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/cib_internal.h>
 
 #include <glib.h>
 
@@ -56,6 +56,31 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
     }
 }
 
+#define XPATH_DEPRECATED_RULES                          \
+    "//" PCMK_XE_OP_DEFAULTS "//" PCMK_XE_EXPRESSION    \
+    "|//" PCMK_XE_OP "//" PCMK_XE_EXPRESSION
+
+/*!
+ * \internal
+ * \brief Log a warning for deprecated rule syntax in operations
+ *
+ * \param[in] scheduler  Scheduler data
+ */
+static void
+check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
+{
+    // @COMPAT Drop this function when support for the syntax is dropped
+    xmlNode *deprecated = get_xpath_object(XPATH_DEPRECATED_RULES,
+                                           scheduler->input, LOG_NEVER);
+
+    if (deprecated != NULL) {
+        pcmk__warn_once(pcmk__wo_op_attr_expr,
+                        "Support for rules with node attribute expressions in "
+                        PCMK_XE_OP " or " PCMK_XE_OP_DEFAULTS " is deprecated "
+                        "and will be dropped in a future release");
+    }
+}
+
 /*
  * Unpack everything
  * At the end you'll have:
@@ -70,9 +95,18 @@ pe_free_working_set(pcmk_scheduler_t *scheduler)
 gboolean
 cluster_status(pcmk_scheduler_t * scheduler)
 {
+    const char *new_version = NULL;
     xmlNode *section = NULL;
 
     if ((scheduler == NULL) || (scheduler->input == NULL)) {
+        return FALSE;
+    }
+
+    new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
+
+    if (pcmk__check_feature_set(new_version) != pcmk_rc_ok) {
+        pcmk__config_err("Can't process CIB with feature set '%s' greater than our own '%s'",
+                         new_version, CRM_FEATURE_SET);
         return FALSE;
     }
 
@@ -81,7 +115,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     if (scheduler->failed != NULL) {
         free_xml(scheduler->failed);
     }
-    scheduler->failed = create_xml_node(NULL, "failed-ops");
+    scheduler->failed = pcmk__xe_create(NULL, "failed-ops");
 
     if (scheduler->now == NULL) {
         scheduler->now = crm_time_new(NULL);
@@ -89,47 +123,48 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     if (scheduler->dc_uuid == NULL) {
         scheduler->dc_uuid = crm_element_value_copy(scheduler->input,
-                                                    XML_ATTR_DC_UUID);
+                                                    PCMK_XA_DC_UUID);
     }
 
-    if (pcmk__xe_attr_is_true(scheduler->input, XML_ATTR_HAVE_QUORUM)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_quorate);
+    if (pcmk__xe_attr_is_true(scheduler->input, PCMK_XA_HAVE_QUORUM)) {
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_quorate);
     } else {
-        pe__clear_working_set_flags(scheduler, pcmk_sched_quorate);
+        pcmk__clear_scheduler_flags(scheduler, pcmk_sched_quorate);
     }
 
-    scheduler->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
+    scheduler->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
                                               scheduler->input, LOG_NEVER);
-    scheduler->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
+    check_for_deprecated_rules(scheduler);
+
+    scheduler->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
                                                scheduler->input, LOG_NEVER);
 
-    section = get_xpath_object("//" XML_CIB_TAG_CRMCONFIG, scheduler->input,
+    section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
                                LOG_TRACE);
     unpack_config(section, scheduler);
 
    if (!pcmk_any_flags_set(scheduler->flags,
                            pcmk_sched_location_only|pcmk_sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
-        crm_warn("Fencing and resource management disabled due to lack of quorum");
+        pcmk__sched_warn("Fencing and resource management disabled "
+                         "due to lack of quorum");
     }
 
-    section = get_xpath_object("//" XML_CIB_TAG_NODES, scheduler->input,
-                               LOG_TRACE);
+    section = get_xpath_object("//" PCMK_XE_NODES, scheduler->input, LOG_TRACE);
     unpack_nodes(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, scheduler->input,
+    section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
                                LOG_TRACE);
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
 
-    section = get_xpath_object("//" XML_CIB_TAG_TAGS, scheduler->input,
-                               LOG_NEVER);
+    section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
     unpack_tags(section, scheduler);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_location_only)) {
-        section = get_xpath_object("//"XML_CIB_TAG_STATUS, scheduler->input,
+        section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
                                    LOG_TRACE);
         unpack_status(section, scheduler);
     }
@@ -144,7 +179,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                   scheduler->blocked_resources);
     }
 
-    pe__set_working_set_flags(scheduler, pcmk_sched_have_status);
+    pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_status);
     return TRUE;
 }
 
@@ -207,8 +242,8 @@ pe_free_nodes(GList *nodes)
         /* This is called after pe_free_resources(), which means that we can't
          * use node->details->uname for Pacemaker Remote nodes.
          */
-        crm_trace("Freeing node %s", (pe__is_guest_or_remote_node(node)?
-                  "(guest or remote)" : pe__node_name(node)));
+        crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
+                  "(guest or remote)" : pcmk__node_name(node)));
 
         if (node->details->attrs != NULL) {
             g_hash_table_destroy(node->details->attrs);
@@ -235,12 +270,12 @@ pe__free_ordering(GList *constraints)
     GList *iterator = constraints;
 
     while (iterator != NULL) {
-        pe__ordering_t *order = iterator->data;
+        pcmk__action_relation_t *order = iterator->data;
 
         iterator = iterator->next;
 
-        free(order->lh_action_task);
-        free(order->rh_action_task);
+        free(order->task1);
+        free(order->task2);
         free(order);
     }
     if (constraints != NULL) {
@@ -254,11 +289,11 @@ pe__free_location(GList *constraints)
     GList *iterator = constraints;
 
     while (iterator != NULL) {
-        pe__location_t *cons = iterator->data;
+        pcmk__location_t *cons = iterator->data;
 
         iterator = iterator->next;
 
-        g_list_free_full(cons->node_list_rh, free);
+        g_list_free_full(cons->nodes, free);
         free(cons->id);
         free(cons);
     }
@@ -282,7 +317,7 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         return;
     }
 
-    pe__clear_working_set_flags(scheduler, pcmk_sched_have_status);
+    pcmk__clear_scheduler_flags(scheduler, pcmk_sched_have_status);
     if (scheduler->config_hash != NULL) {
         g_hash_table_destroy(scheduler->config_hash);
     }
@@ -378,12 +413,12 @@ set_working_set_defaults(pcmk_scheduler_t *scheduler)
 
     scheduler->flags = 0x0ULL;
 
-    pe__set_working_set_flags(scheduler,
+    pcmk__set_scheduler_flags(scheduler,
                               pcmk_sched_symmetric_cluster
                               |pcmk_sched_stop_removed_resources
                               |pcmk_sched_cancel_removed_actions);
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_concurrent_fencing);
+    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_concurrent_fencing);
     }
 }
 
@@ -431,7 +466,7 @@ pe_find_node_any(const GList *nodes, const char *id, const char *uname)
         match = pe_find_node_id(nodes, id);
     }
     if ((match == NULL) && (uname != NULL)) {
-        match = pe_find_node(nodes, uname);
+        match = pcmk__find_node_in_list(nodes, uname);
     }
     return match;
 }
@@ -461,6 +496,11 @@ pe_find_node_id(const GList *nodes, const char *id)
     return NULL;
 }
 
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/pengine/status_compat.h>
+
 /*!
  * \brief Find a node by name in a list of nodes
  *
@@ -472,12 +512,8 @@ pe_find_node_id(const GList *nodes, const char *id)
 pcmk_node_t *
 pe_find_node(const GList *nodes, const char *node_name)
 {
-    for (const GList *iter = nodes; iter != NULL; iter = iter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iter->data;
-
-        if (pcmk__str_eq(node->details->uname, node_name, pcmk__str_casei)) {
-            return node;
-        }
-    }
-    return NULL;
+    return pcmk__find_node_in_list(nodes, node_name);
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API

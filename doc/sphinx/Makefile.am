@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -84,7 +84,7 @@ EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)			\
 # don't cross filesystems, sparse, show progress
 RSYNC_OPTS      = -rlptvzxS --progress
 
-PACKAGE_SERIES=$(shell echo "$VERSION" | awk -F. '{ print $1"."$2 }')
+PACKAGE_SERIES=$(shell echo "$(VERSION)" | awk -F. '{ print $$1"."$$2 }')
 
 BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
 
@@ -120,20 +120,22 @@ INKSCAPE_CMD	= $(INKSCAPE) --export-dpi=90 -C
 # Create the book directory in case this is a VPATH build.
 $(BOOKS:%=%/conf.py): conf.py.in
 	$(AM_V_at)-$(MKDIR_P) "$(@:%/conf.py=%)"
-	$(AM_V_GEN)sed							\
-		-e 's/%VERSION%/$(VERSION)/g'				\
-		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'			\
-		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'	\
-		-e 's#%SRC_DIR%#$(abs_srcdir)#g'			\
+	$(AM_V_GEN)sed								\
+		-e 's/%VERSION%/$(VERSION)/g'					\
+		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'				\
+		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'		\
+		-e 's#%SRC_DIR%#$(abs_srcdir)#g'				\
 		-e 's#%ABS_TOP_SRCDIR%#$(abs_top_srcdir)#g'			\
 		-e 's#%CONFIGDIR%#@CONFIGDIR@#g'				\
 		-e 's#%CRM_BLACKBOX_DIR%#@CRM_BLACKBOX_DIR@#g'			\
+		-e 's#%CRM_CONFIG_DIR%#@CRM_CONFIG_DIR@#g'			\
 		-e 's#%CRM_DAEMON_GROUP%#@CRM_DAEMON_GROUP@#g'			\
 		-e 's#%CRM_DAEMON_USER%#@CRM_DAEMON_USER@#g'			\
 		-e 's#%CRM_LOG_DIR%#@CRM_LOG_DIR@#g'				\
 		-e 's#%CRM_SCHEMA_DIRECTORY%#@CRM_SCHEMA_DIRECTORY@#g'		\
 		-e 's#%PACEMAKER_CONFIG_DIR%#@PACEMAKER_CONFIG_DIR@#g'		\
 		-e 's#%PCMK_GNUTLS_PRIORITIES%#@PCMK_GNUTLS_PRIORITIES@#g'	\
+		-e 's#%PCMK__REMOTE_SCHEMA_DIR%#@PCMK__REMOTE_SCHEMA_DIR@#g'	\
 		$(<) > "$@"
 
 $(BOOK)/_build: $(STATIC_FILES) $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)
@@ -175,6 +177,15 @@ if BUILD_SPHINX_DOCS
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
 		"$(RSYNC_DEST)/$(PACKAGE)/doc"
 endif
+
+.PHONY: vars
+vars:
+	@echo "BOOK_FORMATS='$(BOOK_FORMATS)'"
+	@echo "PAPER='$(PAPER)'"
+	@echo "SPHINXFLAGS='$(SPHINXFLAGS)'"
+	@echo "RSYNC_DEST='$(RSYNC_DEST)'"
+	@echo "VERSION='$(VERSION)'"
+	@echo "PACKAGE_SERIES='$(PACKAGE_SERIES)'"
 
 .PHONY: all-local
 all-local:

@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="16" operation="migrate_to" operation_key="degllx62-vm_migrate_to_0" on_node="deglxen002" on_node_uuid="deglxen002">
         <primitive id="degllx62-vm" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_to" CRM_meta_on_node="deglxen002" CRM_meta_on_node_uuid="deglxen002" CRM_meta_record_pending="false" CRM_meta_timeout="1800000"  xmfile="/etc/xen/vm/degllx62"/>
+        <attributes CRM_meta_migrate_source="deglxen002" CRM_meta_migrate_target="deglxen001" CRM_meta_name="migrate_to" CRM_meta_on_node="deglxen002" CRM_meta_on_node_uuid="deglxen002" CRM_meta_record_pending="true" CRM_meta_timeout="1800000"  xmfile="/etc/xen/vm/degllx62"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,8 @@
 #ifndef PCMK__CRM_COMPATIBILITY__H
 #  define PCMK__CRM_COMPATIBILITY__H
 
-#include <crm/msg_xml.h>
+#include <crm/msg_xml_compat.h>   // PCMK_XE_PROMOTABLE_LEGACY
+#include <crm/common/xml.h>
 #include <crm/pengine/pe_types.h> // enum pe_obj_types
 
 #ifdef __cplusplus
@@ -127,7 +128,7 @@ extern "C" {
 #define LOG_DEBUG_6  LOG_TRACE
 #define LRMD_OP_RSC_CHK_REG         "lrmd_rsc_check_register"
 #define MAX_IPC_FAIL                5
-#define NAME(x)                     crm_element_value(x, XML_NVPAIR_ATTR_NAME)
+#define NAME(x)                     crm_element_value(x, PCMK_XA_NAME)
 #define MSG_LOG                     1
 #define PE_OBJ_T_NATIVE             "native"
 #define PE_OBJ_T_GROUP              "group"
@@ -135,7 +136,7 @@ extern "C" {
 #define PE_OBJ_T_MASTER             "master"
 #define SERVICE_SCRIPT              "/sbin/service"
 #define SOCKET_LEN                  1024
-#define TSTAMP(x)                   crm_element_value(x, XML_ATTR_TSTAMP)
+#define TSTAMP(x)                   crm_element_value(x, PCMK_XA_CRM_TIMESTAMP)
 #define XML_ATTR_TAGNAME            F_XML_TAGNAME
 #define XML_ATTR_FILTER_TYPE        "type-filter"
 #define XML_ATTR_FILTER_ID          "id-filter"
@@ -145,14 +146,14 @@ extern "C" {
 #define XML_MSG_TAG_DATA            "msg_data"
 #define XML_FAIL_TAG_RESOURCE       "failed_resource"
 #define XML_FAILRES_ATTR_RESID      "resource_id"
-#define XML_FAILRES_ATTR_REASON     "reason"
+#define XML_FAILRES_ATTR_REASON     PCMK_XA_REASON
 #define XML_FAILRES_ATTR_RESSTATUS  "resource_status"
-#define XML_ATTR_RESULT             "result"
+#define XML_ATTR_RESULT             PCMK_XA_RESULT
 #define XML_ATTR_SECTION            "section"
 #define XML_CIB_TAG_DOMAIN          "domain"
 #define XML_CIB_TAG_CONSTRAINT      "constraint"
 #define XML_RSC_ATTR_STATE          "clone-state"
-#define XML_RSC_ATTR_PRIORITY       "priority"
+#define XML_RSC_ATTR_PRIORITY       PCMK_META_PRIORITY
 #define XML_OP_ATTR_DEPENDENT       "dependent-on"
 #define XML_LRM_TAG_AGENTS          "lrm_agents"
 #define XML_LRM_TAG_AGENT           "lrm_agent"
@@ -163,11 +164,11 @@ extern "C" {
 #define XML_CIB_ATTR_STONITH        "stonith"
 #define XML_CIB_ATTR_STANDBY        "standby"
 #define XML_RULE_ATTR_SCORE_MANGLED "score-attribute-mangled"
-#define XML_RULE_ATTR_RESULT        "result"
+#define XML_RULE_ATTR_RESULT        PCMK_XA_RESULT
 #define XML_NODE_ATTR_STATE         "state"
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
-#define VALUE(x)                    crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+#define VALUE(x)                    crm_element_value(x, PCMK_XA_VALUE)
 #define action_wrapper_s            pe_action_wrapper_s
 #define add_cib_op_callback(cib, id, flag, data, fn) do {                \
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
@@ -201,17 +202,17 @@ extern "C" {
 static inline enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+    if (safe_str_eq(name, PCMK_XE_PRIMITIVE)) {
         return pcmk_rsc_variant_primitive;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
+    } else if (safe_str_eq(name, PCMK_XE_GROUP)) {
         return pcmk_rsc_variant_group;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
+    } else if (safe_str_eq(name, PCMK_XE_CLONE)
                 || safe_str_eq(name, PCMK_XE_PROMOTABLE_LEGACY)) {
         return pcmk_rsc_variant_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+    } else if (safe_str_eq(name, PCMK_XE_BUNDLE)) {
         return pcmk_rsc_variant_bundle;
     }
 
@@ -223,13 +224,13 @@ get_resource_typename(enum pe_obj_types type)
 {
     switch (type) {
         case pcmk_rsc_variant_primitive:
-            return XML_CIB_TAG_RESOURCE;
+            return PCMK_XE_PRIMITIVE;
         case pcmk_rsc_variant_group:
-            return XML_CIB_TAG_GROUP;
+            return PCMK_XE_GROUP;
         case pcmk_rsc_variant_clone:
-            return XML_CIB_TAG_INCARNATION;
+            return PCMK_XE_CLONE;
         case pcmk_rsc_variant_bundle:
-            return XML_CIB_TAG_CONTAINER;
+            return PCMK_XE_BUNDLE;
         case pcmk_rsc_variant_unknown:
             return "unknown";
     }

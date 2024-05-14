@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_IPC__H
-#  define PCMK__CRM_COMMON_IPC__H
+#define PCMK__CRM_COMMON_IPC__H
 
 
 #include <sys/uio.h>
@@ -34,16 +34,24 @@ extern "C" {
  * compatibility.
  */
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 #define create_reply(request, xml_response_data)    \
     create_reply_adv(request, xml_response_data, __func__)
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
                           const char *origin);
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 #define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
     create_request_adv(task, xml_data, host_to, sys_to, sys_from, uuid_from, \
                        __func__)
 
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_request_adv(const char *task, xmlNode *xml_data,
                             const char *host_to, const char *sys_to,
                             const char *sys_from, const char *uuid_from,
@@ -76,11 +84,17 @@ enum pcmk_ipc_server {
     pcmk_ipc_schedulerd,    //!< Scheduler
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this enum
 //! Possible event types that an IPC event callback can be called for
 enum pcmk_ipc_event {
     pcmk_ipc_event_connect,     //!< Result of asynchronous connection attempt
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_ipc_event_disconnect,  //!< Termination of IPC connection
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     pcmk_ipc_event_reply,       //!< Daemon's reply to client IPC request
+
     pcmk_ipc_event_notify,      //!< Notification from daemon
 };
 
@@ -91,6 +105,7 @@ enum pcmk_ipc_dispatch {
     pcmk_ipc_dispatch_sync, //!< Sending a command will wait for any reply
 };
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! Client connection to Pacemaker IPC
 typedef struct pcmk_ipc_api_s pcmk_ipc_api_t;
 
@@ -113,10 +128,13 @@ typedef void (*pcmk_ipc_callback_t)(pcmk_ipc_api_t *api,
                                     crm_exit_t status,
                                     void *event_data, void *user_data);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 int pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void pcmk_free_ipc_api(pcmk_ipc_api_t *api);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 int pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type);
 
 void pcmk_disconnect_ipc(pcmk_ipc_api_t *api);
@@ -125,6 +143,7 @@ int pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms);
 
 void pcmk_dispatch_ipc(pcmk_ipc_api_t *api);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 void pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
                                 void *user_data);
 
@@ -220,9 +239,8 @@ unsigned int crm_ipc_default_buffer_size(void);
 int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                                  pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
-/* This is controller-specific but is declared in this header for C API
- * backward compatibility.
- */
+// @COMPAT Make internal when we can break API backward compatibility
+//! \deprecated Do not use
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
                               const char *major_version, const char *minor_version);
 

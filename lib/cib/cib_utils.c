@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2023 the Pacemaker project contributors
+ * Later changes copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,26 +19,10 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
-
-xmlNode *
-cib_get_generation(cib_t * cib)
-{
-    xmlNode *the_cib = NULL;
-    xmlNode *generation = create_xml_node(NULL, XML_CIB_TAG_GENERATION_TUPPLE);
-
-    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
-    if (the_cib != NULL) {
-        copy_in_properties(generation, the_cib);
-        free_xml(the_cib);
-    }
-
-    return generation;
-}
 
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
@@ -51,9 +35,9 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
         return FALSE;
 
     } else {
-        crm_element_value_int(cib, XML_ATTR_GENERATION, epoch);
-        crm_element_value_int(cib, XML_ATTR_NUMUPDATES, updates);
-        crm_element_value_int(cib, XML_ATTR_GENERATION_ADMIN, admin_epoch);
+        crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
+        crm_element_value_int(cib, PCMK_XA_NUM_UPDATES, updates);
+        crm_element_value_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     }
     return TRUE;
 }
@@ -91,6 +75,7 @@ int
 cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
 {
     int rc = pcmk_err_generic;
+    xmlNode *wrapper = NULL;
 
     CRM_ASSERT(patchset != NULL);
     *patchset = NULL;
@@ -100,14 +85,17 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return ENOMSG;
     }
 
-    if ((crm_element_value_int(msg, F_CIB_RC, &rc) != 0) || (rc != pcmk_ok)) {
+    if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
+        || (rc != pcmk_ok)) {
+
         crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
                  pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);
     }
 
-    *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT, NULL, NULL);
+    *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (*patchset == NULL) {
         crm_err("CIB diff notification received with no patchset");
@@ -116,7 +104,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     return pcmk_rc_ok;
 }
 
-#define XPATH_DIFF_V1 "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+#define XPATH_DIFF_V1 "//" PCMK__XE_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
 
 /*!
  * \internal
@@ -124,7 +112,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB)
+ *                      to \c PCMK_XE_CIB)
  *
  * \return \c true if \p element was modified, or \c false otherwise
  */
@@ -132,7 +120,7 @@ static bool
 element_in_patchset_v1(const xmlNode *patchset, const char *element)
 {
     char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
-                                    pcmk__s(element, XML_TAG_CIB));
+                                    pcmk__s(element, PCMK_XE_CIB));
     xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
 
     free(xpath);
@@ -150,7 +138,7 @@ element_in_patchset_v1(const xmlNode *patchset, const char *element)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
  *                      element supported by \c pcmk__cib_abs_xpath_for().
  *
  * \return \c true if \p element was modified, or \c false otherwise
@@ -168,11 +156,12 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
     // Matches if and only if element_xpath is part of a changed path
     element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
 
-    for (const xmlNode *change = first_named_child(patchset, XML_DIFF_CHANGE);
-         change != NULL; change = crm_next_same_xml(change)) {
+    for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
+                                                      NULL, NULL);
+         change != NULL; change = pcmk__xe_next_same(change)) {
 
-        const char *op = crm_element_value(change, F_CIB_OPERATION);
-        const char *diff_xpath = crm_element_value(change, XML_DIFF_PATH);
+        const char *op = crm_element_value(change, PCMK__XA_CIB_OP);
+        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
             // Change to an existing element
@@ -180,9 +169,10 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
             break;
         }
 
-        if (pcmk__str_eq(op, "create", pcmk__str_none)
+        if (pcmk__str_eq(op, PCMK_VALUE_CREATE, pcmk__str_none)
             && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
-            && pcmk__xe_is(pcmk__xml_first_child(change), element)) {
+            && pcmk__xe_is(pcmk__xe_first_child(change, NULL, NULL, NULL),
+                                                element)) {
 
             // Newly added element
             rc = true;
@@ -200,7 +190,7 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c XML_TAG_CIB). Supported values include any CIB
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
  *                      element supported by \c pcmk__cib_abs_xpath_for().
  *
  * \return \c true if \p element was modified, or \c false otherwise
@@ -229,7 +219,7 @@ cib__element_in_patchset(const xmlNode *patchset, const char *element)
 /*!
  * \brief Create XML for a new (empty) CIB
  *
- * \param[in] cib_epoch   What to use as "epoch" CIB property
+ * \param[in] cib_epoch  What to use as \c PCMK_XA_EPOCH CIB attribute
  *
  * \return Newly created XML for empty CIB
  * \note It is the caller's responsibility to free the result with free_xml().
@@ -239,32 +229,32 @@ createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
-    cib_root = create_xml_node(NULL, XML_TAG_CIB);
-    crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
+    cib_root = pcmk__xe_create(NULL, PCMK_XE_CIB);
+    crm_xml_add(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    crm_xml_add(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
 
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
-    crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
+    crm_xml_add_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
+    crm_xml_add_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
+    crm_xml_add_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
-    config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
-    create_xml_node(cib_root, XML_CIB_TAG_STATUS);
+    config = pcmk__xe_create(cib_root, PCMK_XE_CONFIGURATION);
+    pcmk__xe_create(cib_root, PCMK_XE_STATUS);
 
-    create_xml_node(config, XML_CIB_TAG_CRMCONFIG);
-    create_xml_node(config, XML_CIB_TAG_NODES);
-    create_xml_node(config, XML_CIB_TAG_RESOURCES);
-    create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
+    pcmk__xe_create(config, PCMK_XE_CRM_CONFIG);
+    pcmk__xe_create(config, PCMK_XE_NODES);
+    pcmk__xe_create(config, PCMK_XE_RESOURCES);
+    pcmk__xe_create(config, PCMK_XE_CONSTRAINTS);
 
 #if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
     {
-        xmlNode *rsc_defaults = create_xml_node(config, XML_CIB_TAG_RSCCONFIG);
-        xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
-        xmlNode *nvpair = create_xml_node(meta, XML_CIB_TAG_NVPAIR);
+        xmlNode *rsc_defaults = pcmk__xe_create(config, PCMK_XE_RSC_DEFAULTS);
+        xmlNode *meta = pcmk__xe_create(rsc_defaults, PCMK_XE_META_ATTRIBUTES);
+        xmlNode *nvpair = pcmk__xe_create(meta, PCMK_XE_NVPAIR);
 
-        crm_xml_add(meta, XML_ATTR_ID, "build-resource-defaults");
-        crm_xml_add(nvpair, XML_ATTR_ID, "build-" XML_RSC_ATTR_STICKINESS);
-        crm_xml_add(nvpair, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_STICKINESS);
-        crm_xml_add_int(nvpair, XML_NVPAIR_ATTR_VALUE,
+        crm_xml_add(meta, PCMK_XA_ID, "build-resource-defaults");
+        crm_xml_add(nvpair, PCMK_XA_ID, "build-" PCMK_META_RESOURCE_STICKINESS);
+        crm_xml_add(nvpair, PCMK_XA_NAME, PCMK_META_RESOURCE_STICKINESS);
+        crm_xml_add_int(nvpair, PCMK_XA_VALUE,
                         PCMK__RESOURCE_STICKINESS_DEFAULT);
     }
 #endif
@@ -281,7 +271,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
-        value = cib_pref(options, "enable-acl");
+        value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
         rc = crm_is_true(value);
         g_hash_table_destroy(options);
     }
@@ -324,7 +314,7 @@ should_copy_cib(const char *op, const char *section, int call_options)
         return false;
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_none)) {
+    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_none)) {
         /* Copying large CIBs accounts for a huge percentage of our CIB usage,
          * and this avoids some of it.
          *
@@ -339,11 +329,10 @@ should_copy_cib(const char *op, const char *section, int call_options)
 }
 
 int
-cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
-               const char *section, xmlNode *req, xmlNode *input,
-               bool manage_counters, bool *config_changed,
-               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-               xmlNode **output)
+cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
+               bool is_query, const char *section, xmlNode *req, xmlNode *input,
+               bool manage_counters, bool *config_changed, xmlNode **current_cib,
+               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = pcmk_ok;
     bool check_schema = true;
@@ -353,8 +342,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *new_version = NULL;
-    const char *user = crm_element_value(req, F_CIB_USER);
+    const char *user = crm_element_value(req, PCMK__XA_CIB_USER);
     bool with_digest = false;
 
     crm_trace("Begin %s%s%s op",
@@ -406,11 +394,11 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
 
         } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
             /* We're about to free the document of which *output is a part */
-            *output = copy_xml(*output);
+            *output = pcmk__xml_copy(NULL, *output);
 
         } else if ((*output)->doc == (*current_cib)->doc) {
             /* Give them a copy they can free */
-            *output = copy_xml(*output);
+            *output = pcmk__xml_copy(NULL, *output);
         }
 
         free_xml(cib_filtered);
@@ -425,8 +413,8 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         scratch = *current_cib;
 
         // Make a copy of the top-level element to store version details
-        top = create_xml_node(NULL, (const char *) scratch->name);
-        copy_in_properties(top, scratch);
+        top = pcmk__xe_create(NULL, (const char *) scratch->name);
+        pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
         patchset_cib = top;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -438,7 +426,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         *current_cib = scratch;
 
     } else {
-        scratch = copy_xml(*current_cib);
+        scratch = pcmk__xml_copy(NULL, *current_cib);
         patchset_cib = *current_cib;
 
         xml_track_changes(scratch, user, NULL, cib_acl_enabled(scratch, user));
@@ -469,13 +457,18 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         goto done;
     }
 
-    if (scratch) {
-        new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
+    /* If the CIB is from a file, we don't need to check that the feature set is
+     * supported.  All we care about in that case is the schema version, which
+     * is checked elsewhere.
+     */
+    if (scratch && (cib == NULL || cib->variant != cib_file)) {
+        const char *new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
 
-        if (new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
-            crm_err("Discarding update with feature set '%s' greater than our own '%s'",
-                    new_version, CRM_FEATURE_SET);
-            rc = -EPROTONOSUPPORT;
+        rc = pcmk__check_feature_set(new_version);
+        if (rc != pcmk_rc_ok) {
+            pcmk__config_err("Discarding update with feature set '%s' greater than our own '%s'",
+                             new_version, CRM_FEATURE_SET);
+            rc = pcmk_rc2legacy(rc);
             goto done;
         }
     }
@@ -484,22 +477,22 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         int old = 0;
         int new = 0;
 
-        crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
-        crm_element_value_int(patchset_cib, XML_ATTR_GENERATION_ADMIN, &old);
+        crm_element_value_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
+        crm_element_value_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                    XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+                    PCMK_XA_ADMIN_EPOCH, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
-            crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
-            crm_element_value_int(patchset_cib, XML_ATTR_GENERATION, &old);
+            crm_element_value_int(scratch, PCMK_XA_EPOCH, &new);
+            crm_element_value_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                        XML_ATTR_GENERATION, old, new, call_options);
+                        PCMK_XA_EPOCH, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");
                 rc = -pcmk_err_old_data;
@@ -509,10 +502,10 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
 
     crm_trace("Massaging CIB contents");
     pcmk__strip_xml_text(scratch);
-    fix_plus_plus_recursive(scratch);
 
     if (!make_copy) {
-        /* At this point, patchset_cib is just the "cib" tag and its properties.
+        /* At this point, patchset_cib is just the PCMK_XE_CIB tag and its
+         * properties.
          *
          * The v1 format would barf on this, but we know the v2 patch
          * format only needs it for the top-level version fields
@@ -549,7 +542,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
                 // Validate the calculated patch set
                 int test_rc = pcmk_ok;
                 int format = 1;
-                xmlNode *cib_copy = copy_xml(patchset_cib);
+                xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
 
                 crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
@@ -571,7 +564,7 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
         );
     }
 
-    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
@@ -583,59 +576,53 @@ cib_perform_op(const char *op, int call_options, cib__op_fn_t fn, bool is_query,
      * Exceptions, anything in:
 
      static filter_t filter[] = {
-     { 0, XML_ATTR_ORIGIN },
-     { 0, XML_CIB_ATTR_WRITTEN },
-     { 0, XML_ATTR_UPDATE_ORIG },
-     { 0, XML_ATTR_UPDATE_CLIENT },
-     { 0, XML_ATTR_UPDATE_USER },
+     { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
+     { 0, PCMK_XA_CIB_LAST_WRITTEN },
+     { 0, PCMK_XA_UPDATE_ORIGIN },
+     { 0, PCMK_XA_UPDATE_CLIENT },
+     { 0, PCMK_XA_UPDATE_USER },
      };
      */
 
     if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
-        const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
+        const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
 
         pcmk__xe_add_last_written(scratch);
-        if (schema) {
-            static int minimum_schema = 0;
-            int current_schema = get_schema_version(schema);
+        pcmk__warn_if_schema_deprecated(schema);
 
-            if (minimum_schema == 0) {
-                minimum_schema = get_schema_version("pacemaker-1.2");
+        /* Make values of origin, client, and user in scratch match
+         * the ones in req (if the schema allows the attributes)
+         */
+        if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") >= 0) {
+            const char *origin = crm_element_value(req, PCMK__XA_SRC);
+            const char *client = crm_element_value(req,
+                                                   PCMK__XA_CIB_CLIENTNAME);
+
+            if (origin != NULL) {
+                crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
+            } else {
+                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
             }
 
-            /* Does the CIB support the "update-*" attributes... */
-            if (current_schema >= minimum_schema) {
-                /* Ensure values of origin, client, and user in scratch match
-                 * the values in req
-                 */
-                const char *origin = crm_element_value(req, F_ORIG);
-                const char *client = crm_element_value(req, F_CIB_CLIENTNAME);
+            if (client != NULL) {
+                crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
+            } else {
+                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
+            }
 
-                if (origin != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_ORIG, origin);
-                } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_ORIG);
-                }
-
-                if (client != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_CLIENT, user);
-                } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_CLIENT);
-                }
-
-                if (user != NULL) {
-                    crm_xml_add(scratch, XML_ATTR_UPDATE_USER, user);
-                } else {
-                    xml_remove_prop(scratch, XML_ATTR_UPDATE_USER);
-                }
+            if (user != NULL) {
+                crm_xml_add(scratch, PCMK_XA_UPDATE_USER, user);
+            } else {
+                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
             }
         }
     }
 
     crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
-    if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, true)) {
+    if ((rc == pcmk_ok) && check_schema
+        && !pcmk__configured_schema_validates(scratch)) {
         const char *current_schema = crm_element_value(scratch,
-                                                       XML_ATTR_VALIDATION);
+                                                       PCMK_XA_VALIDATE_WITH);
 
         crm_warn("Updated CIB does not validate against %s schema",
                  pcmk__s(current_schema, "unspecified"));
@@ -677,30 +664,28 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 {
     CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
 
-    *op_msg = create_xml_node(NULL, T_CIB_COMMAND);
-    if (*op_msg == NULL) {
-        return -EPROTO;
-    }
+    *op_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
 
     cib->call_id++;
     if (cib->call_id < 1) {
         cib->call_id = 1;
     }
 
-    crm_xml_add(*op_msg, F_XML_TAGNAME, T_CIB_COMMAND);
-    crm_xml_add(*op_msg, F_TYPE, T_CIB);
-    crm_xml_add(*op_msg, F_CIB_OPERATION, op);
-    crm_xml_add(*op_msg, F_CIB_HOST, host);
-    crm_xml_add(*op_msg, F_CIB_SECTION, section);
-    crm_xml_add(*op_msg, F_CIB_USER, user_name);
-    crm_xml_add(*op_msg, F_CIB_CLIENTNAME, client_name);
-    crm_xml_add_int(*op_msg, F_CIB_CALLID, cib->call_id);
+    crm_xml_add(*op_msg, PCMK__XA_T, PCMK__VALUE_CIB);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_OP, op);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_HOST, host);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_SECTION, section);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_USER, user_name);
+    crm_xml_add(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
+    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
-    crm_xml_add_int(*op_msg, F_CIB_CALLOPTS, call_options);
+    crm_xml_add_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
-        add_message_xml(*op_msg, F_CIB_CALLDATA, data);
+        xmlNode *wrapper = pcmk__xe_create(*op_msg, PCMK__XE_CIB_CALLDATA);
+
+        pcmk__xml_copy(wrapper, data);
     }
 
     if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
@@ -721,8 +706,8 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 static int
 validate_transaction_request(const xmlNode *request)
 {
-    const char *op = crm_element_value(request, F_CIB_OPERATION);
-    const char *host = crm_element_value(request, F_CIB_HOST);
+    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
     int rc = cib__get_operation(op, &operation);
 
@@ -768,10 +753,10 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
     }
 
     if (rc == pcmk_rc_ok) {
-        add_node_copy(cib->transaction, request);
+        pcmk__xml_copy(cib->transaction, request);
 
     } else {
-        const char *op = crm_element_value(request, F_CIB_OPERATION);
+        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
@@ -789,9 +774,12 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
-        crm_element_value_int(msg, F_CIB_RC, &rc);
-        crm_element_value_int(msg, F_CIB_CALLID, &call_id);
-        output = get_message_xml(msg, F_CIB_CALLDATA);
+        xmlNode *wrapper = NULL;
+
+        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+        crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
+        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+        output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     }
 
     blob = cib__lookup_id(call_id);
@@ -843,7 +831,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(msg, F_SUBTYPE);
+    event = crm_element_value(msg, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
@@ -863,55 +851,6 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-static pcmk__cluster_option_t cib_opts[] = {
-    /* name, legacy name, type, allowed values,
-     * default value, validator,
-     * short description,
-     * long description
-     */
-    {
-        "enable-acl", NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
-        N_("Enable Access Control Lists (ACLs) for the CIB"),
-        NULL
-    },
-    {
-        "cluster-ipc-limit", NULL, "integer", NULL,
-        "500", pcmk__valid_positive_number,
-        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
-        N_("Raise this if log has \"Evicting client\" messages for cluster daemon"
-            " PIDs (a good value is the number of resources in the cluster"
-            " multiplied by the number of nodes).")
-    },
-};
-
-void
-cib_metadata(void)
-{
-    const char *desc_short = "Cluster Information Base manager options";
-    const char *desc_long = "Cluster options used by Pacemaker's Cluster "
-                            "Information Base manager";
-
-    gchar *s = pcmk__format_option_metadata("pacemaker-based", desc_short,
-                                            desc_long, cib_opts,
-                                            PCMK__NELEM(cib_opts));
-    printf("%s", s);
-    g_free(s);
-}
-
-static void
-verify_cib_options(GHashTable *options)
-{
-    pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
-}
-
-const char *
-cib_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, cib_opts, PCMK__NELEM(cib_opts),
-                                name);
-}
-
 gboolean
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
@@ -926,13 +865,14 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     g_hash_table_remove_all(options);
 
-    config = pcmk_find_cib_element(current_cib, XML_CIB_TAG_CRMCONFIG);
+    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
     if (config) {
-        pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
-                          options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
+        pe_unpack_nvpairs(current_cib, config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                          NULL, options, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, TRUE,
+                          now, NULL);
     }
 
-    verify_cib_options(options);
+    pcmk__validate_cluster_options(options);
 
     crm_time_free(now);
 
@@ -973,14 +913,17 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
 {
     int rc = pcmk_err_generic;
 
+    xmlNode *wrapper = NULL;
     xmlNode *diff = NULL;
 
     CRM_ASSERT(event);
     CRM_ASSERT(input);
     CRM_ASSERT(output);
 
-    crm_element_value_int(event, F_CIB_RC, &rc);
-    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
+    crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
+    wrapper = pcmk__xe_first_child(event, PCMK__XE_CIB_UPDATE_RESULT, NULL,
+                                   NULL);
+    diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (rc < pcmk_ok || diff == NULL) {
         return rc;
@@ -1092,6 +1035,21 @@ cib__clean_up_connection(cib_t **cib)
 
 #include <crm/cib/util_compat.h>
 
+xmlNode *
+cib_get_generation(cib_t * cib)
+{
+    xmlNode *the_cib = NULL;
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
+
+    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
+    if (the_cib != NULL) {
+        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
+        free_xml(the_cib);
+    }
+
+    return generation;
+}
+
 const char *
 get_object_path(const char *object_type)
 {
@@ -1108,6 +1066,33 @@ xmlNode *
 get_object_root(const char *object_type, xmlNode *the_root)
 {
     return pcmk_find_cib_element(the_root, object_type);
+}
+
+const char *
+cib_pref(GHashTable * options, const char *name)
+{
+    return pcmk__cluster_option(options, name);
+}
+
+void
+cib_metadata(void)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk__output_new(&out, "text", NULL, NULL);
+
+    if (rc != pcmk_rc_ok) {
+        crm_err("Unable to output metadata: %s", pcmk_rc_str(rc));
+        return;
+    }
+
+    pcmk__daemon_metadata(out, "pacemaker-based",
+                          "Cluster Information Base manager options",
+                          "Cluster options used by Pacemaker's Cluster "
+                          "Information Base manager",
+                          pcmk__opt_based);
+
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
 }
 
 // LCOV_EXCL_STOP

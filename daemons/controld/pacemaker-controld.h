@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,6 @@
 #  define controld_trigger_config()  \
     controld_trigger_config_as(__func__, __LINE__)
 
-void crmd_metadata(void);
 void controld_trigger_config_as(const char *fn, int line);
 void controld_election_init(const char *uname);
 void controld_configure_election(GHashTable *options);

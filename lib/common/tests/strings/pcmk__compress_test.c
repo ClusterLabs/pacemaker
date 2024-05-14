@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@ const char *SIMPLE_COMPRESSED = "BZh41AY&SYO\x1ai";
 static void
 simple_compress(void **state)
 {
-    char *result = calloc(1024, sizeof(char));
+    char *result = pcmk__assert_alloc(1024, sizeof(char));
     unsigned int len;
 
     assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len), pcmk_rc_ok);
@@ -30,7 +30,7 @@ simple_compress(void **state)
 static void
 max_too_small(void **state)
 {
-    char *result = calloc(1024, sizeof(char));
+    char *result = pcmk__assert_alloc(1024, sizeof(char));
     unsigned int len;
 
     assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 10, &result, &len), EFBIG);
@@ -38,10 +38,11 @@ max_too_small(void **state)
 
 static void
 calloc_fails(void **state) {
-    char *result = calloc(1024, sizeof(char));
+    char *result = pcmk__assert_alloc(1024, sizeof(char));
     unsigned int len;
 
-    pcmk__assert_asserts(
+    pcmk__assert_exits(
+        CRM_EX_OSERR,
         {
             pcmk__mock_calloc = true;   // calloc() will return NULL
             expect_value(__wrap_calloc, nmemb, (size_t) ((40 * 1.01) + 601));

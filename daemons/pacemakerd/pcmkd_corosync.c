@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include "pacemakerd.h"
+#include "pcmkd_corosync.h"
 
 #include <sys/utsname.h>
 #include <sys/stat.h>           /* for calls to stat() */
@@ -271,7 +272,8 @@ pacemakerd_read_config(void)
     gid_t found_gid = 0;
     pid_t found_pid = 0;
     int rv;
-    enum cluster_type_e stack;
+    enum pcmk_cluster_layer cluster_layer = pcmk_cluster_layer_unknown;
+    const char *cluster_layer_s = NULL;
 
     // There can be only one possibility
     do {
@@ -318,19 +320,21 @@ pacemakerd_read_config(void)
         return FALSE;
     }
 
-    stack = get_cluster_type();
-    if (stack != pcmk_cluster_corosync) {
+    cluster_layer = pcmk_get_cluster_layer();
+    cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
+
+    if (cluster_layer != pcmk_cluster_layer_corosync) {
         crm_crit("Expected Corosync cluster layer but detected %s "
-                 CRM_XS " stack=%d", name_for_cluster_type(stack), stack);
+                 CRM_XS " cluster_layer=%d",
+                 cluster_layer_s, cluster_layer);
         return FALSE;
     }
 
-    crm_info("Reading configuration for %s stack",
-             name_for_cluster_type(stack));
-    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, "corosync", true);
+    crm_info("Reading configuration for %s cluster layer", cluster_layer_s);
+    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, PCMK_VALUE_COROSYNC, true);
 
     // @COMPAT Drop at 3.0.0; added unused in 1.1.9
-    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, "corosync", true);
+    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, PCMK_VALUE_COROSYNC, true);
 
     // If debug logging is not configured, check whether corosync has it
     if (pcmk__env_option(PCMK__ENV_DEBUG) == NULL) {

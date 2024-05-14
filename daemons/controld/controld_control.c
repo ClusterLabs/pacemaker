@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
@@ -27,10 +27,10 @@ static qb_ipcs_service_t *ipcs = NULL;
 static crm_trigger_t *config_read_trigger = NULL;
 
 #if SUPPORT_COROSYNC
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
+extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 #endif
 
-void crm_shutdown(int nsig);
+static void crm_shutdown(int nsig);
 static gboolean crm_read_options(gpointer user_data);
 
 /*	 A_HA_CONNECT	*/
@@ -41,25 +41,25 @@ do_ha_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     gboolean registered = FALSE;
-    static crm_cluster_t *cluster = NULL;
+    static pcmk_cluster_t *cluster = NULL;
 
     if (cluster == NULL) {
         cluster = pcmk_cluster_new();
     }
 
     if (action & A_HA_DISCONNECT) {
-        crm_cluster_disconnect(cluster);
+        pcmk_cluster_disconnect(cluster);
         crm_info("Disconnected from the cluster");
 
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
     }
 
     if (action & A_HA_CONNECT) {
-        crm_set_status_callback(&peer_update_callback);
-        crm_set_autoreap(FALSE);
+        pcmk__cluster_set_status_callback(&peer_update_callback);
+        pcmk__cluster_set_autoreap(false);
 
 #if SUPPORT_COROSYNC
-        if (is_corosync_cluster()) {
+        if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
             registered = crm_connect_corosync(cluster);
         }
 #endif // SUPPORT_COROSYNC
@@ -117,7 +117,7 @@ do_shutdown_req(long long action,
              pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+    if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     free_xml(msg);
@@ -241,7 +241,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_destroy_transition_trigger();
 
     pcmk__client_cleanup();
-    crm_peer_destroy();
+    pcmk__cluster_destroy_node_caches();
 
     controld_free_fsa_timers();
     te_cleanup_stonith_history_sync(NULL, TRUE);
@@ -365,7 +365,7 @@ accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     crm_trace("Accepting new IPC client connection");
     if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
+        return -ENOMEM;
     }
     return 0;
 }
@@ -381,15 +381,17 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
+                           CRM_EX_PROTOCOL);
         return 0;
     }
-    pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
+    pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
+                       CRM_EX_INDETERMINATE);
 
     CRM_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(msg, F_CRM_USER, client->user);
+    pcmk__update_acl_user(msg, PCMK__XA_CRM_USER, client->user);
 
-    crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
+    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, client->id);
     if (controld_authorize_ipc_message(msg, client, NULL)) {
         crm_trace("Processing IPC message from client %s",
                   pcmk__client_name(client));
@@ -515,194 +517,6 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
-static pcmk__cluster_option_t controller_options[] = {
-    /* name, old name, type, allowed values,
-     * default value, validator,
-     * short description,
-     * long description
-     */
-    {
-        "dc-version", NULL, "string", NULL, PCMK__VALUE_NONE, NULL,
-        N_("Pacemaker version on cluster node elected Designated Controller (DC)"),
-        N_("Includes a hash which identifies the exact changeset the code was "
-            "built from. Used for diagnostic purposes.")
-    },
-    {
-        "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
-        N_("The messaging stack on which Pacemaker is currently running"),
-        N_("Used for informational and diagnostic purposes.")
-    },
-    {
-        "cluster-name", NULL, "string", NULL, NULL, NULL,
-        N_("An arbitrary name for the cluster"),
-        N_("This optional value is mostly for users' convenience as desired "
-            "in administration, but may also be used in Pacemaker "
-            "configuration rules via the #cluster-name node attribute, and "
-            "by higher-level tools and resource agents.")
-    },
-    {
-        XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time",
-        NULL, "20s", pcmk__valid_interval_spec,
-        N_("How long to wait for a response from other nodes during start-up"),
-        N_("The optimal value will depend on the speed and load of your network "
-            "and the type of switches used.")
-    },
-    {
-        XML_CONFIG_ATTR_RECHECK, NULL, "time",
-        N_("Zero disables polling, while positive values are an interval in seconds"
-            "(unless other units are specified, for example \"5min\")"),
-        "15min", pcmk__valid_interval_spec,
-        N_("Polling interval to recheck cluster state and evaluate rules "
-            "with date specifications"),
-        N_("Pacemaker is primarily event-driven, and looks ahead to know when to "
-            "recheck cluster state for failure timeouts and most time-based "
-            "rules. However, it will also recheck the cluster after this "
-            "amount of inactivity, to evaluate rules with date specifications "
-            "and serve as a fail-safe for certain types of scheduler bugs.")
-    },
-    {
-        "load-threshold", NULL, "percentage", NULL,
-        "80%", pcmk__valid_percentage,
-        N_("Maximum amount of system load that should be used by cluster nodes"),
-        N_("The cluster will slow down its recovery process when the amount of "
-            "system resources used (currently CPU) approaches this limit"),
-    },
-    {
-        "node-action-limit", NULL, "integer", NULL,
-        "0", pcmk__valid_number,
-        N_("Maximum number of jobs that can be scheduled per node "
-            "(defaults to 2x cores)")
-    },
-    { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
-        N_("How a cluster node should react if notified of its own fencing"),
-        N_("A cluster node may receive notification of its own fencing if fencing "
-        "is misconfigured, or if fabric fencing is in use that doesn't cut "
-        "cluster communication. Allowed values are \"stop\" to attempt to "
-        "immediately stop Pacemaker and stay stopped, or \"panic\" to attempt "
-        "to immediately reboot the local node, falling back to stop on failure.")
-    },
-    {
-        XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL,
-        "2min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("Declare an election failed if it is not decided within this much "
-            "time. If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL,
-        "20min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("Exit immediately if shutdown does not complete within this much "
-            "time. If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        "join-integration-timeout", "crmd-integration-timeout", "time", NULL,
-        "3min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        "join-finalization-timeout", "crmd-finalization-timeout", "time", NULL,
-        "30min", pcmk__valid_interval_spec,
-        "*** Advanced Use Only ***",
-        N_("If you need to adjust this value, it probably indicates "
-            "the presence of a bug.")
-    },
-    {
-        "transition-delay", "crmd-transition-delay", "time", NULL,
-        "0s", pcmk__valid_interval_spec,
-        N_("*** Advanced Use Only *** Enabling this option will slow down "
-            "cluster recovery under all conditions"),
-        N_("Delay cluster recovery for this much time to allow for additional "
-            "events to occur. Useful if your configuration is sensitive to "
-            "the order in which ping updates arrive.")
-    },
-    {
-        "stonith-watchdog-timeout", NULL, "time", NULL,
-        "0", controld_verify_stonith_watchdog_timeout,
-        N_("How long before nodes can be assumed to be safely down when "
-           "watchdog-based self-fencing via SBD is in use"),
-        N_("If this is set to a positive value, lost nodes are assumed to "
-           "self-fence using watchdog-based SBD within this much time. This "
-           "does not require a fencing resource to be explicitly configured, "
-           "though a fence_watchdog resource can be configured, to limit use "
-           "to specific nodes. If this is set to 0 (the default), the cluster "
-           "will never assume watchdog-based self-fencing. If this is set to a "
-           "negative value, the cluster will use twice the local value of the "
-           "`SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, "
-           "or otherwise treat this as 0. WARNING: When used, this timeout "
-           "must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use "
-           "watchdog-based SBD, and Pacemaker will refuse to start on any of "
-           "those nodes where this is not true for the local value or SBD is "
-           "not active. When this is set to a negative value, "
-           "`SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes "
-           "that use SBD, otherwise data corruption or loss could occur.")
-    },
-    {
-        "stonith-max-attempts", NULL, "integer", NULL,
-        "10", pcmk__valid_positive_number,
-        N_("How many times fencing can fail before it will no longer be "
-            "immediately re-attempted on a target")
-    },
-
-    // Already documented in libpe_status (other values must be kept identical)
-    {
-        "no-quorum-policy", NULL, "select",
-        "stop, freeze, ignore, demote, suicide", "stop", pcmk__valid_quorum,
-        N_("What to do when the cluster does not have quorum"), NULL
-    },
-    {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean,
-        N_("Whether to lock resources to a cleanly shut down node"),
-        N_("When true, resources active on a node when it is cleanly shut down "
-            "are kept \"locked\" to that node (not allowed to run elsewhere) "
-            "until they start again on that node after it rejoins (or for at "
-            "most shutdown-lock-limit, if set). Stonith resources and "
-            "Pacemaker Remote connections are never locked. Clone and bundle "
-            "instances and the promoted role of promotable clones are "
-            "currently never locked, though support could be added in a future "
-            "release.")
-    },
-    {
-        XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
-        "0", pcmk__valid_interval_spec,
-        N_("Do not lock resources to a cleanly shut down node longer than "
-           "this"),
-        N_("If shutdown-lock is true and this is set to a nonzero time "
-            "duration, shutdown locks will expire after this much time has "
-            "passed since the shutdown was initiated, even if the node has not "
-            "rejoined.")
-    },
-    {
-        XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT, NULL, "time", NULL,
-        "0", pcmk__valid_interval_spec,
-        N_("How long to wait for a node that has joined the cluster to join "
-           "the controller process group"),
-        N_("Fence nodes that do not join the controller process group within "
-           "this much time after joining the cluster, to allow the cluster "
-           "to continue managing resources. A value of 0 means never fence " 
-           "pending nodes. Setting the value to 2h means fence nodes after "
-           "2 hours.")
-    },
-};
-
-void
-crmd_metadata(void)
-{
-    const char *desc_short = "Pacemaker controller options";
-    const char *desc_long = "Cluster options used by Pacemaker's controller";
-
-    gchar *s = pcmk__format_option_metadata("pacemaker-controld", desc_short,
-                                            desc_long, controller_options,
-                                            PCMK__NELEM(controller_options));
-    printf("%s", s);
-    g_free(s);
-}
-
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -726,49 +540,62 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmconfig = output;
-    if ((crmconfig != NULL)
-        && !pcmk__xe_is(crmconfig, XML_CIB_TAG_CRMCONFIG)) {
-        crmconfig = first_named_child(crmconfig, XML_CIB_TAG_CRMCONFIG);
+    if ((crmconfig != NULL) && !pcmk__xe_is(crmconfig, PCMK_XE_CRM_CONFIG)) {
+        crmconfig = pcmk__xe_first_child(crmconfig, PCMK_XE_CRM_CONFIG, NULL,
+                                         NULL);
     }
     if (!crmconfig) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query for " XML_CIB_TAG_CRMCONFIG " section failed");
+        crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         goto bail;
     }
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
-    pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
-                      config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
+    pe_unpack_nvpairs(crmconfig, crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
+                      config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE, now,
+                      NULL);
 
     // Validate all options, and use defaults if not already present in hash
-    pcmk__validate_cluster_options(config_hash, controller_options,
-                                   PCMK__NELEM(controller_options));
+    pcmk__validate_cluster_options(config_hash);
 
-    value = g_hash_table_lookup(config_hash, "no-quorum-policy");
-    if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
+    /* Validate the watchdog timeout in the context of the local node
+     * environment. If invalid, the controller will exit with a fatal error.
+     *
+     * We do this via a wrapper in the controller, so that we call
+     * pcmk__valid_stonith_watchdog_timeout() only if watchdog fencing is
+     * enabled for the local node. Otherwise, we may exit unnecessarily.
+     *
+     * A validator function in libcrmcommon can't act as such a wrapper, because
+     * it doesn't have a stonith API connection or the local node name.
+     */
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
+    controld_verify_stonith_watchdog_timeout(value);
+
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
+    if (pcmk__str_eq(value, PCMK_VALUE_FENCE_LEGACY, pcmk__str_casei)
+        && (pcmk__locate_sbd() != 0)) {
         controld_set_global_flags(controld_no_quorum_suicide);
     }
 
-    value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);
     if (crm_is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
         controld_clear_global_flags(controld_shutdown_lock_enabled);
     }
 
-    value = g_hash_table_lookup(config_hash,
-                                XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
-    controld_globals.shutdown_lock_limit = crm_parse_interval_spec(value)
-                                           / 1000;
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK_LIMIT);
+    pcmk_parse_interval_spec(value, &controld_globals.shutdown_lock_limit);
+    controld_globals.shutdown_lock_limit /= 1000;
 
-    value = g_hash_table_lookup(config_hash,
-                                XML_CONFIG_ATTR_NODE_PENDING_TIMEOUT);
-    controld_globals.node_pending_timeout = crm_parse_interval_spec(value) / 1000;
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_NODE_PENDING_TIMEOUT);
+    pcmk_parse_interval_spec(value, &controld_globals.node_pending_timeout);
+    controld_globals.node_pending_timeout /= 1000;
 
-    value = g_hash_table_lookup(config_hash, "cluster-name");
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_CLUSTER_NAME);
     pcmk__str_update(&(controld_globals.cluster_name), value);
 
     // Let subcomponents initialize their own static variables
@@ -777,7 +604,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     controld_configure_fsa_timers(config_hash);
     controld_configure_throttle(config_hash);
 
-    alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
+    alerts = pcmk__xe_first_child(output, PCMK_XE_ALERTS, NULL, NULL);
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);
@@ -809,8 +636,8 @@ crm_read_options(gpointer user_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
     int call_id = cib_conn->cmds->query(cib_conn,
-                                        "//" XML_CIB_TAG_CRMCONFIG
-                                        " | //" XML_CIB_TAG_ALERTS,
+                                        "//" PCMK_XE_CRM_CONFIG
+                                        " | //" PCMK_XE_ALERTS,
                                         NULL, cib_xpath|cib_scope_local);
 
     fsa_register_cib_callback(call_id, NULL, config_query_callback);
@@ -829,7 +656,7 @@ do_read_config(long long action,
     controld_trigger_config();
 }
 
-void
+static void
 crm_shutdown(int nsig)
 {
     const char *value = NULL;
@@ -856,9 +683,7 @@ crm_shutdown(int nsig)
      * config_query_callback() has been run at least once, it doesn't look like
      * anything could have changed the timer period since then.
      */
-    value = pcmk__cluster_option(NULL, controller_options,
-                                 PCMK__NELEM(controller_options),
-                                 XML_CONFIG_ATTR_FORCE_QUIT);
-    default_period_ms = crm_parse_interval_spec(value);
+    value = pcmk__cluster_option(NULL, PCMK_OPT_SHUTDOWN_ESCALATION);
+    pcmk_parse_interval_spec(value, &default_period_ms);
     controld_shutdown_start_countdown(default_period_ms);
 }

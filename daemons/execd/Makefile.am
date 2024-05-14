@@ -44,12 +44,14 @@ pacemaker_remoted_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemaker_remoted_LDADD = $(top_builddir)/lib/fencing/libstonithd.la
 pacemaker_remoted_LDADD	+= $(top_builddir)/lib/services/libcrmservice.la
+pacemaker_remoted_LDADD += $(top_builddir)/lib/cib/libcib.la
 pacemaker_remoted_LDADD += $(top_builddir)/lib/lrmd/liblrmd.la
 pacemaker_remoted_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) 	\
 				  remoted_tls.c 		\
 				  remoted_pidone.c 		\
-				  remoted_proxy.c
+				  remoted_proxy.c 		\
+				  remoted_schemas.c
 endif
 
 cts_exec_helper_LDADD = $(top_builddir)/lib/pengine/libpe_status.la

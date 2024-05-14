@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 
@@ -58,11 +58,12 @@ attrd_clear_requesting_shutdown(void)
  * \internal
  * \brief Check whether local attribute manager is shutting down
  *
- * \param[in] if_requested  Also consider presence of "shutdown" attribute
+ * \param[in] if_requested  If \c true, also consider presence of
+ *                          \c PCMK__NODE_ATTR_SHUTDOWN attribute
  *
  * \return \c true if local attribute manager has begun shutdown sequence
  *         or (if \p if_requested is \c true) whether local node has a nonzero
- *         "shutdown" attribute set, otherwise \c false
+ *         \c PCMK__NODE_ATTR_SHUTDOWN attribute set, otherwise \c false
  * \note Most callers should pass \c false for \p if_requested, because the
  *       attribute manager needs to continue performing while the controller is
  *       shutting down, and even needs to be eligible for election in case all
@@ -175,8 +176,8 @@ attrd_expand_value(const char *value, const char *old_value)
     }
     int_value += offset;
 
-    if (int_value > INFINITY) {
-        int_value = INFINITY;
+    if (int_value > PCMK_SCORE_INFINITY) {
+        int_value = PCMK_SCORE_INFINITY;
     }
     return int_value;
 }
@@ -204,7 +205,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     /* Create a pattern that matches desired attributes */
 
     if (rsc == NULL) {
-        pattern = strdup(ATTRD_RE_CLEAR_ALL);
+        pattern = pcmk__str_copy(ATTRD_RE_CLEAR_ALL);
     } else if (op == NULL) {
         pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
@@ -238,7 +239,6 @@ attrd_free_attribute(gpointer data)
         free(a->id);
         free(a->set_id);
         free(a->set_type);
-        free(a->uuid);
         free(a->user);
 
         mainloop_timer_del(a->timer);
@@ -288,38 +288,15 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
     pcmk__scan_min_int(value, &ver, 0);
 
     if (ver > 0) {
-        char *host_name = strdup(host);
-
         /* Record the peer attrd's protocol version. */
-        CRM_ASSERT(host_name != NULL);
-        g_hash_table_insert(peer_protocol_vers, host_name, GINT_TO_POINTER(ver));
+        g_hash_table_insert(peer_protocol_vers, pcmk__str_copy(host),
+                            GINT_TO_POINTER(ver));
 
         /* If the protocol version is a new minimum, record it as such. */
         if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {
             minimum_protocol_version = ver;
             crm_trace("Set minimum attrd protocol version to %d",
                       minimum_protocol_version);
-        }
-    }
-}
-
-void
-attrd_copy_xml_attributes(xmlNode *src, xmlNode *dest)
-{
-    /* Copy attributes from the wrapper parent node into the child node.
-     * We can't just use copy_in_properties because we want to skip any
-     * attributes that are already set on the child.  For instance, if
-     * we were told to use a specific node, there will already be a node
-     * attribute on the child.  Copying the parent's node attribute over
-     * could result in the wrong value.
-     */
-    for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-        const char *p_value = ((a == NULL) || (a->children == NULL)) ? NULL :
-                              (const char *) a->children->content;
-
-        if (crm_element_value(dest, p_name) == NULL) {
-            crm_xml_add(dest, p_name, p_value);
         }
     }
 }

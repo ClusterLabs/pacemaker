@@ -27,10 +27,10 @@ As might be expected, it has the most code of any of the daemons.
 Join sequence
 _____________
 
-Most daemons track their cluster peers using Corosync's membership and CPG
-only. The controller additionally requires peers to `join`, which ensures they
-are ready to be assigned tasks. Joining proceeds through a series of phases
-referred to as the `join sequence` or `join process`.
+Most daemons track their cluster peers using Corosync's membership and
+:term:`CPG` only. The controller additionally requires peers to `join`, which
+ensures they are ready to be assigned tasks. Joining proceeds through a series
+of phases referred to as the `join sequence` or `join process`.
 
 A node's current join phase is tracked by the ``join`` member of ``crm_node_t``
 (used in the peer cache). It is an ``enum crm_join_phase`` that (ideally)
@@ -141,7 +141,7 @@ _______________
 
 The function calls for a fencing request go something like this:
 
-The local fencer receives the client's request via an IPC or messaging
+The local fencer receives the client's request via an :term:`IPC` or messaging
 layer callback, which calls
 
 * ``stonith_command()``, which (for requests) calls
@@ -199,8 +199,8 @@ __________________
 
 Each ``STONITH_OP_FENCE`` request goes something like this:
 
-The chosen peer fencer receives the ``STONITH_OP_FENCE`` request via IPC or
-messaging layer callback, which calls:
+The chosen peer fencer receives the ``STONITH_OP_FENCE`` request via
+:term:`IPC` or messaging layer callback, which calls:
 
 * ``stonith_command()``, which (for requests) calls
 
@@ -240,7 +240,7 @@ returns, and calls
 Fencing replies
 _______________
 
-The original fencer receives the ``STONITH_OP_FENCE`` reply via IPC or
+The original fencer receives the ``STONITH_OP_FENCE`` reply via :term:`IPC` or
 messaging layer callback, which calls:
 
 * ``stonith_command()``, which (for replies) calls
@@ -295,10 +295,10 @@ The purpose of the scheduler is to take a CIB as input and generate a
 transition graph (list of actions that need to be taken) as output.
 
 The controller invokes the scheduler by contacting the scheduler daemon via
-local IPC. Tools such as ``crm_simulate``, ``crm_mon``, and ``crm_resource``
-can also invoke the scheduler, but do so by calling the library functions
-directly. This allows them to run using a ``CIB_file`` without the cluster
-needing to be active.
+local :term:`IPC`. Tools such as ``crm_simulate``, ``crm_mon``, and
+``crm_resource`` can also invoke the scheduler, but do so by calling the
+library functions directly. This allows them to run using a ``CIB_file``
+without the cluster needing to be active.
 
 The main entry point for the scheduler code is
 ``lib/pacemaker/pcmk_scheduler.c:pcmk__schedule_actions()``. It sets
@@ -315,7 +315,7 @@ defaults and calls a series of functions for the scheduling. Some key steps:
   the CIB status section. This is used to decide whether certain
   actions need to be done, such as deleting orphan resources, forcing a restart
   when a resource definition changes, etc.
-* ``assign_resources()`` assigns resources to nodes.
+* ``assign_resources()`` :term:`assigns <assign>` resources to nodes.
 * ``schedule_resource_actions()`` schedules resource-specific actions (which
   might or might not end up in the final graph).
 * ``pcmk__apply_orderings()`` processes ordering constraints in order to modify
@@ -364,7 +364,7 @@ Resources
 _________
 
 ``pcmk_resource_t`` is the data object representing cluster resources. A
-resource has a variant: primitive (a.k.a. native), group, clone, or bundle.
+resource has a variant: :term:`primitive`, group, clone, or :term:`bundle`.
 
 The resource object has members for two sets of methods,
 ``resource_object_functions_t`` from the ``libpe_status`` public API, and
@@ -374,9 +374,9 @@ The resource object has members for two sets of methods,
 The object functions have basic capabilities such as unpacking the resource
 XML, and determining the current or planned location of the resource.
 
-The assignment functions have more obscure capabilities needed for scheduling,
-such as processing location and ordering constraints. For example,
-``pcmk__create_internal_constraints()`` simply calls the
+The :term:`assignment <assign>` functions have more obscure capabilities needed
+for scheduling, such as processing location and ordering constraints. For
+example, ``pcmk__create_internal_constraints()`` simply calls the
 ``internal_constraints()`` method for each top-level resource in the cluster.
 
 .. index::
@@ -385,9 +385,10 @@ such as processing location and ordering constraints. For example,
 Nodes
 _____
 
-Assignment of resources to nodes is done by choosing the node with the highest
-score for a given resource. The scheduler does a bunch of processing to
-generate the scores, then the actual assignment is straightforward.
+:term:`Assignment <assign>` of resources to nodes is done by choosing the node
+with the highest :term:`score` for a given resource. The scheduler does a bunch
+of processing to generate the scores, then the actual assignment is
+straightforward.
 
 Node lists are frequently used. For example, ``pcmk_scheduler_t`` has a
 ``nodes`` member which is a list of all nodes in the cluster, and
@@ -435,8 +436,8 @@ ___________
 
 Colocation constraints come into play in these parts of the scheduler code:
 
-* When sorting resources for assignment, so resources with highest node score
-  are assigned first (see ``cmp_resources()``)
+* When sorting resources for :term:`assignment <assign>`, so resources with
+  highest node :term:`score` are assigned first (see ``cmp_resources()``)
 * When updating node scores for resource assigment or promotion priority
 * When assigning resources, so any resources to be colocated with can be
   assigned first, and so colocations affect where the resource is assigned
@@ -449,7 +450,8 @@ The resource assignment functions have several methods related to colocations:
   dependent's allowed node scores (if called while resources are being
   assigned) or the dependent's priority (if called while choosing promotable
   instance roles). It can behave differently depending on whether it is being
-  called as the primary's method or as the dependent's method.
+  called as the :term:`primary's <primary>` method or as the :term:`dependent's
+  <dependent>` method.
 * ``add_colocated_node_scores():`` This updates a table of nodes for a given
   colocation attribute and score. It goes through colocations involving a given
   resource, and updates the scores of the nodes in the table with the best

@@ -162,7 +162,12 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean pacemaker.spec.in
 	    -e 's/^\(%global commit_abbrev \).*/\1$(SPEC_ABBREV)/'	\
 	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"		\
 	    -e 's/PACKAGE_VERSION/$(SPEC_RELEASE_NO)-$(SPECVERSION)/'	\
-	    > "$@"
+	    > "$@"; 							\
+	if echo "$$(rpmlint --help 2>&1)" | grep -q "ignore-unused-rpmlintrc"; then 	\
+		rpmlint --ignore-unused-rpmlintrc --file rpmlintrc "$@"; 		\
+	else 										\
+		rpmlint --file rpmlintrc "$@"; 						\
+	fi
 
 .PHONY: spec $(PACKAGE).spec
 spec $(PACKAGE).spec: $(RPM_SPEC_DIR)/$(PACKAGE).spec
@@ -190,10 +195,6 @@ rpm:	srpm
 .PHONY: rpm-clean
 rpm-clean: spec-clean srpm-clean
 	-if [ -n "$(RPM_CLEAN)" ]; then rm -rf $(RPM_CLEAN); fi
-
-.PHONY: rpmlint
-rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
-	rpmlint -f rpmlintrc "$<"
 
 .PHONY: rpm-dep
 rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec

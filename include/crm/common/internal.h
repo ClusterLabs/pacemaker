@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,6 +27,8 @@
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/results_internal.h>
 #include <crm/common/messages_internal.h>
+#include <crm/common/nvpair_internal.h>
+#include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/acl_internal.h>
 
@@ -98,7 +100,7 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
  * \param[in] name XML attribute to get
  *
  * \return True if the given \p name is an attribute on \p node and has
- *         the value "true", False in all other cases
+ *         the value \c PCMK_VALUE_TRUE, False in all other cases
  */
 bool
 pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
@@ -128,12 +130,6 @@ pid_t pcmk__procfs_pid_of(const char *name);
 unsigned int pcmk__procfs_num_cores(void);
 int pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size);
 bool pcmk__procfs_has_pids(void);
-
-/* internal XML schema functions (from xml.c) */
-
-void crm_schema_init(void);
-void crm_schema_cleanup(void);
-
 
 /* internal functions related to process IDs (from pid.c) */
 
@@ -231,6 +227,22 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Get readable string for whether specified flags are set
+ *
+ * \param[in] flag_group    Group of flags to check
+ * \param[in] flags         Which flags in \p flag_group should be checked
+ *
+ * \return "true" if all \p flags are set in \p flag_group, otherwise "false"
+ */
+static inline const char *
+pcmk__flag_text(uint64_t flag_group, uint64_t flags)
+{
+    return pcmk__btoa(pcmk_all_flags_set(flag_group, flags));
+}
+
+
 // miscellaneous utilities (from utils.c)
 
 void pcmk__daemonize(const char *name, const char *pidfile);
@@ -241,6 +253,49 @@ void pcmk__sleep_ms(unsigned int ms);
 extern int pcmk__score_red;
 extern int pcmk__score_green;
 extern int pcmk__score_yellow;
+
+/*!
+ * \internal
+ * \brief Allocate new zero-initialized memory, asserting on failure
+ *
+ * \param[in] file      File where \p function is located
+ * \param[in] function  Calling function
+ * \param[in] line      Line within \p file
+ * \param[in] nmemb     Number of elements to allocate memory for
+ * \param[in] size      Size of each element
+ *
+ * \return Newly allocated memory of of size <tt>nmemb * size</tt> (guaranteed
+ *         not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+static inline void *
+pcmk__assert_alloc_as(const char *file, const char *function, uint32_t line,
+                      size_t nmemb, size_t size)
+{
+    void *ptr = calloc(nmemb, size);
+
+    if (ptr == NULL) {
+        crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
+        crm_exit(CRM_EX_OSERR);
+    }
+    return ptr;
+}
+
+/*!
+ * \internal
+ * \brief Allocate new zero-initialized memory, asserting on failure
+ *
+ * \param[in] nmemb  Number of elements to allocate memory for
+ * \param[in] size   Size of each element
+ *
+ * \return Newly allocated memory of of size <tt>nmemb * size</tt> (guaranteed
+ *         not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+#define pcmk__assert_alloc(nmemb, size) \
+    pcmk__assert_alloc_as(__FILE__, __func__, __LINE__, nmemb, size)
 
 /*!
  * \internal
@@ -269,7 +324,6 @@ pcmk__realloc(void *ptr, size_t size)
     }
     return new_ptr;
 }
-
 
 static inline char *
 pcmk__getpid_s(void)

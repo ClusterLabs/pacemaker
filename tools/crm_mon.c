@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,6 @@
 #include <signal.h>
 #include <sys/utsname.h>
 
-#include <crm/msg_xml.h>
 #include <crm/services.h>
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>
@@ -45,7 +44,7 @@
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__*
 
 #include "crm_mon.h"
 
@@ -121,19 +120,20 @@ crm_mon_disconnected_html(pcmk__output_t *out, va_list args)
         out->reset(out);
     }
 
-    pcmk__output_create_xml_text_node(out, "span", "Not connected to CIB");
+    pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN,
+                                      "Not connected to CIB");
 
     if (desc != NULL) {
-        pcmk__output_create_xml_text_node(out, "span", ": ");
-        pcmk__output_create_xml_text_node(out, "span", desc);
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, ": ");
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, desc);
     }
 
     if (state != pcmk_pacemakerd_state_invalid) {
         const char *state_s = pcmk__pcmkd_state_enum2friendly(state);
 
-        pcmk__output_create_xml_text_node(out, "span", " (");
-        pcmk__output_create_xml_text_node(out, "span", state_s);
-        pcmk__output_create_xml_text_node(out, "span", ")");
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, " (");
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, state_s);
+        pcmk__output_create_xml_text_node(out, PCMK__XE_SPAN, ")");
     }
 
     out->finish(out, CRM_EX_DISCONNECT, true, NULL);
@@ -185,9 +185,9 @@ crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
         state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
     }
 
-    pcmk__output_create_xml_node(out, "crm-mon-disconnected",
-                                 XML_ATTR_DESC, desc,
-                                 "pacemakerd-state", state_s,
+    pcmk__output_create_xml_node(out, PCMK_XE_CRM_MON_DISCONNECTED,
+                                 PCMK_XA_DESCRIPTION, desc,
+                                 PCMK_XA_PACEMAKERD_STATE, state_s,
                                  NULL);
 
     out->finish(out, CRM_EX_DISCONNECT, true, NULL);
@@ -284,7 +284,7 @@ struct {
     { "dc", pcmk_section_dc },
     { "failcounts", pcmk_section_failcounts },
     { "failures", pcmk_section_failures },
-    { PCMK__VALUE_FENCING, pcmk_section_fencing_all },
+    { PCMK_VALUE_FENCING, pcmk_section_fencing_all },
     { "fencing-failed", pcmk_section_fence_failed },
     { "fencing-pending", pcmk_section_fence_pending },
     { "fencing-succeeded", pcmk_section_fence_worked },
@@ -322,7 +322,7 @@ apply_exclude(const gchar *excludes, GError **error) {
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
-        } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
+        } else if (pcmk__str_eq(*s, PCMK_VALUE_NONE, pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (bit != 0) {
             show &= ~bit;
@@ -331,7 +331,7 @@ apply_exclude(const gchar *excludes, GError **error) {
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, maint-mode, nodes, "
-                        PCMK__VALUE_NONE ", operations, options, resources, "
+                        PCMK_VALUE_NONE ", operations, options, resources, "
                         "stack, summary, tickets, times");
             result = FALSE;
             break;
@@ -362,19 +362,19 @@ apply_include(const gchar *includes, GError **error) {
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
             }
-        } else if (pcmk__str_any_of(*s, "default", "defaults", NULL)) {
+        } else if (pcmk__str_any_of(*s, PCMK_VALUE_DEFAULT, "defaults", NULL)) {
             show |= default_includes(output_format);
-        } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
+        } else if (pcmk__str_eq(*s, PCMK_VALUE_NONE, pcmk__str_none)) {
             show = 0;
         } else if (bit != 0) {
             show |= bit;
         } else {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
-                        "default, failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, maint-mode, nodes, "
-                        PCMK__VALUE_NONE ", operations, options, resources, "
-                        "stack, summary, tickets, times");
+                        PCMK_VALUE_DEFAULT ", failcounts, failures, fencing, "
+                        "fencing-failed, fencing-pending, fencing-succeeded, "
+                        "maint-mode, nodes, " PCMK_VALUE_NONE ", operations, "
+                        "options, resources, stack, summary, tickets, times");
             result = FALSE;
             break;
         }
@@ -471,13 +471,13 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         case 3:
             options.fence_connect = TRUE;
             fence_history = pcmk__fence_history_full;
-            return include_exclude_cb("--include", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--include", PCMK_VALUE_FENCING, data,
                                       err);
 
         case 2:
             options.fence_connect = TRUE;
             fence_history = pcmk__fence_history_full;
-            return include_exclude_cb("--include", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--include", PCMK_VALUE_FENCING, data,
                                       err);
 
         case 1:
@@ -488,7 +488,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
         case 0:
             options.fence_connect = FALSE;
             fence_history = pcmk__fence_history_none;
-            return include_exclude_cb("--exclude", PCMK__VALUE_FENCING, data,
+            return include_exclude_cb("--exclude", PCMK_VALUE_FENCING, data,
                                       err);
 
         default:
@@ -553,7 +553,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
-        options.reconnect_ms = crm_parse_interval_spec(optarg);
+        pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
 
         if (options.exec_mode != mon_exec_daemonized) {
             // Reconnect interval applies to daemonized too, so don't override
@@ -756,7 +756,7 @@ static GOptionEntry display_entries[] = {
       NULL },
 
     { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
-      "Display pending state if 'record-pending' is enabled",
+      "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
     { NULL }
@@ -854,8 +854,12 @@ mon_cib_connection_destroy(gpointer user_data)
     /* the client API won't properly reconnect notifications if they are still
      * in the table - so remove them
      */
-    stonith_api_delete(st);
-    st = NULL;
+    if (st != NULL) {
+        if (st->state != stonith_disconnected) {
+            st->cmds->disconnect(st);
+        }
+        st->cmds->remove_notification(st, NULL);
+    }
 
     if (cib) {
         cib->cmds->signoff(cib);
@@ -918,13 +922,17 @@ setup_fencer_connection(void)
     if (rc == pcmk_ok) {
         crm_trace("Setting up stonith callbacks");
         if (options.watch_fencing) {
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+            st->cmds->register_notification(st,
+                                            PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_event);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                            mon_st_callback_event);
         } else {
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+            st->cmds->register_notification(st,
+                                            PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                             mon_st_callback_display);
-            st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
+            st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_HISTORY,
+                                            mon_st_callback_display);
         }
     } else {
         stonith_api_delete(st);
@@ -960,10 +968,11 @@ setup_cib_connection(void)
         }
 
         if (rc == pcmk_rc_ok) {
-            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY,
+            cib->cmds->del_notify_callback(cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                            crm_diff_update);
-            rc = pcmk_legacy2rc(cib->cmds->add_notify_callback(cib,
-                                    T_CIB_DIFF_NOTIFY, crm_diff_update));
+            rc = cib->cmds->add_notify_callback(cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                                crm_diff_update);
+            rc = pcmk_legacy2rc(rc);
         }
 
         if (rc != pcmk_rc_ok) {
@@ -1088,6 +1097,28 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 {
     int c;
     gboolean config_mode = FALSE;
+    gboolean rc = G_SOURCE_CONTINUE;
+
+    /* If the attached pty device (pseudo-terminal) has been closed/deleted,
+     * the condition (G_IO_IN | G_IO_ERR | G_IO_HUP) occurs.
+     * Exit with an error, otherwise the process would persist in the
+     * background and significantly raise the CPU usage.
+     */
+    if ((condition & G_IO_ERR) && (condition & G_IO_HUP)) {
+        rc = G_SOURCE_REMOVE;
+        clean_up(CRM_EX_IOERR);
+    }
+
+    /* The connection/fd has been closed. Refresh the screen and remove this
+     * event source hence ignore stdin.
+     */
+    if (condition & (G_IO_HUP | G_IO_NVAL)) {
+        rc = G_SOURCE_REMOVE;
+    }
+
+    if ((condition & G_IO_IN) == 0) {
+        return rc;
+    }
 
     while (1) {
 
@@ -1194,7 +1225,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 refresh:
     refresh_after_event(FALSE, TRUE);
 
-    return TRUE;
+    return rc;
 }
 #endif  // CURSES_ENABLED
 
@@ -1313,24 +1344,8 @@ static void
 add_output_args(void) {
     GError *err = NULL;
 
-    if (output_format == mon_output_plain) {
-        if (!pcmk__force_args(context, &err, "%s --text-fancy", g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_cgi) {
+    if (output_format == mon_output_cgi) {
         if (!pcmk__force_args(context, &err, "%s --html-cgi", g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &err, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
-            g_propagate_error(&error, err);
-            clean_up(CRM_EX_USAGE);
-        }
-    } else if (output_format == mon_output_legacy_xml) {
-        output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &err, "%s --xml-legacy --xml-substitute", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
@@ -1359,7 +1374,7 @@ reconcile_output_format(pcmk__common_args_t *args)
         return;
     }
 
-    if (pcmk__str_eq(args->output_ty, "none", pcmk__str_none)) {
+    if (pcmk__str_eq(args->output_ty, PCMK_VALUE_NONE, pcmk__str_none)) {
         output_format = mon_output_none;
 
     } else if (pcmk__str_eq(args->output_ty, "html", pcmk__str_none)) {
@@ -1582,8 +1597,6 @@ main(int argc, char **argv)
     set_default_exec_mode(args);
     add_output_args();
 
-    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
-
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
@@ -1591,10 +1604,21 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_ERROR);
     }
 
+    if (output_format == mon_output_legacy_xml) {
+        output_format = mon_output_xml;
+        pcmk__output_set_legacy_xml(out);
+    }
+
+    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
+
     /* If we had a valid format for pcmk__output_new(), output_format should be
      * set by now.
      */
     CRM_ASSERT(output_format != mon_output_unset);
+
+    if (output_format == mon_output_plain) {
+        pcmk__output_text_set_fancy(out, true);
+    }
 
     if (options.exec_mode == mon_exec_daemonized) {
         if (!options.external_agent && (output_format == mon_output_none)) {
@@ -1670,10 +1694,16 @@ main(int argc, char **argv)
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
     }
 
-    if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
-        out->dest != stdout) {
-        pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
-                              pcmk__itoa(options.reconnect_ms / 1000), NULL);
+    if ((output_format == mon_output_html || output_format == mon_output_cgi)
+        && (out->dest != stdout)) {
+
+        char *content = pcmk__itoa(options.reconnect_ms / 1000);
+
+        pcmk__html_add_header(PCMK__XE_META,
+                              PCMK__XA_HTTP_EQUIV, PCMK__VALUE_REFRESH,
+                              PCMK__XA_CONTENT, content,
+                              NULL);
+        free(content);
     }
 
 #ifdef PCMK__COMPAT_2_0
@@ -1731,7 +1761,8 @@ main(int argc, char **argv)
             ncurses_winch_handler = NULL;
 
         io_channel = g_io_channel_unix_new(STDIN_FILENO);
-        g_io_add_watch(io_channel, G_IO_IN, detect_user_input, NULL);
+        g_io_add_watch(io_channel, (G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL),
+                       detect_user_input, NULL);
     }
 #endif
 
@@ -1742,10 +1773,6 @@ main(int argc, char **argv)
 
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
-
-    if (io_channel != NULL) {
-        g_io_channel_shutdown(io_channel, TRUE, NULL);
-    }
 
     crm_info("Exiting %s", crm_system_name);
 
@@ -1785,7 +1812,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */
         execl(options.external_agent, options.external_agent, NULL);
-        exit(CRM_EX_ERROR);
+        crm_exit(CRM_EX_ERROR);
     }
 
     crm_trace("Finished running custom notification program '%s'.", options.external_agent);
@@ -1814,14 +1841,14 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     xmlNode *n = xml;
     xmlNode * rsc_op = xml;
 
-    if(strcmp((const char*)xml->name, XML_LRM_TAG_RSC_OP) != 0) {
+    if(strcmp((const char*)xml->name, PCMK__XE_LRM_RSC_OP) != 0) {
         pcmk__xe_foreach_child(xml, NULL, handle_rsc_op, (void *) node_id);
         return pcmk_rc_ok;
     }
 
-    id = pe__xe_history_key(rsc_op);
+    id = pcmk__xe_history_key(rsc_op);
 
-    magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
+    magic = crm_element_value(rsc_op, PCMK__XA_TRANSITION_MAGIC);
     if (magic == NULL) {
         /* non-change */
         return pcmk_rc_ok;
@@ -1838,18 +1865,18 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         goto bail;
     }
 
-    node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
+    node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
 
-    while ((n != NULL) && !pcmk__xe_is(n, XML_CIB_TAG_STATE)) {
+    while ((n != NULL) && !pcmk__xe_is(n, PCMK__XE_NODE_STATE)) {
         n = n->parent;
     }
 
     if(node == NULL && n) {
-        node = crm_element_value(n, XML_ATTR_UNAME);
+        node = crm_element_value(n, PCMK_XA_UNAME);
     }
 
     if (node == NULL && n) {
-        node = ID(n);
+        node = pcmk__xe_id(n);
     }
 
     if (node == NULL) {
@@ -1902,101 +1929,107 @@ mon_trigger_refresh(gpointer user_data)
 static int
 handle_op_for_node(xmlNode *xml, void *userdata)
 {
-    const char *node = crm_element_value(xml, XML_ATTR_UNAME);
+    const char *node = crm_element_value(xml, PCMK_XA_UNAME);
 
     if (node == NULL) {
-        node = ID(xml);
+        node = pcmk__xe_id(xml);
     }
 
     handle_rsc_op(xml, (void *) node);
     return pcmk_rc_ok;
 }
 
+static int
+crm_diff_update_element_v2(xmlNode *change, void *userdata)
+{
+    const char *name = NULL;
+    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+    xmlNode *match = NULL;
+    const char *node = NULL;
+
+    if (op == NULL) {
+        return pcmk_rc_ok;
+
+    } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
+        match = change->children;
+
+    } else if (pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
+                                NULL)) {
+        return pcmk_rc_ok;
+
+    } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
+        match = pcmk__xe_first_child(change, PCMK_XE_CHANGE_RESULT, NULL, NULL);
+        if(match) {
+            match = match->children;
+        }
+    }
+
+    if(match) {
+        name = (const char *)match->name;
+    }
+
+    crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+    if(xpath == NULL) {
+        /* Version field, ignore */
+
+    } else if(name == NULL) {
+        crm_debug("No result for %s operation to %s", op, xpath);
+        CRM_ASSERT(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
+                                    NULL));
+
+    } else if (strcmp(name, PCMK_XE_CIB) == 0) {
+        pcmk__xe_foreach_child(pcmk__xe_first_child(match, PCMK_XE_STATUS, NULL,
+                                                    NULL),
+                               NULL, handle_op_for_node, NULL);
+
+    } else if (strcmp(name, PCMK_XE_STATUS) == 0) {
+        pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
+
+    } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
+        node = crm_element_value(match, PCMK_XA_UNAME);
+        if (node == NULL) {
+            node = pcmk__xe_id(match);
+        }
+        handle_rsc_op(match, (void *) node);
+
+    } else if (strcmp(name, PCMK__XE_LRM) == 0) {
+        node = pcmk__xe_id(match);
+        handle_rsc_op(match, (void *) node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RESOURCES) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        handle_rsc_op(match, local_node);
+        free(local_node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RESOURCE) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        handle_rsc_op(match, local_node);
+        free(local_node);
+
+    } else if (strcmp(name, PCMK__XE_LRM_RSC_OP) == 0) {
+        char *local_node = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
+
+        handle_rsc_op(match, local_node);
+        free(local_node);
+
+    } else {
+        crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
-    xmlNode *change = NULL;
-    xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    for (change = pcmk__xml_first_child(diff); change != NULL;
-         change = pcmk__xml_next(change)) {
-        const char *name = NULL;
-        const char *op = crm_element_value(change, XML_DIFF_OP);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-        xmlNode *match = NULL;
-        const char *node = NULL;
-
-        if(op == NULL) {
-            continue;
-
-        } else if(strcmp(op, "create") == 0) {
-            match = change->children;
-
-        } else if(strcmp(op, "move") == 0) {
-            continue;
-
-        } else if(strcmp(op, "delete") == 0) {
-            continue;
-
-        } else if(strcmp(op, "modify") == 0) {
-            match = first_named_child(change, XML_DIFF_RESULT);
-            if(match) {
-                match = match->children;
-            }
-        }
-
-        if(match) {
-            name = (const char *)match->name;
-        }
-
-        crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
-        if(xpath == NULL) {
-            /* Version field, ignore */
-
-        } else if(name == NULL) {
-            crm_debug("No result for %s operation to %s", op, xpath);
-            CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
-
-        } else if(strcmp(name, XML_TAG_CIB) == 0) {
-            pcmk__xe_foreach_child(first_named_child(match, XML_CIB_TAG_STATUS),
-                                   NULL, handle_op_for_node, NULL);
-
-        } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
-            pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
-
-        } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {
-            node = crm_element_value(match, XML_ATTR_UNAME);
-            if (node == NULL) {
-                node = ID(match);
-            }
-            handle_rsc_op(match, (void *) node);
-
-        } else if(strcmp(name, XML_CIB_TAG_LRM) == 0) {
-            node = ID(match);
-            handle_rsc_op(match, (void *) node);
-
-        } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
-
-            handle_rsc_op(match, local_node);
-            free(local_node);
-
-        } else if(strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
-
-            handle_rsc_op(match, local_node);
-            free(local_node);
-
-        } else if(strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
-
-            handle_rsc_op(match, local_node);
-            free(local_node);
-
-        } else {
-            crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
-        }
-    }
+    pcmk__xe_foreach_child(diff, NULL, crm_diff_update_element_v2, NULL);
 }
 
 static void
@@ -2004,8 +2037,9 @@ crm_diff_update_v1(const char *event, xmlNode * msg)
 {
     /* Process operation updates */
     xmlXPathObject *xpathObj = xpath_search(msg,
-                                            "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
-                                            "//" XML_LRM_TAG_RSC_OP);
+                                            "//" PCMK__XE_CIB_UPDATE_RESULT
+                                            "//" PCMK__XE_DIFF_ADDED
+                                            "//" PCMK__XE_LRM_RSC_OP);
     int lpc = 0, max = numXpathResults(xpathObj);
 
     for (lpc = 0; lpc < max; lpc++) {
@@ -2022,7 +2056,9 @@ crm_diff_update(const char *event, xmlNode * msg)
     int rc = -1;
     static bool stale = FALSE;
     gboolean cib_updated = FALSE;
-    xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
+                                            NULL, NULL);
+    xmlNode *diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     out->progress(out, false);
 
@@ -2218,6 +2254,10 @@ clean_up(crm_exit_t exit_code)
     /* Quitting crm_mon is much more complicated than it ought to be. */
 
     /* (1) Close connections, free things, etc. */
+    if (io_channel != NULL) {
+        g_io_channel_shutdown(io_channel, TRUE, NULL);
+    }
+
     cib__clean_up_connection(&cib);
     stonith_api_delete(st);
     free(options.neg_location_prefix);

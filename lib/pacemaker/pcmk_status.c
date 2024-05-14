@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/common/results.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
-#include <crm/stonith-ng.h>
+#include <crm/stonith-ng.h> // stonith__register_messages()
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
@@ -77,7 +77,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
                             const char *only_node, const char *only_rsc,
                             const char *neg_location_prefix, bool simple_output)
 {
-    xmlNode *cib_copy = copy_xml(current_cib);
+    xmlNode *cib_copy = pcmk__xml_copy(NULL, current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = 0;
     pcmk_scheduler_t *scheduler = NULL;
@@ -86,10 +86,10 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
 
     int rc = pcmk_rc_ok;
 
-    if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
+    rc = pcmk_update_configured_schema(&cib_copy, false);
+    if (rc != pcmk_rc_ok) {
         cib__clean_up_connection(&cib);
         free_xml(cib_copy);
-        rc = pcmk_rc_schema_validation;
         out->err(out, "Upgrade failed: %s", pcmk_rc_str(rc));
         return rc;
     }
@@ -101,8 +101,8 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *stonith, cib_t *cib,
     }
 
     scheduler = pe_new_working_set();
-    CRM_ASSERT(scheduler != NULL);
-    pe__set_working_set_flags(scheduler, pcmk_sched_no_compat);
+    pcmk__mem_assert(scheduler);
+    pcmk__set_scheduler_flags(scheduler, pcmk_sched_no_compat);
 
     scheduler->input = cib_copy;
     scheduler->priv = out;
@@ -179,7 +179,7 @@ pcmk_status(xmlNodePtr *xml)
 
     rc = pcmk__status(out, cib, pcmk__fence_history_full, pcmk_section_all,
                       show_opts, NULL, NULL, NULL, false, 0);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     cib_delete(cib);
     return rc;
@@ -329,7 +329,7 @@ pcmk__output_simple_status(pcmk__output_t *out,
             nodes_online++;
         } else {
             pcmk__add_word(&offline_nodes, 1024, "offline node:");
-            pcmk__add_word(&offline_nodes, 0, pe__node_name(node));
+            pcmk__add_word(&offline_nodes, 0, pcmk__node_name(node));
             has_warnings = true;
             offline = true;
         }

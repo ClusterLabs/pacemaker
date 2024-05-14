@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,8 @@
 #  include <string.h>
 
 #  include <libxml/tree.h>
+
+#include <crm/common/options.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,7 +69,7 @@ extern "C" {
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  * >=3.19.0: DC supports PCMK__CIB_REQUEST_COMMIT_TRANSACT
  */
-#  define CRM_FEATURE_SET		"3.19.0"
+#  define CRM_FEATURE_SET		"3.19.5"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -78,24 +80,8 @@ extern "C" {
 
 #  define CRM_META			"CRM_meta"
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 extern char *crm_system_name;
-
-// How we represent "infinite" scores
-#  define CRM_SCORE_INFINITY    1000000
-#  define CRM_INFINITY_S        "INFINITY"
-#  define CRM_PLUS_INFINITY_S   "+" CRM_INFINITY_S
-#  define CRM_MINUS_INFINITY_S  "-" CRM_INFINITY_S
-
-/* @COMPAT API < 2.0.0 Deprecated "infinity" aliases
- *
- * INFINITY might be defined elsewhere (e.g. math.h), so undefine it first.
- * This, of course, complicates any attempt to use the other definition in any
- * code that includes this header.
- */
-#  undef INFINITY
-#  define INFINITY_S        "INFINITY"
-#  define MINUS_INFINITY_S "-INFINITY"
-#  define INFINITY        1000000
 
 /* Sub-systems */
 #  define CRM_SYSTEM_DC		"dc"
@@ -138,7 +124,6 @@ extern char *crm_system_name;
 #  define CRM_OP_HELLO		"hello"
 #  define CRM_OP_PECALC		"pe_calc"
 #  define CRM_OP_QUIT		"quit"
-#  define CRM_OP_LOCAL_SHUTDOWN 	"start_shutdown"
 #  define CRM_OP_SHUTDOWN_REQ	"req_shutdown"
 #  define CRM_OP_SHUTDOWN   PCMK_ACTION_DO_SHUTDOWN
 #  define CRM_OP_REGISTER		"register"

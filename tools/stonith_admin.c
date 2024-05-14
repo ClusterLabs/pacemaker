@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,14 +23,13 @@
 #include <string.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__register_messages()
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
 
@@ -53,7 +52,7 @@ struct {
     stonith_key_value_t *params;
     int fence_level;
     int timeout ;
-    int tolerance;
+    long long tolerance_ms;
     int delay;
     char *agent;
     char *confirm_host;
@@ -265,7 +264,15 @@ add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.tolerance = crm_get_msec(optarg) / 1000;
+    // pcmk__request_fencing() expects an unsigned int
+    options.tolerance_ms = crm_get_msec(optarg);
+
+    if (options.tolerance_ms < 0) {
+        crm_warn("Ignoring invalid tolerance '%s'", optarg);
+        options.tolerance_ms = 0;
+    } else {
+        options.tolerance_ms = QB_MIN(options.tolerance_ms, UINT_MAX);
+    }
     return TRUE;
 }
 
@@ -339,8 +346,8 @@ request_fencing(stonith_t *st, const char *target, const char *command,
     char *reason = NULL;
     int rc = pcmk__request_fencing(st, target, command, name,
                                    options.timeout * 1000,
-                                   options.tolerance * 1000,
-                                   options.delay, &reason);
+                                   options.tolerance_ms, options.delay,
+                                   &reason);
 
     if (rc != pcmk_rc_ok) {
         const char *rc_str = pcmk_rc_str(rc);
@@ -407,6 +414,8 @@ main(int argc, char **argv)
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
+
+    pcmk__output_enable_list_element(out);
 
     stonith__register_messages(out);
 

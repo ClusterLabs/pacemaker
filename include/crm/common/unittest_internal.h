@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,10 +19,82 @@
 
 #include <cmocka.h>
 
+#include <crm/common/xml.h>
+
 #ifndef CRM_COMMON_UNITTEST_INTERNAL__H
 #define CRM_COMMON_UNITTEST_INTERNAL__H
 
 /* internal unit testing related utilities */
+
+#if (PCMK__WITH_COVERAGE == 1)
+/* This function isn't exposed anywhere.  The following prototype was taken from
+ * /usr/lib/gcc/x86_64-redhat-linux/??/include/gcov.h
+ */
+extern void __gcov_dump(void);
+#else
+#define __gcov_dump()
+#endif
+
+/*!
+ * \internal
+ * \brief Assert that the XML output from an API function is valid
+ *
+ * \param[in] xml   The XML output of some public pacemaker API function
+ *
+ * Run the given XML through xmllint and attempt to validate it against the
+ * api-result.rng schema file.  Assert if validation fails.
+ *
+ * \note PCMK_schema_directory needs to be set to the directory containing
+ *       the built schema files before calling this function.  Typically,
+ *       this will be done in Makefile.am.
+ */
+void pcmk__assert_validates(xmlNode *xml);
+
+/*!
+ * \internal
+ * \brief Perform setup for a group of unit tests that will manipulate XML
+ *
+ * This function is suitable for being passed as the first argument to the
+ * \c PCMK__UNIT_TEST macro.
+ *
+ * \param[in] state     The cmocka state object, currently unused by this
+ *                      function
+ */
+int pcmk__xml_test_setup_group(void **state);
+
+/*!
+ * \internal
+ * \brief Copy the given CIB file to a temporary file so it can be modified
+ *        as part of doing unit tests, returning the full temporary file or
+ *        \c NULL on error.
+ *
+ * This function should be called as part of the process of setting up any
+ * single unit test that would access and modify a CIB.  That is, it should
+ * be called from whatever function is the second argument to
+ * cmocka_unit_test_setup_teardown.
+ *
+ * \param[in]   in_file     The filename of the input CIB file, which must
+ *                          exist in the \c $PCMK_CTS_CLI_DIR directory.  This
+ *                          should only be the filename, not the complete
+ *                          path.
+ */
+char *pcmk__cib_test_copy_cib(const char *in_file);
+
+/*!
+ * \internal
+ * \brief Clean up whatever was done by a previous call to
+ *        \c pcmk__cib_test_copy_cib.
+ *
+ * This function should be called as part of the process of tearing down
+ * any single unit test that accessed a CIB.  That is, it should be called
+ * from whatever function is the third argument to
+ * \c cmocka_unit_test_setup_teardown.
+ *
+ * \param[in]   out_path    The complete path to the temporary CIB location.
+ *                          This is the return value of
+ *                          \c pcmk__cib_test_copy_cib.
+ */
+void pcmk__cib_test_cleanup(char *out_path);
 
 /*!
  * \internal
@@ -51,6 +123,7 @@
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
             stmt; \
+            __gcov_dump(); \
             _exit(0); \
         } else if (p > 0) { \
             int wstatus = 0; \
@@ -64,6 +137,15 @@
             fail_msg("unable to fork for assert test"); \
         } \
     } while (0);
+
+/*!
+ * \internal
+ * \brief Assert that a statement aborts
+ *
+ * This is exactly the same as pcmk__assert_asserts (CRM_ASSERT() is implemented
+ * with abort()), but given a different name for clarity.
+ */
+#define pcmk__assert_aborts(stmt) pcmk__assert_asserts(stmt)
 
 /*!
  * \internal
@@ -87,6 +169,7 @@
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
             stmt; \
+            __gcov_dump(); \
             _exit(CRM_EX_NONE); \
         } else if (p > 0) { \
             int wstatus = 0; \

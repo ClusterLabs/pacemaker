@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,8 +31,8 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
    if (g_hash_table_lookup(rsc->known_on, node->details->id) != NULL) {
        return TRUE;
 
-   } else if ((rsc->variant == pcmk_rsc_variant_primitive)
-              && pe_rsc_is_anon_clone(rsc->parent)
+   } else if (pcmk__is_primitive(rsc)
+              && pcmk__is_anonymous_clone(rsc->parent)
               && (g_hash_table_lookup(rsc->parent->known_on,
                                       node->details->id) != NULL)) {
        /* We check only the parent, not the uber-parent, because we cannot
@@ -87,8 +87,8 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                      * The most likely explanation is that the DC died and took
                      * its status with it.
                      */
-                    pe_rsc_debug(rsc, "Ordering %s after %s recovery",
-                                 action->uuid, pe__node_name(target));
+                    pcmk__rsc_debug(rsc, "Ordering %s after %s recovery",
+                                    action->uuid, pcmk__node_name(target));
                     order_actions(stonith_op, action,
                                   pcmk__ar_ordered
                                   |pcmk__ar_unrunnable_first_blocks);
@@ -129,7 +129,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
      * because guest node "fencing" is actually just a resource stop.
      */
     if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)
-        || pe__is_guest_node(target)) {
+        || pcmk__is_guest_or_bundle_node(target)) {
 
         order_implicit = true;
     }
@@ -143,7 +143,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         pcmk_action_t *action = iter->data;
 
         // The stop would never complete, so convert it into a pseudo-action.
-        pe__set_action_flags(action, pcmk_action_pseudo|pcmk_action_runnable);
+        pcmk__set_action_flags(action, pcmk_action_pseudo|pcmk_action_runnable);
 
         if (order_implicit) {
             /* Order the stonith before the parent stop (if any).
@@ -158,7 +158,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
              * cluster and thus immune to that check (and is irrelevant if
              * target is not a guest).
              */
-            if (!pe_rsc_is_bundled(rsc)) {
+            if (!pcmk__is_bundled(rsc)) {
                 order_actions(stonith_op, action, pcmk__ar_guest_allowed);
             }
             order_actions(stonith_op, parent_stop, pcmk__ar_guest_allowed);
@@ -167,11 +167,11 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
             crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
                        rsc->id, (order_implicit? "after" : "because"),
-                       pe__node_name(target));
+                       pcmk__node_name(target));
         } else {
             crm_info("%s is implicit %s %s is fenced",
                      action->uuid, (order_implicit? "after" : "because"),
-                     pe__node_name(target));
+                     pcmk__node_name(target));
         }
 
         if (pcmk_is_set(rsc->flags, pcmk_rsc_notify)) {
@@ -198,7 +198,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
          * resources instead of the above.
          */
          crm_info("Moving healthy resource %s off %s before fencing",
-                  rsc->id, pe__node_name(node));
+                  rsc->id, pcmk__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(PCMK_ACTION_STONITH), stonith_op,
                             pcmk__ar_ordered, rsc->cluster);
@@ -217,22 +217,22 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
 
             if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
-                pe_rsc_info(rsc,
-                            "Demote of failed resource %s is implicit "
-                            "after %s is fenced",
-                            rsc->id, pe__node_name(target));
+                pcmk__rsc_info(rsc,
+                               "Demote of failed resource %s is implicit "
+                               "after %s is fenced",
+                               rsc->id, pcmk__node_name(target));
             } else {
-                pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, pe__node_name(target));
+                pcmk__rsc_info(rsc, "%s is implicit after %s is fenced",
+                               action->uuid, pcmk__node_name(target));
             }
 
             /* The demote would never complete and is now implied by the
              * fencing, so convert it into a pseudo-action.
              */
-            pe__set_action_flags(action,
-                                 pcmk_action_pseudo|pcmk_action_runnable);
+            pcmk__set_action_flags(action,
+                                   pcmk_action_pseudo|pcmk_action_runnable);
 
-            if (pe_rsc_is_bundled(rsc)) {
+            if (pcmk__is_bundled(rsc)) {
                 // Recovery will be ordered as usual after parent's implied stop
 
             } else if (order_implicit) {
@@ -263,9 +263,9 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        pe_rsc_trace(rsc,
-                     "Skipping fencing constraints for unmanaged resource: %s",
-                     rsc->id);
+        pcmk__rsc_trace(rsc,
+                        "Skipping fencing constraints for unmanaged resource: "
+                        "%s", rsc->id);
 
     } else {
         order_start_vs_fencing(rsc, stonith_op);
@@ -381,7 +381,7 @@ pcmk__fence_guest(pcmk_node_t *node)
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
                              FALSE, node->details->data_set);
-    pe__set_action_flags(stonith_op, pcmk_action_pseudo|pcmk_action_runnable);
+    pcmk__set_action_flags(stonith_op, pcmk_action_pseudo|pcmk_action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
@@ -393,8 +393,8 @@ pcmk__fence_guest(pcmk_node_t *node)
                                                      node->details->data_set);
 
         crm_info("Implying guest %s is down (action %d) after %s fencing",
-                 pe__node_name(node), stonith_op->id,
-                 pe__node_name(stop->node));
+                 pcmk__node_name(node), stonith_op->id,
+                 pcmk__node_name(stop->node));
         order_actions(parent_stonith_op, stonith_op,
                       pcmk__ar_unrunnable_first_blocks
                       |pcmk__ar_first_implies_then);
@@ -405,7 +405,7 @@ pcmk__fence_guest(pcmk_node_t *node)
                       |pcmk__ar_first_implies_then);
         crm_info("Implying guest %s is down (action %d) "
                  "after container %s is stopped (action %d)",
-                 pe__node_name(node), stonith_op->id,
+                 pcmk__node_name(node), stonith_op->id,
                  container->id, stop->id);
     } else {
         /* If we're fencing the guest node but there's no stop for the guest
@@ -422,13 +422,13 @@ pcmk__fence_guest(pcmk_node_t *node)
             order_actions(stop, stonith_op, pcmk__ar_ordered);
             crm_info("Implying guest %s is down (action %d) "
                      "after connection is stopped (action %d)",
-                     pe__node_name(node), stonith_op->id, stop->id);
+                     pcmk__node_name(node), stonith_op->id, stop->id);
         } else {
             /* Not sure why we're fencing, but everything must already be
              * cleanly stopped.
              */
             crm_info("Implying guest %s is down (action %d) ",
-                     pe__node_name(node), stonith_op->id);
+                     pcmk__node_name(node), stonith_op->id);
         }
     }
 
@@ -448,7 +448,8 @@ pcmk__fence_guest(pcmk_node_t *node)
 bool
 pcmk__node_unfenced(const pcmk_node_t *node)
 {
-    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+    const char *unfenced = pcmk__node_attr(node, CRM_ATTR_UNFENCED, NULL,
+                                           pcmk__rsc_node_current);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
 }

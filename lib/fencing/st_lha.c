@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,6 @@
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <stonith/stonith.h>
@@ -30,25 +29,35 @@
 
 static void *lha_agents_lib = NULL;
 
+// @TODO Use XML string constants and maybe a real XML object
 static const char META_TEMPLATE[] =
-    "<?xml version=\"1.0\"?>\n"
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-    "<resource-agent name=\"%s\">\n"
-    "  <version>1.0</version>\n"
-    "  <longdesc lang=\"en\">\n"
+    "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"
+    "<" PCMK_XE_RESOURCE_AGENT " " PCMK_XA_NAME "=\"%s\">\n"
+    "  <" PCMK_XE_VERSION ">1.1</" PCMK_XE_VERSION ">\n"
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">\n"
+        "%s\n"
+    "  </" PCMK_XE_LONGDESC ">\n"
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"
+        "%s"
+      "</" PCMK_XE_SHORTDESC ">\n"
     "%s\n"
-    "  </longdesc>\n"
-    "  <shortdesc lang=\"en\">%s</shortdesc>\n"
-    "%s\n"
-    "  <actions>\n"
-    "    <action name=\"start\"   timeout=\"%s\" />\n"
-    "    <action name=\"stop\"    timeout=\"15\" />\n"
-    "    <action name=\"status\"  timeout=\"%s\" />\n"
-    "    <action name=\"monitor\" timeout=\"%s\" interval=\"3600\"/>\n"
-    "    <action name=\"meta-data\"  timeout=\"15\" />\n"
-    "  </actions>\n"
-    "  <special tag=\"heartbeat\">\n"
-    "    <version>2.0</version>\n" "  </special>\n" "</resource-agent>\n";
+    "  <" PCMK_XE_ACTIONS ">\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""
+                           " " PCMK_META_TIMEOUT "=\"%s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STOP "\""
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_STATUS "\""
+                           " " PCMK_META_TIMEOUT "=\"%s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_MONITOR "\""
+                           " " PCMK_META_TIMEOUT "=\"%s\""
+                           " " PCMK_META_INTERVAL "=\"3600s\" />\n"
+    "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_META_DATA "\""
+                           " " PCMK_META_TIMEOUT "=\"15s\" />\n"
+    "  </" PCMK_XE_ACTIONS ">\n"
+    "  <" PCMK_XE_SPECIAL " " PCMK_XA_TAG "=\"heartbeat\">\n"
+    "    <" PCMK_XE_VERSION ">2.0</" PCMK_XE_VERSION ">\n"
+    "  </" PCMK_XE_SPECIAL ">\n"
+    "</" PCMK_XE_RESOURCE_AGENT ">\n";
 
 static void *
 find_library_function(void **handle, const char *lib, const char *fn)
@@ -194,60 +203,66 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
     }
 
     if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
-        char *xml_meta_longdesc = NULL;
-        char *xml_meta_shortdesc = NULL;
-
-        char *meta_param = NULL;
-        char *meta_longdesc = NULL;
-        char *meta_shortdesc = NULL;
+        const char *meta_longdesc = NULL;
+        const char *meta_shortdesc = NULL;
+        const char *meta_param = NULL;
         const char *timeout_str = NULL;
 
-        stonith_obj = (*st_new_fn) (agent);
-        if (stonith_obj) {
-            (*st_log_fn) (stonith_obj, (PILLogFun) & stonith_plugin);
-            pcmk__str_update(&meta_longdesc,
-                             (*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
+        gchar *meta_longdesc_esc = NULL;
+        gchar *meta_shortdesc_esc = NULL;
+
+        stonith_obj = st_new_fn(agent);
+        if (stonith_obj != NULL) {
+            st_log_fn(stonith_obj, (PILLogFun) &stonith_plugin);
+
+            meta_longdesc = st_info_fn(stonith_obj, ST_DEVICEDESCR);
             if (meta_longdesc == NULL) {
                 crm_warn("no long description in %s's metadata.", agent);
-                meta_longdesc = strdup(no_parameter_info);
+                meta_longdesc = no_parameter_info;
             }
 
-            pcmk__str_update(&meta_shortdesc,
-                             (*st_info_fn) (stonith_obj, ST_DEVICEID));
+            meta_shortdesc = st_info_fn(stonith_obj, ST_DEVICEID);
             if (meta_shortdesc == NULL) {
                 crm_warn("no short description in %s's metadata.", agent);
-                meta_shortdesc = strdup(no_parameter_info);
+                meta_shortdesc = no_parameter_info;
             }
 
-            pcmk__str_update(&meta_param,
-                             (*st_info_fn) (stonith_obj, ST_CONF_XML));
+            meta_param = st_info_fn(stonith_obj, ST_CONF_XML);
             if (meta_param == NULL) {
                 crm_warn("no list of parameters in %s's metadata.", agent);
-                meta_param = strdup(no_parameter_info);
+                meta_param = no_parameter_info;
             }
-            (*st_del_fn) (stonith_obj);
+
+            st_del_fn(stonith_obj);
+
         } else {
             errno = EINVAL;
             crm_perror(LOG_ERR, "Agent %s not found", agent);
             return -EINVAL;
         }
 
-        xml_meta_longdesc =
-            (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
-        xml_meta_shortdesc =
-            (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
+        if (pcmk__xml_needs_escape(meta_longdesc, pcmk__xml_escape_text)) {
+            meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
+                                                 pcmk__xml_escape_text);
+            meta_longdesc = meta_longdesc_esc;
+        }
+        if (pcmk__xml_needs_escape(meta_shortdesc, pcmk__xml_escape_text)) {
+            meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
+                                                  pcmk__xml_escape_text);
+            meta_shortdesc = meta_shortdesc_esc;
+        }
 
+        /* @TODO This needs a string that's parsable by crm_get_msec(). In
+         * general, pcmk__readable_interval() doesn't provide that. It works
+         * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
+         */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
-        buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
-                                   xml_meta_shortdesc, meta_param,
+        buffer = crm_strdup_printf(META_TEMPLATE, agent, meta_longdesc,
+                                   meta_shortdesc, meta_param,
                                    timeout_str, timeout_str, timeout_str);
 
-        xmlFree(xml_meta_longdesc);
-        xmlFree(xml_meta_shortdesc);
-
-        free(meta_shortdesc);
-        free(meta_longdesc);
-        free(meta_param);
+        g_free(meta_longdesc_esc);
+        g_free(meta_shortdesc_esc);
     }
     if (output) {
         *output = buffer;

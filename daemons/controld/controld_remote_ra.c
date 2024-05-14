@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
@@ -206,7 +206,8 @@ should_purge_attributes(crm_node_t *node)
     /* Get the node that was hosting the remote connection resource from the
      * peer cache.  That's the one we really care about here.
      */
-    conn_node = crm_get_peer(0, node->conn_host);
+    conn_node = pcmk__get_node(0, node->conn_host, NULL,
+                               pcmk__node_search_cluster_member);
     if (conn_node == NULL) {
         return purge;
     }
@@ -296,7 +297,7 @@ remote_node_up(const char *node_name)
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
 
     /* Ensure node is in the remote peer cache with member status */
-    node = crm_remote_peer_get(node_name);
+    node = pcmk__cluster_lookup_remote_node(node_name);
     CRM_CHECK(node != NULL, return);
 
     purge_remote_node_attrs(call_opt, node);
@@ -324,24 +325,24 @@ remote_node_up(const char *node_name)
      */
     broadcast_remote_state_message(node_name, true);
 
-    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_cluster, update,
                                      __func__);
 
-    /* Clear the XML_NODE_IS_FENCED flag in the node state. If the node ever
+    /* Clear the PCMK__XA_NODE_FENCED flag in the node state. If the node ever
      * needs to be fenced, this flag will allow various actions to determine
      * whether the fencing has happened yet.
      */
-    crm_xml_add(state, XML_NODE_IS_FENCED, "0");
+    crm_xml_add(state, PCMK__XA_NODE_FENCED, "0");
 
     /* TODO: If the remote connection drops, and this (async) CIB update either
      * failed or has not yet completed, later actions could mistakenly think the
-     * node has already been fenced (if the XML_NODE_IS_FENCED attribute was
+     * node has already been fenced (if the PCMK__XA_NODE_FENCED attribute was
      * previously set, because it won't have been cleared). This could prevent
      * actual fencing or allow recurring monitor failures to be cleared too
      * soon. Ideally, we wouldn't rely on the CIB for the fenced status.
      */
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL);
+    controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
     free_xml(update);
 }
 
@@ -379,7 +380,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     }
 
     /* Ensure node is in the remote peer cache with lost state */
-    node = crm_remote_peer_get(node_name);
+    node = pcmk__cluster_lookup_remote_node(node_name);
     CRM_CHECK(node != NULL, return);
     pcmk__update_peer_state(__func__, node, CRM_NODE_LOST, 0);
 
@@ -387,9 +388,9 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     broadcast_remote_state_message(node_name, false);
 
     /* Update CIB node state */
-    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     create_node_state_update(node, node_update_cluster, update, __func__);
-    controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt, NULL);
+    controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
     free_xml(update);
 }
 
@@ -419,7 +420,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
          * it hasn't been tracking the remote node, and other code relies on
          * the cache to distinguish remote nodes from unseen cluster nodes.
          */
-        crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
+        crm_node_t *node = pcmk__cluster_lookup_remote_node(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
         pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
@@ -437,7 +438,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
                  * so if the connection migrated elsewhere and we aren't DC,
                  * un-cache the node, so we don't have stale info
                  */
-                crm_remote_peer_cache_remove(cmd->rsc_id);
+                pcmk__cluster_forget_remote_node(cmd->rsc_id);
             }
         }
     }
@@ -493,7 +494,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
 
         op.params = pcmk__strkey_table(free, free);
         for (tmp = cmd->params; tmp; tmp = tmp->next) {
-            g_hash_table_insert(op.params, strdup(tmp->key), strdup(tmp->value));
+            pcmk__insert_dup(op.params, tmp->key, tmp->value);
         }
 
     }
@@ -861,12 +862,17 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int rc = pcmk_rc_ok;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (pcmk__strcase_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
-                                 XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
+        if (pcmk__strcase_any_of(tmp->key,
+                                 PCMK_REMOTE_RA_ADDR, PCMK_REMOTE_RA_SERVER,
+                                 NULL)) {
             server = tmp->value;
-        } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {
+
+        } else if (pcmk__str_eq(tmp->key, PCMK_REMOTE_RA_PORT,
+                                pcmk__str_none)) {
             port = atoi(tmp->value);
-        } else if (pcmk__str_eq(tmp->key, CRM_META "_" XML_RSC_ATTR_CONTAINER, pcmk__str_casei)) {
+
+        } else if (pcmk__str_eq(tmp->key, CRM_META "_" PCMK__META_CONTAINER,
+                                pcmk__str_none)) {
             lrm_remote_set_flags(lrm_state, controlling_guest);
         }
     }
@@ -967,9 +973,9 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (pcmk__str_any_of(cmd->action, PCMK_ACTION_RELOAD,
                                     PCMK_ACTION_RELOAD_AGENT, NULL))  {
-            /* Currently the only reloadable parameter is reconnect_interval,
-             * which is only used by the scheduler via the CIB, so reloads are a
-             * no-op.
+            /* Currently the only reloadable parameter is
+             * PCMK_REMOTE_RA_RECONNECT_INTERVAL, which is only used by the
+             * scheduler via the CIB, so reloads are a no-op.
              *
              * @COMPAT DC <2.1.0: We only need to check for "reload" in case
              * we're in a rolling upgrade with a DC scheduling "reload" instead
@@ -995,7 +1001,7 @@ remote_ra_data_init(lrm_state_t * lrm_state)
         return;
     }
 
-    ra_data = calloc(1, sizeof(remote_ra_data_t));
+    ra_data = pcmk__assert_alloc(1, sizeof(remote_ra_data_t));
     ra_data->work = mainloop_add_trigger(G_PRIORITY_HIGH, handle_remote_ra_exec, lrm_state);
     lrm_state->remote_ra_data = ra_data;
 }
@@ -1041,12 +1047,12 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
     lrmd_rsc_info_t *info = NULL;
 
     if ((lrm_state_find(rsc_id))) {
-        info = calloc(1, sizeof(lrmd_rsc_info_t));
+        info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
-        info->id = strdup(rsc_id);
-        info->type = strdup(REMOTE_LRMD_RA);
-        info->standard = strdup(PCMK_RESOURCE_CLASS_OCF);
-        info->provider = strdup("pacemaker");
+        info->id = pcmk__str_copy(rsc_id);
+        info->type = pcmk__str_copy(REMOTE_LRMD_RA);
+        info->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_OCF);
+        info->provider = pcmk__str_copy("pacemaker");
     }
 
     return info;
@@ -1202,7 +1208,7 @@ handle_dup:
     /* update the userdata */
     if (userdata) {
        free(cmd->userdata);
-       cmd->userdata = strdup(userdata);
+       cmd->userdata = pcmk__str_copy(userdata);
     }
 
     /* if we've already reported success, generate a new call id */
@@ -1280,23 +1286,12 @@ controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
         return pcmk_rc_ok;
     }
 
-    cmd = calloc(1, sizeof(remote_ra_cmd_t));
-    if (cmd == NULL) {
-        lrmd_key_value_freeall(params);
-        return ENOMEM;
-    }
+    cmd = pcmk__assert_alloc(1, sizeof(remote_ra_cmd_t));
 
-    cmd->owner = strdup(lrm_state->node_name);
-    cmd->rsc_id = strdup(rsc_id);
-    cmd->action = strdup(action);
-    cmd->userdata = strdup(userdata);
-    if ((cmd->owner == NULL) || (cmd->rsc_id == NULL) || (cmd->action == NULL)
-        || (cmd->userdata == NULL)) {
-        free_cmd(cmd);
-        lrmd_key_value_freeall(params);
-        return ENOMEM;
-    }
-
+    cmd->owner = pcmk__str_copy(lrm_state->node_name);
+    cmd->rsc_id = pcmk__str_copy(rsc_id);
+    cmd->action = pcmk__str_copy(action);
+    cmd->userdata = pcmk__str_copy(userdata);
     cmd->interval_ms = interval_ms;
     cmd->timeout = timeout_ms;
     cmd->start_delay = start_delay_ms;
@@ -1347,9 +1342,8 @@ remote_ra_fail(const char *node_name)
  *     </downed>
  *  </pseudo_event>
  */
-#define XPATH_PSEUDO_FENCE "/" XML_GRAPH_TAG_PSEUDO_EVENT \
-    "[@" XML_LRM_ATTR_TASK "='stonith']/" XML_GRAPH_TAG_DOWNED \
-    "/" XML_CIB_TAG_NODE
+#define XPATH_PSEUDO_FENCE "/" PCMK__XE_PSEUDO_EVENT \
+    "[@" PCMK_XA_OPERATION "='stonith']/" PCMK__XE_DOWNED "/" PCMK_XE_NODE
 
 /*!
  * \internal
@@ -1380,7 +1374,7 @@ remote_ra_process_pseudo(xmlNode *xml)
          * recovered.
          */
         if (result) {
-            const char *remote = ID(result);
+            const char *remote = pcmk__xe_id(result);
 
             if (remote) {
                 remote_node_down(remote, DOWN_ERASE_LRM);
@@ -1398,13 +1392,13 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     crm_node_t *node;
 
     call_opt = crmd_cib_smart_opt();
-    node = crm_remote_peer_get(lrm_state->node_name);
+    node = pcmk__cluster_lookup_remote_node(lrm_state->node_name);
     CRM_CHECK(node != NULL, return);
-    update = create_xml_node(NULL, XML_CIB_TAG_STATUS);
+    update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
     state = create_node_state_update(node, node_update_none, update,
                                      __func__);
-    crm_xml_add(state, XML_NODE_IS_MAINTENANCE, maintenance?"1":"0");
-    if (controld_update_cib(XML_CIB_TAG_STATUS, update, call_opt,
+    crm_xml_add(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
+    if (controld_update_cib(PCMK_XE_STATUS, update, call_opt,
                             NULL) == pcmk_rc_ok) {
         /* TODO: still not 100% sure that async update will succeed ... */
         if (maintenance) {
@@ -1416,9 +1410,9 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     free_xml(update);
 }
 
-#define XPATH_PSEUDO_MAINTENANCE "//" XML_GRAPH_TAG_PSEUDO_EVENT \
-    "[@" XML_LRM_ATTR_TASK "='" PCMK_ACTION_MAINTENANCE_NODES "']/" \
-    XML_GRAPH_TAG_MAINTENANCE
+#define XPATH_PSEUDO_MAINTENANCE "//" PCMK__XE_PSEUDO_EVENT         \
+    "[@" PCMK_XA_OPERATION "='" PCMK_ACTION_MAINTENANCE_NODES "']/" \
+    PCMK__XE_MAINTENANCE
 
 /*!
  * \internal
@@ -1435,25 +1429,29 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node = first_named_child(getXpathResult(search, 0),
-                                      XML_CIB_TAG_NODE);
-             node != NULL; node = crm_next_same_xml(node)) {
+        for (node = pcmk__xe_first_child(getXpathResult(search, 0),
+                                         PCMK_XE_NODE, NULL, NULL);
+             node != NULL; node = pcmk__xe_next_same(node)) {
 
-            lrm_state_t *lrm_state = lrm_state_find(ID(node));
+            lrm_state_t *lrm_state = lrm_state_find(pcmk__xe_id(node));
 
             cnt++;
             if (lrm_state && lrm_state->remote_ra_data &&
                 pcmk_is_set(((remote_ra_data_t *) lrm_state->remote_ra_data)->status, remote_active)) {
-                int is_maint;
+
+                const char *in_maint_s = NULL;
+                int in_maint;
 
                 cnt_remote++;
-                pcmk__scan_min_int(crm_element_value(node, XML_NODE_IS_MAINTENANCE),
-                                   &is_maint, 0);
-                remote_ra_maintenance(lrm_state, is_maint);
+                in_maint_s = crm_element_value(node,
+                                               PCMK__XA_NODE_IN_MAINTENANCE);
+                pcmk__scan_min_int(in_maint_s, &in_maint, 0);
+                remote_ra_maintenance(lrm_state, in_maint);
             }
         }
-        crm_trace("Action holds %d nodes (%d remotes found) "
-                    "adjusting maintenance-mode", cnt, cnt_remote);
+        crm_trace("Action holds %d nodes (%d remotes found) adjusting "
+                  PCMK_OPT_MAINTENANCE_MODE,
+                  cnt, cnt_remote);
     }
     freeXpathObject(search);
 }

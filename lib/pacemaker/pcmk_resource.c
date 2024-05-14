@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
+#include <crm/cib/internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/results.h>
 #include <crm/common/output_internal.h>
@@ -22,10 +23,11 @@
 #include <pacemaker-internal.h>
 
 // Search path for resource operation history (takes node name and resource ID)
-#define XPATH_OP_HISTORY "//" XML_CIB_TAG_STATUS                            \
-                         "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']" \
-                         "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES      \
-                         "/" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
+#define XPATH_OP_HISTORY "//" PCMK_XE_STATUS                            \
+                         "/" PCMK__XE_NODE_STATE                        \
+                         "[@" PCMK_XA_UNAME "='%s']"                    \
+                         "/" PCMK__XE_LRM "/" PCMK__XE_LRM_RESOURCES    \
+                         "/" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"
 
 static xmlNode *
 best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
@@ -44,18 +46,21 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     free(xpath);
 
     // Examine each history entry
-    for (xmlNode *lrm_rsc_op = first_named_child(history, XML_LRM_TAG_RSC_OP);
-         lrm_rsc_op != NULL; lrm_rsc_op = crm_next_same_xml(lrm_rsc_op)) {
+    for (xmlNode *lrm_rsc_op = pcmk__xe_first_child(history,
+                                                    PCMK__XE_LRM_RSC_OP, NULL,
+                                                    NULL);
+         lrm_rsc_op != NULL; lrm_rsc_op = pcmk__xe_next_same(lrm_rsc_op)) {
 
         const char *digest = crm_element_value(lrm_rsc_op,
-                                               XML_LRM_ATTR_RESTART_DIGEST);
+                                               PCMK__XA_OP_RESTART_DIGEST);
         guint interval_ms = 0;
-        const char *task = crm_element_value(lrm_rsc_op, XML_LRM_ATTR_TASK);
+        const char *task = crm_element_value(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;
-        bool failure = pcmk__ends_with(ID(lrm_rsc_op), "_last_failure_0");
+        bool failure = pcmk__ends_with(pcmk__xe_id(lrm_rsc_op),
+                                       "_last_failure_0");
 
 
-        crm_element_value_ms(lrm_rsc_op, XML_LRM_ATTR_INTERVAL, &interval_ms);
+        crm_element_value_ms(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
                        && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                                PCMK_ACTION_START,
@@ -105,6 +110,79 @@ is_best:
 
 /*!
  * \internal
+ * \brief Remove a resource
+ *
+ * \param[in,out] cib       An open connection to the CIB
+ * \param[in]     cib_opts  Options to use in the CIB operation call
+ * \param[in]     rsc_id    Resource to remove
+ * \param[in]     rsc_type  Type of the resource ("primitive", "group", etc.)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
+                      const char *rsc_type)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *msg_data = NULL;
+
+    if (cib == NULL) {
+        return ENOTCONN;
+    }
+
+    if (rsc_id == NULL || rsc_type == NULL) {
+        return EINVAL;
+    }
+
+    msg_data = pcmk__xe_create(NULL, rsc_type);
+    crm_xml_add(msg_data, PCMK_XA_ID, rsc_id);
+
+    rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);
+    rc = pcmk_legacy2rc(rc);
+
+    free_xml(msg_data);
+    return rc;
+}
+
+int
+pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+    uint32_t cib_opts = cib_sync_call;
+    cib_t *cib = NULL;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    cib = cib_new();
+    if (cib == NULL) {
+        rc = pcmk_rc_cib_corrupt;
+        goto done;
+    }
+
+    rc = cib->cmds->signon(cib, crm_system_name, cib_command);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = pcmk__resource_delete(cib, cib_opts, rsc_id, rsc_type);
+
+done:
+    if (cib != NULL) {
+        cib__clean_up_connection(&cib);
+    }
+
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Calculate and output resource operation digests
  *
  * \param[in,out] out        Output object
@@ -120,14 +198,14 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 {
     const char *task = NULL;
     xmlNode *xml_op = NULL;
-    op_digest_cache_t *digests = NULL;
+    pcmk__op_digest_t *digests = NULL;
     guint interval_ms = 0;
     int rc = pcmk_rc_ok;
 
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {
         return EINVAL;
     }
-    if (rsc->variant != pcmk_rsc_variant_primitive) {
+    if (!pcmk__is_primitive(rsc)) {
         // Only primitives get operation digests
         return EOPNOTSUPP;
     }
@@ -137,8 +215,8 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     // Generate an operation key
     if (xml_op != NULL) {
-        task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-        crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+        task = crm_element_value(xml_op, PCMK_XA_OPERATION);
+        crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
     }
     if (task == NULL) { // Assume start if no history is available
         task = PCMK_ACTION_START;
@@ -156,8 +234,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 
 int
 pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
-                      const pcmk_node_t *node, GHashTable *overrides,
-                      pcmk_scheduler_t *scheduler)
+                      const pcmk_node_t *node, GHashTable *overrides)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -168,6 +245,6 @@ pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
     }
     pcmk__register_lib_messages(out);
     rc = pcmk__resource_digests(out, rsc, node, overrides);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

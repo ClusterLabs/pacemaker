@@ -20,11 +20,13 @@ Table of Contents
 
    faq
    general
+   documentation
    python
    c
    components
    helpers
    evolution
+   glossary
 
 Index
 -----

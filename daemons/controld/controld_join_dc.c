@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,6 @@
 
 #include <crm/crm.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 
@@ -188,12 +187,12 @@ create_dc_message(const char *join_op, const char *host_to)
                                   CRM_SYSTEM_DC, NULL);
 
     /* Identify which election this is a part of */
-    crm_xml_add_int(msg, F_CRM_JOIN_ID, current_join_id);
+    crm_xml_add_int(msg, PCMK__XA_JOIN_ID, current_join_id);
 
     /* Add a field specifying whether the DC is shutting down. This keeps the
      * joining node from fencing the old DC if it becomes the new DC.
      */
-    pcmk__xe_set_bool_attr(msg, F_CRM_DC_LEAVING,
+    pcmk__xe_set_bool_attr(msg, PCMK__XA_DC_LEAVING,
                            pcmk_is_set(controld_globals.fsa_input_register,
                                        R_SHUTDOWN));
     return msg;
@@ -206,7 +205,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *member = (crm_node_t *)value;
 
     CRM_ASSERT(member != NULL);
-    if (crm_is_peer_active(member) == FALSE) {
+    if (!pcmk__cluster_is_node_active(member)) {
         crm_info("Not making join-%d offer to inactive node %s",
                  current_join_id,
                  (member->uname? member->uname : "with unknown name"));
@@ -249,10 +248,10 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
     // Advertise our feature set so the joining node can bail if not compatible
-    crm_xml_add(offer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
     crm_info("Sending join-%d offer to %s", current_join_id, member->uname);
-    send_cluster_message(member, crm_msg_crmd, offer, TRUE);
+    pcmk__cluster_send_message(member, crm_msg_crmd, offer);
     free_xml(offer);
 
     crm_update_peer_join(__func__, member, crm_join_welcomed);
@@ -313,12 +312,12 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    join_to = crm_element_value(welcome->msg, F_CRM_HOST_FROM);
+    join_to = crm_element_value(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
         return;
     }
-    member = crm_get_peer(0, join_to);
+    member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster_member);
 
     /* It is possible that a node will have been sick or starting up when the
      * original offer was made. However, it will either re-announce itself in
@@ -332,14 +331,16 @@ do_dc_join_offer_one(long long action,
      * well, to ensure the correct value for max_generation_from.
      */
     if (strcasecmp(join_to, controld_globals.our_nodename) != 0) {
-        member = crm_get_peer(0, controld_globals.our_nodename);
+        member = pcmk__get_node(0, controld_globals.our_nodename, NULL,
+                                pcmk__node_search_cluster_member);
         join_make_offer(NULL, member, NULL);
     }
 
     /* This was a genuine join request; cancel any existing transition and
      * invoke the scheduler.
      */
-    abort_transition(INFINITY, pcmk__graph_restart, "Node join", NULL);
+    abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart, "Node join",
+                     NULL);
 
     count = crmd_join_phase_count(crm_join_welcomed);
     crm_info("Waiting on join-%d requests from %d outstanding node%s",
@@ -386,19 +387,20 @@ do_dc_join_filter_offer(long long action,
     gboolean ack_nack_bool = TRUE;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
-    const char *ref = crm_element_value(join_ack->msg, F_CRM_REFERENCE);
+    const char *join_from = crm_element_value(join_ack->msg, PCMK__XA_SRC);
+    const char *ref = crm_element_value(join_ack->msg, PCMK_XA_REFERENCE);
     const char *join_version = crm_element_value(join_ack->msg,
-                                                 XML_ATTR_CRM_VERSION);
+                                                 PCMK_XA_CRM_FEATURE_SET);
     crm_node_t *join_node = NULL;
 
     if (join_from == NULL) {
         crm_err("Ignoring invalid join request without node name");
         return;
     }
-    join_node = crm_get_peer(0, join_from);
+    join_node = pcmk__get_node(0, join_from, NULL,
+                               pcmk__node_search_cluster_member);
 
-    crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id);
+    crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id);
     if (join_id != current_join_id) {
         crm_debug("Ignoring join-%d request from %s because we are on join-%d",
                   join_id, join_from, current_join_id);
@@ -411,13 +413,22 @@ do_dc_join_filter_offer(long long action,
         int lpc = 0;
 
         const char *attributes[] = {
-            XML_ATTR_GENERATION_ADMIN,
-            XML_ATTR_GENERATION,
-            XML_ATTR_NUMUPDATES,
+            PCMK_XA_ADMIN_EPOCH,
+            PCMK_XA_EPOCH,
+            PCMK_XA_NUM_UPDATES,
         };
 
-        for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {
-            cmp = compare_int_fields(max_generation_xml, generation, attributes[lpc]);
+        /* It's not obvious that join_ack->xml is the PCMK__XE_GENERATION_TUPLE
+         * element from the join client. The "if" guard is for clarity.
+         */
+        if (pcmk__xe_is(generation, PCMK__XE_GENERATION_TUPLE)) {
+            for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {
+                cmp = compare_int_fields(max_generation_xml, generation,
+                                         attributes[lpc]);
+            }
+
+        } else {    // Should always be PCMK__XE_GENERATION_TUPLE
+            CRM_LOG_ASSERT(false);
         }
     }
 
@@ -431,7 +442,7 @@ do_dc_join_filter_offer(long long action,
                 join_id, join_from, value, ref);
         ack_nack_bool = FALSE;
 
-    } else if (!crm_is_peer_active(join_node)) {
+    } else if (!pcmk__cluster_is_node_active(join_node)) {
         if (match_down_event(join_from) != NULL) {
             /* The join request was received after the node was fenced or
              * otherwise shutdown in a way that we're aware of. No need to log
@@ -463,20 +474,20 @@ do_dc_join_filter_offer(long long action,
 
     } else if (max_generation_xml == NULL) {
         const char *validation = crm_element_value(generation,
-                                                   XML_ATTR_VALIDATION);
+                                                   PCMK_XA_VALIDATE_WITH);
 
-        if (get_schema_version(validation) < 0) {
+        if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
                     "generation) due to unknown schema version %s "
                     CRM_XS " ref=%s",
-                    join_id, join_from, validation, ref);
+                    join_id, join_from, pcmk__s(validation, "(missing)"), ref);
             ack_nack_bool = FALSE;
 
         } else {
             crm_debug("Accepting join-%d request from %s (with first CIB "
                       "generation) " CRM_XS " ref=%s",
                       join_id, join_from, ref);
-            max_generation_xml = copy_xml(generation);
+            max_generation_xml = pcmk__xml_copy(NULL, generation);
             pcmk__str_update(&max_generation_from, join_from);
         }
 
@@ -485,13 +496,14 @@ do_dc_join_filter_offer(long long action,
                    && pcmk__str_eq(join_from, controld_globals.our_nodename,
                                    pcmk__str_casei))) {
         const char *validation = crm_element_value(generation,
-                                                   XML_ATTR_VALIDATION);
+                                                   PCMK_XA_VALIDATE_WITH);
 
-        if (get_schema_version(validation) < 0) {
+        if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
                     "generation than current best from %s) due to unknown "
                     "schema version %s " CRM_XS " ref=%s",
-                    join_id, join_from, max_generation_from, validation, ref);
+                    join_id, join_from, max_generation_from,
+                    pcmk__s(validation, "(missing)"), ref);
             ack_nack_bool = FALSE;
 
         } else {
@@ -502,7 +514,7 @@ do_dc_join_filter_offer(long long action,
             crm_log_xml_debug(generation, "New max generation");
 
             free_xml(max_generation_xml);
-            max_generation_xml = copy_xml(join_ack->xml);
+            max_generation_xml = pcmk__xml_copy(NULL, join_ack->xml);
             pcmk__str_update(&max_generation_from, join_from);
         }
 
@@ -588,7 +600,7 @@ do_dc_join_finalize(long long action,
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
-        pcmk__str_update(&sync_from, controld_globals.our_nodename);
+        sync_from = pcmk__str_copy(controld_globals.our_nodename);
         crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
                   current_join_id, count_finalizable,
                   pcmk__plural_s(count_finalizable));
@@ -596,7 +608,7 @@ do_dc_join_finalize(long long action,
 
     } else {
         // Ask for the agreed best CIB
-        pcmk__str_update(&sync_from, max_generation_from);
+        sync_from = pcmk__str_copy(max_generation_from);
         crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
                    current_join_id, count_finalizable,
                    pcmk__plural_s(count_finalizable), sync_from);
@@ -698,8 +710,8 @@ do_dc_join_ack(long long action,
     int join_id = -1;
     ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
 
-    const char *op = crm_element_value(join_ack->msg, F_CRM_TASK);
-    char *join_from = crm_element_value_copy(join_ack->msg, F_CRM_HOST_FROM);
+    const char *op = crm_element_value(join_ack->msg, PCMK__XA_CRM_TASK);
+    char *join_from = crm_element_value_copy(join_ack->msg, PCMK__XA_SRC);
     crm_node_t *peer = NULL;
 
     enum controld_section_e section = controld_section_lrm;
@@ -726,13 +738,13 @@ do_dc_join_ack(long long action,
         goto done;
     }
 
-    if (crm_element_value_int(join_ack->msg, F_CRM_JOIN_ID, &join_id) != 0) {
+    if (crm_element_value_int(join_ack->msg, PCMK__XA_JOIN_ID, &join_id) != 0) {
         crm_warn("Ignoring join confirmation from %s without valid join ID",
                  join_from);
         goto done;
     }
 
-    peer = crm_get_peer(0, join_from);
+    peer = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster_member);
     if (peer->join != crm_join_finalized) {
         crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
                  "(currently %s not %s)",
@@ -800,7 +812,7 @@ do_dc_join_ack(long long action,
                   join_from, current_join_id);
     }
 
-    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, state,
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, state,
                            cib_scope_local|cib_can_create|cib_transaction);
     free_xml(execd_state);
     if (rc != pcmk_ok) {
@@ -854,10 +866,10 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      * weren't known before
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
-    tmp1 = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(tmp1, XML_ATTR_ID, crm_peer_uuid(join_node));
-    crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
-    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
+    tmp1 = pcmk__xe_create(NULL, PCMK_XE_NODE);
+    crm_xml_add(tmp1, PCMK_XA_ID, pcmk__cluster_node_uuid(join_node));
+    crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
+    fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     free_xml(tmp1);
 
     if (join_node->join == crm_join_nack_quiet) {
@@ -866,8 +878,9 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    join_node = crm_get_peer(0, join_to);
-    if (!crm_is_peer_active(join_node)) {
+    join_node = pcmk__get_node(0, join_to, NULL,
+                               pcmk__node_search_cluster_member);
+    if (!pcmk__cluster_is_node_active(join_node)) {
         /*
          * NACK'ing nodes that the membership layer doesn't know about yet
          * simply creates more churn
@@ -896,10 +909,10 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          * node hosts each to the ACK message.  This keeps new controllers in
          * sync with what has already happened.
          */
-        if (crm_remote_peer_cache_size() != 0) {
+        if (pcmk__cluster_num_remote_nodes() > 0) {
             GHashTableIter iter;
             crm_node_t *node = NULL;
-            xmlNode *remotes = create_xml_node(acknak, XML_CIB_TAG_NODES);
+            xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);
 
             g_hash_table_iter_init(&iter, crm_remote_peer_cache);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
@@ -909,16 +922,16 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                     continue;
                 }
 
-                remote = create_xml_node(remotes, XML_CIB_TAG_NODE);
+                remote = pcmk__xe_create(remotes, PCMK_XE_NODE);
                 pcmk__xe_set_props(remote,
-                                   XML_ATTR_ID, node->uname,
-                                   XML_CIB_TAG_STATE, node->state,
-                                   PCMK__XA_CONN_HOST, node->conn_host,
+                                   PCMK_XA_ID, node->uname,
+                                   PCMK__XA_NODE_STATE, node->state,
+                                   PCMK__XA_CONNECTION_HOST, node->conn_host,
                                    NULL);
             }
         }
     }
-    send_cluster_message(join_node, crm_msg_crmd, acknak, TRUE);
+    pcmk__cluster_send_message(join_node, crm_msg_crmd, acknak);
     free_xml(acknak);
     return;
 }

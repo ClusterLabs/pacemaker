@@ -8,6 +8,188 @@ Host-Local Configuration
           your Pacemaker build settings. Check your Pacemaker configuration
           file to find the correct paths.
 
+Configuration Value Types
+#########################
+
+Throughout this document, configuration values will be designated as having one
+of the following types:
+
+.. list-table:: **Configuration Value Types**
+   :class: longtable
+   :widths: 1 3
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - .. _boolean:
+
+       .. index::
+          pair: type; boolean
+
+       boolean
+     - Case-insensitive text value where ``1``, ``yes``, ``y``, ``on``,
+       and ``true`` evaluate as true and ``0``, ``no``, ``n``, ``off``,
+       ``false``, and unset evaluate as false
+   * - .. _date_time:
+
+       .. index::
+          pair: type; date/time
+
+       date/time
+     - Textual timestamp like ``Sat Dec 21 11:47:45 2013``
+   * - .. _duration:
+
+       .. index::
+          pair: type; duration
+
+       duration
+     - A time duration, specified either like a :ref:`timeout <timeout>` or an
+       `ISO 8601 duration <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
+       A duration may be up to approximately 49 days but is intended for much
+       smaller time periods.
+   * - .. _enumeration:
+
+       .. index::
+          pair: type; enumeration
+
+       enumeration
+     - Text that must be one of a set of defined values (which will be listed
+       in the description)
+   * - .. _epoch_time:
+
+       .. index::
+          pair: type; epoch_time
+
+       epoch_time
+     - Time as the integer number of seconds since the Unix epoch,
+       ``1970-01-01 00:00:00 +0000 (UTC)``.
+   * - .. _id:
+
+       .. index::
+          pair: type; id
+
+       id
+     - A text string starting with a letter or underbar, followed by any
+       combination of letters, numbers, dashes, dots, and/or underbars; when
+       used for a property named ``id``, the string must be unique across all
+       ``id`` properties in the CIB
+   * - .. _integer:
+
+       .. index::
+          pair: type; integer
+
+       integer
+     - 32-bit signed integer value (-2,147,483,648 to 2,147,483,647)
+   * - .. _iso8601:
+
+       .. index::
+          pair: type; iso8601
+
+       ISO 8601
+     - An `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_ date/time.
+   * - .. _nonnegative_integer:
+
+       .. index::
+          pair: type; nonnegative integer
+
+       nonnegative integer
+     - 32-bit nonnegative integer value (0 to 2,147,483,647)
+   * - .. _percentage:
+
+       .. index::
+          pair: type; percentage
+
+       percentage
+     - Floating-point number followed by an optional percent sign ('%')
+   * - .. _port:
+
+       .. index::
+          pair: type; port
+
+       port
+     - Integer TCP port number (0 to 65535)
+   * - .. _range:
+
+       .. index::
+          pair: type; range
+
+       range
+     - A range may be a single nonnegative integer or a dash-separated range of
+       nonnegative integers. Either the first or last value may be omitted to
+       leave the range open-ended. Examples: ``0``, ``3-``, ``-5``, ``4-6``.
+   * - .. _score:
+
+       .. index::
+          pair: type; score
+
+       score
+     - A Pacemaker score can be an integer between -1,000,000 and 1,000,000, or
+       a string alias: ``INFINITY`` or ``+INFINITY`` is equivalent to
+       1,000,000, ``-INFINITY`` is equivalent to -1,000,000, and ``red``,
+       ``yellow``, and ``green`` are equivalent to integers as described in
+       :ref:`node-health`.
+   * - .. _text:
+
+       .. index::
+          pair: type; text
+
+       text
+     - A text string
+   * - .. _timeout:
+
+       .. index::
+          pair: type; timeout
+
+       timeout
+     - A time duration, specified as a bare number (in which case it is
+       considered to be in seconds) or a number with a unit (``ms`` or ``msec``
+       for milliseconds, ``us`` or ``usec`` for microseconds, ``s`` or ``sec``
+       for seconds, ``m`` or ``min`` for minutes, ``h`` or ``hr`` for hours)
+       optionally with whitespace before and/or after the number.
+   * - .. _version:
+
+       .. index::
+          pair: type; version
+
+       version
+     - Version number (any combination of alphanumeric characters, dots, and
+       dashes, starting with a number).
+
+
+Scores
+______
+
+Scores are integral to how Pacemaker works. Practically everything from moving
+a resource to deciding which resource to stop in a degraded cluster is achieved
+by manipulating scores in some way.
+
+Scores are calculated per resource and node. Any node with a negative score for
+a resource can't run that resource. The cluster places a resource on the node
+with the highest score for it.
+
+Score addition and subtraction follow these rules:
+
+* Any value (including ``INFINITY``) - ``INFINITY`` = ``-INFINITY``
+* ``INFINITY`` + any value other than ``-INFINITY`` = ``INFINITY``
+
+.. note::
+
+   What if you want to use a score higher than 1,000,000? Typically this possibility
+   arises when someone wants to base the score on some external metric that might
+   go above 1,000,000.
+
+   The short answer is you can't.
+
+   The long answer is it is sometimes possible work around this limitation
+   creatively. You may be able to set the score to some computed value based on
+   the external metric rather than use the metric directly. For nodes, you can
+   store the metric as a node attribute, and query the attribute when computing
+   the score (possibly as part of a custom resource agent).
+
+
+Local Options
+#############
+
 Pacemaker supports several host-local configuration options. These options can
 be configured on each node in the main Pacemaker configuration file
 (|PCMK_CONFIG_FILE|) in the format ``<NAME>="<VALUE>"``. They work by setting
@@ -22,6 +204,18 @@ environment variables when Pacemaker daemons start up.
      - Type
      - Default
      - Description
+
+   * - .. _cib_pam_service:
+
+       .. index::
+          pair: node option; CIB_pam_service
+
+       CIB_pam_service
+     - :ref:`text <text>`
+     - login
+     - PAM service to use for remote CIB client authentication (passed to
+       ``pam_start``).
+
    * - .. _pcmk_logfacility:
        
        .. index::
@@ -50,7 +244,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_logpriority:
 
        .. index::
-          pair:: node option; PCMK_logpriority
+          pair: node option; PCMK_logpriority
 
        PCMK_logpriority
      - :ref:`enumeration <enumeration>`
@@ -72,7 +266,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_logfile:
 
        .. index::
-          pair:: node option; PCMK_logfile
+          pair: node option; PCMK_logfile
 
        PCMK_logfile
      - :ref:`text <text>`
@@ -81,12 +275,15 @@ environment variables when Pacemaker daemons start up.
        specified file (in addition to the system log, if enabled). These
        messages may have extended information, and will include messages of info
        severity. This log is of more use to developers and advanced system
-       administrators, and when reporting problems.
+       administrators, and when reporting problems. Note: The default is
+       |PCMK_CONTAINER_LOG_FILE| (inside the container) for bundled container
+       nodes; this would typically be mapped to a different path on the host
+       running the container.
 
    * - .. _pcmk_logfile_mode:
 
        .. index::
-          pair:: node option; PCMK_logfile_mode
+          pair: node option; PCMK_logfile_mode
 
        PCMK_logfile_mode
      - :ref:`text <text>`
@@ -97,7 +294,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_debug:
 
        .. index::
-          pair:: node option; PCMK_debug
+          pair: node option; PCMK_debug
 
        PCMK_debug
      - :ref:`enumeration <enumeration>`
@@ -119,7 +316,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_stderr:
 
        .. index::
-          pair:: node option; PCMK_stderr
+          pair: node option; PCMK_stderr
 
        PCMK_stderr
      - :ref:`boolean <boolean>`
@@ -135,7 +332,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_functions:
 
        .. index::
-          pair:: node option; PCMK_trace_functions
+          pair: node option; PCMK_trace_functions
 
        PCMK_trace_functions
      - :ref:`text <text>`
@@ -149,7 +346,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_files:
 
        .. index::
-          pair:: node option; PCMK_trace_files
+          pair: node option; PCMK_trace_files
 
        PCMK_trace_files
      - :ref:`text <text>`
@@ -162,7 +359,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_formats:
 
        .. index::
-          pair:: node option; PCMK_trace_formats
+          pair: node option; PCMK_trace_formats
 
        PCMK_trace_formats
      - :ref:`text <text>`
@@ -176,7 +373,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_tags:
 
        .. index::
-          pair:: node option; PCMK_trace_tags
+          pair: node option; PCMK_trace_tags
 
        PCMK_trace_tags
      - :ref:`text <text>`
@@ -189,7 +386,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_blackbox:
 
        .. index::
-          pair:: node option; PCMK_blackbox
+          pair: node option; PCMK_blackbox
 
        PCMK_blackbox
      - :ref:`enumeration <enumeration>`
@@ -214,7 +411,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_trace_blackbox:
 
        .. index::
-          pair:: node option; PCMK_trace_blackbox
+          pair: node option; PCMK_trace_blackbox
 
        PCMK_trace_blackbox
      - :ref:`enumeration <enumeration>`
@@ -228,7 +425,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_node_start_state:
 
        .. index::
-          pair:: node option; PCMK_node_start_state
+          pair: node option; PCMK_node_start_state
 
        PCMK_node_start_state
      - :ref:`enumeration <enumeration>`
@@ -241,19 +438,19 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_node_action_limit:
 
        .. index::
-          pair:: node option; PCMK_node_action_limit
+          pair: node option; PCMK_node_action_limit
 
        PCMK_node_action_limit
      - :ref:`nonnegative integer <nonnegative_integer>`
      -
      - Specify the maximum number of jobs that can be scheduled on this node. If
-       set, this overrides the ``node-action-limit`` cluster property for this
-       node.
+       set, this overrides the :ref:`node-action-limit <node_action_limit>`
+       cluster option on this node.
 
    * - .. _pcmk_shutdown_delay:
 
        .. index::
-          pair:: node option; PCMK_shutdown_delay
+          pair: node option; PCMK_shutdown_delay
 
        PCMK_shutdown_delay
      - :ref:`timeout <timeout>`
@@ -264,7 +461,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_fail_fast:
 
        .. index::
-          pair:: node option; PCMK_fail_fast
+          pair: node option; PCMK_fail_fast
 
        PCMK_fail_fast
      - :ref:`boolean <boolean>`
@@ -276,7 +473,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_panic_action:
 
        .. index::
-          pair:: node option; PCMK_panic_action
+          pair: node option; PCMK_panic_action
 
        PCMK_panic_action
      - :ref:`enumeration <enumeration>`
@@ -292,7 +489,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_authkey_location:
 
        .. index::
-          pair:: node option; PCMK_authkey_location
+          pair: node option; PCMK_authkey_location
 
        PCMK_authkey_location
      - :ref:`text <text>`
@@ -306,7 +503,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_address:
 
        .. index::
-          pair:: node option; PCMK_remote_address
+          pair: node option; PCMK_remote_address
 
        PCMK_remote_address
      - :ref:`text <text>`
@@ -323,7 +520,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_port:
 
        .. index::
-          pair:: node option; PCMK_remote_port
+          pair: node option; PCMK_remote_port
 
        PCMK_remote_port
      - :ref:`port <port>`
@@ -334,7 +531,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_remote_pid1:
 
        .. index::
-          pair:: node option; PCMK_remote_pid1
+          pair: node option; PCMK_remote_pid1
 
        PCMK_remote_pid1
      - :ref:`enumeration <enumeration>`
@@ -362,7 +559,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_tls_priorities:
 
        .. index::
-          pair:: node option; PCMK_tls_priorities
+          pair: node option; PCMK_tls_priorities
 
        PCMK_tls_priorities
      - :ref:`text <text>`
@@ -383,7 +580,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_dh_min_bits:
 
        .. index::
-          pair:: node option; PCMK_dh_min_bits
+          pair: node option; PCMK_dh_min_bits
 
        PCMK_dh_min_bits
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -407,7 +604,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_dh_max_bits:
 
        .. index::
-          pair:: node option; PCMK_dh_max_bits
+          pair: node option; PCMK_dh_max_bits
 
        PCMK_dh_max_bits
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -428,7 +625,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_ipc_type:
 
        .. index::
-          pair:: node option; PCMK_ipc_type
+          pair: node option; PCMK_ipc_type
 
        PCMK_ipc_type
      - :ref:`enumeration <enumeration>`
@@ -443,7 +640,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_ipc_buffer:
 
        .. index::
-          pair:: node option; PCMK_ipc_buffer
+          pair: node option; PCMK_ipc_buffer
 
        PCMK_ipc_buffer
      - :ref:`nonnegative integer <nonnegative_integer>`
@@ -456,7 +653,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_cluster_type:
 
        .. index::
-          pair:: node option; PCMK_cluster_type
+          pair: node option; PCMK_cluster_type
 
        PCMK_cluster_type
      - :ref:`enumeration <enumeration>`
@@ -470,7 +667,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_schema_directory:
 
        .. index::
-          pair:: node option; PCMK_schema_directory
+          pair: node option; PCMK_schema_directory
 
        PCMK_schema_directory
      - :ref:`text <text>`
@@ -478,10 +675,22 @@ environment variables when Pacemaker daemons start up.
      - *Advanced Use Only:* Specify an alternate location for RNG schemas and
        XSL transforms.
 
+   * - .. _pcmk_remote_schema_directory:
+
+       .. index::
+          pair: node option; PCMK_remote_schema_directory
+
+       PCMK_remote_schema_directory
+     - :ref:`text <text>`
+     - |PCMK__REMOTE_SCHEMA_DIR|
+     - *Advanced Use Only:* Specify an alternate location on Pacemaker Remote
+       nodes for storing newer RNG schemas and XSL transforms fetched from
+       the cluster.
+
    * - .. _pcmk_valgrind_enabled:
 
        .. index::
-          pair:: node option; PCMK_valgrind_enabled
+          pair: node option; PCMK_valgrind_enabled
 
        PCMK_valgrind_enabled
      - :ref:`enumeration <enumeration>`
@@ -492,7 +701,7 @@ environment variables when Pacemaker daemons start up.
    * - .. _pcmk_callgrind_enabled:
 
        .. index::
-          pair:: node option; PCMK_callgrind_enabled
+          pair: node option; PCMK_callgrind_enabled
 
        PCMK_callgrind_enabled
      - :ref:`enumeration <enumeration>`
@@ -501,10 +710,36 @@ environment variables when Pacemaker daemons start up.
        ``valgrind`` with the ``callgrind`` tool enabled. Allowed values are the
        same as for ``PCMK_debug``.
 
+   * - .. _sbd_sync_resource_startup:
+
+       .. index::
+          pair:: node option; SBD_SYNC_RESOURCE_STARTUP
+
+       SBD_SYNC_RESOURCE_STARTUP
+     - :ref:`boolean <boolean>`
+     -
+     - If true, ``pacemakerd`` waits for a ping from ``sbd`` during startup
+       before starting other Pacemaker daemons, and during shutdown after
+       stopping other Pacemaker daemons but before exiting. Default value is set
+       based on the ``--with-sbd-sync-default`` configure script option.
+
+   * - .. _sbd_watchdog_timeout:
+
+       .. index::
+          pair:: node option; SBD_WATCHDOG_TIMEOUT
+
+       SBD_WATCHDOG_TIMEOUT
+     - :ref:`duration <duration>`
+     -
+     - If the ``stonith-watchdog-timeout`` cluster property is set to a negative
+       or invalid value, use double this value as the default if positive, or
+       use 0 as the default otherwise. This value must be greater than the value
+       of ``stonith-watchdog-timeout`` if both are set.
+
    * - .. _valgrind_opts:
 
        .. index::
-          pair:: node option; VALGRIND_OPTS
+          pair: node option; VALGRIND_OPTS
 
        VALGRIND_OPTS
      - :ref:`text <text>`

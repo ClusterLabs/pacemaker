@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,12 +11,14 @@ include $(top_srcdir)/mk/common.mk
 
 AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
+SUBDIRS = tests
+
 noinst_HEADERS  = libpacemaker_private.h
 
 ## libraries
 lib_LTLIBRARIES	= libpacemaker.la
 
-libpacemaker_la_LDFLAGS	= -version-info 8:0:7
+libpacemaker_la_LDFLAGS	= -version-info 9:0:8
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -40,6 +42,7 @@ libpacemaker_la_SOURCES += pcmk_graph_consumer.c
 libpacemaker_la_SOURCES += pcmk_graph_logging.c
 libpacemaker_la_SOURCES += pcmk_graph_producer.c
 libpacemaker_la_SOURCES += pcmk_injections.c
+libpacemaker_la_SOURCES += pcmk_options.c
 libpacemaker_la_SOURCES += pcmk_output.c
 libpacemaker_la_SOURCES += pcmk_resource.c
 libpacemaker_la_SOURCES += pcmk_result_code.c
@@ -65,5 +68,8 @@ libpacemaker_la_SOURCES += pcmk_sched_resource.c
 libpacemaker_la_SOURCES += pcmk_sched_tickets.c
 libpacemaker_la_SOURCES += pcmk_sched_utilization.c
 libpacemaker_la_SOURCES	+= pcmk_scheduler.c
+libpacemaker_la_SOURCES += pcmk_setup.c
 libpacemaker_la_SOURCES += pcmk_simulate.c
 libpacemaker_la_SOURCES += pcmk_status.c
+libpacemaker_la_SOURCES += pcmk_ticket.c
+libpacemaker_la_SOURCES += pcmk_verify.c

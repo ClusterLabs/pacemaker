@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
@@ -44,10 +43,11 @@ controld_election_init(const char *uname)
 void
 controld_configure_election(GHashTable *options)
 {
-    const char *value = NULL;
+    const char *value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
+    guint interval_ms = 0U;
 
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_ELECTION_FAIL);
-    election_timeout_set_period(fsa_election, crm_parse_interval_spec(value));
+    pcmk_parse_interval_spec(value, &interval_ms);
+    election_timeout_set_period(fsa_election, interval_ms);
 }
 
 void
@@ -201,7 +201,7 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
 #define dc_takeover_update_attr(name, value) do {                           \
        cib__update_node_attr(controld_globals.logger_out,                   \
                              controld_globals.cib_conn, cib_none,           \
-                             XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, \
+                             PCMK_XE_CRM_CONFIG, NULL, NULL, NULL, NULL,    \
                              name, value, NULL, NULL);                      \
     } while (0)
 
@@ -213,7 +213,8 @@ do_dc_takeover(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     xmlNode *cib = NULL;
-    const char *cluster_type = name_for_cluster_type(get_cluster_type());
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     pid_t watchdog = pcmk__locate_sbd();
 
     crm_info("Taking over DC status for this partition");
@@ -226,20 +227,23 @@ do_dc_takeover(long long action,
     controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
                                                  cib_scope_local);
 
-    cib = create_xml_node(NULL, XML_TAG_CIB);
-    crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    controld_update_cib(XML_TAG_CIB, cib, cib_none, feature_update_callback);
+    cib = pcmk__xe_create(NULL, PCMK_XE_CIB);
+    crm_xml_add(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    controld_update_cib(PCMK_XE_CIB, cib, cib_none, feature_update_callback);
 
-    dc_takeover_update_attr(XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
-    dc_takeover_update_attr("dc-version", PACEMAKER_VERSION "-" BUILD_VERSION);
-    dc_takeover_update_attr("cluster-infrastructure", cluster_type);
+    dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
+    dc_takeover_update_attr(PCMK_OPT_DC_VERSION,
+                            PACEMAKER_VERSION "-" BUILD_VERSION);
+    dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_layer_s);
 
 #if SUPPORT_COROSYNC
-    if ((controld_globals.cluster_name == NULL) && is_corosync_cluster()) {
+    if ((controld_globals.cluster_name == NULL)
+        && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
+
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name != NULL) {
-            dc_takeover_update_attr("cluster-name", cluster_name);
+            dc_takeover_update_attr(PCMK_OPT_CLUSTER_NAME, cluster_name);
         }
         free(cluster_name);
     }
@@ -265,13 +269,15 @@ do_dc_release(long long action,
         crm_info("DC role released");
         if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
-            crm_node_t *node = crm_get_peer(0, controld_globals.our_nodename);
+            crm_node_t *node =
+                pcmk__get_node(0, controld_globals.our_nodename,
+                               NULL, pcmk__node_search_cluster_member);
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,
                                               __func__);
             /* Don't need a based response because controld will stop. */
-            fsa_cib_anon_update_discard_reply(XML_CIB_TAG_STATUS, update);
+            fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             free_xml(update);
         }
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
@@ -280,6 +286,5 @@ do_dc_release(long long action,
         crm_err("Unknown DC action %s", fsa_action2string(action));
     }
 
-    crm_trace("Am I still the DC? %s", AM_I_DC ? XML_BOOLEAN_YES : XML_BOOLEAN_NO);
-
+    crm_trace("Am I still the DC? %s", pcmk__btoa(AM_I_DC));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,11 +46,23 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+/* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
+ * crm_attribute --list-options=cluster instead of querying daemon metadata.
+ */
+static int
+controld_metadata(pcmk__output_t *out)
+{
+    return pcmk__daemon_metadata(out, "pacemaker-controld",
+                                 "Pacemaker controller options",
+                                 "Cluster options used by Pacemaker's "
+                                 "controller",
+                                 pcmk__opt_controld);
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    return pcmk__build_arg_context(args, "text (default), xml", group,
-                                   "[metadata]");
+    return pcmk__build_arg_context(args, "text (default), xml", group, NULL);
 }
 
 int
@@ -96,8 +108,14 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        crmd_metadata();
+
         initialize = false;
+        rc = controld_metadata(out);
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Unable to display metadata: %s", pcmk_rc_str(rc));
+        }
         goto done;
     }
 
@@ -178,7 +196,7 @@ crmd_init(void)
     init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
     state = s_crmd_fsa(C_STARTUP);
 
     if (state == S_PENDING || state == S_STARTING) {

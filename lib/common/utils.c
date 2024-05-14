@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,6 @@
 
 #include <crm/crm.h>
 #include <crm/services.h>
-#include <crm/msg_xml.h>
 #include <crm/cib/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
@@ -257,46 +256,6 @@ compare_version(const char *version1, const char *version2)
 }
 
 /*!
- * \brief Parse milliseconds from a Pacemaker interval specification
- *
- * \param[in] input  Pacemaker time interval specification (a bare number of
- *                   seconds, a number with a unit optionally with whitespace
- *                   before and/or after the number, or an ISO 8601 duration)
- *
- * \return Milliseconds equivalent of given specification on success (limited
- *         to the range of an unsigned integer), 0 if input is NULL,
- *         or 0 (and set errno to EINVAL) on error
- */
-guint
-crm_parse_interval_spec(const char *input)
-{
-    long long msec = -1;
-
-    errno = 0;
-    if (input == NULL) {
-        return 0;
-
-    } else if (input[0] == 'P') {
-        crm_time_t *period_s = crm_time_parse_duration(input);
-
-        if (period_s) {
-            msec = 1000 * crm_time_get_seconds(period_s);
-            crm_time_free(period_s);
-        }
-
-    } else {
-        msec = crm_get_msec(input);
-    }
-
-    if (msec < 0) {
-        crm_warn("Using 0 instead of '%s'", input);
-        errno = EINVAL;
-        return 0;
-    }
-    return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
-}
-
-/*!
  * \internal
  * \brief Log a failed assertion
  *
@@ -464,43 +423,6 @@ pcmk__daemonize(const char *name, const char *pidfile)
     pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 }
 
-char *
-crm_meta_name(const char *field)
-{
-    int lpc = 0;
-    int max = 0;
-    char *crm_name = NULL;
-
-    CRM_CHECK(field != NULL, return NULL);
-    crm_name = crm_strdup_printf(CRM_META "_%s", field);
-
-    /* Massage the names so they can be used as shell variables */
-    max = strlen(crm_name);
-    for (; lpc < max; lpc++) {
-        switch (crm_name[lpc]) {
-            case '-':
-                crm_name[lpc] = '_';
-                break;
-        }
-    }
-    return crm_name;
-}
-
-const char *
-crm_meta_value(GHashTable * hash, const char *field)
-{
-    char *key = NULL;
-    const char *value = NULL;
-
-    key = crm_meta_name(field);
-    if (key) {
-        value = g_hash_table_lookup(hash, key);
-        free(key);
-    }
-
-    return value;
-}
-
 #ifdef HAVE_UUID_UUID_H
 #  include <uuid/uuid.h>
 #endif
@@ -511,7 +433,7 @@ crm_generate_uuid(void)
     unsigned char uuid[16];
     char *buffer = malloc(37);  /* Including NUL byte */
 
-    CRM_ASSERT(buffer != NULL);
+    pcmk__mem_assert(buffer);
     uuid_generate(uuid);
     uuid_unparse(uuid, buffer);
     return buffer;
@@ -526,27 +448,15 @@ crm_gnutls_global_init(void)
 }
 #endif
 
-/*!
- * \brief Get the local hostname
- *
- * \return Newly allocated string with name, or NULL (and set errno) on error
- */
-char *
-pcmk_hostname(void)
-{
-    struct utsname hostinfo;
-
-    return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
-}
-
 bool
 pcmk_str_is_infinity(const char *s) {
-    return pcmk__str_any_of(s, CRM_INFINITY_S, CRM_PLUS_INFINITY_S, NULL);
+    return pcmk__str_any_of(s, PCMK_VALUE_INFINITY, PCMK_VALUE_PLUS_INFINITY,
+                            NULL);
 }
 
 bool
 pcmk_str_is_minus_infinity(const char *s) {
-    return pcmk__str_eq(s, CRM_MINUS_INFINITY_S, pcmk__str_none);
+    return pcmk__str_eq(s, PCMK_VALUE_MINUS_INFINITY, pcmk__str_none);
 }
 
 /*!
@@ -592,3 +502,48 @@ pcmk__sleep_ms(unsigned int ms)
     }
 #endif
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/util_compat.h>
+
+guint
+crm_parse_interval_spec(const char *input)
+{
+    long long msec = -1;
+
+    errno = 0;
+    if (input == NULL) {
+        return 0;
+
+    } else if (input[0] == 'P') {
+        crm_time_t *period_s = crm_time_parse_duration(input);
+
+        if (period_s) {
+            msec = 1000 * crm_time_get_seconds(period_s);
+            crm_time_free(period_s);
+        }
+
+    } else {
+        msec = crm_get_msec(input);
+    }
+
+    if (msec < 0) {
+        crm_warn("Using 0 instead of '%s'", input);
+        errno = EINVAL;
+        return 0;
+    }
+    return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
+}
+
+char *
+pcmk_hostname(void)
+{
+    struct utsname hostinfo;
+
+    return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

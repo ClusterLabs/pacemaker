@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 #include <stdio.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
@@ -53,6 +52,7 @@ static struct {
     gboolean get_node_path;
     gboolean local;
     gboolean no_children;
+    gboolean score_update;
     gboolean sync_call;
 
     /* @COMPAT: For "-!" version option. Not advertised nor marked as
@@ -79,9 +79,9 @@ print_xml_output(xmlNode * xml)
     }
 
     if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        const char *id = crm_element_value(xml, XML_ATTR_ID);
+        const char *id = crm_element_value(xml, PCMK_XA_ID);
 
-        if (pcmk__str_eq((const char *)xml->name, "xpath-query", pcmk__str_casei)) {
+        if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
             xmlNode *child = NULL;
 
             for (child = xml->children; child; child = child->next) {
@@ -93,9 +93,12 @@ print_xml_output(xmlNode * xml)
         }
 
     } else {
-        char *buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", buffer);
-        free(buffer);
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buf, 0);
+
+        fprintf(stdout, "%s", buf->str);
+        g_string_free(buf, TRUE);
     }
 }
 
@@ -138,18 +141,18 @@ static inline bool
 scope_is_valid(const char *scope)
 {
     return pcmk__str_any_of(scope,
-                            XML_CIB_TAG_CONFIGURATION,
-                            XML_CIB_TAG_NODES,
-                            XML_CIB_TAG_RESOURCES,
-                            XML_CIB_TAG_CONSTRAINTS,
-                            XML_CIB_TAG_CRMCONFIG,
-                            XML_CIB_TAG_RSCCONFIG,
-                            XML_CIB_TAG_OPCONFIG,
-                            XML_CIB_TAG_ACLS,
-                            XML_TAG_FENCING_TOPOLOGY,
-                            XML_CIB_TAG_TAGS,
-                            XML_CIB_TAG_ALERTS,
-                            XML_CIB_TAG_STATUS,
+                            PCMK_XE_CONFIGURATION,
+                            PCMK_XE_NODES,
+                            PCMK_XE_RESOURCES,
+                            PCMK_XE_CONSTRAINTS,
+                            PCMK_XE_CRM_CONFIG,
+                            PCMK_XE_RSC_DEFAULTS,
+                            PCMK_XE_OP_DEFAULTS,
+                            PCMK_XE_ACLS,
+                            PCMK_XE_FENCING_TOPOLOGY,
+                            PCMK_XE_TAGS,
+                            PCMK_XE_ALERTS,
+                            PCMK_XE_STATUS,
                             NULL);
 }
 
@@ -283,8 +286,8 @@ static GOptionEntry command_entries[] = {
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Delete first object matching supplied criteria (for example, "
-      "<" XML_ATTR_OP " " XML_ATTR_ID "=\"rsc1_op1\" "
-          XML_ATTR_NAME "=\"monitor\"/>).\n"
+      "<" PCMK_XE_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
+          PCMK_XA_NAME "=\"monitor\"/>).\n"
       INDENT "The XML element name and all attributes must match in order for "
       "the element to be deleted.",
       NULL },
@@ -298,7 +301,7 @@ static GOptionEntry command_entries[] = {
     { "empty", 'a', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       command_cb,
       "Output an empty CIB. Accepts an optional schema name argument to use as "
-      "the " XML_ATTR_VALIDATION " value.\n"
+      "the " PCMK_XA_VALIDATE_WITH " value.\n"
       INDENT "If no schema is given, the latest will be used.",
       "[schema]" },
 
@@ -350,12 +353,12 @@ static GOptionEntry addl_entries[] = {
 
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
-      INDENT "Valid values: " XML_CIB_TAG_CONFIGURATION ", " XML_CIB_TAG_NODES
-      ", " XML_CIB_TAG_RESOURCES ", " XML_CIB_TAG_CONSTRAINTS
-      ", " XML_CIB_TAG_CRMCONFIG ", " XML_CIB_TAG_RSCCONFIG ",\n"
-      INDENT "              " XML_CIB_TAG_OPCONFIG ", " XML_CIB_TAG_ACLS
-      ", " XML_TAG_FENCING_TOPOLOGY ", " XML_CIB_TAG_TAGS
-      ", " XML_CIB_TAG_ALERTS ", " XML_CIB_TAG_STATUS "\n"
+      INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
+      ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
+      ", " PCMK_XE_CRM_CONFIG ", " PCMK_XE_RSC_DEFAULTS ",\n"
+      INDENT "              " PCMK_XE_OP_DEFAULTS ", " PCMK_XE_ACLS
+      ", " PCMK_XE_FENCING_TOPOLOGY ", " PCMK_XE_TAGS ", " PCMK_XE_ALERTS
+      ", " PCMK_XE_STATUS "\n"
       INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "
       "appear takes effect",
       "value" },
@@ -370,10 +373,10 @@ static GOptionEntry addl_entries[] = {
       &options.get_node_path,
       "When performing XPath queries, return paths of any matches found\n"
       INDENT "(for example, "
-      "\"/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
-      "/" XML_CIB_TAG_RESOURCES "/" XML_CIB_TAG_INCARNATION
-      "[@" XML_ATTR_ID "='dummy-clone']"
-      "/" XML_CIB_TAG_RESOURCE "[@" XML_ATTR_ID "='dummy']\")",
+      "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+      "/" PCMK_XE_RESOURCES "/" PCMK_XE_CLONE
+      "[@" PCMK_XA_ID "='dummy-clone']"
+      "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='dummy']\")",
       NULL },
 
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
@@ -385,6 +388,32 @@ static GOptionEntry addl_entries[] = {
       INDENT "                'namespace', or 'auto' (use default value)\n"
       INDENT "Default value: 'auto'",
       "[value]" },
+
+    { "score", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.score_update,
+      "Treat new attribute values as atomic score updates where possible "
+      "(with --modify/-M)\n\n"
+
+      INDENT "This currently happens by default and cannot be disabled, but\n"
+      INDENT "this default behavior is deprecated and will be removed in a\n"
+      INDENT "future release. Set this flag if this behavior is desired.\n\n"
+
+      INDENT "This option takes effect when updating XML attributes. For an\n"
+      INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
+      INDENT "\"name+=X\" for some score X, the new value is set as follows:\n"
+      INDENT " * If attribute \"name\" is not already set to some value in\n"
+      INDENT "   the element being updated, the new value is set as a literal\n"
+      INDENT "   string.\n"
+      INDENT " * If the new value is \"name++\", then the attribute is set to\n"
+      INDENT "   its existing value (parsed as a score) plus 1.\n"
+      INDENT " * If the new value is \"name+=X\" for some score X, then the\n"
+      INDENT "   attribute is set to its existing value plus X, where the\n"
+      INDENT "   existing value and X are parsed and added as scores.\n\n"
+
+      INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
+      INDENT "Refer to Pacemaker Explained and to the char2score() function\n"
+      INDENT "for more details on scores, including how they're parsed and\n"
+      INDENT "added.",
+      NULL },
 
     { "allow-create", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.allow_create,
@@ -430,34 +459,33 @@ build_arg_context(pcmk__common_args_t *args)
            "Query the configuration from the local node:\n\n"
            "\t# cibadmin --query --local\n\n"
            "Query just the cluster options configuration:\n\n"
-           "\t# cibadmin --query --scope " XML_CIB_TAG_CRMCONFIG "\n\n"
-           "Query all '" XML_RSC_ATTR_TARGET_ROLE "' settings:\n\n"
+           "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
+           "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
            "\t# cibadmin --query --xpath "
-               "\"//" XML_CIB_TAG_NVPAIR
-               "[@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_TARGET_ROLE"']\""
-               "\n\n"
-           "Remove all '" XML_RSC_ATTR_MANAGED "' settings:\n\n"
+               "\"//" PCMK_XE_NVPAIR
+               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\"\n\n"
+           "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
            "\t# cibadmin --delete-all --xpath "
-               "\"//" XML_CIB_TAG_NVPAIR
-               "[@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_MANAGED "']\"\n\n"
+               "\"//" PCMK_XE_NVPAIR
+               "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
            "Remove the resource named 'old':\n\n"
            "\t# cibadmin --delete --xml-text "
-               "'<" XML_CIB_TAG_RESOURCE " " XML_ATTR_ID "=\"old\"/>'\n\n"
+               "'<" PCMK_XE_PRIMITIVE " " PCMK_XA_ID "=\"old\"/>'\n\n"
            "Remove all resources from the configuration:\n\n"
-           "\t# cibadmin --replace --scope " XML_CIB_TAG_RESOURCES
-               " --xml-text '<" XML_CIB_TAG_RESOURCES "/>'\n\n"
+           "\t# cibadmin --replace --scope " PCMK_XE_RESOURCES
+               " --xml-text '<" PCMK_XE_RESOURCES "/>'\n\n"
            "Replace complete configuration with contents of "
                "$HOME/pacemaker.xml:\n\n"
            "\t# cibadmin --replace --xml-file $HOME/pacemaker.xml\n\n"
-           "Replace " XML_CIB_TAG_CONSTRAINTS " section of configuration with "
+           "Replace " PCMK_XE_CONSTRAINTS " section of configuration with "
                "contents of $HOME/constraints.xml:\n\n"
-           "\t# cibadmin --replace --scope " XML_CIB_TAG_CONSTRAINTS
+           "\t# cibadmin --replace --scope " PCMK_XE_CONSTRAINTS
                " --xml-file $HOME/constraints.xml\n\n"
            "Increase configuration version to prevent old configurations from "
                "being loaded accidentally:\n\n"
            "\t# cibadmin --modify --xml-text "
-               "'<" XML_TAG_CIB " " XML_ATTR_GENERATION_ADMIN
-                   "=\"" XML_ATTR_GENERATION_ADMIN "++\"/>'\n\n"
+               "'<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH
+                   "=\"" PCMK_XA_ADMIN_EPOCH "++\"/>'\n\n"
            "Edit the configuration with your favorite $EDITOR:\n\n"
            "\t# cibadmin --query > $HOME/local.xml\n\n"
            "\t# $EDITOR $HOME/local.xml\n\n"
@@ -567,13 +595,14 @@ main(int argc, char **argv)
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
-        char *buf = NULL;
+        GString *buf = g_string_sized_new(1024);
 
         output = createEmptyCib(1);
-        crm_xml_add(output, XML_ATTR_VALIDATION, options.validate_with);
-        buf = dump_xml_formatted(output);
-        fprintf(stdout, "%s", buf);
-        free(buf);
+        crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
+
+        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+        fprintf(stdout, "%s", buf->str);
+        g_string_free(buf, TRUE);
         goto done;
     }
 
@@ -658,16 +687,16 @@ main(int argc, char **argv)
     }
 
     if (options.input_file != NULL) {
-        input = filename2xml(options.input_file);
+        input = pcmk__xml_read(options.input_file);
         source = options.input_file;
 
     } else if (options.input_xml != NULL) {
-        input = string2xml(options.input_xml);
+        input = pcmk__xml_parse(options.input_xml);
         source = "input string";
 
     } else if (options.input_stdin) {
+        input = pcmk__xml_read(NULL);
         source = "STDIN";
-        input = stdin2xml();
 
     } else if (options.acl_render_mode != pcmk__acl_render_none) {
         char *username = pcmk__uid2username(geteuid());
@@ -751,12 +780,20 @@ main(int argc, char **argv)
             goto done;
         }
 
-        version = crm_element_value(input, XML_ATTR_CRM_VERSION);
+        version = crm_element_value(input, PCMK_XA_CRM_FEATURE_SET);
         digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         goto done;
+
+    } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
+                            pcmk__str_none)) {
+        /* @COMPAT When we drop default support for expansion in cibadmin, guard
+         * with `if (options.score_update)`
+         */
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_score_update);
     }
 
     rc = do_init();
@@ -773,9 +810,13 @@ main(int argc, char **argv)
     }
 
     rc = do_work(input, &output);
-    if (rc > 0) {
-        /* wait for the reply by creating a mainloop and running it until
-         * the callbacks are invoked...
+    if (!pcmk_is_set(options.cmd_options, cib_sync_call)
+        && (the_cib->variant != cib_file)
+        && (rc >= 0)) {
+        /* For async call, positive rc is the call ID (file always synchronous).
+         *
+         * Wait for the reply by creating a mainloop and running it until the
+         * callbacks are invoked.
          */
         request_id = rc;
 
@@ -791,32 +832,36 @@ main(int argc, char **argv)
         crm_info("Starting mainloop");
         g_main_loop_run(mainloop);
 
-    } else if ((rc == -pcmk_err_schema_unchanged)
-               && (strcmp(options.cib_action,
-                          PCMK__CIB_REQUEST_UPGRADE) == 0)) {
-        report_schema_unchanged();
-
-    } else if (rc < 0) {
+    } else {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
-        if (rc == pcmk_rc_schema_validation) {
-            if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
-                xmlNode *obj = NULL;
-                int version = 0;
+        if ((rc == pcmk_rc_schema_unchanged)
+            && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
 
-                if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                         options.cmd_options) == pcmk_ok) {
-                    update_validation(&obj, &version, 0, TRUE, FALSE);
+            report_schema_unchanged();
+
+        } else if (rc != pcmk_rc_ok) {
+            crm_err("Call failed: %s", pcmk_rc_str(rc));
+            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
+
+            if (rc == pcmk_rc_schema_validation) {
+                if (strcmp(options.cib_action,
+                           PCMK__CIB_REQUEST_UPGRADE) == 0) {
+                    xmlNode *obj = NULL;
+
+                    if (the_cib->cmds->query(the_cib, NULL, &obj,
+                                             options.cmd_options) == pcmk_ok) {
+                        pcmk__update_schema(&obj, NULL, true, false);
+                    }
+                    free_xml(obj);
+
+                } else if (output != NULL) {
+                    // Show validation errors to stderr
+                    pcmk__validate_xml(output, NULL, NULL, NULL);
                 }
-                free_xml(obj);
-
-            } else if (output) {
-                validate_xml_verbose(output);
             }
         }
-        exit_code = pcmk_rc2exitc(rc);
     }
 
     if ((output != NULL)
@@ -883,11 +928,11 @@ do_work(xmlNode *input, xmlNode **output)
     /* construct the request */
     the_cib->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__xe_is(input, XML_TAG_CIB)) {
-        xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
 
         if (status == NULL) {
-            create_xml_node(input, XML_CIB_TAG_STATUS);
+            pcmk__xe_create(input, PCMK_XE_STATUS);
         }
     }
 

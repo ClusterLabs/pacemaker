@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
@@ -95,9 +95,8 @@ compare_notify_entries(gconstpointer a, gconstpointer b)
 static notify_entry_t *
 dup_notify_entry(const notify_entry_t *entry)
 {
-    notify_entry_t *dup = calloc(1, sizeof(notify_entry_t));
+    notify_entry_t *dup = pcmk__assert_alloc(1, sizeof(notify_entry_t));
 
-    CRM_ASSERT(dup != NULL);
     dup->rsc = entry->rsc;
     dup->node = entry->node;
     return dup;
@@ -141,9 +140,9 @@ get_node_names(const GList *list, GString **all_node_names,
 
         // Add to host node name list if appropriate
         if (host_node_names != NULL) {
-            if (pe__is_guest_node(node)
+            if (pcmk__is_guest_or_bundle_node(node)
                 && (node->details->remote_rsc->container->running_on != NULL)) {
-                node = pe__current_node(node->details->remote_rsc->container);
+                node = pcmk__current_node(node->details->remote_rsc->container);
                 if (node->details->uname == NULL) {
                     continue;
                 }
@@ -253,8 +252,7 @@ copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    g_hash_table_insert(notify->meta, strdup((const char *) key),
-                        strdup((const char *) value));
+    pcmk__insert_dup(notify->meta, (const char *) key, (const char *) value);
 }
 
 static void
@@ -264,7 +262,7 @@ add_notify_data_to_action_meta(const notify_data_t *n_data,
     for (const GSList *item = n_data->keys; item; item = item->next) {
         const pcmk_nvpair_t *nvpair = (const pcmk_nvpair_t *) item->data;
 
-        add_hash_param(action->meta, nvpair->name, nvpair->value);
+        pcmk__insert_meta(action, nvpair->name, nvpair->value);
     }
 }
 
@@ -290,9 +288,9 @@ new_notify_pseudo_action(pcmk_resource_t *rsc, const pcmk_action_t *action,
                            notif_action, NULL,
                            pcmk_is_set(action->flags, pcmk_action_optional),
                            rsc->cluster);
-    pe__set_action_flags(notify, pcmk_action_pseudo);
-    add_hash_param(notify->meta, "notify_key_type", notif_type);
-    add_hash_param(notify->meta, "notify_key_operation", action->task);
+    pcmk__set_action_flags(notify, pcmk_action_pseudo);
+    pcmk__insert_meta(notify, "notify_key_type", notif_type);
+    pcmk__insert_meta(notify, "notify_key_operation", action->task);
     return notify;
 }
 
@@ -332,16 +330,16 @@ new_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
         skip_reason = "original action not runnable";
     }
     if (skip_reason != NULL) {
-        pe_rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
-                     rsc->id, pe__node_name(node), skip_reason);
+        pcmk__rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
+                        rsc->id, pcmk__node_name(node), skip_reason);
         return NULL;
     }
 
     value = g_hash_table_lookup(op->meta, "notify_type");     // "pre" or "post"
     task = g_hash_table_lookup(op->meta, "notify_operation"); // original action
 
-    pe_rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
-                 rsc->id, pe__node_name(node), value, task);
+    pcmk__rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
+                    rsc->id, pcmk__node_name(node), value, task);
 
     // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
@@ -379,7 +377,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
     notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,
                                n_data);
     if (notify != NULL) {
-        notify->priority = INFINITY;
+        notify->priority = PCMK_SCORE_INFINITY;
     }
 
     // Order recurring monitors after all "post-" notifications complete
@@ -390,8 +388,7 @@ new_post_notify_action(pcmk_resource_t *rsc, const pcmk_node_t *node,
         pcmk_action_t *mon = (pcmk_action_t *) iter->data;
         const char *interval_ms_s = NULL;
 
-        interval_ms_s = g_hash_table_lookup(mon->meta,
-                                            XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms_s = g_hash_table_lookup(mon->meta, PCMK_META_INTERVAL);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
             || pcmk__str_eq(mon->task, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             continue; // Not a recurring monitor
@@ -441,8 +438,7 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         return NULL;
     }
 
-    n_data = calloc(1, sizeof(notify_data_t));
-    CRM_ASSERT(n_data != NULL);
+    n_data = pcmk__assert_alloc(1, sizeof(notify_data_t));
 
     n_data->action = task;
 
@@ -451,18 +447,17 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         // Create "pre-" notify pseudo-action for clone
         n_data->pre = new_notify_pseudo_action(rsc, action, PCMK_ACTION_NOTIFY,
                                                "pre");
-        pe__set_action_flags(n_data->pre, pcmk_action_runnable);
-        add_hash_param(n_data->pre->meta, "notify_type", "pre");
-        add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
+        pcmk__set_action_flags(n_data->pre, pcmk_action_runnable);
+        pcmk__insert_meta(n_data->pre, "notify_type", "pre");
+        pcmk__insert_meta(n_data->pre, "notify_operation", n_data->action);
 
         // Create "pre-" notifications complete pseudo-action for clone
         n_data->pre_done = new_notify_pseudo_action(rsc, action,
                                                     PCMK_ACTION_NOTIFIED,
                                                     "confirmed-pre");
-        pe__set_action_flags(n_data->pre_done, pcmk_action_runnable);
-        add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
-        add_hash_param(n_data->pre_done->meta,
-                       "notify_operation", n_data->action);
+        pcmk__set_action_flags(n_data->pre_done, pcmk_action_runnable);
+        pcmk__insert_meta(n_data->pre_done, "notify_type", "pre");
+        pcmk__insert_meta(n_data->pre_done, "notify_operation", n_data->action);
 
         // Order "pre-" -> "pre-" complete -> original action
         order_actions(n_data->pre, n_data->pre_done, pcmk__ar_ordered);
@@ -474,28 +469,28 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
         // Create "post-" notify pseudo-action for clone
         n_data->post = new_notify_pseudo_action(rsc, complete,
                                                 PCMK_ACTION_NOTIFY, "post");
-        n_data->post->priority = INFINITY;
+        n_data->post->priority = PCMK_SCORE_INFINITY;
         if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
-            pe__set_action_flags(n_data->post, pcmk_action_runnable);
+            pcmk__set_action_flags(n_data->post, pcmk_action_runnable);
         } else {
-            pe__clear_action_flags(n_data->post, pcmk_action_runnable);
+            pcmk__clear_action_flags(n_data->post, pcmk_action_runnable);
         }
-        add_hash_param(n_data->post->meta, "notify_type", "post");
-        add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
+        pcmk__insert_meta(n_data->post, "notify_type", "post");
+        pcmk__insert_meta(n_data->post, "notify_operation", n_data->action);
 
         // Create "post-" notifications complete pseudo-action for clone
         n_data->post_done = new_notify_pseudo_action(rsc, complete,
                                                      PCMK_ACTION_NOTIFIED,
                                                      "confirmed-post");
-        n_data->post_done->priority = INFINITY;
+        n_data->post_done->priority = PCMK_SCORE_INFINITY;
         if (pcmk_is_set(complete->flags, pcmk_action_runnable)) {
-            pe__set_action_flags(n_data->post_done, pcmk_action_runnable);
+            pcmk__set_action_flags(n_data->post_done, pcmk_action_runnable);
         } else {
-            pe__clear_action_flags(n_data->post_done, pcmk_action_runnable);
+            pcmk__clear_action_flags(n_data->post_done, pcmk_action_runnable);
         }
-        add_hash_param(n_data->post_done->meta, "notify_type", "post");
-        add_hash_param(n_data->post_done->meta,
-                       "notify_operation", n_data->action);
+        pcmk__insert_meta(n_data->post_done, "notify_type", "post");
+        pcmk__insert_meta(n_data->post_done,
+                          "notify_operation", n_data->action);
 
         // Order original action complete -> "post-" -> "post-" complete
         order_actions(complete, n_data->post, pcmk__ar_first_implies_then);
@@ -523,9 +518,8 @@ pe__action_notif_pseudo_ops(pcmk_resource_t *rsc, const char *task,
 static notify_entry_t *
 new_notify_entry(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
+    notify_entry_t *entry = pcmk__assert_alloc(1, sizeof(notify_entry_t));
 
-    CRM_ASSERT(entry != NULL);
     entry->rsc = rsc;
     entry->node = node;
     return entry;
@@ -595,9 +589,10 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             break;
 
         default:
-            crm_err("Resource %s role on %s (%s) is not supported for "
-                    "notifications (bug?)",
-                    rsc->id, pe__node_name(node), role2text(rsc->role));
+            pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
+                            "notifications (bug?)",
+                            rsc->id, pcmk__node_name(node),
+                            pcmk_role_text(rsc->role));
             free(entry);
             break;
     }
@@ -612,7 +607,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
-            enum action_tasks task = text2task(op->task);
+            enum action_tasks task = pcmk_parse_action(op->task);
 
             if ((task == pcmk_action_stop) && op->node->details->unclean) {
                 // Create anyway (additional noise if node can't be fenced)
@@ -753,8 +748,9 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_available_uname", node_list);
     g_list_free(nodes);
 
-    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if (pcmk__str_eq("host", source, pcmk__str_none)) {
+    source = g_hash_table_lookup(rsc->meta,
+                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+    if (pcmk__str_eq(PCMK_VALUE_HOST, source, pcmk__str_none)) {
         get_node_names(rsc->cluster->nodes, &node_list, &metal_list);
         add_notify_env_free_gs(n_data, "notify_all_hosts", metal_list);
     } else {
@@ -763,13 +759,13 @@ add_notif_keys(const pcmk_resource_t *rsc, notify_data_t *n_data)
     add_notify_env_free_gs(n_data, "notify_all_uname", node_list);
 
     if (required && (n_data->pre != NULL)) {
-        pe__clear_action_flags(n_data->pre, pcmk_action_optional);
-        pe__clear_action_flags(n_data->pre_done, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->pre, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->pre_done, pcmk_action_optional);
     }
 
     if (required && (n_data->post != NULL)) {
-        pe__clear_action_flags(n_data->post, pcmk_action_optional);
-        pe__clear_action_flags(n_data->post_done, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->post, pcmk_action_optional);
+        pcmk__clear_action_flags(n_data->post_done, pcmk_action_optional);
     }
 }
 
@@ -809,7 +805,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     GList *iter = NULL;
     pcmk_action_t *stop = NULL;
     pcmk_action_t *start = NULL;
-    enum action_tasks task = text2task(n_data->action);
+    enum action_tasks task = pcmk_parse_action(n_data->action);
 
     // If this is a clone, call recursively for each instance
     if (rsc->children != NULL) {
@@ -823,7 +819,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
 
         if (!pcmk_is_set(op->flags, pcmk_action_optional)
             && (op->node != NULL)) {
-            switch (text2task(op->task)) {
+            switch (pcmk_parse_action(op->task)) {
                 case pcmk_action_start:
                 case pcmk_action_stop:
                 case pcmk_action_promote:
@@ -840,24 +836,24 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     switch (task) {
         case pcmk_action_start:
             if (n_data->start == NULL) {
-                pe_rsc_trace(rsc, "No notify action needed for %s %s",
-                             rsc->id, n_data->action);
+                pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
+                                rsc->id, n_data->action);
                 return;
             }
             break;
 
         case pcmk_action_promote:
             if (n_data->promote == NULL) {
-                pe_rsc_trace(rsc, "No notify action needed for %s %s",
-                             rsc->id, n_data->action);
+                pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
+                                rsc->id, n_data->action);
                 return;
             }
             break;
 
         case pcmk_action_demote:
             if (n_data->demote == NULL) {
-                pe_rsc_trace(rsc, "No notify action needed for %s %s",
-                             rsc->id, n_data->action);
+                pcmk__rsc_trace(rsc, "No notify action needed for %s %s",
+                                rsc->id, n_data->action);
                 return;
             }
             break;
@@ -867,8 +863,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             break;
     }
 
-    pe_rsc_trace(rsc, "Creating notify actions for %s %s",
-                 rsc->id, n_data->action);
+    pcmk__rsc_trace(rsc, "Creating notify actions for %s %s",
+                    rsc->id, n_data->action);
 
     // Create notify actions for stop or demote
     if ((rsc->role != pcmk_role_stopped)
@@ -918,8 +914,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             }
         }
         if (rsc->allocated_to == NULL) {
-            pe_proc_err("Next role '%s' but %s is not allocated",
-                        role2text(rsc->next_role), rsc->id);
+            pcmk__sched_err("Next role '%s' but %s is not allocated",
+                            pcmk_role_text(rsc->next_role), rsc->id);
             return;
         }
         if ((task != pcmk_action_start) || (start == NULL)

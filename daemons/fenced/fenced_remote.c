@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,6 @@
 #include <regex.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
@@ -370,24 +369,25 @@ undo_op_remap(remote_fencing_op_t *op)
  * \internal
  * \brief Create notification data XML for a fencing operation result
  *
- * \param[in] op      Fencer operation that completed
+ * \param[in,out] parent  Parent XML element for newly created element
+ * \param[in]     op      Fencer operation that completed
  *
  * \return Newly created XML to add as notification data
  * \note The caller is responsible for freeing the result.
  */
 static xmlNode *
-fencing_result2xml(const remote_fencing_op_t *op)
+fencing_result2xml(xmlNode *parent, const remote_fencing_op_t *op)
 {
-    xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+    xmlNode *notify_data = pcmk__xe_create(parent, PCMK__XE_ST_NOTIFY_FENCE);
 
-    crm_xml_add_int(notify_data, "state", op->state);
-    crm_xml_add(notify_data, F_STONITH_TARGET, op->target);
-    crm_xml_add(notify_data, F_STONITH_ACTION, op->action);
-    crm_xml_add(notify_data, F_STONITH_DELEGATE, op->delegate);
-    crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, op->id);
-    crm_xml_add(notify_data, F_STONITH_ORIGIN, op->originator);
-    crm_xml_add(notify_data, F_STONITH_CLIENTID, op->client_id);
-    crm_xml_add(notify_data, F_STONITH_CLIENTNAME, op->client_name);
+    crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
+    crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
+    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ACTION, op->action);
+    crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, op->delegate);
+    crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
+    crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, op->originator);
+    crm_xml_add(notify_data, PCMK__XA_ST_CLIENTID, op->client_id);
+    crm_xml_add(notify_data, PCMK__XA_ST_CLIENTNAME, op->client_name);
 
     return notify_data;
 }
@@ -403,25 +403,26 @@ void
 fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
-    xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
-    xmlNode *notify_data = fencing_result2xml(op);
+    xmlNode *bcast = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
+    xmlNode *wrapper = NULL;
+    xmlNode *notify_data = NULL;
 
     count++;
     crm_trace("Broadcasting result to peers");
-    crm_xml_add(bcast, F_TYPE, T_STONITH_NOTIFY);
-    crm_xml_add(bcast, F_SUBTYPE, "broadcast");
-    crm_xml_add(bcast, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-    crm_xml_add_int(bcast, "count", count);
+    crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
+    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+    crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+    crm_xml_add_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
-        pcmk__xe_set_bool_attr(bcast, F_STONITH_MERGED, true);
+        pcmk__xe_set_bool_attr(bcast, PCMK__XA_ST_OP_MERGED, true);
     }
 
+    wrapper = pcmk__xe_create(bcast, PCMK__XE_ST_CALLDATA);
+    notify_data = fencing_result2xml(wrapper, op);
     stonith__xe_set_result(notify_data, &op->result);
 
-    add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
-    send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
-    free_xml(notify_data);
+    pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, bcast);
     free_xml(bcast);
 
     return;
@@ -447,12 +448,12 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     }
 
     /* Do notification with a clean data object */
-    crm_xml_add_int(data, "state", op->state);
-    crm_xml_add(data, F_STONITH_TARGET, op->target);
-    crm_xml_add(data, F_STONITH_OPERATION, op->action);
+    crm_xml_add_int(data, PCMK_XA_STATE, op->state);
+    crm_xml_add(data, PCMK__XA_ST_TARGET, op->target);
+    crm_xml_add(data, PCMK__XA_ST_OP, op->action);
 
     reply = fenced_construct_reply(op->request, data, &op->result);
-    crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
+    crm_xml_add(reply, PCMK__XA_ST_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
     client = pcmk__find_client_by_id(op->client_id);
@@ -463,10 +464,11 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     }
 
     /* bcast to all local clients that the fencing operation happend */
-    notify_data = fencing_result2xml(op);
-    fenced_send_notification(T_STONITH_NOTIFY_FENCE, &op->result, notify_data);
+    notify_data = fencing_result2xml(NULL, op);
+    fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, &op->result,
+                             notify_data);
     free_xml(notify_data);
-    fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+    fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
 
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
@@ -509,12 +511,13 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 static char *
 delegate_from_xml(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" F_STONITH_DELEGATE, xml, LOG_NEVER);
+    xmlNode *match = get_xpath_object("//@" PCMK__XA_ST_DELEGATE, xml,
+                                      LOG_NEVER);
 
     if (match == NULL) {
-        return crm_element_value_copy(xml, F_ORIG);
+        return crm_element_value_copy(xml, PCMK__XA_SRC);
     } else {
-        return crm_element_value_copy(match, F_STONITH_DELEGATE);
+        return crm_element_value_copy(match, PCMK__XA_ST_DELEGATE);
     }
 }
 
@@ -564,7 +567,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     undo_op_remap(op);
 
     if (data == NULL) {
-        data = create_xml_node(NULL, "remote-op");
+        data = pcmk__xe_create(NULL, "remote-op");
         local_data = data;
 
     } else if (op->delegate == NULL) {
@@ -584,15 +587,15 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         }
     }
 
-    if (dup || (crm_element_value(data, F_STONITH_MERGED) != NULL)) {
+    if (dup || (crm_element_value(data, PCMK__XA_ST_OP_MERGED) != NULL)) {
         op_merged = true;
     }
 
     /* Tell everyone the operation is done, we will continue
      * with doing the local notifications once we receive
      * the broadcast back. */
-    subt = crm_element_value(data, F_SUBTYPE);
-    if (!dup && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
+    subt = crm_element_value(data, PCMK__XA_SUBT);
+    if (!dup && !pcmk__str_eq(subt, PCMK__VALUE_BROADCAST, pcmk__str_none)) {
         /* Defer notification until the bcast message arrives */
         fenced_broadcast_op_result(op, op_merged);
         free_xml(local_data);
@@ -800,7 +803,8 @@ add_required_device(remote_fencing_op_t *op, const char *device)
                                          sort_strings);
 
     if (!match) {
-        op->automatic_list = g_list_prepend(op->automatic_list, strdup(device));
+        op->automatic_list = g_list_prepend(op->automatic_list,
+                                            pcmk__str_copy(device));
     }
 }
 
@@ -833,7 +837,10 @@ set_op_device_list(remote_fencing_op_t * op, GList *devices)
         op->devices_list = NULL;
     }
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
-        op->devices_list = g_list_append(op->devices_list, strdup(lpc->data));
+        const char *device = lpc->data;
+
+        op->devices_list = g_list_append(op->devices_list,
+                                         pcmk__str_copy(device));
     }
     op->devices = op->devices_list;
 }
@@ -1001,6 +1008,7 @@ merge_duplicates(remote_fencing_op_t *op)
     g_hash_table_iter_init(&iter, stonith_remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
         const char *other_action = op_requested_action(other);
+        crm_node_t *node = NULL;
 
         if (!strcmp(op->id, other->id)) {
             continue; // Don't compare against self
@@ -1030,7 +1038,11 @@ merge_duplicates(remote_fencing_op_t *op)
                       op->id, other->id, other->target);
             continue;
         }
-        if (!fencing_peer_active(crm_get_peer(0, other->originator))) {
+
+        node = pcmk__get_node(0, other->originator, NULL,
+                              pcmk__node_search_cluster_member);
+
+        if (!fencing_peer_active(node)) {
             crm_notice("Failing action '%s' targeting %s originating from "
                        "client %s@%s: Originator is dead " CRM_XS " id=%.8s",
                        other->action, other->target, other->client_name,
@@ -1042,8 +1054,8 @@ merge_duplicates(remote_fencing_op_t *op)
         }
         if ((other->total_timeout > 0)
             && (now > (other->total_timeout + other->created))) {
-            crm_trace("%.8s not duplicate of %.8s: old (%ld vs. %ld + %d)",
-                      op->id, other->id, now, other->created,
+            crm_trace("%.8s not duplicate of %.8s: old (%lld vs. %lld + %ds)",
+                      op->id, other->id, (long long)now, (long long)other->created,
                       other->total_timeout);
             continue;
         }
@@ -1055,7 +1067,7 @@ merge_duplicates(remote_fencing_op_t *op)
         if (other->total_timeout == 0) {
             other->total_timeout = op->total_timeout =
                 TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, NULL);
-            crm_trace("Best guess as to timeout used for %.8s: %d",
+            crm_trace("Best guess as to timeout used for %.8s: %ds",
                       other->id, other->total_timeout);
         }
         crm_notice("Merging fencing action '%s' targeting %s originating from "
@@ -1097,12 +1109,12 @@ int
 fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_ERR);
 
     CRM_CHECK(dev != NULL, return EPROTO);
 
     crm_notice("Received manual confirmation that %s has been fenced",
-               pcmk__s(crm_element_value(dev, F_STONITH_TARGET),
+               pcmk__s(crm_element_value(dev, PCMK__XA_ST_TARGET),
                        "unknown target"));
     op = initiate_remote_stonith_op(client, msg, TRUE);
     if (op == NULL) {
@@ -1110,7 +1122,7 @@ fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
     }
     op->state = st_done;
     set_fencing_completed(op);
-    op->delegate = strdup("a human");
+    op->delegate = pcmk__str_copy("a human");
 
     // For the fencer's purposes, the fencing operation is done
     pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -1137,7 +1149,8 @@ void *
 create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_NEVER);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request,
+                                    LOG_NEVER);
     int call_options = 0;
     const char *operation = NULL;
 
@@ -1146,7 +1159,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     /* If this operation is owned by another node, check to make
      * sure we haven't already created this operation. */
     if (peer && dev) {
-        const char *op_id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+        const char *op_id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
 
         CRM_CHECK(op_id != NULL, return NULL);
 
@@ -1158,15 +1171,14 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         }
     }
 
-    op = calloc(1, sizeof(remote_fencing_op_t));
-    CRM_ASSERT(op != NULL);
+    op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
-    crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
+    crm_element_value_int(request, PCMK__XA_ST_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
-    crm_element_value_int(request, F_STONITH_DELAY, &(op->client_delay));
+    crm_element_value_int(request, PCMK__XA_ST_DELAY, &(op->client_delay));
 
     if (peer && dev) {
-        op->id = crm_element_value_copy(dev, F_STONITH_REMOTE_OP_ID);
+        op->id = crm_element_value_copy(dev, PCMK__XA_ST_REMOTE_OP);
     } else {
         op->id = crm_generate_uuid();
     }
@@ -1175,41 +1187,49 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     op->state = st_query;
     op->replies_expected = fencing_active_peers();
-    op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
-    op->originator = crm_element_value_copy(dev, F_STONITH_ORIGIN);
-    op->delegate = crm_element_value_copy(dev, F_STONITH_DELEGATE); /* May not be set */
-    op->created = time(NULL);
+    op->action = crm_element_value_copy(dev, PCMK__XA_ST_DEVICE_ACTION);
 
+    /* The node initiating the stonith operation. If an operation is relayed,
+     * this is the last node the operation lands on. When in standalone mode,
+     * origin is the ID of the client that originated the operation.
+     *
+     * Or may be the name of the function that created the operation.
+     */
+    op->originator = crm_element_value_copy(dev, PCMK__XA_ST_ORIGIN);
     if (op->originator == NULL) {
         /* Local or relayed request */
-        op->originator = strdup(stonith_our_uname);
+        op->originator = pcmk__str_copy(stonith_our_uname);
     }
+
+    // Delegate may not be set
+    op->delegate = crm_element_value_copy(dev, PCMK__XA_ST_DELEGATE);
+    op->created = time(NULL);
 
     CRM_LOG_ASSERT(client != NULL);
-    if (client) {
-        op->client_id = strdup(client);
-    }
-
+    op->client_id = pcmk__str_copy(client);
 
     /* For a RELAY operation, set fenced on the client. */
-    operation = crm_element_value(request, F_STONITH_OPERATION);
+    operation = crm_element_value(request, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         op->client_name = crm_strdup_printf("%s.%lu", crm_system_name,
                                          (unsigned long) getpid());
     } else {
-        op->client_name = crm_element_value_copy(request, F_STONITH_CLIENTNAME);
+        op->client_name = crm_element_value_copy(request,
+                                                 PCMK__XA_ST_CLIENTNAME);
     }
 
-    op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
-    op->request = copy_xml(request);    /* TODO: Figure out how to avoid this */
-    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
+    op->target = crm_element_value_copy(dev, PCMK__XA_ST_TARGET);
+
+    // @TODO Figure out how to avoid copying XML here
+    op->request = pcmk__xml_copy(NULL, request);
+    crm_element_value_int(request, PCMK__XA_ST_CALLOPT, &call_options);
     op->call_options = call_options;
 
-    crm_element_value_int(request, F_STONITH_CALLID, &(op->client_callid));
+    crm_element_value_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
 
     crm_trace("%s new fencing op %s ('%s' targeting %s for client %s, "
-              "base timeout %d, %u %s expected)",
+              "base timeout %ds, %u %s expected)",
               (peer && dev)? "Recorded" : "Generated", op->id, op->action,
               op->target, op->client_name, op->base_timeout,
               op->replies_expected,
@@ -1220,14 +1240,15 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         crm_node_t *node;
 
         pcmk__scan_min_int(op->target, &nodeid, 0);
-        node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
+        node = pcmk__search_node_caches(nodeid, NULL,
+                                        pcmk__node_search_any
+                                        |pcmk__node_search_cluster_cib);
 
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
 
         if (node && node->uname) {
-            free(op->target);
-            op->target = strdup(node->uname);
+            pcmk__str_update(&(op->target), node->uname);
 
         } else {
             crm_warn("Could not expand nodeid '%s' into a host name", op->target);
@@ -1239,7 +1260,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     if (op->state != st_duplicate) {
         /* kick history readers */
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 
     /* safe to trim as long as that doesn't touch pending ops */
@@ -1272,7 +1293,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     if (client) {
         client_id = client->id;
     } else {
-        client_id = crm_element_value(request, F_STONITH_CLIENTID);
+        client_id = crm_element_value(request, PCMK__XA_ST_CLIENTID);
     }
 
     CRM_LOG_ASSERT(client_id != NULL);
@@ -1305,7 +1326,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
 
         default:
             crm_notice("Requesting peer fencing (%s) targeting %s "
-                       CRM_XS " id=%.8s state=%s base_timeout=%d",
+                       CRM_XS " id=%.8s state=%s base_timeout=%ds",
                        op->action, op->target, op->id,
                        stonith_op_state_str(op->state), op->base_timeout);
     }
@@ -1313,24 +1334,24 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
                               NULL, op->call_options);
 
-    crm_xml_add(query, F_STONITH_REMOTE_OP_ID, op->id);
-    crm_xml_add(query, F_STONITH_TARGET, op->target);
-    crm_xml_add(query, F_STONITH_ACTION, op_requested_action(op));
-    crm_xml_add(query, F_STONITH_ORIGIN, op->originator);
-    crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);
-    crm_xml_add(query, F_STONITH_CLIENTNAME, op->client_name);
-    crm_xml_add_int(query, F_STONITH_TIMEOUT, op->base_timeout);
+    crm_xml_add(query, PCMK__XA_ST_REMOTE_OP, op->id);
+    crm_xml_add(query, PCMK__XA_ST_TARGET, op->target);
+    crm_xml_add(query, PCMK__XA_ST_DEVICE_ACTION, op_requested_action(op));
+    crm_xml_add(query, PCMK__XA_ST_ORIGIN, op->originator);
+    crm_xml_add(query, PCMK__XA_ST_CLIENTID, op->client_id);
+    crm_xml_add(query, PCMK__XA_ST_CLIENTNAME, op->client_name);
+    crm_xml_add_int(query, PCMK__XA_ST_TIMEOUT, op->base_timeout);
 
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
-    operation = crm_element_value(request, F_STONITH_OPERATION);
+    operation = crm_element_value(request, PCMK__XA_ST_OP);
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
-        relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID);
+        relay_op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP);
         if (relay_op_id) {
-            crm_xml_add(query, F_STONITH_REMOTE_OP_ID_RELAY, relay_op_id);
+            crm_xml_add(query, PCMK__XA_ST_REMOTE_OP_RELAY, relay_op_id);
         }
     }
 
-    send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
+    pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, query);
     free_xml(query);
 
     query_timeout = op->base_timeout * TIMEOUT_MULTIPLY_FACTOR;
@@ -1347,6 +1368,16 @@ enum find_best_peer_options {
     /*! Skip peers and devices that are not verified */
     FIND_PEER_VERIFIED_ONLY = 0x0004,
 };
+
+static bool
+is_watchdog_fencing(const remote_fencing_op_t *op, const char *device)
+{
+    return (stonith_watchdog_timeout_ms > 0
+            // Only an explicit mismatch is considered not a watchdog fencing.
+            && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_null_matches)
+            && pcmk__is_fencing_action(op->action)
+            && node_does_watchdog_fencing(op->target));
+}
 
 static peer_device_info_t *
 find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer_options options)
@@ -1443,10 +1474,10 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && pcmk_is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
-    if ((stonith_watchdog_timeout_ms > 0)
-        && pcmk__is_fencing_action(op->action)
-        && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
-        && node_does_watchdog_fencing(op->target)) {
+    /* With a simple watchdog fencing configuration without a topology,
+     * "device" is NULL here. Consider it should be done with watchdog fencing.
+     */
+    if (is_watchdog_fencing(op, device)) {
         crm_info("Couldn't contact watchdog-fencing target-node (%s)",
                  op->target);
         /* check_watchdog_fencing_and_wait will log additional info */
@@ -1458,32 +1489,69 @@ stonith_choose_peer(remote_fencing_op_t * op)
 }
 
 static int
+valid_fencing_timeout(int specified_timeout, bool action_specific,
+                      const remote_fencing_op_t *op, const char *device)
+{
+    int timeout = specified_timeout;
+
+    if (!is_watchdog_fencing(op, device)) {
+        return timeout;
+    }
+
+    timeout = (int) QB_MIN(QB_MAX(specified_timeout,
+                                  stonith_watchdog_timeout_ms / 1000), INT_MAX);
+
+    if (timeout > specified_timeout) {
+        if (action_specific) {
+            crm_warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
+                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     "instead",
+                     op->action, specified_timeout, device? device : "watchdog",
+                     timeout, timeout);
+
+        } else {
+            crm_warn("Fencing timeout %ds is too short (must be >= "
+                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     "instead",
+                     specified_timeout, timeout, timeout);
+        }
+    }
+
+    return timeout;
+}
+
+static int
 get_device_timeout(const remote_fencing_op_t *op,
                    const peer_device_info_t *peer, const char *device,
                    bool with_delay)
 {
+    int timeout = op->base_timeout;
     device_properties_t *props;
-    int delay = 0;
+
+    timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
 
     if (!peer || !device) {
-        return op->base_timeout;
+        return timeout;
     }
 
     props = g_hash_table_lookup(peer->devices, device);
     if (!props) {
-        return op->base_timeout;
+        return timeout;
+    }
+
+    if (props->custom_action_timeout[op->phase]) {
+        timeout = valid_fencing_timeout(props->custom_action_timeout[op->phase],
+                                        true, op, device);
     }
 
     // op->client_delay < 0 means disable any static/random fencing delays
     if (with_delay && (op->client_delay >= 0)) {
         // delay_base is eventually limited by delay_max
-        delay = (props->delay_max[op->phase] > 0 ?
-                 props->delay_max[op->phase] : props->delay_base[op->phase]);
+        timeout += (props->delay_max[op->phase] > 0 ?
+                    props->delay_max[op->phase] : props->delay_base[op->phase]);
     }
 
-    return (props->custom_action_timeout[op->phase]?
-            props->custom_action_timeout[op->phase] : op->base_timeout)
-           + delay;
+    return timeout;
 }
 
 struct timeout_data {
@@ -1532,7 +1600,7 @@ static int
 get_op_total_timeout(const remote_fencing_op_t *op,
                      const peer_device_info_t *chosen_peer)
 {
-    int total_timeout = 0;
+    long long total_timeout = 0;
     stonith_topology_t *tp = find_topology_for_host(op->target);
 
     if (pcmk_is_set(op->call_options, st_opt_topology) && tp) {
@@ -1558,17 +1626,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 continue;
             }
             for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
-                /* in case of watchdog-device we add the timeout to the budget
-                   regardless of if we got a reply or not
-                 */
-                if ((stonith_watchdog_timeout_ms > 0)
-                    && pcmk__is_fencing_action(op->action)
-                    && pcmk__str_eq(device_list->data, STONITH_WATCHDOG_ID,
-                                    pcmk__str_none)
-                    && node_does_watchdog_fencing(op->target)) {
-                    total_timeout += stonith_watchdog_timeout_ms / 1000;
-                    continue;
-                }
+                bool found = false;
 
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
@@ -1586,9 +1644,17 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data,
                                                             true);
+                        found = true;
                         break;
                     }
                 }               /* End Loop3: match device with peer that owns device, find device's timeout period */
+
+                /* in case of watchdog-device we add the timeout to the budget
+                   if didn't get a reply
+                 */
+                if (!found && is_watchdog_fencing(op, device_list->data)) {
+                    total_timeout += stonith_watchdog_timeout_ms / 1000;
+                }
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */
 
@@ -1612,15 +1678,23 @@ get_op_total_timeout(const remote_fencing_op_t *op,
 
     } else if (chosen_peer) {
         total_timeout = get_peer_timeout(op, chosen_peer);
+
     } else {
+        total_timeout = valid_fencing_timeout(op->base_timeout, false, op,
+                                              NULL);
+    }
+
+    if (total_timeout <= 0) {
         total_timeout = op->base_timeout;
     }
 
     /* Take any requested fencing delay into account to prevent it from eating
      * up the total timeout.
      */
-    return ((total_timeout ? total_timeout : op->base_timeout)
-            + ((op->client_delay > 0)? op->client_delay : 0));
+    if (op->client_delay > 0) {
+        total_timeout += op->client_delay;
+    }
+    return (int) QB_MIN(total_timeout, INT_MAX);
 }
 
 static void
@@ -1643,9 +1717,9 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     }
 
     crm_trace("Reporting timeout for %s (id=%.8s)", op->client_name, op->id);
-    client_node = crm_element_value(op->request, F_STONITH_CLIENTNODE);
-    call_id = crm_element_value(op->request, F_STONITH_CALLID);
-    client_id = crm_element_value(op->request, F_STONITH_CLIENTID);
+    client_node = crm_element_value(op->request, PCMK__XA_ST_CLIENTNODE);
+    call_id = crm_element_value(op->request, PCMK__XA_ST_CALLID);
+    client_id = crm_element_value(op->request, PCMK__XA_ST_CLIENTID);
     if (!client_node || !call_id || !client_id) {
         return;
     }
@@ -1658,12 +1732,14 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 
     /* The client is connected to another node, relay this update to them */
     update = stonith_create_op(op->client_callid, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
-    crm_xml_add(update, F_STONITH_REMOTE_OP_ID, op->id);
-    crm_xml_add(update, F_STONITH_CLIENTID, client_id);
-    crm_xml_add(update, F_STONITH_CALLID, call_id);
-    crm_xml_add_int(update, F_STONITH_TIMEOUT, op_timeout);
+    crm_xml_add(update, PCMK__XA_ST_REMOTE_OP, op->id);
+    crm_xml_add(update, PCMK__XA_ST_CLIENTID, client_id);
+    crm_xml_add(update, PCMK__XA_ST_CALLID, call_id);
+    crm_xml_add_int(update, PCMK__XA_ST_TIMEOUT, op_timeout);
 
-    send_cluster_message(crm_get_peer(0, client_node), crm_msg_stonith_ng, update, FALSE);
+    pcmk__cluster_send_message(pcmk__get_node(0, client_node, NULL,
+                                              pcmk__node_search_cluster_member),
+                               crm_msg_stonith_ng, update);
 
     free_xml(update);
 
@@ -1742,17 +1818,18 @@ static gboolean
 check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 {
     if (node_does_watchdog_fencing(op->target)) {
+        guint timeout_ms = QB_MIN(stonith_watchdog_timeout_ms, UINT_MAX);
 
-        crm_notice("Waiting %lds for %s to self-fence (%s) for "
+        crm_notice("Waiting %s for %s to self-fence (%s) for "
                    "client %s " CRM_XS " id=%.8s",
-                   (stonith_watchdog_timeout_ms / 1000),
-                   op->target, op->action, op->client_name, op->id);
+                   pcmk__readable_interval(timeout_ms), op->target, op->action,
+                   op->client_name, op->id);
 
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
         }
-        op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms,
-                                         remote_op_watchdog_done, op);
+        op->op_timer_one = g_timeout_add(timeout_ms, remote_op_watchdog_done,
+                                         op);
         return TRUE;
     } else {
         crm_debug("Skipping fallback to watchdog-fencing as %s is "
@@ -1819,7 +1896,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, peer);
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
-        crm_info("Total timeout set to %d for peer's fencing targeting %s for %s"
+        crm_info("Total timeout set to %ds for peer's fencing targeting %s for %s"
                  CRM_XS "id=%.8s",
                  op->total_timeout, op->target, op->client_name, op->id);
     }
@@ -1846,6 +1923,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     if (peer) {
         int timeout_one = 0;
         xmlNode *remote_op = stonith_create_op(op->client_callid, op->id, STONITH_OP_FENCE, NULL, 0);
+        const crm_node_t *peer_node =
+            pcmk__get_node(0, peer->host, NULL,
+                           pcmk__node_search_cluster_member);
 
         if (op->client_delay > 0) {
            /* Take requested fencing delay into account to prevent it from
@@ -1854,15 +1934,15 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * op->client_delay;
         }
 
-        crm_xml_add(remote_op, F_STONITH_REMOTE_OP_ID, op->id);
-        crm_xml_add(remote_op, F_STONITH_TARGET, op->target);
-        crm_xml_add(remote_op, F_STONITH_ACTION, op->action);
-        crm_xml_add(remote_op, F_STONITH_ORIGIN, op->originator);
-        crm_xml_add(remote_op, F_STONITH_CLIENTID, op->client_id);
-        crm_xml_add(remote_op, F_STONITH_CLIENTNAME, op->client_name);
-        crm_xml_add_int(remote_op, F_STONITH_TIMEOUT, timeout);
-        crm_xml_add_int(remote_op, F_STONITH_CALLOPTS, op->call_options);
-        crm_xml_add_int(remote_op, F_STONITH_DELAY, op->client_delay);
+        crm_xml_add(remote_op, PCMK__XA_ST_REMOTE_OP, op->id);
+        crm_xml_add(remote_op, PCMK__XA_ST_TARGET, op->target);
+        crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ACTION, op->action);
+        crm_xml_add(remote_op, PCMK__XA_ST_ORIGIN, op->originator);
+        crm_xml_add(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
+        crm_xml_add(remote_op, PCMK__XA_ST_CLIENTNAME, op->client_name);
+        crm_xml_add_int(remote_op, PCMK__XA_ST_TIMEOUT, timeout);
+        crm_xml_add_int(remote_op, PCMK__XA_ST_CALLOPT, op->call_options);
+        crm_xml_add_int(remote_op, PCMK__XA_ST_DELAY, op->client_delay);
 
         if (device) {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR *
@@ -1871,14 +1951,15 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
                        op->client_name, timeout_one);
-            crm_xml_add(remote_op, F_STONITH_DEVICE, device);
+            crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ID, device);
 
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
-                       CRM_XS " for client %s (%ds, %lds)",
+                       CRM_XS " for client %s (%ds, %s)",
                        peer->host, op->action, op->target, op->client_name,
-                       timeout_one, stonith_watchdog_timeout_ms);
+                       timeout_one,
+                       pcmk__readable_interval(stonith_watchdog_timeout_ms));
         }
 
         op->state = st_exec;
@@ -1887,11 +1968,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = 0;
         }
 
-        if (!((stonith_watchdog_timeout_ms > 0)
-              && (pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_none)
-                  || (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
-                      && pcmk__is_fencing_action(op->action)))
-              && check_watchdog_fencing_and_wait(op))) {
+        if (!is_watchdog_fencing(op, device)
+            || !check_watchdog_fencing_and_wait(op)) {
 
             /* Some thoughts about self-fencing cases reaching this point:
                - Actually check in check_watchdog_fencing_and_wait
@@ -1907,8 +1985,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  enabled for a node but the watchdog-fencing-device isn't
                  explicitly chosen for suicide. Local pe-execution in sbd
                  may detect the node as unclean and lead to timely suicide.
-                 Otherwise the selection of stonith-watchdog-timeout at
-                 least is questionable.
+                 Otherwise the selection of PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 at least is questionable.
              */
 
             /* coming here we're not waiting for watchdog timeout -
@@ -1916,7 +1994,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
 
-        send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
+        pcmk__cluster_send_message(peer_node, crm_msg_stonith_ng, remote_op);
         peer->tried = TRUE;
         free_xml(remote_op);
         return;
@@ -1948,11 +2026,15 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
 
-        if(stonith_watchdog_timeout_ms > 0 && pcmk__str_eq(device,
-           STONITH_WATCHDOG_ID, pcmk__str_null_matches)) {
-            if (check_watchdog_fencing_and_wait(op)) {
-                return;
-            }
+        if (is_watchdog_fencing(op, device)
+            && check_watchdog_fencing_and_wait(op)) {
+            /* Consider a watchdog fencing targeting an offline node executing
+             * once it starts waiting for the target to self-fence. So that when
+             * the query timer pops, remote_op_query_timeout() considers the
+             * fencing already in progress.
+             */
+            op->state = st_exec;
+            return;
         }
 
         if (op->state == st_query) {
@@ -2078,24 +2160,25 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
                       enum st_remap_phase phase, device_properties_t *props)
 {
     props->custom_action_timeout[phase] = 0;
-    crm_element_value_int(xml, F_STONITH_ACTION_TIMEOUT,
+    crm_element_value_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
                           &props->custom_action_timeout[phase]);
     if (props->custom_action_timeout[phase]) {
-        crm_trace("Peer %s with device %s returned %s action timeout %d",
+        crm_trace("Peer %s with device %s returned %s action timeout %ds",
                   peer, device, action, props->custom_action_timeout[phase]);
     }
 
     props->delay_max[phase] = 0;
-    crm_element_value_int(xml, F_STONITH_DELAY_MAX, &props->delay_max[phase]);
+    crm_element_value_int(xml, PCMK__XA_ST_DELAY_MAX, &props->delay_max[phase]);
     if (props->delay_max[phase]) {
-        crm_trace("Peer %s with device %s returned maximum of random delay %d for %s",
+        crm_trace("Peer %s with device %s returned maximum of random delay %ds for %s",
                   peer, device, props->delay_max[phase], action);
     }
 
     props->delay_base[phase] = 0;
-    crm_element_value_int(xml, F_STONITH_DELAY_BASE, &props->delay_base[phase]);
+    crm_element_value_int(xml, PCMK__XA_ST_DELAY_BASE,
+                          &props->delay_base[phase]);
     if (props->delay_base[phase]) {
-        crm_trace("Peer %s with device %s returned base delay %d for %s",
+        crm_trace("Peer %s with device %s returned base delay %ds for %s",
                   peer, device, props->delay_base[phase], action);
     }
 
@@ -2103,7 +2186,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         int required = 0;
 
-        crm_element_value_int(xml, F_STONITH_DEVICE_REQUIRED, &required);
+        crm_element_value_int(xml, PCMK__XA_ST_REQUIRED, &required);
         if (required) {
             crm_trace("Peer %s requires device %s to execute for action %s",
                       peer, device, action);
@@ -2114,7 +2197,7 @@ parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
     /* If a reboot is remapped to off+on, it's possible that a node is allowed
      * to perform one action but not another.
      */
-    if (pcmk__xe_attr_is_true(xml, F_STONITH_ACTION_DISALLOWED)) {
+    if (pcmk__xe_attr_is_true(xml, PCMK__XA_ST_ACTION_DISALLOWED)) {
         props->disallowed[phase] = TRUE;
         crm_trace("Peer %s is disallowed from executing %s for device %s",
                   peer, action, device);
@@ -2136,37 +2219,39 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
 {
     xmlNode *child;
     int verified = 0;
-    device_properties_t *props = calloc(1, sizeof(device_properties_t));
+    device_properties_t *props =
+        pcmk__assert_alloc(1, sizeof(device_properties_t));
     int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
 
     /* Add a new entry to this peer's devices list */
-    CRM_ASSERT(props != NULL);
-    g_hash_table_insert(peer->devices, strdup(device), props);
+    g_hash_table_insert(peer->devices, pcmk__str_copy(device), props);
 
     /* Peers with verified (monitored) access will be preferred */
-    crm_element_value_int(xml, F_STONITH_DEVICE_VERIFIED, &verified);
+    crm_element_value_int(xml, PCMK__XA_ST_MONITOR_VERIFIED, &verified);
     if (verified) {
         crm_trace("Peer %s has confirmed a verified device %s",
                   peer->host, device);
         props->verified = TRUE;
     }
 
-    crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
+    crm_element_value_int(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, &flags);
     props->device_support_flags = flags;
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
-    for (child = pcmk__xml_first_child(xml); child != NULL;
-         child = pcmk__xml_next(child)) {
+    for (child = pcmk__xe_first_child(xml, NULL, NULL, NULL); child != NULL;
+         child = pcmk__xe_next(child)) {
         /* Replies for "reboot" operations will include the action-specific
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
          */
-        if (pcmk__str_eq(ID(child), PCMK_ACTION_OFF, pcmk__str_none)) {
+        if (pcmk__str_eq(pcmk__xe_id(child), PCMK_ACTION_OFF, pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, PCMK_ACTION_OFF,
                                   op, st_phase_off, props);
-        } else if (pcmk__str_eq(ID(child), PCMK_ACTION_ON, pcmk__str_none)) {
+
+        } else if (pcmk__str_eq(pcmk__xe_id(child), PCMK_ACTION_ON,
+                                pcmk__str_none)) {
             parse_action_specific(child, peer->host, device, PCMK_ACTION_ON,
                                   op, st_phase_on, props);
         }
@@ -2188,19 +2273,17 @@ static peer_device_info_t *
 add_result(remote_fencing_op_t *op, const char *host, int ndevices,
            const xmlNode *xml)
 {
-    peer_device_info_t *peer = calloc(1, sizeof(peer_device_info_t));
+    peer_device_info_t *peer = pcmk__assert_alloc(1,
+                                                  sizeof(peer_device_info_t));
     xmlNode *child;
 
-    // cppcheck seems not to understand the abort logic in CRM_CHECK
-    // cppcheck-suppress memleak
-    CRM_CHECK(peer != NULL, return NULL);
-    peer->host = strdup(host);
+    peer->host = pcmk__str_copy(host);
     peer->devices = pcmk__strkey_table(free, free);
 
     /* Each child element describes one capable device available to the peer */
-    for (child = pcmk__xml_first_child(xml); child != NULL;
-         child = pcmk__xml_next(child)) {
-        const char *device = ID(child);
+    for (child = pcmk__xe_first_child(xml, NULL, NULL, NULL); child != NULL;
+         child = pcmk__xe_next(child)) {
+        const char *device = pcmk__xe_id(child);
 
         if (device) {
             add_device_properties(child, op, peer, device);
@@ -2241,16 +2324,16 @@ process_remote_stonith_query(xmlNode *msg)
     remote_fencing_op_t *op = NULL;
     peer_device_info_t *peer = NULL;
     uint32_t replies_expected;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+    id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return -EPROTO);
 
-    dev = get_xpath_object("//@" F_STONITH_AVAILABLE_DEVICES, msg, LOG_ERR);
+    dev = get_xpath_object("//@" PCMK__XA_ST_AVAILABLE_DEVICES, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
-    crm_element_value_int(dev, F_STONITH_AVAILABLE_DEVICES, &ndevices);
+    crm_element_value_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
 
     op = g_hash_table_lookup(stonith_remote_op_list, id);
     if (op == NULL) {
@@ -2266,7 +2349,7 @@ process_remote_stonith_query(xmlNode *msg)
     if ((++op->replies >= replies_expected) && (op->state == st_query)) {
         have_all_replies = TRUE;
     }
-    host = crm_element_value(msg, F_ORIG);
+    host = crm_element_value(msg, PCMK__XA_SRC);
     host_is_target = pcmk__str_eq(host, op->target, pcmk__str_casei);
 
     crm_info("Query result %d of %d from %s for %s/%s (%d device%s) %s",
@@ -2339,12 +2422,12 @@ fenced_process_fencing_reply(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(dev != NULL, return);
 
-    id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
+    id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return);
 
     dev = stonith__find_xe_with_result(msg);
@@ -2352,7 +2435,7 @@ fenced_process_fencing_reply(xmlNode *msg)
 
     stonith__xe_get_result(dev, &result);
 
-    device = crm_element_value(dev, F_STONITH_DEVICE);
+    device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
     if (stonith_remote_op_list) {
         op = g_hash_table_lookup(stonith_remote_op_list, id);
@@ -2360,7 +2443,7 @@ fenced_process_fencing_reply(xmlNode *msg)
 
     if ((op == NULL) && pcmk__result_ok(&result)) {
         /* Record successful fencing operations */
-        const char *client_id = crm_element_value(dev, F_STONITH_CLIENTID);
+        const char *client_id = crm_element_value(dev, PCMK__XA_ST_CLIENTID);
 
         op = create_remote_stonith_op(client_id, dev, TRUE);
     }
@@ -2383,7 +2466,9 @@ fenced_process_fencing_reply(xmlNode *msg)
         return;
     }
 
-    if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
+    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
+                     PCMK__VALUE_BROADCAST, pcmk__str_none)) {
+
         if (pcmk__result_ok(&op->result)) {
             op->state = st_done;
         } else {
@@ -2412,7 +2497,7 @@ fenced_process_fencing_reply(xmlNode *msg)
             return;
         }
 
-        device = crm_element_value(msg, F_STONITH_DEVICE);
+        device = crm_element_value(msg, PCMK__XA_ST_DEVICE_ID);
 
         if ((op->phase == 2) && !pcmk__result_ok(&op->result)) {
             /* A remapped "on" failed, but the node was already turned off

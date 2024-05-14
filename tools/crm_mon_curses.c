@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <crm/common/output.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__history_description()
 #include <crm/pengine/internal.h>
 #include <glib.h>
 #include <pacemaker-internal.h>
@@ -23,10 +23,6 @@
 #include "crm_mon.h"
 
 #if CURSES_ENABLED
-
-GOptionEntry crm_mon_curses_output_entries[] = {
-    { NULL }
-};
 
 typedef struct curses_list_data_s {
     unsigned int len;
@@ -39,6 +35,14 @@ typedef struct private_data_s {
 } private_data_t;
 
 static void
+free_list_data(gpointer data) {
+    curses_list_data_t *list_data = data;
+
+    free(list_data->singular_noun);
+    free(list_data->plural_noun);
+}
+
+static void
 curses_free_priv(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
@@ -48,7 +52,7 @@ curses_free_priv(pcmk__output_t *out) {
 
     priv = out->priv;
 
-    g_queue_free(priv->parent_q);
+    g_queue_free_full(priv->parent_q, free_list_data);
     free(priv);
     out->priv = NULL;
 }
@@ -201,10 +205,10 @@ curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *pl
         va_end(ap);
     }
 
-    new_list = calloc(1, sizeof(curses_list_data_t));
+    new_list = pcmk__assert_alloc(1, sizeof(curses_list_data_t));
     new_list->len = 0;
-    pcmk__str_update(&new_list->singular_noun, singular_noun);
-    pcmk__str_update(&new_list->plural_noun, plural_noun);
+    new_list->singular_noun = pcmk__str_copy(singular_noun);
+    new_list->plural_noun = pcmk__str_copy(plural_noun);
 
     g_queue_push_tail(priv->parent_q, new_list);
 }
@@ -262,7 +266,7 @@ curses_end_list(pcmk__output_t *out) {
         }
     }
 
-    free(node);
+    free_list_data(node);
 }
 
 static bool
@@ -310,7 +314,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
             free(*dest);
         }
 
-        *dest = calloc(1, 1024);
+        *dest = pcmk__assert_alloc(1, 1024);
         /* On older systems, scanw is defined as taking a char * for its first argument,
          * while newer systems rightly want a const char *.  Accomodate both here due
          * to building with -Werror.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2021 the Pacemaker project contributors
+ * Copyright 2006-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,6 +43,7 @@
 /* Where to keep scheduler outputs */
 #undef PE_STATE_DIR
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /* Location to store core files produced by Pacemaker daemons */
 #undef CRM_CORE_DIR
 
@@ -63,6 +64,7 @@
 /* Set of enabled features */
 #undef CRM_FEATURES
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 /* Support the Corosync messaging and membership layer */
 #undef SUPPORT_COROSYNC
 
@@ -70,6 +72,7 @@
 #undef SUPPORT_SYSTEMD
 
 /* Support upstart based system services */
+//! \deprecated Do not use (always treat as 0)
 #undef SUPPORT_UPSTART
 
 #endif /* CRM_CONFIG__H */

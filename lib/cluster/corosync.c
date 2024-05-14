@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,32 +9,30 @@
 
 #include <crm_internal.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <inttypes.h>                   // PRIu64, PRIx32
 #include <netdb.h>
-#include <inttypes.h>   // PRIu64
-
-#include <bzlib.h>
-
-#include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
+#include <netinet/in.h>
+#include <stdbool.h>
+#include <sys/socket.h>
 #include <sys/utsname.h>
 
-#include <qb/qbipcc.h>
-#include <qb/qbutil.h>
-
+#include <bzlib.h>
+#include <corosync/cfg.h>
+#include <corosync/cmap.h>
 #include <corosync/corodefs.h>
 #include <corosync/corotypes.h>
 #include <corosync/hdb.h>
-#include <corosync/cfg.h>
-#include <corosync/cmap.h>
 #include <corosync/quorum.h>
+#include <qb/qbipcc.h>
+#include <qb/qbutil.h>
 
-#include <crm/msg_xml.h>
+#include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_internal.h>    // PCMK__SPECIAL_PID
+#include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
 static quorum_handle_t pcmk_quorum_handle = 0;
@@ -54,7 +52,9 @@ static gboolean (*quorum_app_callback)(unsigned long long seq,
 char *
 pcmk__corosync_uuid(const crm_node_t *node)
 {
-    if ((node != NULL) && is_corosync_cluster()) {
+    CRM_ASSERT(pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync);
+
+    if (node != NULL) {
         if (node->id > 0) {
             return crm_strdup_printf("%u", node->id);
         } else {
@@ -114,7 +114,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     int rv;
 
     if (nodeid == 0) {
-        nodeid = get_local_nodeid(0);
+        nodeid = pcmk__cpg_local_nodeid(0);
     }
 
     if (cmap_handle == 0 && local_handle == 0) {
@@ -217,13 +217,14 @@ bail:
  * \internal
  * \brief Disconnect from Corosync cluster
  *
- * \param[in,out] cluster  Cluster connection to disconnect
+ * \param[in,out] cluster  Cluster object to disconnect
  */
 void
-pcmk__corosync_disconnect(crm_cluster_t *cluster)
+pcmk__corosync_disconnect(pcmk_cluster_t *cluster)
 {
-    cluster_disconnect_cpg(cluster);
-    if (pcmk_quorum_handle) {
+    pcmk__cpg_disconnect(cluster);
+
+    if (pcmk_quorum_handle != 0) {
         quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
     }
@@ -309,12 +310,13 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         crm_debug("Member[%d] %u ", i, id);
 
         /* Get this node's peer cache entry (adding one if not already there) */
-        node = crm_get_peer(id, NULL);
+        node = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster_member);
         if (node->uname == NULL) {
             char *name = pcmk__corosync_name(0, id);
 
             crm_info("Obtaining name for new node %u", id);
-            node = crm_get_peer(id, name);
+            node = pcmk__get_node(id, name, NULL,
+                                  pcmk__node_search_cluster_member);
             free(name);
         }
 
@@ -445,106 +447,101 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \internal
  * \brief Connect to Corosync cluster layer
  *
- * \param[in,out] cluster   Initialized cluster object to connect
+ * \param[in,out] cluster  Initialized cluster object to connect
+ *
+ * \return Standard Pacemaker return code
  */
-gboolean
-pcmk__corosync_connect(crm_cluster_t *cluster)
+int
+pcmk__corosync_connect(pcmk_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
-    enum cluster_type_e stack = get_cluster_type();
+    const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
+    const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
+    int rc = pcmk_rc_ok;
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
-    if (stack != pcmk_cluster_corosync) {
-        crm_err("Invalid cluster type: %s " CRM_XS " stack=%d",
-                name_for_cluster_type(stack), stack);
-        return FALSE;
+    if (cluster_layer != pcmk_cluster_layer_corosync) {
+        crm_err("Invalid cluster layer: %s " CRM_XS " cluster_layer=%d",
+                cluster_layer_s, cluster_layer);
+        return EINVAL;
     }
 
-    if (!cluster_connect_cpg(cluster)) {
-        // Error message was logged by cluster_connect_cpg()
-        return FALSE;
+    rc = pcmk__cpg_connect(cluster);
+    if (rc != pcmk_rc_ok) {
+        // Error message was logged by pcmk__cpg_connect()
+        return rc;
     }
-    crm_info("Connection to %s established", name_for_cluster_type(stack));
+    crm_info("Connection to %s established", cluster_layer_s);
 
-    cluster->nodeid = get_local_nodeid(0);
+    cluster->nodeid = pcmk__cpg_local_nodeid(0);
     if (cluster->nodeid == 0) {
         crm_err("Could not determine local node ID");
-        return FALSE;
+        return ENXIO;
     }
 
-    cluster->uname = get_node_name(0);
+    cluster->uname = pcmk__cluster_node_name(0);
     if (cluster->uname == NULL) {
         crm_err("Could not determine local node name");
-        return FALSE;
+        return ENXIO;
     }
 
     // Ensure local node always exists in peer cache
-    peer = crm_get_peer(cluster->nodeid, cluster->uname);
+    peer = pcmk__get_node(cluster->nodeid, cluster->uname, NULL,
+                          pcmk__node_search_cluster_member);
     cluster->uuid = pcmk__corosync_uuid(peer);
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
  * \internal
  * \brief Check whether a Corosync cluster is active
  *
- * \return pcmk_cluster_corosync if Corosync is found, else pcmk_cluster_unknown
+ * \return \c true if Corosync is found active, or \c false otherwise
  */
-enum cluster_type_e
-pcmk__corosync_detect(void)
+bool
+pcmk__corosync_is_active(void)
 {
-    int rc = CS_OK;
     cmap_handle_t handle;
+    int rc = pcmk__init_cmap(&handle);
 
-    rc = pcmk__init_cmap(&handle);
-
-    switch(rc) {
-        case CS_OK:
-            break;
-        case CS_ERR_SECURITY:
-            crm_debug("Failed to initialize the cmap API: Permission denied (%d)", rc);
-            /* It's there, we just can't talk to it.
-             * Good enough for us to identify as 'corosync'
-             */
-            return pcmk_cluster_corosync;
-
-        default:
-            crm_info("Failed to initialize the cmap API: %s (%d)",
-                     pcmk__cs_err_str(rc), rc);
-            return pcmk_cluster_unknown;
+    if (rc == CS_OK) {
+        cmap_finalize(handle);
+        return true;
     }
 
-    cmap_finalize(handle);
-    return pcmk_cluster_corosync;
+    crm_info("Failed to initialize the cmap API: %s (%d)",
+             pcmk__cs_err_str(rc), rc);
+    return false;
 }
 
 /*!
+ * \internal
  * \brief Check whether a Corosync cluster peer is active
  *
  * \param[in] node  Node to check
  *
- * \return TRUE if \p node is an active Corosync peer, otherwise FALSE
+ * \return \c true if \p node is an active Corosync peer, or \c false otherwise
  */
-gboolean
-crm_is_corosync_peer_active(const crm_node_t *node)
+bool
+pcmk__corosync_is_peer_active(const crm_node_t *node)
 {
     if (node == NULL) {
         crm_trace("Corosync peer inactive: NULL");
-        return FALSE;
-
-    } else if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
+        return false;
+    }
+    if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_none)) {
         crm_trace("Corosync peer %s inactive: state=%s",
                   node->uname, node->state);
-        return FALSE;
-
-    } else if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
-        crm_trace("Corosync peer %s inactive: processes=%.16x",
-                  node->uname, node->processes);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
+        crm_trace("Corosync peer %s inactive " CRM_XS " processes=%.16" PRIx32,
+                  node->uname, node->processes);
+        return false;
+    }
+    return true;
 }
 
 /*!
@@ -606,7 +603,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         goto bail;
     }
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
     crm_trace("Initializing Corosync node list");
     for (lpc = 0; TRUE; lpc++) {
         uint32_t nodeid = 0;
@@ -640,17 +637,17 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
 
         if (nodeid > 0 || name != NULL) {
             crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
-            crm_get_peer(nodeid, name);
+            pcmk__get_node(nodeid, name, NULL, pcmk__node_search_cluster_member);
         }
 
         if (nodeid > 0 && name != NULL) {
             any = true;
 
             if (xml_parent) {
-                xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
+                xmlNode *node = pcmk__xe_create(xml_parent, PCMK_XE_NODE);
 
                 crm_xml_set_id(node, "%u", nodeid);
-                crm_xml_add(node, XML_ATTR_UNAME, name);
+                crm_xml_add(node, PCMK_XA_UNAME, name);
             }
         }
 
@@ -812,3 +809,17 @@ bail:
     cmap_finalize(cmap_handle);
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+gboolean
+crm_is_corosync_peer_active(const crm_node_t *node)
+{
+    return pcmk__corosync_is_peer_active(node);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,14 +38,21 @@ enum cib_variant {
 };
 
 enum cib_state {
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_connected_command,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_connected_query,
+
     cib_disconnected
 };
 
 enum cib_conn_type {
     cib_command,
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_query,
+
     cib_no_connection,
     cib_command_nonblocking,
 };
@@ -78,6 +85,7 @@ enum cib_call_options {
      * non-legacy mode.
      */
 
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated This value will be removed in a future release
     cib_scope_local     = (1 << 8),
 
@@ -99,7 +107,31 @@ enum cib_call_options {
      */
     cib_transaction     = (1 << 10),
 
+    /*!
+     * \brief Treat new attribute values as atomic score updates where possible
+     *
+     * This option takes effect when updating XML attributes. For an attribute
+     * named \c "name", if the new value is \c "name++" or \c "name+=X" for some
+     * score \c X, the new value is set as follows:
+     * * If attribute \c "name" is not already set to some value in the element
+     *   being updated, the new value is set as a literal string.
+     * * If the new value is \c "name++", then the attribute is set to its
+     *   existing value (parsed as a score) plus 1.
+     * * If the new value is \c "name+=X" for some score \c X, then the
+     *   attribute is set to its existing value plus \c X, where the existing
+     *   value and \c X are parsed and added as scores.
+     *
+     * Scores are integer values capped at \c INFINITY and \c -INFINITY. Refer
+     * to Pacemaker Explained and to the \c char2score() function for more
+     * details on scores, including how they're parsed and added.
+     *
+     * Note: This is implemented only for modify operations.
+     */
+    cib_score_update    = (1 << 11),
+
+    // NOTE: sbd (as of at least 1.5.2) uses this value
     cib_sync_call       = (1 << 12),
+
     cib_no_mtime        = (1 << 13),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
@@ -123,13 +155,16 @@ enum cib_call_options {
 typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
 
     //! \deprecated This method will be removed and should not be used
     int (*signon_raw) (cib_t *cib, const char *name, enum cib_conn_type type,
                        int *event_fd);
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*signoff) (cib_t *cib);
+
     int (*free) (cib_t *cib);
 
     //! \deprecated This method will be removed and should not be used
@@ -137,24 +172,32 @@ typedef struct cib_api_operations_s {
                                                           int callid, int rc,
                                                           xmlNode *output));
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*add_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));
+
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*del_notify_callback) (cib_t *cib, const char *event,
                                 void (*callback) (const char *event,
                                                   xmlNode *msg));
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*set_connection_dnotify) (cib_t *cib,
                                    void (*dnotify) (gpointer user_data));
 
     //! \deprecated This method will be removed and should not be used
     int (*inputfd) (cib_t *cib);
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated This method will be removed and should not be used
     int (*noop) (cib_t *cib, int call_options);
 
     int (*ping) (cib_t *cib, xmlNode **output_data, int call_options);
+
+    // NOTE: sbd (as of at least 1.5.2) uses this
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
+
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
@@ -175,6 +218,11 @@ typedef struct cib_api_operations_s {
                       int call_options);
     int (*upgrade) (cib_t *cib, int call_options);
     int (*bump_epoch) (cib_t *cib, int call_options);
+
+    /*!
+     * The \c <failed> element in the reply to a failed creation call is
+     * deprecated since 2.1.8.
+     */
     int (*create) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
     int (*modify) (cib_t *cib, const char *section, xmlNode *data,
@@ -317,17 +365,22 @@ typedef struct cib_api_operations_s {
      * \brief Set the user as whom all CIB requests via methods will be executed
      *
      * By default, the value of the \c CIB_user environment variable is used if
-     * set. Otherwise, \c root is used.
+     * set. Otherwise, the current effective user is used.
      *
      * \param[in,out] cib   CIB connection
      * \param[in]     user  Name of user whose permissions to use when
      *                      processing requests
      */
     void (*set_user)(cib_t *cib, const char *user);
+
+    int (*fetch_schemas)(cib_t *cib, xmlNode **output_data, const char *after_ver,
+                         int call_options);
 } cib_api_operations_t;
 
 struct cib_s {
+    // NOTE: sbd (as of at least 1.5.2) uses this
     enum cib_state state;
+
     enum cib_conn_type type;
     enum cib_variant variant;
 
@@ -342,6 +395,7 @@ struct cib_s {
     void (*op_callback) (const xmlNode *msg, int call_id, int rc,
                          xmlNode *output);
 
+    // NOTE: sbd (as of at least 1.5.2) uses this
     cib_api_operations_t *cmds;
 
     xmlNode *transaction;

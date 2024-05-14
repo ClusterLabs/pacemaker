@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -493,24 +493,25 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 {
     int rc = pcmk_rc_ok;
     static uint64_t id = 0;
-    char *xml_text = NULL;
+    GString *xml_text = NULL;
 
     struct iovec iov[2];
     struct remote_header_v0 *header;
 
     CRM_CHECK((remote != NULL) && (msg != NULL), return EINVAL);
 
-    xml_text = dump_xml_unformatted(msg);
-    CRM_CHECK(xml_text != NULL, return EINVAL);
+    xml_text = g_string_sized_new(1024);
+    pcmk__xml_string(msg, 0, xml_text, 0);
+    CRM_CHECK(xml_text->len > 0,
+              g_string_free(xml_text, TRUE); return EINVAL);
 
-    header = calloc(1, sizeof(struct remote_header_v0));
-    CRM_ASSERT(header != NULL);
+    header = pcmk__assert_alloc(1, sizeof(struct remote_header_v0));
 
     iov[0].iov_base = header;
     iov[0].iov_len = sizeof(struct remote_header_v0);
 
-    iov[1].iov_base = xml_text;
-    iov[1].iov_len = 1 + strlen(xml_text);
+    iov[1].iov_len = 1 + xml_text->len;
+    iov[1].iov_base = g_string_free(xml_text, FALSE);
 
     id++;
     header->id = id;
@@ -527,7 +528,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
     }
 
     free(iov[0].iov_base);
-    free(iov[1].iov_base);
+    g_free((gchar *) iov[1].iov_base);
     return rc;
 }
 
@@ -554,7 +555,8 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     if (header->payload_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->payload_uncompressed;
-        char *uncompressed = calloc(1, header->payload_offset + size_u);
+        char *uncompressed =
+            pcmk__assert_alloc(1, header->payload_offset + size_u);
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->payload_compressed, size_u);
@@ -592,7 +594,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 
     CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
 
-    xml = string2xml(remote->buffer + header->payload_offset);
+    xml = pcmk__xml_parse(remote->buffer + header->payload_offset);
     if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
         crm_warn("Couldn't parse v%d message, we only understand v%d",
                  header->version, REMOTE_MSG_VERSION);
@@ -978,7 +980,7 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
         return rc;
     }
 
-    cb_data = calloc(1, sizeof(struct tcp_async_cb_data));
+    cb_data = pcmk__assert_alloc(1, sizeof(struct tcp_async_cb_data));
     cb_data->userdata = userdata;
     cb_data->callback = callback;
     cb_data->sock = sock;
@@ -1206,6 +1208,9 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     struct sockaddr_storage addr;
     socklen_t laddr = sizeof(addr);
     char addr_str[INET6_ADDRSTRLEN];
+#ifdef TCP_USER_TIMEOUT
+    long sbd_timeout = 0;
+#endif
 
     /* accept the connection */
     memset(&addr, 0, sizeof(addr));
@@ -1229,9 +1234,11 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     }
 
 #ifdef TCP_USER_TIMEOUT
-    if (pcmk__get_sbd_timeout() > 0) {
+    sbd_timeout = pcmk__get_sbd_watchdog_timeout();
+    if (sbd_timeout > 0) {
         // Time to fail and retry before watchdog
-        unsigned int optval = (unsigned int) pcmk__get_sbd_timeout() / 2;
+        long half = sbd_timeout / 2;
+        unsigned int optval = (half <= UINT_MAX)? half : UINT_MAX;
 
         rc = setsockopt(*csock, SOL_TCP, TCP_USER_TIMEOUT,
                         &optval, sizeof(optval));

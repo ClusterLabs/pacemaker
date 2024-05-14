@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,10 +15,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-GOptionEntry pcmk__log_output_entries[] = {
-    { NULL }
-};
 
 typedef struct private_data_s {
     /* gathered in log_begin_list */
@@ -165,8 +161,8 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    node = create_xml_node(NULL, name);
-    xmlNodeSetContent(node, (pcmkXmlStr) buf);
+    node = pcmk__xe_create(NULL, name);
+    pcmk__xe_set_content(node, "%s", buf);
     do_crm_log_xml(priv->log_level, name, node);
     free(node);
 }
@@ -353,34 +349,63 @@ pcmk__mk_log_output(char **argv) {
     return retval;
 }
 
+/*!
+ * \internal
+ * \brief Get the log level for a log output object
+ *
+ * This returns 0 if the output object is not of log format.
+ *
+ * \param[in] out  Output object
+ *
+ * \return Current log level for \p out
+ */
 uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out)
 {
-    private_data_t *priv = NULL;
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT((out != NULL) && (out->priv != NULL));
-    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return 0);
+    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
 
-    priv = out->priv;
-    return priv->log_level;
+        CRM_ASSERT(priv != NULL);
+        return priv->log_level;
+    }
+    return 0;
 }
 
+/*!
+ * \internal
+ * \brief Set the log level for a log output object
+ *
+ * This does nothing if the output object is not of log format.
+ *
+ * \param[in,out] out        Output object
+ * \param[in]     log_level  Log level constant (\c LOG_ERR, etc.) to use
+ *
+ * \note \c LOG_INFO is used by default for new \c pcmk__output_t objects.
+ * \note Almost all formatted output messages respect this setting. However,
+ *       <tt>out->err</tt> always logs at \c LOG_ERR.
+ */
 void
-pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level) {
-    private_data_t *priv = NULL;
+pcmk__output_set_log_level(pcmk__output_t *out, uint8_t log_level)
+{
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT(out != NULL && out->priv != NULL);
-    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
+    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
 
-    priv = out->priv;
-    priv->log_level = log_level;
+        CRM_ASSERT(priv != NULL);
+        priv->log_level = log_level;
+    }
 }
 
 /*!
  * \internal
  * \brief Set the file, function, line, and tags used to filter log output
  *
- * \param[in,out] out       Logger output object
+ * This does nothing if the output object is not of log format.
+ *
+ * \param[in,out] out       Output object
  * \param[in]     file      File name to filter with (or NULL for default)
  * \param[in]     function  Function name to filter with (or NULL for default)
  * \param[in]     line      Line number to filter with (or 0 for default)
@@ -394,14 +419,15 @@ void
 pcmk__output_set_log_filter(pcmk__output_t *out, const char *file,
                             const char *function, uint32_t line, uint32_t tags)
 {
-    private_data_t *priv = NULL;
+    CRM_ASSERT(out != NULL);
 
-    CRM_ASSERT((out != NULL) && (out->priv != NULL));
-    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
+    if (pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        private_data_t *priv = out->priv;
 
-    priv = out->priv;
-    priv->file = file;
-    priv->function = function;
-    priv->line = line;
-    priv->tags = tags;
+        CRM_ASSERT(priv != NULL);
+        priv->file = file;
+        priv->function = function;
+        priv->line = line;
+        priv->tags = tags;
+    }
 }

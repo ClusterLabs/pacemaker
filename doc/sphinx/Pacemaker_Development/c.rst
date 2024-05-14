@@ -752,12 +752,35 @@ Function names should be unique across the entire project, to allow for
 individual tracing via ``PCMK_trace_functions``, and make it easier to search
 code and follow detail logs.
 
-A common function signature is a comparison function that returns 0 if its
-arguments are equal for sorting purposes, -1 if the first argument should sort
-first, and 1 is the second argument should sort first. Such a function should
-have ``cmp`` in its name, to parallel ``strcmp()``; ``sort`` should only be
-used in the names of functions that sort an entire list (typically using a
-``cmp`` function).
+.. _sort_func:
+
+Sorting
+^^^^^^^
+
+A function that sorts an entire list should have ``sort`` in its name. It sorts
+elements using a :ref:`comparison <compare_func>` function, which may be either
+hard-coded or passed as an argument.
+
+.. _compare_func:
+
+Comparison
+^^^^^^^^^^
+
+A comparison function for :ref:`sorting <sort_func>` should have ``cmp`` in its
+name and should *not* have ``sort`` in its name.
+
+.. _constructor_func:
+
+Constructors
+^^^^^^^^^^^^
+
+A constructor creates a new dynamically allocated object. It may perform some
+initialization procedure on the new object.
+
+* If the constructor always creates an independent object instance, its name
+  should include ``new``.
+* If the constructor may add the new object to some existing object, its name
+  should include ``create``.
 
 
 Function Definitions
@@ -832,6 +855,12 @@ messages and converting from one to another, can be found in
 Of course, functions may have return values that aren't success/failure
 indicators, such as a pointer, integer count, or bool.
 
+:ref:`Comparison <compare_func>` functions should return
+
+* a negative integer if the first argument should sort first
+* 0 if its arguments are equal for sorting purposes
+* a positive integer is the second argument should sort first
+
 
 Public API Functions
 ____________________
@@ -880,6 +909,30 @@ __________________________________
 * The convenience macros ``pcmk__plural_s()`` and ``pcmk__plural_alt()`` are
   handy when logging a word that may be singular or plural.
 
+Log Levels
+__________
+
+When to use each log level:
+
+* **critical:** fatal error (usually something that would make a daemon exit)
+* **error:** failure of something that affects the cluster (such as a resource
+  action, fencing action, etc.) or daemon operation
+* **warning:** minor, potential, or recoverable failures (such as something
+  only affecting a daemon client, or invalid configuration that can be left to
+  default)
+* **notice:** important successful events (such as a node joining or leaving,
+  resource action results, or configuration changes)
+* **info:** events that would be helpful with troubleshooting (such as status
+  section updates or elections)
+* **debug:** information that would be helpful for debugging code or complex
+  problems
+* **trace:** like debug but for very noisy or low-level stuff
+
+By default, critical through notice are logged to the system log and detail
+log, info is logged to the detail log only, and debug and trace are not logged
+(if enabled, they go to the detail log only).
+
+
 Logging
 _______
 
@@ -912,6 +965,34 @@ using libqb's "extended logging" feature:
             pcmk_rc_str(rc), rc, id);
 
 
+Assertion Logging
+_________________
+
+``CRM_ASSERT(expr)``
+  If ``expr`` is false, this will call <code>crm_err()</code> with a "Triggered
+  fatal assert" message (with details), then abort execution. This should be
+  used for logic errors that should be impossible (such as a NULL function
+  argument where not accepted) and environmental errors that can't be handled
+  gracefully (for example, memory allocation failures, though returning
+  ``ENOMEM`` is often better).
+
+``CRM_LOG_ASSERT(expr)``
+  If ``expr`` is false, this will generally log a message without aborting. If
+  the log level is below trace, it just calls ``crm_err()`` with a "Triggered
+  assert" message (with details). If the log level is trace, and the caller is
+  a daemon, then it will fork a child process in which to dump core, as well as
+  logging the message. If the log level is trace, and the caller is not a
+  daemon, then it will behave like ``CRM_ASSERT()`` (i.e. log and abort). This
+  should be used for logic or protocol errors that require no special handling.
+
+``CRM_CHECK(expr, failed_action)``
+  If ``expr`` is false, behave like ``CRM_LOG_ASSERT(expr)`` (that is, log a
+  message and dump core if requested) then perform ``failed_action`` (which
+  must not contain ``continue``, ``break``, or ``errno``). This should be used
+  for logic or protocol errors that can be handled, usually by returning an
+  error status.
+
+
 Output
 ______
 
@@ -924,12 +1005,40 @@ A custom message can be defined with a unique string identifier, plus
 implementation functions for each supported format. The caller invokes the
 message using the identifier. The user selects the output format via
 ``--output-as``, and the output code automatically calls the appropriate
-implementation function.
+implementation function. Custom messages are useful when you want to output 
+messages that are more complex than a one-line error or informational message, 
+reproducible, and automatically handled by the output formatting system. 
+Custom messages can contain other custom messages.
+
+Custom message functions are implemented as follows: Start with the macro 
+``PCMK__OUTPUT_ARGS``, whose arguments are the message name, followed by the 
+arguments to the message. Then there is the function declaration, for which the 
+arguments are the pointer to the current output object, then a variable argument 
+list.
+
+To output a custom message, you first need to create, i.e. register, the custom 
+message that you want to output. Either call ``register_message``, which 
+registers a custom message at runtime, or make use of the collection of 
+predefined custom messages in ``fmt_functions``, which is defined in 
+``lib/pacemaker/pcmk_output.c``. Once you have the message to be outputted, 
+output it by calling ``message``.
+
+Note: The ``fmt_functions`` functions accommodate all of the output formats; 
+the default implementation accommodates any format that isn't explicitly 
+accommodated. The default output provides valid output for any output format, 
+but you may still want to implement a specific output, i.e. xml, text, or html. 
+The ``message`` function automatically knows which implementation to use, 
+because the ``pcmk__output_s`` contains this information.
 
 The interface (most importantly ``pcmk__output_t``) is declared in
 ``include/crm/common/output*h``. See the API comments and existing tools for
-examples.
+examples. 
 
+Some of its important member functions are ``err``, which formats error messages 
+and ``info``, which formats informational messages. Also, ``list_item``, 
+which formats list items, ``begin_list``, which starts lists, and ``end_list``, 
+which ends lists, are important because lists can be useful, yet differently 
+handled by the different output types.
 
 .. index::
    single: Makefile.am

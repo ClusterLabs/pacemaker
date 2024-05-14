@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 static void
 empty_input(void **state)
 {
-    xmlNode *node = string2xml("<node/>");
+    xmlNode *node = pcmk__xml_parse("<node/>");
     bool value;
 
     assert_int_equal(pcmk__xe_get_bool_attr(NULL, NULL, &value), ENODATA);
@@ -29,7 +29,7 @@ empty_input(void **state)
 static void
 attr_missing(void **state)
 {
-    xmlNode *node = string2xml("<node a=\"true\" b=\"false\"/>");
+    xmlNode *node = pcmk__xml_parse("<node a=\"true\" b=\"false\"/>");
     bool value;
 
     assert_int_equal(pcmk__xe_get_bool_attr(node, "c", &value), ENODATA);
@@ -39,7 +39,8 @@ attr_missing(void **state)
 static void
 attr_present(void **state)
 {
-    xmlNode *node = string2xml("<node a=\"true\" b=\"false\" c=\"blah\"/>");
+    xmlNode *node = pcmk__xml_parse("<node a=\"true\" b=\"false\" "
+                                                 "c=\"blah\"/>");
     bool value;
 
     value = false;
@@ -53,7 +54,7 @@ attr_present(void **state)
     free_xml(node);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
                 cmocka_unit_test(empty_input),
                 cmocka_unit_test(attr_missing),
                 cmocka_unit_test(attr_present))

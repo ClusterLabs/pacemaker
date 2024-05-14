@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2023 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,6 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
@@ -106,10 +105,12 @@ patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 static void
 print_patch(xmlNode *patch)
 {
-    char *buffer = dump_xml_formatted(patch);
+    GString *buffer = g_string_sized_new(1024);
 
-    printf("%s", buffer);
-    free(buffer);
+    pcmk__xml_string(patch, pcmk__xml_fmt_pretty, buffer, 0);
+
+    printf("%s", buffer->str);
+    g_string_free(buffer, TRUE);
     fflush(stdout);
 }
 
@@ -117,7 +118,7 @@ print_patch(xmlNode *patch)
 static int
 apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 {
-    xmlNode *output = copy_xml(input);
+    xmlNode *output = pcmk__xml_copy(NULL, input);
     int rc = xml_apply_patchset(output, patch, as_cib);
 
     rc = pcmk_legacy2rc(rc);
@@ -133,7 +134,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 
         print_patch(output);
 
-        version = crm_element_value(output, XML_ATTR_CRM_VERSION);
+        version = crm_element_value(output, PCMK_XA_CRM_FEATURE_SET);
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
         crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
@@ -153,7 +154,7 @@ log_patch_cib_versions(xmlNode *patch)
 
     xml_patch_versions(patch, add, del);
     fmt = crm_element_value(patch, PCMK_XA_FORMAT);
-    digest = crm_element_value(patch, XML_ATTR_DIGEST);
+    digest = crm_element_value(patch, PCMK__XA_DIGEST);
 
     if (add[2] != del[2] || add[1] != del[1] || add[0] != del[0]) {
         crm_info("Patch: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
@@ -168,7 +169,8 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
 
     crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
     if (format == 2) {
-        xmlNode *version_xml = find_xml_node(patch, "version", FALSE);
+        xmlNode *version_xml = pcmk__xe_first_child(patch, PCMK_XE_VERSION,
+                                                    NULL, NULL);
 
         if (version_xml) {
             free_xml(version_xml);
@@ -178,24 +180,24 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
         int i = 0;
 
         const char *tags[] = {
-            XML_TAG_DIFF_REMOVED,
-            XML_TAG_DIFF_ADDED,
+            PCMK__XE_DIFF_REMOVED,
+            PCMK__XE_DIFF_ADDED,
         };
 
         for (i = 0; i < PCMK__NELEM(tags); i++) {
             xmlNode *tmp = NULL;
             int lpc;
 
-            tmp = find_xml_node(patch, tags[i], FALSE);
+            tmp = pcmk__xe_first_child(patch, tags[i], NULL, NULL);
             if (tmp) {
                 for (lpc = 0; lpc < nvfields; lpc++) {
-                    xml_remove_prop(tmp, vfields[lpc]);
+                    pcmk__xe_remove_attr(tmp, vfields[lpc]);
                 }
 
-                tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
+                tmp = pcmk__xe_first_child(tmp, PCMK_XE_CIB, NULL, NULL);
                 if (tmp) {
                     for (lpc = 0; lpc < nvfields; lpc++) {
-                        xml_remove_prop(tmp, vfields[lpc]);
+                        pcmk__xe_remove_attr(tmp, vfields[lpc]);
                     }
                 }
             }
@@ -209,9 +211,9 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
                gboolean as_cib, gboolean no_version)
 {
     const char *vfields[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
     };
 
     xmlNode *output = NULL;
@@ -328,25 +330,25 @@ main(int argc, char **argv)
     }
 
     if (options.raw_1) {
-        object_1 = string2xml(options.xml_file_1);
+        object_1 = pcmk__xml_parse(options.xml_file_1);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
-        object_1 = stdin2xml();
+        object_1 = pcmk__xml_read(NULL);
 
     } else if (options.xml_file_1 != NULL) {
-        object_1 = filename2xml(options.xml_file_1);
+        object_1 = pcmk__xml_read(options.xml_file_1);
     }
 
     if (options.raw_2) {
-        object_2 = string2xml(options.xml_file_2);
+        object_2 = pcmk__xml_parse(options.xml_file_2);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
-        object_2 = stdin2xml();
+        object_2 = pcmk__xml_read(NULL);
 
     } else if (options.xml_file_2 != NULL) {
-        object_2 = filename2xml(options.xml_file_2);
+        object_2 = pcmk__xml_read(options.xml_file_2);
     }
 
     if (object_1 == NULL) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,16 +29,25 @@ extern "C" {
  */
 
 const char *rsc_printable_id(const pcmk_resource_t *rsc);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 gboolean cluster_status(pcmk_scheduler_t *scheduler);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 pcmk_scheduler_t *pe_new_working_set(void);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 void pe_free_working_set(pcmk_scheduler_t *scheduler);
+
 void set_working_set_defaults(pcmk_scheduler_t *scheduler);
 void cleanup_calculations(pcmk_scheduler_t *scheduler);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
 void pe_reset_working_set(pcmk_scheduler_t *scheduler);
+
 pcmk_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
 pcmk_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id,
                                              enum pe_find flags);
-pcmk_node_t *pe_find_node(const GList *node_list, const char *node_name);
 pcmk_node_t *pe_find_node_id(const GList *node_list, const char *id);
 pcmk_node_t *pe_find_node_any(const GList *node_list, const char *id,
                             const char *node_name);
@@ -48,63 +57,9 @@ void calculate_active_ops(const GList *sorted_op_list, int *start_index,
                           int *stop_index);
 int pe_bundle_replicas(const pcmk_resource_t *rsc);
 
-/*!
- * \brief Check whether a resource is any clone type
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is clone, false otherwise
- */
-static inline bool
-pe_rsc_is_clone(const pcmk_resource_t *rsc)
-{
-    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
-}
-
-/*!
- * \brief Check whether a resource is a globally unique clone
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is unique clone, false otherwise
- */
-static inline bool
-pe_rsc_is_unique_clone(const pcmk_resource_t *rsc)
-{
-    return pe_rsc_is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
-}
-
-/*!
- * \brief Check whether a resource is an anonymous clone
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is anonymous clone, false otherwise
- */
-static inline bool
-pe_rsc_is_anon_clone(const pcmk_resource_t *rsc)
-{
-    return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
-}
-
-/*!
- * \brief Check whether a resource is part of a bundle
- *
- * \param[in] rsc  Resource to check
- *
- * \return true if resource is part of a bundle, false otherwise
- */
-static inline bool
-pe_rsc_is_bundled(const pcmk_resource_t *rsc)
-{
-    if (rsc == NULL) {
-        return false;
-    }
-    while (rsc->parent != NULL) {
-        rsc = rsc->parent;
-    }
-    return rsc->variant == pcmk_rsc_variant_bundle;
-}
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/status_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

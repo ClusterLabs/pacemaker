@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include "crmcommon_private.h"
 
@@ -22,9 +22,9 @@
  *
  * All header lines contain three integers separated by dots, of the form
  * <tt>{0}.{1}.{2}</tt>:
- * * \p {0}: \p XML_ATTR_GENERATION_ADMIN
- * * \p {1}: \p XML_ATTR_GENERATION
- * * \p {2}: \p XML_ATTR_NUMUPDATES
+ * * \p {0}: \c PCMK_XA_ADMIN_EPOCH
+ * * \p {1}: \c PCMK_XA_EPOCH
+ * * \p {2}: \c PCMK_XA_NUM_UPDATES
  *
  * Lines containing \p "---" describe removals and end with the patch format
  * number. Lines containing \p "+++" describe additions and end with the patch
@@ -48,7 +48,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
         const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
-        const char *digest = crm_element_value(patchset, XML_ATTR_DIGEST);
+        const char *digest = crm_element_value(patchset, PCMK__XA_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",
@@ -81,7 +81,7 @@ xml_show_patchset_v1_recursive(pcmk__output_t *out, const char *prefix,
                                const xmlNode *data, int depth, uint32_t options)
 {
     if ((data->children == NULL)
-        || (crm_element_value(data, XML_DIFF_MARKER) != NULL)) {
+        || (crm_element_value(data, PCMK__XA_CRM_DIFF_MARKER) != NULL)) {
 
         // Found a change; clear the pcmk__xml_fmt_diff_short option if set
         options &= ~pcmk__xml_fmt_diff_short;
@@ -143,7 +143,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
      * However, v1 patchsets can only exist during rolling upgrades from
      * Pacemaker 1.1.11, so not worth worrying about.
      */
-    removed = find_xml_node(patchset, XML_TAG_DIFF_REMOVED, FALSE);
+    removed = pcmk__xe_first_child(patchset, PCMK__XE_DIFF_REMOVED, NULL, NULL);
     for (child = pcmk__xml_first_child(removed); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "- ", child, 0,
@@ -159,7 +159,7 @@ xml_show_patchset_v1(pcmk__output_t *out, const xmlNode *patchset,
     }
 
     is_first = true;
-    added = find_xml_node(patchset, XML_TAG_DIFF_ADDED, FALSE);
+    added = pcmk__xe_first_child(patchset, PCMK__XE_DIFF_ADDED, NULL, NULL);
     for (child = pcmk__xml_first_child(added); child != NULL;
          child = pcmk__xml_next(child)) {
         int temp_rc = xml_show_patchset_v1_recursive(out, "+ ", child, 0,
@@ -197,16 +197,18 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
     int rc = xml_show_patchset_header(out, patchset);
     int temp_rc = pcmk_rc_no_output;
 
-    for (const xmlNode *change = pcmk__xml_first_child(patchset);
-         change != NULL; change = pcmk__xml_next(change)) {
-        const char *op = crm_element_value(change, XML_DIFF_OP);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+    for (const xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL,
+                                                      NULL);
+         change != NULL; change = pcmk__xe_next(change)) {
+
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;
         }
 
-        if (strcmp(op, "create") == 0) {
+        if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
                                              xpath);
 
@@ -226,30 +228,33 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
             rc = pcmk__output_select_rc(rc, temp_rc);
             free(prefix);
 
-        } else if (strcmp(op, "move") == 0) {
-            const char *position = crm_element_value(change, XML_DIFF_POSITION);
+        } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
+            const char *position = crm_element_value(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,
                                 PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
                                 xpath, position);
             rc = pcmk__output_select_rc(rc, temp_rc);
 
-        } else if (strcmp(op, "modify") == 0) {
-            xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
+        } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
+            xmlNode *clist = pcmk__xe_first_child(change, PCMK_XE_CHANGE_LIST,
+                                                  NULL, NULL);
             GString *buffer_set = NULL;
             GString *buffer_unset = NULL;
 
-            for (const xmlNode *child = pcmk__xml_first_child(clist);
-                 child != NULL; child = pcmk__xml_next(child)) {
-                const char *name = crm_element_value(child, "name");
+            for (const xmlNode *child = pcmk__xe_first_child(clist, NULL, NULL,
+                                                             NULL);
+                 child != NULL; child = pcmk__xe_next(child)) {
 
-                op = crm_element_value(child, XML_DIFF_OP);
+                const char *name = crm_element_value(child, PCMK_XA_NAME);
+
+                op = crm_element_value(child, PCMK_XA_OPERATION);
                 if (op == NULL) {
                     continue;
                 }
 
                 if (strcmp(op, "set") == 0) {
-                    const char *value = crm_element_value(child, "value");
+                    const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
                     pcmk__add_separated_word(&buffer_set, 256, "@", ", ");
                     pcmk__g_strcat(buffer_set, name, "=", value, NULL);
@@ -273,10 +278,10 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
                 g_string_free(buffer_unset, TRUE);
             }
 
-        } else if (strcmp(op, "delete") == 0) {
+        } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             int position = -1;
 
-            crm_element_value_int(change, XML_DIFF_POSITION, &position);
+            crm_element_value_int(change, PCMK_XE_POSITION, &position);
             if (position >= 0) {
                 temp_rc = out->info(out, "-- %s (%d)", xpath, position);
             } else {
@@ -301,7 +306,8 @@ xml_show_patchset_v2(pcmk__output_t *out, const xmlNode *patchset)
  *
  * \return Standard Pacemaker return code
  *
- * \note \p args should contain only the XML patchset
+ * \note \p args should contain the following:
+ *       -# XML patchset
  */
 PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
@@ -340,7 +346,8 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
  *
  * \return Standard Pacemaker return code
  *
- * \note \p args should contain only the XML patchset
+ * \note \p args should contain the following:
+ *       -# XML patchset
  */
 PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
@@ -402,7 +409,8 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
  *
  * \return Standard Pacemaker return code
  *
- * \note \p args should contain only the XML patchset
+ * \note \p args should contain the following:
+ *       -# XML patchset
  */
 PCMK__OUTPUT_ARGS("xml-patchset", "const xmlNode *")
 static int
@@ -411,10 +419,13 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
     const xmlNode *patchset = va_arg(args, const xmlNode *);
 
     if (patchset != NULL) {
-        char *buf = dump_xml_formatted_with_text(patchset);
+        GString *buf = g_string_sized_new(1024);
 
-        out->output_xml(out, "xml-patchset", buf);
-        free(buf);
+        pcmk__xml_string(patchset, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buf,
+                         0);
+
+        out->output_xml(out, PCMK_XE_XML_PATCHSET, buf->str);
+        g_string_free(buf, TRUE);
         return pcmk_rc_ok;
     }
     crm_trace("Empty patch");

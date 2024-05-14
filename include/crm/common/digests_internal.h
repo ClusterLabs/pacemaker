@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
-#  define PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
+#define PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
 
 #include <libxml/tree.h>            // xmlNode
 
@@ -23,6 +23,17 @@ enum pcmk__digest_result {
     pcmk__digest_mismatch,  // Any parameter changed (potentially reloadable)
     pcmk__digest_restart,   // Parameters that require a restart changed
 };
+
+// Information needed to compare operation digests
+typedef struct {
+    enum pcmk__digest_result rc;    // Result of digest comparison
+    xmlNode *params_all;            // All operation parameters
+    xmlNode *params_secure;         // Parameters marked private
+    xmlNode *params_restart;        // Parameters marked not reloadable
+    char *digest_all_calc;          // Digest of params_all
+    char *digest_secure_calc;       // Digest of params_secure
+    char *digest_restart_calc;      // Digest of params_restart
+} pcmk__op_digest_t;
 
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
 

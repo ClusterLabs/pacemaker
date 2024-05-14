@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,6 @@
 #include <md5.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
@@ -37,7 +36,7 @@ dump_xml_for_digest(xmlNodePtr xml)
 
     /* for compatibility with the old result which is used for v1 digests */
     g_string_append_c(buffer, ' ');
-    pcmk__xml2text(xml, 0, buffer, 0);
+    pcmk__xml_string(xml, 0, buffer, 0);
     g_string_append_c(buffer, '\n');
 
     return buffer;
@@ -92,13 +91,12 @@ static char *
 calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
-    GString *buffer = g_string_sized_new(1024);
+    GString *buf = g_string_sized_new(1024);
 
     crm_trace("Begin digest %s", do_filter?"filtered":"");
-    pcmk__xml2text(source, (do_filter? pcmk__xml_fmt_filtered : 0), buffer, 0);
 
-    CRM_ASSERT(buffer != NULL);
-    digest = crm_md5sum((const char *) buffer->str);
+    pcmk__xml_string(source, (do_filter? pcmk__xml_fmt_filtered : 0), buf, 0);
+    digest = crm_md5sum(buf->str);
 
     pcmk__if_tracing(
         {
@@ -106,17 +104,17 @@ calculate_xml_digest_v2(const xmlNode *source, gboolean do_filter)
                                                  pcmk__get_tmpdir(), digest);
 
             crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(source, XML_ATTR_GENERATION_ADMIN),
-                      crm_element_value(source, XML_ATTR_GENERATION),
-                      crm_element_value(source, XML_ATTR_NUMUPDATES),
+                      crm_element_value(source, PCMK_XA_ADMIN_EPOCH),
+                      crm_element_value(source, PCMK_XA_EPOCH),
+                      crm_element_value(source, PCMK_XA_NUM_UPDATES),
                       trace_file);
             save_xml_to_file(source, "digest input", trace_file);
             free(trace_file);
         },
         {}
     );
-    g_string_free(buffer, TRUE);
     crm_trace("End digest");
+    g_string_free(buf, TRUE);
     return digest;
 }
 
@@ -234,11 +232,11 @@ bool
 pcmk__xa_filterable(const char *name)
 {
     static const char *filter[] = {
-        XML_ATTR_ORIGIN,
-        XML_CIB_ATTR_WRITTEN,
-        XML_ATTR_UPDATE_ORIG,
-        XML_ATTR_UPDATE_CLIENT,
-        XML_ATTR_UPDATE_USER,
+        PCMK_XA_CRM_DEBUG_ORIGIN,
+        PCMK_XA_CIB_LAST_WRITTEN,
+        PCMK_XA_UPDATE_ORIGIN,
+        PCMK_XA_UPDATE_CLIENT,
+        PCMK_XA_UPDATE_USER,
     };
 
     for (int i = 0; i < PCMK__NELEM(filter); i++) {
@@ -275,4 +273,64 @@ crm_md5sum(const char *buffer)
         crm_err("Could not create digest");
     }
     return digest;
+}
+
+// Return true if a is an attribute that should be filtered
+static bool
+should_filter_for_digest(xmlAttrPtr a, void *user_data)
+{
+    if (strncmp((const char *) a->name, CRM_META "_",
+                sizeof(CRM_META " ") - 1) == 0) {
+        return true;
+    }
+    return pcmk__str_any_of((const char *) a->name,
+                            PCMK_XA_ID,
+                            PCMK_XA_CRM_FEATURE_SET,
+                            PCMK__XA_OP_DIGEST,
+                            PCMK__META_ON_NODE,
+                            PCMK__META_ON_NODE_UUID,
+                            "pcmk_external_ip",
+                            NULL);
+}
+
+/*!
+ * \internal
+ * \brief Remove XML attributes not needed for operation digest
+ *
+ * \param[in,out] param_set  XML with operation parameters
+ */
+void
+pcmk__filter_op_for_digest(xmlNode *param_set)
+{
+    char *key = NULL;
+    char *timeout = NULL;
+    guint interval_ms = 0;
+
+    if (param_set == NULL) {
+        return;
+    }
+
+    /* Timeout is useful for recurring operation digests, so grab it before
+     * removing meta-attributes
+     */
+    key = crm_meta_name(PCMK_META_INTERVAL);
+    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
+        interval_ms = 0;
+    }
+    free(key);
+    key = NULL;
+    if (interval_ms != 0) {
+        key = crm_meta_name(PCMK_META_TIMEOUT);
+        timeout = crm_element_value_copy(param_set, key);
+    }
+
+    // Remove all CRM_meta_* attributes and certain other attributes
+    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
+
+    // Add timeout back for recurring operation digests
+    if (timeout != NULL) {
+        crm_xml_add(param_set, key, timeout);
+    }
+    free(timeout);
+    free(key);
 }

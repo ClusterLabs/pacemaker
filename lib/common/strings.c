@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -342,74 +342,146 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
     return pcmk_rc_ok;
 }
 
-#ifndef NUMCHARS
-#  define	NUMCHARS	"0123456789."
-#endif
-
-#ifndef WHITESPACE
-#  define	WHITESPACE	" \t\n\r\f"
-#endif
-
 /*!
  * \brief Parse a time+units string and return milliseconds equivalent
  *
- * \param[in] input  String with a number and optional unit (optionally
- *                   with whitespace before and/or after the number).  If
- *                   missing, the unit defaults to seconds.
+ * \param[in] input  String with a nonnegative number and optional unit
+ *                   (optionally with whitespace before and/or after the
+ *                   number). If missing, the unit defaults to seconds.
  *
  * \return Milliseconds corresponding to string expression, or
- *         PCMK__PARSE_INT_DEFAULT on error
+ *         \c PCMK__PARSE_INT_DEFAULT on error
  */
 long long
 crm_get_msec(const char *input)
 {
-    const char *num_start = NULL;
-    const char *units;
+    char *units = NULL; // Do not free; will point to part of input
     long long multiplier = 1000;
     long long divisor = 1;
     long long msec = PCMK__PARSE_INT_DEFAULT;
-    size_t num_len = 0;
-    char *end_text = NULL;
 
     if (input == NULL) {
         return PCMK__PARSE_INT_DEFAULT;
     }
 
-    num_start = input + strspn(input, WHITESPACE);
-    num_len = strspn(num_start, NUMCHARS);
-    if (num_len < 1) {
+    // Skip initial whitespace
+    while (isspace(*input)) {
+        input++;
+    }
+
+    // Reject negative and unparsable inputs
+    scan_ll(input, &msec, -1, &units);
+    if (msec < 0) {
         return PCMK__PARSE_INT_DEFAULT;
     }
-    units = num_start + num_len;
-    units += strspn(units, WHITESPACE);
 
-    if (!strncasecmp(units, "ms", 2) || !strncasecmp(units, "msec", 4)) {
-        multiplier = 1;
-        divisor = 1;
-    } else if (!strncasecmp(units, "us", 2) || !strncasecmp(units, "usec", 4)) {
-        multiplier = 1;
-        divisor = 1000;
-    } else if (!strncasecmp(units, "s", 1) || !strncasecmp(units, "sec", 3)) {
+    /* If the number is a decimal, scan_ll() reads only the integer part. Skip
+     * any remaining digits or decimal characters.
+     *
+     * @COMPAT Well-formed and malformed decimals are both accepted inputs. For
+     * example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms" and
+     * parsed successfully. At a compatibility break, decide if this is still
+     * desired.
+     */
+    while (isdigit(*units) || (*units == '.')) {
+        units++;
+    }
+
+    // Skip any additional whitespace after the number
+    while (isspace(*units)) {
+        units++;
+    }
+
+    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
+     * second strncasecmp() in each case is redundant.
+     */
+    if ((*units == '\0')
+        || (strncasecmp(units, "s", 1) == 0)
+        || (strncasecmp(units, "sec", 3) == 0)) {
         multiplier = 1000;
         divisor = 1;
-    } else if (!strncasecmp(units, "m", 1) || !strncasecmp(units, "min", 3)) {
+
+    } else if ((strncasecmp(units, "ms", 2) == 0)
+               || (strncasecmp(units, "msec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "us", 2) == 0)
+               || (strncasecmp(units, "usec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1000;
+
+    } else if ((strncasecmp(units, "m", 1) == 0)
+               || (strncasecmp(units, "min", 3) == 0)) {
         multiplier = 60 * 1000;
         divisor = 1;
-    } else if (!strncasecmp(units, "h", 1) || !strncasecmp(units, "hr", 2)) {
+
+    } else if ((strncasecmp(units, "h", 1) == 0)
+               || (strncasecmp(units, "hr", 2) == 0)) {
         multiplier = 60 * 60 * 1000;
         divisor = 1;
-    } else if ((*units != '\0') && (*units != '\n') && (*units != '\r')) {
+
+    } else {
+        // Invalid units
         return PCMK__PARSE_INT_DEFAULT;
     }
 
-    scan_ll(num_start, &msec, PCMK__PARSE_INT_DEFAULT, &end_text);
+    // Apply units, capping at LLONG_MAX
     if (msec > (LLONG_MAX / multiplier)) {
-        // Arithmetics overflow while multiplier/divisor mutually exclusive
         return LLONG_MAX;
     }
-    msec *= multiplier;
-    msec /= divisor;
-    return msec;
+    return (msec * multiplier) / divisor;
+}
+
+/*!
+ * \brief Parse milliseconds from a Pacemaker interval specification
+ *
+ * \param[in]  input      Pacemaker time interval specification (a bare number
+ *                        of seconds; a number with a unit, optionally with
+ *                        whitespace before and/or after the number; or an ISO
+ *                        8601 duration)
+ * \param[out] result_ms  Where to store milliseconds equivalent of \p input on
+ *                        success (limited to the range of an unsigned integer),
+ *                        or 0 if \p input is \c NULL or invalid
+ *
+ * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok if
+ *         \p input is valid or \c NULL, and \c EINVAL otherwise)
+ */
+int
+pcmk_parse_interval_spec(const char *input, guint *result_ms)
+{
+    long long msec = PCMK__PARSE_INT_DEFAULT;
+    int rc = pcmk_rc_ok;
+
+    if (input == NULL) {
+        msec = 0;
+        goto done;
+    }
+
+    if (input[0] == 'P') {
+        crm_time_t *period_s = crm_time_parse_duration(input);
+
+        if (period_s != NULL) {
+            msec = 1000 * crm_time_get_seconds(period_s);
+            crm_time_free(period_s);
+        }
+
+    } else {
+        msec = crm_get_msec(input);
+    }
+
+    if (msec == PCMK__PARSE_INT_DEFAULT) {
+        crm_warn("Using 0 instead of invalid interval specification '%s'",
+                 input);
+        msec = 0;
+        rc = EINVAL;
+    }
+
+done:
+    if (result_ms != NULL) {
+        *result_ms = (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
+    }
+    return rc;
 }
 
 gboolean
@@ -425,17 +497,20 @@ crm_str_to_boolean(const char *s, int *ret)
 {
     if (s == NULL) {
         return -1;
+    }
 
-    } else if (strcasecmp(s, "true") == 0
-               || strcasecmp(s, "on") == 0
-               || strcasecmp(s, "yes") == 0 || strcasecmp(s, "y") == 0 || strcasecmp(s, "1") == 0) {
-        *ret = TRUE;
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_TRUE, "on", "yes", "y", "1", NULL)) {
+        if (ret != NULL) {
+            *ret = TRUE;
+        }
         return 1;
+    }
 
-    } else if (strcasecmp(s, "false") == 0
-               || strcasecmp(s, "off") == 0
-               || strcasecmp(s, "no") == 0 || strcasecmp(s, "n") == 0 || strcasecmp(s, "0") == 0) {
-        *ret = FALSE;
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, "off", "no", "n", "0",
+                             NULL)) {
+        if (ret != NULL) {
+            *ret = FALSE;
+        }
         return 1;
     }
     return -1;
@@ -612,6 +687,24 @@ pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                  key_destroy_func, value_destroy_func);
 }
 
+/*!
+ * \internal
+ * \brief Insert string copies into a hash table as key and value
+ *
+ * \param[in,out] table  Hash table to add to
+ * \param[in]     name   String to add a copy of as key
+ * \param[in]     value  String to add a copy of as value
+ *
+ * \note This asserts on invalid arguments or memory allocation failure.
+ */
+void
+pcmk__insert_dup(GHashTable *table, const char *name, const char *value)
+{
+    CRM_ASSERT((table != NULL) && (name != NULL));
+
+    g_hash_table_insert(table, pcmk__str_copy(name), pcmk__str_copy(value));
+}
+
 /* used with hash tables where case does not matter */
 static gboolean
 pcmk__strcase_equal(gconstpointer a, gconstpointer b)
@@ -654,7 +747,8 @@ static void
 copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
 {
     if (key && value && user_data) {
-        g_hash_table_insert((GHashTable*)user_data, strdup(key), strdup(value));
+        pcmk__insert_dup((GHashTable *) user_data,
+                         (const char *) key, (const char *) value);
     }
 }
 
@@ -759,8 +853,7 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     clock_gettime(CLOCK_MONOTONIC, &before_t);
 #endif
 
-    compressed = calloc((size_t) max, sizeof(char));
-    CRM_ASSERT(compressed);
+    compressed = pcmk__assert_alloc((size_t) max, sizeof(char));
 
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
@@ -967,44 +1060,6 @@ pcmk__str_any_of(const char *s, ...)
 
 /*!
  * \internal
- * \brief Check whether a character is in any of a list of strings
- *
- * \param[in]   ch      Character (ASCII) to search for
- * \param[in]   ...     Strings to search. Final argument must be
- *                      \c NULL.
- *
- * \return  \c true if any of \p ... contain \p ch, \c false otherwise
- * \note    \p ... must contain at least one argument (\c NULL).
- */
-bool
-pcmk__char_in_any_str(int ch, ...)
-{
-    bool rc = false;
-    va_list ap;
-
-    /*
-     * Passing a char to va_start() can generate compiler warnings,
-     * so ch is declared as an int.
-     */
-    va_start(ap, ch);
-
-    while (1) {
-        const char *ele = va_arg(ap, const char *);
-
-        if (ele == NULL) {
-            break;
-        } else if (strchr(ele, ch) != NULL) {
-            rc = true;
-            break;
-        }
-    }
-
-    va_end(ap);
-    return rc;
-}
-
-/*!
- * \internal
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric
@@ -1178,6 +1233,35 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 
 /*!
  * \internal
+ * \brief Copy a string, asserting on failure
+ *
+ * \param[in] file      File where \p function is located
+ * \param[in] function  Calling function
+ * \param[in] line      Line within \p file
+ * \param[in] str       String to copy (can be \c NULL)
+ *
+ * \return Newly allocated copy of \p str, or \c NULL if \p str is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
+                  const char *str)
+{
+    if (str != NULL) {
+        char *result = strdup(str);
+
+        if (result == NULL) {
+            crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
+            crm_exit(CRM_EX_OSERR);
+        }
+        return result;
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
  * \brief Update a dynamically allocated string with a new value
  *
  * Given a dynamically allocated string and a new value for it, if the string
@@ -1194,12 +1278,7 @@ pcmk__str_update(char **str, const char *value)
 {
     if ((str != NULL) && !pcmk__str_eq(*str, value, pcmk__str_none)) {
         free(*str);
-        if (value == NULL) {
-            *str = NULL;
-        } else {
-            *str = strdup(value);
-            CRM_ASSERT(*str != NULL);
-        }
+        *str = pcmk__str_copy(value);
     }
 }
 

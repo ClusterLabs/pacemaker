@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,10 +13,8 @@
 #include <unistd.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
-#include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 #include <crm/common/remote_internal.h>
 #include <crm/lrmd_internal.h>
 
@@ -111,14 +109,11 @@ lrmd_remote_client_msg(gpointer data)
 
     request = pcmk__remote_message_xml(client->remote);
     while (request) {
-        crm_element_value_int(request, F_LRMD_REMOTE_MSG_ID, &id);
+        crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
         crm_trace("Processing remote client request %d", id);
         if (!client->name) {
-            const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
-
-            if (value) {
-                client->name = strdup(value);
-            }
+            client->name = crm_element_value_copy(request,
+                                                  PCMK__XA_LRMD_CLIENTNAME);
         }
 
         lrmd_call_id++;
@@ -126,9 +121,9 @@ lrmd_remote_client_msg(gpointer data)
             lrmd_call_id = 1;
         }
 
-        crm_xml_add(request, F_LRMD_CLIENTID, client->id);
-        crm_xml_add(request, F_LRMD_CLIENTNAME, client->name);
-        crm_xml_add_int(request, F_LRMD_CALLID, lrmd_call_id);
+        crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
+        crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
+        crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
         process_lrmd_message(client, id, request);
         free_xml(request);
@@ -175,6 +170,7 @@ lrmd_remote_client_destroy(gpointer user_data)
         gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(*client->remote->tls_session);
         gnutls_free(client->remote->tls_session);
+        client->remote->tls_session = NULL;
         close(csock);
     }
 
@@ -229,7 +225,7 @@ lrmd_remote_listen(gpointer data)
     }
 
     new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = calloc(1, sizeof(pcmk__remote_t));
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
     pcmk__set_client_flags(new_client, pcmk__client_tls);
     new_client->remote->tls_session = session;
 

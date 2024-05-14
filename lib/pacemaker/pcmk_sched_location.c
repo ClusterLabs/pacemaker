@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/rules_internal.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
@@ -26,89 +27,167 @@ get_node_score(const char *rule, const char *score, bool raw,
     int score_f = 0;
 
     if (score == NULL) {
-        pe_err("Rule %s: no score specified.  Assuming 0.", rule);
+        pcmk__config_warn("Rule %s: no score specified (assuming 0)", rule);
 
     } else if (raw) {
         score_f = char2score(score);
 
     } else {
+        const char *target = NULL;
         const char *attr_score = NULL;
 
-        attr_score = pe__node_attribute_calculated(node, score, rsc,
-                                                   pcmk__rsc_node_current,
-                                                   false);
+        target = g_hash_table_lookup(rsc->meta,
+                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
+        attr_score = pcmk__node_attr(node, score, target,
+                                     pcmk__rsc_node_current);
         if (attr_score == NULL) {
             crm_debug("Rule %s: %s did not have a value for %s",
-                      rule, pe__node_name(node), score);
-            score_f = -INFINITY;
+                      rule, pcmk__node_name(node), score);
+            score_f = -PCMK_SCORE_INFINITY;
 
         } else {
             crm_debug("Rule %s: %s had value %s for %s",
-                      rule, pe__node_name(node), attr_score, score);
+                      rule, pcmk__node_name(node), attr_score, score);
             score_f = char2score(attr_score);
         }
     }
     return score_f;
 }
 
-static pe__location_t *
+/*!
+ * \internal
+ * \brief Parse a role configuration for a location constraint
+ *
+ * \param[in]  role_spec  Role specification
+ * \param[out] role       Where to store parsed role
+ *
+ * \return true if role specification is valid, otherwise false
+ */
+static bool
+parse_location_role(const char *role_spec, enum rsc_role_e *role)
+{
+    if (role_spec == NULL) {
+        *role = pcmk_role_unknown;
+        return true;
+    }
+
+    *role = pcmk_parse_role(role_spec);
+    switch (*role) {
+        case pcmk_role_unknown:
+            return false;
+
+        case pcmk_role_started:
+        case pcmk_role_unpromoted:
+            /* Any promotable clone instance cannot be promoted without being in
+             * the unpromoted role first. Therefore, any constraint for the
+             * started or unpromoted role applies to every role.
+             */
+            *role = pcmk_role_unknown;
+            break;
+
+        default:
+            break;
+    }
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Generate a location constraint from a rule
+ *
+ * \param[in,out] rsc            Resource that constraint is for
+ * \param[in]     rule_xml       Rule XML (sub-element of location constraint)
+ * \param[in]     discovery      Value of \c PCMK_XA_RESOURCE_DISCOVERY for
+ *                               constraint
+ * \param[out]    next_change    Where to set when rule evaluation will change
+ * \param[in,out] rule_input     Values used to evaluate rule criteria
+ *                               (node-specific values will be overwritten by
+ *                               this function)
+ *
+ * \return true if rule is valid, otherwise false
+ */
+static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pe_re_match_data_t *re_match_data)
+                       pcmk_rule_input_t *rule_input)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
     const char *boolean = NULL;
-    const char *role = NULL;
+    const char *role_spec = NULL;
 
     GList *iter = NULL;
-    GList *nodes = NULL;
 
-    bool do_and = true;
-    bool accept = true;
     bool raw_score = true;
     bool score_allocated = false;
 
-    pe__location_t *location_rule = NULL;
+    pcmk__location_t *location_rule = NULL;
+    enum rsc_role_e role = pcmk_role_unknown;
+    enum pcmk__combine combine = pcmk__combine_unknown;
 
     rule_xml = expand_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
-        return NULL;
+        return false; // Error already logged
     }
 
-    rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
-    boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
-    role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
-
-    crm_trace("Processing rule: %s", rule_id);
-
-    if ((role != NULL) && (text2role(role) == pcmk_role_unknown)) {
-        pe_err("Bad role specified for %s: %s", rule_id, role);
-        return NULL;
+    rule_id = crm_element_value(rule_xml, PCMK_XA_ID);
+    if (rule_id == NULL) {
+        pcmk__config_err("Ignoring " PCMK_XE_RULE " without " PCMK_XA_ID
+                         " in location constraint");
+        return false;
     }
 
-    score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
+    boolean = crm_element_value(rule_xml, PCMK_XA_BOOLEAN_OP);
+    role_spec = crm_element_value(rule_xml, PCMK_XA_ROLE);
+
+    if (parse_location_role(role_spec, &role)) {
+        crm_trace("Setting rule %s role filter to %s", rule_id, role_spec);
+    } else {
+        pcmk__config_err("Ignoring rule %s: Invalid " PCMK_XA_ROLE " '%s'",
+                         rule_id, role_spec);
+        return false;
+    }
+
+    crm_trace("Processing location constraint rule %s", rule_id);
+
+    score = crm_element_value(rule_xml, PCMK_XA_SCORE);
     if (score == NULL) {
-        score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
+        score = crm_element_value(rule_xml, PCMK_XA_SCORE_ATTRIBUTE);
         if (score != NULL) {
             raw_score = false;
         }
     }
-    if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
-        do_and = false;
+
+    combine = pcmk__parse_combine(boolean);
+    switch (combine) {
+        case pcmk__combine_and:
+        case pcmk__combine_or:
+            break;
+
+        default:
+            /* @COMPAT When we can break behavioral backward compatibility,
+             * return false
+             */
+            pcmk__config_warn("Location constraint rule %s has invalid "
+                              PCMK_XA_BOOLEAN_OP " value '%s', using default "
+                              "'" PCMK_VALUE_AND "'",
+                              rule_id, boolean);
+            combine = pcmk__combine_and;
+            break;
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
+    CRM_CHECK(location_rule != NULL, return NULL);
 
-    if (location_rule == NULL) {
-        return NULL;
-    }
+    location_rule->role_filter = role;
 
-    if ((re_match_data != NULL) && (re_match_data->nregs > 0)
-        && (re_match_data->pmatch[0].rm_so != -1) && !raw_score) {
+    if ((rule_input->rsc_id != NULL) && (rule_input->rsc_id_nmatches > 0)
+        && !raw_score) {
 
-        char *result = pe_expand_re_matches(score, re_match_data);
+        char *result = pcmk__replace_submatches(score, rule_input->rsc_id,
+                                                rule_input->rsc_id_submatches,
+                                                rule_input->rsc_id_nmatches);
 
         if (result != NULL) {
             score = result;
@@ -116,69 +195,21 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         }
     }
 
-    if (role != NULL) {
-        crm_trace("Setting role filter: %s", role);
-        location_rule->role_filter = text2role(role);
-        if (location_rule->role_filter == pcmk_role_unpromoted) {
-            /* Any promotable clone cannot be promoted without being in the
-             * unpromoted role first. Ergo, any constraint for the unpromoted
-             * role applies to every role.
-             */
-            location_rule->role_filter = pcmk_role_unknown;
-        }
-    }
-    if (do_and) {
-        nodes = pcmk__copy_node_list(rsc->cluster->nodes, true);
-        for (iter = nodes; iter != NULL; iter = iter->next) {
-            pcmk_node_t *node = iter->data;
-
-            node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
-        }
-    }
-
     for (iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
-        int score_f = 0;
         pcmk_node_t *node = iter->data;
-        pe_match_data_t match_data = {
-            .re = re_match_data,
-            .params = pe_rsc_params(rsc, node, rsc->cluster),
-            .meta = rsc->meta,
-        };
 
-        accept = pe_test_rule(rule_xml, node->details->attrs, pcmk_role_unknown,
-                              rsc->cluster->now, next_change, &match_data);
+        rule_input->node_attrs = node->details->attrs;
+        rule_input->rsc_params = pe_rsc_params(rsc, node, rsc->cluster);
 
-        crm_trace("Rule %s %s on %s", ID(rule_xml), accept? "passed" : "failed",
-                  pe__node_name(node));
+        if (pcmk_evaluate_rule(rule_xml, rule_input,
+                               next_change) == pcmk_rc_ok) {
+            pcmk_node_t *local = pe__copy_node(node);
 
-        score_f = get_node_score(rule_id, score, raw_score, node, rsc);
-
-        if (accept) {
-            pcmk_node_t *local = pe_find_node_id(nodes, node->details->id);
-
-            if ((local == NULL) && do_and) {
-                continue;
-
-            } else if (local == NULL) {
-                local = pe__copy_node(node);
-                nodes = g_list_append(nodes, local);
-            }
-
-            if (!do_and) {
-                local->weight = pcmk__add_scores(local->weight, score_f);
-            }
-            crm_trace("%s has score %s after %s", pe__node_name(node),
+            location_rule->nodes = g_list_prepend(location_rule->nodes, local);
+            local->weight = get_node_score(rule_id, score, raw_score, node,
+                                           rsc);
+            crm_trace("%s has score %s after %s", pcmk__node_name(node),
                       pcmk_readable_score(local->weight), rule_id);
-
-        } else if (do_and && !accept) {
-            // Remove it
-            pcmk_node_t *delete = pe_find_node_id(nodes, node->details->id);
-
-            if (delete != NULL) {
-                nodes = g_list_remove(nodes, delete);
-                crm_trace("%s did not match", pe__node_name(node));
-            }
-            free(delete);
         }
     }
 
@@ -186,27 +217,26 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         free((char *)score);
     }
 
-    location_rule->node_list_rh = nodes;
-    if (location_rule->node_list_rh == NULL) {
-        crm_trace("No matching nodes for rule %s", rule_id);
-        return NULL;
+    if (location_rule->nodes == NULL) {
+        crm_trace("No matching nodes for location constraint rule %s", rule_id);
+    } else {
+        crm_trace("Location constraint rule %s matched %d nodes",
+                  rule_id, g_list_length(location_rule->nodes));
     }
-
-    crm_trace("%s: %d nodes matched",
-              rule_id, g_list_length(location_rule->node_list_rh));
-    return location_rule;
+    return true;
 }
 
 static void
-unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
-                    const char *score, pe_re_match_data_t *re_match_data)
+unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
+                    const char *role_spec, const char *score,
+                    char *rsc_id_match, int rsc_id_nmatches,
+                    regmatch_t *rsc_id_submatches)
 {
-    pe__location_t *location = NULL;
-    const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
+    const char *rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
+    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+    const char *node = crm_element_value(xml_obj, PCMK_XE_NODE);
     const char *discovery = crm_element_value(xml_obj,
-                                              XML_LOCATION_ATTR_DISCOVERY);
+                                              PCMK_XA_RESOURCE_DISCOVERY);
 
     if (rsc == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
@@ -215,37 +245,86 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
     }
 
     if (score == NULL) {
-        score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+        score = crm_element_value(xml_obj, PCMK_XA_SCORE);
     }
 
     if ((node != NULL) && (score != NULL)) {
         int score_i = char2score(score);
-        pcmk_node_t *match = pe_find_node(rsc->cluster->nodes, node);
+        pcmk_node_t *match = pcmk_find_node(rsc->cluster, node);
+        enum rsc_role_e role = pcmk_role_unknown;
+        pcmk__location_t *location = NULL;
 
-        if (!match) {
+        if (match == NULL) {
+            crm_info("Ignoring location constraint %s "
+                     "because '%s' is not a known node",
+                     pcmk__s(id, "without ID"), node);
             return;
         }
+
+        if (role_spec == NULL) {
+            role_spec = crm_element_value(xml_obj, PCMK_XA_ROLE);
+        }
+        if (parse_location_role(role_spec, &role)) {
+            crm_trace("Setting location constraint %s role filter: %s",
+                      id, role_spec);
+        } else {
+            /* @COMPAT The previous behavior of creating the constraint ignoring
+             * the role is retained for now, but we should ignore the entire
+             * constraint when we can break backward compatibility.
+             */
+            pcmk__config_err("Ignoring role in constraint %s: "
+                             "Invalid value '%s'", id, role_spec);
+        }
+
         location = pcmk__new_location(id, rsc, score_i, discovery, match);
+        if (location == NULL) {
+            return; // Error already logged
+        }
+        location->role_filter = role;
 
     } else {
         bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
+        pcmk_rule_input_t rule_input = {
+            .now = rsc->cluster->now,
+            .rsc_meta = rsc->meta,
+            .rsc_id = rsc_id_match,
+            .rsc_id_submatches = rsc_id_submatches,
+            .rsc_id_nmatches = rsc_id_nmatches,
+        };
 
-        /* This loop is logically parallel to pe_evaluate_rules(), except
+        /* This loop is logically parallel to pcmk__evaluate_rules(), except
          * instead of checking whether any rule is active, we set up location
          * constraints for each active rule.
+         *
+         * @COMPAT When we can break backward compatibility, limit location
+         * constraints to a single rule, for consistency with other contexts.
+         * Since a rule may contain other rules, this does not prohibit any
+         * existing use cases.
          */
-        for (xmlNode *rule_xml = first_named_child(xml_obj, XML_TAG_RULE);
-             rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
-            empty = false;
-            crm_trace("Unpacking %s/%s", id, ID(rule_xml));
-            generate_location_rule(rsc, rule_xml, discovery, next_change,
-                                   re_match_data);
+        for (xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE,
+                                                      NULL, NULL);
+             rule_xml != NULL; rule_xml = pcmk__xe_next_same(rule_xml)) {
+
+            if (generate_location_rule(rsc, rule_xml, discovery, next_change,
+                                       &rule_input)) {
+                if (empty) {
+                    empty = false;
+                    continue;
+                }
+                pcmk__warn_once(pcmk__wo_location_rules,
+                                "Support for multiple " PCMK_XE_RULE
+                                " elements in a location constraint is "
+                                "deprecated and will be removed in a future "
+                                "release (use a single new rule combining the "
+                                "previous rules with " PCMK_XA_BOOLEAN_OP
+                                " set to '" PCMK_VALUE_OR "' instead)");
+            }
         }
 
         if (empty) {
             pcmk__config_err("Ignoring constraint '%s' because it contains "
-                             "no rules", id);
+                             "no valid rules", id);
         }
 
         /* If there is a point in the future when the evaluation of a rule will
@@ -258,51 +337,25 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc, const char *role,
                                     "location rule evaluation");
         }
         crm_time_free(next_change);
-        return;
-    }
-
-    if (role == NULL) {
-        role = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
-    }
-
-    if ((location != NULL) && (role != NULL)) {
-        if (text2role(role) == pcmk_role_unknown) {
-            pe_err("Invalid constraint %s: Bad role %s", id, role);
-            return;
-
-        } else {
-            enum rsc_role_e r = text2role(role);
-            switch (r) {
-                case pcmk_role_unknown:
-                case pcmk_role_started:
-                case pcmk_role_unpromoted:
-                    /* Applies to all */
-                    location->role_filter = pcmk_role_unknown;
-                    break;
-                default:
-                    location->role_filter = r;
-                    break;
-            }
-        }
     }
 }
 
 static void
 unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+    const char *value = crm_element_value(xml_obj, PCMK_XA_RSC);
 
     if (value) {
         pcmk_resource_t *rsc;
 
         rsc = pcmk__find_constraint_resource(scheduler->resources, value);
-        unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL);
+        unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL, 0, NULL);
     }
 
-    value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
+    value = crm_element_value(xml_obj, PCMK_XA_RSC_PATTERN);
     if (value) {
-        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        regex_t regex;
         bool invert = false;
 
         if (value[0] == '!') {
@@ -310,11 +363,10 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             invert = true;
         }
 
-        if (regcomp(r_patt, value, REG_EXTENDED) != 0) {
+        if (regcomp(&regex, value, REG_EXTENDED) != 0) {
             pcmk__config_err("Ignoring constraint '%s' because "
-                             XML_LOC_ATTR_SOURCE_PATTERN
+                             PCMK_XA_RSC_PATTERN
                              " has invalid value '%s'", id, value);
-            free(r_patt);
             return;
         }
 
@@ -326,29 +378,24 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             regmatch_t *pmatch = NULL;
             int status;
 
-            if (r_patt->re_nsub > 0) {
-                nregs = r_patt->re_nsub + 1;
+            if (regex.re_nsub > 0) {
+                nregs = regex.re_nsub + 1;
             } else {
                 nregs = 1;
             }
-            pmatch = calloc(nregs, sizeof(regmatch_t));
+            pmatch = pcmk__assert_alloc(nregs, sizeof(regmatch_t));
 
-            status = regexec(r_patt, r->id, nregs, pmatch, 0);
+            status = regexec(&regex, r->id, nregs, pmatch, 0);
 
             if (!invert && (status == 0)) {
-                pe_re_match_data_t re_match_data = {
-                                                .string = r->id,
-                                                .nregs = nregs,
-                                                .pmatch = pmatch
-                                               };
-
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
-                unpack_rsc_location(xml_obj, r, NULL, NULL, &re_match_data);
+                unpack_rsc_location(xml_obj, r, NULL, NULL, r->id, nregs,
+                                    pmatch);
 
             } else if (invert && (status != 0)) {
                 crm_debug("'%s' is an inverted match of '%s' for %s",
                           r->id, value, id);
-                unpack_rsc_location(xml_obj, r, NULL, NULL, NULL);
+                unpack_rsc_location(xml_obj, r, NULL, NULL, NULL, 0, NULL);
 
             } else {
                 crm_trace("'%s' does not match '%s' for %s", r->id, value, id);
@@ -357,8 +404,7 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             free(pmatch);
         }
 
-        regfree(r_patt);
-        free(r_patt);
+        regfree(&regex);
     }
 }
 
@@ -378,9 +424,9 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     CRM_CHECK(xml_obj != NULL, return EINVAL);
 
-    id = ID(xml_obj);
+    id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
+        pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
         return pcmk_rc_unpack_error;
     }
@@ -388,11 +434,11 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
         return pcmk_rc_ok;
     }
 
-    rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    rsc_id = crm_element_value(xml_obj, PCMK_XA_RSC);
     if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
@@ -407,12 +453,14 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    state = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+    state = crm_element_value(xml_obj, PCMK_XA_ROLE);
 
-    *expanded_xml = copy_xml(xml_obj);
+    *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
-    // Convert any template or tag reference into constraint resource_set
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
+    /* Convert any template or tag reference into constraint
+     * PCMK_XE_RESOURCE_SET
+     */
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
@@ -421,11 +469,13 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (rsc_set != NULL) {
         if (state != NULL) {
-            // Move "rsc-role" into converted resource_set as "role" attribute
-            crm_xml_add(rsc_set, "role", state);
-            xml_remove_prop(*expanded_xml, XML_RULE_ATTR_ROLE);
+            /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
+             * PCMK_XA_ROLE attribute
+             */
+            crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
+            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
         }
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
+        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
 
     } else {
         // No sets
@@ -449,29 +499,30 @@ unpack_location_set(xmlNode *location, xmlNode *set,
 
     CRM_CHECK(set != NULL, return EINVAL);
 
-    set_id = ID(set);
+    set_id = pcmk__xe_id(set);
     if (set_id == NULL) {
-        pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
-                         XML_ATTR_ID " in constraint '%s'",
-                         pcmk__s(ID(location), "(missing ID)"));
+        pcmk__config_err("Ignoring " PCMK_XE_RESOURCE_SET " without "
+                         PCMK_XA_ID " in constraint '%s'",
+                         pcmk__s(pcmk__xe_id(location), "(missing ID)"));
         return pcmk_rc_unpack_error;
     }
 
-    role = crm_element_value(set, "role");
-    local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    role = crm_element_value(set, PCMK_XA_ROLE);
+    local_score = crm_element_value(set, PCMK_XA_SCORE);
 
-    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
-         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+    for (xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF, NULL, NULL);
+         xml_rsc != NULL; xml_rsc = pcmk__xe_next_same(xml_rsc)) {
 
         resource = pcmk__find_constraint_resource(scheduler->resources,
-                                                  ID(xml_rsc));
+                                                  pcmk__xe_id(xml_rsc));
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
-                             set_id, ID(xml_rsc));
+                             set_id, pcmk__xe_id(xml_rsc));
             return pcmk_rc_unpack_error;
         }
 
-        unpack_rsc_location(location, resource, role, local_score, NULL);
+        unpack_rsc_location(location, resource, role, local_score, NULL, 0,
+                            NULL);
     }
 
     return pcmk_rc_ok;
@@ -495,8 +546,8 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         xml_obj = expanded_xml;
     }
 
-    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
-         set = crm_next_same_xml(set)) {
+    for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
+         set != NULL; set = pcmk__xe_next_same(set)) {
 
         any_sets = true;
         set = expand_idref(set, scheduler->input);
@@ -530,62 +581,62 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
  * \param[in]     discover_mode  Resource discovery option for constraint
  * \param[in]     node           Node in constraint (or NULL if rule-based)
  *
- * \return Newly allocated location constraint
+ * \return Newly allocated location constraint on success, otherwise NULL
  * \note The result will be added to the cluster (via \p rsc) and should not be
  *       freed separately.
  */
-pe__location_t *
+pcmk__location_t *
 pcmk__new_location(const char *id, pcmk_resource_t *rsc,
                    int node_score, const char *discover_mode, pcmk_node_t *node)
 {
-    pe__location_t *new_con = NULL;
+    pcmk__location_t *new_con = NULL;
+
+    CRM_CHECK((node != NULL) || (node_score == 0), return NULL);
 
     if (id == NULL) {
-        pe_err("Invalid constraint: no ID specified");
+        pcmk__config_err("Invalid constraint: no ID specified");
         return NULL;
-
-    } else if (rsc == NULL) {
-        pe_err("Invalid constraint %s: no resource specified", id);
-        return NULL;
-
-    } else if (node == NULL) {
-        CRM_CHECK(node_score == 0, return NULL);
     }
 
-    new_con = calloc(1, sizeof(pe__location_t));
-    if (new_con != NULL) {
-        new_con->id = strdup(id);
-        new_con->rsc_lh = rsc;
-        new_con->node_list_rh = NULL;
-        new_con->role_filter = pcmk_role_unknown;
-
-        if (pcmk__str_eq(discover_mode, "always",
-                         pcmk__str_null_matches|pcmk__str_casei)) {
-            new_con->discover_mode = pcmk_probe_always;
-
-        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
-            new_con->discover_mode = pcmk_probe_never;
-
-        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
-            new_con->discover_mode = pcmk_probe_exclusive;
-            rsc->exclusive_discover = TRUE;
-
-        } else {
-            pe_err("Invalid " XML_LOCATION_ATTR_DISCOVERY " value %s "
-                   "in location constraint", discover_mode);
-        }
-
-        if (node != NULL) {
-            pcmk_node_t *copy = pe__copy_node(node);
-
-            copy->weight = node_score;
-            new_con->node_list_rh = g_list_prepend(NULL, copy);
-        }
-
-        rsc->cluster->placement_constraints = g_list_prepend(
-            rsc->cluster->placement_constraints, new_con);
-        rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
+    if (rsc == NULL) {
+        pcmk__config_err("Invalid constraint %s: no resource specified", id);
+        return NULL;
     }
+
+    new_con = pcmk__assert_alloc(1, sizeof(pcmk__location_t));
+    new_con->id = pcmk__str_copy(id);
+    new_con->rsc = rsc;
+    new_con->nodes = NULL;
+    new_con->role_filter = pcmk_role_unknown;
+
+    if (pcmk__str_eq(discover_mode, PCMK_VALUE_ALWAYS,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        new_con->discover_mode = pcmk_probe_always;
+
+    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_NEVER,
+                            pcmk__str_casei)) {
+        new_con->discover_mode = pcmk_probe_never;
+
+    } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
+                            pcmk__str_casei)) {
+        new_con->discover_mode = pcmk_probe_exclusive;
+        rsc->exclusive_discover = TRUE;
+
+    } else {
+        pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
+                         "in location constraint", discover_mode);
+    }
+
+    if (node != NULL) {
+        pcmk_node_t *copy = pe__copy_node(node);
+
+        copy->weight = node_score;
+        new_con->nodes = g_list_prepend(NULL, copy);
+    }
+
+    rsc->cluster->placement_constraints = g_list_prepend(
+        rsc->cluster->placement_constraints, new_con);
+    rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
 
     return new_con;
 }
@@ -601,9 +652,9 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
 {
     for (GList *iter = scheduler->placement_constraints;
          iter != NULL; iter = iter->next) {
-        pe__location_t *location = iter->data;
+        pcmk__location_t *location = iter->data;
 
-        location->rsc_lh->cmds->apply_location(location->rsc_lh, location);
+        location->rsc->cmds->apply_location(location->rsc, location);
     }
 }
 
@@ -618,7 +669,7 @@ pcmk__apply_locations(pcmk_scheduler_t *scheduler)
  *       apply_location() method should be used instead in most cases.
  */
 void
-pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     bool need_role = false;
 
@@ -627,40 +678,39 @@ pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *location)
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > pcmk_role_unknown);
     if (need_role && (location->role_filter != rsc->next_role)) {
-        pe_rsc_trace(rsc,
-                     "Not applying %s to %s because role will be %s not %s",
-                     location->id, rsc->id, role2text(rsc->next_role),
-                     role2text(location->role_filter));
+        pcmk__rsc_trace(rsc,
+                        "Not applying %s to %s because role will be %s not %s",
+                        location->id, rsc->id, pcmk_role_text(rsc->next_role),
+                        pcmk_role_text(location->role_filter));
         return;
     }
 
-    if (location->node_list_rh == NULL) {
-        pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
-                     location->id, rsc->id);
+    if (location->nodes == NULL) {
+        pcmk__rsc_trace(rsc, "Not applying %s to %s because no nodes match",
+                        location->id, rsc->id);
         return;
     }
 
-    pe_rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
-                 (need_role? " for role " : ""),
-                 (need_role? role2text(location->role_filter) : ""), rsc->id);
+    pcmk__rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
+                    (need_role? " for role " : ""),
+                    (need_role? pcmk_role_text(location->role_filter) : ""),
+                    rsc->id);
 
-    for (GList *iter = location->node_list_rh;
-         iter != NULL; iter = iter->next) {
-
+    for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = iter->data;
         pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
                                                         node->details->id);
 
         if (allowed_node == NULL) {
-            pe_rsc_trace(rsc, "* = %d on %s",
-                         node->weight, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "* = %d on %s",
+                            node->weight, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->allowed_nodes,
                                 (gpointer) allowed_node->details->id,
                                 allowed_node);
         } else {
-            pe_rsc_trace(rsc, "* + %d on %s",
-                         node->weight, pe__node_name(node));
+            pcmk__rsc_trace(rsc, "* + %d on %s",
+                            node->weight, pcmk__node_name(node));
             allowed_node->weight = pcmk__add_scores(allowed_node->weight,
                                                     node->weight);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2022 the Pacemaker project contributors
+ * Copyright 2016-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/alerts_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"
 
@@ -105,9 +105,11 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
-    xmlNode *alert_xml = get_xpath_object("//" F_LRMD_ALERT, request, LOG_ERR);
-    const char *alert_id = crm_element_value(alert_xml, F_LRMD_ALERT_ID);
-    const char *alert_path = crm_element_value(alert_xml, F_LRMD_ALERT_PATH);
+    xmlNode *alert_xml = get_xpath_object("//" PCMK__XE_LRMD_ALERT, request,
+                                          LOG_ERR);
+    const char *alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
+    const char *alert_path = crm_element_value(alert_xml,
+                                               PCMK__XA_LRMD_ALERT_PATH);
     svc_action_t *action = NULL;
     int alert_timeout = 0;
     int rc = pcmk_ok;
@@ -116,13 +118,14 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
     if ((alert_id == NULL) || (alert_path == NULL) ||
         (client == NULL) || (client->id == NULL)) { /* hint static analyzer */
-        return -EINVAL;
+        rc = -EINVAL;
+        goto err;
     }
     if (draining_alerts) {
         return pcmk_ok;
     }
 
-    crm_element_value_int(alert_xml, F_LRMD_TIMEOUT, &alert_timeout);
+    crm_element_value_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
 
     crm_info("Executing alert %s for %s", alert_id, client->id);
 
@@ -130,20 +133,11 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     pcmk__add_alert_key_int(params, PCMK__alert_key_node_sequence,
                             ++alert_sequence_no);
 
-    cb_data = calloc(1, sizeof(struct alert_cb_s));
-    if (cb_data == NULL) {
-        rc = -errno;
-        goto err;
-    }
+    cb_data = pcmk__assert_alloc(1, sizeof(struct alert_cb_s));
 
-    /* coverity[deref_ptr] False Positive */
-    cb_data->client_id = strdup(client->id);
-    if (cb_data->client_id == NULL) {
-        rc = -errno;
-        goto err;
-    }
+    cb_data->client_id = pcmk__str_copy(client->id);
 
-    crm_element_value_int(request, F_LRMD_CALLID, &(cb_data->call_id));
+    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);
@@ -165,9 +159,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
 err:
     if (cb_data) {
-        if (cb_data->client_id) {
-            free(cb_data->client_id);
-        }
+        free(cb_data->client_id);
         free(cb_data);
     }
     services_action_free(action);

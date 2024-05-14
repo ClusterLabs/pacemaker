@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
@@ -158,23 +158,17 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
  * \param[in] key         Connection table key (NULL to use sane default)
  * \param[in] uid_client  UID corresponding to c (ignored if c is NULL)
  *
- * \return Pointer to new pcmk__client_t (or NULL on error)
+ * \return Pointer to new pcmk__client_t (guaranteed not to be \c NULL)
  */
 static pcmk__client_t *
 client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 {
-    pcmk__client_t *client = calloc(1, sizeof(pcmk__client_t));
-
-    if (client == NULL) {
-        crm_perror(LOG_ERR, "Allocating client");
-        return NULL;
-    }
+    pcmk__client_t *client = pcmk__assert_alloc(1, sizeof(pcmk__client_t));
 
     if (c) {
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
-            client->user = strdup("#unprivileged");
-            CRM_CHECK(client->user != NULL, free(client); return NULL);
+            client->user = pcmk__str_copy("#unprivileged");
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
         }
@@ -208,10 +202,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 pcmk__client_t *
 pcmk__new_unauth_client(void *key)
 {
-    pcmk__client_t *client = client_from_connection(NULL, key, 0);
-
-    CRM_ASSERT(client != NULL);
-    return client;
+    return client_from_connection(NULL, key, 0);
 }
 
 pcmk__client_t *
@@ -242,9 +233,6 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 
     /* TODO: Do our own auth checking, return NULL if unauthorized */
     client = client_from_connection(c, NULL, uid_client);
-    if (client == NULL) {
-        return NULL;
-    }
 
     if ((uid_client == 0) || (uid_client == uid_cluster)) {
         /* Remember when a connection came from root or hacluster */
@@ -259,10 +247,7 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 static struct iovec *
 pcmk__new_ipc_event(void)
 {
-    struct iovec *iov = calloc(2, sizeof(struct iovec));
-
-    CRM_ASSERT(iov != NULL);
-    return iov;
+    return (struct iovec *) pcmk__assert_alloc(2, sizeof(struct iovec));
 }
 
 /*!
@@ -331,6 +316,14 @@ pcmk__free_client(pcmk__client_t *c)
         if (c->remote->auth_timeout) {
             g_source_remove(c->remote->auth_timeout);
         }
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (c->remote->tls_session != NULL) {
+            /* @TODO Reduce duplication at callers. Put here everything
+             * necessary to tear down and free tls_session.
+             */
+            gnutls_free(c->remote->tls_session);
+        }
+#endif  // HAVE_GNUTLS_GNUTLS_H
         free(c->remote->buffer);
         free(c->remote);
     }
@@ -413,7 +406,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
     if (header->size_compressed) {
         int rc = 0;
         unsigned int size_u = 1 + header->size_uncompressed;
-        uncompressed = calloc(1, size_u);
+        uncompressed = pcmk__assert_alloc(1, size_u);
 
         crm_trace("Decompressing message data %u bytes into %u bytes",
                   header->size_compressed, size_u);
@@ -433,7 +426,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
 
     CRM_ASSERT(text[header->size_uncompressed - 1] == 0);
 
-    xml = string2xml(text);
+    xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
 
     free(uncompressed);
@@ -583,23 +576,25 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                       uint32_t max_send_size, struct iovec **result,
                       ssize_t *bytes)
 {
-    static unsigned int biggest = 0;
     struct iovec *iov;
     unsigned int total = 0;
-    char *compressed = NULL;
-    char *buffer = NULL;
+    GString *buffer = NULL;
     pcmk__ipc_header_t *header = NULL;
+    int rc = pcmk_rc_ok;
 
     if ((message == NULL) || (result == NULL)) {
-        return EINVAL;
+        rc = EINVAL;
+        goto done;
     }
 
     header = calloc(1, sizeof(pcmk__ipc_header_t));
     if (header == NULL) {
-       return ENOMEM; /* errno mightn't be set by allocator */
+       rc = ENOMEM;
+       goto done;
     }
 
-    buffer = dump_xml_unformatted(message);
+    buffer = g_string_sized_new(1024);
+    pcmk__xml_string(message, 0, buffer, 0);
 
     if (max_send_size == 0) {
         max_send_size = crm_ipc_default_buffer_size();
@@ -612,17 +607,21 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size_uncompressed = 1 + strlen(buffer);
+    header->size_uncompressed = 1 + buffer->len;
     total = iov[0].iov_len + header->size_uncompressed;
 
     if (total < max_send_size) {
-        iov[1].iov_base = buffer;
+        iov[1].iov_base = pcmk__str_copy(buffer->str);
         iov[1].iov_len = header->size_uncompressed;
 
     } else {
+        static unsigned int biggest = 0;
+
+        char *compressed = NULL;
         unsigned int new_size = 0;
 
-        if (pcmk__compress(buffer, (unsigned int) header->size_uncompressed,
+        if (pcmk__compress(buffer->str,
+                           (unsigned int) header->size_uncompressed,
                            (unsigned int) max_send_size, &compressed,
                            &new_size) == pcmk_rc_ok) {
 
@@ -631,8 +630,6 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
 
             iov[1].iov_len = header->size_compressed;
             iov[1].iov_base = compressed;
-
-            free(buffer);
 
             biggest = QB_MAX(header->size_compressed, biggest);
 
@@ -646,9 +643,9 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                     header->size_uncompressed, max_send_size, 4 * biggest);
 
             free(compressed);
-            free(buffer);
             pcmk_free_ipc_event(iov);
-            return EMSGSIZE;
+            rc = EMSGSIZE;
+            goto done;
         }
     }
 
@@ -660,7 +657,12 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     if (bytes != NULL) {
         *bytes = header->qb.size;
     }
-    return pcmk_rc_ok;
+
+done:
+    if (buffer != NULL) {
+        g_string_free(buffer, TRUE);
+    }
+    return rc;
 }
 
 int
@@ -786,10 +788,10 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
     xmlNode *ack = NULL;
 
     if (pcmk_is_set(flags, crm_ipc_client_response)) {
-        ack = create_xml_node(NULL, tag);
-        crm_xml_add(ack, "function", function);
-        crm_xml_add_int(ack, "line", line);
-        crm_xml_add_int(ack, "status", (int) status);
+        ack = pcmk__xe_create(NULL, tag);
+        crm_xml_add(ack, PCMK_XA_FUNCTION, function);
+        crm_xml_add_int(ack, PCMK__XA_LINE, line);
+        crm_xml_add_int(ack, PCMK_XA_STATUS, (int) status);
         crm_xml_add(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
     }
     return ack;
@@ -911,7 +913,7 @@ void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server(PCMK__VALUE_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
         crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");

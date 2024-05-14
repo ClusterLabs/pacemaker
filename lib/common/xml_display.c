@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
@@ -96,7 +95,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
     int rc = pcmk_rc_no_output;
 
     if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
-        const char *hidden = crm_element_value(data, "hidden");
+        const char *hidden = crm_element_value(data, PCMK__XA_HIDDEN);
 
         g_string_truncate(buffer, 0);
 
@@ -110,7 +109,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             xml_node_private_t *nodepriv = attr->_private;
             const char *p_name = (const char *) attr->name;
             const char *p_value = pcmk__xml_attr_value(attr);
-            char *p_copy = NULL;
+            gchar *p_copy = NULL;
 
             if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
@@ -120,21 +119,23 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             if (pcmk_any_flags_set(options,
                                    pcmk__xml_fmt_diff_plus
                                    |pcmk__xml_fmt_diff_minus)
-                && (strcmp(XML_DIFF_MARKER, p_name) == 0)) {
+                && (strcmp(PCMK__XA_CRM_DIFF_MARKER, p_name) == 0)) {
                 continue;
             }
 
             if ((hidden != NULL) && (p_name[0] != '\0')
                 && (strstr(hidden, p_name) != NULL)) {
-                pcmk__str_update(&p_copy, "*****");
+
+                p_value = "*****";
 
             } else {
-                p_copy = crm_xml_escape(p_value);
+                p_copy = pcmk__xml_escape(p_value, true);
+                p_value = p_copy;
             }
 
             pcmk__g_strcat(buffer, " ", p_name, "=\"",
-                           pcmk__s(p_copy, "<null>"), "\"", NULL);
-            free(p_copy);
+                           pcmk__s(p_value, "<null>"), "\"", NULL);
+            g_free(p_copy);
         }
 
         if ((data->children != NULL)
@@ -477,7 +478,7 @@ log_data_element(int log_level, const char *file, const char *function,
 
     if (pcmk_is_set(options, pcmk__xml_fmt_pretty)
         && ((data->children == NULL)
-            || (crm_element_value(data, XML_DIFF_MARKER) != NULL))) {
+            || (crm_element_value(data, PCMK__XA_CRM_DIFF_MARKER) != NULL))) {
 
         if (pcmk_is_set(options, pcmk__xml_fmt_diff_plus)) {
             legacy_options |= xml_log_option_diff_all;

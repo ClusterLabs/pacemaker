@@ -196,7 +196,7 @@ class AttributeTests(Tests):
         test.add_cmd("attrd_updater", "--name DDD -U 555 --set=foo --output-as=xml")
         test.add_cmd_check_stdout("attrd_updater", "--name DDD -Q --output-as=xml",
                                   "name=\"DDD\" value=\"555\"")
-        test.add_log_pattern("Processed 1 private change for DDD, id=n/a, set=foo")
+        test.add_log_pattern("Processed 1 private change for DDD (set foo)")
 
     def build_multiple_query_tests(self):
         """ Add tests that set and query an attribute across multiple nodes """

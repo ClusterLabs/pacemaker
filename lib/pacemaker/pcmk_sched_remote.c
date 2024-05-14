@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
@@ -94,7 +93,7 @@ get_remote_node_state(const pcmk_node_t *node)
     remote_rsc = node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
 
-    cluster_node = pe__current_node(remote_rsc);
+    cluster_node = pcmk__current_node(remote_rsc);
 
     /* If the cluster node the remote connection resource resides on
      * is unclean or went offline, we can't process any operations
@@ -169,7 +168,7 @@ static void
 apply_remote_ordering(pcmk_action_t *action)
 {
     pcmk_resource_t *remote_rsc = NULL;
-    enum action_tasks task = text2task(action->task);
+    enum action_tasks task = pcmk_parse_action(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
     uint32_t order_opts = pcmk__ar_none;
@@ -178,7 +177,7 @@ apply_remote_ordering(pcmk_action_t *action)
         return;
     }
 
-    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
+    CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
@@ -203,7 +202,8 @@ apply_remote_ordering(pcmk_action_t *action)
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
-                pe__set_order_flags(order_opts, pcmk__ar_first_implies_then);
+                pcmk__set_relation_flags(order_opts,
+                                         pcmk__ar_first_implies_then);
             }
 
             /* Ensure connection is up before running this action */
@@ -266,7 +266,7 @@ apply_remote_ordering(pcmk_action_t *action)
                                         pcmk__ar_first_implies_then);
 
             } else {
-                pcmk_node_t *cluster_node = pe__current_node(remote_rsc);
+                pcmk_node_t *cluster_node = pcmk__current_node(remote_rsc);
 
                 if ((task == pcmk_action_monitor) && (state == remote_state_failed)) {
                     /* We would only be here if we do not know the state of the
@@ -306,11 +306,11 @@ apply_container_ordering(pcmk_action_t *action)
      */
     pcmk_resource_t *remote_rsc = NULL;
     pcmk_resource_t *container = NULL;
-    enum action_tasks task = text2task(action->task);
+    enum action_tasks task = pcmk_parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(action->node != NULL);
-    CRM_ASSERT(pe__is_guest_or_remote_node(action->node));
+    CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
@@ -434,7 +434,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (!pe__is_guest_or_remote_node(action->node)) {
+        if (!pcmk__is_pacemaker_remote_node(action->node)) {
             continue;
         }
 
@@ -464,7 +464,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
                  item = item->next) {
                 pcmk_action_t *rsc_action = item->data;
 
-                if (!pe__same_node(rsc_action->node, action->node)
+                if (!pcmk__same_node(rsc_action->node, action->node)
                     && pcmk__str_eq(rsc_action->task, PCMK_ACTION_STOP,
                                     pcmk__str_none)) {
                     pcmk__new_ordering(remote, start_key(remote), NULL,
@@ -480,8 +480,8 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          *
          * This is somewhat brittle in that we need to make sure the results of
          * this ordering are compatible with the result of get_router_node().
-         * It would probably be better to add XML_LRM_ATTR_ROUTER_NODE as part
-         * of this logic rather than create_graph_action().
+         * It would probably be better to add PCMK__XA_ROUTER_NODE as part of
+         * this logic rather than create_graph_action().
          */
         if (remote->container) {
             crm_trace("Container ordering for %s", action->uuid);
@@ -505,7 +505,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 bool
 pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
-    return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
+    return pcmk__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
 
@@ -551,13 +551,13 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     const char *task = action->task;
 
     if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_none)
-        || !pe__is_guest_or_remote_node(action->node)) {
+        || !pcmk__is_pacemaker_remote_node(action->node)) {
         return NULL;
     }
 
     CRM_ASSERT(action->node->details->remote_rsc != NULL);
 
-    began_on = pe__current_node(action->node->details->remote_rsc);
+    began_on = pcmk__current_node(action->node->details->remote_rsc);
     ended_on = action->node->details->remote_rsc->allocated_to;
     if (action->node->details->remote_rsc
         && (action->node->details->remote_rsc->container == NULL)
@@ -583,7 +583,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         return began_on;
     }
 
-    if (pe__same_node(began_on, ended_on)) {
+    if (pcmk__same_node(began_on, ended_on)) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
@@ -654,45 +654,48 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
 void
 pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
 {
-    const char *remote_addr = g_hash_table_lookup(params,
-                                                  XML_RSC_ATTR_REMOTE_RA_ADDR);
+    const char *remote_addr = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
         GHashTable *base = pe_rsc_params(rsc, NULL, rsc->cluster);
 
-        remote_addr = g_hash_table_lookup(base, XML_RSC_ATTR_REMOTE_RA_ADDR);
+        remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
-            g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
-                                strdup(remote_addr));
+            pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, remote_addr);
         }
     }
 }
 
 /*!
- * \brief Add special bundle meta-attributes to XML
+ * \brief Add special guest node meta-attributes to XML
  *
- * If a given action will be executed on a guest node (including a bundle),
- * add the special bundle meta-attribute "container-attribute-target" and
- * environment variable "physical_host" as XML attributes (using meta-attribute
- * naming).
+ * If a given action will be executed on a guest node, add the following as XML
+ * attributes (using meta-attribute naming):
+ * * The resource's \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET meta-attribute
+ *   (usually set only for bundles), as \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET
+ * * The guest's physical host (current host for "down" actions, next host for
+ *   "up" actions), as \c PCMK__META_PHYSICAL_HOST
+ *
+ * If the guest node has no physical host, then don't add either attribute.
  *
  * \param[in,out] args_xml  XML to add attributes to
  * \param[in]     action    Action to check
  */
 void
-pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
+pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;
     enum action_tasks task;
 
-    if (!pe__is_guest_node(guest)) {
+    if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
 
-    task = text2task(action->task);
+    task = pcmk_parse_action(action->task);
     if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
-        task = text2task(g_hash_table_lookup(action->meta, "notify_operation"));
+        task = pcmk_parse_action(g_hash_table_lookup(action->meta,
+                                                     "notify_operation"));
     }
 
     switch (task) {
@@ -701,7 +704,7 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk_action_demote:
         case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
-            host = pe__current_node(guest->details->remote_rsc->container);
+            host = pcmk__current_node(guest->details->remote_rsc->container);
             break;
 
         case pcmk_action_start:
@@ -718,11 +721,14 @@ pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     }
 
     if (host != NULL) {
-        hash2metafield((gpointer) XML_RSC_ATTR_TARGET,
-                       (gpointer) g_hash_table_lookup(action->rsc->meta,
-                                                      XML_RSC_ATTR_TARGET),
+        gpointer target =
+            g_hash_table_lookup(action->rsc->meta,
+                                PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+
+        hash2metafield((gpointer) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                       target,
                        (gpointer) args_xml);
-        hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
+        hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
                        (gpointer) host->details->uname,
                        (gpointer) args_xml);
     }

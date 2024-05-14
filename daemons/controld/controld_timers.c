@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pacemaker-controld.h>
 
 //! FSA mainloop timer type
@@ -38,10 +38,10 @@ static fsa_timer_t *election_timer = NULL;
 //! Delay start of new transition with expectation something else might happen
 static fsa_timer_t *transition_timer = NULL;
 
-//! join-integration-timeout
+//! \c PCMK_OPT_JOIN_INTEGRATION_TIMEOUT
 static fsa_timer_t *integration_timer = NULL;
 
-//! join-finalization-timeout
+//! \c PCMK_OPT_JOIN_FINALIZATION_TIMEOUT
 static fsa_timer_t *finalization_timer = NULL;
 
 // Wait for DC to stop all resources and give us the all-clear to shut down
@@ -229,40 +229,13 @@ crm_timer_popped(gpointer data)
 bool
 controld_init_fsa_timers(void)
 {
-    transition_timer = calloc(1, sizeof(fsa_timer_t));
-    if (transition_timer == NULL) {
-        return FALSE;
-    }
-
-    integration_timer = calloc(1, sizeof(fsa_timer_t));
-    if (integration_timer == NULL) {
-        return FALSE;
-    }
-
-    finalization_timer = calloc(1, sizeof(fsa_timer_t));
-    if (finalization_timer == NULL) {
-        return FALSE;
-    }
-
-    election_timer = calloc(1, sizeof(fsa_timer_t));
-    if (election_timer == NULL) {
-        return FALSE;
-    }
-
-    shutdown_escalation_timer = calloc(1, sizeof(fsa_timer_t));
-    if (shutdown_escalation_timer == NULL) {
-        return FALSE;
-    }
-
-    wait_timer = calloc(1, sizeof(fsa_timer_t));
-    if (wait_timer == NULL) {
-        return FALSE;
-    }
-
-    recheck_timer = calloc(1, sizeof(fsa_timer_t));
-    if (recheck_timer == NULL) {
-        return FALSE;
-    }
+    transition_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    integration_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    finalization_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    election_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    shutdown_escalation_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    wait_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+    recheck_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
 
     election_timer->source_id = 0;
     election_timer->period_ms = 0;
@@ -332,30 +305,30 @@ controld_configure_fsa_timers(GHashTable *options)
     const char *value = NULL;
 
     // Election timer
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_DC_DEADTIME);
-    election_timer->period_ms = crm_parse_interval_spec(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_DC_DEADTIME);
+    pcmk_parse_interval_spec(value, &(election_timer->period_ms));
 
     // Integration timer
-    value = g_hash_table_lookup(options, "join-integration-timeout");
-    integration_timer->period_ms = crm_parse_interval_spec(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_JOIN_INTEGRATION_TIMEOUT);
+    pcmk_parse_interval_spec(value, &(integration_timer->period_ms));
 
     // Finalization timer
-    value = g_hash_table_lookup(options, "join-finalization-timeout");
-    finalization_timer->period_ms = crm_parse_interval_spec(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_JOIN_FINALIZATION_TIMEOUT);
+    pcmk_parse_interval_spec(value, &(finalization_timer->period_ms));
 
     // Shutdown escalation timer
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_FORCE_QUIT);
-    shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_SHUTDOWN_ESCALATION);
+    pcmk_parse_interval_spec(value, &(shutdown_escalation_timer->period_ms));
     crm_debug("Shutdown escalation occurs if DC has not responded to request "
               "in %ums", shutdown_escalation_timer->period_ms);
 
     // Transition timer
-    value = g_hash_table_lookup(options, "transition-delay");
-    transition_timer->period_ms = crm_parse_interval_spec(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_TRANSITION_DELAY);
+    pcmk_parse_interval_spec(value, &(transition_timer->period_ms));
 
     // Recheck interval
-    value = g_hash_table_lookup(options, XML_CONFIG_ATTR_RECHECK);
-    recheck_interval_ms = crm_parse_interval_spec(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_CLUSTER_RECHECK_INTERVAL);
+    pcmk_parse_interval_spec(value, &recheck_interval_ms);
     crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 }
 

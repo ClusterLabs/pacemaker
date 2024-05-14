@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,8 @@
 static void
 check_defaults(void **state) {
     uint32_t flags;
-    pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
+    pcmk_scheduler_t *scheduler = pcmk__assert_alloc(1,
+                                                     sizeof(pcmk_scheduler_t));
 
     set_working_set_defaults(scheduler);
 
@@ -28,7 +29,7 @@ check_defaults(void **state) {
             |pcmk_sched_stop_removed_resources
             |pcmk_sched_cancel_removed_actions;
 
-    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
+    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, PCMK_VALUE_TRUE)) {
         flags |= pcmk_sched_concurrent_fencing;
     }
 

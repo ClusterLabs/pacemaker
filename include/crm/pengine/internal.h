@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #  include <stdbool.h>
 #  include <stdint.h>
 #  include <string.h>
-#  include <crm/msg_xml.h>
+#  include <crm/common/xml.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
 #  include <crm/common/internal.h>
@@ -30,153 +30,6 @@ bool pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags);
 
 bool pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags);
 pcmk_resource_t *pe__last_group_member(const pcmk_resource_t *group);
-
-
-#  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
-#  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
-#  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)
-
-#  define pe_err(fmt...) do {           \
-        was_processing_error = TRUE;    \
-        pcmk__config_err(fmt);          \
-    } while (0)
-
-#  define pe_warn(fmt...) do {          \
-        was_processing_warning = TRUE;  \
-        pcmk__config_warn(fmt);         \
-    } while (0)
-
-#  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
-#  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
-
-#define pe__set_working_set_flags(scheduler, flags_to_set) do {             \
-        (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
-            LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (scheduler)->flags, (flags_to_set), #flags_to_set);             \
-    } while (0)
-
-#define pe__clear_working_set_flags(scheduler, flags_to_clear) do {         \
-        (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
-            LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
-    } while (0)
-
-#define pe__set_resource_flags(resource, flags_to_set) do {                 \
-        (resource)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
-            LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
-            (flags_to_set), #flags_to_set);                                 \
-    } while (0)
-
-#define pe__clear_resource_flags(resource, flags_to_clear) do {             \
-        (resource)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
-            LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
-            (flags_to_clear), #flags_to_clear);                             \
-    } while (0)
-
-#define pe__set_action_flags(action, flags_to_set) do {                     \
-        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,            \
-                                             LOG_TRACE,                     \
-                                             "Action", (action)->uuid,      \
-                                             (action)->flags,               \
-                                             (flags_to_set),                \
-                                             #flags_to_set);                \
-    } while (0)
-
-#define pe__clear_action_flags(action, flags_to_clear) do {                 \
-        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
-                                               LOG_TRACE,                   \
-                                               "Action", (action)->uuid,    \
-                                               (action)->flags,             \
-                                               (flags_to_clear),            \
-                                               #flags_to_clear);            \
-    } while (0)
-
-#define pe__set_raw_action_flags(action_flags, action_name, flags_to_set) do { \
-        action_flags = pcmk__set_flags_as(__func__, __LINE__,               \
-                                          LOG_TRACE, "Action", action_name, \
-                                          (action_flags),                   \
-                                          (flags_to_set), #flags_to_set);   \
-    } while (0)
-
-#define pe__clear_raw_action_flags(action_flags, action_name, flags_to_clear) do { \
-        action_flags = pcmk__clear_flags_as(__func__, __LINE__,             \
-                                            LOG_TRACE,                      \
-                                            "Action", action_name,          \
-                                            (action_flags),                 \
-                                            (flags_to_clear),               \
-                                            #flags_to_clear);               \
-    } while (0)
-
-#define pe__set_action_flags_as(function, line, action, flags_to_set) do {  \
-        (action)->flags = pcmk__set_flags_as((function), (line),            \
-                                             LOG_TRACE,                     \
-                                             "Action", (action)->uuid,      \
-                                             (action)->flags,               \
-                                             (flags_to_set),                \
-                                             #flags_to_set);                \
-    } while (0)
-
-#define pe__clear_action_flags_as(function, line, action, flags_to_clear) do { \
-        (action)->flags = pcmk__clear_flags_as((function), (line),          \
-                                               LOG_TRACE,                   \
-                                               "Action", (action)->uuid,    \
-                                               (action)->flags,             \
-                                               (flags_to_clear),            \
-                                               #flags_to_clear);            \
-    } while (0)
-
-#define pe__set_order_flags(order_flags, flags_to_set) do {                 \
-        order_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
-                                         "Ordering", "constraint",          \
-                                         order_flags, (flags_to_set),       \
-                                         #flags_to_set);                    \
-    } while (0)
-
-#define pe__clear_order_flags(order_flags, flags_to_clear) do {               \
-        order_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
-                                           "Ordering", "constraint",          \
-                                           order_flags, (flags_to_clear),     \
-                                           #flags_to_clear);                  \
-    } while (0)
-
-#define pe_warn_once(pe_wo_bit, fmt...) do {    \
-        if (!pcmk_is_set(pcmk__warnings, pe_wo_bit)) {  \
-            if (pe_wo_bit == pcmk__wo_blind) {  \
-                crm_warn(fmt);                  \
-            } else {                            \
-                pe_warn(fmt);                   \
-            }                                   \
-            pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,         \
-                                               LOG_TRACE,                   \
-                                               "Warn-once", "logging",      \
-                                               pcmk__warnings,              \
-                                               (pe_wo_bit), #pe_wo_bit);    \
-        }                                                                   \
-    } while (0);
-
-
-typedef struct pe__location_constraint_s {
-    char *id;                           // Constraint XML ID
-    pcmk_resource_t *rsc_lh;            // Resource being located
-    enum rsc_role_e role_filter;        // Role to locate
-    enum pe_discover_e discover_mode;   // Resource discovery
-    GList *node_list_rh;                // List of pcmk_node_t*
-} pe__location_t;
-
-typedef struct pe__order_constraint_s {
-    int id;
-    uint32_t flags; // Group of enum pcmk__action_relation_flags
-
-    void *lh_opaque;
-    pcmk_resource_t *lh_rsc;
-    pcmk_action_t *lh_action;
-    char *lh_action_task;
-
-    void *rh_opaque;
-    pcmk_resource_t *rh_rsc;
-    pcmk_action_t *rh_action;
-    char *rh_action_task;
-} pe__ordering_t;
 
 const pcmk_resource_t *pe__const_top_resource(const pcmk_resource_t *rsc,
                                               bool include_bundle);
@@ -201,16 +54,10 @@ void pe__create_promotable_pseudo_ops(pcmk_resource_t *clone,
 
 bool pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node);
 
-void add_hash_param(GHashTable * hash, const char *name, const char *value);
-
 char *native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                        const char *name, pcmk_scheduler_t *scheduler);
 pcmk_node_t *native_location(const pcmk_resource_t *rsc, GList **list,
                              int current);
-
-void pe_metadata(pcmk__output_t *out);
-void verify_pe_options(GHashTable * options);
-
 void native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler, gboolean failed);
 
@@ -247,8 +94,8 @@ gchar *pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                                   const pcmk_node_t *node, uint32_t show_opts,
                                   const char *target_role, bool show_nodes);
 
-int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
-                         , size_t pairs_count, ...);
+int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name,
+                             ...) G_GNUC_NULL_TERMINATED;
 char *pe__node_display_name(pcmk_node_t *node, bool print_detail);
 
 
@@ -258,12 +105,7 @@ void pe__order_notifs_after_fencing(const pcmk_action_t *action,
                                     pcmk_action_t *stonith_op);
 
 
-static inline const char *
-pe__rsc_bool_str(const pcmk_resource_t *rsc, uint64_t rsc_flag)
-{
-    return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
-}
-
+// Resource output methods
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_default(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
@@ -318,13 +160,6 @@ bool pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
 
 pcmk_node_t *pe__find_active_requires(const pcmk_resource_t *rsc,
                                     unsigned int *count);
-
-static inline pcmk_node_t *
-pe__current_node(const pcmk_resource_t *rsc)
-{
-    return (rsc == NULL)? NULL : rsc->fns->active_node(rsc, NULL, NULL);
-}
-
 
 /* Binary like operators for lists of nodes */
 GHashTable *pe__node_list2table(const GList *list);
@@ -396,9 +231,6 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
 		optional, rsc->cluster)
 
-extern int pe_get_configured_timeout(pcmk_resource_t *rsc, const char *action,
-                                     pcmk_scheduler_t *scheduler);
-
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);
 
@@ -451,17 +283,7 @@ int pe__target_rc_from_xml(const xmlNode *xml_op);
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
 
-typedef struct op_digest_cache_s {
-    enum pcmk__digest_result rc;
-    xmlNode *params_all;
-    xmlNode *params_secure;
-    xmlNode *params_restart;
-    char *digest_all_calc;
-    char *digest_secure_calc;
-    char *digest_restart_calc;
-} op_digest_cache_t;
-
-op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
+pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          guint *interval_ms,
                                          const pcmk_node_t *node,
                                          const xmlNode *xml_op,
@@ -471,7 +293,7 @@ op_digest_cache_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
 
 void pe__free_digests(gpointer ptr);
 
-op_digest_cache_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
+pcmk__op_digest_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          const xmlNode *xml_op,
                                          pcmk_node_t *node,
                                          pcmk_scheduler_t *scheduler);
@@ -515,17 +337,6 @@ int pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                            const char *name, const pcmk_node_t *node,
                            unsigned int options);
 
-//! A single instance of a bundle
-typedef struct {
-    int offset;                 //!< 0-origin index of this instance in bundle
-    char *ipaddr;               //!< IP address associated with this instance
-    pcmk_node_t *node;          //!< Node created for this instance
-    pcmk_resource_t *ip;        //!< IP address resource for ipaddr
-    pcmk_resource_t *child;     //!< Instance of bundled resource
-    pcmk_resource_t *container; //!< Container associated with this instance
-    pcmk_resource_t *remote;    //!< Pacemaker Remote connection into container
-} pe__bundle_replica_t;
-
 GList *pe__bundle_containers(const pcmk_resource_t *bundle);
 
 int pe__bundle_max(const pcmk_resource_t *rsc);
@@ -535,25 +346,17 @@ pcmk_resource_t *pe__bundled_resource(const pcmk_resource_t *rsc);
 const pcmk_resource_t *pe__get_rsc_in_container(const pcmk_resource_t *instance);
 pcmk_resource_t *pe__first_container(const pcmk_resource_t *bundle);
 void pe__foreach_bundle_replica(pcmk_resource_t *bundle,
-                                bool (*fn)(pe__bundle_replica_t *, void *),
+                                bool (*fn)(pcmk__bundle_replica_t *, void *),
                                 void *user_data);
 void pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
-                                      bool (*fn)(const pe__bundle_replica_t *,
+                                      bool (*fn)(const pcmk__bundle_replica_t *,
                                                  void *),
                                       void *user_data);
 pcmk_resource_t *pe__find_bundle_replica(const pcmk_resource_t *bundle,
                                          const pcmk_node_t *node);
 bool pe__bundle_needs_remote_name(pcmk_resource_t *rsc);
-const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc,
-                                       pcmk_scheduler_t *scheduler,
-                                       xmlNode *xml, const char *field);
-
-const char *pe__node_attribute_calculated(const pcmk_node_t *node,
-                                          const char *name,
-                                          const pcmk_resource_t *rsc,
-                                          enum pcmk__rsc_node node_type,
-                                          bool force_host);
-const char *pe_node_attribute_raw(const pcmk_node_t *node, const char *name);
+const char *pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
+                                       const char *field);
 bool pe__is_universal_clone(const pcmk_resource_t *rsc,
                             const pcmk_scheduler_t *scheduler);
 void pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
@@ -621,81 +424,18 @@ int pe__node_health(pcmk_node_t *node);
 static inline enum pcmk__health_strategy
 pe__health_strategy(pcmk_scheduler_t *scheduler)
 {
-    return pcmk__parse_health_strategy(pe_pref(scheduler->config_hash,
-                                               PCMK__OPT_NODE_HEALTH_STRATEGY));
+    const char *strategy = pcmk__cluster_option(scheduler->config_hash,
+                                                PCMK_OPT_NODE_HEALTH_STRATEGY);
+
+    return pcmk__parse_health_strategy(strategy);
 }
 
 static inline int
 pe__health_score(const char *option, pcmk_scheduler_t *scheduler)
 {
-    return char2score(pe_pref(scheduler->config_hash, option));
-}
+    const char *value = pcmk__cluster_option(scheduler->config_hash, option);
 
-/*!
- * \internal
- * \brief Return a string suitable for logging as a node name
- *
- * \param[in] node  Node to return a node name string for
- *
- * \return Node name if available, otherwise node ID if available,
- *         otherwise "unspecified node" if node is NULL or "unidentified node"
- *         if node has neither a name nor ID.
- */
-static inline const char *
-pe__node_name(const pcmk_node_t *node)
-{
-    if (node == NULL) {
-        return "unspecified node";
-
-    } else if (node->details->uname != NULL) {
-        return node->details->uname;
-
-    } else if (node->details->id != NULL) {
-        return node->details->id;
-
-    } else {
-        return "unidentified node";
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether two node objects refer to the same node
- *
- * \param[in] node1  First node object to compare
- * \param[in] node2  Second node object to compare
- *
- * \return true if \p node1 and \p node2 refer to the same node
- */
-static inline bool
-pe__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
-{
-    return (node1 != NULL) && (node2 != NULL)
-           && (node1->details == node2->details);
-}
-
-/*!
- * \internal
- * \brief Get the operation key from an action history entry
- *
- * \param[in] xml  Action history entry
- *
- * \return Entry's operation key
- */
-static inline const char *
-pe__xe_history_key(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else {
-        /* @COMPAT Pacemaker <= 1.1.5 did not add the key, and used the ID
-         * instead. Checking for that allows us to process old saved CIBs,
-         * including some regression tests.
-         */
-        const char *key = crm_element_value(xml, XML_LRM_ATTR_TASK_KEY);
-
-        return pcmk__str_empty(key)? ID(xml) : key;
-    }
+    return char2score(value);
 }
 
 #endif

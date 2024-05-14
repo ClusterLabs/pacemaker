@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
+#include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
@@ -98,7 +99,8 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
     CRM_CHECK(metadata != NULL, return);
     CRM_CHECK(parameter != NULL, return);
 
-    xpath = crm_strdup_printf("//parameter[@name='%s']", parameter);
+    xpath = crm_strdup_printf("//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='%s']",
+                              parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
     xpathObj = xpath_search(metadata, xpath);
@@ -125,9 +127,10 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     xmlNode *xml = NULL;
     xmlNode *actions = NULL;
     xmlXPathObject *xpathObj = NULL;
-    stonith_action_t *action = stonith__action_create(agent, "metadata", NULL,
-                                                      0, timeout_sec, NULL,
-                                                      NULL, NULL);
+    stonith_action_t *action = stonith__action_create(agent,
+                                                      PCMK_ACTION_METADATA,
+                                                      NULL, 0, timeout_sec,
+                                                      NULL, NULL, NULL);
     int rc = stonith__execute(action);
     pcmk__action_result_t *result = stonith__action_result(action);
 
@@ -162,7 +165,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -ENODATA;
     }
 
-    xml = string2xml(result->action_stdout);
+    xml = pcmk__xml_parse(result->action_stdout);
     stonith__destroy_action(action);
 
     if (xml == NULL) {
@@ -170,27 +173,29 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -pcmk_err_schema_validation;
     }
 
-    xpathObj = xpath_search(xml, "//actions");
+    xpathObj = xpath_search(xml, "//" PCMK_XE_ACTIONS);
     if (numXpathResults(xpathObj) > 0) {
         actions = getXpathResult(xpathObj, 0);
     }
     freeXpathObject(xpathObj);
 
     // Add start and stop (implemented by pacemaker, not agent) to meta-data
-    xpathObj = xpath_search(xml, "//action[@name='stop']");
+    xpathObj = xpath_search(xml,
+                            "//" PCMK_XE_ACTION
+                            "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
     if (numXpathResults(xpathObj) <= 0) {
         xmlNode *tmp = NULL;
         const char *timeout_str = NULL;
 
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
-        tmp = create_xml_node(actions, "action");
-        crm_xml_add(tmp, "name", PCMK_ACTION_STOP);
-        crm_xml_add(tmp, "timeout", timeout_str);
+        tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
+        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
+        crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
 
-        tmp = create_xml_node(actions, "action");
-        crm_xml_add(tmp, "name", PCMK_ACTION_START);
-        crm_xml_add(tmp, "timeout", timeout_str);
+        tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
+        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
+        crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
     freeXpathObject(xpathObj);
 
@@ -219,27 +224,33 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 int
 stonith__rhcs_metadata(const char *agent, int timeout_sec, char **output)
 {
-    char *buffer = NULL;
+    GString *buffer = NULL;
     xmlNode *xml = NULL;
 
     int rc = stonith__rhcs_get_metadata(agent, timeout_sec, &xml);
 
     if (rc != pcmk_ok) {
-        free_xml(xml);
-        return rc;
+        goto done;
     }
 
-    buffer = dump_xml_formatted_with_text(xml);
+    buffer = g_string_sized_new(1024);
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty|pcmk__xml_fmt_text, buffer, 0);
+
+    if (pcmk__str_empty(buffer->str)) {
+        rc = -pcmk_err_schema_validation;
+        goto done;
+    }
+
+    if (output != NULL) {
+        pcmk__str_update(output, buffer->str);
+    }
+
+done:
+    if (buffer != NULL) {
+        g_string_free(buffer, TRUE);
+    }
     free_xml(xml);
-    if (buffer == NULL) {
-        return -pcmk_err_schema_validation;
-    }
-    if (output) {
-        *output = buffer;
-    } else {
-        free(buffer);
-    }
-    return pcmk_ok;
+    return rc;
 }
 
 bool
@@ -291,7 +302,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             return -ETIME;
         }
 
-    } else if (pcmk__str_eq(host_arg, PCMK__VALUE_NONE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(host_arg, PCMK_VALUE_NONE, pcmk__str_casei)) {
         host_arg = NULL;
     }
 

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <include href="../constraints-3.9.rng">
+        <start>
+            <ref name="element-ticket"/>
+        </start>
+
+        <!-- This redefines the constraints element from constraints-X.X.rng
+             so it can only contain the element-rsc_ticket element.  This allows
+             us to restrict it so only those kinds of constraints are allowed
+             in ticket XML.
+          -->
+        <define name="element-constraints">
+            <element name="constraints">
+                <zeroOrMore>
+                    <ref name="element-rsc_ticket"/>
+                </zeroOrMore>
+            </element>
+        </define>
+    </include>
+
+    <define name="element-ticket">
+        <element name="ticket">
+            <attribute name="id"> <text /> </attribute>
+            <optional>
+                <attribute name="status">
+                    <choice>
+                        <value>granted</value>
+                        <value>revoked</value>
+                    </choice>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="standby"> <data type="boolean" /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="last-granted"> <text /> </attribute>
+            </optional>
+            <optional>
+                <element name="attribute">
+                    <attribute name="name"> <text /> </attribute>
+                    <attribute name="value"> <text /> </attribute>
+                </element>
+            </optional>
+            <zeroOrMore>
+                <attribute>
+                    <anyName>
+                        <except>
+                            <name>attribute</name>
+                            <name>constraints</name>
+                            <name>id</name>
+                            <name>last-granted</name>
+                            <name>standby</name>
+                            <name>status</name>
+                        </except>
+                    </anyName>
+                    <text />
+                </attribute>
+            </zeroOrMore>
+            <optional>
+                <ref name="element-constraints" />
+            </optional>
+        </element>
+    </define>
+
+</grammar>

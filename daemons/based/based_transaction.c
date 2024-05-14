@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,21 +28,15 @@
 char *
 based_transaction_source_str(const pcmk__client_t *client, const char *origin)
 {
-    char *source = NULL;
-
     if (client != NULL) {
-        source = crm_strdup_printf("client %s (%s)%s%s",
-                                   pcmk__client_name(client),
-                                   pcmk__s(client->id, "unidentified"),
-                                   ((origin != NULL)? " on " : ""),
-                                   pcmk__s(origin, ""));
-
+        return crm_strdup_printf("client %s (%s)%s%s",
+                                 pcmk__client_name(client),
+                                 pcmk__s(client->id, "unidentified"),
+                                 ((origin != NULL)? " on " : ""),
+                                 pcmk__s(origin, ""));
     } else {
-        source = strdup((origin != NULL)? origin : "unknown source");
+        return pcmk__str_copy(pcmk__s(origin, "unknown source"));
     }
-
-    CRM_ASSERT(source != NULL);
-    return source;
 }
 
 /*!
@@ -61,11 +55,13 @@ static int
 process_transaction_requests(xmlNodePtr transaction,
                              const pcmk__client_t *client, const char *source)
 {
-    for (xmlNodePtr request = first_named_child(transaction, T_CIB_COMMAND);
-         request != NULL; request = crm_next_same_xml(request)) {
+    for (xmlNode *request = pcmk__xe_first_child(transaction,
+                                                 PCMK__XE_CIB_COMMAND, NULL,
+                                                 NULL);
+         request != NULL; request = pcmk__xe_next_same(request)) {
 
-        const char *op = crm_element_value(request, F_CIB_OPERATION);
-        const char *host = crm_element_value(request, F_CIB_HOST);
+        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+        const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
         const cib__operation_t *operation = NULL;
         int rc = cib__get_operation(op, &operation);
 
@@ -127,7 +123,7 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
 
     CRM_ASSERT(result_cib != NULL);
 
-    CRM_CHECK(pcmk__xe_is(transaction, T_CIB_TRANSACTION),
+    CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
 
     /* *result_cib should be a copy of the_cib (created by cib_perform_op()). If
@@ -138,7 +134,7 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
      * * cib_perform_op() will infer changes for the commit request at the end.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
-              *result_cib = copy_xml(the_cib));
+              *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
     crm_trace("Committing transaction for %s to working CIB", source);

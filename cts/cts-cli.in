@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2023 the Pacemaker project contributors
+# Copyright 2008-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,8 +23,8 @@ Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
  -t 'TEST [...]' Run only specified tests
-                 (default: 'daemons dates error_codes tools crm_mon acls
-                            validity upgrade rules feature_set').
+                 (default: 'access_render daemons dates error_codes tools
+                            crm_mon acls validity upgrade rules feature_set').
                  Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
@@ -43,8 +43,8 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="daemons dates error_codes tools crm_mon acls validity upgrade rules "
-tests="$tests feature_set"
+tests="access_render daemons dates error_codes tools crm_mon acls validity"
+tests="$tests upgrade rules feature_set"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -550,7 +550,7 @@ function test_crm_mon() {
 
     desc="XML output of active unmanaged resource on offline node"
     cmd="crm_mon -1 --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Brief text output of active unmanaged resource on offline node"
     cmd="crm_mon -1 --brief"
@@ -812,12 +812,84 @@ function test_tools() {
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK
 
+    desc="List all available options (invalid type)"
+    cmd="crm_attribute --list-options=asdf"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="List all available options (invalid type) (XML)"
+    cmd="crm_attribute --list-options=asdf --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="List non-advanced cluster options"
+    cmd="crm_attribute --list-options=cluster"
+    test_assert $CRM_EX_OK 0
+
+    desc="List non-advanced cluster options (XML) (shows all)"
+    cmd="crm_attribute --list-options=cluster --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available cluster options"
+    cmd="crm_attribute --list-options=cluster --all"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available cluster options (XML)"
+    cmd="crm_attribute --list-options=cluster --all --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Query the value of an attribute that does not exist"
     cmd="crm_attribute -n ABCD --query --quiet"
     test_assert $CRM_EX_NOSUCH 0
 
     desc="Configure something before erasing"
-    cmd="crm_attribute -n cluster-delay -v 60s"
+    cmd="crm_attribute -n test_attr -v 5"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' XML attribute update syntax"
+    cmd="cibadmin -M --score --xml-text='<cib admin_epoch=\"admin_epoch++\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' XML attribute update syntax"
+    cmd="cibadmin -M --score --xml-text='<cib admin_epoch=\"admin_epoch+=2\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax"
+    cmd="crm_attribute -n test_attr -v 'value++' --score"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax (XML)"
+    cmd="crm_attribute -n test_attr -v 'value++' --score --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax"
+    cmd="crm_attribute -n test_attr -v 'value+=2' --score"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax (XML)"
+    cmd="crm_attribute -n test_attr -v 'value+=2' --score --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' XML attribute update syntax (--score not set)"
+    cmd="cibadmin -M --xml-text='<cib admin_epoch=\"admin_epoch++\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' XML attribute update syntax (--score not set)"
+    cmd="cibadmin -M --xml-text='<cib admin_epoch=\"admin_epoch+=2\"\>'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax (--score not set)"
+    cmd="crm_attribute -n test_attr -v 'value++'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '++' nvpair value update syntax (--score not set) (XML)"
+    cmd="crm_attribute -n test_attr -v 'value++' --output-as=xml"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax (--score not set)"
+    cmd="crm_attribute -n test_attr -v 'value+=2'"
+    test_assert $CRM_EX_OK
+
+    desc="Test '+=' nvpair value update syntax (--score not set) (XML)"
+    cmd="crm_attribute -n test_attr -v 'value+=2' --output-as=xml"
     test_assert $CRM_EX_OK
 
     desc="Require --force for CIB erasure"
@@ -989,6 +1061,46 @@ function test_tools() {
     cmd="crm_resource foo bar"
     test_assert $CRM_EX_USAGE 0
 
+    desc="List all available resource options (invalid type)"
+    cmd="crm_resource --list-options=asdf"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="List all available resource options (invalid type) (XML)"
+    cmd="crm_resource --list-options=asdf --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="List non-advanced primitive meta-attributes"
+    cmd="crm_resource --list-options=primitive"
+    test_assert $CRM_EX_OK 0
+
+    desc="List non-advanced primitive meta-attributes (XML) (shows all)"
+    cmd="crm_resource --list-options=primitive --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available primitive meta-attributes"
+    cmd="crm_resource --list-options=primitive --all"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available primitive meta-attributes (XML)"
+    cmd="crm_resource --list-options=primitive --all --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List non-advanced fencing parameters"
+    cmd="crm_resource --list-options=fencing"
+    test_assert $CRM_EX_OK 0
+
+    desc="List non-advanced fencing parameters (XML) (shows all)"
+    cmd="crm_resource --list-options=fencing --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List all available fencing parameters"
+    cmd="crm_resource --list-options=fencing --all"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all available fencing parameters (XML)"
+    cmd="crm_resource --list-options=fencing --all --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="crm_resource given both -r and resource config"
     cmd="crm_resource -r xyz --class ocf --provider pacemaker --agent Dummy"
     test_assert $CRM_EX_USAGE 0
@@ -1039,19 +1151,19 @@ function test_tools() {
 
     desc="Set a non-existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Set an existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Delete an existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy -d description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Delete a non-existent attribute for a resource element with output-as=xml"
     cmd="crm_resource -r dummy -d description --element --output-as=xml"
-    test_assert $CRM_EX_OK
+    test_assert_validate $CRM_EX_OK
 
     desc="Set a non-existent attribute for a resource element without output-as=xml"
     cmd="crm_resource -r dummy --set-parameter=description -v test_description --element"
@@ -1095,7 +1207,7 @@ function test_tools() {
 
     desc="Show XML configuration of resource, output as XML"
     cmd="crm_resource -q -r dummy --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
@@ -1137,9 +1249,29 @@ function test_tools() {
     cmd="crm_ticket -t ticketA -r --force"
     test_assert $CRM_EX_OK
 
+    desc="List ticket IDs"
+    cmd="crm_ticket -w"
+    test_assert $CRM_EX_OK 0
+
+    desc="List ticket IDs, outputting in XML"
+    cmd="crm_ticket -w --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query ticket state"
+    cmd="crm_ticket -t ticketA -q"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query ticket state, outputting as xml"
+    cmd="crm_ticket -t ticketA -q --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Query ticket granted state"
     cmd="crm_ticket -t ticketA -G granted"
     test_assert $CRM_EX_OK
+
+    desc="Query ticket granted state, outputting as xml"
+    cmd="crm_ticket -t ticketA -G granted --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Delete ticket granted state"
     cmd="crm_ticket -t ticketA -D granted --force"
@@ -1157,8 +1289,52 @@ function test_tools() {
     cmd="crm_ticket -t ticketA -a"
     test_assert $CRM_EX_OK
 
+    desc="List ticket details"
+    cmd="crm_ticket -L -t ticketA"
+    test_assert $CRM_EX_OK 0
+
+    desc="List ticket details, outputting as XML"
+    cmd="crm_ticket -L -t ticketA --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Add a second ticket"
+    cmd="crm_ticket -t ticketB -G granted -d false"
+    test_assert $CRM_EX_OK
+
+    desc="Set second ticket granted state"
+    cmd="crm_ticket -t ticketB -r --force"
+    test_assert $CRM_EX_OK
+
+    desc="List tickets"
+    cmd="crm_ticket -l"
+    test_assert $CRM_EX_OK 0
+
+    desc="List tickets, outputting as XML"
+    cmd="crm_ticket -l --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Delete second ticket"
+    cmd="cibadmin --delete --xml-text '<ticket_state id=\"ticketB\"/>'"
+    test_assert $CRM_EX_OK
+
     desc="Delete ticket standby state"
     cmd="crm_ticket -t ticketA -D standby"
+    test_assert $CRM_EX_OK
+
+    esc="Add a constraint to a ticket"
+    cmd="cibadmin -C -o constraints --xml-text '<rsc_ticket id=\"dummy-dep-ticketA\" rsc=\"dummy\" rsc-role=\"Started\" ticket=\"ticketA\" loss-policy=\"freeze\"/>'"
+    test_assert $CRM_EX_OK
+
+    desc="Query ticket constraints"
+    cmd="crm_ticket -t ticketA -c"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query ticket constraints, outputting as xml"
+    cmd="crm_ticket -t ticketA -c --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Delete ticket constraint"
+    cmd="cibadmin --delete --xml-text '<rsc_ticket id=\"dummy-dep-ticketA\"/>'"
     test_assert $CRM_EX_OK
 
     desc="Ban a resource on unknown node"
@@ -1363,16 +1539,16 @@ function test_tools() {
     unset CIB_file
 
     desc="Set a meta-attribute for primitive and resources colocated with it"
-    cmd="crm_resource -r prim5 --meta --set-parameter=target-role -v Stopped --recursive"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r prim5 --meta --set-parameter=target-role -v Stopped --recursive --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Set a meta-attribute for group and resource colocated with it"
     cmd="crm_resource -r group --meta --set-parameter=target-role -v Stopped --recursive"
     test_assert $CRM_EX_OK 0
 
     desc="Set a meta-attribute for clone and resource colocated with it"
-    cmd="crm_resource -r clone --meta --set-parameter=target-role -v Stopped --recursive"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r clone --meta --set-parameter=target-role -v Stopped --recursive --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_shadow
     unset CIB_shadow_dir
@@ -1580,7 +1756,7 @@ function test_tools() {
 
     desc="Update a promotable score attribute to -INFINITY (XML)"
     cmd="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Query after updating a promotable score attribute to -INFINITY"
     cmd="crm_attribute -N cluster01 -p -G"
@@ -1588,7 +1764,7 @@ function test_tools() {
 
     desc="Query after updating a promotable score attribute to -INFINITY (XML)"
     cmd="crm_attribute -N cluster01 -p -G --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Try OCF_RESOURCE_INSTANCE if -p is specified with an empty string"
     cmd="crm_attribute -N cluster01 -p '' -G"
@@ -2293,20 +2469,32 @@ function test_tools() {
     CIB_file_invalid_1="$test_home/cli/crm_verify_invalid_bz.xml"
     CIB_file_invalid_2="$test_home/cli/crm_verify_invalid_no_stonith.xml"
     
-    desc="Verify a file-specified invalid configuration, outputting as xml"
+    desc="Verify a file-specified invalid configuration (text output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1'"
+    test_assert $CRM_EX_CONFIG 0
+
+    desc="Verify a file-specified invalid configuration (verbose text output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --verbose"
+    test_assert $CRM_EX_CONFIG 0
+
+    desc="Verify a file-specified invalid configuration (quiet text output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --quiet"
+    test_assert $CRM_EX_CONFIG 0
+
+    desc="Verify a file-specified invalid configuration (XML output)"
     cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml"
     test_assert_validate $CRM_EX_CONFIG 0
 
-    desc="Verify another file-specified invalid configuration, outputting as xml"
-    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml"
-    test_assert_validate $CRM_EX_CONFIG 0
-
-    desc="Verbosely verify a file-specified invalid configuration, outputting as xml"
+    desc="Verify a file-specified invalid configuration (verbose XML output)"
     cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml --verbose"
     test_assert_validate $CRM_EX_CONFIG 0
 
-    desc="Verbosely verify another file-specified invalid configuration, outputting as xml"
-    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml --verbose"
+    desc="Verify a file-specified invalid configuration (quiet XML output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_1' --output-as=xml --quiet"
+    test_assert_validate $CRM_EX_CONFIG 0
+
+    desc="Verify another file-specified invalid configuration (XML output)"
+    cmd="crm_verify --xml-file '$CIB_file_invalid_2' --output-as=xml"
     test_assert_validate $CRM_EX_CONFIG 0
 
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -2815,7 +3003,7 @@ function test_validity() {
 
     create_shadow_cib --create-empty pacemaker-1.2
     orig_trace_fns="$PCMK_trace_functions"
-    export PCMK_trace_functions=apply_upgrade,update_validation
+    export PCMK_trace_functions=apply_upgrade,pcmk__update_schema
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -2888,7 +3076,7 @@ test_upgrade() {
 
     create_shadow_cib --create-empty pacemaker-2.10
     orig_trace_fns="$PCMK_trace_functions"
-    export PCMK_trace_functions=apply_upgrade,update_validation
+    export PCMK_trace_functions=apply_upgrade,pcmk__update_schema
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -3167,25 +3355,23 @@ EOF
 # Ensure all command output is in portable locale for comparison
 export LC_ALL="C"
 test_access_render() {
-    local TMPXML
+    local TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
 
-    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
-
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib --create-empty
 
     # Create a test CIB that has ACL roles
     cat <<EOF > "$TMPXML"
-    <acls>
-      <acl_role id="role-deny-acls">
-        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
-        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
-      </acl_role>
-      <acl_target id="tony">
-        <role id="role-deny-acls"/>
-      </acl_target>
-    </acls>
+<acls>
+  <acl_role id="role-deny-acls-write-resources">
+    <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+    <acl_permission id="write-resources" kind="write"
+                    xpath="/cib/configuration/resources"/>
+    <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+  </acl_role>
+  <acl_target id="tony">
+    <role id="role-deny-acls-write-resources"/>
+  </acl_target>
+</acls>
 EOF
 
     desc="Configure some ACLs"
@@ -3198,7 +3384,7 @@ EOF
 
     unset CIB_user
 
-    # Run cibadmin --show-access on the test CIB with different users (tony here)
+    # Run cibadmin --show-access on the test CIB as an ACL-restricted user
 
     desc="An instance of ACLs render (into color)"
     cmd="cibadmin --force --show-access=color -Q --user tony"
@@ -3230,7 +3416,7 @@ function test_feature_set() {
 
     desc="XML output, no mixed status"
     cmd="crm_mon --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     # Modify the CIB to fake that the cluster has mixed versions
     desc="Fake inconsistent feature set"
@@ -3243,7 +3429,7 @@ function test_feature_set() {
 
     desc="XML output, mixed status"
     cmd="crm_mon --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_shadow_dir
 }
@@ -3287,6 +3473,7 @@ done
 
 for t in $tests; do
     case "$t" in
+        access_render) ;;
         agents) ;;
         daemons) ;;
         dates) ;;
@@ -3341,6 +3528,16 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
+    # @TODO Add a way to suppress this message within cibadmin, and then drop
+    # the handling here.
+    suppress="The supplied command can provide skewed result since it is run"
+    suppress="$suppress under user that also gets guarded per ACLs on their"
+    suppress="$suppress own right. Continuing since --force flag was provided."
+
+    # This giant sed replaces content expected to change for each run
+    # (timestamps, source file line numbers, etc.), build (configure options,
+    # version numbers, etc.), or platform (system messages, etc.).
+    #
     # last-rc-change= is always numeric in the CIB. However, for the crm_mon
     # test we also need to compare against the XML output of the crm_mon
     # program. There, these are shown as human readable strings (like the
@@ -3354,10 +3551,15 @@ for t in $tests; do
         -e 's/last_change time=\".*\"/last_change time=\"\"/' \
         -e 's/ api-version="[^"]*"/ api-version="X"/' \
         -e 's/ default="[^"]*"/ default=""/' \
+        -e 's/\(\* Possible values.*: .*\)(default: [^)]*)/\1(default: )/g' \
         -e 's/ version="[^"]*"/ version=""/' \
         -e 's/request=\".*\(crm_[a-zA-Z0-9]*\)/request=\"\1/' \
         -e 's/crm_feature_set="[^"]*" //'\
+        -e 's/@crm_feature_set=[0-9.]*, //'\
+        -e 's/\(<change-attr name="crm_feature_set" .* value="\)[0-9.]*"/\1"/' \
         -e 's/validate-with="[^"]*" //'\
+        -e 's/\(@validate-with=pacemaker-\)[0-9.]*,/\1X,/' \
+        -e 's/\(<change-attr name="validate-with" .* value="pacemaker-\)[0-9.]*"/\1X"/' \
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
         -e 's/.*\(crm_time_parse_duration\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(crm_time_parse_period\)@.*\.c:[0-9][0-9]*)/\1/g' \
@@ -3366,14 +3568,17 @@ for t in $tests; do
         -e 's/.*\(parse_date\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(pcmk__.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
-        -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(pcmk__update_schema\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(cluster_status\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e "s/ last-rc-change=['\"][-+A-Za-z0-9: ]*['\"],\{0,1\}//" \
         -e 's|^/tmp/cts-cli\.shadow\.[^/]*/|/tmp/cts-cli.shadow/|' \
         -e 's|"/tmp/cts-cli\.shadow\.[^/]*/|"/tmp/cts-cli.shadow/|' \
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
+        -e 's|^/tmp/cts-cli\.ta_outfile\.[^:]*:|/tmp/cts-cli.ta_outfile:|' \
+        -e 's|^/tmp/cts-cli\.ta_outfile\.[^ ]* fails to validate|/tmp/cts-cli.ta_outfile fails to validate|' \
+        -e 's|^/tmp/cts-cli\.xmllint_outfile\.[^:]*:|/tmp/cts-cli.xmllint_outfile:|' \
         -e 's/^Entity: line [0-9][0-9]*: //'\
-        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
         -e 's/^Migration will take effect until: .*/Migration will take effect until:/' \
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
@@ -3386,6 +3591,7 @@ for t in $tests; do
         -e 's/Master/Promoted/' \
         -e 's/Slave/Unpromoted/' \
         -e 's/\x1b/\\x1b/' \
+        -e "/$suppress/d" \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 

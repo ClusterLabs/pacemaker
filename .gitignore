@@ -161,7 +161,7 @@ configure
 /tools/pcmk_simtimes
 /tools/report.collector
 /tools/report.common
-/xml/version-diff.sh
+/xml/rng-helper
 
 # Compiled targets and intermediary files
 *.o
@@ -247,6 +247,7 @@ pacemaker_*.info
 /lib/*/tests/*/*.log
 /lib/*/tests/*/*_test
 /lib/*/tests/*/*.trs
+/lib/common/tests/schemas/schemas
 /xml/test-*/*.up
 /xml/test-*/*.up.err
 /xml/assets/*.rng
@@ -338,7 +339,7 @@ pacemaker_*.info
 /lib/common/tests/utils/pcmk_str_is_infinity
 /lib/common/tests/utils/pcmk_str_is_minus_infinity
 /lib/gnu/libgnu.a
-/lib/pengine/tests/rules/pe_cron_range_satisfied
+/lib/pengine/tests/rules/
 /lrmd
 /ltmain.sh
 /mcp
@@ -351,4 +352,5 @@ pacemaker_*.info
 /tools/cluster-init
 /test-driver
 /xml/crm.dtd
+/xml/version-diff.sh
 ylwrap

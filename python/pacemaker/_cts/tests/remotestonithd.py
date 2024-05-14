@@ -1,32 +1,28 @@
-""" Fail the connection resource and fence the remote node """
+"""Fail the connection resource and fence the remote node."""
 
 __all__ = ["RemoteStonithd"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
 class RemoteStonithd(RemoteDriver):
-    """ A concrete test that fails the connection resource and fences the
-        remote node
-    """
+    """Fail the connection resource and fence the remote node."""
 
     def __init__(self, cm):
-        """ Create a new RemoteStonithd instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new RemoteStonithd instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         RemoteDriver.__init__(self, cm)
 
         self.name = "RemoteStonithd"
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         if not self.start_new_test(node):
             return self.failure(self.fail_string)
 
@@ -41,8 +37,7 @@ class RemoteStonithd(RemoteDriver):
         return self.success()
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration. """
-
+        """Return True if this test is applicable in the current test configuration."""
         if not RemoteDriver.is_applicable(self):
             return False
 
@@ -50,8 +45,7 @@ class RemoteStonithd(RemoteDriver):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return list of errors which should be ignored."""
         return [
             r"Lost connection to Pacemaker Remote node",
             r"Software caused connection abort",

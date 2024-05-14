@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2022 the Pacemaker project contributors
+ * Copyright 2005-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,9 +18,12 @@
 #include <time.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <limits.h>         // INT_MIN, INT_MAX
 #include <string.h>
 #include <stdbool.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/iso8601_internal.h>
+#include "crmcommon_private.h"
 
 /*
  * Andrew's code was originally written for OSes whose "struct tm" contains:
@@ -125,10 +128,7 @@ crm_time_new(const char *date_time)
 crm_time_t *
 crm_time_new_undefined(void)
 {
-    crm_time_t *result = calloc(1, sizeof(crm_time_t));
-
-    CRM_ASSERT(result != NULL);
-    return result;
+    return (crm_time_t *) pcmk__assert_alloc(1, sizeof(crm_time_t));
 }
 
 /*!
@@ -623,7 +623,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
 
     if (pcmk_is_set(flags, crm_time_log_date)) {
         if (pcmk_is_set(flags, crm_time_weeks)) { // YYYY-WW-D
-            uint32_t y, w, d;
+            uint32_t y = 0;
+            uint32_t w = 0;
+            uint32_t d = 0;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -632,7 +634,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             }
 
         } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
-            uint32_t y, d;
+            uint32_t y = 0;
+            uint32_t d = 0;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -640,7 +643,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             }
 
         } else { // YYYY-MM-DD
-            uint32_t y, m, d;
+            uint32_t y = 0;
+            uint32_t m = 0;
+            uint32_t d = 0;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -694,12 +699,9 @@ char *
 crm_time_as_string(const crm_time_t *dt, int flags)
 {
     char result[DATE_MAX] = { '\0', };
-    char *result_copy = NULL;
 
     time_as_string_common(dt, 0, flags, result);
-
-    pcmk__str_update(&result_copy, result);
-    return result_copy;
+    return pcmk__str_copy(result);
 }
 
 /*!
@@ -864,7 +866,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
  * \internal
  * \brief Parse a time object from an ISO 8601 date/time specification
  *
- * \param[in] date_str  ISO 8601 date/time specification (or "epoch")
+ * \param[in] date_str  ISO 8601 date/time specification (or
+ *                      \c PCMK__VALUE_EPOCH)
  *
  * \return New time object on success, NULL (and set errno) otherwise
  */
@@ -898,8 +901,10 @@ parse_date(const char *date_str)
 
     dt = crm_time_new_undefined();
 
-    if (!strncasecmp("epoch", date_str, 5)
-        && ((date_str[5] == '\0') || (date_str[5] == '/') || isspace(date_str[5]))) {
+    if ((strncasecmp(PCMK__VALUE_EPOCH, date_str, 5) == 0)
+        && ((date_str[5] == '\0')
+            || (date_str[5] == '/')
+            || isspace(date_str[5]))) {
         dt->days = 1;
         dt->years = 1970;
         crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
@@ -1211,8 +1216,7 @@ crm_time_parse_period(const char *period_str)
     }
 
     tzset();
-    period = calloc(1, sizeof(crm_time_period_t));
-    CRM_ASSERT(period != NULL);
+    period = pcmk__assert_alloc(1, sizeof(crm_time_period_t));
 
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
@@ -1370,6 +1374,23 @@ crm_time_set_timet(crm_time_t *target, const time_t *source)
     ha_set_tm_time(target, localtime(source));
 }
 
+/*!
+ * \internal
+ * \brief Set one time object to another if the other is earlier
+ *
+ * \param[in,out] target  Time object to set
+ * \param[in]     source  Time object to use if earlier
+ */
+void
+pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
+{
+    if ((target != NULL) && (source != NULL)
+        && (!crm_time_is_defined(target)
+            || (crm_time_compare(source, target) < 0))) {
+        crm_time_set(target, source);
+    }
+}
+
 crm_time_t *
 pcmk_copy_time(const crm_time_t *source)
 {
@@ -1422,6 +1443,127 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
 
     crm_time_free(utc);
     return answer;
+}
+
+/*!
+ * \internal
+ * \brief Return the XML attribute name corresponding to a time component
+ *
+ * \param[in] component  Component to check
+ *
+ * \return XML attribute name corresponding to \p component, or NULL if
+ *         \p component is invalid
+ */
+const char *
+pcmk__time_component_attr(enum pcmk__time_component component)
+{
+    switch (component) {
+        case pcmk__time_years:
+            return PCMK_XA_YEARS;
+
+        case pcmk__time_months:
+            return PCMK_XA_MONTHS;
+
+        case pcmk__time_weeks:
+            return PCMK_XA_WEEKS;
+
+        case pcmk__time_days:
+            return PCMK_XA_DAYS;
+
+        case pcmk__time_hours:
+            return PCMK_XA_HOURS;
+
+        case pcmk__time_minutes:
+            return PCMK_XA_MINUTES;
+
+        case pcmk__time_seconds:
+            return PCMK_XA_SECONDS;
+
+        default:
+            return NULL;
+    }
+}
+
+typedef void (*component_fn_t)(crm_time_t *, int);
+
+/*!
+ * \internal
+ * \brief Get the addition function corresponding to a time component
+ * \param[in] component  Component to check
+ *
+ * \return Addition function corresponding to \p component, or NULL if
+ *         \p component is invalid
+ */
+static component_fn_t
+component_fn(enum pcmk__time_component component)
+{
+    switch (component) {
+        case pcmk__time_years:
+            return crm_time_add_years;
+
+        case pcmk__time_months:
+            return crm_time_add_months;
+
+        case pcmk__time_weeks:
+            return crm_time_add_weeks;
+
+        case pcmk__time_days:
+            return crm_time_add_days;
+
+        case pcmk__time_hours:
+            return crm_time_add_hours;
+
+        case pcmk__time_minutes:
+            return crm_time_add_minutes;
+
+        case pcmk__time_seconds:
+            return crm_time_add_seconds;
+
+        default:
+            return NULL;
+    }
+
+}
+
+/*!
+ * \internal
+ * \brief Add the value of an XML attribute to a time object
+ *
+ * \param[in,out] t          Time object to add to
+ * \param[in]     component  Component of \p t to add to
+ * \param[in]     xml        XML with value to add
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
+                        const xmlNode *xml)
+{
+    long long value;
+    const char *attr = pcmk__time_component_attr(component);
+    component_fn_t add = component_fn(component);
+
+    if ((t == NULL) || (attr == NULL) || (add == NULL)) {
+        return EINVAL;
+    }
+
+    if (xml == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    if (pcmk__scan_ll(crm_element_value(xml, attr), &value,
+                      0LL) != pcmk_rc_ok) {
+        return pcmk_rc_unpack_error;
+    }
+
+    if ((value < INT_MIN) || (value > INT_MAX)) {
+        return ERANGE;
+    }
+
+    if (value != 0LL) {
+        add(t, (int) value);
+    }
+    return pcmk_rc_ok;
 }
 
 crm_time_t *
@@ -1690,8 +1832,11 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
     pcmk__time_hr_t *hr_dt = NULL;
 
     if (dt) {
-        hr_dt = target?target:calloc(1, sizeof(pcmk__time_hr_t));
-        CRM_ASSERT(hr_dt != NULL);
+        hr_dt = target;
+        if (hr_dt == NULL) {
+            hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
+        }
+
         *hr_dt = (pcmk__time_hr_t) {
             .years = dt->years,
             .months = dt->months,
@@ -1772,12 +1917,21 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
-    const char *mark_s;
-    int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
-        date_len = 0, nano_digits = 0;
-    char nano_s[10], date_s[max+1], nanofmt_s[5] = "%", *tmp_fmt_s;
-    struct tm tm;
-    crm_time_t dt;
+#define DATE_LEN_MAX 128
+    const char *mark_s = NULL;
+    int scanned_pos = 0;
+    int printed_pos = 0;
+    int fmt_pos = 0;
+    size_t date_len = 0;
+    int nano_digits = 0;
+
+    char nano_s[10] = { '\0', };
+    char date_s[DATE_LEN_MAX] = { '\0', };
+    char nanofmt_s[5] = "%";
+    char *tmp_fmt_s = NULL;
+
+    struct tm tm = { 0, };
+    crm_time_t dt = { 0, };
 
     if (!format) {
         return NULL;
@@ -1818,7 +1972,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-        date_len += strftime(&date_s[date_len], max-date_len, tmp_fmt_s, &tm);
+        date_len += strftime(&date_s[date_len], DATE_LEN_MAX - date_len,
+                             tmp_fmt_s, &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
@@ -1829,7 +1984,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-            date_len += snprintf(&date_s[date_len], max-date_len,
+            date_len += snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
                                  nanofmt_s, nano_s);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
@@ -1839,6 +1994,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     }
 
     return (date_len == 0)?NULL:strdup(date_s);
+#undef DATE_LEN_MAX
 }
 
 /*!
@@ -1858,22 +2014,15 @@ char *
 pcmk__epoch2str(const time_t *source, uint32_t flags)
 {
     time_t epoch_time = (source == NULL)? time(NULL) : *source;
-    char *result = NULL;
 
     if (flags == 0) {
-        const char *buf = pcmk__trim(ctime(&epoch_time));
-
-        if (buf != NULL) {
-            result = strdup(buf);
-            CRM_ASSERT(result != NULL);
-        }
+        return pcmk__str_copy(pcmk__trim(ctime(&epoch_time)));
     } else {
         crm_time_t dt;
 
         crm_time_set_timet(&dt, &epoch_time);
-        result = crm_time_as_string(&dt, flags);
+        return crm_time_as_string(&dt, flags);
     }
-    return result;
 }
 
 /*!
@@ -1899,7 +2048,6 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
     struct timespec tmp_ts;
     crm_time_t dt;
     char result[DATE_MAX] = { 0 };
-    char *result_copy = NULL;
 
     if (ts == NULL) {
         qb_util_timespec_from_epoch_get(&tmp_ts);
@@ -1907,8 +2055,7 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
     }
     crm_time_set_timet(&dt, &ts->tv_sec);
     time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags, result);
-    pcmk__str_update(&result_copy, result);
-    return result_copy;
+    return pcmk__str_copy(result);
 }
 
 /*!
@@ -1934,24 +2081,24 @@ pcmk__readable_interval(guint interval_ms)
     int offset = 0;
 
     str[0] = '\0';
-    if (interval_ms > MS_IN_D) {
+    if (interval_ms >= MS_IN_D) {
         offset += snprintf(str + offset, MAXSTR - offset, "%ud",
                            interval_ms / MS_IN_D);
         interval_ms -= (interval_ms / MS_IN_D) * MS_IN_D;
     }
-    if (interval_ms > MS_IN_H) {
+    if (interval_ms >= MS_IN_H) {
         offset += snprintf(str + offset, MAXSTR - offset, "%uh",
                            interval_ms / MS_IN_H);
         interval_ms -= (interval_ms / MS_IN_H) * MS_IN_H;
     }
-    if (interval_ms > MS_IN_M) {
+    if (interval_ms >= MS_IN_M) {
         offset += snprintf(str + offset, MAXSTR - offset, "%um",
                            interval_ms / MS_IN_M);
         interval_ms -= (interval_ms / MS_IN_M) * MS_IN_M;
     }
 
     // Ns, N.NNNs, or NNNms
-    if (interval_ms > MS_IN_S) {
+    if (interval_ms >= MS_IN_S) {
         offset += snprintf(str + offset, MAXSTR - offset, "%u",
                            interval_ms / MS_IN_S);
         interval_ms -= (interval_ms / MS_IN_S) * MS_IN_S;

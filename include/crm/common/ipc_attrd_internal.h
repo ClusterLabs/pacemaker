@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_COMMON_IPC_ATTRD_INTERNAL__H
-#  define PCMK__CRM_COMMON_IPC_ATTRD_INTERNAL__H
+#define PCMK__CRM_COMMON_IPC_ATTRD_INTERNAL__H
 
 #include <glib.h>            // GList
 #include <crm/common/ipc.h>  // pcmk_ipc_api_t
@@ -89,10 +89,11 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
 
 /*!
  * \internal
- * \brief Purge a node from pacemaker-attrd
+ * \brief Request removal of a node's transient attributes
  *
  * \param[in,out] api           pacemaker-attrd IPC object
- * \param[in]     node          Node to remove
+ * \param[in]     node          Node whose attributes should be purged
+ * \param[in]     reap          If true, also request removal from node caches
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
@@ -102,7 +103,7 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node);
+int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap);
 
 /*!
  * \internal

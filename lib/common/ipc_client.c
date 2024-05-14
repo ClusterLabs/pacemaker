@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
 #include <bzlib.h>
 
 #include <crm/crm.h>   /* indirectly: pcmk_err_generic */
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
@@ -251,7 +251,7 @@ pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log)
     }
     switch (api->server) {
         case pcmk_ipc_attrd:
-            return for_log? "attribute manager" : T_ATTRD;
+            return for_log? "attribute manager" : PCMK__VALUE_ATTRD;
 
         case pcmk_ipc_based:
             return for_log? "CIB manager" : NULL /* PCMK__SERVER_BASED_RW */;
@@ -338,7 +338,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
         return ENOMSG;
     }
 
-    msg = string2xml(buffer);
+    msg = pcmk__xml_parse(buffer);
     if (msg == NULL) {
         crm_warn("Malformed message received from %s IPC",
                  pcmk_ipc_name(api, true));
@@ -755,10 +755,11 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
 
     switch (api->server) {
         case pcmk_ipc_attrd:
-            request = create_xml_node(NULL, __func__);
-            crm_xml_add(request, F_TYPE, T_ATTRD);
-            crm_xml_add(request, F_ORIG, crm_system_name);
-            crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+            request = pcmk__xe_create(NULL, __func__);
+            crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
+            crm_xml_add(request, PCMK__XA_SRC, crm_system_name);
+            crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+            pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
             pcmk__xe_add_node(request, node_name, nodeid);
             break;
 
@@ -770,7 +771,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             if (nodeid > 0) {
                 crm_xml_set_id(request, "%lu", (unsigned long) nodeid);
             }
-            crm_xml_add(request, XML_ATTR_UNAME, node_name);
+            crm_xml_add(request, PCMK_XA_UNAME, node_name);
             break;
 
         case pcmk_ipc_based:
@@ -1122,7 +1123,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         unsigned int size_u = 1 + header->size_uncompressed;
         /* never let buf size fall below our max size required for ipc reads. */
         unsigned int new_buf_size = QB_MAX((sizeof(pcmk__ipc_header_t) + size_u), client->max_buf_size);
-        char *uncompressed = calloc(1, new_buf_size);
+        char *uncompressed = pcmk__assert_alloc(1, new_buf_size);
 
         crm_trace("Decompressing message data %u bytes into %u bytes",
                  header->size_compressed, size_u);
@@ -1264,13 +1265,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 /* Got it */
                 break;
             } else if (hdr->qb.id < request_id) {
-                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                xmlNode *bad = pcmk__xml_parse(crm_ipc_buffer(client));
 
                 crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "OldIpcReply");
 
             } else {
-                xmlNode *bad = string2xml(crm_ipc_buffer(client));
+                xmlNode *bad = pcmk__xml_parse(crm_ipc_buffer(client));
 
                 crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
                 crm_log_xml_notice(bad, "ImpossibleReply");
@@ -1429,7 +1430,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
                   crm_ipc_buffer(client));
 
         if (reply) {
-            *reply = string2xml(crm_ipc_buffer(client));
+            *reply = pcmk__xml_parse(crm_ipc_buffer(client));
         }
 
     } else {
@@ -1622,13 +1623,17 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     do {
         poll_rc = poll(&pollfd, 1, 2000);
     } while ((poll_rc == -1) && (errno == EINTR));
-    if ((poll_rc <= 0) || (qb_ipcc_connect_continue(c) != 0)) {
+
+    /* If poll() failed, given that disconnect function is not registered yet,
+     * qb_ipcc_disconnect() won't clean up the socket. In any case, call
+     * qb_ipcc_connect_continue() here so that it may fail and do the cleanup
+     * for us.
+     */
+    if (qb_ipcc_connect_continue(c) != 0) {
         crm_info("Could not connect to %s IPC: %s", name,
                  (poll_rc == 0)?"timeout":strerror(errno));
         rc = pcmk_rc_ipc_unresponsive;
-        if (poll_rc > 0) {
-            c = NULL; // qb_ipcc_connect_continue cleaned up for us
-        }
+        c = NULL; // qb_ipcc_connect_continue cleaned up for us
         goto bail;
     }
 #endif

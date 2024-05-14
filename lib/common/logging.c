@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -192,7 +192,7 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 static bool
 logfile_disabled(const char *filename)
 {
-    return pcmk__str_eq(filename, PCMK__VALUE_NONE, pcmk__str_casei)
+    return pcmk__str_eq(filename, PCMK_VALUE_NONE, pcmk__str_casei)
            || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
 }
 
@@ -785,7 +785,7 @@ set_identity(const char *entity, int argc, char *const *argv)
     }
 
     if (entity != NULL) {
-        crm_system_name = strdup(entity);
+        crm_system_name = pcmk__str_copy(entity);
 
     } else if ((argc > 0) && (argv != NULL)) {
         char *mutable = strdup(argv[0]);
@@ -794,14 +794,12 @@ set_identity(const char *entity, int argc, char *const *argv)
         if (strstr(modified, "lt-") == modified) {
             modified += 3;
         }
-        crm_system_name = strdup(modified);
+        crm_system_name = pcmk__str_copy(modified);
         free(mutable);
 
     } else {
-        crm_system_name = strdup("Unknown");
+        crm_system_name = pcmk__str_copy("Unknown");
     }
-
-    CRM_ASSERT(crm_system_name != NULL);
 
     // Used by fencing.py.py (in fence-agents)
     pcmk__set_env_option(PCMK__ENV_SERVICE, crm_system_name, false);
@@ -915,12 +913,12 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (pcmk__is_daemon) {
             facility = "daemon";
         } else {
-            facility = PCMK__VALUE_NONE;
+            facility = PCMK_VALUE_NONE;
         }
         pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility, true);
     }
 
-    if (pcmk__str_eq(facility, PCMK__VALUE_NONE, pcmk__str_casei)) {
+    if (pcmk__str_eq(facility, PCMK_VALUE_NONE, pcmk__str_casei)) {
         quiet = TRUE;
 
 
@@ -957,7 +955,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     {
         const char *logfile = pcmk__env_option(PCMK__ENV_LOGFILE);
 
-        if (!pcmk__str_eq(PCMK__VALUE_NONE, logfile, pcmk__str_casei)
+        if (!pcmk__str_eq(PCMK_VALUE_NONE, logfile, pcmk__str_casei)
             && (pcmk__is_daemon || (logfile != NULL))) {
             // Daemons always get a log file, unless explicitly set to "none"
             pcmk__add_logfile(logfile);

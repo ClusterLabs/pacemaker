@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm/msg_xml.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
@@ -43,6 +42,7 @@ struct {
     char *xml_file;
     gboolean xml_stdin;
     char *xml_string;
+    unsigned int verbosity;
 } options;
 
 static GOptionEntry data_entries[] = {
@@ -112,11 +112,33 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+/*!
+ * \internal
+ * \brief Output a configuration issue
+ *
+ * \param[in] ctx  Output object
+ * \param[in] msg  printf(3)-style format string
+ * \param[in] ...  Format string arguments
+ */
+G_GNUC_PRINTF(2, 3)
+static void
+output_config_issue(void *ctx, const char *msg, ...)
+{
+    va_list ap;
+    char *buf = NULL;
+    pcmk__output_t *out = ctx;
+
+    va_start(ap, msg);
+    CRM_ASSERT(vasprintf(&buf, msg, ap) > 0);
+    if (options.verbosity > 0) {
+        out->err(out, "%s", buf);
+    }
+    va_end(ap);
+}
+
 int
 main(int argc, char **argv)
 {
-    xmlNode *cib_object = NULL;
-    xmlNode *status = NULL;
 
     pcmk_scheduler_t *scheduler = NULL;
 
@@ -127,7 +149,13 @@ main(int argc, char **argv)
 
     pcmk__output_t *out = NULL;
 
+    const char *cib_source = NULL;
+    xmlNode *cib_object = NULL;
+
     GOptionGroup *output_group = NULL;
+
+    const char *failure_type = NULL;
+
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "xSX");
     GOptionContext *context = build_arg_context(args, &output_group);
@@ -159,127 +187,73 @@ main(int argc, char **argv)
 
     pcmk__register_lib_messages(out);
 
-    pcmk__set_config_error_handler((pcmk__config_error_func) out->err, out);
-    pcmk__set_config_warning_handler((pcmk__config_warning_func) out->err, out);
+    pcmk__set_config_error_handler(output_config_issue, out);
+    pcmk__set_config_warning_handler(output_config_issue, out);
 
-    crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
+    if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
+        args->verbosity = 1;
+    }
+    options.verbosity = args->verbosity;
 
-    if (options.use_live_cib) {
-        crm_info("Reading XML from: live cluster");
-        rc = cib__signon_query(out, NULL, &cib_object);
-
-        if (rc != pcmk_rc_ok) {
-            // cib__signon_query() outputs any relevant error
-            goto done;
-        }
-
-    } else if (options.xml_file != NULL) {
-        cib_object = filename2xml(options.xml_file);
-        if (cib_object == NULL) {
-            rc = ENODATA;
-            g_set_error(&error, PCMK__RC_ERROR, rc, "Couldn't parse input file: %s", options.xml_file);
-            goto done;
-        }
-
+    if (options.xml_file != NULL) {
+        cib_source = options.xml_file;
     } else if (options.xml_string != NULL) {
-        cib_object = string2xml(options.xml_string);
-        if (cib_object == NULL) {
-            rc = ENODATA;
-            g_set_error(&error, PCMK__RC_ERROR, rc, "Couldn't parse input string: %s", options.xml_string);
-            goto done;
-        }
+        cib_source = options.xml_string;
     } else if (options.xml_stdin) {
-        cib_object = stdin2xml();
-        if (cib_object == NULL) {
-            rc = ENODATA;
-            g_set_error(&error, PCMK__RC_ERROR, rc, "Couldn't parse input from STDIN.");
-            goto done;
-        }
-
+        cib_source = "-";
+    } else if (options.use_live_cib) {
+        cib_source = NULL;
     } else {
         rc = ENODATA;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "No configuration source specified.  Use --help for usage information.");
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "No input specified");
         goto done;
     }
 
-    if (!pcmk__xe_is(cib_object, XML_TAG_CIB)) {
-        rc = EBADMSG;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "This tool can only check complete configurations (i.e. those starting with <cib>).");
+    rc = pcmk__parse_cib(out, cib_source, &cib_object);
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__EXITC_ERROR, rc, "Couldn't parse input");
         goto done;
     }
 
     if (options.cib_save != NULL) {
-        write_xml_file(cib_object, options.cib_save, FALSE);
-    }
-
-    status = pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS);
-    if (status == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
-    }
-
-    if (pcmk__validate_xml(cib_object, NULL, (xmlRelaxNGValidityErrorFunc) out->err, out) == FALSE) {
-        pcmk__config_err("CIB did not pass schema validation");
-        free_xml(cib_object);
-        cib_object = NULL;
-
-    } else if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
-        crm_config_error = TRUE;
-        free_xml(cib_object);
-        cib_object = NULL;
-        out->err(out, "The cluster will NOT be able to use this configuration.\n"
-                 "Please manually update the configuration to conform to the %s syntax.",
-                 xml_latest_schema());
+        pcmk__xml_write_file(cib_object, options.cib_save, false, NULL);
     }
 
     scheduler = pe_new_working_set();
+
     if (scheduler == NULL) {
         rc = errno;
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not allocate scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
+
     scheduler->priv = out;
 
-    /* Process the configuration to set crm_config_error/crm_config_warning.
-     *
-     * @TODO Some parts of the configuration are unpacked only when needed (for
-     * example, action configuration), so we aren't necessarily checking those.
-     */
-    if (cib_object != NULL) {
-        unsigned long long flags = pcmk_sched_no_counts|pcmk_sched_no_compat;
+    rc = pcmk__verify(scheduler, out, cib_object);
 
-        if ((status == NULL) && !options.use_live_cib) {
-            // No status available, so do minimal checks
-            flags |= pcmk_sched_validate_only;
+    if (rc == pcmk_rc_schema_validation) {
+        if (crm_config_error) {
+            failure_type = "Errors found during check: ";
+          } else if (crm_config_warning) {
+            failure_type = "Warnings found during check: ";
+          } else {
+            failure_type = "";
+          }
+
+          if (args->quiet) {
+              // User requested no output
+
+          } else if (options.verbosity > 0) {
+              out->err(out, "%sconfig not valid", failure_type);
+
+          } else {
+              out->err(out, "%sconfig not valid\n-V may provide more details", failure_type);
+          }
         }
-        pcmk__schedule_actions(cib_object, flags, scheduler);
-    }
+
     pe_free_working_set(scheduler);
-
-    if (crm_config_error) {
-        rc = pcmk_rc_schema_validation;
-
-        if (args->verbosity > 0 || pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Errors found during check: config not valid");
-        } else {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Errors found during check: config not valid\n-V may provide more details");
-        } 
-
-    } else if (crm_config_warning) {
-        rc = pcmk_rc_schema_validation;
-
-        if (args->verbosity > 0 || pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Warnings found during check: config may not be valid");
-        } else {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Warnings found during check: config may not be valid\n-V may provide more details");
-        }
-    }
 
   done:
     g_strfreev(processed_args);
@@ -287,6 +261,10 @@ main(int argc, char **argv)
     free(options.cib_save);
     free(options.xml_file);
     free(options.xml_string);
+
+    if (cib_object != NULL) {
+        free_xml(cib_object);      
+    }
 
     if (exit_code == CRM_EX_OK) {
         exit_code = pcmk_rc2exitc(rc);

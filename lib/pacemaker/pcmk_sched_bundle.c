@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 
 #include <stdbool.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
@@ -31,7 +31,7 @@ struct assign_data {
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-assign_replica(pe__bundle_replica_t *replica, void *user_data)
+assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_node_t *container_host = NULL;
 
@@ -43,25 +43,25 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
                                                            true);
 
     if (replica->ip != NULL) {
-        pe_rsc_trace(bundle, "Assigning bundle %s IP %s",
-                     bundle->id, replica->ip->id);
+        pcmk__rsc_trace(bundle, "Assigning bundle %s IP %s",
+                        bundle->id, replica->ip->id);
         replica->ip->cmds->assign(replica->ip, prefer, stop_if_fail);
     }
 
     container_host = replica->container->allocated_to;
     if (replica->remote != NULL) {
-        if (pe__is_guest_or_remote_node(container_host)) {
+        if (pcmk__is_pacemaker_remote_node(container_host)) {
             /* REMOTE_CONTAINER_HACK: "Nested" connection resources must be on
              * the same host because Pacemaker Remote only supports a single
              * active connection.
              */
             pcmk__new_colocation("#replica-remote-with-host-remote", NULL,
-                                 INFINITY, replica->remote,
+                                 PCMK_SCORE_INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
                                  NULL, pcmk__coloc_influence);
         }
-        pe_rsc_trace(bundle, "Assigning bundle %s connection %s",
-                     bundle->id, replica->remote->id);
+        pcmk__rsc_trace(bundle, "Assigning bundle %s connection %s",
+                        bundle->id, replica->remote->id);
         replica->remote->cmds->assign(replica->remote, prefer, stop_if_fail);
     }
 
@@ -71,19 +71,19 @@ assign_replica(pe__bundle_replica_t *replica, void *user_data)
 
         g_hash_table_iter_init(&iter, replica->child->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (!pe__same_node(node, replica->node)) {
-                node->weight = -INFINITY;
+            if (!pcmk__same_node(node, replica->node)) {
+                node->weight = -PCMK_SCORE_INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
-                node->weight = INFINITY;
+                node->weight = PCMK_SCORE_INFINITY;
             }
         }
 
-        pe__set_resource_flags(replica->child->parent, pcmk_rsc_assigning);
-        pe_rsc_trace(bundle, "Assigning bundle %s replica child %s",
-                     bundle->id, replica->child->id);
+        pcmk__set_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
+                        bundle->id, replica->child->id);
         replica->child->cmds->assign(replica->child, replica->node,
                                      stop_if_fail);
-        pe__clear_resource_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__clear_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
     }
     return true;
 }
@@ -115,10 +115,10 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk_resource_t *bundled_resource = NULL;
     struct assign_data assign_data = { prefer, stop_if_fail };
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
-    pe_rsc_trace(rsc, "Assigning bundle %s", rsc->id);
-    pe__set_resource_flags(rsc, pcmk_rsc_assigning);
+    pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
+    pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
     pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
                                       pcmk_sched_output_scores),
@@ -144,13 +144,13 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
             if (pe__node_is_bundle_instance(rsc, node)) {
                 node->weight = 0;
             } else {
-                node->weight = -INFINITY;
+                node->weight = -PCMK_SCORE_INFINITY;
             }
         }
         bundled_resource->cmds->assign(bundled_resource, prefer, stop_if_fail);
     }
 
-    pe__clear_resource_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk_rsc_assigning|pcmk_rsc_unassigned);
     return NULL;
 }
 
@@ -164,7 +164,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-create_replica_actions(pe__bundle_replica_t *replica, void *user_data)
+create_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
         replica->ip->cmds->create_actions(replica->ip);
@@ -191,7 +191,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
     GList *containers = NULL;
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     pe__foreach_bundle_replica(rsc, create_replica_actions, NULL);
 
@@ -207,12 +207,12 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_PROMOTED,
                                                true, true);
-            action->priority = INFINITY;
+            action->priority = PCMK_SCORE_INFINITY;
 
             pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTE, true, true);
             action = pe__new_rsc_pseudo_action(rsc, PCMK_ACTION_DEMOTED,
                                                true, true);
-            action->priority = INFINITY;
+            action->priority = PCMK_SCORE_INFINITY;
         }
     }
 }
@@ -227,7 +227,7 @@ pcmk__bundle_create_actions(pcmk_resource_t *rsc)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
+replica_internal_constraints(pcmk__bundle_replica_t *replica, void *user_data)
 {
     pcmk_resource_t *bundle = user_data;
 
@@ -266,8 +266,8 @@ replica_internal_constraints(pe__bundle_replica_t *replica, void *user_data)
         pcmk__order_stops(replica->container, replica->ip,
                           pcmk__ar_then_implies_first|pcmk__ar_guest_allowed);
 
-        pcmk__new_colocation("#ip-with-container", NULL, INFINITY, replica->ip,
-                             replica->container, NULL, NULL,
+        pcmk__new_colocation("#ip-with-container", NULL, PCMK_SCORE_INFINITY,
+                             replica->ip, replica->container, NULL, NULL,
                              pcmk__coloc_influence);
     }
 
@@ -298,7 +298,7 @@ pcmk__bundle_internal_constraints(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     pe__foreach_bundle_replica(rsc, replica_internal_constraints, rsc);
 
@@ -371,7 +371,7 @@ struct match_data {
  *         should be processed), otherwise false
  */
 static bool
-match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
+match_replica_container(const pcmk__bundle_replica_t *replica, void *user_data)
 {
     struct match_data *match_data = user_data;
 
@@ -395,7 +395,7 @@ match_replica_container(const pe__bundle_replica_t *replica, void *user_data)
 static const pcmk_node_t *
 get_bundle_node_host(const pcmk_node_t *node)
 {
-    if (pe__is_bundle_node(node)) {
+    if (pcmk__is_bundle_node(node)) {
         const pcmk_resource_t *container = node->details->remote_rsc->container;
 
         return container->fns->location(container, NULL, 0);
@@ -466,12 +466,13 @@ struct coloc_data {
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
+replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
+                          void *user_data)
 {
     struct coloc_data *coloc_data = user_data;
     pcmk_node_t *chosen = NULL;
 
-    if (coloc_data->colocation->score < INFINITY) {
+    if (coloc_data->colocation->score < PCMK_SCORE_INFINITY) {
         replica->container->cmds->apply_coloc_score(coloc_data->dependent,
                                                     replica->container,
                                                     coloc_data->colocation,
@@ -491,10 +492,10 @@ replica_apply_coloc_score(const pe__bundle_replica_t *replica, void *user_data)
         return true;
     }
 
-    pe_rsc_trace(pe__const_top_resource(replica->container, true),
-                 "Allowing mandatory colocation %s using %s @%d",
-                 coloc_data->colocation->id, pe__node_name(chosen),
-                 chosen->weight);
+    pcmk__rsc_trace(pe__const_top_resource(replica->container, true),
+                    "Allowing mandatory colocation %s using %s @%d",
+                    coloc_data->colocation->id, pcmk__node_name(chosen),
+                    chosen->weight);
     coloc_data->container_hosts = g_list_prepend(coloc_data->container_hosts,
                                                  chosen);
     return true;
@@ -525,22 +526,19 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
      * Instead, we add its colocation constraints to its containers and bundled
      * primitive and call the apply_coloc_score() method for them as dependents.
      */
-    CRM_ASSERT((primary != NULL)
-               && (primary->variant == pcmk_rsc_variant_bundle)
-               && (dependent != NULL)
-               && (dependent->variant == pcmk_rsc_variant_primitive)
+    CRM_ASSERT(pcmk__is_bundle(primary) && pcmk__is_primitive(dependent)
                && (colocation != NULL) && !for_dependent);
 
     if (pcmk_is_set(primary->flags, pcmk_rsc_unassigned)) {
-        pe_rsc_trace(primary,
-                     "Skipping applying colocation %s "
-                     "because %s is still provisional",
-                     colocation->id, primary->id);
+        pcmk__rsc_trace(primary,
+                        "Skipping applying colocation %s "
+                        "because %s is still provisional",
+                        colocation->id, primary->id);
         return;
     }
-    pe_rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
-                 colocation->id, dependent->id, primary->id,
-                 pcmk_readable_score(colocation->score));
+    pcmk__rsc_trace(primary, "Applying colocation %s (%s with %s at %s)",
+                    colocation->id, dependent->id, primary->id,
+                    pcmk_readable_score(colocation->score));
 
     /* If the constraint dependent is a clone or bundle, "dependent" here is one
      * of its instances. Look for a compatible instance of this bundle.
@@ -550,21 +548,22 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
 
         primary_container = compatible_container(dependent, primary);
         if (primary_container != NULL) { // Success, we found one
-            pe_rsc_debug(primary, "Pairing %s with %s",
-                         dependent->id, primary_container->id);
+            pcmk__rsc_debug(primary, "Pairing %s with %s",
+                            dependent->id, primary_container->id);
             dependent->cmds->apply_coloc_score(dependent, primary_container,
                                                colocation, true);
 
-        } else if (colocation->score >= INFINITY) { // Failure, and it's fatal
+        } else if (colocation->score >= PCMK_SCORE_INFINITY) {
+            // Failure, and it's fatal
             crm_notice("%s cannot run because there is no compatible "
                        "instance of %s to colocate with",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true, true);
 
         } else { // Failure, but we can ignore it
-            pe_rsc_debug(primary,
-                         "%s cannot be colocated with any instance of %s",
-                         dependent->id, primary->id);
+            pcmk__rsc_debug(primary,
+                            "%s cannot be colocated with any instance of %s",
+                            dependent->id, primary->id);
         }
         return;
     }
@@ -572,7 +571,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     pe__foreach_const_bundle_replica(primary, replica_apply_coloc_score,
                                      &coloc_data);
 
-    if (colocation->score >= INFINITY) {
+    if (colocation->score >= PCMK_SCORE_INFINITY) {
         pcmk__colocation_intersect_nodes(dependent, primary, colocation,
                                          coloc_data.container_hosts, false);
     }
@@ -586,8 +585,7 @@ pcmk__with_bundle_colocations(const pcmk_resource_t *rsc,
 {
     const pcmk_resource_t *bundled_rsc = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
-               && (orig_rsc != NULL) && (list != NULL));
+    CRM_ASSERT(pcmk__is_bundle(rsc) && (orig_rsc != NULL) && (list != NULL));
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
@@ -631,8 +629,7 @@ pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
 {
     const pcmk_resource_t *bundled_rsc = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
-               && (orig_rsc != NULL) && (list != NULL));
+    CRM_ASSERT(pcmk__is_bundle(rsc) && (orig_rsc != NULL) && (list != NULL));
 
     // The bundle itself and its containers always get its colocations
     if ((orig_rsc == rsc)
@@ -685,8 +682,7 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
     uint32_t flags = 0;
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((action != NULL) && (action->rsc != NULL)
-               && (action->rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT((action != NULL) && pcmk__is_bundle(action->rsc));
 
     bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
@@ -723,9 +719,9 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
+apply_location_to_replica(pcmk__bundle_replica_t *replica, void *user_data)
 {
-    pe__location_t *location = user_data;
+    pcmk__location_t *location = user_data;
 
     if (replica->container != NULL) {
         replica->container->cmds->apply_location(replica->container, location);
@@ -744,12 +740,11 @@ apply_location_to_replica(pe__bundle_replica_t *replica, void *user_data)
  * \param[in,out] location  Location constraint to apply
  */
 void
-pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
+pcmk__bundle_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle)
-               && (location != NULL));
+    CRM_ASSERT((location != NULL) && pcmk__is_bundle(rsc));
 
     pcmk__apply_location(rsc, location);
     pe__foreach_bundle_replica(rsc, apply_location_to_replica, location);
@@ -764,7 +759,7 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
     }
 }
 
-#define XPATH_REMOTE "//nvpair[@name='" XML_RSC_ATTR_REMOTE_RA_ADDR "']"
+#define XPATH_REMOTE "//nvpair[@name='" PCMK_REMOTE_RA_ADDR "']"
 
 /*!
  * \internal
@@ -776,7 +771,7 @@ pcmk__bundle_apply_location(pcmk_resource_t *rsc, pe__location_t *location)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
+add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if ((replica->remote != NULL) && (replica->container != NULL)
         && pe__bundle_needs_remote_name(replica->remote)) {
@@ -792,9 +787,8 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
         const char *calculated_addr = NULL;
 
         // Replace the value in replica->remote->xml (if appropriate)
-        calculated_addr = pe__add_bundle_remote_name(replica->remote,
-                                                     replica->remote->cluster,
-                                                     nvpair, "value");
+        calculated_addr = pe__add_bundle_remote_name(replica->remote, nvpair,
+                                                     PCMK_XA_VALUE);
         if (calculated_addr != NULL) {
             /* Since this is for the bundle as a resource, and not any
              * particular action, replace the value in the default
@@ -805,9 +799,7 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
             GHashTable *params = pe_rsc_params(replica->remote,
                                                NULL, replica->remote->cluster);
 
-            g_hash_table_replace(params,
-                                 strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
-                                 strdup(calculated_addr));
+            pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, calculated_addr);
         } else {
             pcmk_resource_t *bundle = user_data;
 
@@ -818,9 +810,9 @@ add_replica_actions_to_graph(pe__bundle_replica_t *replica, void *user_data)
              * unpacking status, promote, and migrate_from history, but
              * that's already happened by this point).
              */
-            pe_rsc_info(bundle,
-                        "Unable to determine address for bundle %s "
-                        "remote connection", bundle->id);
+            pcmk__rsc_info(bundle,
+                           "Unable to determine address for bundle %s "
+                           "remote connection", bundle->id);
         }
     }
     if (replica->ip != NULL) {
@@ -846,7 +838,7 @@ pcmk__bundle_add_actions_to_graph(pcmk_resource_t *rsc)
 {
     pcmk_resource_t *bundled_resource = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     bundled_resource = pe__bundled_resource(rsc);
     if (bundled_resource != NULL) {
@@ -871,9 +863,9 @@ struct probe_data {
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
+order_replica_start_after(pcmk__bundle_replica_t *replica, void *user_data)
 {
-    pe__bundle_replica_t *probed_replica = user_data;
+    pcmk__bundle_replica_t *probed_replica = user_data;
 
     if ((replica == probed_replica) || (replica->container == NULL)) {
         return true;
@@ -899,7 +891,7 @@ order_replica_start_after(pe__bundle_replica_t *replica, void *user_data)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
+create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
 {
     struct probe_data *probe_data = user_data;
 
@@ -908,7 +900,7 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
         probe_data->any_created = true;
     }
     if ((replica->child != NULL)
-        && pe__same_node(probe_data->node, replica->node)
+        && pcmk__same_node(probe_data->node, replica->node)
         && replica->child->cmds->create_probe(replica->child,
                                               probe_data->node)) {
         probe_data->any_created = true;
@@ -951,8 +943,9 @@ create_replica_probes(pe__bundle_replica_t *replica, void *user_data)
         free(probe_uuid);
         if (probe != NULL) {
             probe_data->any_created = true;
-            pe_rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
-                         replica->remote->id, pe__node_name(probe_data->node));
+            pcmk__rsc_trace(probe_data->bundle, "Ordering %s probe on %s",
+                            replica->remote->id,
+                            pcmk__node_name(probe_data->node));
             pcmk__new_ordering(replica->container,
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),
@@ -979,7 +972,7 @@ pcmk__bundle_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
 {
     struct probe_data probe_data = { rsc, node, false };
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
     pe__foreach_bundle_replica(rsc, create_replica_probes, &probe_data);
     return probe_data.any_created;
 }
@@ -994,7 +987,7 @@ pcmk__bundle_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
  * \return true (to indicate that any further replicas should be processed)
  */
 static bool
-output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
+output_replica_actions(pcmk__bundle_replica_t *replica, void *user_data)
 {
     if (replica->ip != NULL) {
         replica->ip->cmds->output_actions(replica->ip);
@@ -1020,7 +1013,7 @@ output_replica_actions(pe__bundle_replica_t *replica, void *user_data)
 void
 pcmk__output_bundle_actions(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
     pe__foreach_bundle_replica(rsc, output_replica_actions, NULL);
 }
 
@@ -1032,7 +1025,7 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
 {
     pcmk_resource_t *container = NULL;
 
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
         return;
@@ -1053,6 +1046,6 @@ pcmk__bundle_add_utilization(const pcmk_resource_t *rsc,
 void
 pcmk__bundle_shutdown_lock(pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_bundle));
+    CRM_ASSERT(pcmk__is_bundle(rsc));
     // Bundles currently don't support shutdown locks
 }

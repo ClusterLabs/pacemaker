@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,12 +33,27 @@ typedef struct lrmd_key_value_s {
     struct lrmd_key_value_s *next;
 } lrmd_key_value_t;
 
-/* This should be bumped every time there is an incompatible change that
- * prevents older clients from connecting to this version of the server.
+/* The major version should be bumped every time there is an incompatible
+ * change that prevents older clients from connecting to this version of
+ * the server.  The minor version indicates feature support.
+ *
+ * Protocol  Pacemaker  Significant changes
+ * --------  ---------  -------------------
+ *   1.2       2.1.8    PCMK__CIB_REQUEST_SCHEMAS
  */
-#define LRMD_PROTOCOL_VERSION "1.1"
+#define LRMD_PROTOCOL_VERSION "1.2"
 
-/* This is the version that the client version will actually be compared
+#define LRMD_SUPPORTS_SCHEMA_XFER(x) (compare_version((x), "1.2") >= 0)
+
+/* The major protocol version the client and server both need to support for
+ * the connection to be successful.  This should only ever be the major
+ * version - not a complete version number.
+ */
+#define LRMD_COMPATIBLE_PROTOCOL "1"
+
+/* \deprecated Do not use (will be removed in a future release)
+ *
+ * This is the version that the client version will actually be compared
  * against. This should be identical to LRMD_PROTOCOL_VERSION. However, we
  * accidentally bumped LRMD_PROTOCOL_VERSION in 6424a647 (1.1.15) when we didn't
  * need to, so for now it's different. If we ever have a truly incompatible
@@ -51,46 +66,6 @@ typedef struct lrmd_key_value_s {
 #define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
-
-#define F_LRMD_OPERATION        "lrmd_op"
-#define F_LRMD_CLIENTNAME       "lrmd_clientname"
-#define F_LRMD_IS_IPC_PROVIDER  "lrmd_is_ipc_provider"
-#define F_LRMD_CLIENTID         "lrmd_clientid"
-#define F_LRMD_PROTOCOL_VERSION "lrmd_protocol_version"
-#define F_LRMD_REMOTE_MSG_TYPE  "lrmd_remote_msg_type"
-#define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
-#define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"
-#define F_LRMD_CALLID           "lrmd_callid"
-#define F_LRMD_CALLOPTS         "lrmd_callopt"
-#define F_LRMD_CALLDATA         "lrmd_calldata"
-#define F_LRMD_RC               "lrmd_rc"
-#define F_LRMD_EXEC_RC          "lrmd_exec_rc"
-#define F_LRMD_OP_STATUS        "lrmd_exec_op_status"
-#define F_LRMD_TIMEOUT          "lrmd_timeout"
-#define F_LRMD_WATCHDOG         "lrmd_watchdog"
-#define F_LRMD_CLASS            "lrmd_class"
-#define F_LRMD_PROVIDER         "lrmd_provider"
-#define F_LRMD_TYPE             "lrmd_type"
-#define F_LRMD_ORIGIN           "lrmd_origin"
-
-#define F_LRMD_RSC_RUN_TIME      "lrmd_run_time"
-#define F_LRMD_RSC_RCCHANGE_TIME "lrmd_rcchange_time"
-#define F_LRMD_RSC_EXEC_TIME     "lrmd_exec_time"
-#define F_LRMD_RSC_QUEUE_TIME    "lrmd_queue_time"
-
-#define F_LRMD_RSC_ID           "lrmd_rsc_id"
-#define F_LRMD_RSC_ACTION       "lrmd_rsc_action"
-#define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
-#define F_LRMD_RSC_OUTPUT       "lrmd_rsc_output"
-#define F_LRMD_RSC_EXIT_REASON  "lrmd_rsc_exit_reason"
-#define F_LRMD_RSC_START_DELAY  "lrmd_rsc_start_delay"
-#define F_LRMD_RSC_INTERVAL     "lrmd_rsc_interval"
-#define F_LRMD_RSC_DELETED      "lrmd_rsc_deleted"
-#define F_LRMD_RSC              "lrmd_rsc"
-
-#define F_LRMD_ALERT_ID           "lrmd_alert_id"
-#define F_LRMD_ALERT_PATH         "lrmd_alert_path"
-#define F_LRMD_ALERT              "lrmd_alert"
 
 #define LRMD_OP_RSC_REG           "lrmd_rsc_register"
 #define LRMD_OP_RSC_EXEC          "lrmd_rsc_exec"
@@ -112,21 +87,6 @@ typedef struct lrmd_key_value_s {
 #define LRMD_IPC_OP_SHUTDOWN_REQ  "shutdown_req"
 #define LRMD_IPC_OP_SHUTDOWN_ACK  "shutdown_ack"
 #define LRMD_IPC_OP_SHUTDOWN_NACK "shutdown_nack"
-
-#define F_LRMD_IPC_OP           "lrmd_ipc_op"
-#define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
-#define F_LRMD_IPC_SESSION      "lrmd_ipc_session"
-#define F_LRMD_IPC_CLIENT       "lrmd_ipc_client"
-#define F_LRMD_IPC_USER         "lrmd_ipc_user"
-#define F_LRMD_IPC_MSG          "lrmd_ipc_msg"
-#define F_LRMD_IPC_MSG_ID       "lrmd_ipc_msg_id"
-#define F_LRMD_IPC_MSG_FLAGS    "lrmd_ipc_msg_flags"
-
-#define T_LRMD           "lrmd"
-#define T_LRMD_REPLY     "lrmd_reply"
-#define T_LRMD_NOTIFY    "lrmd_notify"
-#define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
-#define T_LRMD_RSC_OP    "lrmd_rsc_op"
 /* *INDENT-ON* */
 
 /*!
@@ -553,6 +513,10 @@ lrmd_event_type2str(enum lrmd_callback_event type)
     }
     return "unknown";
 }
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/lrmd_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

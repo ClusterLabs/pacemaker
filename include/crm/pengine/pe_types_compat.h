@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,64 +25,65 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Use pcmk_rsc_removed instead
+//! \deprecated Do not use
 #define pe_rsc_orphan                   pcmk_rsc_removed
 
-//! \deprecated Use pcmk_rsc_managed instead
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
 #define pe_rsc_managed                  pcmk_rsc_managed
 
-//! \deprecated Use pcmk_rsc_blocked instead
+//! \deprecated Do not use
 #define pe_rsc_block                    pcmk_rsc_blocked
 
-//! \deprecated Use pcmk_rsc_removed_filler instead
+//! \deprecated Do not use
 #define pe_rsc_orphan_container_filler  pcmk_rsc_removed_filler
 
-//! \deprecated Use pcmk_rsc_notify instead
+//! \deprecated Do not use
 #define pe_rsc_notify                   pcmk_rsc_notify
 
-//! \deprecated Use pcmk_rsc_unique instead
+//! \deprecated Do not use
 #define pe_rsc_unique                   pcmk_rsc_unique
 
-//! \deprecated Use pcmk_rsc_fence_device instead
+//! \deprecated Do not use
 #define pe_rsc_fence_device             pcmk_rsc_fence_device
 
-//! \deprecated Use pcmk_rsc_promotable instead
+//! \deprecated Do not use
 #define pe_rsc_promotable               pcmk_rsc_promotable
 
-//! \deprecated Use pcmk_rsc_unassigned instead
+//! \deprecated Do not use
 #define pe_rsc_provisional              pcmk_rsc_unassigned
 
-//! \deprecated Use pcmk_rsc_assigning instead
+//! \deprecated Do not use
 #define pe_rsc_allocating               pcmk_rsc_assigning
 
-//! \deprecated Use pcmk_rsc_updating_nodes instead
+//! \deprecated Do not use
 #define pe_rsc_merging                  pcmk_rsc_updating_nodes
 
-//! \deprecated Use pcmk_rsc_restarting instead
+//! \deprecated Do not use
 #define pe_rsc_restarting               pcmk_rsc_restarting
 
-//! \deprecated Use pcmk_rsc_stop_if_failed instead
+//! \deprecated Do not use
 #define pe_rsc_stop                     pcmk_rsc_stop_if_failed
 
-//! \deprecated Use pcmk_rsc_reload instead
+//! \deprecated Do not use
 #define pe_rsc_reload                   pcmk_rsc_reload
 
-//! \deprecated Use pcmk_rsc_remote_nesting_allowed instead
+//! \deprecated Do not use
 #define pe_rsc_allow_remote_remotes     pcmk_rsc_remote_nesting_allowed
 
-//! \deprecated Use pcmk_rsc_critical instead
+//! \deprecated Do not use
 #define pe_rsc_critical                 pcmk_rsc_critical
 
-//! \deprecated Use pcmk_rsc_failed instead
+//! \deprecated Do not use
 #define pe_rsc_failed                   pcmk_rsc_failed
 
-//! \deprecated Use pcmk_rsc_detect_loop instead
+//! \deprecated Do not use
 #define pe_rsc_detect_loop              pcmk_rsc_detect_loop
 
 //! \deprecated Do not use
 #define pe_rsc_runnable                 pcmk_rsc_runnable
 
-//! \deprecated Use pcmk_rsc_start_pending instead
+//! \deprecated Do not use
 #define pe_rsc_start_pending            pcmk_rsc_start_pending
 
 //!< \deprecated Do not use
@@ -91,106 +92,108 @@ extern "C" {
 //!< \deprecated Do not use
 #define pe_rsc_stopping                 pcmk_rsc_stopping
 
-//! \deprecated Use pcmk_rsc_stop_unexpected instead
+//! \deprecated Do not use
 #define pe_rsc_stop_unexpected          pcmk_rsc_stop_unexpected
 
-//! \deprecated Use pcmk_rsc_migratable instead
+//! \deprecated Do not use
 #define pe_rsc_allow_migrate            pcmk_rsc_migratable
 
-//! \deprecated Use pcmk_rsc_ignore_failure instead
+//! \deprecated Do not use
 #define pe_rsc_failure_ignored          pcmk_rsc_ignore_failure
 
-//! \deprecated Use pcmk_rsc_replica_container instead
+//! \deprecated Do not use
 #define pe_rsc_replica_container        pcmk_rsc_replica_container
 
-//! \deprecated Use pcmk_rsc_maintenance instead
+//! \deprecated Do not use
 #define pe_rsc_maintenance              pcmk_rsc_maintenance
 
 //! \deprecated Do not use
 #define pe_rsc_is_container             pcmk_rsc_has_filler
 
-//! \deprecated Use pcmk_rsc_needs_quorum instead
+//! \deprecated Do not use
 #define pe_rsc_needs_quorum             pcmk_rsc_needs_quorum
 
-//! \deprecated Use pcmk_rsc_needs_fencing instead
+//! \deprecated Do not use
 #define pe_rsc_needs_fencing            pcmk_rsc_needs_fencing
 
-//! \deprecated Use pcmk_rsc_needs_unfencing instead
+//! \deprecated Do not use
 #define pe_rsc_needs_unfencing          pcmk_rsc_needs_unfencing
 
-//! \deprecated Use pcmk_sched_quorate instead
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
 #define pe_flag_have_quorum             pcmk_sched_quorate
 
-//! \deprecated Use pcmk_sched_symmetric_cluster instead
+//! \deprecated Do not use
 #define pe_flag_symmetric_cluster       pcmk_sched_symmetric_cluster
 
-//! \deprecated Use pcmk_sched_in_maintenance instead
+//! \deprecated Do not use
 #define pe_flag_maintenance_mode        pcmk_sched_in_maintenance
 
-//! \deprecated Use pcmk_sched_fencing_enabled instead
+//! \deprecated Do not use
 #define pe_flag_stonith_enabled         pcmk_sched_fencing_enabled
 
-//! \deprecated Use pcmk_sched_have_fencing instead
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
 #define pe_flag_have_stonith_resource   pcmk_sched_have_fencing
 
-//! \deprecated Use pcmk_sched_enable_unfencing instead
+//! \deprecated Do not use
 #define pe_flag_enable_unfencing        pcmk_sched_enable_unfencing
 
-//! \deprecated Use pcmk_sched_concurrent_fencing instead
+//! \deprecated Do not use
 #define pe_flag_concurrent_fencing      pcmk_sched_concurrent_fencing
 
-//! \deprecated Use pcmk_sched_stop_removed_resources instead
+//! \deprecated Do not use
 #define pe_flag_stop_rsc_orphans        pcmk_sched_stop_removed_resources
 
-//! \deprecated Use pcmk_sched_cancel_removed_actions instead
+//! \deprecated Do not use
 #define pe_flag_stop_action_orphans     pcmk_sched_cancel_removed_actions
 
-//! \deprecated Use pcmk_sched_stop_all instead
+//! \deprecated Do not use
 #define pe_flag_stop_everything         pcmk_sched_stop_all
 
-//! \deprecated Use pcmk_sched_start_failure_fatal instead
+//! \deprecated Do not use
 #define pe_flag_start_failure_fatal     pcmk_sched_start_failure_fatal
 
 //! \deprecated Do not use
 #define pe_flag_remove_after_stop       pcmk_sched_remove_after_stop
 
-//! \deprecated Use pcmk_sched_startup_fencing instead
+//! \deprecated Do not use
 #define pe_flag_startup_fencing         pcmk_sched_startup_fencing
 
-//! \deprecated Use pcmk_sched_shutdown_lock instead
+//! \deprecated Do not use
 #define pe_flag_shutdown_lock           pcmk_sched_shutdown_lock
 
-//! \deprecated Use pcmk_sched_probe_resources instead
+//! \deprecated Do not use
 #define pe_flag_startup_probes          pcmk_sched_probe_resources
 
-//! \deprecated Use pcmk_sched_have_status instead
+//! \deprecated Do not use
 #define pe_flag_have_status             pcmk_sched_have_status
 
-//! \deprecated Use pcmk_sched_have_remote_nodes instead
+//! \deprecated Do not use
 #define pe_flag_have_remote_nodes       pcmk_sched_have_remote_nodes
 
-//! \deprecated Use pcmk_sched_location_only instead
+//! \deprecated Do not use
 #define pe_flag_quick_location          pcmk_sched_location_only
 
-//! \deprecated Use pcmk_sched_sanitized instead
+//! \deprecated Do not use
 #define pe_flag_sanitized               pcmk_sched_sanitized
 
 //! \deprecated Do not use
 #define pe_flag_stdout                  (1ULL << 22)
 
-//! \deprecated Use pcmk_sched_no_counts instead
+//! \deprecated Do not use
 #define pe_flag_no_counts               pcmk_sched_no_counts
 
-//! \deprecated Use pcmk_sched_no_compat instead
+//! \deprecated Do not use
 #define pe_flag_no_compat               pcmk_sched_no_compat
 
-//! \deprecated Use pcmk_sched_output_scores instead
+//! \deprecated Do not use
 #define pe_flag_show_scores             pcmk_sched_output_scores
 
-//! \deprecated Use pcmk_sched_show_utilization instead
+//! \deprecated Do not use
 #define pe_flag_show_utilization        pcmk_sched_show_utilization
 
-//! \deprecated Use pcmk_sched_validate_only instead
+//! \deprecated Do not use
 #define pe_flag_check_config            pcmk_sched_validate_only
 
 //!@{
@@ -223,6 +226,7 @@ typedef struct pe_action_wrapper_s action_wrapper_t;
 //! \deprecated Do not use
 typedef struct pe_action_wrapper_s pe_action_wrapper_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
 
@@ -232,24 +236,26 @@ typedef struct pe_node_s pe_node_t;
 //! \deprecated Use enum pe_quorum_policy instead
 typedef enum pe_quorum_policy no_quorum_policy_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s pe_resource_t;
 
-//! \deprecated Use pcmk_tag_t instead
+//! \deprecated Do not use
 typedef struct pe_tag_s tag_t;
 
-//! \deprecated Use pcmk_tag_t instead
+//! \deprecated Do not use
 typedef struct pe_tag_s pe_tag_t;
 
-//! \deprecated Use pcmk_ticket_t instead
+//! \deprecated Do not use
 typedef struct pe_ticket_s ticket_t;
 
-//! \deprecated Use pcmk_ticket_t instead
+//! \deprecated Do not use
 typedef struct pe_ticket_s pe_ticket_t;
 
+// NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
 

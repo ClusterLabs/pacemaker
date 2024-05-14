@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,7 +21,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
@@ -36,7 +35,7 @@ extern int init_remote_listener(int port, gboolean encrypted);
 gboolean cib_shutdown_flag = FALSE;
 int cib_status = pcmk_ok;
 
-crm_cluster_t *crm_cluster = NULL;
+pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
@@ -126,6 +125,19 @@ setup_stand_alone(GError **error)
     return pcmk_rc_ok;
 }
 
+/* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
+ * crm_attribute --list-options=cluster instead of querying daemon metadata.
+ */
+static int
+based_metadata(pcmk__output_t *out)
+{
+    return pcmk__daemon_metadata(out, "pacemaker-based",
+                                 "Cluster Information Base manager options",
+                                 "Cluster options used by Pacemaker's Cluster "
+                                 "Information Base manager",
+                                 pcmk__opt_based);
+}
+
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
@@ -154,8 +166,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, "text (default), xml", group,
-                                      "[metadata]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -204,7 +215,13 @@ main(int argc, char **argv)
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
-        cib_metadata();
+
+        rc = based_metadata(out);
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Unable to display metadata: %s", pcmk_rc_str(rc));
+        }
         goto done;
     }
 
@@ -254,7 +271,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_peer_init();
+    pcmk__cluster_init_node_caches();
 
     // Read initial CIB, connect to cluster, and start IPC servers
     cib_init();
@@ -267,14 +284,14 @@ main(int argc, char **argv)
     /* If main loop returned, clean up and exit. We disconnect in case
      * terminate_cib() was called with fast=-1.
      */
-    crm_cluster_disconnect(crm_cluster);
+    pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
 
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    crm_peer_destroy();
+    pcmk__cluster_destroy_node_caches();
 
     if (local_notify_queue != NULL) {
         g_hash_table_destroy(local_notify_queue);
@@ -306,20 +323,19 @@ cib_cs_dispatch(cpg_handle_t handle,
     uint32_t kind = 0;
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &kind, &from);
 
     if(data == NULL) {
         return;
     }
     if (kind == crm_class_cluster) {
-        xml = string2xml(data);
+        xml = pcmk__xml_parse(data);
         if (xml == NULL) {
             crm_err("Invalid XML: '%.120s'", data);
             free(data);
             return;
         }
-        crm_xml_add(xml, F_ORIG, from);
-        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); */
+        crm_xml_add(xml, PCMK__XA_SRC, from);
         cib_peer_callback(xml, NULL);
     }
 
@@ -359,7 +375,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 
         case crm_status_uname:
         case crm_status_nstate:
-            if (cib_shutdown_flag && (crm_active_peers() < 2)
+            if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 
                 crm_info("No more peers");
@@ -375,10 +391,10 @@ cib_init(void)
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
-    if (is_corosync_cluster()) {
-        crm_cluster->destroy = cib_cs_destroy;
-        crm_cluster->cpg.cpg_deliver_fn = cib_cs_dispatch;
-        crm_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        pcmk_cluster_set_destroy_fn(crm_cluster, cib_cs_destroy);
+        pcmk_cpg_set_deliver_fn(crm_cluster, cib_cs_dispatch);
+        pcmk_cpg_set_confchg_fn(crm_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
 
@@ -390,9 +406,9 @@ cib_init(void)
     }
 
     if (!stand_alone) {
-        crm_set_status_callback(&cib_peer_update_callback);
+        pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
-        if (!crm_cluster_connect(crm_cluster)) {
+        if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
@@ -419,12 +435,13 @@ startCib(const char *filename)
 
         cib_read_config(config_hash, cib);
 
-        pcmk__scan_port(crm_element_value(cib, "remote-tls-port"), &port);
+        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
         if (port >= 0) {
             remote_tls_fd = init_remote_listener(port, TRUE);
         }
 
-        pcmk__scan_port(crm_element_value(cib, "remote-clear-port"), &port);
+        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_CLEAR_PORT),
+                        &port);
         if (port >= 0) {
             remote_fd = init_remote_listener(port, FALSE);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -132,13 +131,14 @@ stonith__history_description(const stonith_history_t *history,
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
 
-            pcmk__g_strcat(str, "delegate=", history->delegate, ", ", NULL);
+            pcmk__g_strcat(str, PCMK_XA_DELEGATE "=", history->delegate, ", ",
+                           NULL);
         }
 
         // Add information about originator
         pcmk__g_strcat(str,
-                       "client=", history->client, ", origin=", history->origin,
-                       NULL);
+                       PCMK_XA_CLIENT "=", history->client, ", "
+                       PCMK_XA_ORIGIN "=", history->origin, NULL);
 
         // For completed actions, add completion time
         if (completed_time_s != NULL) {
@@ -293,8 +293,8 @@ full_history_xml(pcmk__output_t *out, va_list args)
     } else {
         char *rc_s = pcmk__itoa(history_rc);
 
-        pcmk__output_create_xml_node(out, "fence_history",
-                                     "status", rc_s,
+        pcmk__output_create_xml_node(out, PCMK_XE_FENCE_HISTORY,
+                                     PCMK_XA_STATUS, rc_s,
                                      NULL);
         free(rc_s);
 
@@ -312,7 +312,7 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
 
     if (when) {
         char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
         return pcmk_rc_ok;
     } else {
@@ -344,9 +344,9 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     if (when) {
         char *buf = timespec_string(when, 0, false);
 
-        pcmk__output_create_xml_node(out, "last-fenced",
-                                     "target", target,
-                                     "when", buf,
+        pcmk__output_create_xml_node(out, PCMK_XE_LAST_FENCED,
+                                     PCMK_XA_TARGET, target,
+                                     PCMK_XA_WHEN, buf,
                                      NULL);
 
         free(buf);
@@ -456,28 +456,32 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     const char *succeeded G_GNUC_UNUSED = va_arg(args, const char *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event",
-                                                   "action", event->action,
-                                                   "target", event->target,
-                                                   "client", event->client,
-                                                   "origin", event->origin,
-                                                   NULL);
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_create_xml_node(out, PCMK_XE_FENCE_EVENT,
+                                        PCMK_XA_ACTION, event->action,
+                                        PCMK_XA_TARGET, event->target,
+                                        PCMK_XA_CLIENT, event->client,
+                                        PCMK_XA_ORIGIN, event->origin,
+                                        NULL);
 
     switch (event->state) {
         case st_failed:
-            pcmk__xe_set_props(node, "status", "failed",
-                               XML_LRM_ATTR_EXIT_REASON, event->exit_reason,
+            pcmk__xe_set_props(node,
+                               PCMK_XA_STATUS, PCMK_VALUE_FAILED,
+                               PCMK_XA_EXIT_REASON, event->exit_reason,
                                NULL);
             break;
 
         case st_done:
-            crm_xml_add(node, "status", "success");
+            crm_xml_add(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
             break;
 
         default: {
             char *state = pcmk__itoa(event->state);
-            pcmk__xe_set_props(node, "status", "pending",
-                               "extended-status", state,
+            pcmk__xe_set_props(node,
+                               PCMK_XA_STATUS, PCMK_VALUE_PENDING,
+                               PCMK_XA_EXTENDED_STATUS, state,
                                NULL);
             free(state);
             break;
@@ -485,14 +489,14 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     }
 
     if (event->delegate != NULL) {
-        crm_xml_add(node, "delegate", event->delegate);
+        crm_xml_add(node, PCMK_XA_DELEGATE, event->delegate);
     }
 
     if ((event->state == st_failed) || (event->state == st_done)) {
         char *time_s = timespec_string(event->completed, event->completed_nsec,
                                        true);
 
-        crm_xml_add(node, "completed", time_s);
+        crm_xml_add(node, PCMK_XA_COMPLETED, time_s);
         free(time_s);
     }
 
@@ -512,12 +516,12 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     if (device) {
         char *buf = crm_strdup_printf("Validation of %s on %s %s", agent, device,
                                       rc ? "failed" : "succeeded");
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     } else {
         char *buf = crm_strdup_printf("Validation of %s %s", agent,
                                       rc ? "failed" : "succeeded");
-        pcmk__output_create_html_node(out, "div", NULL, NULL, buf);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     }
 
@@ -557,12 +561,14 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(
-        out, "validate", "agent", agent, "valid", pcmk__btoa(rc == pcmk_ok),
-        NULL);
+    const char *valid = pcmk__btoa(rc == pcmk_ok);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_VALIDATE,
+                                                   PCMK_XA_AGENT, agent,
+                                                   PCMK_XA_VALID, valid,
+                                                   NULL);
 
     if (device != NULL) {
-        crm_xml_add(node, "device", device);
+        crm_xml_add(node, PCMK_XA_DEVICE, device);
     }
 
     pcmk__output_xml_push_parent(out, node);

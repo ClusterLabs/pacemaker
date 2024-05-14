@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,17 +17,17 @@
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 /*
- * This file isolates handling of three types of name/value pairs:
+ * This file isolates handling of various kinds of name/value pairs:
  *
  * - pcmk_nvpair_t data type
  * - XML attributes (<TAG ... NAME=VALUE ...>)
  * - XML nvpair elements (<nvpair id=ID name=NAME value=VALUE>)
+ * - Meta-attributes (for resources and actions)
  */
 
 // pcmk_nvpair_t handling
@@ -50,11 +50,10 @@ pcmk__new_nvpair(const char *name, const char *value)
 
     CRM_ASSERT(name);
 
-    nvpair = calloc(1, sizeof(pcmk_nvpair_t));
-    CRM_ASSERT(nvpair);
+    nvpair = pcmk__assert_alloc(1, sizeof(pcmk_nvpair_t));
 
-    pcmk__str_update(&nvpair->name, name);
-    pcmk__str_update(&nvpair->value, value);
+    nvpair->name = pcmk__str_copy(name);
+    nvpair->value = pcmk__str_copy(value);
     return nvpair;
 }
 
@@ -630,6 +629,37 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
 }
 
 /*!
+ * \internal
+ * \brief Get a date/time object from an XML attribute value
+ *
+ * \param[in]  xml   XML with attribute to parse (from CIB)
+ * \param[in]  attr  Name of attribute to parse
+ * \param[out] t     Where to create date/time object
+ *                   (\p *t must be NULL initially)
+ *
+ * \return Standard Pacemaker return code
+ * \note The caller is responsible for freeing \p *t using crm_time_free().
+ */
+int
+pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
+{
+    const char *value = NULL;
+
+    if ((t == NULL) || (*t != NULL) || (xml == NULL) || (attr == NULL)) {
+        return EINVAL;
+    }
+
+    value = crm_element_value(xml, attr);
+    if (value != NULL) {
+        *t = crm_time_new(value);
+        if (*t == NULL) {
+            return pcmk_rc_unpack_error;
+        }
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Retrieve a copy of the value of an XML attribute
  *
  * This is like \c crm_element_value() but allocating new memory for the result.
@@ -643,20 +673,18 @@ crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
 char *
 crm_element_value_copy(const xmlNode *data, const char *name)
 {
-    char *value_copy = NULL;
-
-    pcmk__str_update(&value_copy, crm_element_value(data, name));
-    return value_copy;
+    return pcmk__str_copy(crm_element_value(data, name));
 }
 
 /*!
- * \brief Add hash table entry to XML as (possibly legacy) name/value
+ * \brief Safely add hash table entry to XML as attribute or name-value pair
  *
  * Suitable for \c g_hash_table_foreach(), this function takes a hash table key
  * and value, with an XML node passed as user data, and adds an XML attribute
  * with the specified name and value if it does not already exist. If the key
- * name starts with a digit, this will instead add a \<param name=NAME
- * value=VALUE/> child to the XML (for legacy compatibility with heartbeat).
+ * name starts with a digit, then it's not a valid XML attribute name. In that
+ * case, this will instead add a <tt><param name=NAME value=VALUE/></tt> child
+ * to the XML.
  *
  * \param[in]     key        Key of hash table entry
  * \param[in]     value      Value of hash table entry
@@ -665,16 +693,24 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 void
 hash2smartfield(gpointer key, gpointer value, gpointer user_data)
 {
+    /* @TODO Generate PCMK__XE_PARAM nodes for all keys that aren't valid XML
+     * attribute names (not just those that start with digits), or possibly for
+     * all keys to simplify parsing.
+     *
+     * Consider either deprecating as public API or exposing PCMK__XE_PARAM.
+     * PCMK__XE_PARAM is currently private because it doesn't appear in any
+     * output that Pacemaker generates.
+     */
     const char *name = key;
     const char *s_value = value;
 
     xmlNode *xml_node = user_data;
 
     if (isdigit(name[0])) {
-        xmlNode *tmp = create_xml_node(xml_node, XML_TAG_PARAM);
+        xmlNode *tmp = pcmk__xe_create(xml_node, PCMK__XE_PARAM);
 
-        crm_xml_add(tmp, XML_NVPAIR_ATTR_NAME, name);
-        crm_xml_add(tmp, XML_NVPAIR_ATTR_VALUE, s_value);
+        crm_xml_add(tmp, PCMK_XA_NAME, name);
+        crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
 
     } else if (crm_element_value(xml_node, name) == NULL) {
         crm_xml_add(xml_node, name, s_value);
@@ -770,19 +806,16 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
      */
     CRM_CHECK(id || name, return NULL);
 
-    nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
-    CRM_CHECK(nvp, return NULL);
+    nvp = pcmk__xe_create(parent, PCMK_XE_NVPAIR);
 
     if (id) {
-        crm_xml_add(nvp, XML_ATTR_ID, id);
+        crm_xml_add(nvp, PCMK_XA_ID, id);
     } else {
-        const char *parent_id = ID(parent);
-
         crm_xml_set_id(nvp, "%s-%s",
-                       (parent_id? parent_id : XML_CIB_TAG_NVPAIR), name);
+                       pcmk__s(pcmk__xe_id(parent), PCMK_XE_NVPAIR), name);
     }
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+    crm_xml_add(nvp, PCMK_XA_NAME, name);
+    crm_xml_add(nvp, PCMK_XA_VALUE, value);
     return nvp;
 }
 
@@ -832,7 +865,7 @@ xml2list(const xmlNode *parent)
 
     CRM_CHECK(parent != NULL, return nvpair_hash);
 
-    nvpair_list = find_xml_node(parent, XML_TAG_ATTRS, FALSE);
+    nvpair_list = pcmk__xe_first_child(parent, PCMK__XE_ATTRIBUTES, NULL, NULL);
     if (nvpair_list == NULL) {
         crm_trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");
@@ -848,20 +881,18 @@ xml2list(const xmlNode *parent)
 
         crm_trace("Added %s=%s", p_name, p_value);
 
-        g_hash_table_insert(nvpair_hash, strdup(p_name), strdup(p_value));
+        pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
 
-    for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
-         child = pcmk__xml_next(child)) {
+    for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
+         child != NULL; child = pcmk__xe_next_same(child)) {
 
-        if (strcmp((const char *)child->name, XML_TAG_PARAM) == 0) {
-            const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
-            const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
+        const char *key = crm_element_value(child, PCMK_XA_NAME);
+        const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
-            crm_trace("Added %s=%s", key, value);
-            if (key != NULL && value != NULL) {
-                g_hash_table_insert(nvpair_hash, strdup(key), strdup(value));
-            }
+        crm_trace("Added %s=%s", key, value);
+        if (key != NULL && value != NULL) {
+            pcmk__insert_dup(nvpair_hash, key, value);
         }
     }
 
@@ -871,7 +902,7 @@ xml2list(const xmlNode *parent)
 void
 pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
 {
-    crm_xml_add(node, name, value ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
+    crm_xml_add(node, name, pcmk__btoa(value));
 }
 
 int
@@ -909,6 +940,60 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 
     rc = pcmk__xe_get_bool_attr(node, name, &value);
     return rc == pcmk_rc_ok && value == true;
+}
+
+// Meta-attribute handling
+
+/*!
+ * \brief Get the environment variable equivalent of a meta-attribute name
+ *
+ * \param[in] attr_name  Name of meta-attribute
+ *
+ * \return Newly allocated string for \p attr_name with "CRM_meta_" prefix and
+ *         underbars instead of dashes
+ * \note This asserts on an invalid argument or memory allocation error, so
+ *       callers can assume the result is non-NULL. The caller is responsible
+ *       for freeing the result using free().
+ */
+char *
+crm_meta_name(const char *attr_name)
+{
+    char *env_name = NULL;
+
+    CRM_ASSERT(!pcmk__str_empty(attr_name));
+
+    env_name = crm_strdup_printf(CRM_META "_%s", attr_name);
+    for (char *c = env_name; *c != '\0'; ++c) {
+        if (*c == '-') {
+            *c = '_';
+        }
+    }
+    return env_name;
+}
+
+/*!
+ * \brief Get the value of a meta-attribute
+ *
+ * Get the value of a meta-attribute from a hash table whose keys are
+ * meta-attribute environment variable names (as crm_meta_name() would
+ * create, like pcmk__graph_action_t:params, not pcmk_resource_t:meta).
+ *
+ * \param[in] meta       Hash table of meta-attributes
+ * \param[in] attr_name  Name of meta-attribute to get
+ *
+ * \return Value of given meta-attribute
+ */
+const char *
+crm_meta_value(GHashTable *meta, const char *attr_name)
+{
+    if ((meta != NULL) && (attr_name != NULL)) {
+        char *key = crm_meta_name(attr_name);
+        const char *value = g_hash_table_lookup(meta, key);
+
+        free(key);
+        return value;
+    }
+    return NULL;
 }
 
 // Deprecated functions kept only for backward API compatibility
@@ -960,7 +1045,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
         return NULL;
 
     } else if (old_value && !value) {
-        xml_remove_prop(node, name);
+        pcmk__xe_remove_attr(node, name);
         return NULL;
     }
 

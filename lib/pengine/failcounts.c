@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -12,7 +12,6 @@
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/pengine/internal.h>
@@ -35,22 +34,20 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     }
 
     // Get name and interval from configured op
-    conf_op_name = crm_element_value(conf_op_xml, "name");
-    conf_op_interval_spec = crm_element_value(conf_op_xml,
-                                              XML_LRM_ATTR_INTERVAL);
-    conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
+    conf_op_name = crm_element_value(conf_op_xml, PCMK_XA_NAME);
+    conf_op_interval_spec = crm_element_value(conf_op_xml, PCMK_META_INTERVAL);
+    pcmk_parse_interval_spec(conf_op_interval_spec, &conf_op_interval_ms);
 
     // Get name and interval from op history entry
-    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
-    crm_element_value_ms(lrm_op_xml, XML_LRM_ATTR_INTERVAL_MS,
-                         &lrm_op_interval_ms);
+    lrm_op_task = crm_element_value(lrm_op_xml, PCMK_XA_OPERATION);
+    crm_element_value_ms(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
         || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {
         return FALSE;
     }
 
-    lrm_op_id = ID(lrm_op_xml);
+    lrm_op_id = pcmk__xe_id(lrm_op_xml);
     last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
 
     if (pcmk__str_eq(last_failure_key, lrm_op_id, pcmk__str_casei)) {
@@ -64,7 +61,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
             int rc = 0;
             int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 
-            crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_RC, &rc);
+            crm_element_value_int(lrm_op_xml, PCMK__XA_RC_CODE, &rc);
             if (rc != target_rc) {
                 matched = TRUE;
             }
@@ -86,16 +83,17 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * to properly detect on-fail in id-ref, operation meta-attributes, or
      * op_defaults, or evaluate rules.
      *
-     * Also, on-fail defaults to block (in unpack_operation()) for stop actions
-     * when stonith is disabled.
+     * Also, PCMK_META_ON_FAIL defaults to PCMK_VALUE_BLOCK (in
+     * unpack_operation()) for stop actions when stonith is disabled.
      *
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//" XML_CIB_TAG_RESOURCE
-                                    "[@" XML_ATTR_ID "='%s']"
-                                    "//" XML_ATTR_OP
-                                    "[@" XML_OP_ATTR_ON_FAIL "='block']",
+    char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
+                                    "[@" PCMK_XA_ID "='%s']"
+                                    "//" PCMK_XE_OP
+                                    "[@" PCMK_META_ON_FAIL
+                                        "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
@@ -124,14 +122,16 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
                 // Get name and interval from configured op
-                conf_op_name = crm_element_value(pref, "name");
-                conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
-                conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
+                conf_op_name = crm_element_value(pref, PCMK_XA_NAME);
+                conf_op_interval_spec = crm_element_value(pref,
+                                                          PCMK_META_INTERVAL);
+                pcmk_parse_interval_spec(conf_op_interval_spec,
+                                         &conf_op_interval_ms);
 
-#define XPATH_FMT "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"       \
-                  "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"       \
-                  "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='%s']"    \
-                  "[@" XML_LRM_ATTR_INTERVAL "='%u']"
+#define XPATH_FMT "//" PCMK__XE_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"      \
+                  "//" PCMK__XE_LRM_RESOURCE "[@" PCMK_XA_ID "='%s']"       \
+                  "/" PCMK__XE_LRM_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"   \
+                  "[@" PCMK_META_INTERVAL "='%u']"
 
                 lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
                                                  node->details->uname, xml_name,
@@ -251,7 +251,7 @@ generate_fail_regexes(const pcmk_resource_t *rsc,
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
     const char *version = crm_element_value(rsc->cluster->input,
-                                            XML_ATTR_CRM_VERSION);
+                                            PCMK_XA_CRM_FEATURE_SET);
 
     // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
@@ -302,9 +302,10 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
     if (regexec(&(fc_data->failcount_re), (const char *) key, 0, NULL, 0) == 0) {
         fc_data->failcount = pcmk__add_scores(fc_data->failcount,
                                               char2score(value));
-        pe_rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
-                     (const char *) key, (const char *) value, fc_data->rsc->id,
-                     pcmk_readable_score(fc_data->failcount));
+        pcmk__rsc_trace(fc_data->rsc, "Added %s (%s) to %s fail count (now %s)",
+                        (const char *) key, (const char *) value,
+                        fc_data->rsc->id,
+                        pcmk_readable_score(fc_data->failcount));
         return;
     }
 
@@ -382,9 +383,10 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     if ((fc_data.failcount > 0) && (rsc->failure_timeout > 0)
         && block_failure(node, rsc, xml_op)) {
 
-        pe_warn("Ignoring failure timeout %d for %s "
-                "because it conflicts with on-fail=block",
-                rsc->failure_timeout, rsc->id);
+        pcmk__config_warn("Ignoring failure timeout %d for %s "
+                          "because it conflicts with "
+                          PCMK_META_ON_FAIL "=" PCMK_VALUE_BLOCK,
+                          rsc->failure_timeout, rsc->id);
         rsc->failure_timeout = 0;
     }
 
@@ -395,8 +397,9 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         time_t now = get_effective_time(rsc->cluster);
 
         if (now > (fc_data.last_failure + rsc->failure_timeout)) {
-            pe_rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
-                         rsc->id, pe__node_name(node), rsc->failure_timeout);
+            pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %ds",
+                            rsc->id, pcmk__node_name(node),
+                            rsc->failure_timeout);
             fc_data.failcount = 0;
         }
     }
@@ -412,21 +415,23 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container on the wrong node.
      */
     if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->fillers != NULL)
-        && !pe_rsc_is_bundled(rsc)) {
+        && !pcmk__is_bundled(rsc)) {
 
         g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
         if (fc_data.failcount > 0) {
-            pe_rsc_info(rsc,
-                        "Container %s and the resources within it "
-                        "have failed %s time%s on %s",
-                        rsc->id, pcmk_readable_score(fc_data.failcount),
-                        pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+            pcmk__rsc_info(rsc,
+                           "Container %s and the resources within it "
+                           "have failed %s time%s on %s",
+                           rsc->id, pcmk_readable_score(fc_data.failcount),
+                           pcmk__plural_s(fc_data.failcount),
+                           pcmk__node_name(node));
         }
 
     } else if (fc_data.failcount > 0) {
-        pe_rsc_info(rsc, "%s has failed %s time%s on %s",
-                    rsc->id, pcmk_readable_score(fc_data.failcount),
-                    pcmk__plural_s(fc_data.failcount), pe__node_name(node));
+        pcmk__rsc_info(rsc, "%s has failed %s time%s on %s",
+                       rsc->id, pcmk_readable_score(fc_data.failcount),
+                       pcmk__plural_s(fc_data.failcount),
+                       pcmk__node_name(node));
     }
 
     if (last_failure != NULL) {
@@ -461,8 +466,8 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
     key = pcmk__op_key(rsc->id, PCMK_ACTION_CLEAR_FAILCOUNT, 0);
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
                           scheduler);
-    add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+    pcmk__insert_meta(clear, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
     crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
-               rsc->id, pe__node_name(node), reason, clear->uuid);
+               rsc->id, pcmk__node_name(node), reason, clear->uuid);
     return clear;
 }

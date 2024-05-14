@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,57 +14,59 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <crm/crm.h>
-#include <crm/common/output.h>
-#include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  /* pcmk__xml2fd */
 #include <glib.h>
 
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output.h>
 #include <crm/common/xml.h>
-
-static gboolean legacy_xml = FALSE;
-static gboolean simple_list = FALSE;
-static gboolean substitute = FALSE;
-
-GOptionEntry pcmk__xml_output_entries[] = {
-    { "xml-legacy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
-      NULL,
-      NULL },
-    { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
-      NULL,
-      NULL },
-    { "xml-substitute", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &substitute,
-      NULL,
-      NULL },
-
-    { NULL }
-};
+#include <crm/common/xml_internal.h>    // pcmk__xml2fd
 
 typedef struct subst_s {
     const char *from;
     const char *to;
 } subst_t;
 
-static subst_t substitutions[] = {
-    { "Active Resources",                               "resources" },
-    { "Assignment Scores",                              "allocations" },
-    { "Assignment Scores and Utilization Information",  "allocations_utilizations" },
-    { "Cluster Summary",                                "summary" },
-    { "Current cluster status",                         "cluster_status" },
-    { "Executing Cluster Transition",                   "transition" },
-    { "Failed Resource Actions",                        "failures" },
-    { "Fencing History",                                "fence_history" },
-    { "Full List of Resources",                         "resources" },
-    { "Inactive Resources",                             "resources" },
-    { "Migration Summary",                              "node_history" },
-    { "Negative Location Constraints",                  "bans" },
-    { "Node Attributes",                                "node_attributes" },
-    { "Operations",                                     "node_history" },
-    { "Resource Config",                                "resource_config" },
-    { "Resource Operations",                            "operations" },
-    { "Revised Cluster Status",                         "revised_cluster_status" },
-    { "Transition Summary",                             "actions" },
-    { "Utilization Information",                        "utilizations" },
+static const subst_t substitutions[] = {
+    { "Active Resources",
+      PCMK_XE_RESOURCES, },
+    { "Assignment Scores",
+      PCMK_XE_ALLOCATIONS, },
+    { "Assignment Scores and Utilization Information",
+      PCMK_XE_ALLOCATIONS_UTILIZATIONS, },
+    { "Cluster Summary",
+      PCMK_XE_SUMMARY, },
+    { "Current cluster status",
+      PCMK_XE_CLUSTER_STATUS, },
+    { "Executing Cluster Transition",
+      PCMK_XE_TRANSITION, },
+    { "Failed Resource Actions",
+      PCMK_XE_FAILURES, },
+    { "Fencing History",
+      PCMK_XE_FENCE_HISTORY, },
+    { "Full List of Resources",
+      PCMK_XE_RESOURCES, },
+    { "Inactive Resources",
+      PCMK_XE_RESOURCES, },
+    { "Migration Summary",
+      PCMK_XE_NODE_HISTORY, },
+    { "Negative Location Constraints",
+      PCMK_XE_BANS, },
+    { "Node Attributes",
+      PCMK_XE_NODE_ATTRIBUTES, },
+    { "Operations",
+      PCMK_XE_NODE_HISTORY, },
+    { "Resource Config",
+      PCMK_XE_RESOURCE_CONFIG, },
+    { "Resource Operations",
+      PCMK_XE_OPERATIONS, },
+    { "Revised Cluster Status",
+      PCMK_XE_REVISED_CLUSTER_STATUS, },
+    { "Timings",
+      PCMK_XE_TIMINGS, },
+    { "Transition Summary",
+      PCMK_XE_ACTIONS, },
+    { "Utilization Information",
+      PCMK_XE_UTILIZATIONS, },
 
     { NULL, NULL }
 };
@@ -82,7 +84,45 @@ typedef struct private_data_s {
     GSList *errors;
     /* End members that must match the HTML version */
     bool legacy_xml;
+    bool list_element;
 } private_data_t;
+
+static bool
+has_root_node(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    priv = out->priv;
+    return priv != NULL && priv->root != NULL;
+}
+
+static void
+add_root_node(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    /* has_root_node will assert if out is NULL, so no need to do it here */
+    if (has_root_node(out)) {
+        return;
+    }
+
+    priv = out->priv;
+
+    if (priv->legacy_xml) {
+        priv->root = pcmk__xe_create(NULL, PCMK_XE_CRM_MON);
+        crm_xml_add(priv->root, PCMK_XA_VERSION, PACEMAKER_VERSION);
+    } else {
+        priv->root = pcmk__xe_create(NULL, PCMK_XE_PACEMAKER_RESULT);
+        crm_xml_add(priv->root, PCMK_XA_API_VERSION, PCMK__API_VERSION);
+        crm_xml_add(priv->root, PCMK_XA_REQUEST,
+                    pcmk__s(out->request, "libpacemaker"));
+    }
+
+    priv->parent_q = g_queue_new();
+    g_queue_push_tail(priv->parent_q, priv->root);
+}
 
 static void
 xml_free_priv(pcmk__output_t *out) {
@@ -94,9 +134,16 @@ xml_free_priv(pcmk__output_t *out) {
 
     priv = out->priv;
 
-    free_xml(priv->root);
-    g_queue_free(priv->parent_q);
-    g_slist_free(priv->errors);
+    if (has_root_node(out)) {
+        free_xml(priv->root);
+        /* The elements of parent_q are xmlNodes that are a part of the
+         * priv->root document, so the above line already frees them.  Don't
+         * call g_queue_free_full here.
+         */
+        g_queue_free(priv->parent_q);
+    }
+
+    g_slist_free_full(priv->errors, free);
     free(priv);
     out->priv = NULL;
 }
@@ -119,36 +166,18 @@ xml_init(pcmk__output_t *out) {
         priv = out->priv;
     }
 
-    if (legacy_xml) {
-        priv->root = create_xml_node(NULL, "crm_mon");
-        crm_xml_add(priv->root, "version", PACEMAKER_VERSION);
-    } else {
-        priv->root = create_xml_node(NULL, "pacemaker-result");
-        crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
-
-        if (out->request != NULL) {
-            crm_xml_add(priv->root, "request", out->request);
-        }
-    }
-
-    priv->parent_q = g_queue_new();
     priv->errors = NULL;
-    g_queue_push_tail(priv->parent_q, priv->root);
-
-    /* Copy this from the file-level variable.  This means that it is only settable
-     * as a command line option, and that pcmk__output_new must be called after all
-     * command line processing is completed.
-     */
-    priv->legacy_xml = legacy_xml;
 
     return true;
 }
 
 static void
 add_error_node(gpointer data, gpointer user_data) {
-    char *str = (char *) data;
+    const char *str = (const char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
-    pcmk_create_xml_text_node(node, "error", str);
+
+    node = pcmk__xe_create(node, PCMK_XE_ERROR);
+    pcmk__xe_set_content(node, "%s", str);
 }
 
 static void
@@ -159,14 +188,13 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     CRM_ASSERT(out != NULL);
     priv = out->priv;
 
-    /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
-     * in the pcmk__output_new path.
-     */
-    if (priv == NULL || priv->root == NULL) {
+    if (priv == NULL) {
         return;
     }
 
-    if (legacy_xml) {
+    add_root_node(out);
+
+    if (priv->legacy_xml) {
         GSList *node = priv->errors;
 
         if (exit_status != CRM_EX_OK) {
@@ -180,13 +208,14 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     } else {
         char *rc_as_str = pcmk__itoa(exit_status);
 
-        node = create_xml_node(priv->root, "status");
-        pcmk__xe_set_props(node, "code", rc_as_str,
-                           "message", crm_exit_str(exit_status),
+        node = pcmk__xe_create(priv->root, PCMK_XE_STATUS);
+        pcmk__xe_set_props(node,
+                           PCMK_XA_CODE, rc_as_str,
+                           PCMK_XA_MESSAGE, crm_exit_str(exit_status),
                            NULL);
 
         if (g_slist_length(priv->errors) > 0) {
-            xmlNodePtr errors_node = create_xml_node(node, "errors");
+            xmlNodePtr errors_node = pcmk__xe_create(node, PCMK_XE_ERRORS);
             g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
         }
 
@@ -198,7 +227,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
     }
 
     if (copy_dest != NULL) {
-        *copy_dest = copy_xml(priv->root);
+        *copy_dest = pcmk__xml_copy(NULL, priv->root);
     }
 }
 
@@ -223,18 +252,20 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     rc_as_str = pcmk__itoa(exit_status);
 
-    node = pcmk__output_xml_create_parent(out, "command",
-                                          "code", rc_as_str,
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_COMMAND,
+                                          PCMK_XA_CODE, rc_as_str,
                                           NULL);
 
     if (proc_stdout != NULL) {
-        child_node = pcmk_create_xml_text_node(node, "output", proc_stdout);
-        crm_xml_add(child_node, "source", "stdout");
+        child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
+        pcmk__xe_set_content(child_node, "%s", proc_stdout);
+        crm_xml_add(child_node, PCMK_XA_SOURCE, "stdout");
     }
 
     if (proc_stderr != NULL) {
-        child_node = pcmk_create_xml_text_node(node, "output", proc_stderr);
-        crm_xml_add(child_node, "source", "stderr");
+        child_node = pcmk__xe_create(node, PCMK_XE_OUTPUT);
+        pcmk__xe_set_content(child_node, "%s", proc_stderr);
+        crm_xml_add(child_node, PCMK_XA_SOURCE, "stderr");
     }
 
     free(rc_as_str);
@@ -242,15 +273,16 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 xml_version(pcmk__output_t *out, bool extended) {
+    const char *author = "Andrew Beekhof and the Pacemaker project "
+                         "contributors";
     CRM_ASSERT(out != NULL);
 
-    pcmk__output_create_xml_node(out, "version",
-                                 "program", "Pacemaker",
-                                 "version", PACEMAKER_VERSION,
-                                 "author", "Andrew Beekhof and the "
-                                           "Pacemaker project contributors",
-                                 "build", BUILD_VERSION,
-                                 "features", CRM_FEATURES,
+    pcmk__output_create_xml_node(out, PCMK_XE_VERSION,
+                                 PCMK_XA_PROGRAM, "Pacemaker",
+                                 PCMK_XA_VERSION, PACEMAKER_VERSION,
+                                 PCMK_XA_AUTHOR, author,
+                                 PCMK_XA_BUILD, BUILD_VERSION,
+                                 PCMK_XA_FEATURES, CRM_FEATURES,
                                  NULL);
 }
 
@@ -264,6 +296,8 @@ xml_err(pcmk__output_t *out, const char *format, ...) {
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
+
+    add_root_node(out);
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
@@ -302,20 +336,20 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     char *name = NULL;
     char *buf = NULL;
     int len;
+    private_data_t *priv = NULL;
 
-    CRM_ASSERT(out != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
-    if (substitute) {
-        for (subst_t *s = substitutions; s->from != NULL; s++) {
-            if (!strcmp(s->from, buf)) {
-                name = g_strdup(s->to);
-                break;
-            }
+    for (const subst_t *s = substitutions; s->from != NULL; s++) {
+        if (strcmp(s->from, buf) == 0) {
+            name = g_strdup(s->to);
+            break;
         }
     }
 
@@ -323,12 +357,12 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         name = g_ascii_strdown(buf, -1);
     }
 
-    if (legacy_xml || simple_list) {
-        pcmk__output_xml_create_parent(out, name, NULL);
-    } else {
-        pcmk__output_xml_create_parent(out, "list",
-                                       "name", name,
+    if (priv->list_element) {
+        pcmk__output_xml_create_parent(out, PCMK_XE_LIST,
+                                       PCMK_XA_NAME, name,
                                        NULL);
+    } else {
+        pcmk__output_xml_create_parent(out, name, NULL);
     }
 
     g_free(name);
@@ -350,10 +384,10 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
-    item_node = pcmk__output_create_xml_text_node(out, "item", buf);
+    item_node = pcmk__output_create_xml_text_node(out, PCMK_XE_ITEM, buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, "name", name);
+        crm_xml_add(item_node, PCMK_XA_NAME, name);
     }
 
     free(buf);
@@ -371,16 +405,18 @@ xml_end_list(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    if (priv->legacy_xml || simple_list) {
-        g_queue_pop_tail(priv->parent_q);
-    } else {
+    if (priv->list_element) {
         char *buf = NULL;
         xmlNodePtr node;
 
+        /* Do not free node here - it's still part of the document */
         node = g_queue_pop_tail(priv->parent_q);
         buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
-        crm_xml_add(node, "count", buf);
+        crm_xml_add(node, PCMK_XA_COUNT, buf);
         free(buf);
+    } else {
+        /* Do not free this result - it's still part of the document */
+        g_queue_pop_tail(priv->parent_q);
     }
 }
 
@@ -465,13 +501,15 @@ pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node) {
     CRM_ASSERT(node != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
+    add_root_node(out);
+
     priv = out->priv;
     parent = g_queue_peek_tail(priv->parent_q);
 
     // Shouldn't happen unless the caller popped priv->root
     CRM_CHECK(parent != NULL, return);
 
-    add_node_copy(parent, node);
+    pcmk__xml_copy(parent, node);
 }
 
 xmlNodePtr
@@ -483,9 +521,11 @@ pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
+    add_root_node(out);
+
     priv = out->priv;
 
-    node = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
+    node = pcmk__xe_create(g_queue_peek_tail(priv->parent_q), name);
     va_start(args, name);
     pcmk__xe_set_propv(node, args);
     va_end(args);
@@ -501,7 +541,7 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
     node = pcmk__output_create_xml_node(out, name, NULL);
-    xmlNodeSetContent(node, (pcmkXmlStr) content);
+    pcmk__xe_set_content(node, "%s", content);
     return node;
 }
 
@@ -512,6 +552,8 @@ pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_ASSERT(parent != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
+
+    add_root_node(out);
 
     priv = out->priv;
 
@@ -525,9 +567,12 @@ pcmk__output_xml_pop_parent(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return);
 
+    add_root_node(out);
+
     priv = out->priv;
 
     CRM_ASSERT(g_queue_get_length(priv->parent_q) > 0);
+    /* Do not free this result - it's still part of the document */
     g_queue_pop_tail(priv->parent_q);
 }
 
@@ -538,8 +583,61 @@ pcmk__output_xml_peek_parent(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_CHECK(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL), return NULL);
 
+    add_root_node(out);
+
     priv = out->priv;
 
     /* If queue is empty NULL will be returned */
     return g_queue_peek_tail(priv->parent_q);
+}
+
+bool
+pcmk__output_get_legacy_xml(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
+        return false;
+    }
+
+    CRM_ASSERT(out->priv != NULL);
+
+    priv = out->priv;
+    return priv->legacy_xml;
+}
+
+void
+pcmk__output_set_legacy_xml(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
+        return;
+    }
+
+    CRM_ASSERT(out->priv != NULL);
+
+    priv = out->priv;
+    priv->legacy_xml = true;
+}
+
+void
+pcmk__output_enable_list_element(pcmk__output_t *out)
+{
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "xml", pcmk__str_none)) {
+        return;
+    }
+
+    CRM_ASSERT(out->priv != NULL);
+
+    priv = out->priv;
+    priv->list_element = true;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2023 the Pacemaker project contributors
+ * Copyright 2014-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
@@ -31,7 +31,8 @@ utilization_value(const char *s)
     int value = 0;
 
     if ((s != NULL) && (pcmk__scan_min_int(s, &value, INT_MIN) == EINVAL)) {
-        pe_warn("Using 0 for utilization instead of invalid value '%s'", value);
+        pcmk__config_warn("Using 0 for utilization instead of "
+                          "invalid value '%s'", value);
         value = 0;
     }
     return value;
@@ -229,7 +230,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     if (required > remaining) {
         crm_debug("Remaining capacity for %s on %s (%d) is insufficient "
                   "for resource %s usage (%d)",
-                  (const char *) key, pe__node_name(data->node), remaining,
+                  (const char *) key, pcmk__node_name(data->node), remaining,
                   data->rsc_id, required);
         data->is_enough = false;
     }
@@ -306,7 +307,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return NULL);
 
     // The default placement strategy ignores utilization
-    if (pcmk__str_eq(rsc->cluster->placement_strategy, "default",
+    if (pcmk__str_eq(rsc->cluster->placement_strategy, PCMK_VALUE_DEFAULT,
                      pcmk__str_casei)) {
         return NULL;
     }
@@ -352,10 +353,10 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
                                          unassigned_utilization)) {
-                pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
-                             pe__node_name(node), rscs_id);
-                resource_location(rsc, node, -INFINITY, "__limit_utilization__",
-                                  rsc->cluster);
+                pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
+                                pcmk__node_name(node), rscs_id);
+                resource_location(rsc, node, -PCMK_SCORE_INFINITY,
+                                  "__limit_utilization__", rsc->cluster);
             }
         }
         most_capable_node = NULL;
@@ -366,10 +367,10 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
-                pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
-                             pe__node_name(node), rsc->id);
-                resource_location(rsc, node, -INFINITY, "__limit_utilization__",
-                                  rsc->cluster);
+                pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
+                                pcmk__node_name(node), rsc->id);
+                resource_location(rsc, node, -PCMK_SCORE_INFINITY,
+                                  "__limit_utilization__", rsc->cluster);
             }
         }
     }
@@ -401,7 +402,7 @@ new_load_stopped_op(pcmk_node_t *node)
 
     if (load_stopped->node == NULL) {
         load_stopped->node = pe__copy_node(node);
-        pe__clear_action_flags(load_stopped, pcmk_action_optional);
+        pcmk__clear_action_flags(load_stopped, pcmk_action_optional);
     }
     free(load_stopped_task);
     return load_stopped;
@@ -421,8 +422,9 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
     const GList *iter = NULL;
     pcmk_action_t *load_stopped = NULL;
 
-    pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
-                 rsc->id, rsc->cluster->placement_strategy);
+    pcmk__rsc_trace(rsc,
+                    "Creating utilization constraints for %s - strategy: %s",
+                    rsc->id, rsc->cluster->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {

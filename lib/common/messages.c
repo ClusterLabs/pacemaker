@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
 /*!
@@ -61,23 +61,25 @@ create_request_adv(const char *task, xmlNode *msg_data,
     }
 
     // host_from will get set for us if necessary by the controller when routed
-    request = create_xml_node(NULL, __func__);
-    crm_xml_add(request, F_CRM_ORIGIN, origin);
-    crm_xml_add(request, F_TYPE, T_CRM);
-    crm_xml_add(request, F_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(request, F_CRM_MSG_TYPE, XML_ATTR_REQUEST);
-    crm_xml_add(request, F_CRM_REFERENCE, reference);
-    crm_xml_add(request, F_CRM_TASK, task);
-    crm_xml_add(request, F_CRM_SYS_TO, sys_to);
-    crm_xml_add(request, F_CRM_SYS_FROM, true_from);
+    request = pcmk__xe_create(NULL, __func__);
+    crm_xml_add(request, PCMK_XA_ORIGIN, origin);
+    crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_CRMD);
+    crm_xml_add(request, PCMK_XA_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(request, PCMK__XA_SUBT, PCMK__VALUE_REQUEST);
+    crm_xml_add(request, PCMK_XA_REFERENCE, reference);
+    crm_xml_add(request, PCMK__XA_CRM_TASK, task);
+    crm_xml_add(request, PCMK__XA_CRM_SYS_TO, sys_to);
+    crm_xml_add(request, PCMK__XA_CRM_SYS_FROM, true_from);
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
     if (host_to != NULL && strlen(host_to) > 0) {
-        crm_xml_add(request, F_CRM_HOST_TO, host_to);
+        crm_xml_add(request, PCMK__XA_CRM_HOST_TO, host_to);
     }
 
     if (msg_data != NULL) {
-        add_message_xml(request, F_CRM_DATA, msg_data);
+        xmlNode *wrapper = pcmk__xe_create(request, PCMK__XE_CRM_XML);
+
+        pcmk__xml_copy(wrapper, msg_data);
     }
     free(reference);
     free(true_from);
@@ -104,65 +106,54 @@ create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
 {
     xmlNode *reply = NULL;
 
-    const char *host_from = crm_element_value(original_request, F_CRM_HOST_FROM);
-    const char *sys_from = crm_element_value(original_request, F_CRM_SYS_FROM);
-    const char *sys_to = crm_element_value(original_request, F_CRM_SYS_TO);
-    const char *type = crm_element_value(original_request, F_CRM_MSG_TYPE);
-    const char *operation = crm_element_value(original_request, F_CRM_TASK);
-    const char *crm_msg_reference = crm_element_value(original_request, F_CRM_REFERENCE);
+    const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
+    const char *sys_from = crm_element_value(original_request,
+                                             PCMK__XA_CRM_SYS_FROM);
+    const char *sys_to = crm_element_value(original_request,
+                                           PCMK__XA_CRM_SYS_TO);
+    const char *type = crm_element_value(original_request, PCMK__XA_SUBT);
+    const char *operation = crm_element_value(original_request,
+                                              PCMK__XA_CRM_TASK);
+    const char *crm_msg_reference = crm_element_value(original_request,
+                                                      PCMK_XA_REFERENCE);
 
     if (type == NULL) {
         crm_err("Cannot create new_message, no message type in original message");
         CRM_ASSERT(type != NULL);
         return NULL;
-#if 0
-    } else if (strcasecmp(XML_ATTR_REQUEST, type) != 0) {
-        crm_err("Cannot create new_message, original message was not a request");
-        return NULL;
-#endif
-    }
-    reply = create_xml_node(NULL, __func__);
-    if (reply == NULL) {
-        crm_err("Cannot create new_message, malloc failed");
-        return NULL;
     }
 
-    crm_xml_add(reply, F_CRM_ORIGIN, origin);
-    crm_xml_add(reply, F_TYPE, T_CRM);
-    crm_xml_add(reply, F_CRM_VERSION, CRM_FEATURE_SET);
-    crm_xml_add(reply, F_CRM_MSG_TYPE, XML_ATTR_RESPONSE);
-    crm_xml_add(reply, F_CRM_REFERENCE, crm_msg_reference);
-    crm_xml_add(reply, F_CRM_TASK, operation);
+    if (strcmp(type, PCMK__VALUE_REQUEST) != 0) {
+        /* Replies should only be generated for request messages, but it's possible
+         * we expect replies to other messages right now so this can't be enforced.
+         */
+        crm_trace("Creating a reply for a non-request original message");
+    }
+
+    reply = pcmk__xe_create(NULL, __func__);
+    crm_xml_add(reply, PCMK_XA_ORIGIN, origin);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_CRMD);
+    crm_xml_add(reply, PCMK_XA_VERSION, CRM_FEATURE_SET);
+    crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_RESPONSE);
+    crm_xml_add(reply, PCMK_XA_REFERENCE, crm_msg_reference);
+    crm_xml_add(reply, PCMK__XA_CRM_TASK, operation);
 
     /* since this is a reply, we reverse the from and to */
-    crm_xml_add(reply, F_CRM_SYS_TO, sys_from);
-    crm_xml_add(reply, F_CRM_SYS_FROM, sys_to);
+    crm_xml_add(reply, PCMK__XA_CRM_SYS_TO, sys_from);
+    crm_xml_add(reply, PCMK__XA_CRM_SYS_FROM, sys_to);
 
     /* HOSTTO will be ignored if it is to the DC anyway. */
     if (host_from != NULL && strlen(host_from) > 0) {
-        crm_xml_add(reply, F_CRM_HOST_TO, host_from);
+        crm_xml_add(reply, PCMK__XA_CRM_HOST_TO, host_from);
     }
 
     if (xml_response_data != NULL) {
-        add_message_xml(reply, F_CRM_DATA, xml_response_data);
+        xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CRM_XML);
+
+        pcmk__xml_copy(wrapper, xml_response_data);
     }
 
     return reply;
-}
-
-xmlNode *
-get_message_xml(const xmlNode *msg, const char *field)
-{
-    return pcmk__xml_first_child(first_named_child(msg, field));
-}
-
-gboolean
-add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
-{
-    xmlNode *holder = create_xml_node(msg, field);
-
-    add_node_copy(holder, xml);
-    return TRUE;
 }
 
 /*!
@@ -289,3 +280,28 @@ pcmk__reset_request(pcmk__request_t *request)
 
     pcmk__reset_result(&(request->result));
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+gboolean
+add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
+{
+    xmlNode *holder = pcmk__xe_create(msg, field);
+
+    pcmk__xml_copy(holder, xml);
+    return TRUE;
+}
+
+xmlNode *
+get_message_xml(const xmlNode *msg, const char *field)
+{
+    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
+
+    return pcmk__xe_first_child(child, NULL, NULL, NULL);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

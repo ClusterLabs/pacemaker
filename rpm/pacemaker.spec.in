@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2023 the Pacemaker project contributors
+# Copyright 2008-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -204,7 +204,7 @@
 ## Distro-specific configuration choices
 
 ### Use 2.0-style output when other distro packages don't support current output
-%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} <= 8 )
+%if ( 0%{?fedora} && 0%{?fedora} <=35 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
 %global compat20 --enable-compat-2.0
 %endif
 
@@ -412,6 +412,11 @@ Requires(pre): %{pkgname_shadow_utils}
 Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
 Conflicts:     sbd < 1.4.0
+%if ( 0%{?fedora} && 0%{?fedora} <=35 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
+Conflicts:     pcs >= 0.11
+%else
+Conflicts:     pcs < 0.11
+%endif
 
 %description -n %{pkgname_pcmk_libs}
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -769,6 +774,7 @@ exit 0
 %endif
 %{_sbindir}/fence_watchdog
 
+%doc %{_mandir}/man7/pacemaker-based.*
 %doc %{_mandir}/man7/pacemaker-controld.*
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
 %doc %{_mandir}/man7/pacemaker-fenced.*
@@ -849,6 +855,7 @@ exit 0
 %{ocf_root}/resource.d/pacemaker
 
 %doc %{_mandir}/man7/*pacemaker*
+%exclude %{_mandir}/man7/pacemaker-based.*
 %exclude %{_mandir}/man7/pacemaker-controld.*
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/pacemaker-fenced.*

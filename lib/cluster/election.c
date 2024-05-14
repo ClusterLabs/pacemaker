@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>
@@ -298,8 +297,9 @@ election_vote(election_t *e)
         return;
     }
 
-    our_node = crm_get_peer(0, e->uname);
-    if ((our_node == NULL) || (crm_is_peer_active(our_node) == FALSE)) {
+    our_node = pcmk__get_node(0, e->uname, NULL,
+                              pcmk__node_search_cluster_member);
+    if (!pcmk__cluster_is_node_active(our_node)) {
         crm_trace("Cannot vote in %s yet: local node not connected to cluster",
                   e->name);
         return;
@@ -310,13 +310,15 @@ election_vote(election_t *e)
     vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
     e->count++;
-    crm_xml_add(vote, F_CRM_ELECTION_OWNER, our_node->uuid);
-    crm_xml_add_int(vote, F_CRM_ELECTION_ID, e->count);
+    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->uuid);
+    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, e->count);
 
+    // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
     get_uptime(&age);
-    crm_xml_add_timeval(vote, F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, &age);
+    crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
+                        PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
-    send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, vote);
     free_xml(vote);
 
     crm_debug("Started %s round %d", e->name, e->count);
@@ -355,7 +357,7 @@ election_check(election_t *e)
     }
 
     voted_size = g_hash_table_size(e->voted);
-    num_members = crm_active_peers();
+    num_members = pcmk__cluster_num_active_nodes();
 
     /* in the case of #voted > #members, it is better to
      *   wait for the timeout and give the cluster time to
@@ -372,7 +374,7 @@ election_check(election_t *e)
             crm_warn("Received too many votes in %s", e->name);
             g_hash_table_iter_init(&gIter, crm_peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
-                if (crm_is_peer_active(node)) {
+                if (pcmk__cluster_is_node_active(node)) {
                     crm_warn("* expected vote: %s", node->uname);
                 }
             }
@@ -428,12 +430,12 @@ parse_election_message(const election_t *e, const xmlNode *message,
     vote->age.tv_sec = -1;
     vote->age.tv_usec = -1;
 
-    vote->op = crm_element_value(message, F_CRM_TASK);
-    vote->from = crm_element_value(message, F_CRM_HOST_FROM);
-    vote->version = crm_element_value(message, F_CRM_VERSION);
-    vote->election_owner = crm_element_value(message, F_CRM_ELECTION_OWNER);
+    vote->op = crm_element_value(message, PCMK__XA_CRM_TASK);
+    vote->from = crm_element_value(message, PCMK__XA_SRC);
+    vote->version = crm_element_value(message, PCMK_XA_VERSION);
+    vote->election_owner = crm_element_value(message, PCMK__XA_ELECTION_OWNER);
 
-    crm_element_value_int(message, F_CRM_ELECTION_ID, &(vote->election_id));
+    crm_element_value_int(message, PCMK__XA_ELECTION_ID, &(vote->election_id));
 
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
@@ -448,9 +450,11 @@ parse_election_message(const election_t *e, const xmlNode *message,
     // Op-specific validation
 
     if (pcmk__str_eq(vote->op, CRM_OP_VOTE, pcmk__str_none)) {
-        // Only vote ops have uptime
-        crm_element_value_timeval(message, F_CRM_ELECTION_AGE_S,
-                                  F_CRM_ELECTION_AGE_US, &(vote->age));
+        /* Only vote ops have uptime.
+           Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is in microseconds.
+         */
+        crm_element_value_timeval(message, PCMK__XA_ELECTION_AGE_SEC,
+                                  PCMK__XA_ELECTION_AGE_NANO_SEC, &(vote->age));
         if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
             crm_warn("Cannot count %s %s from %s because it is missing uptime",
                      (e? e->name : "election"), vote->op, vote->from);
@@ -485,19 +489,12 @@ parse_election_message(const election_t *e, const xmlNode *message,
 static void
 record_vote(election_t *e, struct vote *vote)
 {
-    char *voter_copy = NULL;
-    char *vote_copy = NULL;
-
     CRM_ASSERT(e && vote && vote->from && vote->op);
+
     if (e->voted == NULL) {
         e->voted = pcmk__strkey_table(free, free);
     }
-
-    voter_copy = strdup(vote->from);
-    vote_copy = strdup(vote->op);
-    CRM_ASSERT(voter_copy && vote_copy);
-
-    g_hash_table_replace(e->voted, voter_copy, vote_copy);
+    pcmk__insert_dup(e->voted, vote->from, vote->op);
 }
 
 static void
@@ -508,10 +505,10 @@ send_no_vote(crm_node_t *peer, struct vote *vote)
     xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
                                      CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    crm_xml_add(novote, F_CRM_ELECTION_OWNER, vote->election_owner);
-    crm_xml_add_int(novote, F_CRM_ELECTION_ID, vote->election_id);
+    crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
+    crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
-    send_cluster_message(peer, crm_msg_crmd, novote, TRUE);
+    pcmk__cluster_send_message(peer, crm_msg_crmd, novote);
     free_xml(novote);
 }
 
@@ -547,8 +544,10 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         return election_error;
     }
 
-    your_node = crm_get_peer(0, vote.from);
-    our_node = crm_get_peer(0, e->uname);
+    your_node = pcmk__get_node(0, vote.from, NULL,
+                               pcmk__node_search_cluster_member);
+    our_node = pcmk__get_node(0, e->uname, NULL,
+                              pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
                    && pcmk__str_eq(our_node->uuid, vote.election_owner,
                                    pcmk__str_none);
@@ -557,7 +556,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         reason = "Not eligible";
         we_lose = TRUE;
 
-    } else if (our_node == NULL || crm_is_peer_active(our_node) == FALSE) {
+    } else if (!pcmk__cluster_is_node_active(our_node)) {
         reason = "We are not part of the cluster";
         log_level = LOG_ERR;
         we_lose = TRUE;
@@ -567,7 +566,7 @@ election_count_vote(election_t *e, const xmlNode *message, bool can_win)
         reason = "Superseded";
         done = TRUE;
 
-    } else if (your_node == NULL || crm_is_peer_active(your_node) == FALSE) {
+    } else if (!pcmk__cluster_is_node_active(your_node)) {
         /* Possibly we cached the message in the FSA queue at a point that it wasn't */
         reason = "Peer is not part of our cluster";
         log_level = LOG_WARNING;

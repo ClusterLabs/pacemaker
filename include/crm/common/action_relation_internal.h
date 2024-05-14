@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,10 @@
  */
 
 #ifndef PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
-#  define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
+#define PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H
+
+#include <stdint.h>                     // uint32_t
+#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_action_t
 
 /*!
  * Flags to indicate the relationship between two actions
@@ -127,6 +130,50 @@ enum pcmk__action_relation_flags {
     pcmk__ar_then_cancels_first             = (1U << 25),
 };
 
+/* Action relation object
+ *
+ * The most common type of relation is an ordering, in which case action1 etc.
+ * refers to the "first" action, and action2 etc. refers to the "then" action.
+ */
+typedef struct {
+    int id;                     // Counter to identify relation
+    uint32_t flags;             // Group of enum pcmk__action_relation_flags
+    pcmk_resource_t *rsc1;      // Resource for first action, if any
+    pcmk_action_t *action1;     // First action in relation
+    char *task1;                // Action name or key for first action
+    pcmk_resource_t *rsc2;      // Resource for second action, if any
+    pcmk_action_t *action2;     // Second action in relation
+    char *task2;                // Action name or key for second action
+} pcmk__action_relation_t;
+
 typedef struct pe_action_wrapper_s pcmk__related_action_t;
+
+/*!
+ * \internal
+ * \brief Set action relation flags
+ *
+ * \param[in,out] ar_flags      Flag group to modify
+ * \param[in]     flags_to_set  enum pcmk__action_relation_flags to set
+ */
+#define pcmk__set_relation_flags(ar_flags, flags_to_set) do {           \
+        ar_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,    \
+                                      "Action relation", "constraint",  \
+                                      ar_flags, (flags_to_set),         \
+                                      #flags_to_set);                   \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear action relation flags
+ *
+ * \param[in,out] ar_flags        Flag group to modify
+ * \param[in]     flags_to_clear  enum pcmk__action_relation_flags to clear
+ */
+#define pcmk__clear_relation_flags(ar_flags, flags_to_clear) do {           \
+        ar_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,      \
+                                        "Action relation", "constraint",    \
+                                        ar_flags, (flags_to_clear),         \
+                                        #flags_to_clear);                   \
+    } while (0)
 
 #endif      // PCMK__CRM_COMMON_ACTION_RELATION_INTERNAL__H

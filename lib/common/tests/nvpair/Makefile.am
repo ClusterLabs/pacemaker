@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2023 the Pacemaker project contributors
+# Copyright 2021-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,7 +11,10 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__xe_attr_is_true_test 	\
+check_PROGRAMS = crm_meta_name_test		\
+		 crm_meta_value_test		\
+		 pcmk__xe_attr_is_true_test 	\
+		 pcmk__xe_get_datetime_test	\
 		 pcmk__xe_get_bool_attr_test 	\
 		 pcmk__xe_set_bool_attr_test
 

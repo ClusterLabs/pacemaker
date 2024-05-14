@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 the Pacemaker project contributors
+ * Copyright 2018-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <stdint.h>         // uint8_t, uint32_t
 #include <stdbool.h>        // bool
 #include <sys/types.h>      // size_t
-#include <glib.h>           // GList
+#include <glib.h>           // gchar, GList
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
@@ -33,22 +33,32 @@
  * (e.g. when checking differences) that something was deleted.
  */
 typedef struct pcmk__deleted_xml_s {
-        char *path;
-        int position;
+    gchar *path;
+    int position;
 } pcmk__deleted_xml_t;
 
 typedef struct xml_node_private_s {
-        long check;
+        uint32_t check;
         uint32_t flags;
 } xml_node_private_t;
 
 typedef struct xml_doc_private_s {
-        long check;
+        uint32_t check;
         uint32_t flags;
         char *user;
         GList *acls;
         GList *deleted_objs; // List of pcmk__deleted_xml_t
 } xml_doc_private_t;
+
+// XML entity references
+
+#define PCMK__XML_ENTITY_AMP    "&amp;"
+#define PCMK__XML_ENTITY_GT     "&gt;"
+#define PCMK__XML_ENTITY_LT     "&lt;"
+#define PCMK__XML_ENTITY_QUOT   "&quot;"
+
+//! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
+#define PCMK__XML_VERSION ((pcmkXmlStr) "1.0")
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
@@ -63,14 +73,10 @@ typedef struct xml_doc_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-void pcmk__xml2text(const xmlNode *data, uint32_t options, GString *buffer,
-                    int depth);
-
-G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-void pcmk__mark_xml_created(xmlNode *xml);
+void pcmk__xml_mark_created(xmlNode *xml);
 
 G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml,
@@ -82,7 +88,7 @@ xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
 
 G_GNUC_INTERNAL
 void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
-                      bool as_diff);
+                      uint32_t flags, bool as_diff);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment,
@@ -124,6 +130,36 @@ bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
+
+G_GNUC_INTERNAL
+int pcmk__xe_set_score(xmlNode *target, const char *name, const char *value);
+
+/*
+ * Date/times
+ */
+
+// For use with pcmk__add_time_from_xml()
+enum pcmk__time_component {
+    pcmk__time_unknown,
+    pcmk__time_years,
+    pcmk__time_months,
+    pcmk__time_weeks,
+    pcmk__time_days,
+    pcmk__time_hours,
+    pcmk__time_minutes,
+    pcmk__time_seconds,
+};
+
+G_GNUC_INTERNAL
+const char *pcmk__time_component_attr(enum pcmk__time_component component);
+
+G_GNUC_INTERNAL
+int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
+                            const xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
+
 
 /*
  * IPC
@@ -274,13 +310,113 @@ int pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
                           const char *filename, char **argv);
 
 G_GNUC_INTERNAL
+void pcmk__register_option_messages(pcmk__output_t *out);
+
+G_GNUC_INTERNAL
 void pcmk__register_patchset_messages(pcmk__output_t *out);
+
+G_GNUC_INTERNAL
+bool pcmk__output_text_get_fancy(pcmk__output_t *out);
+
+/*
+ * Rules
+ */
+
+// How node attribute values may be compared in rules
+enum pcmk__comparison {
+    pcmk__comparison_unknown,
+    pcmk__comparison_defined,
+    pcmk__comparison_undefined,
+    pcmk__comparison_eq,
+    pcmk__comparison_ne,
+    pcmk__comparison_lt,
+    pcmk__comparison_lte,
+    pcmk__comparison_gt,
+    pcmk__comparison_gte,
+};
+
+// How node attribute values may be parsed in rules
+enum pcmk__type {
+    pcmk__type_unknown,
+    pcmk__type_string,
+    pcmk__type_integer,
+    pcmk__type_number,
+    pcmk__type_version,
+};
+
+// Where to obtain reference value for a node attribute comparison
+enum pcmk__reference_source {
+    pcmk__source_unknown,
+    pcmk__source_literal,
+    pcmk__source_instance_attrs,
+    pcmk__source_meta_attrs,
+};
+
+G_GNUC_INTERNAL
+enum pcmk__comparison pcmk__parse_comparison(const char *op);
+
+G_GNUC_INTERNAL
+enum pcmk__type pcmk__parse_type(const char *type, enum pcmk__comparison op,
+                                 const char *value1, const char *value2);
+
+G_GNUC_INTERNAL
+enum pcmk__reference_source pcmk__parse_source(const char *source);
+
+G_GNUC_INTERNAL
+int pcmk__cmp_by_type(const char *value1, const char *value2,
+                      enum pcmk__type type);
+
+G_GNUC_INTERNAL
+int pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
+                          crm_time_t **end);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_attr_expression(const xmlNode *expression,
+                                   const pcmk_rule_input_t *rule_input);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_rsc_expression(const xmlNode *expr,
+                                  const pcmk_rule_input_t *rule_input);
+
+G_GNUC_INTERNAL
+int pcmk__evaluate_op_expression(const xmlNode *expr,
+                                 const pcmk_rule_input_t *rule_input);
 
 
 /*
  * Utils
  */
 #define PCMK__PW_BUFFER_LEN 500
+
+
+/*
+ * Schemas
+ */
+typedef struct {
+    unsigned char v[2];
+} pcmk__schema_version_t;
+
+enum pcmk__schema_validator {
+    pcmk__schema_validator_none,
+    pcmk__schema_validator_rng
+};
+
+typedef struct {
+    int schema_index;
+    char *name;
+    char *transform;
+    void *cache;
+    enum pcmk__schema_validator validator;
+    pcmk__schema_version_t version;
+    char *transform_enter;
+    bool transform_onleave;
+} pcmk__schema_t;
+
+G_GNUC_INTERNAL
+GList *pcmk__find_x_0_schema(void);
 
 
 #endif  // CRMCOMMON_PRIVATE__H

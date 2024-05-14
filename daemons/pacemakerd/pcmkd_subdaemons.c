@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,10 @@
 
 #include <crm_internal.h>
 #include "pacemakerd.h"
+
+#if SUPPORT_COROSYNC
+#include "pcmkd_corosync.h"
+#endif
 
 #include <errno.h>
 #include <grp.h>
@@ -21,22 +25,25 @@
 #include <unistd.h>
 
 #include <crm/cluster.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
+
+enum child_daemon_flags {
+    child_none                  = 0,
+    child_respawn               = 1 << 0,
+    child_needs_cluster         = 1 << 1,
+    child_needs_retry           = 1 << 2,
+    child_active_before_startup = 1 << 3,
+};
 
 typedef struct pcmk_child_s {
     pid_t pid;
     int respawn_count;
-    bool respawn;
     const char *name;
     const char *uid;
     const char *command;
     const char *endpoint;  /* IPC server name */
-    bool needs_cluster;
     int check_count;
-
-    /* Anything below here will be dynamically initialized */
-    bool needs_retry;
-    bool active_before_startup;
+    uint32_t flags;
 } pcmk_child_t;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 1
@@ -48,34 +55,34 @@ typedef struct pcmk_child_s {
 
 static pcmk_child_t pcmk_children[] = {
     {
-        0, 0, true,  "pacemaker-based", CRM_DAEMON_USER,
+        0, 0, "pacemaker-based", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO,
-        true
+        0, child_respawn | child_needs_cluster
     },
     {
-        0, 0, true, "pacemaker-fenced", NULL,
+        0, 0, "pacemaker-fenced", NULL,
         CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng",
-        true
+        0, child_respawn | child_needs_cluster
     },
     {
-        0, 0, true,  "pacemaker-execd", NULL,
+        0, 0, "pacemaker-execd", NULL,
         CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD,
-        false
+        0, child_respawn
     },
     {
-        0, 0, true, "pacemaker-attrd", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
-        true
+        0, 0, "pacemaker-attrd", CRM_DAEMON_USER,
+        CRM_DAEMON_DIR "/pacemaker-attrd", PCMK__VALUE_ATTRD,
+        0, child_respawn | child_needs_cluster
     },
     {
-        0, 0, true, "pacemaker-schedulerd", CRM_DAEMON_USER,
+        0, 0, "pacemaker-schedulerd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
-        false
+        0, child_respawn
     },
     {
-        0, 0, true, "pacemaker-controld", CRM_DAEMON_USER,
+        0, 0, "pacemaker-controld", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD,
-        true
+        0, child_respawn | child_needs_cluster
     },
 };
 
@@ -103,7 +110,7 @@ unsigned int shutdown_complete_state_reported_to = 0;
 gboolean shutdown_complete_state_reported_client_closed = FALSE;
 
 /* state we report when asked via pacemakerd-api status-ping */
-const char *pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_INIT;
+const char *pacemakerd_state = PCMK__VALUE_INIT;
 gboolean running_with_sbd = FALSE; /* local copy */
 
 GMainLoop *mainloop = NULL;
@@ -154,7 +161,7 @@ check_next_subdaemon(gpointer user_data)
                             pcmk_children[next_child].pid),
                         pcmk_children[next_child].check_count);
                 stop_child(&pcmk_children[next_child], SIGKILL);
-                if (pcmk_children[next_child].respawn) {
+                if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        give it another round of check retries
                      */
@@ -166,7 +173,7 @@ check_next_subdaemon(gpointer user_data)
                         (long long) PCMK__SPECIAL_PID_AS_0(
                             pcmk_children[next_child].pid),
                         pcmk_children[next_child].check_count);
-                if (pcmk_children[next_child].respawn) {
+                if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        and we haven't run out of connect retries
                        we account this as progress we are willing
@@ -180,7 +187,7 @@ check_next_subdaemon(gpointer user_data)
              */
             break;
         case pcmk_rc_ipc_unresponsive:
-            if (!pcmk_children[next_child].respawn) {
+            if (!pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                 /* if a subdaemon is down and we don't want it
                    to be restarted this is a success during
                    shutdown. if it isn't restarted anymore
@@ -191,7 +198,7 @@ check_next_subdaemon(gpointer user_data)
                     subdaemon_check_progress = time(NULL);
                 }
             }
-            if (!pcmk_children[next_child].active_before_startup) {
+            if (!pcmk_is_set(pcmk_children[next_child].flags, child_active_before_startup)) {
                 crm_trace("found %s[%lld] missing - signal-handler "
                           "will take care of it",
                            pcmk_children[next_child].name,
@@ -199,7 +206,7 @@ check_next_subdaemon(gpointer user_data)
                             pcmk_children[next_child].pid));
                 break;
             }
-            if (pcmk_children[next_child].respawn) {
+            if (pcmk_is_set(pcmk_children[next_child].flags, child_respawn)) {
                 crm_err("%s[%lld] terminated",
                         pcmk_children[next_child].name,
                         (long long) PCMK__SPECIAL_PID_AS_0(
@@ -264,14 +271,14 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
             case CRM_EX_FATAL:
                 crm_warn("Shutting cluster down because %s[%d] had fatal failure",
                          name, pid);
-                child->respawn = false;
+                child->flags &= ~child_respawn;
                 fatal_error = TRUE;
                 pcmk_shutdown(SIGTERM);
                 break;
 
             case CRM_EX_PANIC:
                 crm_emerg("%s[%d] instructed the machine to reset", name, pid);
-                child->respawn = false;
+                child->flags &= ~child_respawn;
                 fatal_error = TRUE;
                 pcmk__panic(__func__);
                 pcmk_shutdown(SIGTERM);
@@ -291,20 +298,20 @@ static void
 pcmk_process_exit(pcmk_child_t * child)
 {
     child->pid = 0;
-    child->active_before_startup = false;
+    child->flags &= ~child_active_before_startup;
     child->check_count = 0;
 
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
         crm_err("Child respawn count exceeded by %s", child->name);
-        child->respawn = false;
+        child->flags &= ~child_respawn;
     }
 
     if (shutdown_trigger) {
         /* resume step-wise shutdown (returned TRUE yields no parallelizing) */
         mainloop_set_trigger(shutdown_trigger);
 
-    } else if (!child->respawn) {
+    } else if (!pcmk_is_set(child->flags, child_respawn)) {
         /* nothing to do */
 
     } else if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
@@ -316,10 +323,10 @@ pcmk_process_exit(pcmk_child_t * child)
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
 
-    } else if (child->needs_cluster && !pcmkd_cluster_connected()) {
+    } else if (pcmk_is_set(child->flags, child_needs_cluster) && !pcmkd_cluster_connected()) {
         crm_notice("Not respawning %s subdaemon until cluster returns",
                    child->name);
-        child->needs_retry = true;
+        child->flags |= child_needs_retry;
 
     } else {
         crm_notice("Respawning %s subdaemon after unexpected exit",
@@ -336,7 +343,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (phase == PCMK__NELEM(pcmk_children) - 1) {
         crm_notice("Shutting down Pacemaker");
-        pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN;
+        pacemakerd_state = PCMK__VALUE_SHUTTING_DOWN;
     }
 
     for (; phase >= 0; phase--) {
@@ -345,7 +352,7 @@ pcmk_shutdown_worker(gpointer user_data)
         if (child->pid != 0) {
             time_t now = time(NULL);
 
-            if (child->respawn) {
+            if (pcmk_is_set(child->flags, child_respawn)) {
                 if (child->pid == PCMK__SPECIAL_PID) {
                     crm_warn("The process behind %s IPC cannot be"
                              " terminated, so either wait the graceful"
@@ -359,7 +366,7 @@ pcmk_shutdown_worker(gpointer user_data)
                              child->command);
                 }
                 next_log = now + 30;
-                child->respawn = false;
+                child->flags &= ~child_respawn;
                 stop_child(child, SIGTERM);
                 if (phase < PCMK_CHILD_CONTROLD) {
                     g_timeout_add(SHUTDOWN_ESCALATION_PERIOD,
@@ -381,7 +388,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     crm_notice("Shutdown complete");
-    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE;
+    pacemakerd_state = PCMK__VALUE_SHUTDOWN_COMPLETE;
     if (!fatal_error && running_with_sbd &&
         pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
@@ -393,8 +400,12 @@ pcmk_shutdown_worker(gpointer user_data)
     {
         const char *delay = pcmk__env_option(PCMK__ENV_SHUTDOWN_DELAY);
         if(delay) {
+            long long delay_ms = crm_get_msec(delay);
+
             sync();
-            pcmk__sleep_ms(crm_get_msec(delay));
+            if (delay_ms > 0) {
+                pcmk__sleep_ms((unsigned int) QB_MIN(delay_ms, UINT_MAX));
+            }
         }
     }
 
@@ -427,7 +438,7 @@ start_child(pcmk_child_t * child)
     const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
     const char *env_callgrind = pcmk__env_option(PCMK__ENV_CALLGRIND_ENABLED);
 
-    child->active_before_startup = false;
+    child->flags &= ~child_active_before_startup;
     child->check_count = 0;
 
     if (child->command == NULL) {
@@ -481,19 +492,20 @@ start_child(pcmk_child_t * child)
         (void)setsid();
 
         /* Setup the two alternate arg arrays */
-        opts_vgrind[0] = strdup(VALGRIND_BIN);
+        opts_vgrind[0] = pcmk__str_copy(VALGRIND_BIN);
         if (use_callgrind) {
-            opts_vgrind[1] = strdup("--tool=callgrind");
-            opts_vgrind[2] = strdup("--callgrind-out-file=" CRM_STATE_DIR "/callgrind.out.%p");
-            opts_vgrind[3] = strdup(child->command);
+            opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
+            opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
+                                            CRM_STATE_DIR "/callgrind.out.%p");
+            opts_vgrind[3] = pcmk__str_copy(child->command);
             opts_vgrind[4] = NULL;
         } else {
-            opts_vgrind[1] = strdup(child->command);
+            opts_vgrind[1] = pcmk__str_copy(child->command);
             opts_vgrind[2] = NULL;
             opts_vgrind[3] = NULL;
             opts_vgrind[4] = NULL;
         }
-        opts_default[0] = strdup(child->command);
+        opts_default[0] = pcmk__str_copy(child->command);
 
         if(gid) {
             // Drop root group access if not needed
@@ -759,7 +771,7 @@ find_and_track_existing_processes(void)
                                (long long) PCMK__SPECIAL_PID_AS_0(
                                                pcmk_children[i].pid));
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
-                    pcmk_children[i].active_before_startup = true;
+                    pcmk_children[i].flags |= child_active_before_startup;
                     break;
                 case pcmk_rc_ipc_pid_only:
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
@@ -802,7 +814,7 @@ find_and_track_existing_processes(void)
 gboolean
 init_children_processes(void *user_data)
 {
-    if (is_corosync_cluster()) {
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         /* Corosync clusters can drop root group access, because we set
          * uidgid.gid.${gid}=1 via CMAP, which allows these processes to connect
          * to corosync.
@@ -825,8 +837,8 @@ init_children_processes(void *user_data)
      *
      * This may be useful for the daemons to know
      */
-    pcmk__set_env_option(PCMK__ENV_RESPAWNED, "true", false);
-    pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_RUNNING;
+    pcmk__set_env_option(PCMK__ENV_RESPAWNED, PCMK_VALUE_TRUE, false);
+    pacemakerd_state = PCMK__VALUE_RUNNING;
     return TRUE;
 }
 
@@ -843,13 +855,13 @@ void
 restart_cluster_subdaemons(void)
 {
     for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        if (!pcmk_children[i].needs_retry || pcmk_children[i].pid != 0) {
+        if (!pcmk_is_set(pcmk_children[i].flags, child_needs_retry) || pcmk_children[i].pid != 0) {
             continue;
         }
 
         crm_notice("Respawning cluster-based subdaemon: %s", pcmk_children[i].name);
         if (start_child(&pcmk_children[i])) {
-            pcmk_children[i].needs_retry = false;
+            pcmk_children[i].flags &= ~child_needs_retry;
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
+#include <crm/cib/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/scheduler_internal.h>
@@ -44,7 +44,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
              enum pcmk__check_parameters check)
 {
     const char *reason = NULL;
-    op_digest_cache_t *digest_data = NULL;
+    pcmk__op_digest_t *digest_data = NULL;
 
     switch (check) {
         case pcmk__check_active:
@@ -62,7 +62,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
-                              rsc->id, ID(rsc_op), node->details->id);
+                              rsc->id, pcmk__xe_id(rsc_op), node->details->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -134,8 +134,8 @@ check_failure_threshold(gpointer data, gpointer user_data)
         pcmk_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
-            resource_location(failed, node, -INFINITY, "__fail_limit__",
-                              rsc->cluster);
+            resource_location(failed, node, -PCMK_SCORE_INFINITY,
+                              "__fail_limit__", rsc->cluster);
         }
     }
 }
@@ -144,10 +144,11 @@ check_failure_threshold(gpointer data, gpointer user_data)
  * \internal
  * \brief If resource has exclusive discovery, ban node if not allowed
  *
- * Location constraints have a resource-discovery option that allows users to
- * specify where probes are done for the affected resource. If this is set to
- * exclusive, probes will only be done on nodes listed in exclusive constraints.
- * This function bans the resource from the node if the node is not listed.
+ * Location constraints have a PCMK_XA_RESOURCE_DISCOVERY option that allows
+ * users to specify where probes are done for the affected resource. If this is
+ * set to \c exclusive, probes will only be done on nodes listed in exclusive
+ * constraints. This function bans the resource from the node if the node is not
+ * listed.
  *
  * \param[in,out] data       Resource to check
  * \param[in]     user_data  Node to check resource on
@@ -168,7 +169,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
         match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
         if ((match != NULL)
             && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
-            match->weight = -INFINITY;
+            match->weight = -PCMK_SCORE_INFINITY;
         }
     }
 }
@@ -210,15 +211,15 @@ apply_stickiness(gpointer data, gpointer user_data)
     if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
-        pe_rsc_debug(rsc,
-                     "Ignoring %s stickiness because the cluster is "
-                     "asymmetric and %s is not explicitly allowed",
-                     rsc->id, pe__node_name(node));
+        pcmk__rsc_debug(rsc,
+                        "Ignoring %s stickiness because the cluster is "
+                        "asymmetric and %s is not explicitly allowed",
+                        rsc->id, pcmk__node_name(node));
         return;
     }
 
-    pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
-                 rsc->id, rsc->stickiness, pe__node_name(node));
+    pcmk__rsc_debug(rsc, "Resource %s has %d stickiness on %s",
+                    rsc->id, rsc->stickiness, pcmk__node_name(node));
     resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
 }
 
@@ -306,7 +307,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
 
     crm_trace("Assigning resources to nodes");
 
-    if (!pcmk__str_eq(scheduler->placement_strategy, "default",
+    if (!pcmk__str_eq(scheduler->placement_strategy, PCMK_VALUE_DEFAULT,
                       pcmk__str_casei)) {
         pcmk__sort_resources(scheduler);
     }
@@ -321,8 +322,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
             pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
             if (rsc->is_remote_node) {
-                pe_rsc_trace(rsc, "Assigning remote connection resource '%s'",
-                             rsc->id);
+                pcmk__rsc_trace(rsc, "Assigning remote connection resource '%s'",
+                                rsc->id);
                 rsc->cmds->assign(rsc, rsc->partial_migration_target, true);
             }
         }
@@ -333,8 +334,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (!rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Assigning %s resource '%s'",
-                         rsc->xml->name, rsc->id);
+            pcmk__rsc_trace(rsc, "Assigning %s resource '%s'",
+                            rsc->xml->name, rsc->id);
             rsc->cmds->assign(rsc, NULL, true);
         }
     }
@@ -485,7 +486,7 @@ needs_fencing(const pcmk_node_t *node, bool have_managed)
 static bool
 needs_shutdown(const pcmk_node_t *node)
 {
-    if (pe__is_guest_or_remote_node(node)) {
+    if (pcmk__is_pacemaker_remote_node(node)) {
        /* Do not send shutdown actions for Pacemaker Remote nodes.
         * @TODO We might come up with a good use for this in the future.
         */
@@ -532,7 +533,7 @@ schedule_fencing(pcmk_node_t *node)
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, node->details->data_set);
 
-    pe_warn("Scheduling node %s for fencing", pe__node_name(node));
+    pcmk__sched_warn("Scheduling node %s for fencing", pcmk__node_name(node));
     pcmk__order_vs_fence(fencing, node->details->data_set);
     return fencing;
 }
@@ -566,7 +567,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
          */
-        if (pe__is_guest_node(node)) {
+        if (pcmk__is_guest_or_bundle_node(node)) {
             if (node->details->remote_requires_reset && have_managed
                 && pe_can_fence(scheduler, node)) {
                 pcmk__fence_guest(node);
@@ -598,20 +599,21 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 
         if ((fencing == NULL) && node->details->unclean) {
             integrity_lost = true;
-            pe_warn("Node %s is unclean but cannot be fenced",
-                    pe__node_name(node));
+            pcmk__config_warn("Node %s is unclean but cannot be fenced",
+                              pcmk__node_name(node));
         }
     }
 
     if (integrity_lost) {
         if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
-            pe_warn("Resource functionality and data integrity cannot be "
-                    "guaranteed (configure, enable, and test fencing to "
-                    "correct this)");
+            pcmk__config_warn("Resource functionality and data integrity "
+                              "cannot be guaranteed (configure, enable, "
+                              "and test fencing to correct this)");
 
         } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_quorate)) {
             crm_notice("Unclean nodes will not be fenced until quorum is "
-                       "attained or no-quorum-policy is set to ignore");
+                       "attained or " PCMK_OPT_NO_QUORUM_POLICY " is set to "
+                       PCMK_VALUE_IGNORE);
         }
     }
 
@@ -667,7 +669,8 @@ log_resource_details(pcmk_scheduler_t *scheduler)
         // Log all resources except inactive orphans
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
             || (rsc->role != pcmk_role_stopped)) {
-            out->message(out, crm_map_element_name(rsc->xml), 0, rsc, all, all);
+            out->message(out, pcmk__map_element_name(rsc->xml), 0UL, rsc, all,
+                         all);
         }
     }
 
@@ -741,7 +744,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
-        pe__set_working_set_flags(scheduler, flags);
+        pcmk__set_scheduler_flags(scheduler, flags);
         return;
     }
 
@@ -763,7 +766,7 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
         scheduler->localhost = localhost_save;
     }
 
-    pe__set_working_set_flags(scheduler, flags);
+    pcmk__set_scheduler_flags(scheduler, flags);
     scheduler->input = cib;
     cluster_status(scheduler); // Sets pcmk_sched_have_status
 }
@@ -817,4 +820,74 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     if (get_crm_log_level() == LOG_TRACE) {
         log_unrunnable_actions(scheduler);
     }
+}
+
+/*!
+ * \internal
+ * \brief Initialize scheduler data
+ *
+ * Make our own copies of the CIB XML and date/time object, if they're not
+ * \c NULL. This way we don't have to take ownership of the objects passed via
+ * the API.
+ *
+ * This function is most useful for public API functions that want the caller
+ * to retain ownership of the CIB object
+ *
+ * \param[in,out] out        Output object
+ * \param[in]     input      The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date       Date and time to use in the scheduler (if \c NULL,
+ *                           use current date and time).  This can be used for
+ *                           checking whether a rule is in effect at a certa
+ *                           date and time.
+ * \param[out]    scheduler  Where to store initialized scheduler data
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
+                     pcmk_scheduler_t **scheduler)
+{
+    // Allows for cleaner syntax than dereferencing the scheduler argument
+    pcmk_scheduler_t *new_scheduler = NULL;
+
+    new_scheduler = pe_new_working_set();
+    if (new_scheduler == NULL) {
+        return ENOMEM;
+    }
+
+    pcmk__set_scheduler_flags(new_scheduler,
+                              pcmk_sched_no_counts|pcmk_sched_no_compat);
+
+    // Populate the scheduler data
+
+    // Make our own copy of the given input or fetch the CIB and use that
+    if (input != NULL) {
+        new_scheduler->input = pcmk__xml_copy(NULL, input);
+        if (new_scheduler->input == NULL) {
+            out->err(out, "Failed to copy input XML");
+            pe_free_working_set(new_scheduler);
+            return ENOMEM;
+        }
+
+    } else {
+        int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
+
+        if (rc != pcmk_rc_ok) {
+            pe_free_working_set(new_scheduler);
+            return rc;
+        }
+    }
+
+    // Make our own copy of the given crm_time_t object; otherwise
+    // cluster_status() populates with the current time
+    if (date != NULL) {
+        // pcmk_copy_time() guarantees non-NULL
+        new_scheduler->now = pcmk_copy_time(date);
+    }
+
+    // Unpack everything
+    cluster_status(new_scheduler);
+    *scheduler = new_scheduler;
+
+    return pcmk_rc_ok;
 }

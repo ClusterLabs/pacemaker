@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,11 +15,12 @@
 #include <stdlib.h>
 #include <glib.h>
 
-#include <crm/msg_xml.h>
+#include <crm/cib/internal.h>       // cib__*
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/xml.h>
+#include <crm/cluster/internal.h>   // pcmk__get_node()
 
 #include "pacemaker-attrd.h"
 
@@ -50,8 +51,10 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 {
     const xmlNode *patchset = NULL;
     const char *client_name = NULL;
+    bool status_changed = false;
 
     if (attrd_shutting_down(true)) {
+        crm_debug("Ignoring CIB change during shutdown");
         return;
     }
 
@@ -59,8 +62,18 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_ALERTS)) {
+    if (cib__element_in_patchset(patchset, PCMK_XE_ALERTS)) {
         mainloop_set_trigger(attrd_config_read);
+    }
+
+    status_changed = cib__element_in_patchset(patchset, PCMK_XE_STATUS);
+
+    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
+    if (!cib__client_triggers_refresh(client_name)) {
+        /* This change came from a source that ensured the CIB is consistent
+         * with our attributes table, so we don't need to write anything out.
+         */
+        return;
     }
 
     if (!attrd_election_won()) {
@@ -68,20 +81,13 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         return;
     }
 
-    client_name = crm_element_value(msg, F_CIB_CLIENTNAME);
-    if (!cib__client_triggers_refresh(client_name)) {
-        // The CIB is still accurate
-        return;
-    }
-
-    if (cib__element_in_patchset(patchset, XML_CIB_TAG_NODES)
-        || cib__element_in_patchset(patchset, XML_CIB_TAG_STATUS)) {
-
-        /* An unsafe client modified the nodes or status section. Write
-         * transient attributes to ensure they're up-to-date in the CIB.
+    if (status_changed || cib__element_in_patchset(patchset, PCMK_XE_NODES)) {
+        /* An unsafe client modified the PCMK_XE_NODES or PCMK_XE_STATUS
+         * section. Write transient attributes to ensure they're up-to-date in
+         * the CIB.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, F_CIB_CLIENTID);
+            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
         }
         crm_notice("Updating all attributes after %s event triggered by %s",
                    event, pcmk__s(client_name, "(unidentified client)"));
@@ -108,7 +114,7 @@ attrd_cib_connect(int max_retry)
         }
         attempts++;
         crm_debug("Connection attempt %d to the CIB manager", attempts);
-        rc = the_cib->cmds->signon(the_cib, T_ATTRD, cib_command);
+        rc = the_cib->cmds->signon(the_cib, PCMK__VALUE_ATTRD, cib_command);
 
     } while ((rc != pcmk_ok) && (attempts < max_retry));
 
@@ -126,7 +132,8 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
+    rc = the_cib->cmds->add_notify_callback(the_cib,
+                                            PCMK__VALUE_CIB_DIFF_NOTIFY,
                                             attrd_cib_updated_cb);
     if (rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback");
@@ -144,7 +151,7 @@ void
 attrd_cib_disconnect(void)
 {
     CRM_CHECK(the_cib != NULL, return);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY,
+    the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
 }
@@ -153,39 +160,44 @@ static void
 attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
                void *user_data)
 {
-    do_crm_log_unlikely(((rc != pcmk_ok)? LOG_NOTICE : LOG_DEBUG),
-                        "Cleared transient attributes: %s "
-                        CRM_XS " xpath=%s rc=%d",
-                        pcmk_strerror(rc), (char *) user_data, rc);
+    const char *node = pcmk__s((const char *) user_data, "a node");
+
+    if (rc == pcmk_ok) {
+        crm_info("Cleared transient node attributes for %s from CIB", node);
+    } else {
+        crm_err("Unable to clear transient node attributes for %s from CIB: %s",
+                node, pcmk_strerror(rc));
+    }
 }
 
-#define XPATH_TRANSIENT "//node_state[@uname='%s']/" XML_TAG_TRANSIENT_NODEATTRS
+#define XPATH_TRANSIENT "//" PCMK__XE_NODE_STATE    \
+                        "[@" PCMK_XA_UNAME "='%s']" \
+                        "/" PCMK__XE_TRANSIENT_ATTRIBUTES
 
 /*!
  * \internal
- * \brief Wipe all transient attributes for this node from the CIB
+ * \brief Wipe all transient node attributes for a node from the CIB
  *
- * Clear any previous transient node attributes from the CIB. This is
- * normally done by the DC's controller when this node leaves the cluster, but
- * this handles the case where the node restarted so quickly that the
- * cluster layer didn't notice.
- *
- * \todo If pacemaker-attrd respawns after crashing (see PCMK_ENV_RESPAWNED),
- *       ideally we'd skip this and sync our attributes from the writer.
- *       However, currently we reject any values for us that the writer has, in
- *       attrd_peer_update().
+ * \param[in] node  Node to clear attributes for
  */
-static void
-attrd_erase_attrs(void)
+void
+attrd_cib_erase_transient_attrs(const char *node)
 {
     int call_id = 0;
-    char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
+    char *xpath = NULL;
 
-    crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
-             xpath);
+    CRM_CHECK(node != NULL, return);
+
+    xpath = crm_strdup_printf(XPATH_TRANSIENT, node);
+
+    crm_debug("Clearing transient node attributes for %s from CIB using %s",
+              node, xpath);
 
     call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
-    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
+    free(xpath);
+
+    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE,
+                                          pcmk__str_copy(node),
                                           "attrd_erase_cb", attrd_erase_cb,
                                           free);
 }
@@ -197,8 +209,17 @@ attrd_erase_attrs(void)
 void
 attrd_cib_init(void)
 {
-    // We have no attribute values in memory, wipe the CIB to match
-    attrd_erase_attrs();
+    /* We have no attribute values in memory, so wipe the CIB to match. This is
+     * normally done by the DC's controller when this node leaves the cluster, but
+     * this handles the case where the node restarted so quickly that the
+     * cluster layer didn't notice.
+     *
+     * \todo If pacemaker-attrd respawns after crashing (see PCMK_ENV_RESPAWNED),
+     *       ideally we'd skip this and sync our attributes from the writer.
+     *       However, currently we reject any values for us that the writer has, in
+     *       attrd_peer_update().
+     */
+    attrd_cib_erase_transient_attrs(attrd_cluster->uname);
 
     // Set a trigger for reading the CIB (for the alerts section)
     attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
@@ -262,19 +283,24 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        do_crm_log(level, "* %s[%s]=%s", a->id, peer, v->requested);
-        free(v->requested);
-        v->requested = NULL;
-        if (rc != pcmk_ok) {
-            a->changed = true; /* Attempt write out again */
+        if (rc == pcmk_ok) {
+            crm_info("* Wrote %s[%s]=%s",
+                     a->id, peer, pcmk__s(v->requested, "(unset)"));
+            pcmk__str_update(&(v->requested), NULL);
+        } else {
+            do_crm_log(level, "* Could not write %s[%s]=%s",
+                       a->id, peer, pcmk__s(v->requested, "(unset)"));
+            /* Reattempt write below if we are still the writer */
+            attrd_set_attr_flags(a, attrd_attr_changed);
         }
     }
 
-    if (a->changed && attrd_election_won()) {
+    if (pcmk_is_set(a->flags, attrd_attr_changed) && attrd_election_won()) {
         if (rc == pcmk_ok) {
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
+            crm_debug("Pending update for %s can be written now", a->id);
             write_attribute(a, false);
 
         /* We're re-attempting a write because the original failed; delay
@@ -320,40 +346,27 @@ static int
 add_set_attr_update(const attribute_t *attr, const char *attr_id,
                     const char *node_id, const char *set_id, const char *value)
 {
-    xmlNode *update = create_xml_node(NULL, XML_CIB_TAG_STATE);
+    xmlNode *update = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
     xmlNode *child = update;
     int rc = ENOMEM;
 
-    if (child == NULL) {
-        goto done;
-    }
-    crm_xml_add(child, XML_ATTR_ID, node_id);
+    crm_xml_add(child, PCMK_XA_ID, node_id);
 
-    child = create_xml_node(child, XML_TAG_TRANSIENT_NODEATTRS);
-    if (child == NULL) {
-        goto done;
-    }
-    crm_xml_add(child, XML_ATTR_ID, node_id);
+    child = pcmk__xe_create(child, PCMK__XE_TRANSIENT_ATTRIBUTES);
+    crm_xml_add(child, PCMK_XA_ID, node_id);
 
-    child = create_xml_node(child, attr->set_type);
-    if (child == NULL) {
-        goto done;
-    }
-    crm_xml_add(child, XML_ATTR_ID, set_id);
+    child = pcmk__xe_create(child, attr->set_type);
+    crm_xml_add(child, PCMK_XA_ID, set_id);
 
-    child = create_xml_node(child, XML_CIB_TAG_NVPAIR);
-    if (child == NULL) {
-        goto done;
-    }
-    crm_xml_add(child, XML_ATTR_ID, attr_id);
-    crm_xml_add(child, XML_NVPAIR_ATTR_NAME, attr->id);
-    crm_xml_add(child, XML_NVPAIR_ATTR_VALUE, value);
+    child = pcmk__xe_create(child, PCMK_XE_NVPAIR);
+    crm_xml_add(child, PCMK_XA_ID, attr_id);
+    crm_xml_add(child, PCMK_XA_NAME, attr->id);
+    crm_xml_add(child, PCMK_XA_VALUE, value);
 
-    rc = the_cib->cmds->modify(the_cib, XML_CIB_TAG_STATUS, update,
+    rc = the_cib->cmds->modify(the_cib, PCMK_XE_STATUS, update,
                                cib_can_create|cib_transaction);
     rc = pcmk_legacy2rc(rc);
 
-done:
     free_xml(update);
     return rc;
 }
@@ -373,16 +386,16 @@ static int
 add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                       const char *node_id, const char *set_id)
 {
-    char *xpath = crm_strdup_printf("/" XML_TAG_CIB
-                                    "/" XML_CIB_TAG_STATUS
-                                    "/" XML_CIB_TAG_STATE
-                                        "[@" XML_ATTR_ID "='%s']"
-                                    "/" XML_TAG_TRANSIENT_NODEATTRS
-                                        "[@" XML_ATTR_ID "='%s']"
-                                    "/%s[@" XML_ATTR_ID "='%s']"
-                                    "/" XML_CIB_TAG_NVPAIR
-                                        "[@" XML_ATTR_ID "='%s' "
-                                         "and @" XML_NVPAIR_ATTR_NAME "='%s']",
+    char *xpath = crm_strdup_printf("/" PCMK_XE_CIB
+                                    "/" PCMK_XE_STATUS
+                                    "/" PCMK__XE_NODE_STATE
+                                        "[@" PCMK_XA_ID "='%s']"
+                                    "/" PCMK__XE_TRANSIENT_ATTRIBUTES
+                                        "[@" PCMK_XA_ID "='%s']"
+                                    "/%s[@" PCMK_XA_ID "='%s']"
+                                    "/" PCMK_XE_NVPAIR
+                                        "[@" PCMK_XA_ID "='%s' "
+                                         "and @" PCMK_XA_NAME "='%s']",
                                     node_id, node_id, attr->set_type, set_id,
                                     attr_id, attr->id);
 
@@ -406,31 +419,17 @@ add_unset_attr_update(const attribute_t *attr, const char *attr_id,
 static int
 add_attr_update(const attribute_t *attr, const char *value, const char *node_id)
 {
-    char *set_id = NULL;
-    char *attr_id = NULL;
+    char *set_id = attrd_set_id(attr, node_id);
+    char *nvpair_id = attrd_nvpair_id(attr, node_id);
     int rc = pcmk_rc_ok;
 
-    if (attr->set_id != NULL) {
-        pcmk__str_update(&set_id, attr->set_id);
+    if (value == NULL) {
+        rc = add_unset_attr_update(attr, nvpair_id, node_id, set_id);
     } else {
-        set_id = crm_strdup_printf("%s-%s", XML_CIB_TAG_STATUS, node_id);
-    }
-    crm_xml_sanitize_id(set_id);
-
-    if (attr->uuid != NULL) {
-        pcmk__str_update(&attr_id, attr->uuid);
-    } else {
-        attr_id = crm_strdup_printf("%s-%s", set_id, attr->id);
-    }
-    crm_xml_sanitize_id(attr_id);
-
-    if (value != NULL) {
-        rc = add_set_attr_update(attr, attr_id, node_id, set_id, value);
-    } else {
-        rc = add_unset_attr_update(attr, attr_id, node_id, set_id);
+        rc = add_set_attr_update(attr, nvpair_id, node_id, set_id, value);
     }
     free(set_id);
-    free(attr_id);
+    free(nvpair_id);
     return rc;
 }
 
@@ -454,13 +453,11 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
 static void
 set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 {
-    attribute_value_t *a_v = NULL;
-    a_v = calloc(1, sizeof(attribute_value_t));
-    CRM_ASSERT(a_v != NULL);
+    attribute_value_t *a_v = pcmk__assert_alloc(1, sizeof(attribute_value_t));
 
     a_v->nodeid = v->nodeid;
-    a_v->nodename = strdup(v->nodename);
-    pcmk__str_update(&a_v->current, v->current);
+    a_v->nodename = pcmk__str_copy(v->nodename);
+    a_v->current = pcmk__str_copy(v->current);
 
     g_hash_table_replace(t, a_v->nodename, a_v);
 }
@@ -493,7 +490,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     /* If this attribute will be written to the CIB ... */
-    if (!stand_alone && !a->is_private) {
+    if (!stand_alone && !pcmk_is_set(a->flags, attrd_attr_is_private)) {
         /* Defer the write if now's not a good time */
         if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost",
@@ -520,21 +517,17 @@ write_attribute(attribute_t *a, bool ignore_delay)
         the_cib->cmds->set_user(the_cib, a->user);
         rc = the_cib->cmds->init_transaction(the_cib);
         if (rc != pcmk_ok) {
-            crm_err("Failed to write %s (id %s, set %s): Could not initiate "
+            crm_err("Failed to write %s (set %s): Could not initiate "
                     "CIB transaction",
-                    a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+                    a->id, pcmk__s(a->set_id, "unspecified"));
             goto done;
         }
     }
 
-    /* Attribute will be written shortly, so clear changed flag */
-    a->changed = false;
-
-    /* We will check all peers' uuids shortly, so initialize this to false */
-    a->unknown_peer_uuids = false;
-
-    /* Attribute will be written shortly, so clear forced write flag */
-    a->force_write = FALSE;
+    /* Attribute will be written shortly, so clear changed flag and force
+     * write flag, and initialize UUID missing flag to false.
+     */
+    attrd_clear_attr_flags(a, attrd_attr_changed|attrd_attr_uuid_missing|attrd_attr_force_write);
 
     /* Make the table for the attribute trap */
     alert_attribute_value = pcmk__strikey_table(NULL,
@@ -543,79 +536,80 @@ write_attribute(attribute_t *a, bool ignore_delay)
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
-        crm_node_t *peer = crm_get_peer_full(v->nodeid, v->nodename,
-                                             CRM_GET_PEER_ANY);
+        const char *uuid = NULL;
 
-        /* If the value's peer info does not correspond to a peer, ignore it */
-        if (peer == NULL) {
-            crm_notice("Cannot update %s[%s]=%s because peer not known",
-                       a->id, v->nodename, v->current);
-            continue;
-        }
+        if (pcmk_is_set(v->flags, attrd_value_remote)) {
+            /* If this is a Pacemaker Remote node, the node's UUID is the same
+             * as its name, which we already have.
+             */
+            uuid = v->nodename;
 
-        /* If we're just learning the peer's node id, remember it */
-        if (peer->id && (v->nodeid == 0)) {
-            crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
-            v->nodeid = peer->id;
+        } else {
+            // This will create a cluster node cache entry if none exists
+            crm_node_t *peer = pcmk__get_node(v->nodeid, v->nodename, NULL,
+                                              pcmk__node_search_any);
+
+            uuid = peer->uuid;
+
+            // Remember peer's node ID if we're just now learning it
+            if ((peer->id != 0) && (v->nodeid == 0)) {
+                crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
+                v->nodeid = peer->id;
+            }
         }
 
         /* If this is a private attribute, no update needs to be sent */
-        if (stand_alone || a->is_private) {
+        if (stand_alone || pcmk_is_set(a->flags, attrd_attr_is_private)) {
             private_updates++;
             continue;
         }
 
-        /* If the peer is found, but its uuid is unknown, defer write */
-        if (peer->uuid == NULL) {
-            a->unknown_peer_uuids = true;
-            crm_notice("Cannot update %s[%s]=%s because peer UUID not known "
-                       "(will retry if learned)",
+        // Defer write if this is a cluster node that's never been seen
+        if (uuid == NULL) {
+            attrd_set_attr_flags(a, attrd_attr_uuid_missing);
+            crm_notice("Cannot update %s[%s]='%s' now because node's UUID is "
+                       "unknown (will retry if learned)",
                        a->id, v->nodename, v->current);
             continue;
         }
 
         // Update this value as part of the CIB transaction we're building
-        rc = add_attr_update(a, v->current, peer->uuid);
+        rc = add_attr_update(a, v->current, uuid);
         if (rc != pcmk_rc_ok) {
-            crm_err("Failed to update %s[%s]=%s (peer known as %s, UUID %s, "
-                    "ID %" PRIu32 "/%" PRIu32 "): %s",
-                    a->id, v->nodename, v->current, peer->uname, peer->uuid,
-                    peer->id, v->nodeid, pcmk_rc_str(rc));
+            crm_err("Failed to update %s[%s]='%s': %s "
+                    CRM_XS " node uuid=%s id=%" PRIu32,
+                    a->id, v->nodename, v->current, pcmk_rc_str(rc),
+                    uuid, v->nodeid);
             continue;
         }
 
-        crm_debug("Updating %s[%s]=%s (peer known as %s, UUID %s, ID "
-                  "%" PRIu32 "/%" PRIu32 ")",
-                  a->id, v->nodename, v->current,
-                  peer->uname, peer->uuid, peer->id, v->nodeid);
+        crm_debug("Writing %s[%s]=%s (node-state-id=%s node-id=%" PRIu32 ")",
+                  a->id, v->nodename, pcmk__s(v->current, "(unset)"),
+                  uuid, v->nodeid);
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */
         set_alert_attribute_value(alert_attribute_value, v);
 
-        free(v->requested);
-        v->requested = NULL;
-        if (v->current) {
-            v->requested = strdup(v->current);
-        }
+        // Save this value so we can log it when write completes
+        pcmk__str_update(&(v->requested), v->current);
     }
 
     if (private_updates) {
-        crm_info("Processed %d private change%s for %s, id=%s, set=%s",
+        crm_info("Processed %d private change%s for %s (set %s)",
                  private_updates, pcmk__plural_s(private_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+                 a->id, pcmk__s(a->set_id, "unspecified"));
     }
     if (cib_updates > 0) {
-        char *id = NULL;
+        char *id = pcmk__str_copy(a->id);
 
         // Commit transaction
         a->update = the_cib->cmds->end_transaction(the_cib, true, cib_none);
 
-        crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
+        crm_info("Sent CIB request %d with %d change%s for %s (set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
-                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set_id, "n/a"));
+                 a->id, pcmk__s(a->set_id, "unspecified"));
 
-        pcmk__str_update(&id, a->id);
         if (the_cib->cmds->register_callback_full(the_cib, a->update,
                                                   CIB_OP_TIMEOUT_S, FALSE, id,
                                                   "attrd_cib_callback",
@@ -653,18 +647,20 @@ attrd_write_attributes(uint32_t options)
               pcmk_is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!pcmk_is_set(options, attrd_write_all) && a->unknown_peer_uuids) {
+        if (!pcmk_is_set(options, attrd_write_all) &&
+            pcmk_is_set(a->flags, attrd_attr_uuid_missing)) {
             // Try writing this attribute again, in case peer ID was learned
-            a->changed = true;
-        } else if (a->force_write) {
+            attrd_set_attr_flags(a, attrd_attr_changed);
+        } else if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
             /* If the force_write flag is set, write the attribute. */
-            a->changed = true;
+            attrd_set_attr_flags(a, attrd_attr_changed);
         }
 
-        if (pcmk_is_set(options, attrd_write_all) || a->changed) {
+        if (pcmk_is_set(options, attrd_write_all) ||
+            pcmk_is_set(a->flags, attrd_attr_changed)) {
             bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
 
-            if (a->force_write) {
+            if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
                 // Always ignore delay when forced write flag is set
                 ignore_delay = true;
             }

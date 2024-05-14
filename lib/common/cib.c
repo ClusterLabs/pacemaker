@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2023 the Pacemaker project contributors
+ * Later changes copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <libxml/tree.h>    // xmlNode
 
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/cib.h>
 #include <crm/common/cib_internal.h>
 
@@ -29,74 +29,74 @@ static struct {
 } cib_sections[] = {
     {
         // This first entry is also the default if a NULL is compared
-        XML_TAG_CIB,
+        PCMK_XE_CIB,
         NULL,
-        "//" XML_TAG_CIB
+        "//" PCMK_XE_CIB
     },
     {
-        XML_CIB_TAG_STATUS,
-        "/" XML_TAG_CIB,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+        PCMK_XE_STATUS,
+        "/" PCMK_XE_CIB,
+        "//" PCMK_XE_CIB "/" PCMK_XE_STATUS
     },
     {
-        XML_CIB_TAG_CONFIGURATION,
-        "/" XML_TAG_CIB,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+        PCMK_XE_CONFIGURATION,
+        "/" PCMK_XE_CIB,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
     },
     {
-        XML_CIB_TAG_CRMCONFIG,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CRMCONFIG
+        PCMK_XE_CRM_CONFIG,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_CRM_CONFIG
     },
     {
-        XML_CIB_TAG_NODES,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES
+        PCMK_XE_NODES,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_NODES
     },
     {
-        XML_CIB_TAG_RESOURCES,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES
+        PCMK_XE_RESOURCES,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RESOURCES
     },
     {
-        XML_CIB_TAG_CONSTRAINTS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_CONSTRAINTS
+        PCMK_XE_CONSTRAINTS,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_CONSTRAINTS
     },
     {
-        XML_CIB_TAG_OPCONFIG,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_OPCONFIG
+        PCMK_XE_OP_DEFAULTS,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_OP_DEFAULTS
     },
     {
-        XML_CIB_TAG_RSCCONFIG,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG
+        PCMK_XE_RSC_DEFAULTS,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_RSC_DEFAULTS
     },
     {
-        XML_CIB_TAG_ACLS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ACLS
+        PCMK_XE_ACLS,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_ACLS
     },
     {
-        XML_TAG_FENCING_TOPOLOGY,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_TAG_FENCING_TOPOLOGY
+        PCMK_XE_FENCING_TOPOLOGY,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_FENCING_TOPOLOGY
     },
     {
-        XML_CIB_TAG_TAGS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_TAGS
+        PCMK_XE_TAGS,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_TAGS
     },
     {
-        XML_CIB_TAG_ALERTS,
-        "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION,
-        "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS
+        PCMK_XE_ALERTS,
+        "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION,
+        "//" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION "/" PCMK_XE_ALERTS
     },
     {
-        XML_CIB_TAG_SECTION_ALL,
+        PCMK__XE_ALL,
         NULL,
-        "//" XML_TAG_CIB
+        "//" PCMK_XE_CIB
     },
 };
 
@@ -172,4 +172,20 @@ xmlNode *
 pcmk_find_cib_element(xmlNode *cib, const char *element_name)
 {
     return get_xpath_object(pcmk_cib_xpath_for(element_name), cib, LOG_TRACE);
+}
+
+/*!
+ * \internal
+ * \brief Check that the feature set in the CIB is supported on this node
+ *
+ * \param[in] new_version   PCMK_XA_CRM_FEATURE_SET attribute from the CIB
+ */
+int
+pcmk__check_feature_set(const char *cib_version)
+{
+    if (cib_version && compare_version(cib_version, CRM_FEATURE_SET) > 0) {
+        return EPROTONOSUPPORT;
+    }
+
+    return pcmk_rc_ok;
 }

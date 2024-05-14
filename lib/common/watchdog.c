@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -112,10 +112,10 @@ panic_local(void)
 
     if(ppid > 1) {
         /* child daemon */
-        exit(CRM_EX_PANIC);
+        crm_exit(CRM_EX_PANIC);
     } else {
         /* pacemakerd or orphan child */
-        exit(CRM_EX_FATAL);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -141,10 +141,10 @@ panic_sbd(void)
 
     if(ppid > 1) {
         /* child daemon */
-        exit(CRM_EX_PANIC);
+        crm_exit(CRM_EX_PANIC);
     } else {
         /* pacemakerd or orphan child */
-        exit(CRM_EX_FATAL);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -232,7 +232,7 @@ pcmk__locate_sbd(void)
 }
 
 long
-pcmk__get_sbd_timeout(void)
+pcmk__get_sbd_watchdog_timeout(void)
 {
     static long sbd_timeout = -2;
 
@@ -266,44 +266,53 @@ pcmk__get_sbd_sync_resource_startup(void)
 }
 
 long
-pcmk__auto_watchdog_timeout(void)
+pcmk__auto_stonith_watchdog_timeout(void)
 {
-    long sbd_timeout = pcmk__get_sbd_timeout();
+    long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
     return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
 }
 
 bool
-pcmk__valid_sbd_timeout(const char *value)
+pcmk__valid_stonith_watchdog_timeout(const char *value)
 {
+    /* @COMPAT At a compatibility break, accept either negative values or a
+     * specific string like "auto" (but not both) to mean "auto-calculate the
+     * timeout." Reject other values that aren't parsable as timeouts.
+     */
     long st_timeout = value? crm_get_msec(value) : 0;
 
     if (st_timeout < 0) {
-        st_timeout = pcmk__auto_watchdog_timeout();
-        crm_debug("Using calculated value %ld for stonith-watchdog-timeout (%s)",
+        st_timeout = pcmk__auto_stonith_watchdog_timeout();
+        crm_debug("Using calculated value %ld for "
+                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
     }
 
     if (st_timeout == 0) {
-        crm_debug("Watchdog may be enabled but stonith-watchdog-timeout is disabled (%s)",
+        crm_debug("Watchdog may be enabled but "
+                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is disabled (%s)",
                   value? value : "default");
 
     } else if (pcmk__locate_sbd() == 0) {
-        crm_emerg("Shutting down: stonith-watchdog-timeout configured (%s) "
-                  "but SBD not active", (value? value : "auto"));
+        crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                  " configured (%s) but SBD not active",
+                  pcmk__s(value, "auto"));
         crm_exit(CRM_EX_FATAL);
         return false;
 
     } else {
-        long sbd_timeout = pcmk__get_sbd_timeout();
+        long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
         if (st_timeout < sbd_timeout) {
-            crm_emerg("Shutting down: stonith-watchdog-timeout (%s) too short "
-                      "(must be >%ldms)", value, sbd_timeout);
+            crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                      " (%s) too short (must be >%ldms)",
+                      value, sbd_timeout);
             crm_exit(CRM_EX_FATAL);
             return false;
         }
-        crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",
+        crm_info("Watchdog configured with " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 " %s and SBD timeout %ldms",
                  value, sbd_timeout);
     }
     return true;

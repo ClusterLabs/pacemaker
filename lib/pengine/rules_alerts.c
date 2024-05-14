@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/xml_internal.h>
@@ -34,8 +34,8 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
     const char *value = NULL;
     int rc = pcmk_rc_ok;
 
-    pe_unpack_nvpairs(basenode, basenode, XML_TAG_META_SETS, NULL, config_hash,
-                      NULL, FALSE, now, NULL);
+    pe_unpack_nvpairs(basenode, basenode, PCMK_XE_META_ATTRIBUTES, NULL,
+                      config_hash, NULL, FALSE, now, NULL);
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
@@ -45,16 +45,20 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
         goto done;
     }
 
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TIMEOUT);
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value) {
-        entry->timeout = crm_get_msec(value);
+        long long timeout_ms = crm_get_msec(value);
+
+        entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
         if (entry->timeout <= 0) {
             if (entry->timeout == 0) {
                 crm_trace("Alert %s uses default timeout of %dmsec",
                           entry->id, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
             } else {
-                crm_warn("Alert %s has invalid timeout value '%s', using default %dmsec",
-                         entry->id, (char*)value, PCMK__ALERT_DEFAULT_TIMEOUT_MS);
+                pcmk__config_warn("Alert %s has invalid timeout value '%s', "
+                                  "using default (%d ms)",
+                                  entry->id, value,
+                                  PCMK__ALERT_DEFAULT_TIMEOUT_MS);
             }
             entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
         } else {
@@ -65,7 +69,7 @@ get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
             *max_timeout = entry->timeout;
         }
     }
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_TSTAMP_FORMAT);
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMESTAMP_FORMAT);
     if (value) {
         /* hard to do any checks here as merely anything can
          * can be a valid time-format-string
@@ -89,7 +93,8 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         return;
     }
 
-    child = first_named_child(basenode, XML_TAG_ATTR_SETS);
+    child = pcmk__xe_first_child(basenode, PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
+                                 NULL);
     if (child == NULL) {
         return;
     }
@@ -98,16 +103,16 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
         entry->envvars = pcmk__strkey_table(free, free);
     }
 
-    for (child = first_named_child(child, XML_CIB_TAG_NVPAIR); child != NULL;
-         child = crm_next_same_xml(child)) {
+    for (child = pcmk__xe_first_child(child, PCMK_XE_NVPAIR, NULL, NULL);
+         child != NULL; child = pcmk__xe_next_same(child)) {
 
-        const char *name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
-        const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
+        const char *name = crm_element_value(child, PCMK_XA_NAME);
+        const char *value = crm_element_value(child, PCMK_XA_VALUE);
 
         if (value == NULL) {
             value = "";
         }
-        g_hash_table_insert(entry->envvars, strdup(name), strdup(value));
+        pcmk__insert_dup(entry->envvars, name, value);
         crm_trace("Alert %s: added environment variable %s='%s'",
                   entry->id, name, value);
     }
@@ -116,33 +121,34 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
 static void
 unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
 {
-    xmlNode *select = first_named_child(basenode, XML_CIB_TAG_ALERT_SELECT);
+    xmlNode *select = pcmk__xe_first_child(basenode, PCMK_XE_SELECT, NULL,
+                                           NULL);
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
-    for (event_type = pcmk__xe_first_child(select); event_type != NULL;
-         event_type = pcmk__xe_next(event_type)) {
+    for (event_type = pcmk__xe_first_child(select, NULL, NULL, NULL);
+         event_type != NULL; event_type = pcmk__xe_next(event_type)) {
 
-        if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_FENCING)) {
+        if (pcmk__xe_is(event_type, PCMK_XE_SELECT_FENCING)) {
             flags |= pcmk__alert_fencing;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_NODES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_NODES)) {
             flags |= pcmk__alert_node;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_RESOURCES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_RESOURCES)) {
             flags |= pcmk__alert_resource;
 
-        } else if (pcmk__xe_is(event_type, XML_CIB_TAG_ALERT_ATTRIBUTES)) {
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_ATTRIBUTES)) {
             xmlNode *attr;
             const char *attr_name;
             int nattrs = 0;
 
             flags |= pcmk__alert_attribute;
-            for (attr = first_named_child(event_type, XML_CIB_TAG_ALERT_ATTR);
-                 attr != NULL;
-                 attr = crm_next_same_xml(attr)) {
+            for (attr = pcmk__xe_first_child(event_type, PCMK_XE_ATTRIBUTE,
+                                             NULL, NULL);
+                 attr != NULL; attr = pcmk__xe_next_same(attr)) {
 
-                attr_name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+                attr_name = crm_element_value(attr, PCMK_XA_NAME);
                 if (attr_name) {
                     if (nattrs == 0) {
                         g_strfreev(entry->select_attribute_name);
@@ -216,17 +222,22 @@ pe_unpack_alerts(const xmlNode *alerts)
         return alert_list;
     }
 
-    for (alert = first_named_child(alerts, XML_CIB_TAG_ALERT);
-         alert != NULL; alert = crm_next_same_xml(alert)) {
+    for (alert = pcmk__xe_first_child(alerts, PCMK_XE_ALERT, NULL, NULL);
+         alert != NULL; alert = pcmk__xe_next_same(alert)) {
 
         xmlNode *recipient;
         int recipients = 0;
-        const char *alert_id = ID(alert);
-        const char *alert_path = crm_element_value(alert, XML_ALERT_ATTR_PATH);
+        const char *alert_id = pcmk__xe_id(alert);
+        const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
 
         /* The schema should enforce this, but to be safe ... */
-        if ((alert_id == NULL) || (alert_path == NULL)) {
-            crm_warn("Ignoring invalid alert without id and path");
+        if (alert_id == NULL) {
+            pcmk__config_warn("Ignoring invalid alert without " PCMK_XA_ID);
+            crm_log_xml_info(alert, "missing-id");
+            continue;
+        }
+        if (alert_path == NULL) {
+            pcmk__config_warn("Ignoring alert %s: No " PCMK_XA_PATH, alert_id);
             continue;
         }
 
@@ -247,14 +258,15 @@ pe_unpack_alerts(const xmlNode *alerts)
                   entry->id, entry->path, entry->timeout, entry->tstamp_format,
                   (entry->envvars? g_hash_table_size(entry->envvars) : 0));
 
-        for (recipient = first_named_child(alert, XML_CIB_TAG_ALERT_RECIPIENT);
-             recipient != NULL; recipient = crm_next_same_xml(recipient)) {
+        for (recipient = pcmk__xe_first_child(alert, PCMK_XE_RECIPIENT, NULL,
+                                              NULL);
+             recipient != NULL; recipient = pcmk__xe_next_same(recipient)) {
 
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
 
             recipients++;
-            recipient_entry->recipient = strdup(crm_element_value(recipient,
-                                                XML_ALERT_ATTR_REC_VALUE));
+            recipient_entry->recipient = crm_element_value_copy(recipient,
+                                                                PCMK_XA_VALUE);
 
             if (unpack_alert(recipient, recipient_entry,
                              &max_timeout) != pcmk_rc_ok) {
@@ -265,7 +277,8 @@ pe_unpack_alerts(const xmlNode *alerts)
             }
             alert_list = g_list_prepend(alert_list, recipient_entry);
             crm_debug("Alert %s has recipient %s with value %s and %d envvars",
-                      entry->id, ID(recipient), recipient_entry->recipient,
+                      entry->id, pcmk__xe_id(recipient),
+                      recipient_entry->recipient,
                       (recipient_entry->envvars?
                        g_hash_table_size(recipient_entry->envvars) : 0));
         }

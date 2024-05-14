@@ -1,1 +1,1 @@
-Schema validation of configuration is disabled (enabling is encouraged and prevents common misconfigurations)
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)

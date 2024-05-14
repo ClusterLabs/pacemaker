@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2022 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,10 @@
 #ifndef CRM_COMMON_ACL_INTERNAL__H
 #define CRM_COMMON_ACL_INTERNAL__H
 
-#include <string.h>      // strcmp()
+#include <string.h>         // strcmp()
+#include <libxml/tree.h>    // xmlNode
+
+#include <crm/common/xml_internal.h>    // enum xml_private_flags
 
 /* internal ACL-related utilities */
 

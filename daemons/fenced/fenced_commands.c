@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,6 @@
 #include <ctype.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
@@ -129,7 +128,7 @@ static int
 get_action_delay_max(const stonith_device_t *device, const char *action)
 {
     const char *value = NULL;
-    int delay_max = 0;
+    guint delay_max = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -137,10 +136,11 @@ get_action_delay_max(const stonith_device_t *device, const char *action)
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_MAX);
     if (value) {
-       delay_max = crm_parse_interval_spec(value) / 1000;
+        pcmk_parse_interval_spec(value, &delay_max);
+        delay_max /= 1000;
     }
 
-    return delay_max;
+    return (int) delay_max;
 }
 
 static int
@@ -148,7 +148,7 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
                       const char *target)
 {
     char *hash_value = NULL;
-    int delay_base = 0;
+    guint delay_base = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -157,10 +157,8 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
     hash_value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
 
     if (hash_value) {
-        char *value = strdup(hash_value);
+        char *value = pcmk__str_copy(hash_value);
         char *valptr = value;
-
-        CRM_ASSERT(value != NULL);
 
         if (target != NULL) {
             for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
@@ -181,13 +179,14 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
         }
 
         if (strchr(value, ':') == 0) {
-           delay_base = crm_parse_interval_spec(value) / 1000;
+            pcmk_parse_interval_spec(value, &delay_base);
+            delay_base /= 1000;
         }
 
         free(valptr);
     }
 
-    return delay_base;
+    return (int) delay_base;
 }
 
 /*!
@@ -232,7 +231,8 @@ get_action_timeout(const stonith_device_t *device, const char *action,
         snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
-            return atoi(value);
+            long long timeout_ms = crm_get_msec(value);
+            return (int) QB_MIN(timeout_ms / 1000, INT_MAX);
         }
     }
     return default_timeout;
@@ -345,34 +345,33 @@ create_async_command(xmlNode *msg)
         return NULL;
     }
 
-    op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
+    op = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, msg, LOG_ERR);
     if (op == NULL) {
         return NULL;
     }
 
-    cmd = calloc(1, sizeof(async_command_t));
-    CRM_ASSERT(cmd != NULL);
+    cmd = pcmk__assert_alloc(1, sizeof(async_command_t));
 
     // All messages must include these
-    cmd->action = crm_element_value_copy(op, F_STONITH_ACTION);
-    cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
-    cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
+    cmd->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
+    cmd->op = crm_element_value_copy(msg, PCMK__XA_ST_OP);
+    cmd->client = crm_element_value_copy(msg, PCMK__XA_ST_CLIENTID);
     if ((cmd->action == NULL) || (cmd->op == NULL) || (cmd->client == NULL)) {
         free_async_command(cmd);
         return NULL;
     }
 
-    crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
-    crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
-    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
-    crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
+    crm_element_value_int(msg, PCMK__XA_ST_CALLID, &(cmd->id));
+    crm_element_value_int(msg, PCMK__XA_ST_CALLOPT, &(cmd->options));
+    crm_element_value_int(msg, PCMK__XA_ST_DELAY, &(cmd->start_delay));
+    crm_element_value_int(msg, PCMK__XA_ST_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
 
-    cmd->origin = crm_element_value_copy(msg, F_ORIG);
-    cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
-    cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
-    cmd->target = crm_element_value_copy(op, F_STONITH_TARGET);
-    cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
+    cmd->origin = crm_element_value_copy(msg, PCMK__XA_SRC);
+    cmd->remote_op_id = crm_element_value_copy(msg, PCMK__XA_ST_REMOTE_OP);
+    cmd->client_name = crm_element_value_copy(msg, PCMK__XA_ST_CLIENTNAME);
+    cmd->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
+    cmd->device = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ID);
 
     cmd->done_cb = st_child_done;
 
@@ -645,12 +644,13 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (device->include_nodeid && (cmd->target != NULL)) {
-        crm_node_t *node = crm_get_peer(0, cmd->target);
+        crm_node_t *node = pcmk__get_node(0, cmd->target, NULL,
+                                          pcmk__node_search_cluster_member);
 
         cmd->target_nodeid = node->id;
     }
 
-    cmd->device = strdup(device->id);
+    cmd->device = pcmk__str_copy(device->id);
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
@@ -785,7 +785,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
             case ':':
                 if (lpc > last) {
                     free(name);
-                    name = calloc(1, 1 + lpc - last);
+                    name = pcmk__assert_alloc(1, 1 + lpc - last);
                     memcpy(name, hostmap + last, lpc - last);
                 }
                 last = lpc + 1;
@@ -801,7 +801,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     char *value = NULL;
                     int k = 0;
 
-                    value = calloc(1, 1 + lpc - last);
+                    value = pcmk__assert_alloc(1, 1 + lpc - last);
                     memcpy(value, hostmap + last, lpc - last);
 
                     for (int i = 0; value[i] != '\0'; i++) {
@@ -814,7 +814,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     crm_debug("Adding alias '%s'='%s'", name, value);
                     g_hash_table_replace(aliases, name, value);
                     if (targets) {
-                        *targets = g_list_append(*targets, strdup(value));
+                        *targets = g_list_append(*targets, pcmk__str_copy(value));
                     }
                     value = NULL;
                     name = NULL;
@@ -888,10 +888,10 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
             crm_err("Could not retrieve metadata for fencing agent %s", agent);
             return EAGAIN;
         }
-        g_hash_table_replace(metadata_cache, strdup(agent), buffer);
+        g_hash_table_replace(metadata_cache, pcmk__str_copy(agent), buffer);
     }
 
-    *metadata = string2xml(buffer);
+    *metadata = pcmk__xml_parse(buffer);
     return pcmk_rc_ok;
 }
 
@@ -908,7 +908,8 @@ is_nodeid_required(xmlNode * xml)
         return FALSE;
     }
 
-    xpath = xpath_search(xml, "//parameter[@name='nodeid']");
+    xpath = xpath_search(xml,
+                         "//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='nodeid']");
     if (numXpathResults(xpath)  <= 0) {
         freeXpathObject(xpath);
         return FALSE;
@@ -944,7 +945,7 @@ read_action_metadata(stonith_device_t *device)
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
 
-        action = crm_element_value(match, "name");
+        action = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
@@ -956,16 +957,23 @@ read_action_metadata(stonith_device_t *device)
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_reboot);
         } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
-            /* "automatic" means the cluster will unfence node when it joins */
-            /* "required" is a deprecated synonym for "automatic" */
-            if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
+            /* PCMK_XA_AUTOMATIC means the cluster will unfence a node when it
+             * joins.
+             *
+             * @COMPAT PCMK__XA_REQUIRED is a deprecated synonym for
+             * PCMK_XA_AUTOMATIC.
+             */
+            if (pcmk__xe_attr_is_true(match, PCMK_XA_AUTOMATIC)
+                || pcmk__xe_attr_is_true(match, PCMK__XA_REQUIRED)) {
                 device->automatic_unfencing = TRUE;
             }
             stonith__set_device_flags(device->flags, device->id,
                                       st_device_supports_on);
         }
 
-        if ((action != NULL) && pcmk__xe_attr_is_true(match, "on_target")) {
+        if ((action != NULL)
+            && pcmk__xe_attr_is_true(match, PCMK_XA_ON_TARGET)) {
+
             pcmk__add_word(&(device->on_target_actions), 64, action);
         }
     }
@@ -993,7 +1001,7 @@ map_action(GHashTable *params, const char *action, const char *value)
     } else {
         crm_warn("Mapping %s='%s' to %s='%s'",
                  STONITH_ATTR_ACTION_OP, value, key, value);
-        g_hash_table_insert(params, key, strdup(value));
+        g_hash_table_insert(params, key, pcmk__str_copy(value));
     }
 }
 
@@ -1023,7 +1031,8 @@ xml2device_params(const char *name, const xmlNode *dev)
             crm_warn("Ignoring empty '%s' parameter", STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_REBOOT) == 0) {
-            crm_warn("Ignoring %s='reboot' (see stonith-action cluster property instead)",
+            crm_warn("Ignoring %s='reboot' (see " PCMK_OPT_STONITH_ACTION
+                     " cluster property instead)",
                      STONITH_ATTR_ACTION_OP);
 
         } else if (strcmp(value, PCMK_ACTION_OFF) == 0) {
@@ -1050,15 +1059,15 @@ target_list_type(stonith_device_t * dev)
     if (check_type == NULL) {
 
         if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
-            check_type = "static-list";
+            check_type = PCMK_VALUE_STATIC_LIST;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
-            check_type = "static-list";
+            check_type = PCMK_VALUE_STATIC_LIST;
         } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
-            check_type = "dynamic-list";
+            check_type = PCMK_VALUE_DYNAMIC_LIST;
         } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
-            check_type = "status";
+            check_type = PCMK_VALUE_STATUS;
         } else {
-            check_type = PCMK__VALUE_NONE;
+            check_type = PCMK_VALUE_NONE;
         }
     }
 
@@ -1070,17 +1079,15 @@ build_device_from_xml(xmlNode *dev)
 {
     const char *value;
     stonith_device_t *device = NULL;
-    char *agent = crm_element_value_copy(dev, "agent");
+    char *agent = crm_element_value_copy(dev, PCMK_XA_AGENT);
 
     CRM_CHECK(agent != NULL, return device);
 
-    device = calloc(1, sizeof(stonith_device_t));
+    device = pcmk__assert_alloc(1, sizeof(stonith_device_t));
 
-    CRM_CHECK(device != NULL, {free(agent); return device;});
-
-    device->id = crm_element_value_copy(dev, XML_ATTR_ID);
+    device->id = crm_element_value_copy(dev, PCMK_XA_ID);
     device->agent = agent;
-    device->namespace = crm_element_value_copy(dev, "namespace");
+    device->namespace = crm_element_value_copy(dev, PCMK__XA_NAMESPACE);
     device->params = xml2device_params(device->id, dev);
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_LIST);
@@ -1092,8 +1099,10 @@ build_device_from_xml(xmlNode *dev)
     device->aliases = build_port_aliases(value, &(device->targets));
 
     value = target_list_type(device);
-    if (!pcmk__str_eq(value, "static-list", pcmk__str_casei) && device->targets) {
-        /* Other than "static-list", dev-> targets is unnecessary. */
+    if (!pcmk__str_eq(value, PCMK_VALUE_STATIC_LIST, pcmk__str_casei)
+        && (device->targets != NULL)) {
+
+        // device->targets is necessary only with PCMK_VALUE_STATIC_LIST
         g_list_free_full(device->targets, free);
         device->targets = NULL;
     }
@@ -1125,8 +1134,8 @@ build_device_from_xml(xmlNode *dev)
         device->include_nodeid = is_nodeid_required(device->agent_metadata);
     }
 
-    value = crm_element_value(dev, "rsc_provides");
-    if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
+    value = crm_element_value(dev, PCMK__XA_RSC_PROVIDES);
+    if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
         device->automatic_unfencing = TRUE;
     }
 
@@ -1159,17 +1168,17 @@ schedule_internal_command(const char *origin,
 {
     async_command_t *cmd = NULL;
 
-    cmd = calloc(1, sizeof(async_command_t));
+    cmd = pcmk__assert_alloc(1, sizeof(async_command_t));
 
     cmd->id = -1;
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
-    cmd->action = strdup(action);
-    pcmk__str_update(&cmd->target, target);
-    cmd->device = strdup(device->id);
-    cmd->origin = strdup(origin);
-    cmd->client = strdup(crm_system_name);
-    cmd->client_name = strdup(crm_system_name);
+    cmd->action = pcmk__str_copy(action);
+    cmd->target = pcmk__str_copy(target);
+    cmd->device = pcmk__str_copy(device->id);
+    cmd->origin = pcmk__str_copy(origin);
+    cmd->client = pcmk__str_copy(crm_system_name);
+    cmd->client_name = pcmk__str_copy(crm_system_name);
 
     cmd->internal_user_data = internal_user_data;
     cmd->done_cb = done_cb; /* cmd, not internal_user_data, is passed to 'done_cb' as the userdata */
@@ -1292,13 +1301,13 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
                      ((result->exit_reason == NULL)? "" : ")"));
         }
 
-        /* Fall back to pcmk_host_check="status" if the user didn't explicitly
-         * specify "dynamic-list".
+        /* Fall back to pcmk_host_check=PCMK_VALUE_STATUS if the user didn't
+         * explicitly specify PCMK_VALUE_DYNAMIC_LIST
          */
         if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
             crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
-            g_hash_table_replace(dev->params, strdup(PCMK_STONITH_HOST_CHECK),
-                                 strdup("status"));
+            pcmk__insert_dup(dev->params, PCMK_STONITH_HOST_CHECK,
+                             PCMK_VALUE_STATUS);
         }
     }
 
@@ -1330,7 +1339,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
         if(strstr(key, "CRM_meta") == key) {
             continue;
-        } else if(strcmp(key, "crm_feature_set") == 0) {
+        } else if (strcmp(key, PCMK_XA_CRM_FEATURE_SET) == 0) {
             continue;
         } else {
             char *other_value = g_hash_table_lookup(second, key);
@@ -1389,7 +1398,7 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
                      STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) do {
         if (stonith_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
-                    "stonith-watchdog-timeout set.");
+                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set.");
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
@@ -1419,9 +1428,8 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
             if (node_does_watchdog_fencing(stonith_our_uname)) {
                 g_list_free_full(device->targets, free);
                 device->targets = stonith__parse_targets(stonith_our_uname);
-                g_hash_table_replace(device->params,
-                                     strdup(PCMK_STONITH_HOST_LIST),
-                                     strdup(stonith_our_uname));
+                pcmk__insert_dup(device->params,
+                                 PCMK_STONITH_HOST_LIST, stonith_our_uname);
                 /* proceed as with any other stonith-device */
                 break;
             }
@@ -1578,18 +1586,18 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
     }
     switch (mode) {
         case fenced_target_by_name:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET);
+            return crm_element_value_copy(level, PCMK_XA_TARGET);
 
         case fenced_target_by_pattern:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
+            return crm_element_value_copy(level, PCMK_XA_TARGET_PATTERN);
 
         case fenced_target_by_attribute:
             return crm_strdup_printf("%s=%s",
-                crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE),
-                crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE));
+                crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE),
+                crm_element_value(level, PCMK_XA_TARGET_VALUE));
 
         default:
-            return crm_strdup_printf("unknown-%s", ID(level));
+            return crm_strdup_printf("unknown-%s", pcmk__xe_id(level));
     }
 }
 
@@ -1604,15 +1612,15 @@ stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
 static enum fenced_target_by
 unpack_level_kind(const xmlNode *level)
 {
-    if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
+    if (crm_element_value(level, PCMK_XA_TARGET) != NULL) {
         return fenced_target_by_name;
     }
-    if (crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN) != NULL) {
+    if (crm_element_value(level, PCMK_XA_TARGET_PATTERN) != NULL) {
         return fenced_target_by_pattern;
     }
     if (!stand_alone /* if standalone, there's no attribute manager */
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) != NULL)) {
+        && (crm_element_value(level, PCMK_XA_TARGET_ATTRIBUTE) != NULL)
+        && (crm_element_value(level, PCMK_XA_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
     return fenced_target_by_unknown;
@@ -1670,8 +1678,8 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
      * search by xpath, because it might give multiple hits if the XML is the
      * CIB.
      */
-    if ((xml != NULL) && !pcmk__xe_is(xml, XML_TAG_FENCING_LEVEL)) {
-        xml = get_xpath_object("//" XML_TAG_FENCING_LEVEL, xml, LOG_WARNING);
+    if ((xml != NULL) && !pcmk__xe_is(xml, PCMK_XE_FENCING_LEVEL)) {
+        xml = get_xpath_object("//" PCMK_XE_FENCING_LEVEL, xml, LOG_WARNING);
     }
 
     if (xml == NULL) {
@@ -1681,7 +1689,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
     } else {
         local_mode = unpack_level_kind(xml);
         local_target = stonith_level_key(xml, local_mode);
-        crm_element_value_int(xml, XML_ATTR_STONITH_INDEX, &local_id);
+        crm_element_value_int(xml, PCMK_XA_INDEX, &local_id);
         if (desc != NULL) {
             *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
         }
@@ -1737,7 +1745,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     }
 
     // Ensure an ID was given (even the client API adds an ID)
-    if (pcmk__str_empty(ID(level))) {
+    if (pcmk__str_empty(pcmk__xe_id(level))) {
         crm_warn("Ignoring registration for topology level without ID");
         free(target);
         crm_log_xml_trace(level, "Bad level");
@@ -1749,12 +1757,12 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     // Ensure a valid target was specified
     if (mode == fenced_target_by_unknown) {
         crm_warn("Ignoring registration for topology level '%s' "
-                 "without valid target", ID(level));
+                 "without valid target", pcmk__xe_id(level));
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
-                            ID(level));
+                            pcmk__xe_id(level));
         return;
     }
 
@@ -1766,28 +1774,24 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
-                            pcmk__s(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX),
+                            pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     ""),
-                            ID(level));
+                            pcmk__xe_id(level));
         return;
     }
 
     /* Find or create topology table entry */
     tp = g_hash_table_lookup(topology, target);
     if (tp == NULL) {
-        tp = calloc(1, sizeof(stonith_topology_t));
-        if (tp == NULL) {
-            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                             strerror(ENOMEM));
-            free(target);
-            return;
-        }
+        tp = pcmk__assert_alloc(1, sizeof(stonith_topology_t));
+
         tp->kind = mode;
         tp->target = target;
-        tp->target_value = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_VALUE);
-        tp->target_pattern = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
-        tp->target_attribute = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE);
+        tp->target_value = crm_element_value_copy(level, PCMK_XA_TARGET_VALUE);
+        tp->target_pattern = crm_element_value_copy(level,
+                                                    PCMK_XA_TARGET_PATTERN);
+        tp->target_attribute = crm_element_value_copy(level,
+                                                      PCMK_XA_TARGET_ATTRIBUTE);
 
         g_hash_table_replace(topology, tp->target, tp);
         crm_trace("Added %s (%d) to the topology (%d active entries)",
@@ -1801,12 +1805,12 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
                  tp->target, id);
     }
 
-    devices = parse_device_list(crm_element_value(level, XML_ATTR_STONITH_DEVICES));
+    devices = parse_device_list(crm_element_value(level, PCMK_XA_DEVICES));
     for (dIter = devices; dIter; dIter = dIter->next) {
         const char *device = dIter->value;
 
         crm_trace("Adding device '%s' for %s[%d]", device, tp->target, id);
-        tp->levels[id] = g_list_append(tp->levels[id], strdup(device));
+        tp->levels[id] = g_list_append(tp->levels[id], pcmk__str_copy(device));
     }
     stonith_key_value_freeall(devices, 1, 1);
 
@@ -1857,12 +1861,11 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level %s",
-                            pcmk__s(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX),
+                            pcmk__s(crm_element_value(level, PCMK_XA_INDEX),
                                     "<null>"),
 
                             // Client API doesn't add ID to unregistration XML
-                            pcmk__s(ID(level), ""));
+                            pcmk__s(pcmk__xe_id(level), ""));
         return;
     }
 
@@ -1906,26 +1909,29 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
     char *rv;
     GList *gIter;
 
+    char *pos = NULL;
+    const char *lead_delim = "";
+
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         const char *value = (const char *) gIter->data;
 
         alloc_size += strlen(value);
     }
-    rv = calloc(alloc_size, sizeof(char));
-    if (rv) {
-        char *pos = rv;
-        const char *lead_delim = "";
 
-        for (gIter = list; gIter != NULL; gIter = gIter->next) {
-            const char *value = (const char *) gIter->data;
+    rv = pcmk__assert_alloc(alloc_size, sizeof(char));
+    pos = rv;
 
-            pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
-            lead_delim = delim;
-        }
-        if (max && terminate_with_delim) {
-            sprintf(pos, "%s", delim);
-        }
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        const char *value = (const char *) gIter->data;
+
+        pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
+        lead_delim = delim;
     }
+
+    if (max && terminate_with_delim) {
+        sprintf(pos, "%s", delim);
+    }
+
     return rv;
 }
 
@@ -1947,10 +1953,11 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
 static void
 execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 {
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
-    xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
-    const char *id = crm_element_value(dev, F_STONITH_DEVICE);
-    const char *action = crm_element_value(op, F_STONITH_ACTION);
+    xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, msg, LOG_ERR);
+    xmlNode *op = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, msg,
+                                   LOG_ERR);
+    const char *id = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
+    const char *action = crm_element_value(op, PCMK__XA_ST_DEVICE_ACTION);
     async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
 
@@ -2023,7 +2030,8 @@ search_devices_record_result(struct device_search_s *search, const char *device,
                 return;
             }
         }
-        search->capable = g_list_append(search->capable, strdup(device));
+        search->capable = g_list_append(search->capable,
+                                        pcmk__str_copy(device));
     }
 
     if (search->replies_needed == search->replies_received) {
@@ -2158,10 +2166,12 @@ can_fence_host_with_device(stonith_device_t *dev,
     // Check eligibility as specified by pcmk_host_check
     check_type = target_list_type(dev);
     alias = g_hash_table_lookup(dev->aliases, target);
-    if (pcmk__str_eq(check_type, PCMK__VALUE_NONE, pcmk__str_casei)) {
+    if (pcmk__str_eq(check_type, PCMK_VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
-    } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(check_type, PCMK_VALUE_STATIC_LIST,
+                            pcmk__str_casei)) {
+
         if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
@@ -2169,7 +2179,8 @@ can_fence_host_with_device(stonith_device_t *dev,
             can = TRUE;
         }
 
-    } else if (pcmk__str_eq(check_type, "dynamic-list", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(check_type, PCMK_VALUE_DYNAMIC_LIST,
+                            pcmk__str_casei)) {
         time_t now = time(NULL);
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
@@ -2177,8 +2188,10 @@ can_fence_host_with_device(stonith_device_t *dev,
                                                     search->per_device_timeout);
 
             if (device_timeout > search->per_device_timeout) {
-                crm_notice("Since the pcmk_list_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                    device_timeout, dev_id, search->per_device_timeout);
+                crm_notice("Since the pcmk_list_timeout (%ds) parameter of %s "
+                           "is larger than " PCMK_OPT_STONITH_TIMEOUT
+                           " (%ds), timeout may occur",
+                           device_timeout, dev_id, search->per_device_timeout);
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -2196,12 +2209,14 @@ can_fence_host_with_device(stonith_device_t *dev,
             can = TRUE;
         }
 
-    } else if (pcmk__str_eq(check_type, "status", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(check_type, PCMK_VALUE_STATUS, pcmk__str_casei)) {
         int device_timeout = get_action_timeout(dev, check_type, search->per_device_timeout);
 
         if (device_timeout > search->per_device_timeout) {
-            crm_notice("Since the pcmk_status_timeout(%ds) parameter of %s is larger than stonith-timeout(%ds), timeout may occur",
-                device_timeout, dev_id, search->per_device_timeout);
+            crm_notice("Since the pcmk_status_timeout (%ds) parameter of %s is "
+                       "larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
+                       "timeout may occur",
+                       device_timeout, dev_id, search->per_device_timeout);
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -2246,16 +2261,10 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
         return;
     }
 
-    search = calloc(1, sizeof(struct device_search_s));
-    if (!search) {
-        crm_crit("Cannot search for capable fence devices: %s",
-                 strerror(ENOMEM));
-        callback(NULL, user_data);
-        return;
-    }
+    search = pcmk__assert_alloc(1, sizeof(struct device_search_s));
 
-    pcmk__str_update(&search->host, host);
-    pcmk__str_update(&search->action, action);
+    search->host = pcmk__str_copy(host);
+    search->action = pcmk__str_copy(action);
     search->per_device_timeout = timeout;
     search->allow_suicide = suicide;
     search->callback = callback;
@@ -2303,28 +2312,31 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
 
     CRM_CHECK(xml && action && device, return);
 
+    // PCMK__XA_ST_REQUIRED is currently used only for unfencing
     if (is_action_required(action, device)) {
         crm_trace("Action '%s' is required using %s", action, device->id);
-        crm_xml_add_int(xml, F_STONITH_DEVICE_REQUIRED, 1);
+        crm_xml_add_int(xml, PCMK__XA_ST_REQUIRED, 1);
     }
 
+    // pcmk_<action>_timeout if configured
     action_specific_timeout = get_action_timeout(device, action, 0);
     if (action_specific_timeout) {
-        crm_trace("Action '%s' has timeout %dms using %s",
+        crm_trace("Action '%s' has timeout %ds using %s",
                   action, action_specific_timeout, device->id);
-        crm_xml_add_int(xml, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
+        crm_xml_add_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
+                        action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
         crm_trace("Action '%s' has maximum random delay %ds using %s",
                   action, delay_max, device->id);
-        crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max);
+        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
     }
 
     delay_base = get_action_delay_base(device, action, target);
     if (delay_base > 0) {
-        crm_xml_add_int(xml, F_STONITH_DELAY_BASE, delay_base);
+        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_BASE, delay_base);
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {
@@ -2357,7 +2369,7 @@ add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
     if (!localhost_is_eligible(device, action, target, allow_suicide)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
-        pcmk__xe_set_bool_attr(xml, F_STONITH_ACTION_DISALLOWED, true);
+        pcmk__xe_set_bool_attr(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
     }
 }
 
@@ -2376,9 +2388,9 @@ add_action_reply(xmlNode *xml, const char *action,
                  const stonith_device_t *device, const char *target,
                  gboolean allow_suicide)
 {
-    xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
+    xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
-    crm_xml_add(child, XML_ATTR_ID, action);
+    crm_xml_add(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
     add_disallowed(child, action, device, target, allow_suicide);
 }
@@ -2402,8 +2414,11 @@ stonith_send_reply(const xmlNode *reply, int call_options,
     if (remote_peer == NULL) {
         do_local_reply(reply, client, call_options);
     } else {
-        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
-                             reply, FALSE);
+        const crm_node_t *node =
+            pcmk__get_node(0, remote_peer, NULL,
+                           pcmk__node_search_cluster_member);
+
+        pcmk__cluster_send_message(node, crm_msg_stonith_ng, reply);
     }
 }
 
@@ -2412,7 +2427,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 {
     struct st_query_data *query = user_data;
     int available_devices = 0;
-    xmlNode *dev = NULL;
+    xmlNode *wrapper = NULL;
     xmlNode *list = NULL;
     GList *lpc = NULL;
     pcmk__client_t *client = NULL;
@@ -2426,12 +2441,15 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
     }
 
-    /* Pack the results into XML */
-    list = create_xml_node(NULL, __func__);
-    crm_xml_add(list, F_STONITH_TARGET, query->target);
+    // Pack the results into XML
+    wrapper = pcmk__xe_create(query->reply, PCMK__XE_ST_CALLDATA);
+    list = pcmk__xe_create(wrapper, __func__);
+    crm_xml_add(list, PCMK__XA_ST_TARGET, query->target);
+
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
         const char *action = query->action;
+        xmlNode *dev = NULL;
 
         if (!device) {
             /* It is possible the device got unregistered while
@@ -2441,12 +2459,15 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         available_devices++;
 
-        dev = create_xml_node(list, F_STONITH_DEVICE);
-        crm_xml_add(dev, XML_ATTR_ID, device->id);
-        crm_xml_add(dev, "namespace", device->namespace);
-        crm_xml_add(dev, "agent", device->agent);
-        crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
-        crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
+        dev = pcmk__xe_create(list, PCMK__XE_ST_DEVICE_ID);
+        crm_xml_add(dev, PCMK_XA_ID, device->id);
+        crm_xml_add(dev, PCMK__XA_NAMESPACE, device->namespace);
+        crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
+
+        // Has had successful monitor, list, or status on this node
+        crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED, device->verified);
+
+        crm_xml_add_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
@@ -2482,13 +2503,13 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
         /* A query without a target wants device parameters */
         if (query->target == NULL) {
-            xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
+            xmlNode *attrs = pcmk__xe_create(dev, PCMK__XE_ATTRIBUTES);
 
             g_hash_table_foreach(device->params, hash2field, attrs);
         }
     }
 
-    crm_xml_add_int(list, F_STONITH_AVAILABLE_DEVICES, available_devices);
+    crm_xml_add_int(list, PCMK__XA_ST_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
         crm_debug("Found %d matching device%s for target '%s'",
                   available_devices, pcmk__plural_s(available_devices),
@@ -2498,10 +2519,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
                   available_devices, pcmk__plural_s(available_devices));
     }
 
-    if (list != NULL) {
-        crm_log_xml_trace(list, "Add query results");
-        add_message_xml(query->reply, F_STONITH_CALLDATA, list);
-    }
+    crm_log_xml_trace(list, "query-result");
 
     stonith_send_reply(query->reply, query->call_options, query->remote_peer,
                        client);
@@ -2513,7 +2531,6 @@ done:
     free(query->target);
     free(query->action);
     free(query);
-    free_xml(list);
     g_list_free_full(devices, free);
 }
 
@@ -2542,14 +2559,16 @@ log_async_result(const async_command_t *cmd,
     if (pcmk__result_ok(result)) {
         log_level = (cmd->target == NULL)? LOG_DEBUG : LOG_NOTICE;
         if ((result->action_stdout != NULL)
-            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_none)) {
+            && !pcmk__str_eq(cmd->action, PCMK_ACTION_METADATA,
+                             pcmk__str_none)) {
             output_log_level = LOG_DEBUG;
         }
         next = NULL;
     } else {
         log_level = (cmd->target == NULL)? LOG_NOTICE : LOG_ERR;
         if ((result->action_stdout != NULL)
-            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_none)) {
+            && !pcmk__str_eq(cmd->action, PCMK_ACTION_METADATA,
+                             pcmk__str_none)) {
             output_log_level = LOG_WARNING;
         }
     }
@@ -2633,7 +2652,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     reply = construct_async_reply(cmd, result);
     if (merged) {
-        pcmk__xe_set_bool_attr(reply, F_STONITH_MERGED, true);
+        pcmk__xe_set_bool_attr(reply, PCMK__XA_ST_OP_MERGED, true);
     }
 
     if (!stand_alone && pcmk__is_fencing_action(cmd->action)
@@ -2643,9 +2662,9 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->target);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
-        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+        crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+        crm_xml_add(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+        pcmk__cluster_send_message(NULL, crm_msg_stonith_ng, reply);
     } else {
         // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, client);
@@ -2656,18 +2675,19 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     if (stand_alone) {
         /* Do notification with a clean data object */
-        xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        xmlNode *notify_data = pcmk__xe_create(NULL, PCMK__XE_ST_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
-        crm_xml_add(notify_data, F_STONITH_TARGET, cmd->target);
-        crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
-        crm_xml_add(notify_data, F_STONITH_DELEGATE, "localhost");
-        crm_xml_add(notify_data, F_STONITH_DEVICE, cmd->device);
-        crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
-        crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
+        crm_xml_add(notify_data, PCMK__XA_ST_TARGET, cmd->target);
+        crm_xml_add(notify_data, PCMK__XA_ST_OP, cmd->op);
+        crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, "localhost");
+        crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ID, cmd->device);
+        crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
+        crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, cmd->client);
 
-        fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
-        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_FENCE, result,
+                                 notify_data);
+        fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 
@@ -2890,7 +2910,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
     CRM_CHECK((msg != NULL) && (result != NULL), return);
 
-    dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+    dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_ERR);
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
@@ -2899,7 +2919,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
         return;
     }
 
-    device_id = crm_element_value(dev, F_STONITH_DEVICE);
+    device_id = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
     if (device_id != NULL) {
         device = g_hash_table_lookup(device_list, device_id);
         if (device == NULL) {
@@ -2911,14 +2931,16 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
         schedule_stonith_command(cmd, device);
 
     } else {
-        const char *host = crm_element_value(dev, F_STONITH_TARGET);
+        const char *host = crm_element_value(dev, PCMK__XA_ST_TARGET);
 
         if (pcmk_is_set(cmd->options, st_opt_cs_nodeid)) {
             int nodeid = 0;
             crm_node_t *node = NULL;
 
             pcmk__scan_min_int(host, &nodeid, 0);
-            node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
+            node = pcmk__search_node_caches(nodeid, NULL,
+                                            pcmk__node_search_any
+                                            |pcmk__node_search_cluster_cib);
             if (node != NULL) {
                 host = node->uname;
             }
@@ -2953,10 +2975,10 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 {
     xmlNode *reply = NULL;
 
-    reply = create_xml_node(NULL, T_STONITH_REPLY);
+    reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
-    crm_xml_add(reply, "st_origin", __func__);
-    crm_xml_add(reply, F_TYPE, T_STONITH_NG);
+    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     stonith__xe_set_result(reply, result);
 
     if (request == NULL) {
@@ -2976,12 +2998,12 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 
         // Attributes to copy from request to reply
         const char *names[] = {
-            F_STONITH_OPERATION,
-            F_STONITH_CALLID,
-            F_STONITH_CLIENTID,
-            F_STONITH_CLIENTNAME,
-            F_STONITH_REMOTE_OP_ID,
-            F_STONITH_CALLOPTS
+            PCMK__XA_ST_OP,
+            PCMK__XA_ST_CALLID,
+            PCMK__XA_ST_CLIENTID,
+            PCMK__XA_ST_CLIENTNAME,
+            PCMK__XA_ST_REMOTE_OP,
+            PCMK__XA_ST_CALLOPT,
         };
 
         for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
@@ -2990,7 +3012,9 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             crm_xml_add(reply, name, value);
         }
         if (data != NULL) {
-            add_message_xml(reply, F_STONITH_CALLDATA, data);
+            xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_ST_CALLDATA);
+
+            pcmk__xml_copy(wrapper, data);
         }
     }
     return reply;
@@ -3007,20 +3031,20 @@ static xmlNode *
 construct_async_reply(const async_command_t *cmd,
                       const pcmk__action_result_t *result)
 {
-    xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
+    xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
-    crm_xml_add(reply, "st_origin", __func__);
-    crm_xml_add(reply, F_TYPE, T_STONITH_NG);
-    crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
-    crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
-    crm_xml_add(reply, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
-    crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
-    crm_xml_add(reply, F_STONITH_CLIENTNAME, cmd->client_name);
-    crm_xml_add(reply, F_STONITH_TARGET, cmd->target);
-    crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
-    crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
-    crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
-    crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
+    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
+    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    crm_xml_add(reply, PCMK__XA_ST_OP, cmd->op);
+    crm_xml_add(reply, PCMK__XA_ST_DEVICE_ID, cmd->device);
+    crm_xml_add(reply, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
+    crm_xml_add(reply, PCMK__XA_ST_CLIENTID, cmd->client);
+    crm_xml_add(reply, PCMK__XA_ST_CLIENTNAME, cmd->client_name);
+    crm_xml_add(reply, PCMK__XA_ST_TARGET, cmd->target);
+    crm_xml_add(reply, PCMK__XA_ST_DEVICE_ACTION, cmd->op);
+    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, cmd->origin);
+    crm_xml_add_int(reply, PCMK__XA_ST_CALLID, cmd->id);
+    crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
 
     stonith__xe_set_result(reply, result);
     return reply;
@@ -3081,7 +3105,8 @@ check_alternate_host(const char *target)
 static void 
 remove_relay_op(xmlNode * request)
 {
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, request, LOG_TRACE);
+    xmlNode *dev = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, request,
+                                    LOG_TRACE);
     const char *relay_op_id = NULL; 
     const char *op_id = NULL;
     const char *client_name = NULL;
@@ -3089,12 +3114,12 @@ remove_relay_op(xmlNode * request)
     remote_fencing_op_t *relay_op = NULL; 
 
     if (dev) { 
-        target = crm_element_value(dev, F_STONITH_TARGET); 
+        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
     }
 
-    relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID_RELAY);
-    op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID);
-    client_name = crm_element_value(request, F_STONITH_CLIENTNAME);
+    relay_op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP_RELAY);
+    op_id = crm_element_value(request, PCMK__XA_ST_REMOTE_OP);
+    client_name = crm_element_value(request, PCMK__XA_ST_CLIENTNAME);
 
     /* Delete RELAY operation. */
     if (relay_op_id && target && pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
@@ -3162,11 +3187,11 @@ is_privileged(const pcmk__client_t *c, const char *op)
 static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
-    xmlNode *reply = create_xml_node(NULL, "reply");
+    xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
     CRM_ASSERT(request->ipc_client != NULL);
-    crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(reply, F_STONITH_CLIENTID, request->ipc_client->id);
+    crm_xml_add(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
+    crm_xml_add(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
     return reply;
@@ -3187,11 +3212,12 @@ handle_agent_request(pcmk__request_t *request)
 static xmlNode *
 handle_update_timeout_request(pcmk__request_t *request)
 {
-    const char *call_id = crm_element_value(request->xml, F_STONITH_CALLID);
-    const char *client_id = crm_element_value(request->xml, F_STONITH_CLIENTID);
+    const char *call_id = crm_element_value(request->xml, PCMK__XA_ST_CALLID);
+    const char *client_id = crm_element_value(request->xml,
+                                              PCMK__XA_ST_CLIENTID);
     int op_timeout = 0;
 
-    crm_element_value_int(request->xml, F_STONITH_TIMEOUT, &op_timeout);
+    crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &op_timeout);
     do_stonith_async_timeout_update(client_id, call_id, op_timeout);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -3205,7 +3231,8 @@ handle_query_request(pcmk__request_t *request)
     xmlNode *dev = NULL;
     const char *action = NULL;
     const char *target = NULL;
-    const char *client_id = crm_element_value(request->xml, F_STONITH_CLIENTID);
+    const char *client_id = crm_element_value(request->xml,
+                                              PCMK__XA_ST_CLIENTID);
     struct st_query_data *query = NULL;
 
     if (request->peer != NULL) {
@@ -3218,51 +3245,51 @@ handle_query_request(pcmk__request_t *request)
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
-    dev = get_xpath_object("//@" F_STONITH_ACTION, request->xml, LOG_NEVER);
+    dev = get_xpath_object("//@" PCMK__XE_ST_DEVICE_ACTION, request->xml,
+                           LOG_NEVER);
     if (dev != NULL) {
-        const char *device = crm_element_value(dev, F_STONITH_DEVICE);
+        const char *device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
         if (pcmk__str_eq(device, "manual_ack", pcmk__str_casei)) {
             return NULL; // No query or reply necessary
         }
-        target = crm_element_value(dev, F_STONITH_TARGET);
-        action = crm_element_value(dev, F_STONITH_ACTION);
+        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
+        action = crm_element_value(dev, PCMK__XA_ST_DEVICE_ACTION);
     }
 
     crm_log_xml_trace(request->xml, "Query");
 
-    query = calloc(1, sizeof(struct st_query_data));
-    CRM_ASSERT(query != NULL);
+    query = pcmk__assert_alloc(1, sizeof(struct st_query_data));
 
     query->reply = fenced_construct_reply(request->xml, NULL, &request->result);
-    pcmk__str_update(&query->remote_peer, request->peer);
-    pcmk__str_update(&query->client_id, client_id);
-    pcmk__str_update(&query->target, target);
-    pcmk__str_update(&query->action, action);
+    query->remote_peer = pcmk__str_copy(request->peer);
+    query->client_id = pcmk__str_copy(client_id);
+    query->target = pcmk__str_copy(target);
+    query->action = pcmk__str_copy(action);
     query->call_options = request->call_options;
 
-    crm_element_value_int(request->xml, F_STONITH_TIMEOUT, &timeout);
+    crm_element_value_int(request->xml, PCMK__XA_ST_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
                         pcmk_is_set(query->call_options, st_opt_allow_suicide),
                         query, stonith_query_capable_device_cb, st_device_supports_none);
     return NULL;
 }
 
-// T_STONITH_NOTIFY
+// STONITH_OP_NOTIFY
 static xmlNode *
 handle_notify_request(pcmk__request_t *request)
 {
     const char *flag_name = NULL;
 
     CRM_ASSERT(request->ipc_client != NULL);
-    flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_ACTIVATE);
+    flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
         pcmk__set_client_flags(request->ipc_client, get_stonith_flag(flag_name));
     }
 
-    flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_DEACTIVATE);
+    flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_DEACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Disabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
@@ -3273,22 +3300,23 @@ handle_notify_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
 
-    return pcmk__ipc_create_ack(request->ipc_flags, "ack", NULL, CRM_EX_OK);
+    return pcmk__ipc_create_ack(request->ipc_flags, PCMK__XE_ACK, NULL,
+                                CRM_EX_OK);
 }
 
 // STONITH_OP_RELAY
 static xmlNode *
 handle_relay_request(pcmk__request_t *request)
 {
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request->xml,
+    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request->xml,
                                     LOG_TRACE);
 
     crm_notice("Received forwarded fencing request from "
                "%s %s to fence (%s) peer %s",
                pcmk__request_origin_type(request),
                pcmk__request_origin(request),
-               crm_element_value(dev, F_STONITH_ACTION),
-               crm_element_value(dev, F_STONITH_TARGET));
+               crm_element_value(dev, PCMK__XA_ST_DEVICE_ACTION),
+               crm_element_value(dev, PCMK__XA_ST_TARGET));
 
     if (initiate_remote_stonith_op(NULL, request->xml, FALSE) == NULL) {
         fenced_set_protocol_error(&request->result);
@@ -3324,11 +3352,11 @@ handle_fence_request(pcmk__request_t *request)
 
     } else {
         const char *alternate_host = NULL;
-        xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request->xml,
+        xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request->xml,
                                         LOG_TRACE);
-        const char *target = crm_element_value(dev, F_STONITH_TARGET);
-        const char *action = crm_element_value(dev, F_STONITH_ACTION);
-        const char *device = crm_element_value(dev, F_STONITH_DEVICE);
+        const char *target = crm_element_value(dev, PCMK__XA_ST_TARGET);
+        const char *action = crm_element_value(dev, PCMK__XA_ST_DEVICE_ACTION);
+        const char *device = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
 
         if (request->ipc_client != NULL) {
             int tolerance = 0;
@@ -3336,7 +3364,7 @@ handle_fence_request(pcmk__request_t *request)
             crm_notice("Client %s wants to fence (%s) %s using %s",
                        pcmk__request_origin(request), action,
                        target, (device? device : "any device"));
-            crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
+            crm_element_value_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
             if (stonith_check_fence_tolerance(tolerance, target, action)) {
                 pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
                                  NULL);
@@ -3354,9 +3382,12 @@ handle_fence_request(pcmk__request_t *request)
         if (alternate_host != NULL) {
             const char *client_id = NULL;
             remote_fencing_op_t *op = NULL;
+            crm_node_t *node = pcmk__get_node(0, alternate_host, NULL,
+                                              pcmk__node_search_cluster_member);
 
             if (request->ipc_client->id == 0) {
-                client_id = crm_element_value(request->xml, F_STONITH_CLIENTID);
+                client_id = crm_element_value(request->xml,
+                                              PCMK__XA_ST_CLIENTID);
             } else {
                 client_id = request->ipc_client->id;
             }
@@ -3367,12 +3398,11 @@ handle_fence_request(pcmk__request_t *request)
              */
             op = create_remote_stonith_op(client_id, request->xml, FALSE);
 
-            crm_xml_add(request->xml, F_STONITH_OPERATION, STONITH_OP_RELAY);
-            crm_xml_add(request->xml, F_STONITH_CLIENTID,
+            crm_xml_add(request->xml, PCMK__XA_ST_OP, STONITH_OP_RELAY);
+            crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
                         request->ipc_client->id);
-            crm_xml_add(request->xml, F_STONITH_REMOTE_OP_ID, op->id);
-            send_cluster_message(crm_get_peer(0, alternate_host),
-                                 crm_msg_stonith_ng, request->xml, FALSE);
+            crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
+            pcmk__cluster_send_message(node, crm_msg_stonith_ng, request->xml);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 
@@ -3416,8 +3446,8 @@ handle_history_request(pcmk__request_t *request)
 static xmlNode *
 handle_device_add_request(pcmk__request_t *request)
 {
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
+    const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
+    xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, request->xml,
                                     LOG_ERR);
 
     if (is_privileged(request->ipc_client, op)) {
@@ -3432,8 +3462,8 @@ handle_device_add_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must register device via CIB");
     }
-    fenced_send_device_notification(op, &request->result,
-                                    (dev == NULL)? NULL : ID(dev));
+    fenced_send_config_notification(op, &request->result,
+                                    (dev == NULL)? NULL : pcmk__xe_id(dev));
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3441,10 +3471,10 @@ handle_device_add_request(pcmk__request_t *request)
 static xmlNode *
 handle_device_delete_request(pcmk__request_t *request)
 {
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
+    xmlNode *dev = get_xpath_object("//" PCMK__XE_ST_DEVICE_ID, request->xml,
                                     LOG_ERR);
-    const char *device_id = crm_element_value(dev, XML_ATTR_ID);
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
+    const char *device_id = crm_element_value(dev, PCMK_XA_ID);
+    const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
 
     if (is_privileged(request->ipc_client, op)) {
         stonith_device_remove(device_id, false);
@@ -3454,7 +3484,7 @@ handle_device_delete_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete device via CIB");
     }
-    fenced_send_device_notification(op, &request->result, device_id);
+    fenced_send_config_notification(op, &request->result, device_id);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3463,7 +3493,7 @@ static xmlNode *
 handle_level_add_request(pcmk__request_t *request)
 {
     char *desc = NULL;
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
+    const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
 
     if (is_privileged(request->ipc_client, op)) {
         fenced_register_level(request->xml, &desc, &request->result);
@@ -3473,7 +3503,7 @@ handle_level_add_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must add level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, desc);
+    fenced_send_config_notification(op, &request->result, desc);
     free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
@@ -3483,7 +3513,7 @@ static xmlNode *
 handle_level_delete_request(pcmk__request_t *request)
 {
     char *desc = NULL;
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
+    const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
 
     if (is_privileged(request->ipc_client, op)) {
         fenced_unregister_level(request->xml, &desc, &request->result);
@@ -3493,7 +3523,7 @@ handle_level_delete_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, desc);
+    fenced_send_config_notification(op, &request->result, desc);
     free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
@@ -3505,9 +3535,9 @@ handle_cache_request(pcmk__request_t *request)
     int node_id = 0;
     const char *name = NULL;
 
-    crm_element_value_int(request->xml, XML_ATTR_ID, &node_id);
-    name = crm_element_value(request->xml, XML_ATTR_UNAME);
-    reap_crm_member(node_id, name);
+    crm_element_value_int(request->xml, PCMK_XA_ID, &node_id);
+    name = crm_element_value(request->xml, PCMK_XA_UNAME);
+    pcmk__cluster_forget_cluster_node(node_id, name);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
 }
@@ -3531,7 +3561,7 @@ fenced_register_handlers(void)
         { STONITH_OP_EXEC, handle_agent_request },
         { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
         { STONITH_OP_QUERY, handle_query_request },
-        { T_STONITH_NOTIFY, handle_notify_request },
+        { STONITH_OP_NOTIFY, handle_notify_request },
         { STONITH_OP_RELAY, handle_relay_request },
         { STONITH_OP_FENCE, handle_fence_request },
         { STONITH_OP_FENCE_HISTORY, handle_history_request },
@@ -3596,12 +3626,15 @@ static void
 handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 {
     // Copy, because request might be freed before we want to log this
-    char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
+    char *op = crm_element_value_copy(request, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
-    } else if (pcmk__str_any_of(op, T_STONITH_NOTIFY, STONITH_OP_FENCE, NULL)) {
+
+    } else if (pcmk__str_any_of(op, STONITH_OP_NOTIFY, STONITH_OP_FENCE,
+                                NULL)) {
         fenced_process_fencing_reply(request);
+
     } else {
         crm_err("Ignoring unknown %s reply from %s %s",
                 pcmk__s(op, "untyped"), ((client == NULL)? "peer" : "client"),
@@ -3635,13 +3668,13 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     CRM_CHECK(message != NULL, return);
 
-    if (get_xpath_object("//" T_STONITH_REPLY, message, LOG_NEVER) != NULL) {
+    if (get_xpath_object("//" PCMK__XE_ST_REPLY, message, LOG_NEVER) != NULL) {
         is_reply = true;
     }
-    crm_element_value_int(message, F_STONITH_CALLOPTS, &call_options);
+    crm_element_value_int(message, PCMK__XA_ST_CALLOPT, &call_options);
     crm_debug("Processing %ssynchronous %s %s %u from %s %s",
               pcmk_is_set(call_options, st_opt_sync_call)? "" : "a",
-              crm_element_value(message, F_STONITH_OPERATION),
+              crm_element_value(message, PCMK__XA_ST_OP),
               (is_reply? "reply" : "request"), id,
               ((client == NULL)? "peer" : "client"),
               ((client == NULL)? remote_peer : pcmk__client_name(client)));
@@ -3663,7 +3696,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, F_STONITH_OPERATION);
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_ST_OP);
         CRM_CHECK(request.op != NULL, return);
 
         if (pcmk_is_set(request.call_options, st_opt_sync_call)) {

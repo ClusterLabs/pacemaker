@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,10 +32,10 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/remote_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 
 #include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <crm/fencing/internal.h>   // stonith__*
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  include <gnutls/gnutls.h>
@@ -110,7 +110,7 @@ lrmd_list_add(lrmd_list_t * head, const char *value)
 {
     lrmd_list_t *p, *end;
 
-    p = calloc(1, sizeof(lrmd_list_t));
+    p = pcmk__assert_alloc(1, sizeof(lrmd_list_t));
     p->val = strdup(value);
 
     end = head;
@@ -147,7 +147,7 @@ lrmd_key_value_add(lrmd_key_value_t * head, const char *key, const char *value)
 {
     lrmd_key_value_t *p, *end;
 
-    p = calloc(1, sizeof(lrmd_key_value_t));
+    p = pcmk__assert_alloc(1, sizeof(lrmd_key_value_t));
     p->key = strdup(key);
     p->value = strdup(value);
 
@@ -194,11 +194,11 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
 lrmd_event_data_t *
 lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
 {
-    lrmd_event_data_t *event = calloc(1, sizeof(lrmd_event_data_t));
+    lrmd_event_data_t *event = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
-    CRM_ASSERT(event != NULL);
-    pcmk__str_update((char **) &event->rsc_id, rsc_id);
-    pcmk__str_update((char **) &event->op_type, task);
+    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
+    event->rsc_id = pcmk__str_copy(rsc_id);
+    event->op_type = pcmk__str_copy(task);
     event->interval_ms = interval_ms;
     return event;
 }
@@ -208,12 +208,18 @@ lrmd_copy_event(lrmd_event_data_t * event)
 {
     lrmd_event_data_t *copy = NULL;
 
-    copy = calloc(1, sizeof(lrmd_event_data_t));
+    copy = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
     copy->type = event->type;
-    pcmk__str_update((char **) &copy->rsc_id, event->rsc_id);
-    pcmk__str_update((char **) &copy->op_type, event->op_type);
-    pcmk__str_update((char **) &copy->user_data, event->user_data);
+
+    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
+    copy->rsc_id = pcmk__str_copy(event->rsc_id);
+    copy->op_type = pcmk__str_copy(event->op_type);
+    copy->user_data = pcmk__str_copy(event->user_data);
+    copy->output = pcmk__str_copy(event->output);
+    copy->remote_nodename = pcmk__str_copy(event->remote_nodename);
+    copy->exit_reason = pcmk__str_copy(event->exit_reason);
+
     copy->call_id = event->call_id;
     copy->timeout = event->timeout;
     copy->interval_ms = event->interval_ms;
@@ -221,15 +227,12 @@ lrmd_copy_event(lrmd_event_data_t * event)
     copy->rsc_deleted = event->rsc_deleted;
     copy->rc = event->rc;
     copy->op_status = event->op_status;
-    pcmk__str_update((char **) &copy->output, event->output);
     copy->t_run = event->t_run;
     copy->t_rcchange = event->t_rcchange;
     copy->exec_time = event->exec_time;
     copy->queue_time = event->queue_time;
     copy->connection_rc = event->connection_rc;
     copy->params = pcmk__str_table_dup(event->params);
-    pcmk__str_update((char **) &copy->remote_nodename, event->remote_nodename);
-    pcmk__str_update((char **) &copy->exit_reason, event->exit_reason);
 
     return copy;
 }
@@ -261,7 +264,8 @@ static void
 lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 {
     const char *type;
-    const char *proxy_session = crm_element_value(msg, F_LRMD_IPC_SESSION);
+    const char *proxy_session = crm_element_value(msg,
+                                                  PCMK__XA_LRMD_IPC_SESSION);
     lrmd_private_t *native = lrmd->lrmd_private;
     lrmd_event_data_t event = { 0, };
 
@@ -276,41 +280,57 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     }
 
     event.remote_nodename = native->remote_nodename;
-    type = crm_element_value(msg, F_LRMD_OPERATION);
-    crm_element_value_int(msg, F_LRMD_CALLID, &event.call_id);
-    event.rsc_id = crm_element_value(msg, F_LRMD_RSC_ID);
+    type = crm_element_value(msg, PCMK__XA_LRMD_OP);
+    crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
+    event.rsc_id = crm_element_value(msg, PCMK__XA_LRMD_RSC_ID);
 
     if (pcmk__str_eq(type, LRMD_OP_RSC_REG, pcmk__str_none)) {
         event.type = lrmd_event_register;
     } else if (pcmk__str_eq(type, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         event.type = lrmd_event_unregister;
     } else if (pcmk__str_eq(type, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
+        int rc = 0;
+        int exec_time = 0;
+        int queue_time = 0;
         time_t epoch = 0;
 
-        crm_element_value_int(msg, F_LRMD_TIMEOUT, &event.timeout);
-        crm_element_value_ms(msg, F_LRMD_RSC_INTERVAL, &event.interval_ms);
-        crm_element_value_int(msg, F_LRMD_RSC_START_DELAY, &event.start_delay);
-        crm_element_value_int(msg, F_LRMD_EXEC_RC, (int *)&event.rc);
-        crm_element_value_int(msg, F_LRMD_OP_STATUS, &event.op_status);
-        crm_element_value_int(msg, F_LRMD_RSC_DELETED, &event.rsc_deleted);
+        crm_element_value_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
+        crm_element_value_ms(msg, PCMK__XA_LRMD_RSC_INTERVAL,
+                             &event.interval_ms);
+        crm_element_value_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
+                              &event.start_delay);
 
-        crm_element_value_epoch(msg, F_LRMD_RSC_RUN_TIME, &epoch);
+        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_RC, &rc);
+        event.rc = (enum ocf_exitcode) rc;
+
+        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS,
+                              &event.op_status);
+        crm_element_value_int(msg, PCMK__XA_LRMD_RSC_DELETED,
+                              &event.rsc_deleted);
+
+        crm_element_value_epoch(msg, PCMK__XA_LRMD_RUN_TIME, &epoch);
         event.t_run = (unsigned int) epoch;
 
-        crm_element_value_epoch(msg, F_LRMD_RSC_RCCHANGE_TIME, &epoch);
+        crm_element_value_epoch(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &epoch);
         event.t_rcchange = (unsigned int) epoch;
 
-        crm_element_value_int(msg, F_LRMD_RSC_EXEC_TIME, (int *)&event.exec_time);
-        crm_element_value_int(msg, F_LRMD_RSC_QUEUE_TIME, (int *)&event.queue_time);
+        crm_element_value_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
+        CRM_LOG_ASSERT(exec_time >= 0);
+        event.exec_time = QB_MAX(0, exec_time);
 
-        event.op_type = crm_element_value(msg, F_LRMD_RSC_ACTION);
-        event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
+        crm_element_value_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
+        CRM_LOG_ASSERT(queue_time >= 0);
+        event.queue_time = QB_MAX(0, queue_time);
+
+        event.op_type = crm_element_value(msg, PCMK__XA_LRMD_RSC_ACTION);
+        event.user_data = crm_element_value(msg,
+                                            PCMK__XA_LRMD_RSC_USERDATA_STR);
         event.type = lrmd_event_exec_complete;
 
         /* output and exit_reason may be freed by a callback */
-        event.output = crm_element_value_copy(msg, F_LRMD_RSC_OUTPUT);
+        event.output = crm_element_value_copy(msg, PCMK__XA_LRMD_RSC_OUTPUT);
         lrmd__set_result(&event, event.rc, event.op_status,
-                         crm_element_value(msg, F_LRMD_RSC_EXIT_REASON));
+                         crm_element_value(msg, PCMK__XA_LRMD_RSC_EXIT_REASON));
 
         event.params = xml2list(msg);
     } else if (pcmk__str_eq(type, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
@@ -338,7 +358,7 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->callback != NULL) {
-        xmlNode *msg = string2xml(buffer);
+        xmlNode *msg = pcmk__xml_parse(buffer);
 
         lrmd_dispatch_internal(lrmd, msg);
         free_xml(msg);
@@ -415,7 +435,8 @@ lrmd_tls_dispatch(gpointer userdata)
             break;
     }
     while (xml) {
-        const char *msg_type = crm_element_value(xml, F_LRMD_REMOTE_MSG_TYPE);
+        const char *msg_type = crm_element_value(xml,
+                                                 PCMK__XA_LRMD_REMOTE_MSG_TYPE);
         if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             lrmd_dispatch_internal(lrmd, xml);
         } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
@@ -423,7 +444,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 native->expected_late_replies--;
             } else {
                 int reply_id = 0;
-                crm_element_value_int(xml, F_LRMD_CALLID, &reply_id);
+                crm_element_value_int(xml, PCMK__XA_LRMD_CALLID, &reply_id);
                 /* if this happens, we want to know about it */
                 crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
             }
@@ -517,20 +538,20 @@ static xmlNode *
 lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
                enum lrmd_call_options options)
 {
-    xmlNode *op_msg = create_xml_node(NULL, "lrmd_command");
+    xmlNode *op_msg = NULL;
 
-    CRM_CHECK(op_msg != NULL, return NULL);
     CRM_CHECK(token != NULL, return NULL);
 
-    crm_xml_add(op_msg, F_XML_TAGNAME, "lrmd_command");
-    crm_xml_add(op_msg, F_TYPE, T_LRMD);
-    crm_xml_add(op_msg, F_LRMD_CALLBACK_TOKEN, token);
-    crm_xml_add(op_msg, F_LRMD_OPERATION, op);
-    crm_xml_add_int(op_msg, F_LRMD_TIMEOUT, timeout);
-    crm_xml_add_int(op_msg, F_LRMD_CALLOPTS, options);
+    op_msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
+    crm_xml_add(op_msg, PCMK__XA_T, PCMK__VALUE_LRMD);
+    crm_xml_add(op_msg, PCMK__XA_LRMD_OP, op);
+    crm_xml_add_int(op_msg, PCMK__XA_LRMD_TIMEOUT, timeout);
+    crm_xml_add_int(op_msg, PCMK__XA_LRMD_CALLOPT, options);
 
     if (data != NULL) {
-        add_message_xml(op_msg, F_LRMD_CALLDATA, data);
+        xmlNode *wrapper = pcmk__xe_create(op_msg, PCMK__XE_LRMD_CALLDATA);
+
+        pcmk__xml_copy(wrapper, data);
     }
 
     crm_trace("Created executor %s command with call options %.8lx (%d)",
@@ -584,6 +605,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
         gnutls_bye(*native->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
+        native->remote->tls_session = NULL;
     }
     if (native->psk_cred_c) {
         gnutls_psk_free_client_credentials(native->psk_cred_c);
@@ -607,7 +629,6 @@ lrmd_tls_connection_destroy(gpointer userdata)
     native->source = 0;
     native->sock = 0;
     native->psk_cred_c = NULL;
-    native->remote->tls_session = NULL;
     native->sock = 0;
 
     if (native->callback) {
@@ -624,8 +645,8 @@ int
 lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                       const char *msg_type)
 {
-    crm_xml_add_int(msg, F_LRMD_REMOTE_MSG_ID, id);
-    crm_xml_add(msg, F_LRMD_REMOTE_MSG_TYPE, msg_type);
+    crm_xml_add_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, id);
+    crm_xml_add(msg, PCMK__XA_LRMD_REMOTE_MSG_TYPE, msg_type);
     return pcmk__remote_send_xml(session, msg);
 }
 
@@ -672,8 +693,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             }
         }
 
-        crm_element_value_int(*reply, F_LRMD_REMOTE_MSG_ID, &reply_id);
-        msg_type = crm_element_value(*reply, F_LRMD_REMOTE_MSG_TYPE);
+        crm_element_value_int(*reply, PCMK__XA_LRMD_REMOTE_MSG_ID, &reply_id);
+        msg_type = crm_element_value(*reply, PCMK__XA_LRMD_REMOTE_MSG_TYPE);
 
         if (!msg_type) {
             crm_err("Empty msg type received while waiting for reply");
@@ -905,7 +926,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     rc = pcmk_ok;
     crm_trace("%s op reply received", op);
-    if (crm_element_value_int(op_reply, F_LRMD_RC, &rc) != 0) {
+    if (crm_element_value_int(op_reply, PCMK__XA_LRMD_RC, &rc) != 0) {
         rc = -ENOMSG;
         goto done;
     }
@@ -932,9 +953,9 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
 {
     int rc;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
     rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
     free_xml(data);
@@ -949,14 +970,14 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     int rc = pcmk_rc_ok;
     const char *value;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_OPERATION);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XA_LRMD_OP);
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
 
-    value = g_hash_table_lookup(hash, "stonith-watchdog-timeout");
+    value = g_hash_table_lookup(hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
     if ((value) &&
         (stonith__watchdog_fencing_enabled_for_node(native->remote_nodename))) {
-       crm_xml_add(data, F_LRMD_WATCHDOG, value);
+       crm_xml_add(data, PCMK__XA_LRMD_WATCHDOG, value);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
@@ -971,16 +992,16 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *reply = NULL;
-    xmlNode *hello = create_xml_node(NULL, "lrmd_command");
+    xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
 
-    crm_xml_add(hello, F_TYPE, T_LRMD);
-    crm_xml_add(hello, F_LRMD_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(hello, F_LRMD_CLIENTNAME, name);
-    crm_xml_add(hello, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+    crm_xml_add(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
+    crm_xml_add(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
+    crm_xml_add(hello, PCMK__XA_LRMD_CLIENTNAME, name);
+    crm_xml_add(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     /* advertise that we are a proxy provider */
     if (native->proxy_callback) {
-        pcmk__xe_set_bool_attr(hello, F_LRMD_IS_IPC_PROVIDER, true);
+        pcmk__xe_set_bool_attr(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
     }
 
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
@@ -992,13 +1013,15 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         crm_err("Did not receive registration reply");
         rc = -EPROTO;
     } else {
-        const char *version = crm_element_value(reply, F_LRMD_PROTOCOL_VERSION);
-        const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
-        const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
+        const char *version = crm_element_value(reply,
+                                                PCMK__XA_LRMD_PROTOCOL_VERSION);
+        const char *msg_type = crm_element_value(reply, PCMK__XA_LRMD_OP);
+        const char *tmp_ticket = crm_element_value(reply,
+                                                   PCMK__XA_LRMD_CLIENTID);
         const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
         long long uptime = -1;
 
-        crm_element_value_int(reply, F_LRMD_RC, &rc);
+        crm_element_value_int(reply, PCMK__XA_LRMD_RC, &rc);
 
         /* The remote executor may add its uptime to the XML reply, which is
          * useful in handling transient attributes when the connection to the
@@ -1088,7 +1111,7 @@ copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
     CRM_ASSERT((dest != NULL) && (source != NULL) && (source->data != NULL));
 
     dest->data = gnutls_malloc(source->size);
-    CRM_ASSERT(dest->data);
+    pcmk__mem_assert(dest->data);
 
     memcpy(dest->data, source->data, source->size);
     dest->size = source->size;
@@ -1281,6 +1304,8 @@ lrmd__init_remote_key(gnutls_datum_t *key)
          * would be better to never use the Corosync location as a fallback.
          * However, that would break any deployments currently working with the
          * fallbacks.
+         *
+         * @COMPAT Change at 3.0.0
          */
     }
 
@@ -1292,6 +1317,7 @@ lrmd__init_remote_key(gnutls_datum_t *key)
     }
 
     // Try fallback location, if environment wasn't set to it and default failed
+    // @COMPAT Drop at 3.0.0
     if (env_is_fallback) {
         alt_rc = env_rc;
     } else if (default_rc != pcmk_rc_ok) {
@@ -1321,16 +1347,28 @@ lrmd__init_remote_key(gnutls_datum_t *key)
                  (default_rc == pcmk_rc_ok)? "default" : "fallback",
                  (default_rc == pcmk_rc_ok)? DEFAULT_REMOTE_KEY_LOCATION : ALT_REMOTE_KEY_LOCATION,
                  pcmk_rc_str(env_rc));
+        crm_warn("This undocumented behavior is deprecated and unsafe and will "
+                 "be removed in a future release");
         return pcmk_rc_ok;
     }
 
-    if ((default_rc != pcmk_rc_ok) && (alt_rc != pcmk_rc_ok)) {
-        // Environment unset, defaults failed
-        crm_warn("Could not read Pacemaker Remote key from default location %s"
-                 " (or fallback location %s): %s",
-                 DEFAULT_REMOTE_KEY_LOCATION, ALT_REMOTE_KEY_LOCATION,
-                 pcmk_rc_str(default_rc));
-        return ENOKEY;
+    if (default_rc != pcmk_rc_ok) {
+        if (alt_rc == pcmk_rc_ok) {
+            // Environment variable unset, used alternate location
+            // This gets caught by the default return below, but we additionally
+            // warn on this behavior here.
+            crm_warn("Read Pacemaker Remote key from alternate location %s",
+                     ALT_REMOTE_KEY_LOCATION);
+            crm_warn("This undocumented behavior is deprecated and unsafe and will "
+                     "be removed in a future release");
+        } else {
+            // Environment unset, defaults failed
+            crm_warn("Could not read Pacemaker Remote key from default location %s"
+                     " (or fallback location %s): %s",
+                     DEFAULT_REMOTE_KEY_LOCATION, ALT_REMOTE_KEY_LOCATION,
+                     pcmk_rc_str(default_rc));
+            return ENOKEY;
+        }
     }
 
     return pcmk_rc_ok; // Environment variable unset, a default worked
@@ -1650,7 +1688,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
         gnutls_bye(*native->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = 0;
+        native->remote->tls_session = NULL;
     }
 
     if (native->async_timer) {
@@ -1724,13 +1762,13 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
         return -EINVAL;
     }
 
-    data = create_xml_node(NULL, F_LRMD_RSC);
+    data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    crm_xml_add(data, F_LRMD_CLASS, class);
-    crm_xml_add(data, F_LRMD_PROVIDER, provider);
-    crm_xml_add(data, F_LRMD_TYPE, type);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_CLASS, class);
+    crm_xml_add(data, PCMK__XA_LRMD_PROVIDER, provider);
+    crm_xml_add(data, PCMK__XA_LRMD_TYPE, type);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_REG, data, NULL, 0, options, TRUE);
     free_xml(data);
 
@@ -1741,10 +1779,10 @@ static int
 lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_UNREG, data, NULL, 0, options, TRUE);
     free_xml(data);
 
@@ -1755,13 +1793,12 @@ lrmd_rsc_info_t *
 lrmd_new_rsc_info(const char *rsc_id, const char *standard,
                   const char *provider, const char *type)
 {
-    lrmd_rsc_info_t *rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
+    lrmd_rsc_info_t *rsc_info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
-    CRM_ASSERT(rsc_info);
-    pcmk__str_update(&rsc_info->id, rsc_id);
-    pcmk__str_update(&rsc_info->standard, standard);
-    pcmk__str_update(&rsc_info->provider, provider);
-    pcmk__str_update(&rsc_info->type, type);
+    rsc_info->id = pcmk__str_copy(rsc_id);
+    rsc_info->standard = pcmk__str_copy(standard);
+    rsc_info->provider = pcmk__str_copy(provider);
+    rsc_info->type = pcmk__str_copy(type);
     return rsc_info;
 }
 
@@ -1789,14 +1826,14 @@ static lrmd_rsc_info_t *
 lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options)
 {
     lrmd_rsc_info_t *rsc_info = NULL;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
     xmlNode *output = NULL;
     const char *class = NULL;
     const char *provider = NULL;
     const char *type = NULL;
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     lrmd_send_command(lrmd, LRMD_OP_RSC_INFO, data, &output, 0, options, TRUE);
     free_xml(data);
 
@@ -1804,9 +1841,9 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
         return NULL;
     }
 
-    class = crm_element_value(output, F_LRMD_CLASS);
-    provider = crm_element_value(output, F_LRMD_PROVIDER);
-    type = crm_element_value(output, F_LRMD_TYPE);
+    class = crm_element_value(output, PCMK__XA_LRMD_CLASS);
+    provider = crm_element_value(output, PCMK__XA_LRMD_PROVIDER);
+    type = crm_element_value(output, PCMK__XA_LRMD_TYPE);
 
     if (!class || !type) {
         free_xml(output);
@@ -1849,9 +1886,9 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
 
     // Send request
     if (rsc_id) {
-        data = create_xml_node(NULL, F_LRMD_RSC);
-        crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-        crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
+        data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+        crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+        crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     }
     rc = lrmd_send_command(lrmd, LRMD_OP_GET_RECURRING, data, &output_xml,
                            timeout_ms, options, TRUE);
@@ -1863,17 +1900,21 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     if ((rc != pcmk_ok) || (output_xml == NULL)) {
         return rc;
     }
-    for (xmlNode *rsc_xml = first_named_child(output_xml, F_LRMD_RSC);
+    for (const xmlNode *rsc_xml = pcmk__xe_first_child(output_xml,
+                                                       PCMK__XE_LRMD_RSC, NULL,
+                                                       NULL);
          (rsc_xml != NULL) && (rc == pcmk_ok);
-         rsc_xml = crm_next_same_xml(rsc_xml)) {
+         rsc_xml = pcmk__xe_next_same(rsc_xml)) {
 
-        rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+        rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
         if (rsc_id == NULL) {
             crm_err("Could not parse recurring operation information from executor");
             continue;
         }
-        for (xmlNode *op_xml = first_named_child(rsc_xml, T_LRMD_RSC_OP);
-             op_xml != NULL; op_xml = crm_next_same_xml(op_xml)) {
+        for (const xmlNode *op_xml = pcmk__xe_first_child(rsc_xml,
+                                                          PCMK__XE_LRMD_RSC_OP,
+                                                          NULL, NULL);
+             op_xml != NULL; op_xml = pcmk__xe_next_same(op_xml)) {
 
             lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
 
@@ -1882,11 +1923,12 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
                 break;
             }
             op_info->rsc_id = strdup(rsc_id);
-            op_info->action = crm_element_value_copy(op_xml, F_LRMD_RSC_ACTION);
-            op_info->interval_ms_s = crm_element_value_copy(op_xml,
-                                                            F_LRMD_RSC_INTERVAL);
-            op_info->timeout_ms_s = crm_element_value_copy(op_xml,
-                                                           F_LRMD_TIMEOUT);
+            op_info->action = crm_element_value_copy(op_xml,
+                                                     PCMK__XA_LRMD_RSC_ACTION);
+            op_info->interval_ms_s =
+                crm_element_value_copy(op_xml, PCMK__XA_LRMD_RSC_INTERVAL);
+            op_info->timeout_ms_s =
+                crm_element_value_copy(op_xml, PCMK__XA_LRMD_TIMEOUT);
             *output = g_list_prepend(*output, op_info);
         }
     }
@@ -1929,7 +1971,7 @@ lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
     if (lrmd == NULL) {
         return -ENOTCONN;
     }
-    crm_xml_add(msg, F_LRMD_OPERATION, CRM_OP_IPC_FWD);
+    crm_xml_add(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
 
     crm_log_xml_trace(msg, "PROXY_OUTBOUND");
     return lrmd_send_xml_no_reply(lrmd, msg);
@@ -1985,7 +2027,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
 
     params_table = pcmk__strkey_table(free, free);
     for (const lrmd_key_value_t *param = params; param; param = param->next) {
-        g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
+        pcmk__insert_dup(params_table, param->key, param->value);
     }
     action = services__create_resource_action(type, standard, provider, type,
                                               PCMK_ACTION_META_DATA, 0,
@@ -2029,17 +2071,17 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
               enum lrmd_call_options options, lrmd_key_value_t * params)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
-    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    crm_xml_add(data, F_LRMD_RSC_ACTION, action);
-    crm_xml_add(data, F_LRMD_RSC_USERDATA_STR, userdata);
-    crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
-    crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
-    crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
+    crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+    crm_xml_add_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
@@ -2058,14 +2100,14 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
                     int timeout, lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_ALERT);
-    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_ALERT);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
     lrmd_key_value_t *tmp = NULL;
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_ALERT_ID, alert_id);
-    crm_xml_add(data, F_LRMD_ALERT_PATH, alert_path);
-    crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
+    crm_xml_add(data, PCMK__XA_LRMD_ALERT_PATH, alert_path);
+    crm_xml_add_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
@@ -2084,12 +2126,12 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
                 guint interval_ms)
 {
     int rc = pcmk_ok;
-    xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
-    crm_xml_add(data, F_LRMD_ORIGIN, __func__);
-    crm_xml_add(data, F_LRMD_RSC_ACTION, action);
-    crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
+    crm_xml_add(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ACTION, action);
+    crm_xml_add(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    crm_xml_add_ms(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
     free_xml(data);
     return rc;
@@ -2512,6 +2554,8 @@ lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
 
     event->rc = rc;
     event->op_status = op_status;
+
+    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
     pcmk__str_update((char **) &event->exit_reason, exit_reason);
 }
 

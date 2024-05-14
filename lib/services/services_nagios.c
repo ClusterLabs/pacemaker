@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@
 #include <sys/resource.h>
 
 #include "crm/crm.h"
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include "crm/common/mainloop.h"
 #include "crm/services.h"
 
@@ -73,7 +73,7 @@ services__nagios_prepare(svc_action_t *op)
                 return E2BIG;
             }
 
-            if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei)
+            if (pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_casei)
                 || strstr(key, CRM_META "_")) {
                 continue;
             }
@@ -203,7 +203,7 @@ services__get_nagios_metadata(const char *type, char **output)
 
     } else {
         crm_trace("Reading %d bytes from file", length);
-        *output = calloc(1, (length + 1));
+        *output = pcmk__assert_alloc(1, (length + 1));
         read_len = fread(*output, 1, length, file_strm);
         if (read_len != length) {
             crm_err("Calculated and read bytes differ: %d vs. %d",

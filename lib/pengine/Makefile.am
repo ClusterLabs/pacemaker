@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,12 +17,11 @@ SUBDIRS = . tests
 ## libraries
 lib_LTLIBRARIES		= libpe_rules.la 	\
 			  libpe_status.la
-check_LTLIBRARIES 	= libpe_rules_test.la 	\
-			  libpe_status_test.la
+check_LTLIBRARIES 	= libpe_status_test.la
 
 noinst_HEADERS		= pe_status_private.h
 
-libpe_rules_la_LDFLAGS	= -version-info 30:1:4
+libpe_rules_la_LDFLAGS	= -version-info 30:2:4
 
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -34,7 +33,7 @@ libpe_rules_la_SOURCES	= common.c
 libpe_rules_la_SOURCES	+= rules.c
 libpe_rules_la_SOURCES	+= rules_alerts.c
 
-libpe_status_la_LDFLAGS	= -version-info 35:0:7
+libpe_status_la_LDFLAGS	= -version-info 35:1:7
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -63,23 +62,11 @@ libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
 
 #
-# libpe_rules_test and libpe_status_test are only used with unit tests, so we can
+# libpe_status_test is only used with unit tests, so we can
 # mock system calls.  See lib/common/mock.c for details.
 #
 
 include $(top_srcdir)/mk/tap.mk
-
-libpe_rules_test_la_SOURCES = $(libpe_rules_la_SOURCES)
-libpe_rules_test_la_LDFLAGS = $(libpe_rules_la_LDFLAGS)	\
-			      -rpath $(libdir) 		\
-			      $(LDFLAGS_WRAP)
-# See comments on libcrmcommon_test_la in lib/common/Makefile.am regarding these flags.
-libpe_rules_test_la_CFLAGS = $(libpe_rules_la_CFLAGS) 	\
-			     -DPCMK__UNIT_TESTING 	\
-			     -fno-builtin -fno-inline
-libpe_rules_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la 	\
-			     -lcmocka 						\
-			     -lm
 
 libpe_status_test_la_SOURCES = $(libpe_status_la_SOURCES)
 libpe_status_test_la_LDFLAGS = $(libpe_status_la_LDFLAGS) 	\

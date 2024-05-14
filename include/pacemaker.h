@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -196,19 +196,31 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
                            unsigned int message_timeout_ms);
 
 /*!
+ * \brief Remove a resource
+ *
+ * \param[in,out] xml   Destination for the result, as an XML tree
+ * \param[in] rsc_id    Resource to remove
+ * \param[in] rsc_type  Type of the resource ("primitive", "group", etc.)
+ *
+ * \return Standard Pacemaker return code
+ * \note This function will return \p pcmk_rc_ok if \p rsc_id doesn't exist
+ *       or if \p rsc_type is incorrect for \p rsc_id (deleting something
+ *       that doesn't exist always succeeds).
+ */
+int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type);
+
+/*!
  * \brief Calculate and output resource operation digests
  *
  * \param[out]    xml        Where to store XML with result
  * \param[in,out] rsc        Resource to calculate digests for
  * \param[in]     node       Node whose operation history should be used
  * \param[in]     overrides  Hash table of configuration parameters to override
- * \param[in]     scheduler  Scheduler data (with status)
  *
  * \return Standard Pacemaker return code
  */
 int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
-                          const pcmk_node_t *node, GHashTable *overrides,
-                          pcmk_scheduler_t *scheduler);
+                          const pcmk_node_t *node, GHashTable *overrides);
 
 /*!
  * \brief Simulate a cluster's response to events
@@ -243,6 +255,22 @@ int pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
                   unsigned int section_opts, const char *use_date,
                   const char *input_file, const char *graph_file,
                   const char *dot_file);
+
+/*!
+ * \brief Verify that a CIB is error-free or output errors and warnings
+ *
+ * This high-level function essentially implements crm_verify(8). It operates
+ * on an input CIB file, which can be inputted through one of several ways. It
+ * writes out XML-formatted output.
+ *
+ * \param[in,out] xml          The destination for the result, as an XML tree
+ * \param[in]     cib_source   Source of the CIB: 
+ *                             NULL -> use live cib, "-" -> stdin
+ *                             "<..." -> xml str, otherwise -> xml file name
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_verify(xmlNodePtr *xml, const char *cib_source);
 
 /*!
  * \brief Get nodes list
@@ -375,6 +403,144 @@ int pcmk_list_providers(xmlNodePtr *xml, const char *agent_spec);
  * \return Standard Pacemaker return code
  */
 int pcmk_list_standards(xmlNodePtr *xml);
+
+/*!
+ * \brief List all available cluster options
+ *
+ * These are options that affect the entire cluster.
+ *
+ * \param[in,out] xml  The destination for the result, as an XML tree
+ * \param[in]     all  If \c true, include advanced and deprecated options
+ *                     (currently always treated as true)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_cluster_options(xmlNode **xml, bool all);
+
+/*!
+ * \brief List common fencing resource parameters
+ *
+ * These are parameters that are available for all fencing resources, regardless
+ * of type. They are processed by Pacemaker, rather than by the fence agent or
+ * the fencing library.
+ *
+ * \param[in,out] xml  The destination for the result, as an XML tree
+ * \param[in]     all  If \c true, include advanced and deprecated options
+ *                     (currently always treated as true)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_fencing_params(xmlNode **xml, bool all);
+
+/*!
+ * \internal
+ * \brief List meta-attributes applicable to primitive resources as OCF-like XML
+ *
+ * \param[in,out] out  Output object
+ * \param[in]     all  If \c true, include advanced and deprecated options (this
+ *                     is always treated as true for XML output objects)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_primitive_meta(xmlNode **xml, bool all);
+
+/*!
+ * \brief Return constraints that apply to the given ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find constraint for, or \c NULL for
+ *                              all ticket constraints
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
+
+
+/*!
+ * \brief Delete a ticket's state from the local cluster site
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     ticket_id Ticket to delete
+ * \param[in]     force     If \c true, delete the ticket even if it has
+ *                          been granted
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
+
+/*!
+ * \brief Return the value of a ticket's attribute
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find attribute value for
+ * \param[in]     attr_name     Attribute's name to find value for
+ * \param[in]     attr_default  If either the ticket or the attribute do not
+ *                              exist, use this as the value in \p xml
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+                         const char *attr_name, const char *attr_default);
+
+/*!
+ * \brief Return information about the given ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find info value for, or \c NULL for
+ *                              all tickets
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
+
+/*!
+ * \brief Remove the given attribute(s) from a ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to remove attributes from
+ * \param[in]     attr_delete   A list of attribute names
+ * \param[in]     force         Attempting to remove the granted attribute of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete,
+                            bool force);
+
+/*!
+ * \brief Set the given attribute(s) on a ticket
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to set attributes on
+ * \param[in]     attr_set      A hash table of attributes, where keys are the
+ *                              attribute names and the values are the attribute
+ *                              values
+ * \param[in]     force         Attempting to change the granted status of
+ *                              \p ticket_id will cause this function to return
+ *                              \c EACCES unless \p force is set to \c true
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
+ *       ticket will be created with the given attributes.
+ */
+int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
+                         bool force);
+
+/*!
+ * \brief Return a ticket's state XML
+ *
+ * \param[in,out] xml           The destination for the result, as an XML tree
+ * \param[in]     ticket_id     Ticket to find state for, or \c NULL for all
+ *                              tickets
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note If \p ticket_id is not \c NULL and more than one ticket exists with
+ *       that ID, this function returns \c pcmk_rc_duplicate_id.
+ */
+int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 

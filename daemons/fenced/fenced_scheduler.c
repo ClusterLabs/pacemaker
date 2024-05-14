@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -124,14 +124,14 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             register_if_fencing_device(iter->data, NULL);
-            if (pe_rsc_is_clone(rsc)) {
+            if (pcmk__is_clone(rsc)) {
                 return; // Only one instance needs to be checked for clones
             }
         }
         return;
     }
 
-    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return; // Not a fencing device
     }
@@ -163,8 +163,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     }
 
     // If device is in a group, check whether local node is allowed for group
-    if ((rsc->parent != NULL)
-        && (rsc->parent->variant == pcmk_rsc_variant_group)) {
+    if (pcmk__is_group(rsc->parent)) {
         pcmk_node_t *group_node = local_node_allowed_for(rsc->parent);
 
         if ((group_node != NULL) && (group_node->weight < 0)) {
@@ -177,8 +176,12 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     crm_debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE);
+    agent = crm_element_value(rsc->xml, PCMK_XA_TYPE);
 
+    /* @COMPAT Support for node attribute expressions in rules for resource
+     * meta-attributes is deprecated. When we can break behavioral backward
+     * compatibility, replace node with NULL here.
+     */
     get_meta_attributes(rsc->meta, rsc, node, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,11 +10,11 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
@@ -48,7 +48,7 @@ attrd_lrmd_connect(void)
         int ret = -ENOTCONN;
 
         for (int fails = 0; fails < max_attempts; ++fails) {
-            ret = the_lrmd->cmds->connect(the_lrmd, T_ATTRD, NULL);
+            ret = the_lrmd->cmds->connect(the_lrmd, PCMK__VALUE_ATTRD, NULL);
             if (ret == pcmk_ok) {
                 break;
             }
@@ -93,11 +93,11 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmalerts = output;
-    if ((crmalerts != NULL) && !pcmk__xe_is(crmalerts, XML_CIB_TAG_ALERTS)) {
-        crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
+    if ((crmalerts != NULL) && !pcmk__xe_is(crmalerts, PCMK_XE_ALERTS)) {
+        crmalerts = pcmk__xe_first_child(crmalerts, PCMK_XE_ALERTS, NULL, NULL);
     }
     if (!crmalerts) {
-        crm_notice("CIB query result has no " XML_CIB_TAG_ALERTS " section");
+        crm_notice("CIB query result has no " PCMK_XE_ALERTS " section");
         return;
     }
 
@@ -113,7 +113,7 @@ attrd_read_options(gpointer user_data)
     CRM_CHECK(the_cib != NULL, return TRUE);
 
     call_id = the_cib->cmds->query(the_cib,
-                                   pcmk__cib_abs_xpath_for(XML_CIB_TAG_ALERTS),
+                                   pcmk__cib_abs_xpath_for(PCMK_XE_ALERTS),
                                    NULL, cib_xpath|cib_scope_local);
 
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, NULL,

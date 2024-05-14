@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2023 the Pacemaker project contributors
+ * Copyright 2008-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,9 +22,9 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/xml.h>
 #include <crm/common/remote_internal.h>
 #include <crm/common/output_internal.h>
 
@@ -126,7 +126,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
         }
 
-        crm_element_value_int(op_reply, F_CIB_CALLID, &reply_id);
+        crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
 
         if (reply_id == msg_id) {
             break;
@@ -167,7 +167,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     crm_trace("Synchronous reply received");
 
     /* Start processing the reply... */
-    if (crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
+    if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
         rc = -EPROTO;
     }
 
@@ -189,12 +189,14 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         /* do nothing more */
 
     } else if (!(call_options & cib_discard_reply)) {
-        xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
+        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
+                                                NULL, NULL);
+        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         if (tmp == NULL) {
             crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
         } else {
-            *output_data = copy_xml(tmp);
+            *output_data = pcmk__xml_copy(NULL, tmp);
         }
     }
 
@@ -218,14 +220,14 @@ cib_remote_callback_dispatch(gpointer user_data)
 
     msg = pcmk__remote_message_xml(&private->callback);
     while (msg) {
-        const char *type = crm_element_value(msg, F_TYPE);
+        const char *type = crm_element_value(msg, PCMK__XA_T);
 
         crm_trace("Activating %s callbacks...", type);
 
-        if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
+        if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
             cib_native_callback(cib, msg, 0, 0);
 
-        } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
             g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
         } else {
@@ -380,11 +382,11 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     /* login to server */
-    login = create_xml_node(NULL, T_CIB_COMMAND);
-    crm_xml_add(login, "op", "authenticate");
-    crm_xml_add(login, "user", private->user);
-    crm_xml_add(login, "password", private->passwd);
-    crm_xml_add(login, "hidden", "password");
+    login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
+    crm_xml_add(login, PCMK_XA_OP, "authenticate");
+    crm_xml_add(login, PCMK_XA_USER, private->user);
+    crm_xml_add(login, PCMK__XA_PASSWORD, private->passwd);
+    crm_xml_add(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
 
     pcmk__remote_send_xml(connection, login);
     free_xml(login);
@@ -402,8 +404,9 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     } else {
         /* grab the token */
-        const char *msg_type = crm_element_value(answer, F_CIB_OPERATION);
-        const char *tmp_ticket = crm_element_value(answer, F_CIB_CLIENTID);
+        const char *msg_type = crm_element_value(answer, PCMK__XA_CIB_OP);
+        const char *tmp_ticket = crm_element_value(answer,
+                                                   PCMK__XA_CIB_CLIENTID);
 
         if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);
@@ -538,12 +541,12 @@ cib_remote_inputfd(cib_t * cib)
 static int
 cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 {
-    xmlNode *notify_msg = create_xml_node(NULL, T_CIB_COMMAND);
+    xmlNode *notify_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
-    crm_xml_add(notify_msg, F_CIB_NOTIFY_TYPE, callback);
-    crm_xml_add_int(notify_msg, F_CIB_NOTIFY_ACTIVATE, enabled);
+    crm_xml_add(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
+    crm_xml_add(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
+    crm_xml_add_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
     pcmk__remote_send_xml(&private->callback, notify_msg);
     free_xml(notify_msg);
     return pcmk_ok;
@@ -610,10 +613,9 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->variant = cib_remote;
     cib->variant_opaque = private;
 
-    pcmk__str_update(&private->server, server);
-    pcmk__str_update(&private->user, user);
-    pcmk__str_update(&private->passwd, passwd);
-
+    private->server = pcmk__str_copy(server);
+    private->user = pcmk__str_copy(user);
+    private->passwd = pcmk__str_copy(passwd);
     private->port = port;
     private->encrypted = encrypted;
 

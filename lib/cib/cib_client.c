@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,6 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 static GHashTable *cib_op_callback_table = NULL;
@@ -89,7 +88,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
     crm_trace("Adding callback for %s events (%d)",
               event, g_list_length(cib->notify_list));
 
-    new_client = calloc(1, sizeof(cib_notify_client_t));
+    new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
     new_client->callback = callback;
 
@@ -147,7 +146,7 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
 
     crm_debug("Removing callback for %s events", event);
 
-    new_client = calloc(1, sizeof(cib_notify_client_t));
+    new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
     new_client->callback = callback;
 
@@ -209,7 +208,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
         return FALSE;
     }
 
-    blob = calloc(1, sizeof(cib_callback_client_t));
+    blob = pcmk__assert_alloc(1, sizeof(cib_callback_client_t));
     blob->id = callback_name;
     blob->only_success = only_success;
     blob->user_data = user_data;
@@ -217,9 +216,9 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
     blob->free_func = free_func;
 
     if (timeout > 0) {
-        struct timer_rec_s *async_timer = NULL;
+        struct timer_rec_s *async_timer =
+            pcmk__assert_alloc(1, sizeof(struct timer_rec_s));
 
-        async_timer = calloc(1, sizeof(struct timer_rec_s));
         blob->timer = async_timer;
 
         async_timer->cib = cib;
@@ -401,10 +400,7 @@ cib_client_init_transaction(cib_t *cib)
     }
 
     if (rc == pcmk_rc_ok) {
-        cib->transaction = create_xml_node(NULL, T_CIB_TRANSACTION);
-        if (cib->transaction == NULL) {
-            rc = ENOMEM;
-        }
+        cib->transaction = pcmk__xe_create(NULL, PCMK__XE_CIB_TRANSACTION);
     }
 
     if (rc != pcmk_rc_ok) {
@@ -448,6 +444,21 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
     }
     free_xml(cib->transaction);
     cib->transaction = NULL;
+    return rc;
+}
+
+static int
+cib_client_fetch_schemas(cib_t *cib, xmlNode **output_data, const char *after_ver,
+                         int call_options)
+{
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XA_SCHEMA);
+    int rc = pcmk_ok;
+
+    crm_xml_add(data, PCMK_XA_VERSION, after_ver);
+
+    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_SCHEMAS, NULL, NULL, data,
+                         output_data, call_options, NULL);
+    free_xml(data);
     return rc;
 }
 
@@ -735,6 +746,8 @@ cib_new_variant(void)
     new_cib->cmds->end_transaction = cib_client_end_transaction;
 
     new_cib->cmds->set_user = cib_client_set_user;
+
+    new_cib->cmds->fetch_schemas = cib_client_fetch_schemas;
 
     return new_cib;
 }

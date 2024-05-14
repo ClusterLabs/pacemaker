@@ -26,6 +26,7 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+: ${OCF_RESKEY_dampening:="30s"}
 
 #######################################################################
 
@@ -195,9 +196,6 @@ fi
 
 if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
     OCF_RESKEY_yellow_limit=50
-fi
-if [ -z "${OCF_RESKEY_dampening}" ]; then
-    OCF_RESKEY_dampening="30s"
 fi
 
 case "$__OCF_ACTION" in

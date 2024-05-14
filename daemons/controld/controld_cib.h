@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/cib/internal.h>   // PCMK__CIB_REQUEST_MODIFY
+#include <crm/cib/internal.h>   // cib__*
 #include "controld_globals.h"   // controld_globals.cib_conn
 
 static inline void
@@ -48,7 +48,7 @@ int controld_update_cib(const char *section, xmlNode *data, int options,
                                          void *));
 unsigned int cib_op_timeout(void);
 
-// Subsections of node_state
+// Subsections of PCMK__XE_NODE_STATE
 enum controld_section_e {
     controld_section_lrm,
     controld_section_lrm_unlocked,

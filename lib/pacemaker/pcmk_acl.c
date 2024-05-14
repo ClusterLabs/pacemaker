@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,6 @@
 #include <libxslt/xsltutils.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>
@@ -204,7 +203,7 @@ int
 pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
                                xmlDoc **acl_evaled_doc)
 {
-    int ret, version;
+    int ret;
     xmlNode *target, *comment;
     const char *validation;
 
@@ -223,15 +222,15 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     }
 
     // @COMPAT xmlDocGetRootElement() requires non-const in libxml2 < 2.9.2
-
     validation = crm_element_value(xmlDocGetRootElement((xmlDoc *) cib_doc),
-                                   XML_ATTR_VALIDATION);
-    version = get_schema_version(validation);
-    if (get_schema_version(PCMK__COMPAT_ACL_2_MIN_INCL) > version) {
+                                   PCMK_XA_VALIDATE_WITH);
+
+    if (pcmk__cmp_schemas_by_name(PCMK__COMPAT_ACL_2_MIN_INCL,
+                                  validation) > 0) {
         return pcmk_rc_schema_validation;
     }
 
-    target = copy_xml(xmlDocGetRootElement((xmlDoc *) cib_doc));
+    target = pcmk__xml_copy(NULL, xmlDocGetRootElement((xmlDoc *) cib_doc));
     if (target == NULL) {
         return EINVAL;
     }
@@ -295,7 +294,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
         NULL
     };
     const char **params;
-    int ret;
+    int rc = pcmk_rc_ok;
     xmlParserCtxtPtr parser_ctxt;
 
     /* unfortunately, the input (coming from CIB originally) was parsed with
@@ -330,21 +329,20 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     parser_ctxt = xmlNewParserCtxt();
 
     CRM_ASSERT(sfile != NULL);
-    CRM_ASSERT(parser_ctxt != NULL);
+    pcmk__mem_assert(parser_ctxt);
 
     xslt_doc = xmlCtxtReadFile(parser_ctxt, sfile, NULL, XML_PARSE_NONET);
 
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
         crm_crit("Problem in parsing %s", sfile);
-        return EINVAL;
+        rc = EINVAL;
+        goto done;
     }
-    free(sfile);
-    sfile = NULL;
     xmlFreeParserCtxt(parser_ctxt);
 
     xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
-    CRM_ASSERT(xslt_ctxt != NULL);
+    pcmk__mem_assert(xslt_ctxt);
 
     switch (how) {
         case pcmk__acl_render_namespace:
@@ -381,17 +379,20 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     }
 
     if (res == NULL) {
-        ret = EINVAL;
+        rc = EINVAL;
     } else {
         int doc_txt_len;
         int temp = xsltSaveResultToString(doc_txt_ptr, &doc_txt_len, res, xslt);
         xmlFreeDoc(res);
-        if (temp == 0) {
-            ret = pcmk_rc_ok;
-        } else {
-            ret = EINVAL;
+        if (temp != 0) {
+            rc = EINVAL;
         }
     }
-    xsltFreeStylesheet(xslt);
-    return ret;
+
+done:
+    if (xslt != NULL) {
+        xsltFreeStylesheet(xslt);
+    }
+    free(sfile);
+    return rc;
 }

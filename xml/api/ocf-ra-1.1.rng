@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <!--
+     Version 1.1 of the OCF resource agent API schema
+     Adapted from https://github.com/ClusterLabs/OCF-spec
+     -->
+    <start>
+        <ref name="element-resource-agent" />
+    </start>
+
+    <define name="element-resource-agent">
+        <element name="resource-agent">
+            <attribute name="name" />
+            <optional>
+                <attribute name="version" />
+            </optional>
+
+            <element name="version"> <text /> </element>
+
+            <zeroOrMore>
+                <ref name="element-longdesc" />
+            </zeroOrMore>
+
+            <zeroOrMore>
+                <ref name="element-shortdesc" />
+            </zeroOrMore>
+
+            <ref name="element-parameters" />
+            <ref name="element-actions" />
+            <optional>
+                <ref name="element-special" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-parameters">
+        <element name="parameters">
+            <oneOrMore>
+                <ref name="element-parameter" />
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="element-parameter">
+        <element name="parameter">
+            <ref name="parameter-attributes" />
+
+            <optional>
+                <ref name="element-deprecated" />
+            </optional>
+
+            <oneOrMore>
+                <ref name="element-longdesc" />
+            </oneOrMore>
+
+            <oneOrMore>
+                <ref name="element-shortdesc" />
+            </oneOrMore>
+
+            <ref name="element-content" />
+        </element>
+    </define>
+
+    <define name="parameter-attributes">
+        <attribute name="name" />
+        <optional>
+            <attribute name="unique-group" />
+        </optional>
+        <optional>
+            <!-- "unique" is deprecated -->
+            <attribute name="unique">
+                <ref name="boolean-values" />
+            </attribute>
+        </optional>
+        <optional>
+            <attribute name="required">
+                <ref name="boolean-values" />
+            </attribute>
+        </optional>
+        <optional>
+            <attribute name="reloadable">
+                <ref name="boolean-values" />
+            </attribute>
+        </optional>
+    </define>
+
+    <define name="boolean-values">
+        <choice>
+            <value>0</value>
+            <value>1</value>
+        </choice>
+    </define>
+
+    <define name="element-deprecated">
+        <element name="deprecated">
+            <empty />
+            <interleave>
+                <zeroOrMore>
+                    <element name="replaced-with">
+                        <attribute name="name" />
+                    </element>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <element name="desc">
+                        <ref name="description" />
+                    </element>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <define name="element-longdesc">
+        <element name="longdesc">
+            <ref name="description" />
+        </element>
+    </define>
+
+    <define name="element-shortdesc">
+        <element name="shortdesc">
+            <ref name="description" />
+        </element>
+    </define>
+
+    <define name="description">
+        <attribute name="lang" />
+        <ref name="anyElement" />
+    </define>
+
+    <define name="element-content">
+        <element name="content">
+            <choice>
+                <attribute name="type">
+                    <ref name="atomic-types" />
+                </attribute>
+                <group>
+                    <attribute name="type">
+                        <value>select</value>
+                    </attribute>
+                    <oneOrMore>
+                        <element name="option">
+                            <attribute name="value" />
+                        </element>
+                    </oneOrMore>
+                </group>
+            </choice>
+            <optional>
+                <attribute name="default" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="atomic-types">
+        <choice>
+            <value>boolean</value>
+            <value>string</value>
+            <value>integer</value>
+        </choice>
+    </define>
+
+    <define name="element-actions">
+        <element name="actions">
+            <oneOrMore>
+                <ref name="element-action" />
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="element-action">
+        <element name="action">
+            <attribute name="name" />
+            <attribute name="timeout" />
+            <optional>
+                <attribute name="interval" />
+            </optional>
+            <optional>
+                <attribute name="start-delay" />
+            </optional>
+            <optional>
+                <attribute name="depth" />
+            </optional>
+            <optional>
+                <attribute name="role" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-special">
+        <element name="special">
+            <attribute name="tag" />
+            <ref name="anyElement" />
+        </element>
+    </define>
+
+    <define name="anyElement">
+        <zeroOrMore>
+            <choice>
+                <text/>
+                <element>
+                    <anyName/>
+                    <ref name="any" />
+                </element>
+            </choice>
+        </zeroOrMore>
+    </define>
+
+    <define name="any">
+        <zeroOrMore>
+            <choice>
+                <attribute><anyName /></attribute>
+                <text/>
+                <element>
+                    <anyName/>
+                    <ref name="any" />
+                </element>
+            </choice>
+        </zeroOrMore>
+    </define>
+
+</grammar>

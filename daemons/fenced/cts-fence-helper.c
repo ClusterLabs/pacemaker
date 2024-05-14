@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -20,7 +20,6 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 
@@ -164,8 +163,10 @@ passive_test(void)
         stonith_api_delete(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
+                                    st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                    st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
     st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",
@@ -325,8 +326,10 @@ sanity_tests(void)
         stonith_api_delete(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
-    st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
+                                    st_callback);
+    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                    st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
     st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
     st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",

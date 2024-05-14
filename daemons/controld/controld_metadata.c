@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2023 the Pacemaker project contributors
+ * Copyright 2017-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,25 +70,18 @@ metadata_cache_reset(GHashTable *mdc)
 static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml)
 {
-    const char *param_name = crm_element_value(param_xml, "name");
+    const char *param_name = crm_element_value(param_xml, PCMK_XA_NAME);
     struct ra_param_s *p;
 
-    p = calloc(1, sizeof(struct ra_param_s));
-    if (p == NULL) {
-        return NULL;
-    }
+    p = pcmk__assert_alloc(1, sizeof(struct ra_param_s));
 
-    p->rap_name = strdup(param_name);
-    if (p->rap_name == NULL) {
-        free(p);
-        return NULL;
-    }
+    p->rap_name = pcmk__str_copy(param_name);
 
-    if (pcmk__xe_attr_is_true(param_xml, "reloadable")) {
+    if (pcmk__xe_attr_is_true(param_xml, PCMK_XA_RELOADABLE)) {
         controld_set_ra_param_flags(p, ra_param_reloadable);
     }
 
-    if (pcmk__xe_attr_is_true(param_xml, "unique")) {
+    if (pcmk__xe_attr_is_true(param_xml, PCMK_XA_UNIQUE)) {
         controld_set_ra_param_flags(p, ra_param_unique);
     }
 
@@ -139,21 +132,19 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         goto err;
     }
 
-    metadata = string2xml(metadata_str);
+    metadata = pcmk__xml_parse(metadata_str);
     if (!metadata) {
         reason = "Metadata is not valid XML";
         goto err;
     }
 
-    md = calloc(1, sizeof(struct ra_metadata_s));
-    if (md == NULL) {
-        reason = "Could not allocate memory";
-        goto err;
-    }
+    md = pcmk__assert_alloc(1, sizeof(struct ra_metadata_s));
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         xmlChar *content = NULL;
-        xmlNode *version_element = first_named_child(metadata, "version");
+        xmlNode *version_element = pcmk__xe_first_child(metadata,
+                                                        PCMK_XE_VERSION, NULL,
+                                                        NULL);
 
         if (version_element != NULL) {
             content = xmlNodeGetContent(version_element);
@@ -166,11 +157,11 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Check supported actions
-    match = first_named_child(metadata, "actions");
-    for (match = first_named_child(match, "action"); match != NULL;
-         match = crm_next_same_xml(match)) {
+    match = pcmk__xe_first_child(metadata, PCMK_XE_ACTIONS, NULL, NULL);
+    for (match = pcmk__xe_first_child(match, PCMK_XE_ACTION, NULL, NULL);
+         match != NULL; match = pcmk__xe_next_same(match)) {
 
-        const char *action_name = crm_element_value(match, "name");
+        const char *action_name = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action_name, PCMK_ACTION_RELOAD_AGENT,
                          pcmk__str_none)) {
@@ -188,15 +179,15 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     }
 
     // Build a parameter list
-    match = first_named_child(metadata, "parameters");
-    for (match = first_named_child(match, "parameter"); match != NULL;
-         match = crm_next_same_xml(match)) {
+    match = pcmk__xe_first_child(metadata, PCMK_XE_PARAMETERS, NULL, NULL);
+    for (match = pcmk__xe_first_child(match, PCMK_XE_PARAMETER, NULL, NULL);
+         match != NULL; match = pcmk__xe_next_same(match)) {
 
-        const char *param_name = crm_element_value(match, "name");
+        const char *param_name = crm_element_value(match, PCMK_XA_NAME);
 
         if (param_name == NULL) {
-            crm_warn("Metadata for %s:%s:%s has parameter without a name",
-                     rsc->standard, rsc->provider, rsc->type);
+            crm_warn("Metadata for %s:%s:%s has parameter without a "
+                     PCMK_XA_NAME, rsc->standard, rsc->provider, rsc->type);
         } else {
             struct ra_param_s *p = ra_param_from_xml(match);
 

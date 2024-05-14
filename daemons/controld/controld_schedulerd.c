@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,6 @@
 #include <crm/cluster.h>
 #include <crm/common/xml.h>
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_schedulerd.h>
@@ -65,7 +64,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == pcmk_ok) {
         char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        if (write_xml_file(output, filename, TRUE) < 0) {
+        if (pcmk__xml_write_file(output, filename, true, NULL) != pcmk_rc_ok) {
             crm_err("Could not save Cluster Information Base to %s after scheduler crash",
                     filename);
         } else {
@@ -144,12 +143,13 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
          *
          * The name of the top level element here is irrelevant.  Nothing checks it.
          */
-        fsa_input.msg = create_xml_node(NULL, "dummy-reply");
-        crm_xml_add(fsa_input.msg, XML_ATTR_REFERENCE, msg_ref);
-        crm_xml_add(fsa_input.msg, F_CRM_TGRAPH_INPUT, reply->data.graph.input);
+        fsa_input.msg = pcmk__xe_create(NULL, "dummy-reply");
+        crm_xml_add(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
+        crm_xml_add(fsa_input.msg, PCMK__XA_CRM_TGRAPH_IN,
+                    reply->data.graph.input);
 
-        crm_data_node = create_xml_node(fsa_input.msg, F_CRM_DATA);
-        add_node_copy(crm_data_node, reply->data.graph.tgraph);
+        crm_data_node = pcmk__xe_create(fsa_input.msg, PCMK__XE_CRM_XML);
+        pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         free_xml(fsa_input.msg);
@@ -378,14 +378,14 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CRMCONFIG);
+    xpath_base = pcmk_cib_xpath_for(PCMK_XE_CRM_CONFIG);
     if (xpath_base == NULL) {
-        crm_err(XML_CIB_TAG_CRMCONFIG " CIB element not known (bug?)");
+        crm_err(PCMK_XE_CRM_CONFIG " CIB element not known (bug?)");
         return;
     }
 
     xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
-                                     xpath_base, XML_CIB_TAG_PROPSET,
+                                     xpath_base, PCMK_XE_CLUSTER_PROPERTY_SET,
                                      attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
@@ -393,8 +393,9 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
-        crm_trace("Forcing %s/%s = %s", ID(match), attr_name, attr_value);
-        crm_xml_add(match, XML_NVPAIR_ATTR_VALUE, attr_value);
+        crm_trace("Forcing %s/%s = %s",
+                  pcmk__xe_id(match), attr_name, attr_value);
+        crm_xml_add(match, PCMK_XA_VALUE, attr_value);
     }
 
     if(max == 0) {
@@ -403,32 +404,37 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         xmlNode *cluster_property_set = NULL;
 
         crm_trace("Creating %s-%s for %s=%s",
-                  CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
+                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name, attr_name,
+                  attr_value);
 
-        configuration = pcmk__xe_match(xml, XML_CIB_TAG_CONFIGURATION, NULL,
-                                       NULL);
+        configuration = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
+                                             NULL);
         if (configuration == NULL) {
-            configuration = create_xml_node(xml, XML_CIB_TAG_CONFIGURATION);
+            configuration = pcmk__xe_create(xml, PCMK_XE_CONFIGURATION);
         }
 
-        crm_config = pcmk__xe_match(configuration, XML_CIB_TAG_CRMCONFIG, NULL,
-                                    NULL);
+        crm_config = pcmk__xe_first_child(configuration, PCMK_XE_CRM_CONFIG,
+                                          NULL, NULL);
         if (crm_config == NULL) {
-            crm_config = create_xml_node(configuration, XML_CIB_TAG_CRMCONFIG);
+            crm_config = pcmk__xe_create(configuration, PCMK_XE_CRM_CONFIG);
         }
 
-        cluster_property_set = pcmk__xe_match(crm_config, XML_CIB_TAG_PROPSET,
-                                              NULL, NULL);
+        cluster_property_set =
+            pcmk__xe_first_child(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
+                                 NULL);
         if (cluster_property_set == NULL) {
-            cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
-            crm_xml_add(cluster_property_set, XML_ATTR_ID, CIB_OPTIONS_FIRST);
+            cluster_property_set =
+                pcmk__xe_create(crm_config, PCMK_XE_CLUSTER_PROPERTY_SET);
+            crm_xml_add(cluster_property_set, PCMK_XA_ID,
+                        PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS);
         }
 
-        xml = create_xml_node(cluster_property_set, XML_CIB_TAG_NVPAIR);
+        xml = pcmk__xe_create(cluster_property_set, PCMK_XE_NVPAIR);
 
-        crm_xml_set_id(xml, "%s-%s", CIB_OPTIONS_FIRST, attr_name);
-        crm_xml_add(xml, XML_NVPAIR_ATTR_NAME, attr_name);
-        crm_xml_add(xml, XML_NVPAIR_ATTR_VALUE, attr_value);
+        crm_xml_set_id(xml, "%s-%s",
+                       PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name);
+        crm_xml_add(xml, PCMK_XA_NAME, attr_name);
+        crm_xml_add(xml, PCMK_XA_VALUE, attr_value);
     }
     freeXpathObject(xpathObj);
 }
@@ -476,16 +482,16 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * scheduler is invoked */
     pcmk__refresh_node_caches_from_cib(output);
 
-    crm_xml_add(output, XML_ATTR_DC_UUID, controld_globals.our_uuid);
-    pcmk__xe_set_bool_attr(output, XML_ATTR_HAVE_QUORUM,
+    crm_xml_add(output, PCMK_XA_DC_UUID, controld_globals.our_uuid);
+    pcmk__xe_set_bool_attr(output, PCMK_XA_HAVE_QUORUM,
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));
 
-    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
+    force_local_option(output, PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
     if (pcmk_is_set(controld_globals.flags, controld_ever_had_quorum)
         && !crm_have_quorum) {
-        crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
+        crm_xml_add_int(output, PCMK_XA_NO_QUORUM_PANIC, 1);
     }
 
     rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
@@ -498,8 +504,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         CRM_ASSERT(ref != NULL);
         controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
-                  "quorate=%s", fsa_pe_query, controld_globals.fsa_pe_ref,
-                  crm_peer_seq, pcmk__btoa(pcmk_is_set(controld_globals.flags,
-                                                       controld_has_quorum)));
+                  "quorate=%s",
+                  fsa_pe_query, controld_globals.fsa_pe_ref, crm_peer_seq,
+                  pcmk__flag_text(controld_globals.flags, controld_has_quorum));
     }
 }

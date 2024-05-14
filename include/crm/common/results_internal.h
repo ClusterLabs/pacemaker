@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,13 +12,26 @@
 
 #include <glib.h>               // GQuark
 
-// Generic result code type
+extern const size_t pcmk__n_rc;
 
 int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
 
-// Standard Pacemaker API return codes
-
-extern const size_t pcmk__n_rc;
+/*!
+ * \internal
+ * \brief Abort without dumping core if a pointer is \c NULL
+ *
+ * This is intended to check for memory allocation failure, rather than for null
+ * pointers in general.
+ *
+ * \param[in] ptr  Pointer to check
+ */
+#define pcmk__mem_assert(ptr) do {                                          \
+        if ((ptr) == NULL) {                                                \
+            crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
+                      TRUE);                                                \
+            crm_exit(CRM_EX_OSERR);                                         \
+        }                                                                   \
+    } while (0)
 
 /* Error domains for use with g_set_error */
 

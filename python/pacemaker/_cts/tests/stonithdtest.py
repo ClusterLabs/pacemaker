@@ -1,7 +1,7 @@
-""" Fence a running node and wait for it to restart """
+"""Fence a running node and wait for it to restart."""
 
 __all__ = ["StonithdTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
@@ -21,16 +21,15 @@ from pacemaker._cts.timer import Timer
 
 
 class StonithdTest(CTSTest):
-    """ A concrete test that fences a running node and waits for it to restart """
+    """Fence a running node and wait for it to restart."""
 
     def __init__(self, cm):
-        """ Create a new StonithdTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new StonithdTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.benchmark = True
         self.name = "Stonithd"
@@ -38,8 +37,7 @@ class StonithdTest(CTSTest):
         self._startall = SimulStartLite(cm)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         if len(self._env["nodes"]) < 2:
             return self.skipped()
@@ -122,8 +120,7 @@ class StonithdTest(CTSTest):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         return [
             self.templates["Pat:Fencing_start"] % ".*",
             self.templates["Pat:Fencing_ok"] % ".*",
@@ -132,8 +129,7 @@ class StonithdTest(CTSTest):
         ]
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration. """
-
+        """Return True if this test is applicable in the current test configuration."""
         if not CTSTest.is_applicable(self):
             return False
 

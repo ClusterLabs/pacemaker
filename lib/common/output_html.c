@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,22 +19,22 @@
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
-    ".bold { font-weight: bold }\n"
+    "." PCMK__VALUE_BOLD " { font-weight: bold }\n"
 
-    ".online { color: green }\n"
-    ".offline { color: red }\n"
-    ".maint { color: blue }\n"
-    ".standby { color: blue }\n"
-    ".health_red { color: red }\n"
-    ".health_yellow { color: GoldenRod }\n"
+    "." PCMK_VALUE_ONLINE " { color: green }\n"
+    "." PCMK_VALUE_OFFLINE " { color: red }\n"
+    "." PCMK__VALUE_MAINT " { color: blue }\n"
+    "." PCMK_VALUE_STANDBY " { color: blue }\n"
+    "." PCMK__VALUE_HEALTH_RED " { color: red }\n"
+    "." PCMK__VALUE_HEALTH_YELLOW " { color: GoldenRod }\n"
 
-    ".rsc-failed { color: red }\n"
-    ".rsc-failure-ignored { color: DarkGreen }\n"
-    ".rsc-managed { color: blue }\n"
-    ".rsc-multiple { color: orange }\n"
-    ".rsc-ok { color: green }\n"
+    "." PCMK__VALUE_RSC_FAILED " { color: red }\n"
+    "." PCMK__VALUE_RSC_FAILURE_IGNORED " { color: DarkGreen }\n"
+    "." PCMK__VALUE_RSC_MANAGED " { color: blue }\n"
+    "." PCMK__VALUE_RSC_MULTIPLE " { color: orange }\n"
+    "." PCMK__VALUE_RSC_OK " { color: green }\n"
 
-    ".warning { color: red; font-weight: bold }";
+    "." PCMK__VALUE_WARNING " { color: red; font-weight: bold }";
 
 static gboolean cgi_output = FALSE;
 static char *stylesheet_link = NULL;
@@ -81,9 +81,13 @@ html_free_priv(pcmk__output_t *out) {
 
     priv = out->priv;
 
-    xmlFreeNode(priv->root);
+    free_xml(priv->root);
+    /* The elements of parent_q are xmlNodes that are a part of the
+     * priv->root document, so the above line already frees them.  Don't
+     * call g_queue_free_full here.
+     */
     g_queue_free(priv->parent_q);
-    g_slist_free(priv->errors);
+    g_slist_free_full(priv->errors, free);
     free(priv);
     out->priv = NULL;
 }
@@ -108,10 +112,10 @@ html_init(pcmk__output_t *out) {
 
     priv->parent_q = g_queue_new();
 
-    priv->root = create_xml_node(NULL, "html");
+    priv->root = pcmk__xe_create(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
-    crm_xml_add(priv->root, "lang", "en");
+    crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
@@ -132,6 +136,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     private_data_t *priv = NULL;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
+    xmlNode *child_node = NULL;
 
     CRM_ASSERT(out != NULL);
 
@@ -155,12 +160,14 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     head_node = xmlNewDocRawNode(NULL, NULL, (pcmkXmlStr) "head", NULL);
 
     if (title != NULL ) {
-        pcmk_create_xml_text_node(head_node, "title", title);
+        child_node = pcmk__xe_create(head_node, "title");
+        pcmk__xe_set_content(child_node, "%s", title);
     } else if (out->request != NULL) {
-        pcmk_create_xml_text_node(head_node, "title", out->request);
+        child_node = pcmk__xe_create(head_node, "title");
+        pcmk__xe_set_content(child_node, "%s", out->request);
     }
 
-    charset_node = create_xml_node(head_node, "meta");
+    charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
     crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
@@ -174,10 +181,11 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
      * stylesheet.  The second can override the first.  At least one should be
      * given.
      */
-    pcmk_create_xml_text_node(head_node, "style", stylesheet_default);
+    child_node = pcmk__xe_create(head_node, "style");
+    pcmk__xe_set_content(child_node, "%s", stylesheet_default);
 
     if (stylesheet_link != NULL) {
-        htmlNodePtr link_node = create_xml_node(head_node, "link");
+        htmlNodePtr link_node = pcmk__xe_create(head_node, "link");
         pcmk__xe_set_props(link_node, "rel", "stylesheet",
                            "href", stylesheet_link,
                            NULL);
@@ -196,7 +204,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     }
 
     if (copy_dest != NULL) {
-        *copy_dest = copy_xml(priv->root);
+        *copy_dest = pcmk__xml_copy(NULL, priv->root);
     }
 
     g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
@@ -224,15 +232,17 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
     rc_buf = crm_strdup_printf("Return code: %d", exit_status);
 
     pcmk__output_create_xml_text_node(out, "h2", "Command Output");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, rc_buf);
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, rc_buf);
 
     if (proc_stdout != NULL) {
-        pcmk__output_create_html_node(out, "div", NULL, NULL, "Stdout");
-        pcmk__output_create_html_node(out, "div", NULL, "output", proc_stdout);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, "Stdout");
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL,
+                                      PCMK__VALUE_OUTPUT, proc_stdout);
     }
     if (proc_stderr != NULL) {
-        pcmk__output_create_html_node(out, "div", NULL, NULL, "Stderr");
-        pcmk__output_create_html_node(out, "div", NULL, "output", proc_stderr);
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, "Stderr");
+        pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL,
+                                      PCMK__VALUE_OUTPUT, proc_stderr);
     }
 
     free(rc_buf);
@@ -243,13 +253,17 @@ html_version(pcmk__output_t *out, bool extended) {
     CRM_ASSERT(out != NULL);
 
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, "Program: Pacemaker");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Version: %s", PACEMAKER_VERSION));
-    pcmk__output_create_html_node(out, "div", NULL, NULL,
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Program: Pacemaker");
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Version: " PACEMAKER_VERSION);
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
                                   "Author: Andrew Beekhof and "
                                   "the Pacemaker project contributors");
-    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Build: %s", BUILD_VERSION));
-    pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Features: %s", CRM_FEATURES));
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Build: " BUILD_VERSION);
+    pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL,
+                                  "Features: " CRM_FEATURES);
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -284,7 +298,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(out != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
-    crm_xml_add(node, "lang", "xml");
+    crm_xml_add(node, PCMK_XA_LANG, "xml");
 }
 
 G_GNUC_PRINTF(4, 5)
@@ -349,7 +363,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     free(buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, "class", name);
+        crm_xml_add(item_node, PCMK_XA_CLASS, name);
     }
 }
 
@@ -365,7 +379,9 @@ html_end_list(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    /* Remove the <ul> tag. */
+    /* Remove the <ul> tag, but do not free this result - it's still
+     * part of the document.
+     */
     g_queue_pop_tail(priv->parent_q);
     pcmk__output_xml_pop_parent(out);
 
@@ -441,13 +457,39 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
-        crm_xml_add(node, "class", class_name);
+        crm_xml_add(node, PCMK_XA_CLASS, class_name);
     }
 
     if (id != NULL) {
-        crm_xml_add(node, "id", id);
+        crm_xml_add(node, PCMK_XA_ID, id);
     }
 
+    return node;
+}
+
+/*!
+ * \internal
+ * \brief Create a new HTML element under a given parent with ID and class
+ *
+ * \param[in,out] parent  XML element that will be the new element's parent
+ *                        (\c NULL to create a new XML document with the new
+ *                        node as root)
+ * \param[in]     name    Name of new element
+ * \param[in]     id      CSS ID of new element (can be \c NULL)
+ * \param[in]     class   CSS class of new element (can be \c NULL)
+ *
+ * \return Newly created XML element (guaranteed not to be \c NULL)
+ */
+xmlNode *
+pcmk__html_create(xmlNode *parent, const char *name, const char *id,
+                  const char *class)
+{
+    xmlNode *node = pcmk__xe_create(parent, name);
+
+    pcmk__xe_set_props(node,
+                       PCMK_XA_CLASS, class,
+                       PCMK_XA_ID, id,
+                       NULL);
     return node;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -41,7 +40,8 @@ do_te_control(long long action,
         controld_globals.transition_graph = NULL;
 
         if (cib_conn != NULL) {
-            cib_conn->cmds->del_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
+            cib_conn->cmds->del_notify_callback(cib_conn,
+                                                PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                 te_update_diff);
         }
 
@@ -71,12 +71,11 @@ do_te_control(long long action,
         crm_err("Could not set CIB callbacks");
         init_ok = FALSE;
 
-    } else {
-        if (cib_conn->cmds->add_notify_callback(cib_conn, T_CIB_DIFF_NOTIFY,
-                                                te_update_diff) != pcmk_ok) {
-            crm_err("Could not set CIB notification callback");
-            init_ok = FALSE;
-        }
+    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
+                                                   PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                                   te_update_diff) != pcmk_ok) {
+        crm_err("Could not set CIB notification callback");
+        init_ok = FALSE;
     }
 
     if (init_ok) {
@@ -110,13 +109,15 @@ do_te_invoke(long long action,
     if (action & A_TE_CANCEL) {
         crm_debug("Cancelling the transition: %sactive",
                   controld_globals.transition_graph->complete? "in" : "");
-        abort_transition(INFINITY, pcmk__graph_restart, "Peer Cancelled", NULL);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Peer Cancelled", NULL);
         if (!controld_globals.transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
 
     } else if (action & A_TE_HALT) {
-        abort_transition(INFINITY, pcmk__graph_wait, "Peer Halt", NULL);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_wait, "Peer Halt",
+                         NULL);
         if (!controld_globals.transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
@@ -124,11 +125,11 @@ do_te_invoke(long long action,
     } else if (action & A_TE_INVOKE) {
         ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
         xmlNode *graph_data = input->xml;
-        const char *ref = crm_element_value(input->msg, XML_ATTR_REFERENCE);
-        const char *graph_file = crm_element_value(input->msg, F_CRM_TGRAPH);
-        const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
+        const char *ref = crm_element_value(input->msg, PCMK_XA_REFERENCE);
+        const char *graph_input = crm_element_value(input->msg,
+                                                    PCMK__XA_CRM_TGRAPH_IN);
 
-        if (graph_file == NULL && graph_data == NULL) {
+        if (graph_data == NULL) {
             crm_log_xml_err(input->msg, "Bad command");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
             return;
@@ -136,8 +137,8 @@ do_te_invoke(long long action,
 
         if (!controld_globals.transition_graph->complete) {
             crm_info("Another transition is already active");
-            abort_transition(INFINITY, pcmk__graph_restart, "Transition Active",
-                             NULL);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Transition Active", NULL);
             return;
         }
 
@@ -147,12 +148,8 @@ do_te_invoke(long long action,
             crm_info("Transition is redundant: %s expected but %s received",
                      pcmk__s(controld_globals.fsa_pe_ref, "no reference"),
                      pcmk__s(ref, "no reference"));
-            abort_transition(INFINITY, pcmk__graph_restart,
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
-        }
-
-        if (graph_data == NULL && graph_file != NULL) {
-            graph_data = filename2xml(graph_file);
         }
 
         if (controld_is_started_transition_timer()) {

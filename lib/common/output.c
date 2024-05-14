@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,10 +18,12 @@
 static GHashTable *formatters = NULL;
 
 #if defined(PCMK__UNIT_TESTING)
+// LCOV_EXCL_START
 GHashTable *
 pcmk__output_formatters(void) {
     return formatters;
 }
+// LCOV_EXCL_STOP
 #endif
 
 void
@@ -114,9 +116,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
     int rc = pcmk__bare_output_new(out, fmt_name, filename, argv);
 
     if (rc == pcmk_rc_ok) {
-        /* Register libcrmcommon messages (currently they exist only for
-         * patchset)
-         */
+        // Register libcrmcommon messages
+        pcmk__register_option_messages(*out);
         pcmk__register_patchset_messages(*out);
     }
     return rc;
@@ -127,7 +128,14 @@ pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create,
                       const GOptionEntry *options)
 {
+    char *name_copy = NULL;
+
     CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
+
+    name_copy = strdup(name);
+    if (name_copy == NULL) {
+        return ENOMEM;
+    }
 
     if (formatters == NULL) {
         formatters = pcmk__strkey_table(free, NULL);
@@ -137,7 +145,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
         g_option_group_add_entries(group, options);
     }
 
-    g_hash_table_insert(formatters, strdup(name), create);
+    g_hash_table_insert(formatters, name_copy, create);
     return pcmk_rc_ok;
 }
 
@@ -189,7 +197,7 @@ pcmk__register_message(pcmk__output_t *out, const char *message_id,
                        pcmk__message_fn_t fn) {
     CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id) && fn != NULL);
 
-    g_hash_table_replace(out->messages, strdup(message_id), fn);
+    g_hash_table_replace(out->messages, pcmk__str_copy(message_id), fn);
 }
 
 void
@@ -228,7 +236,7 @@ pcmk__output_and_clear_error(GError **error, pcmk__output_t *out)
  * functions that want to free any previous result supplied by the caller).
  *
  * \param[out]     out  Where to put newly created output object
- * \param[in,out]  xml  If non-NULL, this will be freed
+ * \param[in,out]  xml  If \c *xml is non-NULL, this will be freed
  *
  * \return Standard Pacemaker return code
  */
@@ -238,6 +246,10 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
         PCMK__SUPPORTED_FORMAT_XML,
         { NULL, NULL, NULL }
     };
+
+    if (xml == NULL) {
+        return EINVAL;
+    }
 
     if (*xml != NULL) {
         xmlFreeNode(*xml);
@@ -251,12 +263,19 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
  * \internal
  * \brief  Finish and free an XML-only output object
  *
- * \param[in,out] out  Output object to free
- * \param[out]    xml  If not NULL, where to store XML output
+ * \param[in,out] out         Output object to free
+ * \param[in]     exit_status The exit value of the whole program
+ * \param[out]    xml         If not NULL, where to store XML output
  */
 void
-pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml) {
-    out->finish(out, 0, FALSE, (void **) xml);
+pcmk__xml_output_finish(pcmk__output_t *out, crm_exit_t exit_status,
+                        xmlNodePtr *xml)
+{
+    if (out == NULL) {
+        return;
+    }
+
+    out->finish(out, exit_status, FALSE, (void **) xml);
     pcmk__output_free(out);
 }
 

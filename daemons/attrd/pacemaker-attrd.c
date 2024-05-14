@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,8 +20,6 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
@@ -31,7 +29,7 @@
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 #include "pacemaker-attrd.h"
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
@@ -59,7 +57,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 lrmd_t *the_lrmd = NULL;
-crm_cluster_t *attrd_cluster = NULL;
+pcmk_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
 
@@ -136,7 +134,7 @@ main(int argc, char **argv)
     // Open additional log files
     pcmk__add_logfiles(log_files, out);
 
-    crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker node attribute manager%s",
                stand_alone ? " in standalone mode" : "");
 

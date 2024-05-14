@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,15 +14,12 @@
 #include <time.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
 #include <crm/common/ipc_internal.h>
 
 #include <pacemaker-controld.h>
-
-extern void crm_shutdown(int nsig);
 
 static enum crmd_fsa_input handle_message(xmlNode *msg,
                                           enum crmd_fsa_cause cause);
@@ -102,7 +99,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
               fsa_input2string(input), fsa_cause2string(cause),
               (data? "with" : "without"));
 
-    fsa_data = calloc(1, sizeof(fsa_data_t));
+    fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;
     fsa_data->fsa_input = input;
     fsa_data->fsa_cause = cause;
@@ -191,11 +188,14 @@ fsa_dump_queue(int log_level)
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {
-    ha_msg_input_t *copy = calloc(1, sizeof(ha_msg_input_t));
+    xmlNode *wrapper = NULL;
 
-    CRM_ASSERT(copy != NULL);
-    copy->msg = (orig && orig->msg)? copy_xml(orig->msg) : NULL;
-    copy->xml = get_message_xml(copy->msg, F_CRM_DATA);
+    ha_msg_input_t *copy = pcmk__assert_alloc(1, sizeof(ha_msg_input_t));
+
+    copy->msg = (orig != NULL)? pcmk__xml_copy(NULL, orig->msg) : NULL;
+
+    wrapper = pcmk__xe_first_child(copy->msg, PCMK__XE_CRM_XML, NULL, NULL);
+    copy->xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     return copy;
 }
 
@@ -328,7 +328,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
 gboolean
 relay_message(xmlNode * msg, gboolean originated_locally)
 {
-    enum crm_ais_msg_types dest = crm_msg_ais;
+    enum crm_ais_msg_types dest = crm_msg_none;
     bool is_for_dc = false;
     bool is_for_dcib = false;
     bool is_for_te = false;
@@ -346,12 +346,12 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     CRM_CHECK(msg != NULL, return TRUE);
 
-    host_to = crm_element_value(msg, F_CRM_HOST_TO);
-    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
-    sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
-    type = crm_element_value(msg, F_TYPE);
-    task = crm_element_value(msg, F_CRM_TASK);
-    ref = crm_element_value(msg, XML_ATTR_REFERENCE);
+    host_to = crm_element_value(msg, PCMK__XA_CRM_HOST_TO);
+    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
+    type = crm_element_value(msg, PCMK__XA_T);
+    task = crm_element_value(msg, PCMK__XA_CRM_TASK);
+    ref = crm_element_value(msg, PCMK_XA_REFERENCE);
 
     broadcast = pcmk__str_empty(host_to);
 
@@ -367,8 +367,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     // Require message type (set by create_request())
-    if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
-        crm_warn("Ignoring invalid message %s with type '%s' (not '" T_CRM "')",
+    if (!pcmk__str_eq(type, PCMK__VALUE_CRMD, pcmk__str_none)) {
+        crm_warn("Ignoring invalid message %s with type '%s' "
+                 "(not '" PCMK__VALUE_CRMD "')",
                  ref, pcmk__s(type, ""));
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
@@ -376,15 +377,16 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     // Require a destination subsystem (also set by create_request())
     if (sys_to == NULL) {
-        crm_warn("Ignoring invalid message %s with no " F_CRM_SYS_TO, ref);
+        crm_warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
+                 ref);
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
     }
 
     // Get the message type appropriate to the destination subsystem
-    if (is_corosync_cluster()) {
-        dest = text2msg_type(sys_to);
-        if ((dest < crm_msg_ais) || (dest > crm_msg_stonith_ng)) {
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        dest = pcmk__cluster_parse_msg_type(sys_to);
+        if (dest == crm_msg_none) {
             /* Unrecognized value, use a sane default
              *
              * @TODO Maybe we should bail instead
@@ -427,10 +429,12 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         is_local = true;
 
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-        xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CRM_XML, NULL,
+                                                NULL);
+        xmlNode *msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
-        if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
+        if (pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
             // Local delete of an offline node's resource history
             is_local = true;
         }
@@ -458,9 +462,10 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                       ref, pcmk__s(host_to, "broadcast"));
             crm_log_xml_trace(msg, "relayed");
             if (!broadcast) {
-                node_to = crm_get_peer(0, host_to);
+                node_to = pcmk__get_node(0, host_to, NULL,
+                                         pcmk__node_search_cluster_member);
             }
-            send_cluster_message(node_to, dest, msg, TRUE);
+            pcmk__cluster_send_message(node_to, dest, msg);
             return TRUE;
         }
 
@@ -484,7 +489,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     if (!broadcast) {
-        node_to = pcmk__search_cluster_node_cache(0, host_to, NULL);
+        node_to = pcmk__search_node_caches(0, host_to,
+                                           pcmk__node_search_cluster_member);
         if (node_to == NULL) {
             crm_warn("Ignoring message %s because node %s is unknown",
                      ref, host_to);
@@ -496,7 +502,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     crm_trace("Relay message %s to %s",
               ref, pcmk__s(host_to, "all peers"));
     crm_log_xml_trace(msg, "relayed");
-    send_cluster_message(node_to, dest, msg, TRUE);
+    pcmk__cluster_send_message(node_to, dest, msg);
     return TRUE;
 }
 
@@ -539,10 +545,11 @@ bool
 controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_client,
                                const char *proxy_session)
 {
+    xmlNode *wrapper = NULL;
     xmlNode *message_data = NULL;
     const char *client_name = NULL;
-    const char *op = crm_element_value(client_msg, F_CRM_TASK);
-    const char *ref = crm_element_value(client_msg, XML_ATTR_REFERENCE);
+    const char *op = crm_element_value(client_msg, PCMK__XA_CRM_TASK);
+    const char *ref = crm_element_value(client_msg, PCMK_XA_REFERENCE);
     const char *uuid = (curr_client? curr_client->id : proxy_session);
 
     if (uuid == NULL) {
@@ -556,27 +563,28 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
         return true;
     }
 
-    message_data = get_message_xml(client_msg, F_CRM_DATA);
+    wrapper = pcmk__xe_first_child(client_msg, PCMK__XE_CRM_XML, NULL, NULL);
+    message_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    client_name = crm_element_value(message_data, "client_name");
+    client_name = crm_element_value(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
         crm_warn("IPC hello from client rejected: No client name",
                  CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
         goto rejected;
     }
-    if (!authorize_version(message_data, "major_version", client_name, ref,
-                           uuid)) {
+    if (!authorize_version(message_data, PCMK__XA_MAJOR_VERSION, client_name,
+                           ref, uuid)) {
         goto rejected;
     }
-    if (!authorize_version(message_data, "minor_version", client_name, ref,
-                           uuid)) {
+    if (!authorize_version(message_data, PCMK__XA_MINOR_VERSION, client_name,
+                           ref, uuid)) {
         goto rejected;
     }
 
     crm_trace("Validated IPC hello from client %s", client_name);
     crm_log_xml_trace(client_msg, "hello");
     if (curr_client) {
-        curr_client->userdata = strdup(client_name);
+        curr_client->userdata = pcmk__str_copy(client_name);
     }
     controld_trigger_fsa();
     return false;
@@ -596,16 +604,17 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
 
     CRM_CHECK(msg != NULL, return I_NULL);
 
-    type = crm_element_value(msg, F_CRM_MSG_TYPE);
-    if (pcmk__str_eq(type, XML_ATTR_REQUEST, pcmk__str_none)) {
+    type = crm_element_value(msg, PCMK__XA_SUBT);
+    if (pcmk__str_eq(type, PCMK__VALUE_REQUEST, pcmk__str_none)) {
         return handle_request(msg, cause);
+    }
 
-    } else if (pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_none)) {
+    if (pcmk__str_eq(type, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         handle_response(msg);
         return I_NULL;
     }
 
-    crm_warn("Ignoring message with unknown " F_CRM_MSG_TYPE " '%s'",
+    crm_warn("Ignoring message with unknown " PCMK__XA_SUBT" '%s'",
              pcmk__s(type, ""));
     crm_log_xml_trace(msg, "bad");
     return I_NULL;
@@ -620,31 +629,36 @@ handle_failcount_op(xmlNode * stored_msg)
     char *interval_spec = NULL;
     guint interval_ms = 0;
     gboolean is_remote_node = FALSE;
-    xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
+
+    xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML, NULL,
+                                            NULL);
+    xmlNode *xml_op = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (xml_op) {
-        xmlNode *xml_rsc = first_named_child(xml_op, XML_CIB_TAG_RESOURCE);
-        xmlNode *xml_attrs = first_named_child(xml_op, XML_TAG_ATTRS);
+        xmlNode *xml_rsc = pcmk__xe_first_child(xml_op, PCMK_XE_PRIMITIVE, NULL,
+                                                NULL);
+        xmlNode *xml_attrs = pcmk__xe_first_child(xml_op, PCMK__XE_ATTRIBUTES,
+                                                  NULL, NULL);
 
         if (xml_rsc) {
-            rsc = ID(xml_rsc);
+            rsc = pcmk__xe_id(xml_rsc);
         }
         if (xml_attrs) {
             op = crm_element_value(xml_attrs,
-                                   CRM_META "_" XML_RSC_ATTR_CLEAR_OP);
+                                   CRM_META "_" PCMK__META_CLEAR_FAILURE_OP);
             crm_element_value_ms(xml_attrs,
-                                 CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL,
+                                 CRM_META "_" PCMK__META_CLEAR_FAILURE_INTERVAL,
                                  &interval_ms);
         }
     }
-    uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+    uname = crm_element_value(xml_op, PCMK__META_ON_NODE);
 
     if ((rsc == NULL) || (uname == NULL)) {
         crm_log_xml_warn(stored_msg, "invalid failcount op");
         return I_NULL;
     }
 
-    if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
+    if (crm_element_value(xml_op, PCMK__XA_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
 
@@ -669,7 +683,9 @@ static enum crmd_fsa_input
 handle_lrm_delete(xmlNode *stored_msg)
 {
     const char *mode = NULL;
-    xmlNode *msg_data = get_message_xml(stored_msg, F_CRM_DATA);
+    xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML, NULL,
+                                            NULL);
+    xmlNode *msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     CRM_CHECK(msg_data != NULL, return I_NULL);
 
@@ -679,14 +695,14 @@ handle_lrm_delete(xmlNode *stored_msg)
      * CIB, and do some bookkeeping in the controller.
      *
      * However, if the affected node is offline, the client will specify
-     * mode="cib" which means the controller receiving the operation should
-     * clear the resource's history from the CIB and nothing else. This is used
-     * to clear shutdown locks.
+     * mode=PCMK__VALUE_CIB which means the controller receiving the operation
+     * should clear the resource's history from the CIB and nothing else. This
+     * is used to clear shutdown locks.
      */
     mode = crm_element_value(msg_data, PCMK__XA_MODE);
-    if ((mode == NULL) || strcmp(mode, XML_TAG_CIB)) {
+    if (!pcmk__str_eq(mode, PCMK__VALUE_CIB, pcmk__str_none)) {
         // Relay to affected node
-        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else {
@@ -698,13 +714,13 @@ handle_lrm_delete(xmlNode *stored_msg)
         xmlNode *rsc_xml = NULL;
         int rc = pcmk_rc_ok;
 
-        rsc_xml = first_named_child(msg_data, XML_CIB_TAG_RESOURCE);
+        rsc_xml = pcmk__xe_first_child(msg_data, PCMK_XE_PRIMITIVE, NULL, NULL);
         CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
-        rsc_id = ID(rsc_xml);
-        from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
-        node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
-        user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
+        rsc_id = pcmk__xe_id(rsc_xml);
+        from_sys = crm_element_value(stored_msg, PCMK__XA_CRM_SYS_FROM);
+        node = crm_element_value(msg_data, PCMK__META_ON_NODE);
+        user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,
                   (user_name? " for user " : ""), (user_name? user_name : ""));
@@ -715,19 +731,20 @@ handle_lrm_delete(xmlNode *stored_msg)
                                                   crmd_cib_smart_opt());
         }
 
-        //Notify client and tengine.(Only notify tengine if mode = "cib" and CRM_OP_LRM_DELETE.)
+        /* Notify client. Also notify tengine if mode=PCMK__VALUE_CIB and
+         * op=CRM_OP_LRM_DELETE.
+         */
         if (from_sys) {
             lrmd_event_data_t *op = NULL;
-            const char *from_host = crm_element_value(stored_msg,
-                                                      F_CRM_HOST_FROM);
+            const char *from_host = crm_element_value(stored_msg, PCMK__XA_SRC);
             const char *transition;
 
             if (strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
                 transition = crm_element_value(msg_data,
-                                                       XML_ATTR_TRANSITION_KEY);
+                                               PCMK__XA_TRANSITION_KEY);
             } else {
                 transition = crm_element_value(stored_msg,
-                                                       XML_ATTR_TRANSITION_KEY);
+                                               PCMK__XA_TRANSITION_KEY);
             }
 
             crm_info("Notifying %s on %s that %s was%s deleted",
@@ -735,10 +752,10 @@ handle_lrm_delete(xmlNode *stored_msg)
                      ((rc == pcmk_rc_ok)? "" : " not"));
             op = lrmd_new_event(rsc_id, PCMK_ACTION_DELETE, 0);
             op->type = lrmd_event_exec_complete;
-            op->user_data = strdup(transition? transition : FAKE_TE_ID);
+            op->user_data = pcmk__str_copy(pcmk__s(transition, FAKE_TE_ID));
             op->params = pcmk__strkey_table(free, free);
-            g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION),
-                                strdup(CRM_FEATURE_SET));
+            pcmk__insert_dup(op->params, PCMK_XA_CRM_FEATURE_SET,
+                             CRM_FEATURE_SET);
             controld_rc2event(op, rc);
             controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
             lrmd_free_event(op);
@@ -759,7 +776,7 @@ static enum crmd_fsa_input
 handle_remote_state(const xmlNode *msg)
 {
     const char *conn_host = NULL;
-    const char *remote_uname = ID(msg);
+    const char *remote_uname = pcmk__xe_id(msg);
     crm_node_t *remote_peer;
     bool remote_is_up = false;
     int rc = pcmk_rc_ok;
@@ -768,14 +785,14 @@ handle_remote_state(const xmlNode *msg)
 
     CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
-    remote_peer = crm_remote_peer_get(remote_uname);
+    remote_peer = pcmk__cluster_lookup_remote_node(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
     pcmk__update_peer_state(__func__, remote_peer,
                             remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
                             0);
 
-    conn_host = crm_element_value(msg, PCMK__XA_CONN_HOST);
+    conn_host = crm_element_value(msg, PCMK__XA_CONNECTION_HOST);
     if (conn_host) {
         pcmk__str_update(&remote_peer->conn_host, conn_host);
     } else if (remote_peer->conn_host) {
@@ -802,18 +819,18 @@ handle_ping(const xmlNode *msg)
 
     // Build reply
 
-    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
-    value = crm_element_value(msg, F_CRM_SYS_TO);
-    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
+    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
 
     // Add controller state
     value = fsa_state2string(controld_globals.fsa_state);
-    crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
+    crm_xml_add(ping, PCMK__XA_CRMD_STATE, value);
     crm_notice("Current ping state: %s", value); // CTS needs this
 
     // Add controller health
     // @TODO maybe do some checks to determine meaningful status
-    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
 
     // Send reply
     reply = create_reply(msg, ping);
@@ -843,13 +860,13 @@ handle_node_list(const xmlNode *request)
     xmlNode *reply_data = NULL;
 
     // Create message data for reply
-    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    reply_data = pcmk__xe_create(NULL, PCMK_XE_NODES);
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
-        xmlNode *xml = create_xml_node(reply_data, XML_CIB_TAG_NODE);
+        xmlNode *xml = pcmk__xe_create(reply_data, PCMK_XE_NODE);
 
-        crm_xml_add_ll(xml, XML_ATTR_ID, (long long) node->id); // uint32_t
-        crm_xml_add(xml, XML_ATTR_UNAME, node->uname);
+        crm_xml_add_ll(xml, PCMK_XA_ID, (long long) node->id); // uint32_t
+        crm_xml_add(xml, PCMK_XA_UNAME, node->uname);
         crm_xml_add(xml, PCMK__XA_IN_CCM, node->state);
     }
 
@@ -883,32 +900,32 @@ handle_node_info_request(const xmlNode *msg)
 
     // Build reply
 
-    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+    reply_data = pcmk__xe_create(NULL, PCMK_XE_NODE);
+    crm_xml_add(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM,
+    pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,
                            pcmk_is_set(controld_globals.flags,
                                        controld_has_quorum));
 
     // Check whether client requested node info by ID and/or name
-    crm_element_value_int(msg, XML_ATTR_ID, &node_id);
+    crm_element_value_int(msg, PCMK_XA_ID, &node_id);
     if (node_id < 0) {
         node_id = 0;
     }
-    value = crm_element_value(msg, XML_ATTR_UNAME);
+    value = crm_element_value(msg, PCMK_XA_UNAME);
 
     // Default to local node if none given
     if ((node_id == 0) && (value == NULL)) {
         value = controld_globals.our_nodename;
     }
 
-    node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
+    node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
     if (node) {
-        crm_xml_add(reply_data, XML_ATTR_ID, node->uuid);
-        crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
-        crm_xml_add(reply_data, PCMK__XA_CRMD, node->state);
-        pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
+        crm_xml_add(reply_data, PCMK_XA_ID, node->uuid);
+        crm_xml_add(reply_data, PCMK_XA_UNAME, node->uname);
+        crm_xml_add(reply_data, PCMK_XA_CRMD, node->state);
+        pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
                                pcmk_is_set(node->flags, crm_remote_node));
     }
 
@@ -927,7 +944,7 @@ handle_node_info_request(const xmlNode *msg)
 static void
 verify_feature_set(xmlNode *msg)
 {
-    const char *dc_version = crm_element_value(msg, XML_ATTR_CRM_VERSION);
+    const char *dc_version = crm_element_value(msg, PCMK_XA_CRM_FEATURE_SET);
 
     if (dc_version == NULL) {
         /* All we really know is that the DC feature set is older than 3.1.0,
@@ -953,7 +970,7 @@ verify_feature_set(xmlNode *msg)
 static enum crmd_fsa_input
 handle_shutdown_self_ack(xmlNode *stored_msg)
 {
-    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
@@ -986,7 +1003,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 static enum crmd_fsa_input
 handle_shutdown_ack(xmlNode *stored_msg)
 {
-    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
     if (host_from == NULL) {
         crm_warn("Ignoring shutdown request without origin specified");
@@ -1016,19 +1033,20 @@ static enum crmd_fsa_input
 handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 {
     xmlNode *msg = NULL;
-    const char *op = crm_element_value(stored_msg, F_CRM_TASK);
+    const char *op = crm_element_value(stored_msg, PCMK__XA_CRM_TASK);
 
     /* Optimize this for the DC - it has the most to do */
 
     crm_log_xml_trace(stored_msg, "request");
     if (op == NULL) {
-        crm_warn("Ignoring request without " F_CRM_TASK);
+        crm_warn("Ignoring request without " PCMK__XA_CRM_TASK);
         return I_NULL;
     }
 
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-        const char *from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-        crm_node_t *node = pcmk__search_cluster_node_cache(0, from, NULL);
+        const char *from = crm_element_value(stored_msg, PCMK__XA_SRC);
+        crm_node_t *node =
+            pcmk__search_node_caches(0, from, pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
@@ -1099,11 +1117,13 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
         verify_feature_set(stored_msg);
-        crm_debug("Raising I_JOIN_OFFER: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
+        crm_debug("Raising I_JOIN_OFFER: join-%s",
+                  crm_element_value(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_OFFER;
 
     } else if (strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
-        crm_debug("Raising I_JOIN_RESULT: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
+        crm_debug("Raising I_JOIN_RESULT: join-%s",
+                  crm_element_value(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_RESULT;
 
     } else if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {
@@ -1113,16 +1133,10 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                || (strcmp(op, CRM_OP_LRM_REFRESH) == 0) // @COMPAT
                || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
-        crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);
+        crm_xml_add(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
 
     } else if (strcmp(op, CRM_OP_NOOP) == 0) {
-        return I_NULL;
-
-    } else if (strcmp(op, CRM_OP_LOCAL_SHUTDOWN) == 0) {
-
-        crm_shutdown(SIGTERM);
-        /*return I_SHUTDOWN; */
         return I_NULL;
 
     } else if (strcmp(op, CRM_OP_PING) == 0) {
@@ -1135,12 +1149,12 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         int id = 0;
         const char *name = NULL;
 
-        crm_element_value_int(stored_msg, XML_ATTR_ID, &id);
-        name = crm_element_value(stored_msg, XML_ATTR_UNAME);
+        crm_element_value_int(stored_msg, PCMK_XA_ID, &id);
+        name = crm_element_value(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
             msg = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-            if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+            if (!pcmk__cluster_send_message(NULL, crm_msg_crmd, msg)) {
                 crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
@@ -1148,7 +1162,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             free_xml(msg);
 
         } else {
-            reap_crm_member(id, name);
+            pcmk__cluster_forget_cluster_node(id, name);
 
             /* If we're forgetting this node, also forget any failures to fence
              * it, so we don't carry that over to any node added later with the
@@ -1158,7 +1172,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         }
 
     } else if (strcmp(op, CRM_OP_MAINTENANCE_NODES) == 0) {
-        xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
+        xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML,
+                                                NULL, NULL);
+        xmlNode *xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         remote_ra_process_maintenance_nodes(xml);
 
@@ -1183,15 +1199,15 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 static void
 handle_response(xmlNode *stored_msg)
 {
-    const char *op = crm_element_value(stored_msg, F_CRM_TASK);
+    const char *op = crm_element_value(stored_msg, PCMK__XA_CRM_TASK);
 
     crm_log_xml_trace(stored_msg, "reply");
     if (op == NULL) {
-        crm_warn("Ignoring reply without " F_CRM_TASK);
+        crm_warn("Ignoring reply without " PCMK__XA_CRM_TASK);
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
         // Check whether scheduler answer been superseded by subsequent request
-        const char *msg_ref = crm_element_value(stored_msg, XML_ATTR_REFERENCE);
+        const char *msg_ref = crm_element_value(stored_msg, PCMK_XA_REFERENCE);
 
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
@@ -1212,7 +1228,7 @@ handle_response(xmlNode *stored_msg)
                || strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0 || strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 
     } else {
-        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+        const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
         crm_err("Unexpected response (op=%s, src=%s) sent to the %s",
                 op, host_from, AM_I_DC ? "DC" : "controller");
@@ -1230,7 +1246,7 @@ handle_shutdown_request(xmlNode * stored_msg)
      */
 
     char *now_s = NULL;
-    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    const char *host_from = crm_element_value(stored_msg, PCMK__XA_SRC);
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
@@ -1242,7 +1258,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
-    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+    update_attrd(host_from, PCMK__NODE_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */
@@ -1258,8 +1274,8 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
     client_channel = pcmk__find_client_by_id(sys);
 
-    if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
-        crm_xml_add(msg, F_CRM_HOST_FROM, controld_globals.our_nodename);
+    if (crm_element_value(msg, PCMK__XA_SRC) == NULL) {
+        crm_xml_add(msg, PCMK__XA_SRC, controld_globals.our_nodename);
     }
 
     if (client_channel != NULL) {
@@ -1267,16 +1283,21 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         pcmk__ipc_send_xml(client_channel, 0, msg, crm_ipc_server_event);
 
     } else if (pcmk__str_eq(sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        xmlNode *data = get_message_xml(msg, F_CRM_DATA);
+        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CRM_XML, NULL,
+                                                NULL);
+        xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         process_te_message(msg, data);
 
     } else if (pcmk__str_eq(sys, CRM_SYSTEM_LRMD, pcmk__str_none)) {
         fsa_data_t fsa_data;
         ha_msg_input_t fsa_input;
+        xmlNode *wrapper = NULL;
 
         fsa_input.msg = msg;
-        fsa_input.xml = get_message_xml(msg, F_CRM_DATA);
+
+        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CRM_XML, NULL, NULL);
+        fsa_input.xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         fsa_data.id = 0;
         fsa_data.actions = 0;
@@ -1323,14 +1344,15 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     crm_info("Notifying cluster of Pacemaker Remote node %s %s",
              node_name, node_up? "coming up" : "going down");
 
-    crm_xml_add(msg, XML_ATTR_ID, node_name);
+    crm_xml_add(msg, PCMK_XA_ID, node_name);
     pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
-        crm_xml_add(msg, PCMK__XA_CONN_HOST, controld_globals.our_nodename);
+        crm_xml_add(msg, PCMK__XA_CONNECTION_HOST,
+                    controld_globals.our_nodename);
     }
 
-    send_cluster_message(NULL, crm_msg_crmd, msg, TRUE);
+    pcmk__cluster_send_message(NULL, crm_msg_crmd, msg);
     free_xml(msg);
 }
 

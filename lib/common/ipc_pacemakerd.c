@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 #include <time.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
@@ -26,13 +25,13 @@ typedef struct pacemakerd_api_private_s {
 } pacemakerd_api_private_t;
 
 static const char *pacemakerd_state_str[] = {
-    XML_PING_ATTR_PACEMAKERDSTATE_INIT,
-    XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS,
-    XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
-    XML_PING_ATTR_PACEMAKERDSTATE_RUNNING,
-    XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN,
-    XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
-    XML_PING_ATTR_PACEMAKERDSTATE_REMOTE,
+    PCMK__VALUE_INIT,
+    PCMK__VALUE_STARTING_DAEMONS,
+    PCMK__VALUE_WAIT_FOR_PING,
+    PCMK__VALUE_RUNNING,
+    PCMK__VALUE_SHUTTING_DOWN,
+    PCMK__VALUE_SHUTDOWN_COMPLETE,
+    PCMK_VALUE_REMOTE,
 };
 
 enum pcmk_pacemakerd_state
@@ -180,7 +179,7 @@ post_disconnect(pcmk_ipc_api_t *api)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, F_CRM_TASK);
+    const char *command = crm_element_value(request, PCMK__XA_CRM_TASK);
 
     if (command == NULL) {
         return false;
@@ -194,6 +193,7 @@ static bool
 dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     crm_exit_t status = CRM_EX_OK;
+    xmlNode *wrapper = NULL;
     xmlNode *msg_data = NULL;
     pcmk_pacemakerd_api_reply_t reply_data = {
         pcmk_pacemakerd_reply_unknown
@@ -201,51 +201,56 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     const char *value = NULL;
     long long value_ll = 0;
 
-    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         long long int ack_status = 0;
-        pcmk__scan_ll(crm_element_value(reply, "status"), &ack_status, CRM_EX_OK);
+        pcmk__scan_ll(crm_element_value(reply, PCMK_XA_STATUS), &ack_status,
+                      CRM_EX_OK);
         return ack_status == CRM_EX_INDETERMINATE;
     }
 
-    value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if (pcmk__str_empty(value)
-        || !pcmk__str_eq(value, XML_ATTR_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from pacemakerd: "
-                 "message type '%s' not '" XML_ATTR_RESPONSE "'",
-                 pcmk__s(value, ""));
+    value = crm_element_value(reply, PCMK__XA_SUBT);
+    if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
+        crm_info("Unrecognizable message from %s: "
+                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
+                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
-        crm_info("Unrecognizable message from pacemakerd: no reference");
+    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
+        crm_info("Unrecognizable message from %s: no reference",
+                 pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    value = crm_element_value(reply, F_CRM_TASK);
+    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
-    msg_data = get_message_xml(reply, F_CRM_DATA);
-    crm_element_value_ll(msg_data, XML_ATTR_TSTAMP, &value_ll);
+    wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
+    msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
+    crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
 
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {
         reply_data.reply_type = pcmk_pacemakerd_reply_ping;
         reply_data.data.ping.state =
             pcmk_pacemakerd_api_daemon_state_text2enum(
-                crm_element_value(msg_data, XML_PING_ATTR_PACEMAKERDSTATE));
+                crm_element_value(msg_data, PCMK__XA_PACEMAKERD_STATE));
         reply_data.data.ping.status =
-            pcmk__str_eq(crm_element_value(msg_data, XML_PING_ATTR_STATUS), "ok",
+            pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
         reply_data.data.ping.last_good = (value_ll < 0)? 0 : (time_t) value_ll;
-        reply_data.data.ping.sys_from = crm_element_value(msg_data,
-                                            XML_PING_ATTR_SYSFROM);
+        reply_data.data.ping.sys_from =
+            crm_element_value(msg_data, PCMK__XA_CRM_SUBSYSTEM);
     } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
+        const char *op_status = crm_element_value(msg_data, PCMK__XA_OP_STATUS);
+
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
-        reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));
+        reply_data.data.shutdown.status = atoi(op_status);
     } else {
-        crm_info("Unrecognizable message from pacemakerd: "
-                 "unknown command '%s'", pcmk__s(value, ""));
+        crm_info("Unrecognizable message from %s: unknown command '%s'",
+                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -292,8 +297,8 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't send request to pacemakerd: %s rc=%d",
-                      pcmk_rc_str(rc), rc);
+            crm_debug("Couldn't send request to %s: %s rc=%d",
+                      pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
         }
         free_xml(cmd);
     } else {

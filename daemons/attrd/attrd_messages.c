@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,8 @@
 #include <glib.h>
 
 #include <crm/common/messages_internal.h>
-#include <crm/msg_xml.h>
+#include <crm/cluster/internal.h>   // pcmk__get_node()
+#include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
 
@@ -30,7 +31,7 @@ static int
 remove_sync_point_attribute(xmlNode *xml, void *data)
 {
     pcmk__xe_remove_matching_attrs(xml, is_sync_point_attr, NULL);
-    pcmk__xe_foreach_child(xml, XML_ATTR_OP, remove_sync_point_attribute, NULL);
+    pcmk__xe_foreach_child(xml, PCMK_XE_OP, remove_sync_point_attribute, NULL);
     return pcmk_rc_ok;
 }
 
@@ -105,7 +106,8 @@ handle_confirm_request(pcmk__request_t *request)
 
         crm_debug("Received confirmation from %s", request->peer);
 
-        if (crm_element_value_int(request->xml, XML_LRM_ATTR_CALLID, &callid) == -1) {
+        if (crm_element_value_int(request->xml, PCMK__XA_CALL_ID,
+                                  &callid) == -1) {
             pcmk__set_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                              "Could not get callid from XML");
         } else {
@@ -147,8 +149,14 @@ static xmlNode *
 handle_remove_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
-        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
-        attrd_peer_remove(host, true, request->peer);
+        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
+        bool reap = false;
+
+        if (pcmk__xe_get_bool_attr(request->xml, PCMK__XA_REAP,
+                                   &reap) != pcmk_rc_ok) {
+            reap = true; // Default to true for backward compatibility
+        }
+        attrd_peer_remove(host, reap, request->peer);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     } else {
@@ -167,27 +175,14 @@ handle_refresh_request(pcmk__request_t *request)
 }
 
 static xmlNode *
-handle_sync_request(pcmk__request_t *request)
-{
-    if (request->peer != NULL) {
-        crm_node_t *peer = crm_get_peer(0, request->peer);
-
-        attrd_peer_sync(peer, request->xml);
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
-    } else {
-        return handle_unknown_request(request);
-    }
-}
-
-static xmlNode *
 handle_sync_response_request(pcmk__request_t *request)
 {
     if (request->ipc_client != NULL) {
         return handle_unknown_request(request);
     } else {
         if (request->peer != NULL) {
-            crm_node_t *peer = crm_get_peer(0, request->peer);
+            crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
+                                              pcmk__node_search_cluster_member);
             bool peer_won = attrd_check_for_new_writer(peer, request->xml);
 
             if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
@@ -204,8 +199,9 @@ static xmlNode *
 handle_update_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
-        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
-        crm_node_t *peer = crm_get_peer(0, request->peer);
+        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_HOST);
+        crm_node_t *peer = pcmk__get_node(0, request->peer, NULL,
+                                          pcmk__node_search_cluster_member);
 
         attrd_peer_update(peer, request->xml, host, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -251,7 +247,6 @@ attrd_register_handlers(void)
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
         { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
-        { PCMK__ATTRD_CMD_SYNC, handle_sync_request },
         { PCMK__ATTRD_CMD_SYNC_RESPONSE, handle_sync_response_request },
         { PCMK__ATTRD_CMD_UPDATE, handle_update_request },
         { PCMK__ATTRD_CMD_UPDATE_DELAY, handle_update_request },
@@ -323,11 +318,11 @@ attrd_handle_request(pcmk__request_t *request)
 void
 attrd_broadcast_protocol(void)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __func__);
+    xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
-    crm_xml_add(attrd_op, F_ORIG, crm_system_name);
-    crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    crm_xml_add(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    crm_xml_add(attrd_op, PCMK__XA_SRC, crm_system_name);
+    crm_xml_add(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
@@ -344,9 +339,9 @@ attrd_broadcast_protocol(void)
 gboolean
 attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
-    const char *op = crm_element_value(data, PCMK__XA_TASK);
+    const char *op = crm_element_value(data, PCMK_XA_TASK);
 
-    crm_xml_add(data, F_TYPE, T_ATTRD);
+    crm_xml_add(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
     /* Request a confirmation from the destination peer node (which could
@@ -358,5 +353,5 @@ attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
     }
 
     attrd_xml_add_writer(data);
-    return send_cluster_message(node, crm_msg_attrd, data, TRUE);
+    return pcmk__cluster_send_message(node, crm_msg_attrd, data);
 }

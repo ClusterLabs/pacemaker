@@ -1,7 +1,7 @@
-""" Stop the cluster manager on a given node """
+"""Stop the cluster manager on a given node."""
 
 __all__ = ["StopTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -18,27 +18,25 @@ from pacemaker._cts.tests.ctstest import CTSTest
 
 
 class StopTest(CTSTest):
-    """ A pseudo-test that is only used to set up conditions before running
-        some other test.  This class stops the cluster manager on a given
-        node.
+    """
+    A pseudo-test that sets up conditions before running some other test.
 
-        Other test classes should not use this one as a superclass.
+    This class stops the cluster manager on a given node.  Other test classes
+    should not use this one as a superclass.
     """
 
     def __init__(self, cm):
-        """ Create a new StopTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new StopTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
         self.name = "Stop"
 
     def __call__(self, node):
-        """ Stop the given node, returning whether this succeeded or not """
-
+        """Stop the given node, returning whether this succeeded or not."""
         self.incr("calls")
         if self._cm.expected_status[node] != "up":
             return self.skipped()
@@ -52,7 +50,7 @@ class StopTest(CTSTest):
         # (note that this won't work if we have multiple partitions)
         for other in self._env["nodes"]:
             if self._cm.expected_status[other] == "up" and other != node:
-                patterns.append(self.templates["Pat:They_stopped"] %(other, node))
+                patterns.append(self.templates["Pat:They_stopped"] % (other, node))
 
         watch = self.create_watch(patterns, self._env["DeadTime"])
         watch.set_watch()

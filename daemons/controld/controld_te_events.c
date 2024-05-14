@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,12 +12,11 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
 
-#include <crm/common/attrd_internal.h>
+#include <crm/common/attrs_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
 
 /*!
@@ -109,17 +108,22 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             } else if (action->type == pcmk__cluster_graph_action) {
-                const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+                const char *task = crm_element_value(action->xml,
+                                                     PCMK_XA_OPERATION);
 
                 if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                     continue;
                 }
             }
 
-            target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-            router = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+            target_uuid = crm_element_value(action->xml,
+                                            PCMK__META_ON_NODE_UUID);
+            router = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
             if (router) {
-                crm_node_t *node = crm_get_peer(0, router);
+                const crm_node_t *node =
+                    pcmk__get_node(0, router, NULL,
+                                   pcmk__node_search_cluster_member);
+
                 if (node) {
                     router_uuid = node->uuid;
                 }
@@ -134,10 +138,15 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 
                 if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
                     crm_notice("Action %d (%s) was pending on %s (offline)",
-                               action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
+                               action->id,
+                               crm_element_value(action->xml,
+                                                 PCMK__XA_OPERATION_KEY),
+                               down_node);
                 } else {
                     crm_info("Action %d (%s) is scheduled for %s (offline)",
-                             action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
+                             action->id,
+                             crm_element_value(action->xml, PCMK__XA_OPERATION_KEY),
+                             down_node);
                 }
             }
         }
@@ -145,8 +154,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 
     if (last_action != NULL) {
         crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
-        abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
-                         last_action);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Node failure", last_action);
         return TRUE;
     }
 
@@ -176,9 +185,9 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     char *rsc_id = NULL;
 
     const char *value = NULL;
-    const char *id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
-    const char *on_uname = crm_peer_uname(event_node_uuid);
-    const char *origin = crm_element_value(event, XML_ATTR_ORIGIN);
+    const char *id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
+    const char *on_uname = pcmk__node_name_from_uuid(event_node_uuid);
+    const char *origin = crm_element_value(event, PCMK_XA_CRM_DEBUG_ORIGIN);
 
     // Nothing needs to be done for success or status refresh
     if (rc == target_rc) {
@@ -192,7 +201,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     /* Sanity check */
     CRM_CHECK(on_uname != NULL, return TRUE);
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval_ms),
-              crm_err("Couldn't parse: %s", ID(event)); goto bail);
+              crm_err("Couldn't parse: %s", pcmk__xe_id(event)); goto bail);
 
     /* Decide whether update is necessary and what value to use */
     if ((interval_ms > 0)
@@ -203,12 +212,12 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     } else if (pcmk__str_eq(task, PCMK_ACTION_START, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_start_offset,
-                        CRM_INFINITY_S);
+                        PCMK_VALUE_INFINITY);
 
     } else if (pcmk__str_eq(task, PCMK_ACTION_STOP, pcmk__str_none)) {
         do_update = TRUE;
         value = pcmk__s(controld_globals.transition_graph->failed_stop_offset,
-                        CRM_INFINITY_S);
+                        PCMK_VALUE_INFINITY);
     }
 
     if (do_update) {
@@ -224,7 +233,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         // Fail count will be either incremented or set to infinity
         if (!pcmk_str_is_infinity(value)) {
-            value = XML_NVPAIR_ATTR_VALUE "++";
+            value = PCMK_XA_VALUE "++";
         }
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
@@ -237,8 +246,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            fail_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
-            CRM_ASSERT(fail_pair != NULL);
+            fail_pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
             fail_name = pcmk__failcount_name(rsc_id, task, interval_ms);
             fail_pair->name = fail_name;
@@ -251,8 +259,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        last_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
-        CRM_ASSERT(last_pair != NULL);
+        last_pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
         last_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
         last_pair->name = last_name;
@@ -313,18 +320,18 @@ get_cancel_action(const char *id, const char *node)
             const char *target = NULL;
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
-            task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+            task = crm_element_value(action->xml, PCMK_XA_OPERATION);
             if (!pcmk__str_eq(PCMK_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
 
-            task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+            task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
             if (!pcmk__str_eq(task, id, pcmk__str_casei)) {
                 crm_trace("Wrong key %s for %s on %s", task, id, node);
                 continue;
             }
 
-            target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+            target = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
             if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
                 crm_trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
@@ -348,8 +355,8 @@ confirm_cancel_action(const char *id, const char *node_id)
     if (cancel == NULL) {
         return FALSE;
     }
-    op_key = crm_element_value(cancel->xml, XML_LRM_ATTR_TASK_KEY);
-    node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
+    op_key = crm_element_value(cancel->xml, PCMK__XA_OPERATION_KEY);
+    node_name = crm_element_value(cancel->xml, PCMK__META_ON_NODE);
 
     stop_te_timer(cancel);
     te_action_confirmed(cancel, controld_globals.transition_graph);
@@ -360,8 +367,8 @@ confirm_cancel_action(const char *id, const char *node_id)
 }
 
 /* downed nodes are listed like: <downed> <node id="UUID1" /> ... </downed> */
-#define XPATH_DOWNED "//" XML_GRAPH_TAG_DOWNED \
-                     "/" XML_CIB_TAG_NODE "[@" XML_ATTR_ID "='%s']"
+#define XPATH_DOWNED "//" PCMK__XE_DOWNED \
+                     "/" PCMK_XE_NODE "[@" PCMK_XA_ID "='%s']"
 
 /*!
  * \brief Find a transition event that would have made a specified node down
@@ -405,7 +412,8 @@ match_down_event(const char *target)
 
     if (match != NULL) {
         crm_debug("Shutdown action %d (%s) found for node %s", match->id,
-                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY), target);
+                  crm_element_value(match->xml, PCMK__XA_OPERATION_KEY),
+                  target);
     } else {
         crm_debug("No reason to expect node %s to be down", target);
     }
@@ -434,20 +442,20 @@ process_graph_event(xmlNode *event, const char *event_node)
 <lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>
 */
 
-    magic = crm_element_value(event, XML_ATTR_TRANSITION_KEY);
+    magic = crm_element_value(event, PCMK__XA_TRANSITION_KEY);
     if (magic == NULL) {
         /* non-change */
         return;
     }
 
-    crm_element_value_int(event, XML_LRM_ATTR_OPSTATUS, &status);
+    crm_element_value_int(event, PCMK__XA_OP_STATUS, &status);
     if (status == PCMK_EXEC_PENDING) {
         return;
     }
 
-    id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
-    crm_element_value_int(event, XML_LRM_ATTR_RC, &rc);
-    crm_element_value_int(event, XML_LRM_ATTR_CALLID, &callid);
+    id = crm_element_value(event, PCMK__XA_OPERATION_KEY);
+    crm_element_value_int(event, PCMK__XA_RC_CODE, &rc);
+    crm_element_value_int(event, PCMK__XA_CALL_ID, &callid);
 
     rc = pcmk__effective_rc(rc);
 
@@ -456,7 +464,8 @@ process_graph_event(xmlNode *event, const char *event_node)
         // decode_transition_key() already logged the bad key
         crm_err("Can't process action %s result: Incompatible versions? "
                 CRM_XS " call-id=%d", id, callid);
-        abort_transition(INFINITY, pcmk__graph_restart, "Bad event", event);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Bad event", event);
         return;
     }
 
@@ -468,14 +477,15 @@ process_graph_event(xmlNode *event, const char *event_node)
             goto bail;
         }
         desc = "initiated outside of the cluster";
-        abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
-                         event);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Unexpected event", event);
 
     } else if ((action_num < 0)
                || !pcmk__str_eq(update_te_uuid, controld_globals.te_uuid,
                                 pcmk__str_none)) {
         desc = "initiated by a different DC";
-        abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
+        abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                         "Foreign event", event);
 
     } else if ((controld_globals.transition_graph->id != transition_num)
                || controld_globals.transition_graph->complete) {
@@ -496,16 +506,17 @@ process_graph_event(xmlNode *event, const char *event_node)
             }
 
             desc = "arrived after initial scheduling";
-            abort_transition(INFINITY, pcmk__graph_restart,
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Change in recurring result", event);
 
         } else if (controld_globals.transition_graph->id != transition_num) {
             desc = "arrived really late";
-            abort_transition(INFINITY, pcmk__graph_restart, "Old event", event);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Old event", event);
         } else {
             desc = "arrived late";
-            abort_transition(INFINITY, pcmk__graph_restart, "Inactive graph",
-                             event);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Inactive graph", event);
         }
 
     } else {
@@ -515,8 +526,8 @@ process_graph_event(xmlNode *event, const char *event_node)
         if (action == NULL) {
             // Should never happen
             desc = "unknown";
-            abort_transition(INFINITY, pcmk__graph_restart, "Unknown event",
-                             event);
+            abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
+                             "Unknown event", event);
 
         } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
             /* Nothing further needs to be done if the action has already been
@@ -533,7 +544,8 @@ process_graph_event(xmlNode *event, const char *event_node)
              * (This is the only case where desc == NULL.)
              */
 
-            if (pcmk__str_eq(crm_meta_value(action->params, XML_OP_ATTR_ON_FAIL), "ignore", pcmk__str_casei)) {
+            if (pcmk__str_eq(crm_meta_value(action->params, PCMK_META_ON_FAIL),
+                             PCMK_VALUE_IGNORE, pcmk__str_casei)) {
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {
@@ -553,7 +565,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (id == NULL) {
         id = "unknown action";
     }
-    uname = crm_element_value(event, XML_LRM_ATTR_TARGET);
+    uname = crm_element_value(event, PCMK__META_ON_NODE);
     if (uname == NULL) {
         uname = "unknown node";
     }

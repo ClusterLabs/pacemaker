@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2023 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -257,7 +257,7 @@ static GOptionEntry operation_entries[] = {
       "N" },
     /* Deprecated */
     { "pending", 'j', G_OPTION_FLAG_NO_ARG|G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, pending_cb,
-      "Display pending state if 'record-pending' is enabled",
+      "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
     { NULL }
@@ -359,22 +359,30 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         }
 
     } else if (pcmk__str_eq(input, "-", pcmk__str_casei)) {
-        cib_object = filename2xml(NULL);
+        cib_object = pcmk__xml_read(NULL);
 
     } else {
-        cib_object = filename2xml(input);
+        cib_object = pcmk__xml_read(input);
     }
 
-    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
-        create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+    if (cib_object == NULL) {
+        rc = pcmk_rc_bad_input;
+        g_set_error(error, PCMK__EXITC_ERROR, pcmk_rc2exitc(rc),
+                    "Could not read input XML: %s", pcmk_rc_str(rc));
+        return rc;
     }
 
-    if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
+    if (pcmk_find_cib_element(cib_object, PCMK_XE_STATUS) == NULL) {
+        pcmk__xe_create(cib_object, PCMK_XE_STATUS);
+    }
+
+    rc = pcmk_update_configured_schema(&cib_object, false);
+    if (rc != pcmk_rc_ok) {
         free_xml(cib_object);
-        return pcmk_rc_transform_failed;
+        return rc;
     }
 
-    if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
         free_xml(cib_object);
         return pcmk_rc_schema_validation;
     }
@@ -388,20 +396,17 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         free(pid);
     }
 
-    rc = write_xml_file(cib_object, output, FALSE);
-    free_xml(cib_object);
-    cib_object = NULL;
-
-    if (rc < 0) {
-        rc = pcmk_legacy2rc(rc);
+    rc = pcmk__xml_write_file(cib_object, output, false, NULL);
+    if (rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT,
                     "Could not create '%s': %s", output, pcmk_rc_str(rc));
-        return rc;
     } else {
         setenv("CIB_file", output, 1);
-        free(local_output);
-        return pcmk_rc_ok;
     }
+
+    free_xml(cib_object);
+    free(local_output);
+    return rc;
 }
 
 static GOptionContext *
@@ -489,9 +494,8 @@ main(int argc, char **argv)
     if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches) &&
         !pcmk_is_set(options.flags, pcmk_sim_show_scores) &&
         !pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-        pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
-    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
-        pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
+
+        pcmk__output_text_set_fancy(out, true);
     }
 
     pe__register_messages(out);
@@ -523,12 +527,12 @@ main(int argc, char **argv)
     }
 
     if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_output_scores);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_output_scores);
     }
     if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-        pe__set_working_set_flags(scheduler, pcmk_sched_show_utilization);
+        pcmk__set_scheduler_flags(scheduler, pcmk_sched_show_utilization);
     }
-    pe__set_working_set_flags(scheduler, pcmk_sched_no_compat);
+    pcmk__set_scheduler_flags(scheduler, pcmk_sched_no_compat);
 
     if (options.test_dir != NULL) {
         scheduler->priv = out;

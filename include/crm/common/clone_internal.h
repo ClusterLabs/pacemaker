@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,11 @@
  */
 
 #ifndef PCMK__CRM_COMMON_CLONE_INTERNAL__H
-#  define PCMK__CRM_COMMON_CLONE_INTERNAL__H
+#define PCMK__CRM_COMMON_CLONE_INTERNAL__H
+
+#include <stdbool.h>                    // bool
+#include <crm/common/scheduler_types.h> // pcmk_resource_t
+#include <crm/common/resources.h>       // pcmk_rsc_variant_clone
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +29,50 @@ enum pcmk__clone_flags {
     // Whether promotion constraints have been added
     pcmk__clone_promotion_constrained   = (1 << 2),
 };
+
+/*!
+ * \internal
+ * \brief Check whether a resource is a clone resource
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is a clone, otherwise false
+ *
+ * \note This does not return true if \p rsc has a clone ancestor.
+ */
+static inline bool
+pcmk__is_clone(const pcmk_resource_t *rsc)
+{
+    return (rsc != NULL) && (rsc->variant == pcmk_rsc_variant_clone);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource is a globally unique clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is a unique clone, otherwise false
+ */
+static inline bool
+pcmk__is_unique_clone(const pcmk_resource_t *rsc)
+{
+    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource is an anonymous clone
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc is an anonymous clone, otherwise false
+ */
+static inline bool
+pcmk__is_anonymous_clone(const pcmk_resource_t *rsc)
+{
+    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+}
 
 #ifdef __cplusplus
 }

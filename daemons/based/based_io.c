@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,6 @@
 
 #include <crm/cib.h>
 #include <crm/common/util.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>
 #include <crm/cluster.h>
@@ -258,20 +257,20 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);
+    status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
     if (discard_status && status != NULL) {
-        /* strip out the status section if there is one */
+        // Strip out the PCMK_XE_STATUS section if there is one
         free_xml(status);
         status = NULL;
     }
     if (status == NULL) {
-        create_xml_node(root, XML_CIB_TAG_STATUS);
+        pcmk__xe_create(root, PCMK_XE_STATUS);
     }
 
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    name = XML_ATTR_GENERATION_ADMIN;
+    name = PCMK_XA_ADMIN_EPOCH;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_warn("No value for %s was specified in the configuration.", name);
@@ -283,38 +282,38 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_xml_add_int(root, name, 0);
     }
 
-    name = XML_ATTR_GENERATION;
+    name = PCMK_XA_EPOCH;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_xml_add_int(root, name, 0);
     }
 
-    name = XML_ATTR_NUMUPDATES;
+    name = PCMK_XA_NUM_UPDATES;
     value = crm_element_value(root, name);
     if (value == NULL) {
         crm_xml_add_int(root, name, 0);
     }
 
     // Unset (DC should set appropriate value)
-    xml_remove_prop(root, XML_ATTR_DC_UUID);
+    pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
     if (discard_status) {
         crm_log_xml_trace(root, "[on-disk]");
     }
 
-    validation = crm_element_value(root, XML_ATTR_VALIDATION);
-    if (validate_xml(root, NULL, TRUE) == FALSE) {
+    validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
+    if (!pcmk__configured_schema_validates(root)) {
         crm_err("CIB does not validate with %s",
                 pcmk__s(validation, "no schema specified"));
         cib_status = -pcmk_err_schema_validation;
 
+    // @COMPAT Not specifying validate-with is deprecated since 2.1.8
     } else if (validation == NULL) {
-        int version = 0;
-
-        update_validation(&root, &version, 0, FALSE, FALSE);
-        if (version > 0) {
+        pcmk__update_schema(&root, NULL, false, false);
+        validation = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
+        if (validation != NULL) {
             crm_notice("Enabling %s validation on"
-                       " the existing (sane) configuration", get_schema_name(version));
+                       " the existing (sane) configuration", validation);
         } else {
             crm_err("CIB does not validate with any known schema");
             cib_status = -pcmk_err_schema_validation;
@@ -408,7 +407,7 @@ write_cib_contents(gpointer p)
     /* Make a copy of the CIB to write (possibly in a forked child) */
     if (p) {
         /* Synchronous write out */
-        cib_local = copy_xml(p);
+        cib_local = pcmk__xml_copy(NULL, p);
 
     } else {
         int pid = 0;
@@ -445,7 +444,7 @@ write_cib_contents(gpointer p)
         /* In theory, we can scribble on the_cib here and not affect the parent,
          * but let's be safe anyway.
          */
-        cib_local = copy_xml(the_cib);
+        cib_local = pcmk__xml_copy(NULL, the_cib);
     }
 
     /* Write the CIB */

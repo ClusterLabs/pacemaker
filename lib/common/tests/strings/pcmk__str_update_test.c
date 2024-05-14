@@ -59,7 +59,8 @@ strdup_fails(void **state) {
 
     str = strdup("hello");
 
-    pcmk__assert_asserts(
+    pcmk__assert_exits(
+        CRM_EX_OSERR,
         {
             pcmk__mock_strdup = true;   // strdup() will return NULL
             expect_string(__wrap_strdup, s, "world");

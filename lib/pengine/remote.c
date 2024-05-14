@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2023 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,47 +8,10 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
-
-bool
-pe__resource_is_remote_conn(const pcmk_resource_t *rsc)
-{
-    return (rsc != NULL) && rsc->is_remote_node
-           && pe__is_remote_node(pe_find_node(rsc->cluster->nodes, rsc->id));
-}
-
-bool
-pe__is_remote_node(const pcmk_node_t *node)
-{
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
-           && ((node->details->remote_rsc == NULL)
-               || (node->details->remote_rsc->container == NULL));
-}
-
-bool
-pe__is_guest_node(const pcmk_node_t *node)
-{
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote)
-           && (node->details->remote_rsc != NULL)
-           && (node->details->remote_rsc->container != NULL);
-}
-
-bool
-pe__is_guest_or_remote_node(const pcmk_node_t *node)
-{
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
-}
-
-bool
-pe__is_bundle_node(const pcmk_node_t *node)
-{
-    return pe__is_guest_node(node)
-           && pe_rsc_is_bundled(node->details->remote_rsc);
-}
 
 /*!
  * \internal
@@ -89,17 +52,17 @@ xml_contains_remote_node(xmlNode *xml)
         return false;
     }
 
-    value = crm_element_value(xml, XML_ATTR_TYPE);
+    value = crm_element_value(xml, PCMK_XA_TYPE);
     if (!pcmk__str_eq(value, "remote", pcmk__str_casei)) {
         return false;
     }
 
-    value = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
+    value = crm_element_value(xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(value, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         return false;
     }
 
-    value = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
+    value = crm_element_value(xml, PCMK_XA_PROVIDER);
     if (!pcmk__str_eq(value, "pacemaker", pcmk__str_casei)) {
         return false;
     }
@@ -132,7 +95,7 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
         if (rsc->is_remote_node && (rsc->container != NULL)) {
-            pcmk_node_t *guest_node = pe_find_node(scheduler->nodes, rsc->id);
+            pcmk_node_t *guest_node = pcmk_find_node(scheduler, rsc->id);
 
             if (guest_node) {
                 (*helper)(guest_node, user_data);
@@ -145,14 +108,16 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
  * \internal
  * \brief Create CIB XML for an implicit remote connection
  *
- * \param[in,out] parent           If not NULL, use as parent XML element
- * \param[in]     uname            Name of Pacemaker Remote node
- * \param[in]     container        If not NULL, use this as connection container
- * \param[in]     migrateable      If not NULL, use as allow-migrate value
- * \param[in]     is_managed       If not NULL, use as is-managed value
- * \param[in]     start_timeout    If not NULL, use as remote connect timeout
- * \param[in]     server           If not NULL, use as remote server value
- * \param[in]     port             If not NULL, use as remote port value
+ * \param[in,out] parent         If not \c NULL, use as parent XML element
+ * \param[in]     uname          Name of Pacemaker Remote node
+ * \param[in]     container_id   If not \c NULL, use this as connection container
+ * \param[in]     migrateable    If not \c NULL, use as remote
+ *                               \c PCMK_META_ALLOW_MIGRATE value
+ * \param[in]     is_managed     If not \c NULL, use as remote
+ *                               \c PCMK_META_IS_MANAGED value
+ * \param[in]     start_timeout  If not \c NULL, use as remote connect timeout
+ * \param[in]     server         If not \c NULL, use as \c PCMK_REMOTE_RA_ADDR
+ * \param[in]     port           If not \c NULL, use as \c PCMK_REMOTE_RA_PORT
  *
  * \return Newly created XML
  */
@@ -165,46 +130,45 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     xmlNode *remote;
     xmlNode *xml_sub;
 
-    remote = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
+    remote = pcmk__xe_create(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
-    crm_xml_add(remote, XML_ATTR_ID, uname);
-    crm_xml_add(remote, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(remote, XML_AGENT_ATTR_PROVIDER, "pacemaker");
-    crm_xml_add(remote, XML_ATTR_TYPE, "remote");
+    crm_xml_add(remote, PCMK_XA_ID, uname);
+    crm_xml_add(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    crm_xml_add(remote, PCMK_XA_PROVIDER, "pacemaker");
+    crm_xml_add(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
-    xml_sub = create_xml_node(remote, XML_TAG_META_SETS);
-    crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_META_SETS);
+    xml_sub = pcmk__xe_create(remote, PCMK_XE_META_ATTRIBUTES);
+    crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_META_ATTRIBUTES);
     crm_create_nvpair_xml(xml_sub, NULL,
-                          XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
+                          PCMK__META_INTERNAL_RSC, PCMK_VALUE_TRUE);
     if (container_id) {
         crm_create_nvpair_xml(xml_sub, NULL,
-                              XML_RSC_ATTR_CONTAINER, container_id);
+                              PCMK__META_CONTAINER, container_id);
     }
     if (migrateable) {
         crm_create_nvpair_xml(xml_sub, NULL,
-                              XML_OP_ATTR_ALLOW_MIGRATE, migrateable);
+                              PCMK_META_ALLOW_MIGRATE, migrateable);
     }
     if (is_managed) {
-        crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_MANAGED, is_managed);
+        crm_create_nvpair_xml(xml_sub, NULL, PCMK_META_IS_MANAGED, is_managed);
     }
 
     // Add instance attributes
     if (port || server) {
-        xml_sub = create_xml_node(remote, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_ATTR_SETS);
+        xml_sub = pcmk__xe_create(remote, PCMK_XE_INSTANCE_ATTRIBUTES);
+        crm_xml_set_id(xml_sub, "%s-%s", uname, PCMK_XE_INSTANCE_ATTRIBUTES);
         if (server) {
-            crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_REMOTE_RA_ADDR,
-                                  server);
+            crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_ADDR, server);
         }
         if (port) {
-            crm_create_nvpair_xml(xml_sub, NULL, "port", port);
+            crm_create_nvpair_xml(xml_sub, NULL, PCMK_REMOTE_RA_PORT, port);
         }
     }
 
     // Add operations
-    xml_sub = create_xml_node(remote, "operations");
+    xml_sub = pcmk__xe_create(remote, PCMK_XE_OPERATIONS);
     crm_create_op_xml(xml_sub, uname, PCMK_ACTION_MONITOR, "30s", "30s");
     if (start_timeout) {
         crm_create_op_xml(xml_sub, uname, PCMK_ACTION_START, "0",
@@ -230,10 +194,10 @@ pe__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
 
     CRM_CHECK(scheduler && rsc_op && rsc && node, return);
 
-    check_op = calloc(1, sizeof(struct check_op));
-    CRM_ASSERT(check_op != NULL);
+    check_op = pcmk__assert_alloc(1, sizeof(struct check_op));
 
-    crm_trace("Deferring checks of %s until after allocation", ID(rsc_op));
+    crm_trace("Deferring checks of %s until after allocation",
+              pcmk__xe_id(rsc_op));
     check_op->rsc_op = rsc_op;
     check_op->rsc = rsc;
     check_op->node = node;

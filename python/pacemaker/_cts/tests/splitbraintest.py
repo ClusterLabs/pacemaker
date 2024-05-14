@@ -1,7 +1,7 @@
-""" Create a split brain cluster and verify a resource is multiply managed """
+"""Create a split brain cluster and verify a resource is multiply managed."""
 
 __all__ = ["SplitBrainTest"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
@@ -23,19 +23,20 @@ from pacemaker._cts.tests.starttest import StartTest
 
 
 class SplitBrainTest(CTSTest):
-    """ A concrete test that creates a split brain cluster and verifies that
-        one node in each partition takes over the resource, resulting in two
-        nodes running the same resource.
+    """
+    Create a split brain cluster.
+
+    This test verifies that one node in each partition takes over the
+    resource, resulting in two nodes running the same resource.
     """
 
     def __init__(self, cm):
-        """ Create a new SplitBrainTest instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new SplitBrainTest instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.is_experimental = True
@@ -45,8 +46,7 @@ class SplitBrainTest(CTSTest):
         self._startall = SimulStartLite(cm)
 
     def _isolate_partition(self, partition):
-        """ Create a new partition containing the given nodes """
-
+        """Create a new partition containing the given nodes."""
         other_nodes = self._env["nodes"].copy()
 
         for node in partition:
@@ -67,8 +67,7 @@ class SplitBrainTest(CTSTest):
                 return
 
     def _heal_partition(self, partition):
-        """ Move the given nodes out of their own partition back into the cluster """
-
+        """Move the given nodes out of their own partition back into the cluster."""
         other_nodes = self._env["nodes"].copy()
 
         for node in partition:
@@ -87,8 +86,7 @@ class SplitBrainTest(CTSTest):
             self._cm.unisolate_node(node, other_nodes)
 
     def __call__(self, node):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
         self.passed = True
         partitions = {}
@@ -197,8 +195,7 @@ class SplitBrainTest(CTSTest):
 
     @property
     def errors_to_ignore(self):
-        """ Return list of errors which should be ignored """
-
+        """Return a list of errors which should be ignored."""
         return [
             r"Another DC detected:",
             r"(ERROR|error).*: .*Application of an update diff failed",
@@ -207,8 +204,7 @@ class SplitBrainTest(CTSTest):
         ]
 
     def is_applicable(self):
-        """ Return True if this test is applicable in the current test configuration. """
-
+        """Return True if this test is applicable in the current test configuration."""
         if not CTSTest.is_applicable(self):
             return False
 

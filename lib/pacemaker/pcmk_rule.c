@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,101 +12,14 @@
 #include <crm/cib/internal.h>
 #include <crm/common/cib.h>
 #include <crm/common/iso8601.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/rules_internal.h>
 #include <pacemaker-internal.h>
 
-/*!
- * \internal
- * \brief Evaluate a date expression for a specific time
- *
- * \param[in]  expr         date_expression XML
- * \param[in]  now          Time for which to evaluate expression
- *
- * \return Standard Pacemaker return code
- */
-static int
-eval_date_expression(const xmlNode *expr, crm_time_t *now)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = pcmk_role_unknown,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
+#include "libpacemaker_private.h"
 
-    return pe__eval_date_expr(expr, &rule_data, NULL);
-}
-
-/*!
- * \internal
- * \brief Initialize scheduler data for checking rules
- *
- * Make our own copies of the CIB XML and date/time object, if they're not
- * \c NULL. This way we don't have to take ownership of the objects passed via
- * the API.
- *
- * \param[in,out] out        Output object
- * \param[in]     input      The CIB XML to check (if \c NULL, use current CIB)
- * \param[in]     date       Check whether the rule is in effect at this date
- *                           and time (if \c NULL, use current date and time)
- * \param[out]    scheduler  Where to store initialized scheduler data
- *
- * \return Standard Pacemaker return code
- */
-static int
-init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
-                pcmk_scheduler_t **scheduler)
-{
-    // Allows for cleaner syntax than dereferencing the scheduler argument
-    pcmk_scheduler_t *new_scheduler = NULL;
-
-    new_scheduler = pe_new_working_set();
-    if (new_scheduler == NULL) {
-        return ENOMEM;
-    }
-
-    pe__set_working_set_flags(new_scheduler,
-                              pcmk_sched_no_counts|pcmk_sched_no_compat);
-
-    // Populate the scheduler data
-
-    // Make our own copy of the given input or fetch the CIB and use that
-    if (input != NULL) {
-        new_scheduler->input = copy_xml(input);
-        if (new_scheduler->input == NULL) {
-            out->err(out, "Failed to copy input XML");
-            pe_free_working_set(new_scheduler);
-            return ENOMEM;
-        }
-
-    } else {
-        int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
-
-        if (rc != pcmk_rc_ok) {
-            pe_free_working_set(new_scheduler);
-            return rc;
-        }
-    }
-
-    // Make our own copy of the given crm_time_t object; otherwise
-    // cluster_status() populates with the current time
-    if (date != NULL) {
-        // pcmk_copy_time() guarantees non-NULL
-        new_scheduler->now = pcmk_copy_time(date);
-    }
-
-    // Unpack everything
-    cluster_status(new_scheduler);
-    *scheduler = new_scheduler;
-
-    return pcmk_rc_ok;
-}
-
-#define XPATH_NODE_RULE "//" XML_TAG_RULE "[@" XML_ATTR_ID "='%s']"
+#define XPATH_NODE_RULE "//" PCMK_XE_RULE "[@" PCMK_XA_ID "='%s']"
 
 /*!
  * \internal
@@ -132,7 +45,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
     /* Rules are under the constraints node in the XML, so first find that. */
     cib_constraints = pcmk_find_cib_element(scheduler->input,
-                                            XML_CIB_TAG_CONSTRAINTS);
+                                            PCMK_XE_CONSTRAINTS);
 
     /* Get all rules matching the given ID that are also simple enough for us
      * to check. For the moment, these rules must only have a single
@@ -180,8 +93,10 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     }
 
     /* Then, check that it's something we actually support. */
-    xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
-                              "@" XML_EXPR_ATTR_OPERATION "!='date_spec']",
+    xpath = crm_strdup_printf(XPATH_NODE_RULE
+                              "//" PCMK_XE_DATE_EXPRESSION
+                              "[@" PCMK_XA_OPERATION
+                                  "!='" PCMK_VALUE_DATE_SPEC "']",
                               rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
     num_results = numXpathResults(xpath_obj);
@@ -191,10 +106,15 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     if (num_results == 0) {
         freeXpathObject(xpath_obj);
 
-        xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
-                                  "@" XML_EXPR_ATTR_OPERATION "='date_spec' "
-                                  "and date_spec/@years "
-                                  "and not(date_spec/@moon)]", rule_id);
+        xpath = crm_strdup_printf(XPATH_NODE_RULE
+                                  "//" PCMK_XE_DATE_EXPRESSION
+                                  "[@" PCMK_XA_OPERATION
+                                      "='" PCMK_VALUE_DATE_SPEC "' "
+                                  "and " PCMK_XE_DATE_SPEC
+                                      "/@" PCMK_XA_YEARS " "
+                                  "and not(" PCMK_XE_DATE_SPEC
+                                      "/@" PCMK__XA_MOON ")]",
+                                  rule_id);
         xpath_obj = xpath_search(cib_constraints, xpath);
         num_results = numXpathResults(xpath_obj);
 
@@ -202,8 +122,9 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 
         if (num_results == 0) {
             freeXpathObject(xpath_obj);
-            *error = "Rule must either not use date_spec, or use date_spec "
-                     "with years= but not moon=";
+            *error = "Rule must either not use " PCMK_XE_DATE_SPEC ", or use "
+                     PCMK_XE_DATE_SPEC " with " PCMK_XA_YEARS "= but not "
+                     PCMK__XA_MOON "=";
             return EOPNOTSUPP;
         }
     }
@@ -214,13 +135,10 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * checking can't hurt.
      */
     CRM_ASSERT(match != NULL);
-    CRM_ASSERT(find_expression_type(match) == time_expr);
+    CRM_ASSERT(pcmk__condition_type(match) == pcmk__condition_datetime);
 
-    rc = eval_date_expression(match, scheduler->now);
-    if (rc == pcmk_rc_undetermined) {
-        /* pe__eval_date_expr() should return this only if something is
-         * malformed or missing
-         */
+    rc = pcmk__evaluate_date_expression(match, scheduler->now, NULL);
+    if (rc == pcmk_rc_undetermined) { // Malformed or missing
         *error = "Error parsing rule";
     }
 
@@ -255,7 +173,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         return pcmk_rc_ok;
     }
 
-    rc = init_rule_check(out, input, date, &scheduler);
+    rc = pcmk__init_scheduler(out, input, date, &scheduler);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -291,6 +209,6 @@ pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
     pcmk__register_lib_messages(out);
 
     rc = pcmk__check_rules(out, input, date, rule_ids);
-    pcmk__xml_output_finish(out, xml);
+    pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

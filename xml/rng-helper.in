@@ -1,0 +1,251 @@
+#!@BASH_PATH@
+#
+# Copyright 2014-2024 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+# @COMPAT "next" schemas are deprecated since 2.1.5
+list_candidates() {
+    ls -1 "${1}.rng" "${1}"-[0-9]*.rng "${1}"-next.rng 2>/dev/null
+}
+
+version_from_filename() {
+    vff_filename="$1"
+
+    case "$vff_filename" in
+        *-*.rng)
+            echo "$vff_filename" | sed -e 's/.*-\(.*\).rng/\1/'
+            ;;
+        *)
+            # special case for bare ${base}.rng, no -0.1's around anyway
+            echo 0.1
+            ;;
+    esac
+}
+
+filename_from_version() {
+    ffv_version="$1"
+    ffv_base="$2"
+
+    if [ "$ffv_version" = "0.1" ]; then
+        echo "${ffv_base}.rng"
+    else
+        echo "${ffv_base}-${ffv_version}.rng"
+    fi
+}
+
+# Convert version string (e.g. 2.10) into integer (e.g. 2010) for comparisons
+int_version() {
+    echo "$1" | awk -F. '{ printf("%d%03d\n", $1,$2); }';
+}
+
+# Find the (sub-)schema that best matches a desired version.
+#
+# Version numbers are assumed to be in the format X.Y,
+# where X and Y are integers, and Y is no more than 3 digits,
+# or the special value "next".
+#
+# @COMPAT "next" schemas are deprecated since 2.1.5
+best_match() {
+    # (Sub-)schema name (e.g. "resources")
+    local base="$1"
+
+    # Desired version (e.g. "1.0" or "next")
+    local target="$2"
+
+    # If not empty, append the best match as an XML externalRef to this file
+    # (otherwise, just echo the best match).
+    local destination="$3"
+
+    # Arbitrary text to print before XML (generally spaces to indent)
+    local prefix="$4"
+
+    best="0.0"
+    for rng in $(list_candidates "${base}"); do
+        case ${rng} in
+            ${base}-${target}.rng)
+                # We found exactly what was requested
+                best=${target}
+                break
+                ;;
+            *-next.rng)
+                # "Next" schemas cannot be a best match unless directly requested
+                ;;
+            *)
+                v=$(version_from_filename "${rng}")
+	        if [ $(int_version "${v}") -gt $(int_version "${best}") ]; then
+                    # This version beats the previous best match
+
+                    if [ "${target}" = "next" ]; then
+                        best=${v}
+                    elif [ $(int_version "${v}") -lt $(int_version "${target}") ]; then
+                        # This value is best only if it's still less than the target
+                        best=${v}
+                    fi
+                fi
+                ;;
+        esac
+    done
+
+    if [ "$best" != "0.0" ]; then
+        found=$(filename_from_version "$best" "$base")
+        if [ -z "$destination" ]; then
+            echo "$(basename $found)"
+        else
+            echo "${prefix}<externalRef href=\"$(basename $found)\"/>" >> "$destination"
+        fi
+        return 0
+    fi
+    return 1
+}
+
+version_diff() {
+    # diff fails with ec=2 if no predecessor is found;
+    # this uses '=' GNU extension to sed, if that's not available,
+    # one can use: hline=`echo "$${p}" | grep -Fn "$${hunk}" | cut -d: -f1`;
+    # XXX: use line information from hunk to avoid "not detected" for ambiguity
+    for p in $*; do
+        set $(echo "$p" | tr '-' ' ')
+        echo "### *-$2.rng vs. predecessor"
+
+        for v in *-"$2".rng; do
+            echo "#### $v vs. predecessor"
+
+            b=$(echo "$v" | cut -d- -f1)
+            old=$(best_match "$b" "$1")
+            p=$(diff -u "$old" "$v" 2>/dev/null)
+
+            case $? in
+                1)
+                    echo "$p" | sed -n -e '/^@@ /!d;=;p' -e ':l;n;/^\([- ]\|+.*<[^ />]\+\([^/>]\+="ID\|>$$\)\)/bl;s/^[+ ]\(.*\)/\1/p' |
+                    while read -r hline; do
+                        if read -r h; then
+                            read -r i
+                        else
+                            break
+                        fi
+
+                        iline=$(grep -Fn "$i" "$v" | cut -d: -f1)
+
+                        if [ "$(echo "$iline" | wc -l)" = "1" ]; then
+                            ctxt=$({ sed -n -e "1,$((iline - 1))p" "$v"
+                                     echo "<inject id=\"GOAL\"/>$i"
+                                     sed -n -e "$((iline + 1)),$ p" "$v"
+                                   } | xsltproc --param skip 1 context-of.xsl -)
+                        else
+                            ctxt="(not detected)"
+                        fi
+
+                        echo "$p" | sed -n -e "$((hline - 2)),$hline!d" -e '/^\(+++\|---\)/p'
+                        echo "$h context: $ctxt"
+                        echo "$p" | sed -n -e "1,${hline}d" -e '/^\(---\|@@ \)/be;p;d;:e;n;be'
+                    done
+
+                    ;;
+
+                2)
+                    echo "##### $v has no predecessor"
+                    ;;
+
+            esac
+        done
+    done
+}
+
+build_api_rng() {
+    local FILENAME="$1"
+    local VERSION="$2"
+
+    shift 2
+
+    cat <<EOF >"$FILENAME"
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="pacemaker-result">
+      <attribute name="api-version"> <text /> </attribute>
+      <attribute name="request"> <text /> </attribute>
+      <optional>
+        <choice>
+EOF
+    for RNG in "$@"; do
+        best_match "api/$RNG" "$VERSION" "$FILENAME" "          "
+    done
+    cat <<EOF >>"$FILENAME"
+        </choice>
+      </optional>
+EOF
+    best_match api/status "$VERSION" "$FILENAME" "      "
+    cat <<EOF >>"$FILENAME"
+    </element>
+  </start>
+</grammar>
+EOF
+}
+
+build_cib_rng() {
+    local FILENAME="$1"
+    local VERSION="$2"
+
+    shift 2
+    cat <<EOF >"$FILENAME"
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="cib">
+EOF
+    best_match cib "$VERSION" "$FILENAME" "      "
+    cat <<EOF >>"$FILENAME"
+      <element name="configuration">
+        <interleave>
+EOF
+    for RNG in "$@"; do
+        best_match "$RNG" "$VERSION" "$FILENAME" "          "
+    done
+    cat <<EOF >>"$FILENAME"
+        </interleave>
+      </element>
+      <optional>
+        <element name="status">
+EOF
+    best_match status "$VERSION" "$FILENAME" "          "
+    cat <<EOF >>"$FILENAME"
+        </element>
+      </optional>
+    </element>
+  </start>
+</grammar>
+EOF
+}
+
+# Allow building RNGs from a different directory
+cd "$(dirname $0)"
+
+case "$1" in
+    match)
+        # Using readlink allows building from a different directory
+        best_match "$2" "$3" "$(readlink -f "$4")" "$5"
+        ;;
+
+    diff)
+        shift
+        version_diff "$@"
+        ;;
+
+    build_api_rng)
+        build_api_rng "$2" "$3" "${@:4}"
+        ;;
+
+    build_cib_rng)
+        build_cib_rng "$2" "$3" "${@:4}"
+        ;;
+
+    *)
+        echo "Invalid command: $1"
+        exit 1
+        ;;
+esac

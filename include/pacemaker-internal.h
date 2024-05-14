@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #  include <pcmki/pcmki_agents.h>
 #  include <pcmki/pcmki_cluster_queries.h>
 #  include <pcmki/pcmki_fence.h>
+#  include <pcmki/pcmki_options.h>
 #  include <pcmki/pcmki_output.h>
 #  include <pcmki/pcmki_resource.h>
 #  include <pcmki/pcmki_result_code.h>
@@ -21,6 +22,8 @@
 #  include <pcmki/pcmki_scheduler.h>
 #  include <pcmki/pcmki_simulate.h>
 #  include <pcmki/pcmki_status.h>
+#  include <pcmki/pcmki_ticket.h>
 #  include <pcmki/pcmki_transition.h>
+#  include <pcmki/pcmki_verify.h>
 
 #endif

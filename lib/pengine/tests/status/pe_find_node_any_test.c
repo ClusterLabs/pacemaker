@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,13 +24,13 @@ static void
 non_null_list(void **state) {
     GList *nodes = NULL;
 
-    pcmk_node_t *a = calloc(1, sizeof(pcmk_node_t));
-    pcmk_node_t *b = calloc(1, sizeof(pcmk_node_t));
+    pcmk_node_t *a = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
+    pcmk_node_t *b = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
 
-    a->details = calloc(1, sizeof(struct pe_node_shared_s));
+    a->details = pcmk__assert_alloc(1, sizeof(struct pe_node_shared_s));
     a->details->uname = "cluster1";
     a->details->id = "id1";
-    b->details = calloc(1, sizeof(struct pe_node_shared_s));
+    b->details = pcmk__assert_alloc(1, sizeof(struct pe_node_shared_s));
     b->details->uname = "cluster2";
     b->details->id = "id2";
 

@@ -6,225 +6,102 @@
 Rules
 -----
 
-Rules can be used to make your configuration more dynamic, allowing values to
-change depending on the time or the value of a node attribute. Examples of
-things rules are useful for:
+Rules make a configuration more dynamic, allowing values to depend on
+conditions such as time of day or the value of a node attribute. For example,
+rules can:
 
 * Set a higher value for :ref:`resource-stickiness <resource-stickiness>`
-  during working hours, to minimize downtime, and a lower value on weekends, to
+  during working hours to minimize downtime, and a lower value on weekends to
   allow resources to move to their most preferred locations when people aren't
-  around to notice.
+  around
 
 * Automatically place the cluster into maintenance mode during a scheduled
-  maintenance window.
+  maintenance window
 
-* Assign certain nodes and resources to a particular department via custom
-  node attributes and meta-attributes, and add a single location constraint
-  that restricts the department's resources to run only on those nodes.
-
-Each constraint type or property set that supports rules may contain one or more
-``rule`` elements specifying conditions under which the constraint or properties
-take effect. Examples later in this chapter will make this clearer.
+* Restrict a particular department's resources to run on certain nodes, as
+  determined by custom resource meta-attributes and node attributes
 
 .. index::
-   pair: XML element; rule
+   pair: rule; XML element
+   pair: rule; options
 
-Rule Properties
-###############
+Rule Options
+############
 
-.. table:: **Attributes of a rule Element**
-   :widths: 1 1 3
+Each context that supports rules may contain a single ``rule`` element.
 
-   +-----------------+-------------+-------------------------------------------+
-   | Attribute       | Default     | Description                               |
-   +=================+=============+===========================================+
-   | id              |             | .. index::                                |
-   |                 |             |    pair: rule; id                         |
-   |                 |             |                                           |
-   |                 |             | A unique name for this element (required) |
-   +-----------------+-------------+-------------------------------------------+
-   | role            | ``Started`` | .. index::                                |
-   |                 |             |    pair: rule; role                       |
-   |                 |             |                                           |
-   |                 |             | The rule is in effect only when the       |
-   |                 |             | resource is in the specified role.        |
-   |                 |             | Allowed values are ``Started``,           |
-   |                 |             | ``Unpromoted``, and ``Promoted``. A rule  |
-   |                 |             | with a ``role`` of ``Promoted`` cannot    |
-   |                 |             | determine the initial location of a clone |
-   |                 |             | instance and will only affect which of    |
-   |                 |             | the active instances will be promoted.    |
-   +-----------------+-------------+-------------------------------------------+
-   | score           |             | .. index::                                |
-   |                 |             |    pair: rule; score                      |
-   |                 |             |                                           |
-   |                 |             | If this rule is used in a location        |
-   |                 |             | constraint and evaluates to true, apply   |
-   |                 |             | this score to the constraint. Only one of |
-   |                 |             | ``score`` and ``score-attribute`` may be  |
-   |                 |             | used.                                     |
-   +-----------------+-------------+-------------------------------------------+
-   | score-attribute |             | .. index::                                |
-   |                 |             |    pair: rule; score-attribute            |
-   |                 |             |                                           |
-   |                 |             | If this rule is used in a location        |
-   |                 |             | constraint and evaluates to true, use the |
-   |                 |             | value of this node attribute as the score |
-   |                 |             | to apply to the constraint. Only one of   |
-   |                 |             | ``score`` and ``score-attribute`` may be  |
-   |                 |             | used.                                     |
-   +-----------------+-------------+-------------------------------------------+
-   | boolean-op      | ``and``     | .. index::                                |
-   |                 |             |    pair: rule; boolean-op                 |
-   |                 |             |                                           |
-   |                 |             | If this rule contains more than one       |
-   |                 |             | condition, a value of ``and`` specifies   |
-   |                 |             | that the rule evaluates to true only if   |
-   |                 |             | all conditions are true, and a value of   |
-   |                 |             | ``or`` specifies that the rule evaluates  |
-   |                 |             | to true if any condition is true.         |
-   +-----------------+-------------+-------------------------------------------+
-
-A ``rule`` element must contain one or more conditions. A condition may be an
-``expression`` element, a ``date_expression`` element, or another ``rule`` element.
-
-
-.. index::
-   single: rule; node attribute expression
-   single: node attribute; rule expression
-   pair: XML element; expression
-
-.. _node_attribute_expressions:
-
-Node Attribute Expressions
-##########################
-
-Expressions are rule conditions based on the values of node attributes.
-
-.. table:: **Attributes of an expression Element**
+.. list-table:: **Attributes of a rule Element**
    :class: longtable
-   :widths: 1 2 3
+   :widths: 2 2 2 5
+   :header-rows: 1
+   
+   * - Name
+     - Type
+     - Default
+     - Description
+   
+   * - .. _rule_id:
+     
+       .. index::
+          pair: rule; id
+        
+       id
+     - :ref:`id <id>`
+     -
+     - A unique name for this element (required)
+   * - .. _boolean_op:
+     
+       .. index::
+          pair: rule; boolean-op
+        
+       boolean-op
+     - :ref:`enumeration <enumeration>`
+     - ``and``
+     - How to combine conditions if this rule contains more than one. Allowed
+       values:
+       
+       * ``and``: the rule is satisfied only if all conditions are satisfied
+       * ``or``: the rule is satisfied if any condition is satisfied
 
-   +--------------+---------------------------------+-------------------------------------------+
-   | Attribute    | Default                         | Description                               |
-   +==============+=================================+===========================================+
-   | id           |                                 | .. index::                                |
-   |              |                                 |    pair: expression; id                   |
-   |              |                                 |                                           |
-   |              |                                 | A unique name for this element (required) |
-   +--------------+---------------------------------+-------------------------------------------+
-   | attribute    |                                 | .. index::                                |
-   |              |                                 |    pair: expression; attribute            |
-   |              |                                 |                                           |
-   |              |                                 | The node attribute to test (required)     |
-   +--------------+---------------------------------+-------------------------------------------+
-   | type         | The default type for            | .. index::                                |
-   |              | ``lt``, ``gt``, ``lte``, and    |    pair: expression; type                 |
-   |              | ``gte`` operations is ``number``|                                           |
-   |              | if either value contains a      | How the node attributes should be         |
-   |              | decimal point character, or     | compared. Allowed values are ``string``,  |
-   |              | ``integer`` otherwise. The      | ``integer`` *(since 2.0.5)*, ``number``,  |
-   |              | default type for all other      | and ``version``. ``integer`` truncates    |
-   |              | operations is ``string``. If a  | floating-point values if necessary before |
-   |              | numeric parse fails for either  | performing a 64-bit integer comparison.   |
-   |              | value, then the values are      | ``number`` performs a double-precision    |
-   |              | compared as type ``string``.    | floating-point comparison                 |
-   |              |                                 | *(32-bit integer before 2.0.5)*.          |
-   +--------------+---------------------------------+-------------------------------------------+
-   | operation    |                                 | .. index::                                |
-   |              |                                 |    pair: expression; operation            |
-   |              |                                 |                                           |
-   |              |                                 | The comparison to perform (required).     |
-   |              |                                 | Allowed values:                           |
-   |              |                                 |                                           |
-   |              |                                 | * ``lt:`` True if the node attribute value|
-   |              |                                 |    is less than the comparison value      |
-   |              |                                 | * ``gt:`` True if the node attribute value|
-   |              |                                 |    is greater than the comparison value   |
-   |              |                                 | * ``lte:`` True if the node attribute     |
-   |              |                                 |    value is less than or equal to the     |
-   |              |                                 |    comparison value                       |
-   |              |                                 | * ``gte:`` True if the node attribute     |
-   |              |                                 |    value is greater than or equal to the  |
-   |              |                                 |    comparison value                       |
-   |              |                                 | * ``eq:`` True if the node attribute value|
-   |              |                                 |    is equal to the comparison value       |
-   |              |                                 | * ``ne:`` True if the node attribute value|
-   |              |                                 |    is not equal to the comparison value   |
-   |              |                                 | * ``defined:`` True if the node has the   |
-   |              |                                 |    named attribute                        |
-   |              |                                 | * ``not_defined:`` True if the node does  |
-   |              |                                 |    not have the named attribute           |
-   +--------------+---------------------------------+-------------------------------------------+
-   | value        |                                 | .. index::                                |
-   |              |                                 |    pair: expression; value                |
-   |              |                                 |                                           |
-   |              |                                 | User-supplied value for comparison        |
-   |              |                                 | (required for operations other than       |
-   |              |                                 | ``defined`` and ``not_defined``)          |
-   +--------------+---------------------------------+-------------------------------------------+
-   | value-source | ``literal``                     | .. index::                                |
-   |              |                                 |    pair: expression; value-source         |
-   |              |                                 |                                           |
-   |              |                                 | How the ``value`` is derived. Allowed     |
-   |              |                                 | values:                                   |
-   |              |                                 |                                           |
-   |              |                                 | * ``literal``: ``value`` is a literal     |
-   |              |                                 |   string to compare against               |
-   |              |                                 | * ``param``: ``value`` is the name of a   |
-   |              |                                 |   resource parameter to compare against   |
-   |              |                                 |   (only valid in location constraints)    |
-   |              |                                 | * ``meta``: ``value`` is the name of a    |
-   |              |                                 |   resource meta-attribute to compare      |
-   |              |                                 |   against (only valid in location         |
-   |              |                                 |   constraints)                            |
-   +--------------+---------------------------------+-------------------------------------------+
+.. _rule_conditions:
 
-.. _node-attribute-expressions-special:
+.. index::
+   single: rule; conditions
+   single: rule; contexts
 
-In addition to custom node attributes defined by the administrator, the cluster
-defines special, built-in node attributes for each node that can also be used
-in rule expressions.
+Rule Conditions and Contexts
+############################
 
-.. table:: **Built-in Node Attributes**
-   :widths: 1 4
+A ``rule`` element must contain one or more conditions. A condition is any of
+the following, which will be described in more detail later:
 
-   +---------------+-----------------------------------------------------------+
-   | Name          | Value                                                     |
-   +===============+===========================================================+
-   | #uname        | :ref:`Node name <node_name>`                              |
-   +---------------+-----------------------------------------------------------+
-   | #id           | Node ID                                                   |
-   +---------------+-----------------------------------------------------------+
-   | #kind         | Node type. Possible values are ``cluster``, ``remote``,   |
-   |               | and ``container``. Kind is ``remote`` for Pacemaker Remote|
-   |               | nodes created with the ``ocf:pacemaker:remote`` resource, |
-   |               | and ``container`` for Pacemaker Remote guest nodes and    |
-   |               | bundle nodes                                              |
-   +---------------+-----------------------------------------------------------+
-   | #is_dc        | ``true`` if this node is the cluster's Designated         |
-   |               | Controller (DC), ``false`` otherwise                      |
-   +---------------+-----------------------------------------------------------+
-   | #cluster-name | The value of the ``cluster-name`` cluster property, if set|
-   +---------------+-----------------------------------------------------------+
-   | #site-name    | The value of the ``site-name`` node attribute, if set,    |
-   |               | otherwise identical to ``#cluster-name``                  |
-   +---------------+-----------------------------------------------------------+
-   | #role         | The role the relevant promotable clone resource has on    |
-   |               | this node. Valid only within a rule for a location        |
-   |               | constraint for a promotable clone resource.               |
-   +---------------+-----------------------------------------------------------+
+* a :ref:`date/time expression <date_expression>`
+* a :ref:`node attribute expression <node_attribute_expressions>`
+* a :ref:`resource type expression <rsc_expression>`
+* an :ref:`operation type expression <op_expression>`
+* another ``rule`` (allowing for complex combinations of conditions)
 
-.. Add_to_above_table_if_released:
+Each type of condition is allowed only in certain contexts. Although any given
+context may contain only one ``rule`` element, that element may contain any
+number of conditions, including other ``rule`` elements.
 
-   +---------------+-----------------------------------------------------------+
-   | #ra-version   | The installed version of the resource agent on the node,  |
-   |               | as defined by the ``version`` attribute of the            |
-   |               | ``resource-agent`` tag in the agent's metadata. Valid only|
-   |               | within rules controlling resource options. This can be    |
-   |               | useful during rolling upgrades of a backward-incompatible |
-   |               | resource agent. *(since x.x.x)*                           |
+Rules may be used in the following contexts, which also will be described in
+more detail later:
 
+* a :ref:`location constraint <location_rule>`
+* a :ref:`cluster_property_set <cluster_options>` element (within the
+  ``crm_config`` element)
+* an :ref:`instance_attributes <option_rule>` element (within an ``alert``,
+  ``bundle``, ``clone``, ``group``, ``node``, ``op``, ``primitive``,
+  ``recipient``, or ``template`` element)
+* a :ref:`meta_attributes <option_rule>` element (within an ``alert``,
+  ``bundle``, ``clone``, ``group``, ``op``, ``op_defaults``, ``primitive``,
+  ``recipient``, ``rsc_defaults``, or ``template`` element)
+* a :ref:`utilization <option_rule>` element (within a ``node``, ``primitive``,
+  or ``template`` element)
+
+
+.. _date_expression:
 
 .. index::
    single: rule; date/time expression
@@ -233,66 +110,77 @@ in rule expressions.
 Date/Time Expressions
 #####################
 
-Date/time expressions are rule conditions based (as the name suggests) on the
-current date and time.
+The ``date_expression`` element configures a rule condition based on the
+current date and time. It is allowed in rules in any context.
 
-A ``date_expression`` element may optionally contain a ``date_spec`` or
-``duration`` element depending on the context.
+It may contain a ``date_spec`` or ``duration`` element depending on the
+``operation`` as described below.
 
-.. table:: **Attributes of a date_expression Element**
-   :widths: 1 4
+.. list-table:: **Attributes of a date_expression Element**
+   :class: longtable
+   :widths: 1 1 1 4
+   :header-rows: 1
 
-   +---------------+-----------------------------------------------------------+
-   | Attribute     | Description                                               |
-   +===============+===========================================================+
-   | id            | .. index::                                                |
-   |               |    pair: id; date_expression                              |
-   |               |                                                           |
-   |               | A unique name for this element (required)                 |
-   +---------------+-----------------------------------------------------------+
-   | start         | .. index::                                                |
-   |               |    pair: start; date_expression                           |
-   |               |                                                           |
-   |               | A date/time conforming to the                             |
-   |               | `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_       |
-   |               | specification. May be used when ``operation`` is          |
-   |               | ``in_range`` (in which case at least one of ``start`` or  |
-   |               | ``end`` must be specified) or ``gt`` (in which case       |
-   |               | ``start`` is required).                                   |
-   +---------------+-----------------------------------------------------------+
-   | end           | .. index::                                                |
-   |               |    pair: end; date_expression                             |
-   |               |                                                           |
-   |               | A date/time conforming to the                             |
-   |               | `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_       |
-   |               | specification. May be used when ``operation`` is          |
-   |               | ``in_range`` (in which case at least one of ``start`` or  |
-   |               | ``end`` must be specified) or ``lt`` (in which case       |
-   |               | ``end`` is required).                                     |
-   +---------------+-----------------------------------------------------------+
-   | operation     | .. index::                                                |
-   |               |    pair: operation; date_expression                       |
-   |               |                                                           |
-   |               | Compares the current date/time with the start and/or end  |
-   |               | date, depending on the context. Allowed values:           |
-   |               |                                                           |
-   |               | * ``gt:`` True if the current date/time is after ``start``|
-   |               | * ``lt:`` True if the current date/time is before ``end`` |
-   |               | * ``in_range:`` True if the current date/time is after    |
-   |               |   ``start`` (if specified) and before either ``end`` (if  |
-   |               |   specified) or ``start`` plus the value of the           |
-   |               |   ``duration`` element (if one is contained in the        |
-   |               |   ``date_expression``). If both ``end`` and ``duration``  |
-   |               |   are specified, ``duration`` is ignored.                 |
-   |               | * ``date_spec:`` True if the current date/time matches    |
-   |               |   the specification given in the contained ``date_spec``  |
-   |               |   element (described below)                               |
-   +---------------+-----------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _date_expression_id:
 
+       .. index::
+          pair: date_expression; id
 
-.. note:: There is no ``eq``, ``neq``, ``gte``, or ``lte`` operation, since
-          they would be valid only for a single second.
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique name for this element (required)
+   * - .. _date_expression_start:
 
+       .. index::
+          pair: date_expression; start
+
+       start
+     - :ref:`ISO 8601 <iso8601>`
+     - 
+     - The beginning of the desired time range. Meaningful with an
+       ``operation`` of ``in_range`` or ``gt``.
+   * - .. _date_expression_end:
+
+       .. index::
+          pair: date_expression; end
+
+       end
+     - :ref:`ISO 8601 <iso8601>`
+     - 
+     - The end of the desired time range. Meaningful with an ``operation`` of
+       ``in_range`` or ``lt``.
+   * - .. _date_expression_operation:
+
+       .. index::
+          pair: date_expression; operation
+
+       operation
+     - :ref:`enumeration <enumeration>`
+     - ``in_range``
+     - Specifies how to compare the current date/time against a desired time
+       range. Allowed values:
+
+       * ``gt:`` The expression is satisfied if the current date/time is after
+         ``start`` (which is required)
+       * ``lt:`` The expression is satisfied if the current date/time is before
+         ``end`` (which is required)
+       * ``in_range:`` The expression is satisfied if the current date/time is
+         greater than or equal to ``start`` (if specified) and less than or
+         equal to either ``end`` (if specified) or ``start`` plus the value of
+         the :ref:`duration <duration_element>` element (if one is contained in
+         the ``date_expression``). At least one of ``start`` or ``end`` must be
+         specified. If both ``end`` and ``duration`` are specified,
+         ``duration`` is ignored.
+       * ``date_spec:`` The expression is satisfied if the current date/time
+         matches the specification given in the contained
+         :ref:`date_spec <date_spec>` element (which is required)
+
+.. _date_spec:
 
 .. index::
    single: date specification
@@ -301,87 +189,142 @@ A ``date_expression`` element may optionally contain a ``date_spec`` or
 Date Specifications
 ___________________
 
-A ``date_spec`` element is used to create a cron-like expression relating
-to time. Each field can contain a single number or range. Any field not
-supplied is ignored.
+A ``date_spec`` element is used within a ``date_expression`` to specify a
+combination of dates and times that satisfy the expression.
 
-.. table:: **Attributes of a date_spec Element**
-   :widths: 1 3
+.. list-table:: **Attributes of a date_spec Element**
+   :class: longtable
+   :widths: 1 1 1 4
+   :header-rows: 1
 
-   +---------------+-----------------------------------------------------------+
-   | Attribute     | Description                                               |
-   +===============+===========================================================+
-   | id            | .. index::                                                |
-   |               |    pair: id; date_spec                                    |
-   |               |                                                           |
-   |               | A unique name for this element (required)                 |
-   +---------------+-----------------------------------------------------------+
-   | seconds       | .. index::                                                |
-   |               |    pair: seconds; date_spec                               |
-   |               |                                                           |
-   |               | Allowed values: 0-59                                      |
-   +---------------+-----------------------------------------------------------+
-   | minutes       | .. index::                                                |
-   |               |    pair: minutes; date_spec                               |
-   |               |                                                           |
-   |               | Allowed values: 0-59                                      |
-   +---------------+-----------------------------------------------------------+
-   | hours         | .. index::                                                |
-   |               |    pair: hours; date_spec                                 |
-   |               |                                                           |
-   |               | Allowed values: 0-23 (where 0 is midnight and 23 is       |
-   |               | 11 p.m.)                                                  |
-   +---------------+-----------------------------------------------------------+
-   | monthdays     | .. index::                                                |
-   |               |    pair: monthdays; date_spec                             |
-   |               |                                                           |
-   |               | Allowed values: 1-31 (depending on month and year)        |
-   +---------------+-----------------------------------------------------------+
-   | weekdays      | .. index::                                                |
-   |               |    pair: weekdays; date_spec                              |
-   |               |                                                           |
-   |               | Allowed values: 1-7 (where 1 is Monday and  7 is Sunday)  |
-   +---------------+-----------------------------------------------------------+
-   | yeardays      | .. index::                                                |
-   |               |    pair: yeardays; date_spec                              |
-   |               |                                                           |
-   |               | Allowed values: 1-366 (depending on the year)             |
-   +---------------+-----------------------------------------------------------+
-   | months        | .. index::                                                |
-   |               |    pair: months; date_spec                                |
-   |               |                                                           |
-   |               | Allowed values: 1-12                                      |
-   +---------------+-----------------------------------------------------------+
-   | weeks         | .. index::                                                |
-   |               |    pair: weeks; date_spec                                 |
-   |               |                                                           |
-   |               | Allowed values: 1-53 (depending on weekyear)              |
-   +---------------+-----------------------------------------------------------+
-   | years         | .. index::                                                |
-   |               |    pair: years; date_spec                                 |
-   |               |                                                           |
-   |               | Year according to the Gregorian calendar                  |
-   +---------------+-----------------------------------------------------------+
-   | weekyears     | .. index::                                                |
-   |               |    pair: weekyears; date_spec                             |
-   |               |                                                           |
-   |               | Year in which the week started; for example, 1 January    |
-   |               | 2005 can be specified in ISO 8601 as "2005-001 Ordinal",  |
-   |               | "2005-01-01 Gregorian" or "2004-W53-6 Weekly" and thus    |
-   |               | would match ``years="2005"`` or ``weekyears="2004"``      |
-   +---------------+-----------------------------------------------------------+
-   | moon          | .. index::                                                |
-   |               |    pair: moon; date_spec                                  |
-   |               |                                                           |
-   |               | Allowed values are 0-7 (where 0 is the new moon and 4 is  |
-   |               | full moon). *(deprecated since 2.1.6)*                    |
-   +---------------+-----------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _date_spec_id:
 
-For example, ``monthdays="1"`` matches the first day of every month, and
-``hours="09-17"`` matches the hours between 9 a.m. and 5 p.m. (inclusive).
+       .. index::
+          pair: date_spec; id
 
-At this time, multiple ranges (e.g. ``weekdays="1,2"`` or ``weekdays="1-2,5-6"``)
-are not supported.
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique name for this element (required)
+   * - .. _date_spec_seconds:
+
+       .. index::
+          pair: date_spec; seconds
+
+       seconds
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current time's
+       second is within this range. Allowed integers: 0 to 59.
+   * - .. _date_spec_minutes:
+
+       .. index::
+          pair: date_spec; minutes
+
+       minutes
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current time's
+       minute is within this range. Allowed integers: 0 to 59.
+   * - .. _date_spec_hours:
+
+       .. index::
+          pair: date_spec; hours
+
+       hours
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current time's
+       hour is within this range. Allowed integers: 0 to 23 where 0 is midnight
+       and 23 is 11 p.m.
+   * - .. _date_spec_monthdays:
+
+       .. index::
+          pair: date_spec; monthdays
+
+       monthdays
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       day of the month is in this range. Allowed integers: 1 to 31.
+   * - .. _date_spec_weekdays:
+
+       .. index::
+          pair: date_spec; weekdays
+
+       weekdays
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       ordinal day of the week is in this range. Allowed integers: 1-7 (where 1
+       is Monday and  7 is Sunday).
+   * - .. _date_spec_yeardays:
+
+       .. index::
+          pair: date_spec; yeardays
+
+       yeardays
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       ordinal day of the year is in this range. Allowed integers: 1-366.
+   * - .. _date_spec_months:
+
+       .. index::
+          pair: date_spec; months
+
+       months
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       month is in this range. Allowed integers: 1-12 where 1 is January and 12
+       is December.
+   * - .. _date_spec_weeks:
+
+       .. index::
+          pair: date_spec; weeks
+
+       weeks
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       ordinal week of the year is in this range. Allowed integers: 1-53.
+   * - .. _date_spec_years:
+
+       .. index::
+          pair: date_spec; years
+
+       years
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       year according to the Gregorian calendar is in this range.
+   * - .. _date_spec_weekyears:
+
+       .. index::
+          pair: date_spec; weekyears
+
+       weekyears
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       year in which the week started (according to the ISO 8601 standard) is
+       in this range.
+   * - .. _date_spec_moon:
+
+       .. index::
+          pair: date_spec; moon
+
+       moon
+     - :ref:`range <range>`
+     - 
+     - If this is set, the expression is satisfied only if the current date's
+       phase of the moon is in this range. Allowed values are 0 to 7 where 0 is
+       the new moon and 4 is the full moon. *(deprecated since 2.1.6)*
 
 .. note:: Pacemaker can calculate when evaluation of a ``date_expression`` with
           an ``operation`` of ``gt``, ``lt``, or ``in_range`` will next change,
@@ -400,6 +343,8 @@ are not supported.
           need to perform first, and the load of the machine.
 
 
+.. _duration_element:
+
 .. index::
    single: duration
    pair: XML element; duration
@@ -407,64 +352,97 @@ are not supported.
 Durations
 _________
 
-A ``duration`` is used to calculate a value for ``end`` when one is not
-supplied to ``in_range`` operations. It contains one or more attributes each
-containing a single number. Any attribute not supplied is ignored.
+A ``duration`` element is used within a ``date_expression`` to calculate an
+ending value for ``in_range`` operations when ``end`` is not supplied.
 
-.. table:: **Attributes of a duration Element**
-   :widths: 1 3
+.. list-table:: **Attributes of a duration Element**
+   :class: longtable
+   :widths: 1 1 1 4
+   :header-rows: 1
 
-   +---------------+-----------------------------------------------------------+
-   | Attribute     | Description                                               |
-   +===============+===========================================================+
-   | id            | .. index::                                                |
-   |               |    pair: id; duration                                     |
-   |               |                                                           |
-   |               | A unique name for this element (required)                 |
-   +---------------+-----------------------------------------------------------+
-   | seconds       | .. index::                                                |
-   |               |    pair: seconds; duration                                |
-   |               |                                                           |
-   |               | This many seconds will be added to the total duration     |
-   +---------------+-----------------------------------------------------------+
-   | minutes       | .. index::                                                |
-   |               |    pair: minutes; duration                                |
-   |               |                                                           |
-   |               | This many minutes will be added to the total duration     |
-   +---------------+-----------------------------------------------------------+
-   | hours         | .. index::                                                |
-   |               |    pair: hours; duration                                  |
-   |               |                                                           |
-   |               | This many hours will be added to the total duration       |
-   +---------------+-----------------------------------------------------------+
-   | days          | .. index::                                                |
-   |               |    pair: days; duration                                   |
-   |               |                                                           |
-   |               | This many days will be added to the total duration        |
-   +---------------+-----------------------------------------------------------+
-   | weeks         | .. index::                                                |
-   |               |    pair: weeks; duration                                  |
-   |               |                                                           |
-   |               | This many weeks will be added to the total duration       |
-   +---------------+-----------------------------------------------------------+
-   | months        | .. index::                                                |
-   |               |    pair: months; duration                                 |
-   |               |                                                           |
-   |               | This many months will be added to the total duration      |
-   +---------------+-----------------------------------------------------------+
-   | years         | .. index::                                                |
-   |               |    pair: years; duration                                  |
-   |               |                                                           |
-   |               | This many years will be added to the total duration       |
-   +---------------+-----------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _duration_id:
+
+       .. index::
+          pair: duration; id
+
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique name for this element (required)
+   * - .. _duration_seconds:
+
+       .. index::
+          pair: duration; seconds
+
+       seconds
+     - :ref:`integer <integer>`
+     - 0
+     - Number of seconds to add to the total duration
+   * - .. _duration_minutes:
+
+       .. index::
+          pair: duration; minutes
+
+       minutes
+     - :ref:`integer <integer>`
+     - 0
+     - Number of minutes to add to the total duration
+   * - .. _duration_hours:
+
+       .. index::
+          pair: duration; hours
+
+       hours
+     - :ref:`integer <integer>`
+     - 0
+     - Number of hours to add to the total duration
+   * - .. _duration_days:
+
+       .. index::
+          pair: duration; days
+
+       days
+     - :ref:`integer <integer>`
+     - 0
+     - Number of days to add to the total duration
+   * - .. _duration_weeks:
+
+       .. index::
+          pair: duration; weeks
+
+       weeks
+     - :ref:`integer <integer>`
+     - 0
+     - Number of weeks to add to the total duration
+   * - .. _duration_months:
+
+       .. index::
+          pair: duration; months
+
+       months
+     - :ref:`integer <integer>`
+     - 0
+     - Number of months to add to the total duration
+   * - .. _duration_years:
+
+       .. index::
+          pair: duration; years
+
+       years
+     - :ref:`integer <integer>`
+     - 0
+     - Number of years to add to the total duration
 
 
-Example Time-Based Expressions
-______________________________
+Example Date/Time Expressions
+_____________________________
 
-A small sample of how time-based expressions can be used:
 
-.. topic:: True if now is any time in the year 2005
+.. topic:: Satisfied if the current year is 2005
 
    .. code-block:: xml
 
@@ -497,7 +475,7 @@ A small sample of how time-based expressions can be used:
    Note that the ``16`` matches all the way through ``16:59:59``, because the
    numeric value of the hour still matches.
 
-.. topic:: 9 a.m. to 6 p.m. Monday through Friday or anytime Saturday
+.. topic:: 9 a.m. to 6 p.m. Monday through Friday, or anytime Saturday
 
    .. code-block:: xml
 
@@ -538,63 +516,227 @@ A small sample of how time-based expressions can be used:
          </date_expression>
          <date_expression id="date_expr6-2" operation="in_range"
            start="2005-03-01" end="2005-04-01"/>
+         </date_expression>
       </rule>
 
    .. note:: Because no time is specified with the above dates, 00:00:00 is
              implied. This means that the range includes all of 2005-03-01 but
-             none of 2005-04-01. You may wish to write ``end`` as
-             ``"2005-03-31T23:59:59"`` to avoid confusion.
+             only the first second of 2005-04-01. You may wish to write ``end``
+             as ``"2005-03-31T23:59:59"`` to avoid confusion.
 
+
+.. index::
+   single: rule; node attribute expression
+   single: node attribute; rule expression
+   pair: XML element; expression
+
+.. _node_attribute_expressions:
+
+Node Attribute Expressions
+##########################
+
+The ``expression`` element configures a rule condition based on the value of a
+node attribute. It is allowed in rules in location constraints and in
+``instance_attributes`` elements within ``bundle``, ``clone``, ``group``,
+``op``, ``primitive``, and ``template`` elements.
+
+.. list-table:: **Attributes of an expression Element**
+   :class: longtable
+   :widths: 1 1 3 5
+   :header-rows: 1
+   
+   * - Name
+     - Type
+     - Default
+     - Description
+   
+   * - .. _expression_id:
+     
+       .. index::
+          pair: expression; id
+        
+       id
+     - :ref:`id <id>`
+     -
+     - A unique name for this element (required)
+   * - .. _expression_attribute:
+     
+       .. index::
+          pair: expression; attribute
+        
+       attribute
+     - :ref:`text <text>`
+     -
+     - Name of the node attribute to test (required)
+   * - .. _expression_operation:
+     
+       .. index::
+          pair: expression; operation
+        
+       operation
+     - :ref:`enumeration <enumeration>`
+     - 
+     - The comparison to perform (required). Allowed values:
+       
+       * ``defined:`` The expression is satisfied if the node has the named
+         attribute
+       * ``not_defined:`` The expression is satisfied if the node does not have
+         the named attribute
+       * ``lt:`` The expression is satisfied if the node attribute value is
+         less than the reference value
+       * ``gt:`` The expression is satisfied if the node attribute value is
+         greater than the reference value
+       * ``lte:`` The expression is satisfied if the node attribute value is
+         less than or equal to the reference value
+       * ``gte:`` The expression is satisfied if the node attribute value is
+         greater than or equal to the reference value
+       * ``eq:`` The expression is satisfied if the node attribute value is
+         equal to the reference value
+       * ``ne:`` The expression is satisfied if the node attribute value is not
+         equal to the reference value
+   * - .. _expression_type:
+     
+       .. index::
+          pair: expression; type
+        
+       type
+     - :ref:`enumeration <enumeration>`
+     - The default type for ``lt``, ``gt``, ``lte``, and ``gte`` operations is
+       ``number`` if either value contains a decimal point character, or
+       ``integer`` otherwise. The default type for all other operations is
+       ``string``. If a numeric parse fails for either value, then the values
+       are compared as type ``string``.
+     - How to interpret values. Allowed values are ``string``, ``integer``
+       *(since 2.0.5)*, ``number``, and ``version``. ``integer`` truncates
+       floating-point values if necessary before performing a 64-bit integer
+       comparison. ``number`` performs a double-precision floating-point
+       comparison *(32-bit integer before 2.0.5)*.
+   * - .. _expression_value:
+     
+       .. index::
+          pair: expression; value
+        
+       value
+     - :ref:`text <text>`
+     -
+     - Reference value to compare node attribute against (used only with, and
+       required for, operations other than ``defined`` and ``not_defined``)
+   * - .. _expression_value_source:
+     
+       .. index::
+          pair: expression; value-source
+        
+       value-source
+     - :ref:`enumeration <enumeration>`
+     - ``literal``
+     - How the reference value is obtained. Allowed values:
+       
+       * ``literal``: ``value`` contains the literal reference value to compare
+       * ``param``: ``value`` contains the name of a resource parameter to
+         compare (valid only in the context of a location constraint)
+       * ``meta``: ``value`` is the name of a resource meta-attribute to
+         compare (valid only in the context of a location constraint)
+
+.. _node-attribute-expressions-special:
+
+In addition to custom node attributes defined by the administrator, the cluster
+defines special, built-in node attributes for each node that can also be used
+in rule expressions.
+
+.. list-table:: **Built-in Node Attributes**
+   :class: longtable
+   :widths: 1 4
+   :header-rows: 1
+
+   * - Name
+     - Description
+   * - #uname
+     - :ref:`Node name <node_name>`
+   * - #id
+     - Node ID
+   * - #kind
+     - Node type (``cluster`` for cluster nodes, ``remote`` for Pacemaker
+       Remote nodes created with the ``ocf:pacemaker:remote`` resource, and
+       ``container`` for Pacemaker Remote guest nodes and bundle nodes)
+   * - #is_dc
+     - ``true`` if this node is the cluster's Designated Controller (DC),
+       ``false`` otherwise
+   * - #cluster-name
+     - The value of the ``cluster-name`` cluster property, if set
+   * - #site-name
+     - The value of the ``site-name`` node attribute, if set, otherwise
+       identical to ``#cluster-name``
+
+
+.. _rsc_expression:
 
 .. index::
    single: rule; resource expression
    single: resource; rule expression
    pair: XML element; rsc_expression
 
-Resource Expressions
-####################
+Resource Type Expressions
+#########################
 
-An ``rsc_expression`` *(since 2.0.5)* is a rule condition based on a resource
-agent's properties. This rule is only valid within an ``rsc_defaults`` or
-``op_defaults`` context. None of the matching attributes of ``class``,
-``provider``, and ``type`` are required. If one is omitted, all values of that
-attribute will match.  For instance, omitting ``type`` means every type will
-match.
+The ``rsc_expression`` element *(since 2.0.5)* configures a rule condition
+based on the agent used for a resource. It is allowed in rules in a
+``meta_attributes`` element within a ``rsc_defaults`` or ``op_defaults``
+element.
 
-.. table:: **Attributes of a rsc_expression Element**
-   :widths: 1 3
+.. list-table:: **Attributes of a rsc_expression Element**
+   :class: longtable
+   :widths: 1 1 1 4
+   :header-rows: 1
 
-   +---------------+-----------------------------------------------------------+
-   | Attribute     | Description                                               |
-   +===============+===========================================================+
-   | id            | .. index::                                                |
-   |               |    pair: id; rsc_expression                               |
-   |               |                                                           |
-   |               | A unique name for this element (required)                 |
-   +---------------+-----------------------------------------------------------+
-   | class         | .. index::                                                |
-   |               |    pair: class; rsc_expression                            |
-   |               |                                                           |
-   |               | The standard name to be matched against resource agents   |
-   +---------------+-----------------------------------------------------------+
-   | provider      | .. index::                                                |
-   |               |    pair: provider; rsc_expression                         |
-   |               |                                                           |
-   |               | If given, the vendor to be matched against resource       |
-   |               | agents (only relevant when ``class`` is ``ocf``)          |
-   +---------------+-----------------------------------------------------------+
-   | type          | .. index::                                                |
-   |               |    pair: type; rsc_expression                             |
-   |               |                                                           |
-   |               | The name of the resource agent to be matched              |
-   +---------------+-----------------------------------------------------------+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _rsc_expression_id:
 
-Example Resource-Based Expressions
-__________________________________
+       .. index::
+          pair: rsc_expression; id
 
-A small sample of how resource-based expressions can be used:
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique name for this element (required)
+   * - .. _rsc_expression_class:
 
-.. topic:: True for all ``ocf:heartbeat:IPaddr2`` resources
+       .. index::
+          pair: rsc_expression; class
+
+       class
+     - :ref:`text <text>`
+     - 
+     - If this is set, the expression is satisfied only if the resource's agent
+       standard matches this value
+   * - .. _rsc_expression_provider:
+
+       .. index::
+          pair: rsc_expression; provider
+
+       provider
+     - :ref:`text <text>`
+     - 
+     - If this is set, the expression is satisfied only if the resource's agent
+       provider matches this value
+   * - .. _rsc_expression_type:
+
+       .. index::
+          pair: rsc_expression; type
+
+       type
+     - :ref:`text <text>`
+     - 
+     - If this is set, the expression is satisfied only if the resource's agent
+       type matches this value
+
+
+Example Resource Type Expressions
+_________________________________
+
+.. topic:: Satisfied for ``ocf:heartbeat:IPaddr2`` resources
 
    .. code-block:: xml
 
@@ -602,7 +744,7 @@ A small sample of how resource-based expressions can be used:
           <rsc_expression id="rule_expr1" class="ocf" provider="heartbeat" type="IPaddr2"/>
       </rule>
 
-.. topic:: Provider doesn't apply to non-OCF resources
+.. topic:: Satisfied for ``stonith:fence_xvm`` resources
 
    .. code-block:: xml
 
@@ -611,49 +753,64 @@ A small sample of how resource-based expressions can be used:
       </rule>
 
 
+.. _op_expression:
+
 .. index::
    single: rule; operation expression
    single: operation; rule expression
    pair: XML element; op_expression
 
-Operation Expressions
-#####################
+Operation Type Expressions
+##########################
+
+The ``op_expression`` element *(since 2.0.5)* configures a rule condition based
+on a resource operation name and interval. It is allowed in rules in a
+``meta_attributes`` element within an ``op_defaults`` element.
+
+.. list-table:: **Attributes of an op_expression Element**
+   :class: longtable
+   :widths: 1 1 1 4
+   :header-rows: 1
+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - .. _op_expression_id:
+
+       .. index::
+          pair: op_expression; id
+
+       id
+     - :ref:`id <id>`
+     - 
+     - A unique name for this element (required)
+   * - .. _op_expression_name:
+
+       .. index::
+          pair: op_expression; name
+
+       name
+     - :ref:`text <text>`
+     - 
+     - The expression is satisfied only if the operation's name matches this
+       value (required)
+   * - .. _op_expression_interval:
+
+       .. index::
+          pair: op_expression; interval
+
+       interval
+     - :ref:`duration <duration>`
+     - 
+     - If this is set, the expression is satisfied only if the operation's
+       interval matches this value
 
 
-An ``op_expression`` *(since 2.0.5)* is a rule condition based on an action of
-some resource agent. This rule is only valid within an ``op_defaults`` context.
+Example Operation Type Expressions
+__________________________________
 
-.. table:: **Attributes of an op_expression Element**
-   :widths: 1 3
-
-   +---------------+-----------------------------------------------------------+
-   | Attribute     | Description                                               |
-   +===============+===========================================================+
-   | id            | .. index::                                                |
-   |               |    pair: id; op_expression                                |
-   |               |                                                           |
-   |               | A unique name for this element (required)                 |
-   +---------------+-----------------------------------------------------------+
-   | name          | .. index::                                                |
-   |               |    pair: name; op_expression                              |
-   |               |                                                           |
-   |               | The action name to match against. This can be any action  |
-   |               | supported by the resource agent; common values include    |
-   |               | ``monitor``, ``start``, and ``stop`` (required).          |
-   +---------------+-----------------------------------------------------------+
-   | interval      | .. index::                                                |
-   |               |    pair: interval; op_expression                          |
-   |               |                                                           |
-   |               | The interval of the action to match against. If not given,|
-   |               | only the name attribute will be used to match.            |
-   +---------------+-----------------------------------------------------------+
-
-Example Operation-Based Expressions
-___________________________________
-
-A small sample of how operation-based expressions can be used:
-
-.. topic:: True for all monitor actions
+.. topic:: Expression is satisfied for all monitor actions
 
    .. code-block:: xml
 
@@ -661,7 +818,7 @@ A small sample of how operation-based expressions can be used:
           <op_expression id="rule_expr1" name="monitor"/>
       </rule>
 
-.. topic:: True for all monitor actions with a 10 second interval
+.. topic:: Expression is satisfied for all monitor actions with a 10-second interval
 
    .. code-block:: xml
 
@@ -670,15 +827,68 @@ A small sample of how operation-based expressions can be used:
       </rule>
 
 
+.. _location_rule:
+
 .. index::
    pair: location constraint; rule
 
 Using Rules to Determine Resource Location
 ##########################################
 
-A location constraint may contain one or more top-level rules. The cluster will
-act as if there is a separate location constraint for each rule that evaluates
-as true.
+If a :ref:`location constraint <location-constraint>` contains a rule, the
+cluster will apply the constraint to all nodes where the rule is satisfied.
+This acts as if identical location constraints without rules were defined for
+each of the nodes.
+
+In the context of a location constraint, ``rule`` elements may take additional
+attributes. These have an effect only when set for the constraint's top-level
+``rule``; they are ignored if set on a subrule.
+
+.. list-table:: **Extra Attributes of a rule Element in a Location Constraint**
+   :class: longtable
+   :widths: 2 2 1 5
+   :header-rows: 1
+   
+   * - Name
+     - Type
+     - Default
+     - Description
+   
+   * - .. _rule_role:
+     
+       .. index::
+          pair: rule; role
+        
+       role
+     - :ref:`enumeration <enumeration>`
+     - ``Started``
+     - If this is set in the constraint's top-level rule, the constraint acts
+       as if ``role`` were set to this in the ``rsc_location`` element.
+
+   * - .. _rule_score:
+     
+       .. index::
+          pair: rule; score
+        
+       score
+     - :ref:`score <score>`
+     - 
+     - If this is set in the constraint's top-level rule, the constraint acts
+       as if ``score`` were set to this in the ``rsc_location`` element.
+       Only one of ``score`` and ``score-attribute`` may be set.
+
+   * - .. _rule_score_attribute:
+     
+       .. index::
+          pair: rule; score-attribute
+        
+       score-attribute
+     - :ref:`text <text>`
+     - 
+     - If this is set in the constraint's top-level rule, the constraint acts
+       as if ``score`` were set to the value of this node attribute on each
+       node where the rule is satisfied. Only one of ``score`` and
+       ``score-attribute`` may be set.
 
 Consider the following simple location constraint:
 
@@ -689,7 +899,7 @@ Consider the following simple location constraint:
       <rsc_location id="ban-apache-on-node3" rsc="webserver"
                     score="-INFINITY" node="node3"/>
 
-The same constraint can be more verbosely written using a rule:
+The same constraint can be written more verbosely using a rule:
 
 .. topic:: Prevent resource ``webserver`` from running on node ``node3`` using a rule
 
@@ -703,15 +913,14 @@ The same constraint can be more verbosely written using a rule:
       </rsc_location>
 
 The advantage of using the expanded form is that one could add more expressions
-(for example, limiting the constraint to certain days of the week), or activate
-the constraint by some node attribute other than node name.
+(for example, limiting the constraint to certain days of the week).
 
 Location Rules Based on Other Node Properties
 _____________________________________________
 
-The expanded form allows us to match on node properties other than its name.
-If we rated each machine's CPU power such that the cluster had the following
-nodes section:
+The expanded form allows us to match node attributes other than its name. As an
+example, consider this configuration of custom node attributes specifying each
+node's CPU capacity:
 
 .. topic:: Sample node section with node attributes
 
@@ -730,8 +939,7 @@ nodes section:
          </node>
       </nodes>
 
-then we could prevent resources from running on underpowered machines with this
-rule:
+We can use a rule to prevent a resource from running on underpowered machines:
 
 .. topic:: Rule using a node attribute (to be used inside a location constraint)
 
@@ -746,11 +954,13 @@ Using ``score-attribute`` Instead of ``score``
 ______________________________________________
 
 When using ``score-attribute`` instead of ``score``, each node matched by the
-rule has its score adjusted differently, according to its value for the named
-node attribute. Thus, in the previous example, if a rule inside a location
-constraint for a resource used ``score-attribute="cpu_mips"``, ``c001n01``
-would have its preference to run the resource increased by ``1234`` whereas
-``c001n02`` would have its preference increased by ``5678``.
+rule has its score adjusted according to its value for the named node
+attribute.
+
+In the previous example, if the location constraint rule used
+``score-attribute="cpu_mips"`` instead of ``score="-INFINITY"``, node
+``c001n01`` would have its preference to run the resource increased by 1234
+whereas node ``c001n02`` would have its preference increased by 5678.
 
 
 .. _s-rsc-pattern-rules:
@@ -758,16 +968,15 @@ would have its preference to run the resource increased by ``1234`` whereas
 Specifying location scores using pattern submatches
 ___________________________________________________
 
-Location constraints may use ``rsc-pattern`` to apply the constraint to all
-resources whose IDs match the given pattern (see :ref:`s-rsc-pattern`). The
-pattern may contain up to 9 submatches in parentheses, whose values may be used
-as ``%1`` through ``%9`` in a rule's ``score-attribute`` or a rule expression's
-``attribute``.
+Location constraints may use :ref:`rsc-pattern <s-rsc-pattern>` to apply the
+constraint to all resources whose IDs match the given pattern. The pattern may
+contain up to 9 submatches in parentheses, whose values may be used as ``%1``
+through ``%9`` in a ``rule`` element's ``score-attribute`` or an ``expression``
+element's ``attribute``.
 
-As an example, the following configuration (only relevant parts are shown)
-gives the resources **server-httpd** and **ip-httpd** a preference of 100 on
-**node1** and 50 on **node2**, and **ip-gateway** a preference of -100 on
-**node1** and 200 on **node2**.
+For example, the following configuration excerpt gives the resources
+**server-httpd** and **ip-httpd** a preference of 100 on node1 and 50 on node2,
+and **ip-gateway** a preference of -100 on node1 and 200 on node2.
 
 .. topic:: Location constraint using submatches
 
@@ -807,6 +1016,8 @@ gives the resources **server-httpd** and **ip-httpd** a preference of 100 on
       </constraints>
 
 
+.. _option_rule:
+
 .. index::
    pair: cluster option; rule
    pair: instance attribute; rule
@@ -820,37 +1031,34 @@ Using Rules to Define Options
 
 Rules may be used to control a variety of options:
 
-* :ref:`Cluster options <cluster_options>` (``cluster_property_set`` elements)
-* :ref:`Node attributes <node_attributes>` (``instance_attributes`` or
+* :ref:`Cluster options <cluster_options>` (as ``cluster_property_set``
+  elements)
+* :ref:`Node attributes <node_attributes>` (as ``instance_attributes`` or
   ``utilization`` elements inside a ``node`` element)
-* :ref:`Resource options <resource_options>` (``utilization``,
+* :ref:`Resource options <resource_options>` (as ``utilization``,
   ``meta_attributes``, or ``instance_attributes`` elements inside a resource
   definition element or ``op`` , ``rsc_defaults``, ``op_defaults``, or
   ``template`` element)
-* :ref:`Operation properties <operation_properties>` (``meta_attributes``
+* :ref:`Operation options <operation_properties>` (as ``meta_attributes``
   elements inside an ``op`` or ``op_defaults`` element)
+* :ref:`Alert options <alerts>` (as ``instance_attributes`` or
+  ``meta_attributes`` elements inside an ``alert`` or ``recipient`` element)
 
-.. note::
-
-   Attribute-based expressions for meta-attributes can only be used within
-   ``operations`` and ``op_defaults``.  They will not work with resource
-   configuration or ``rsc_defaults``.  Additionally, attribute-based
-   expressions cannot be used with cluster options.
 
 Using Rules to Control Resource Options
 _______________________________________
 
 Often some cluster nodes will be different from their peers. Sometimes,
-these differences -- e.g. the location of a binary or the names of network
-interfaces -- require resources to be configured differently depending
+these differences (for example, the location of a binary, or the names of
+network interfaces) require resources to be configured differently depending
 on the machine they're hosted on.
 
-By defining multiple ``instance_attributes`` objects for the resource and
+By defining multiple ``instance_attributes`` elements for the resource and
 adding a rule to each, we can easily handle these special cases.
 
 In the example below, ``mySpecialRsc`` will use eth1 and port 9999 when run on
-``node1``, eth2 and port 8888 on ``node2`` and default to eth0 and port 9999
-for all other nodes.
+node1, eth2 and port 8888 on node2 and default to eth0 and port 9999 for all
+other nodes.
 
 .. topic:: Defining different resource options based on the node name
 
@@ -878,20 +1086,20 @@ for all other nodes.
          </instance_attributes>
       </primitive>
 
-The order in which ``instance_attributes`` objects are evaluated is determined
-by their score (highest to lowest). If not supplied, the score defaults to
-zero. Objects with an equal score are processed in their listed order. If the
-``instance_attributes`` object has no rule, or a ``rule`` that evaluates to
-``true``, then for any parameter the resource does not yet have a value for,
-the resource will use the parameter values defined by the ``instance_attributes``.
+Multiple ``instance_attributes`` elements are evaluated from highest score to
+lowest. If not supplied, the score defaults to zero. Objects with equal scores
+are processed in their listed order. If an ``instance_attributes`` object has
+no rule or a satisfied ``rule``, then for any parameter the resource does not
+yet have a value for, the resource will use the value defined by the
+``instance_attributes``.
 
 For example, given the configuration above, if the resource is placed on
 ``node1``:
 
 * ``special-node1`` has the highest score (3) and so is evaluated first; its
-  rule evaluates to ``true``, so ``interface`` is set to ``eth1``.
-* ``special-node2`` is evaluated next with score 2, but its rule evaluates to
-  ``false``, so it is ignored.
+  rule is satisfied, so ``interface`` is set to ``eth1``.
+* ``special-node2`` is evaluated next with score 2, but its rule is not
+  satisfied, so it is ignored.
 * ``defaults`` is evaluated last with score 1, and has no rule, so its values
   are examined; ``interface`` is already defined, so the value here is not
   used, but ``port`` is not yet defined, so ``port`` is set to ``9999``.
@@ -899,11 +1107,12 @@ For example, given the configuration above, if the resource is placed on
 Using Rules to Control Resource Defaults
 ________________________________________
 
-Rules can be used for resource and operation defaults. The following example
-illustrates how to set a different ``resource-stickiness`` value during and
-outside work hours. This allows resources to automatically move back to their
-most preferred hosts, but at a time that (in theory) does not interfere with
-business activities.
+Rules can be used for resource and operation defaults.
+
+The following example illustrates how to set a different
+``resource-stickiness`` value during and outside work hours. This allows
+resources to automatically move back to their most preferred hosts, but at a
+time that (in theory) does not interfere with business activities.
 
 .. topic:: Change ``resource-stickiness`` during working hours
 
@@ -923,20 +1132,8 @@ business activities.
          </meta_attributes>
       </rsc_defaults>
 
-Rules may be used similarly in ``instance_attributes`` or ``utilization``
-blocks.
-
-Any single block may directly contain only a single rule, but that rule may
-itself contain any number of rules.
-
-``rsc_expression`` and ``op_expression`` blocks may additionally be used to
-set defaults on either a single resource or across an entire class of resources
-with a single rule. ``rsc_expression`` may be used to select resource agents
-within both ``rsc_defaults`` and ``op_defaults``, while ``op_expression`` may
-only be used within ``op_defaults``. If multiple rules succeed for a given
-resource agent, the last one specified will be the one that takes effect. As
-with any other rule, boolean operations may be used to make more complicated
-expressions.
+``rsc_expression`` is valid within both ``rsc_defaults`` and ``op_defaults``;
+``op_expression`` is valid only within ``op_defaults``.
 
 .. topic:: Default all IPaddr2 resources to stopped
 

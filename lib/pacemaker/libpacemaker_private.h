@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the Pacemaker project contributors
+ * Copyright 2021-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 
 #include <crm/lrmd_events.h>      // lrmd_event_data_t
 #include <crm/common/scheduler.h> // pcmk_action_t, pcmk_node_t, etc.
-#include <crm/pengine/internal.h> // pe__location_t
+#include <crm/pengine/internal.h> // pcmk__location_t
 
 // Colocation flags
 enum pcmk__coloc_flags {
@@ -241,7 +241,7 @@ struct resource_alloc_functions_s {
      * \param[in,out] rsc       Resource to apply constraint to
      * \param[in,out] location  Location constraint to apply
      */
-    void (*apply_location)(pcmk_resource_t *rsc, pe__location_t *location);
+    void (*apply_location)(pcmk_resource_t *rsc, pcmk__location_t *location);
 
     /*!
      * \internal
@@ -471,15 +471,15 @@ G_GNUC_INTERNAL
 void pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-pe__location_t *pcmk__new_location(const char *id, pcmk_resource_t *rsc,
-                                   int node_score, const char *discover_mode,
-                                   pcmk_node_t *foo_node);
+pcmk__location_t *pcmk__new_location(const char *id, pcmk_resource_t *rsc,
+                                     int node_score, const char *discover_mode,
+                                     pcmk_node_t *foo_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_locations(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pcmk__apply_location(pcmk_resource_t *rsc, pe__location_t *constraint);
+void pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *constraint);
 
 
 // Colocation constraints (pcmk_sched_colocation.c)
@@ -494,12 +494,6 @@ enum pcmk__coloc_affects {
  * \internal
  * \brief Get the value of a colocation's node attribute
  *
- * When looking up a colocation node attribute on a bundle node for a bundle
- * primitive, we should always look on the bundle node's assigned host,
- * regardless of the value of XML_RSC_ATTR_TARGET. At most one resource (the
- * bundle primitive, if any) can run on a bundle node, so any colocation must
- * necessarily be evaluated with respect to the bundle node (the container).
- *
  * \param[in] node  Node on which to look up the attribute
  * \param[in] attr  Name of attribute to look up
  * \param[in] rsc   Resource on whose behalf to look up the attribute
@@ -510,13 +504,23 @@ static inline const char *
 pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
                            const pcmk_resource_t *rsc)
 {
-    const pcmk_resource_t *top = pe__const_top_resource(rsc, false);
-    const bool force_host = pe__is_bundle_node(node)
-                            && pe_rsc_is_bundled(rsc)
-                            && (top == pe__bundled_resource(rsc));
+    const char *target = NULL;
 
-    return pe__node_attribute_calculated(node, attr, rsc,
-                                         pcmk__rsc_node_assigned, force_host);
+    /* A resource colocated with a bundle or its primitive can't run on the
+     * bundle node itself (where only the primitive, if any, can run). Instead,
+     * we treat it as a colocation with the bundle's containers, so always look
+     * up colocation node attributes on the container host.
+     */
+    if (pcmk__is_bundle_node(node) && pcmk__is_bundled(rsc)
+        && (pe__const_top_resource(rsc, false) == pe__bundled_resource(rsc))) {
+        target = PCMK_VALUE_HOST;
+
+    } else if (rsc != NULL) {
+        target = g_hash_table_lookup(rsc->meta,
+                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+    }
+
+    return pcmk__node_attr(node, attr, target, pcmk__rsc_node_assigned);
 }
 
 G_GNUC_INTERNAL
@@ -629,7 +633,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     }
 
     /* The dependent in a colocation influences the primary's location
-     * if the influence option is true or the primary is not yet active.
+     * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
     return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
            || (rsc->running_on == NULL);
@@ -747,8 +751,8 @@ G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
-void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml,
-                                  const pcmk_action_t *action);
+void pcmk__add_guest_meta_to_xml(xmlNode *args_xml,
+                                 const pcmk_action_t *action);
 
 
 // Primitives (pcmk_sched_primitive.c)
@@ -837,7 +841,8 @@ void pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
                                            float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
-void pcmk__group_apply_location(pcmk_resource_t *rsc, pe__location_t *location);
+void pcmk__group_apply_location(pcmk_resource_t *rsc,
+                                pcmk__location_t *location);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__group_action_flags(pcmk_action_t *action,
@@ -898,7 +903,7 @@ void pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__clone_apply_location(pcmk_resource_t *rsc,
-                                pe__location_t *constraint);
+                                pcmk__location_t *constraint);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__clone_action_flags(pcmk_action_t *action,
@@ -951,7 +956,7 @@ void pcmk__bundle_with_colocations(const pcmk_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__bundle_apply_location(pcmk_resource_t *rsc,
-                                 pe__location_t *constraint);
+                                 pcmk__location_t *constraint);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__bundle_action_flags(pcmk_action_t *action,
@@ -1024,9 +1029,9 @@ xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
                                        const char *rprovider);
 
 G_GNUC_INTERNAL
-void pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
-                            const char *resource, const char *task,
-                            guint interval_ms, int rc);
+void pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn,
+                            xmlNode *cib_node, const char *resource,
+                            const char *task, guint interval_ms, int rc);
 
 G_GNUC_INTERNAL
 xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
@@ -1132,7 +1137,7 @@ void pcmk__abort_dangling_migration(void *data, void *user_data);
 bool pcmk__rsc_can_migrate(const pcmk_resource_t *rsc,
                            const pcmk_node_t *current);
 
-void pcmk__order_migration_equivalents(pe__ordering_t *order);
+void pcmk__order_migration_equivalents(pcmk__action_relation_t *order);
 
 
 // Functions related to node utilization (pcmk_sched_utilization.c)
@@ -1158,5 +1163,19 @@ void pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler);
+
+
+// Functions related to the scheduler (pcmk_scheduler.c)
+
+G_GNUC_INTERNAL
+int pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
+                         pcmk_scheduler_t **scheduler);
+
+
+// General setup functions (pcmk_setup.c)
+
+G_GNUC_INTERNAL
+int pcmk__setup_output_cib_sched(pcmk__output_t **out, cib_t **cib,
+                                 pcmk_scheduler_t **scheduler, xmlNode **xml);
 
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

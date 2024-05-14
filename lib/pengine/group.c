@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/common/output.h>
 #include <crm/common/strings_internal.h>
 #include <crm/common/xml_internal.h>
@@ -37,8 +37,8 @@ pcmk_resource_t *
 pe__last_group_member(const pcmk_resource_t *group)
 {
     if (group != NULL) {
-        CRM_CHECK((group->variant == pcmk_rsc_variant_group)
-                  && (group->variant_opaque != NULL), return NULL);
+        CRM_CHECK(pcmk__is_group(group) && (group->variant_opaque != NULL),
+                  return NULL);
         return ((group_variant_data_t *) group->variant_opaque)->last_child;
     }
     return NULL;
@@ -58,8 +58,8 @@ pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags)
 {
     group_variant_data_t *group_data = NULL;
 
-    CRM_CHECK((group != NULL) && (group->variant == pcmk_rsc_variant_group)
-              && (group->variant_opaque != NULL), return false);
+    CRM_CHECK(pcmk__is_group(group) && (group->variant_opaque != NULL),
+              return false);
     group_data = (group_variant_data_t *) group->variant_opaque;
     return pcmk_all_flags_set(group_data->flags, flags);
 }
@@ -89,10 +89,10 @@ set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
         ((group_variant_data_t *) group->variant_opaque)->flags |= flag;
 
     } else {
-        pe_warn_once(wo_bit,
-                     "Support for the '%s' group meta-attribute is deprecated "
-                     "and will be removed in a future release "
-                     "(use a resource set instead)", option);
+        pcmk__warn_once(wo_bit,
+                        "Support for the '%s' group meta-attribute is "
+                        "deprecated and will be removed in a future release "
+                        "(use a resource set instead)", option);
     }
 }
 
@@ -184,28 +184,28 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     group_variant_data_t *group_data = NULL;
     const char *clone_id = NULL;
 
-    pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
+    pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
-    group_data = calloc(1, sizeof(group_variant_data_t));
+    group_data = pcmk__assert_alloc(1, sizeof(group_variant_data_t));
     group_data->last_child = NULL;
     rsc->variant_opaque = group_data;
 
     // @COMPAT These are deprecated since 2.1.5
-    set_group_flag(rsc, XML_RSC_ATTR_ORDERED, pcmk__group_ordered,
+    set_group_flag(rsc, PCMK_META_ORDERED, pcmk__group_ordered,
                    pcmk__wo_group_order);
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
+    clone_id = crm_element_value(rsc->xml, PCMK__META_CLONE);
 
-    for (xml_native_rsc = pcmk__xe_first_child(xml_obj); xml_native_rsc != NULL;
+    for (xml_native_rsc = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+         xml_native_rsc != NULL;
          xml_native_rsc = pcmk__xe_next(xml_native_rsc)) {
 
-        if (pcmk__str_eq((const char *)xml_native_rsc->name,
-                         XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
+        if (pcmk__xe_is(xml_native_rsc, PCMK_XE_PRIMITIVE)) {
             pcmk_resource_t *new_rsc = NULL;
 
-            crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
+            crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
             if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                     scheduler) != pcmk_rc_ok) {
                 continue;
@@ -213,7 +213,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
             rsc->children = g_list_append(rsc->children, new_rsc);
             group_data->last_child = new_rsc;
-            pe_rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
+            pcmk__rsc_trace(rsc, "Added %s member %s", rsc->id, new_rsc->id);
         }
     }
 
@@ -268,7 +268,7 @@ group_print_xml(pcmk_resource_t *rsc, const char *pre_text, long options,
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
 
-    status_print("%s<group " XML_ATTR_ID "=\"%s\" ", pre_text, rsc->id);
+    status_print("%s<group " PCMK_XA_ID "=\"%s\" ", pre_text, rsc->id);
     status_print("number_resources=\"%d\" ", g_list_length(rsc->children));
     status_print(">\n");
 
@@ -369,23 +369,25 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
         if (rc == pcmk_rc_no_output) {
             char *count = pcmk__itoa(g_list_length(gIter));
-            const char *maint_s = pe__rsc_bool_str(rsc, pcmk_rsc_maintenance);
-            const char *managed_s = pe__rsc_bool_str(rsc, pcmk_rsc_managed);
-            const char *disabled_s = pcmk__btoa(pe__resource_is_disabled(rsc));
+            const char *maintenance = pcmk__flag_text(rsc->flags,
+                                                      pcmk_rsc_maintenance);
+            const char *managed = pcmk__flag_text(rsc->flags, pcmk_rsc_managed);
+            const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
 
-            rc = pe__name_and_nvpairs_xml(out, true, "group", 5,
-                                          XML_ATTR_ID, rsc->id,
-                                          "number_resources", count,
-                                          "maintenance", maint_s,
-                                          "managed", managed_s,
-                                          "disabled", disabled_s,
-                                          "description", desc);
+            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP,
+                                          PCMK_XA_ID, rsc->id,
+                                          PCMK_XA_NUMBER_RESOURCES, count,
+                                          PCMK_XA_MAINTENANCE, maintenance,
+                                          PCMK_XA_MANAGED, managed,
+                                          PCMK_XA_DISABLED, disabled,
+                                          PCMK_XA_DESCRIPTION, desc,
+                                          NULL);
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), show_opts, child_rsc,
-                     only_node, only_rsc);
+        out->message(out, (const char *) child_rsc->xml->name, show_opts,
+                     child_rsc, only_node, only_rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -442,7 +444,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
                          pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
-            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
+            out->message(out, (const char *) child_rsc->xml->name, show_opts,
                          child_rsc, only_node, only_rsc);
         }
     }
@@ -457,17 +459,17 @@ group_free(pcmk_resource_t * rsc)
 {
     CRM_CHECK(rsc != NULL, return);
 
-    pe_rsc_trace(rsc, "Freeing %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
-        pe_rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
+        pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
         child_rsc->fns->free(child_rsc);
     }
 
-    pe_rsc_trace(rsc, "Freeing child list");
+    pcmk__rsc_trace(rsc, "Freeing child list");
     g_list_free(rsc->children);
 
     common_free(rsc);
@@ -488,7 +490,7 @@ group_resource_state(const pcmk_resource_t * rsc, gboolean current)
         }
     }
 
-    pe_rsc_trace(rsc, "%s role: %s", rsc->id, role2text(group_role));
+    pcmk__rsc_trace(rsc, "%s role: %s", rsc->id, pcmk_role_text(group_role));
     return group_role;
 }
 
@@ -534,6 +536,6 @@ pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 unsigned int
 pe__group_max_per_node(const pcmk_resource_t *rsc)
 {
-    CRM_ASSERT((rsc != NULL) && (rsc->variant == pcmk_rsc_variant_group));
+    CRM_ASSERT(pcmk__is_group(rsc));
     return 1U;
 }

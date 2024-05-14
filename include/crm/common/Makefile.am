@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -27,18 +27,26 @@ header_HEADERS = acl.h 			\
 		 mainloop_compat.h 	\
 		 nodes.h 		\
 		 nvpair.h 		\
+		 options.h 		\
 		 output.h 		\
 		 resources.h		\
 		 results.h 		\
 		 results_compat.h 	\
 		 roles.h		\
+		 rules.h		\
 		 scheduler.h		\
 		 scheduler_types.h	\
+		 schemas.h		\
+		 scores.h		\
+		 scores_compat.h	\
 		 tags.h			\
 		 tickets.h		\
 		 util.h 		\
 		 util_compat.h 		\
 		 xml.h 			\
-		 xml_compat.h
+		 xml_compat.h		\
+		 xml_io.h		\
+		 xml_io_compat.h	\
+		 xml_names.h
 
 noinst_HEADERS = $(wildcard *internal.h)

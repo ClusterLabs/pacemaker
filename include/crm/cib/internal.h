@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,43 +32,7 @@
 #define PCMK__CIB_REQUEST_NOOP          "noop"
 #define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
-
-#  define F_CIB_CLIENTID  "cib_clientid"
-#  define F_CIB_CALLOPTS  "cib_callopt"
-#  define F_CIB_CALLID    "cib_callid"
-#  define F_CIB_CALLDATA  "cib_calldata"
-#  define F_CIB_OPERATION "cib_op"
-#  define F_CIB_ISREPLY   "cib_isreplyto"
-#  define F_CIB_SECTION   "cib_section"
-#  define F_CIB_HOST	"cib_host"
-#  define F_CIB_RC	"cib_rc"
-#  define F_CIB_UPGRADE_RC      "cib_upgrade_rc"
-#  define F_CIB_DELEGATED	"cib_delegated_from"
-#  define F_CIB_OBJID	"cib_object"
-#  define F_CIB_OBJTYPE	"cib_object_type"
-#  define F_CIB_EXISTING	"cib_existing_object"
-#  define F_CIB_SEENCOUNT	"cib_seen"
-#  define F_CIB_TIMEOUT	"cib_timeout"
-#  define F_CIB_UPDATE	"cib_update"
-#  define F_CIB_GLOBAL_UPDATE	"cib_update"
-#  define F_CIB_UPDATE_RESULT	"cib_update_result"
-#  define F_CIB_CLIENTNAME	"cib_clientname"
-#  define F_CIB_NOTIFY_TYPE	"cib_notify_type"
-#  define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
-#  define F_CIB_UPDATE_DIFF	"cib_update_diff"
-#  define F_CIB_USER		"cib_user"
-#  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
-#  define F_CIB_PING_ID         "cib_ping_id"
-#  define F_CIB_SCHEMA_MAX      "cib_schema_max"
-
-#  define T_CIB			"cib"
-#  define T_CIB_COMMAND		"cib_command"
-#  define T_CIB_NOTIFY		"cib_notify"
-/* notify sub-types */
-#  define T_CIB_PRE_NOTIFY	"cib_pre_notify"
-#  define T_CIB_POST_NOTIFY	"cib_post_notify"
-#  define T_CIB_TRANSACTION	"cib_transaction"
-#  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
+#define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
 
 /*!
  * \internal
@@ -110,6 +74,7 @@ enum cib__op_type {
     cib__op_sync_all,
     cib__op_sync_one,
     cib__op_upgrade,
+    cib__op_schemas,
 };
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
@@ -204,7 +169,7 @@ int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
 
 bool cib__element_in_patchset(const xmlNode *patchset, const char *element);
 
-int cib_perform_op(const char *op, int call_options, cib__op_fn_t fn,
+int cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
                    bool is_query, const char *section, xmlNode *req,
                    xmlNode *input, bool manage_counters, bool *config_changed,
                    xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,

@@ -1,7 +1,7 @@
-""" Start all stopped nodes simultaneously """
+"""Start all stopped nodes simultaneously."""
 
 __all__ = ["SimulStart"]
-__copyright__ = "Copyright 2000-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -10,16 +10,15 @@ from pacemaker._cts.tests.simulstoplite import SimulStopLite
 
 
 class SimulStart(CTSTest):
-    """ A concrete test that starts all stopped nodes simultaneously """
+    """Start all stopped nodes simultaneously."""
 
     def __init__(self, cm):
-        """ Create a new SimulStart instance
-
-            Arguments:
-
-            cm -- A ClusterManager instance
         """
+        Create a new SimulStart instance.
 
+        Arguments:
+        cm -- A ClusterManager instance
+        """
         CTSTest.__init__(self, cm)
 
         self.name = "SimulStart"
@@ -28,8 +27,7 @@ class SimulStart(CTSTest):
         self._stopall = SimulStopLite(cm)
 
     def __call__(self, dummy):
-        """ Perform this test """
-
+        """Perform this test."""
         self.incr("calls")
 
         ret = self._stopall(None)

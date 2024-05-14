@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,7 +21,7 @@
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/services_internal.h>
 
 #include "fencing_private.h"
@@ -96,12 +96,11 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
     if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)
         && !pcmk_stonith_param(key)
         && (strstr(key, CRM_META) == NULL)
-        && !pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
+        && !pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
 
         crm_trace("Passing %s=%s with fence action",
                   (const char *) key, (const char *) (value? value : ""));
-        g_hash_table_insert((GHashTable *) user_data,
-                            strdup(key), strdup(value? value : ""));
+        pcmk__insert_dup((GHashTable *) user_data, key, pcmk__s(value, ""));
     }
 }
 
@@ -143,8 +142,7 @@ make_args(const char *agent, const char *action, const char *target,
             action = value;
         }
     }
-    g_hash_table_insert(arg_list, strdup(STONITH_ATTR_ACTION_OP),
-                        strdup(action));
+    pcmk__insert_dup(arg_list, STONITH_ATTR_ACTION_OP, action);
 
     /* If this is a fencing operation against another node, add more standard
      * arguments.
@@ -155,7 +153,7 @@ make_args(const char *agent, const char *action, const char *target,
         /* Always pass the target's name, per
          * https://github.com/ClusterLabs/fence-agents/blob/main/doc/FenceAgentAPI.md
          */
-        g_hash_table_insert(arg_list, strdup("nodename"), strdup(target));
+        pcmk__insert_dup(arg_list, "nodename", target);
 
         // If the target's node ID was specified, pass it, too
         if (target_nodeid != 0) {
@@ -170,7 +168,7 @@ make_args(const char *agent, const char *action, const char *target,
         // Check whether target must be specified in some other way
         param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
         if (!pcmk__str_eq(agent, "fence_legacy", pcmk__str_none)
-            && !pcmk__str_eq(param, PCMK__VALUE_NONE, pcmk__str_casei)) {
+            && !pcmk__str_eq(param, PCMK_VALUE_NONE, pcmk__str_casei)) {
 
             if (param == NULL) {
                 /* Use the caller's default for pcmk_host_argument, or "port" if
@@ -195,7 +193,7 @@ make_args(const char *agent, const char *action, const char *target,
                 }
                 crm_debug("Passing %s='%s' with fence action %s targeting %s",
                           param, alias, action, pcmk__s(target, "no node"));
-                g_hash_table_insert(arg_list, strdup(param), strdup(alias));
+                pcmk__insert_dup(arg_list, param, alias);
             }
         }
     }
@@ -267,9 +265,7 @@ stonith__action_create(const char *agent, const char *action_name,
                        int timeout_sec, GHashTable *device_args,
                        GHashTable *port_map, const char *host_arg)
 {
-    stonith_action_t *action = calloc(1, sizeof(stonith_action_t));
-
-    CRM_ASSERT(action != NULL);
+    stonith_action_t *action = pcmk__assert_alloc(1, sizeof(stonith_action_t));
 
     action->args = make_args(agent, action_name, target, target_nodeid,
                              device_args, port_map, host_arg);
@@ -449,16 +445,16 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
         rc = pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    crm_xml_add_int(xml, XML_LRM_ATTR_OPSTATUS, (int) execution_status);
-    crm_xml_add_int(xml, XML_LRM_ATTR_RC, exit_status);
-    crm_xml_add(xml, XML_LRM_ATTR_EXIT_REASON, exit_reason);
-    crm_xml_add(xml, F_STONITH_OUTPUT, action_stdout);
+    crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
+    crm_xml_add_int(xml, PCMK__XA_RC_CODE, exit_status);
+    crm_xml_add(xml, PCMK_XA_EXIT_REASON, exit_reason);
+    crm_xml_add(xml, PCMK__XA_ST_OUTPUT, action_stdout);
 
     /* @COMPAT Peers in rolling upgrades, Pacemaker Remote nodes, and external
      * code that use libstonithd <=2.1.2 don't check for the full result, and
      * need a legacy return code instead.
      */
-    crm_xml_add_int(xml, F_STONITH_RC, rc);
+    crm_xml_add_int(xml, PCMK__XA_ST_RC, rc);
 }
 
 /*!
@@ -472,13 +468,13 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
 xmlNode *
 stonith__find_xe_with_result(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" XML_LRM_ATTR_RC, xml, LOG_NEVER);
+    xmlNode *match = get_xpath_object("//@" PCMK__XA_RC_CODE, xml, LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
          * return code, not a full result, so check for that.
          */
-        match = get_xpath_object("//@" F_STONITH_RC, xml, LOG_ERR);
+        match = get_xpath_object("//@" PCMK__XA_ST_RC, xml, LOG_ERR);
     }
     return match;
 }
@@ -500,12 +496,12 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
 
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
-    exit_reason = crm_element_value(xml, XML_LRM_ATTR_EXIT_REASON);
-    action_stdout = crm_element_value_copy(xml, F_STONITH_OUTPUT);
+    exit_reason = crm_element_value(xml, PCMK_XA_EXIT_REASON);
+    action_stdout = crm_element_value_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
-    if ((crm_element_value_int(xml, XML_LRM_ATTR_RC, &exit_status) < 0)
-        || (crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS,
+    if ((crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status) < 0)
+        || (crm_element_value_int(xml, PCMK__XA_OP_STATUS,
                                   &execution_status) < 0)) {
         int rc = pcmk_ok;
         exit_status = CRM_EX_ERROR;
@@ -513,7 +509,7 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
         /* @COMPAT Peers <=2.1.2 in rolling upgrades provide only a legacy
          * return code, not a full result, so check for that.
          */
-        if (crm_element_value_int(xml, F_STONITH_RC, &rc) == 0) {
+        if (crm_element_value_int(xml, PCMK__XA_ST_RC, &rc) == 0) {
             if ((rc == pcmk_ok) || (rc == -EINPROGRESS)) {
                 exit_status = CRM_EX_OK;
             }

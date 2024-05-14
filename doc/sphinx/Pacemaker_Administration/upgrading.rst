@@ -159,11 +159,12 @@ Special considerations when planning a rolling upgrade:
 * If the Pacemaker Remote protocol version is changing, all cluster nodes
   should be upgraded before upgrading any Pacemaker Remote nodes.
 
-See the ClusterLabs wiki's
-`release calendar <https://wiki.clusterlabs.org/wiki/ReleaseCalendar>`_
-to figure out whether the CRM feature set and/or Pacemaker Remote protocol
-version changed between the the Pacemaker release versions in your rolling
-upgrade.
+See the
+`Pacemaker release calendar
+<https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_release_calendar/>`_
+on the ClusterLabs wiki to figure out whether the CRM feature set and/or
+Pacemaker Remote protocol version changed between the the Pacemaker release
+versions in your rolling upgrade.
 
 To perform a rolling upgrade, on each node in turn:
 
@@ -302,9 +303,8 @@ A more cautious approach would proceed like this:
    #. The transformation was successful but produced an invalid result.
 
    If the result of the transformation is invalid, you may see a number of
-   errors from the validation library. If these are not helpful, visit the
-   `Validation FAQ wiki page <https://wiki.clusterlabs.org/wiki/Validation_FAQ>`_
-   and/or try the manual upgrade procedure described below.
+   errors from the validation library. If these are not helpful, try the manual
+   upgrade procedure described below.
 
 #. Check the changes:
 
@@ -398,9 +398,10 @@ the C API. Highlights:
   higher-level tools are strongly recommended to use instead of trying to parse
   the text output, which may change from release to release).
 
-For a detailed list of changes, see the release notes and the
-`Pacemaker 2.1 Changes <https://wiki.clusterlabs.org/wiki/Pacemaker_2.1_Changes>`_
-page on the ClusterLabs wiki.
+For a detailed list of changes, see the release notes and
+`Pacemaker 2.1 Changes
+<https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_2.1_changes/>`_
+on the ClusterLabs wiki.
 
 
 What Changed in 2.0
@@ -431,9 +432,10 @@ behavior. Highlights:
 * The public API for Pacemaker libraries that software applications can use
   has changed significantly.
 
-For a detailed list of changes, see the release notes and the
-`Pacemaker 2.0 Changes <https://wiki.clusterlabs.org/wiki/Pacemaker_2.0_Changes>`_
-page on the ClusterLabs wiki.
+For a detailed list of changes, see the release notes and
+`Pacemaker 2.0 Changes
+<https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_2.0_changes/>`_
+on the ClusterLabs wiki.
 
 
 What Changed in 1.0

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <dirent.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/cluster.h>
 
 #include <pacemaker-controld.h>
@@ -160,7 +160,7 @@ throttle_cib_load(float *load)
     }
 
     if(fgets(buffer, sizeof(buffer), stream)) {
-        char *comm = calloc(1, 256);
+        char *comm = pcmk__assert_alloc(1, 256);
         char state = 0;
         int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
         unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;
@@ -368,10 +368,10 @@ throttle_send_command(enum throttle_state_e mode)
         last = mode;
 
         xml = create_request(CRM_OP_THROTTLE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-        crm_xml_add_int(xml, F_CRM_THROTTLE_MODE, mode);
-        crm_xml_add_int(xml, F_CRM_THROTTLE_MAX, throttle_job_max);
+        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MODE, mode);
+        crm_xml_add_int(xml, PCMK__XA_CRM_LIMIT_MAX, throttle_job_max);
 
-        send_cluster_message(NULL, crm_msg_crmd, xml, TRUE);
+        pcmk__cluster_send_message(NULL, crm_msg_crmd, xml);
         free_xml(xml);
     }
 }
@@ -401,7 +401,8 @@ throttle_set_load_target(float target)
  * \internal
  * \brief Update the maximum number of simultaneous jobs
  *
- * \param[in] preference  Cluster-wide node-action-limit from the CIB
+ * \param[in] preference  Cluster-wide \c PCMK_OPT_NODE_ACTION_LIMIT from the
+ *                        CIB
  */
 static void
 throttle_update_job_max(const char *preference)
@@ -416,7 +417,7 @@ throttle_update_job_max(const char *preference)
         pcmk__scan_ll(preference, &max, 0LL);
     }
     if (max > 0) {
-        throttle_job_max = (int) max;
+        throttle_job_max = (max >= INT_MAX)? INT_MAX : (int) max;
     } else {
         // Default is based on the number of cores detected
         throttle_job_max = 2 * pcmk__procfs_num_cores();
@@ -444,13 +445,13 @@ throttle_init(void)
 void
 controld_configure_throttle(GHashTable *options)
 {
-    const char *value = g_hash_table_lookup(options, "load-threshold");
+    const char *value = g_hash_table_lookup(options, PCMK_OPT_LOAD_THRESHOLD);
 
     if (value != NULL) {
         throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
-    value = g_hash_table_lookup(options, "node-action-limit");
+    value = g_hash_table_lookup(options, PCMK_OPT_NODE_ACTION_LIMIT);
     throttle_update_job_max(value);
 }
 
@@ -473,7 +474,7 @@ throttle_get_total_job_limit(int l)
     /* Cluster-wide limit */
     GHashTableIter iter;
     int limit = l;
-    int peers = crm_active_peers();
+    int peers = pcmk__cluster_num_active_nodes();
     struct throttle_record_s *r = NULL;
 
     g_hash_table_iter_init(&iter, throttle_records);
@@ -497,13 +498,12 @@ throttle_get_total_job_limit(int l)
         }
     }
     if(limit == l) {
-        /* crm_trace("No change to batch-limit=%d", limit); */
 
     } else if(l == 0) {
-        crm_trace("Using batch-limit=%d", limit);
+        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
 
     } else {
-        crm_trace("Using batch-limit=%d instead of %d", limit, l);
+        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit, l);
     }
     return limit;
 }
@@ -516,8 +516,8 @@ throttle_get_job_limit(const char *node)
 
     r = g_hash_table_lookup(throttle_records, node);
     if(r == NULL) {
-        r = calloc(1, sizeof(struct throttle_record_s));
-        r->node = strdup(node);
+        r = pcmk__assert_alloc(1, sizeof(struct throttle_record_s));
+        r->node = pcmk__str_copy(node);
         r->mode = throttle_low;
         r->max = throttle_job_max;
         crm_trace("Defaulting to local values for unknown node %s", node);
@@ -552,16 +552,16 @@ throttle_update(xmlNode *xml)
     int max = 0;
     int mode = 0;
     struct throttle_record_s *r = NULL;
-    const char *from = crm_element_value(xml, F_CRM_HOST_FROM);
+    const char *from = crm_element_value(xml, PCMK__XA_SRC);
 
-    crm_element_value_int(xml, F_CRM_THROTTLE_MODE, &mode);
-    crm_element_value_int(xml, F_CRM_THROTTLE_MAX, &max);
+    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
+    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);
 
     r = g_hash_table_lookup(throttle_records, from);
 
     if(r == NULL) {
-        r = calloc(1, sizeof(struct throttle_record_s));
-        r->node = strdup(from);
+        r = pcmk__assert_alloc(1, sizeof(struct throttle_record_s));
+        r->node = pcmk__str_copy(from);
         g_hash_table_insert(throttle_records, r->node, r);
     }
 

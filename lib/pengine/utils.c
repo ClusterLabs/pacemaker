@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
@@ -35,7 +35,7 @@ gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 bool
 pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
 {
-    if (pe__is_guest_node(node)) {
+    if (pcmk__is_guest_or_bundle_node(node)) {
         /* Guest nodes are fenced by stopping their container resource. We can
          * do that if the container's host is either online or fenceable.
          */
@@ -68,11 +68,11 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
 
     } else if(node->details->online) {
         crm_notice("We can fence %s without quorum because they're in our membership",
-                   pe__node_name(node));
+                   pcmk__node_name(node));
         return true;
     }
 
-    crm_trace("Cannot fence %s", pe__node_name(node));
+    crm_trace("Cannot fence %s", pcmk__node_name(node));
     return false;
 }
 
@@ -92,8 +92,7 @@ pe__copy_node(const pcmk_node_t *this_node)
 
     CRM_ASSERT(this_node != NULL);
 
-    new_node = calloc(1, sizeof(pcmk_node_t));
-    CRM_ASSERT(new_node != NULL);
+    new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
@@ -221,12 +220,12 @@ pe__log_node_weights(const char *file, const char *function, int line,
                                         "%s: %s allocation score on %s: %s",
                                         LOG_TRACE, line, 0,
                                         comment, rsc->id,
-                                        pe__node_name(node),
+                                        pcmk__node_name(node),
                                         pcmk_readable_score(node->weight));
         } else {
             qb_log_from_external_source(function, file, "%s: %s = %s",
                                         LOG_TRACE, line, 0,
-                                        comment, pe__node_name(node),
+                                        comment, pcmk__node_name(node),
                                         pcmk_readable_score(node->weight));
         }
     }
@@ -350,10 +349,10 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
-    pe_rsc_trace(rsc,
-                 "Enabling %s preference (%s) for %s on %s (now %s)",
-                 tag, pcmk_readable_score(score), rsc->id, pe__node_name(node),
-                 pcmk_readable_score(match->weight));
+    pcmk__rsc_trace(rsc,
+                    "Enabling %s preference (%s) for %s on %s (now %s)",
+                    tag, pcmk_readable_score(score), rsc->id,
+                    pcmk__node_name(node), pcmk_readable_score(match->weight));
 }
 
 void
@@ -382,10 +381,10 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    if (node == NULL && score == -INFINITY) {
+    if ((node == NULL) && (score == -PCMK_SCORE_INFINITY)) {
         if (rsc->allocated_to) {
             crm_info("Deallocating %s from %s",
-                     rsc->id, pe__node_name(rsc->allocated_to));
+                     rsc->id, pcmk__node_name(rsc->allocated_to));
             free(rsc->allocated_to);
             rsc->allocated_to = NULL;
         }
@@ -411,18 +410,26 @@ gboolean
 get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = pcmk_role_unknown;
-    const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    const char *value = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
 
     CRM_CHECK(role != NULL, return FALSE);
 
-    if (pcmk__str_eq(value, "started", pcmk__str_null_matches | pcmk__str_casei)
-        || pcmk__str_eq("default", value, pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK_ROLE_STARTED,
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        return FALSE;
+    }
+    if (pcmk__str_eq(PCMK_VALUE_DEFAULT, value, pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting " PCMK_META_TARGET_ROLE
+                          " to the explicit value '" PCMK_VALUE_DEFAULT
+                          "' is deprecated and will be removed in a "
+                          "future release (just leave it unset)");
         return FALSE;
     }
 
-    local_role = text2role(value);
+    local_role = pcmk_parse_role(value);
     if (local_role == pcmk_role_unknown) {
-        pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+        pcmk__config_err("Ignoring '" PCMK_META_TARGET_ROLE "' for %s "
                          "because '%s' is not valid", rsc->id, value);
         return FALSE;
 
@@ -435,7 +442,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
             }
 
         } else {
-            pcmk__config_err("Ignoring '" XML_RSC_ATTR_TARGET_ROLE "' for %s "
+            pcmk__config_err("Ignoring '" PCMK_META_TARGET_ROLE "' for %s "
                              "because '%s' only makes sense for promotable "
                              "clones", rsc->id, value);
             return FALSE;
@@ -478,14 +485,14 @@ order_actions(pcmk_action_t *lh_action, pcmk_action_t *rh_action,
         }
     }
 
-    wrapper = calloc(1, sizeof(pcmk__related_action_t));
+    wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = rh_action;
     wrapper->type = flags;
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
 
-    wrapper = calloc(1, sizeof(pcmk__related_action_t));
+    wrapper = pcmk__assert_alloc(1, sizeof(pcmk__related_action_t));
     wrapper->action = lh_action;
     wrapper->type = flags;
     list = rh_action->actions_before;
@@ -524,7 +531,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 
         ticket = calloc(1, sizeof(pcmk_ticket_t));
         if (ticket == NULL) {
-            crm_err("Cannot allocate ticket '%s'", ticket_id);
+            pcmk__sched_err("Cannot allocate ticket '%s'", ticket_id);
             return NULL;
         }
 
@@ -545,13 +552,16 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 const char *
 rsc_printable_id(const pcmk_resource_t *rsc)
 {
-    return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? rsc->id : ID(rsc->xml);
+    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+        return rsc->id;
+    }
+    return pcmk__xe_id(rsc->xml);
 }
 
 void
 pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
-    pe__clear_resource_flags(rsc, flags);
+    pcmk__clear_rsc_flags(rsc, flags);
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe__clear_resource_flags_recursive((pcmk_resource_t *) gIter->data,
                                            flags);
@@ -570,7 +580,7 @@ pe__clear_resource_flags_on_all(pcmk_scheduler_t *scheduler, uint64_t flag)
 void
 pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
-    pe__set_resource_flags(rsc, flags);
+    pcmk__set_rsc_flags(rsc, flags);
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe__set_resource_flags_recursive((pcmk_resource_t *) gIter->data,
                                          flags);
@@ -626,6 +636,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     if (tag == NULL) {
         tag = calloc(1, sizeof(pcmk_tag_t));
         if (tag == NULL) {
+            pcmk__sched_err("Could not allocate memory for tag %s", tag_name);
             return FALSE;
         }
         tag->id = strdup(tag_name);
@@ -665,7 +676,8 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 bool
 pe__shutdown_requested(const pcmk_node_t *node)
 {
-    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+    const char *shutdown = pcmk__node_attr(node, PCMK__NODE_ATTR_SHUTDOWN, NULL,
+                                           pcmk__rsc_node_current);
 
     return !pcmk__str_eq(shutdown, "0", pcmk__str_null_matches);
 }
@@ -727,9 +739,10 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
     const char *target_role = NULL;
 
     CRM_CHECK(rsc != NULL, return false);
-    target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
     if (target_role) {
-        enum rsc_role_e target_role_e = text2role(target_role);
+        // If invalid, we've already logged an error when unpacking
+        enum rsc_role_e target_role_e = pcmk_parse_role(target_role);
 
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)
@@ -754,7 +767,8 @@ bool
 pe__rsc_running_on_only(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     return (rsc != NULL) && pcmk__list_of_1(rsc->running_on)
-            && pe__same_node((const pcmk_node_t *) rsc->running_on->data, node);
+            && pcmk__same_node((const pcmk_node_t *) rsc->running_on->data,
+                               node);
 }
 
 bool
@@ -809,7 +823,7 @@ pe__build_node_name_list(pcmk_scheduler_t *scheduler, const char *s)
          */
         nodes = g_list_prepend(nodes, strdup("*"));
     } else {
-        pcmk_node_t *node = pe_find_node(scheduler->nodes, s);
+        pcmk_node_t *node = pcmk_find_node(scheduler, s);
 
         if (node) {
             /* The given string was a valid uname for a node.  Return a
@@ -871,12 +885,14 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
     const char *rsc_id = rsc->id;
 
-    if (parent->variant == pcmk_rsc_variant_clone) {
+    if (pcmk__is_clone(parent)) {
         rsc_id = pe__clone_child_id(parent);
     }
 
-    for (xmlNode *xml_op = pcmk__xml_first_child(rsc->cluster->failed); xml_op != NULL;
-         xml_op = pcmk__xml_next(xml_op)) {
+    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->cluster->failed, NULL,
+                                                NULL, NULL);
+         xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
+
         const char *value = NULL;
         char *op_id = NULL;
 
@@ -888,12 +904,12 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
         /* This resource operation was not run on the given node.  Note that if name is
          * NULL, this will always succeed.
          */
-        value = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+        value = crm_element_value(xml_op, PCMK__META_ON_NODE);
         if (value == NULL || !pcmk__str_eq(value, name, pcmk__str_casei|pcmk__str_null_matches)) {
             continue;
         }
 
-        if (!parse_op_key(pe__xe_history_key(xml_op), &op_id, NULL, NULL)) {
+        if (!parse_op_key(pcmk__xe_history_key(xml_op), &op_id, NULL, NULL)) {
             continue; // This history entry is missing an operation key
         }
 
