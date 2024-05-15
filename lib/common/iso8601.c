@@ -1970,6 +1970,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
             }
 
             switch (format[scanned_pos]) {
+                case '\0': // Literal % and possibly digits at end of string
+                    fmt_pos = scanned_pos; // Pass remaining string as-is
+                    break;
+
                 case 'N': // %[width]N
                     scanned_pos++;
 
