@@ -1936,7 +1936,6 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 
     char nano_s[10] = { '\0', };
     char date_s[DATE_LEN_MAX] = { '\0', };
-    char nanofmt_s[5] = "%";
 
     struct tm tm = { 0, };
     crm_time_t dt = { 0, };
@@ -1978,7 +1977,6 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
                     nano_digits = atoi(&format[fmt_pos + 1]);
                     nano_digits = QB_MAX(nano_digits, 0);
                     nano_digits = QB_MIN(nano_digits, 6);
-                    sprintf(&nanofmt_s[1], ".%ds", nano_digits);
                     break;
 
                 default: // Some other specifier
@@ -2002,16 +2000,9 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #endif
         printed_pos = scanned_pos;
         free(tmp_fmt_s);
-        if (nano_digits) {
-#ifdef HAVE_FORMAT_NONLITERAL
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
+        if (nano_digits != 0) {
             date_len += snprintf(&date_s[date_len], DATE_LEN_MAX - date_len,
-                                 nanofmt_s, nano_s);
-#ifdef HAVE_FORMAT_NONLITERAL
-#pragma GCC diagnostic pop
-#endif
+                                 "%.*s", nano_digits, nano_s);
         }
     }
 
