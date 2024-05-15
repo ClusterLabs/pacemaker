@@ -36,7 +36,7 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
     if (running == NULL) {
         pe__add_action_expected_result(probe, CRM_EX_NOT_RUNNING);
 
-    } else if (rsc->role == pcmk_role_promoted) {
+    } else if (rsc->private->orig_role == pcmk_role_promoted) {
         pe__add_action_expected_result(probe, CRM_EX_PROMOTED);
     }
 }
@@ -113,7 +113,8 @@ guest_resource_will_stop(const pcmk_node_t *node)
            || (guest_rsc->next_role == pcmk_role_stopped)
 
            // Guest is moving
-           || ((guest_rsc->role > pcmk_role_stopped) && (guest_node != NULL)
+           || ((guest_rsc->private->orig_role > pcmk_role_stopped)
+               && (guest_node != NULL)
                && pcmk__find_node_in_list(guest_rsc->private->active_nodes,
                                           guest_node->details->uname) == NULL);
 }
@@ -134,7 +135,8 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
-              pcmk_role_text(rsc->role), rsc->id, pcmk__node_name(node));
+              pcmk_role_text(rsc->private->orig_role), rsc->id,
+              pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->private->scheduler);
@@ -244,7 +246,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     if (pcmk__is_guest_or_bundle_node(node)) {
         pcmk_resource_t *guest = node->details->remote_rsc->container;
 
-        if (guest->role == pcmk_role_stopped) {
+        if (guest->private->orig_role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
             reason = "node's guest is stopped";
             probe_then_start(guest, top);

@@ -105,7 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    enum rsc_role_e role;           // Resource's current role
     enum rsc_role_e next_role;      // Resource's scheduled next role
 
     GHashTable *meta;               // Resource's meta-attributes

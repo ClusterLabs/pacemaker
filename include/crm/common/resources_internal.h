@@ -319,6 +319,7 @@ struct pcmk__resource_private {
     char *history_id;               // Resource instance ID in history
     int priority;                   // Priority relative other resources
     int promotion_priority;         // Promotion priority on assigned node
+    enum rsc_role_e orig_role;      // Resource's role at start of transition
     int stickiness;                 // Extra preference for current node
     guint failure_expiration_ms;    // Failures expire after this much time
     int ban_after_failures;         // Ban from node after this many failures

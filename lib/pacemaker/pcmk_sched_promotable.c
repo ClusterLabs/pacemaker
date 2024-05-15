@@ -856,9 +856,9 @@ set_current_role_unpromoted(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
 
-    if (rsc->role == pcmk_role_started) {
+    if (rsc->private->orig_role == pcmk_role_started) {
         // Promotable clones should use unpromoted role instead of started
-        rsc->role = pcmk_role_unpromoted;
+        rsc->private->orig_role = pcmk_role_unpromoted;
     }
     g_list_foreach(rsc->children, set_current_role_unpromoted, NULL);
 }
@@ -1063,7 +1063,7 @@ set_instance_role(gpointer data, gpointer user_data)
         return;
     }
 
-    if ((instance->role < pcmk_role_promoted)
+    if ((instance->private->orig_role < pcmk_role_promoted)
         && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
         && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
@@ -1074,7 +1074,7 @@ set_instance_role(gpointer data, gpointer user_data)
 
     chosen->count++;
     pcmk__rsc_info(clone, "Choosing %s (%s) on %s for promotion",
-                   instance->id, pcmk_role_text(instance->role),
+                   instance->id, pcmk_role_text(instance->private->orig_role),
                    pcmk__node_name(chosen));
     set_next_role_promoted(instance, NULL);
     (*count)++;

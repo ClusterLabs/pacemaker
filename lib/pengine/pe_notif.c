@@ -571,7 +571,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
     entry = new_notify_entry(rsc, node);
 
     // Add notification indicating the resource state
-    switch (rsc->role) {
+    switch (rsc->private->orig_role) {
         case pcmk_role_stopped:
             n_data->inactive = g_list_prepend(n_data->inactive, entry);
             break;
@@ -596,7 +596,7 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
             pcmk__sched_err("Resource %s role on %s (%s) is not supported for "
                             "notifications (bug?)",
                             rsc->id, pcmk__node_name(node),
-                            pcmk_role_text(rsc->role));
+                            pcmk_role_text(rsc->private->orig_role));
             free(entry);
             break;
     }
@@ -871,7 +871,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
                     rsc->id, n_data->action);
 
     // Create notify actions for stop or demote
-    if ((rsc->role != pcmk_role_stopped)
+    if ((rsc->private->orig_role != pcmk_role_stopped)
         && ((task == pcmk_action_stop) || (task == pcmk_action_demote))) {
 
         stop = find_first_action(rsc->private->actions, NULL, PCMK_ACTION_STOP,

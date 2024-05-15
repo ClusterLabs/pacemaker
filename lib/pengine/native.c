@@ -39,11 +39,13 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
                         gboolean failed)
 {
     int priority = 0;
+    const bool promoted = (rsc->private->orig_role == pcmk_role_promoted);
+
     if ((rsc->private->priority == 0) || failed) {
         return;
     }
 
-    if (rsc->role == pcmk_role_promoted) {
+    if (promoted) {
         // Promoted instance takes base priority + 1
         priority = rsc->private->priority + 1;
 
@@ -54,9 +56,8 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
     node->details->priority += priority;
     pcmk__rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
                     pcmk__node_name(node), node->details->priority,
-                    (rsc->role == pcmk_role_promoted)? "promoted " : "",
-                    rsc->id, rsc->private->priority,
-                    (rsc->role == pcmk_role_promoted)? " + 1" : "");
+                    (promoted? "promoted " : ""),
+                    rsc->id, rsc->private->priority, (promoted? " + 1" : ""));
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
@@ -74,9 +75,8 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
                             "%s now has priority %d with %s'%s' "
                             "(priority: %d%s) from guest node %s",
                             pcmk__node_name(a_node), a_node->details->priority,
-                            (rsc->role == pcmk_role_promoted)? "promoted " : "",
-                            rsc->id, rsc->private->priority,
-                            (rsc->role == pcmk_role_promoted)? " + 1" : "",
+                            (promoted? "promoted " : ""), rsc->id,
+                            rsc->private->priority, (promoted? " + 1" : ""),
                             pcmk__node_name(node));
         }
     }
@@ -435,7 +435,7 @@ native_pending_action(const pcmk_resource_t *rsc)
 static enum rsc_role_e
 native_displayable_role(const pcmk_resource_t *rsc)
 {
-    enum rsc_role_e role = rsc->role;
+    enum rsc_role_e role = rsc->private->orig_role;
 
     if ((role == pcmk_role_started)
         && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
@@ -906,7 +906,7 @@ native_resource_state(const pcmk_resource_t * rsc, gboolean current)
     enum rsc_role_e role = rsc->next_role;
 
     if (current) {
-        role = rsc->role;
+        role = rsc->private->orig_role;
     }
     pcmk__rsc_trace(rsc, "%s state: %s", rsc->id, pcmk_role_text(role));
     return role;

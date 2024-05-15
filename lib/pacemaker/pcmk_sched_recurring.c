@@ -282,7 +282,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                                                                op->interval_ms,
                                                                node);
 
-            switch (rsc->role) {
+            switch (rsc->private->orig_role) {
                 case pcmk_role_unpromoted:
                 case pcmk_role_started:
                     if (rsc->next_role == pcmk_role_promoted) {
@@ -366,7 +366,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
                                |pcmk__ar_unrunnable_first_blocks,
                                rsc->private->scheduler);
 
-        } else if (rsc->role == pcmk_role_promoted) {
+        } else if (rsc->private->orig_role == pcmk_role_promoted) {
             pcmk__new_ordering(rsc, demote_key(rsc), NULL,
                                rsc, NULL, mon,
                                pcmk__ar_ordered

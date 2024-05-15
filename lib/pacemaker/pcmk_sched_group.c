@@ -60,7 +60,7 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pcmk__set_rsc_flags(rsc, pcmk__rsc_assigning);
     first_member = (pcmk_resource_t *) rsc->children->data;
-    rsc->role = first_member->role;
+    rsc->private->orig_role = first_member->private->orig_role;
 
     pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),

@@ -294,7 +294,7 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         policy = pcmk_no_quorum_ignore;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_demote) {
-        switch (rsc->role) {
+        switch (rsc->private->orig_role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:
                 if (rsc->next_role > pcmk_role_unpromoted) {
@@ -386,7 +386,7 @@ update_resource_action_runnable(pcmk_action_t *action,
 
             case pcmk_no_quorum_freeze:
                 if (!rsc->private->fns->active(rsc, TRUE)
-                    || (rsc->next_role > rsc->role)) {
+                    || (rsc->next_role > rsc->private->orig_role)) {
                     pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,
                                     pcmk__node_name(action->node));

@@ -335,11 +335,11 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
     next = rsc->private->assigned_node;
     if (rsc->private->active_nodes != NULL) {
         current = pcmk__current_node(rsc);
-        if (rsc->role == pcmk_role_stopped) {
+        if (rsc->private->orig_role == pcmk_role_stopped) {
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
              */
-            rsc->role = pcmk_role_started;
+            rsc->private->orig_role = pcmk_role_started;
         }
     }
 

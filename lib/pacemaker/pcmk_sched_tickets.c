@@ -47,7 +47,7 @@ static bool
 ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     if ((rsc_ticket->role == pcmk_role_unknown)
-        || (rsc_ticket->role == rsc->role)) {
+        || (rsc_ticket->role == rsc->private->orig_role)) {
         return true;
     }
     pcmk__rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",

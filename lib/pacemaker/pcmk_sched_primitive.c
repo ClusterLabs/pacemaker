@@ -485,14 +485,14 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                           PCMK_META_TARGET_ROLE, scheduler);
 
-    } else if ((rsc->next_role > rsc->role)
+    } else if ((rsc->next_role > rsc->private->orig_role)
                && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
                && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
-                   rsc->id, pcmk_role_text(rsc->role),
+                   rsc->id, pcmk_role_text(rsc->private->orig_role),
                    pcmk_role_text(rsc->next_role));
-        pe__set_next_role(rsc, rsc->role,
+        pe__set_next_role(rsc, rsc->private->orig_role,
                           PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE);
     }
 
@@ -511,11 +511,11 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         const char *reason = NULL;
         pcmk_node_t *assign_to = NULL;
 
-        pe__set_next_role(rsc, rsc->role, "unmanaged");
+        pe__set_next_role(rsc, rsc->private->orig_role, "unmanaged");
         assign_to = pcmk__current_node(rsc);
         if (assign_to == NULL) {
             reason = "inactive";
-        } else if (rsc->role == pcmk_role_promoted) {
+        } else if (rsc->private->orig_role == pcmk_role_promoted) {
             reason = "promoted";
         } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             reason = "failed";
@@ -569,7 +569,7 @@ static void
 schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
                          bool need_stop, bool need_promote)
 {
-    enum rsc_role_e role = rsc->role;
+    enum rsc_role_e role = rsc->private->orig_role;
     enum rsc_role_e next_role;
     rsc_transition_fn fn = NULL;
 
@@ -590,11 +590,12 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
     }
 
     // Bring resource up to its next role on its next node
-    while ((rsc->role <= rsc->next_role) && (role != rsc->role)
+    while ((rsc->private->orig_role <= rsc->next_role)
+           && (role != rsc->private->orig_role)
            && !pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
         bool required = need_stop;
 
-        next_role = rsc_state_matrix[role][rsc->role];
+        next_role = rsc_state_matrix[role][rsc->private->orig_role];
         if ((next_role == pcmk_role_promoted) && need_promote) {
             required = true;
         }
@@ -662,7 +663,7 @@ create_pending_start(pcmk_resource_t *rsc)
 static void
 schedule_role_transition_actions(pcmk_resource_t *rsc)
 {
-    enum rsc_role_e role = rsc->role;
+    enum rsc_role_e role = rsc->private->orig_role;
 
     while (role != rsc->next_role) {
         enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
@@ -710,7 +711,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc,
                     "Creating all actions for %s transition from %s to %s "
                     "(%s) on %s",
-                    rsc->id, pcmk_role_text(rsc->role),
+                    rsc->id, pcmk_role_text(rsc->private->orig_role),
                     pcmk_role_text(rsc->next_role), next_role_source,
                     pcmk__node_name(rsc->private->assigned_node));
 
@@ -835,7 +836,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
         pcmk__rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
         need_stop = true;
 
-    } else if ((rsc->role > pcmk_role_started) && (current != NULL)
+    } else if ((rsc->private->orig_role > pcmk_role_started)
+               && (current != NULL)
                && (rsc->private->assigned_node != NULL)) {
         pcmk_action_t *start = NULL;
 
@@ -956,7 +958,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                     pcmk__rsc_promotable)
-        || (rsc->role > pcmk_role_unpromoted)) {
+        || (rsc->private->orig_role > pcmk_role_unpromoted)) {
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0),
                            NULL,
