@@ -77,6 +77,13 @@ no_specifiers(void **state)
                      "%2 this starts and ends with %",
                      // *BSD strftime() strips % in front of nonzero number
                      "2 this starts and ends with %");
+
+    /* strftime() treats % with a number (and no specifier) as a literal string
+     * to be formatted with a field width (undocumented and probably a bug ...)
+     */
+    assert_hr_format("this ends with %10", "this ends with        %10",
+                     // *BSD strftime() strips % in front of nonzero number
+                     "this ends with 10");
 }
 
 static void
