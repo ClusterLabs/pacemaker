@@ -486,9 +486,9 @@ static GOptionEntry query_entries[] = {
       INDENT "--resource and/or --node",
       NULL },
     { "list-options", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, command_cb,
-      "List all available options of the given type\n"
+      "List all available options of the given type.\n"
       INDENT "Allowed values:\n"
-      INDENT PCMK__VALUE_PRIMITIVE "(primitive resource meta-attributes), "
+      INDENT PCMK__VALUE_PRIMITIVE " (primitive resource meta-attributes),\n"
       INDENT PCMK_VALUE_FENCING " (parameters common to all fencing resources)",
       "TYPE" },
     { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
