@@ -1772,7 +1772,7 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_remote_conn_lost)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
@@ -2417,7 +2417,10 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_reset_remote:
-            pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
+            pcmk__set_rsc_flags(rsc,
+                                pcmk_rsc_failed
+                                |pcmk_rsc_stop_if_failed
+                                |pcmk_rsc_remote_conn_lost);
             if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
