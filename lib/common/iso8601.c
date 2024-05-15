@@ -1027,53 +1027,54 @@ invalid:
 }
 
 // Parse an ISO 8601 numeric value and return number of characters consumed
-// @TODO This cannot handle >INT_MAX int values
-// @TODO Fractions appear to be not working
-// @TODO Error out on invalid specifications
 static int
-parse_int(const char *str, int field_width, int upper_bound, int *result)
+parse_int(const char *str, int *result)
 {
-    int lpc = 0;
-    int offset = 0;
-    int intermediate = 0;
-    gboolean fraction = FALSE;
-    gboolean negate = FALSE;
+    unsigned int lpc;
+    int offset = (str[0] == 'T')? 1 : 0;
+    bool fraction = false;
+    bool negate = false;
 
     *result = 0;
     if (*str == '\0') {
         return 0;
     }
 
-    if (str[offset] == 'T') {
-        offset++;
+    // @TODO This cannot handle combinations of these characters
+    switch (str[offset]) {
+        case '.':
+        case ',':
+            fraction = true;
+            offset++;
+            break;
+
+        case '-':
+            negate = true;
+            offset++;
+            break;
+
+        case '+':
+        case ':':
+            offset++;
+            break;
+
+        default:
+            break;
     }
 
-    if (str[offset] == '.' || str[offset] == ',') {
-        fraction = TRUE;
-        field_width = -1;
-        offset++;
-    } else if (str[offset] == '-') {
-        negate = TRUE;
-        offset++;
-    } else if (str[offset] == '+' || str[offset] == ':') {
-        offset++;
-    }
+    for (lpc = 0; (fraction || (lpc < 10)) && isdigit(str[offset]); lpc++) {
+        const int digit = str[offset++] - '0';
 
-    for (; (fraction || lpc < field_width) && isdigit((int)str[offset]); lpc++) {
         if (fraction) {
-            intermediate = (str[offset] - '0') / (10 ^ lpc);
+            /* @TODO The previous code here had bugs that always yielded a
+             * result of 0. Since it never worked, it has been removed rather
+             * than fixed. Effort would be better spent replacing our ISO 8601
+             * code with GDateTime.
+             */
         } else {
-            *result *= 10;
-            intermediate = str[offset] - '0';
+            // @TODO lpc == 9 could yield a 32-bit integer overflow
+            *result = *result * 10 + digit;
         }
-        *result += intermediate;
-        offset++;
-    }
-    if (fraction) {
-        *result = (int)(*result * upper_bound);
-
-    } else if (upper_bound > 0 && *result > upper_bound) {
-        *result = upper_bound;
     }
     if (negate) {
         *result = 0 - *result;
@@ -1136,7 +1137,7 @@ crm_time_parse_duration(const char *period_s)
         }
 
         // An integer must be next
-        rc = parse_int(current, 10, 0, &an_int);
+        rc = parse_int(current, &an_int);
         if (rc == 0) {
             crm_err("'%s' is not a valid ISO 8601 time duration "
                     "because no integer at '%s'", period_s, current);
