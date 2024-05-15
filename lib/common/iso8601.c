@@ -888,7 +888,8 @@ parse_date(const char *date_str)
         goto invalid;
     }
 
-    if ((date_str[0] == 'T') || (date_str[2] == ':')) {
+    if ((date_str[0] == 'T')
+        || ((strlen(date_str) > 2) && (date_str[2] == ':'))) {
         /* Just a time supplied - Infer current date */
         dt = crm_time_new(NULL);
         if (date_str[0] == 'T') {
