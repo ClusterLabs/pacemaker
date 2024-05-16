@@ -2,7 +2,7 @@ Using the original execution date of: 2024-05-13 04:25:37Z
 Current cluster status:
   * Node List:
     * Online: [ fastvm-fedora39-22 fastvm-fedora39-24 ]
-    * RemoteOFFLINE: [ fastvm-fedora39-23 ]
+    * RemoteOnline: [ fastvm-fedora39-23 ]
 
   * Full List of Resources:
     * fastvm-fedora39-23	(ocf:pacemaker:remote):	 FAILED [ fastvm-fedora39-22 fastvm-fedora39-24 ]

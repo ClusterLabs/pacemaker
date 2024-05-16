@@ -2,27 +2,25 @@ Using the original execution date of: 2015-08-12 02:53:40Z
 Current cluster status:
   * Node List:
     * Online: [ bl460g8n3 bl460g8n4 ]
-    * GuestOnline: [ pgsr01 ]
+    * GuestOnline: [ pgsr01 pgsr02 ]
 
   * Full List of Resources:
     * prmDB1	(ocf:heartbeat:VirtualDomain):	 Started bl460g8n3
-    * prmDB2	(ocf:heartbeat:VirtualDomain):	 FAILED bl460g8n4
+    * prmDB2	(ocf:heartbeat:VirtualDomain):	 Started bl460g8n4
     * Resource Group: grpStonith1:
       * prmStonith1-2	(stonith:external/ipmi):	 Started bl460g8n4
     * Resource Group: grpStonith2:
       * prmStonith2-2	(stonith:external/ipmi):	 Started bl460g8n3
     * Resource Group: master-group:
-      * vip-master	(ocf:heartbeat:Dummy):	 FAILED pgsr02
-      * vip-rep	(ocf:heartbeat:Dummy):	 FAILED pgsr02
+      * vip-master	(ocf:heartbeat:Dummy):	 Started pgsr02
+      * vip-rep	(ocf:heartbeat:Dummy):	 Started pgsr02
     * Clone Set: msPostgresql [pgsql] (promotable):
-      * Promoted: [ pgsr01 ]
-      * Stopped: [ bl460g8n3 bl460g8n4 ]
+      * Promoted: [ pgsr01 pgsr02 ]
 
 Transition Summary:
-  * Fence (off) pgsr02 (resource: prmDB2) 'guest is unclean'
   * Stop       prmDB2         (        bl460g8n4 )  due to node availability
-  * Recover    vip-master     ( pgsr02 -> pgsr01 )
-  * Recover    vip-rep        ( pgsr02 -> pgsr01 )
+  * Move       vip-master     ( pgsr02 -> pgsr01 )
+  * Move       vip-rep        ( pgsr02 -> pgsr01 )
   * Stop       pgsql:0        (  Promoted pgsr02 )  due to node availability
   * Stop       pgsr02         (        bl460g8n4 )  due to node availability
 
@@ -31,28 +29,29 @@ Executing Cluster Transition:
   * Resource action: vip-rep         monitor on pgsr01
   * Pseudo action:   msPostgresql_pre_notify_demote_0
   * Resource action: pgsr01          monitor on bl460g8n4
-  * Resource action: pgsr02          stop on bl460g8n4
   * Resource action: pgsr02          monitor on bl460g8n3
-  * Resource action: prmDB2          stop on bl460g8n4
+  * Resource action: pgsql           notify on pgsr02
   * Resource action: pgsql           notify on pgsr01
   * Pseudo action:   msPostgresql_confirmed-pre_notify_demote_0
   * Pseudo action:   msPostgresql_demote_0
-  * Pseudo action:   stonith-pgsr02-off on pgsr02
-  * Pseudo action:   pgsql_post_notify_stop_0
-  * Pseudo action:   pgsql_demote_0
+  * Resource action: pgsql           demote on pgsr02
   * Pseudo action:   msPostgresql_demoted_0
   * Pseudo action:   msPostgresql_post_notify_demoted_0
+  * Resource action: pgsql           notify on pgsr02
   * Resource action: pgsql           notify on pgsr01
   * Pseudo action:   msPostgresql_confirmed-post_notify_demoted_0
   * Pseudo action:   msPostgresql_pre_notify_stop_0
   * Pseudo action:   master-group_stop_0
-  * Pseudo action:   vip-rep_stop_0
+  * Resource action: vip-rep         stop on pgsr02
+  * Resource action: pgsql           notify on pgsr02
   * Resource action: pgsql           notify on pgsr01
   * Pseudo action:   msPostgresql_confirmed-pre_notify_stop_0
   * Pseudo action:   msPostgresql_stop_0
-  * Pseudo action:   vip-master_stop_0
-  * Pseudo action:   pgsql_stop_0
+  * Resource action: vip-master      stop on pgsr02
+  * Resource action: pgsql           stop on pgsr02
   * Pseudo action:   msPostgresql_stopped_0
+  * Resource action: pgsr02          stop on bl460g8n4
+  * Resource action: prmDB2          stop on bl460g8n4
   * Pseudo action:   master-group_stopped_0
   * Pseudo action:   master-group_start_0
   * Resource action: vip-master      start on pgsr01
@@ -63,7 +62,6 @@ Executing Cluster Transition:
   * Resource action: vip-rep         monitor=10000 on pgsr01
   * Resource action: pgsql           notify on pgsr01
   * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
-  * Pseudo action:   pgsql_notified_0
   * Resource action: pgsql           monitor=9000 on pgsr01
 Using the original execution date of: 2015-08-12 02:53:40Z
 
@@ -74,14 +72,14 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * prmDB1	(ocf:heartbeat:VirtualDomain):	 Started bl460g8n3
-    * prmDB2	(ocf:heartbeat:VirtualDomain):	 FAILED
+    * prmDB2	(ocf:heartbeat:VirtualDomain):	 Stopped
     * Resource Group: grpStonith1:
       * prmStonith1-2	(stonith:external/ipmi):	 Started bl460g8n4
     * Resource Group: grpStonith2:
       * prmStonith2-2	(stonith:external/ipmi):	 Started bl460g8n3
     * Resource Group: master-group:
-      * vip-master	(ocf:heartbeat:Dummy):	 FAILED [ pgsr01 pgsr02 ]
-      * vip-rep	(ocf:heartbeat:Dummy):	 FAILED [ pgsr01 pgsr02 ]
+      * vip-master	(ocf:heartbeat:Dummy):	 Started pgsr01
+      * vip-rep	(ocf:heartbeat:Dummy):	 Started pgsr01
     * Clone Set: msPostgresql [pgsql] (promotable):
       * Promoted: [ pgsr01 ]
-      * Stopped: [ bl460g8n3 bl460g8n4 ]
+      * Stopped: [ bl460g8n3 bl460g8n4 pgsr02 ]
