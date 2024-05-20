@@ -1,0 +1,30 @@
+/*
+ * Copyright 2024 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+
+#include "util.h"
+#include "util_compat.h"
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  if (size < 10) {
+    return 0;
+  }
+  char *ns = malloc(size+1);
+  memcpy(ns, data, size);
+  ns[size] = '\0';
+   
+  crm_parse_interval_spec(ns);
+
+  free(ns);  
+  return 0;
+}
