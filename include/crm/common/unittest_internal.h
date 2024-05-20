@@ -96,6 +96,8 @@ char *pcmk__cib_test_copy_cib(const char *in_file);
  */
 void pcmk__cib_test_cleanup(char *out_path);
 
+void pcmk__test_init_logging(const char *name, const char *filename);
+
 /*!
  * \internal
  * \brief Assert that a statement aborts through CRM_ASSERT().
