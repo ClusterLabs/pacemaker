@@ -1916,36 +1916,53 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
     free(hr_dt);
 }
 
+/*!
+ * \internal
+ * \brief Expand a date/time format string, including %N for nanoseconds
+ *
+ * \param[in] format  Date/time format string as per strftime(3) with the
+ *                    addition of %N for nanoseconds
+ * \param[in] hr_dt   Time value to format
+ *
+ * \return Newly allocated string with formatted string
+ */
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
 #define DATE_LEN_MAX 128
-    const char *mark_s = NULL;
-    int scanned_pos = 0;
-    int printed_pos = 0;
-    int fmt_pos = 0;
+    int scanned_pos = 0; // How many characters of format have been parsed
+    int printed_pos = 0; // How many characters of format have been processed
     size_t date_len = 0;
-    int nano_digits = 0;
 
     char nano_s[10] = { '\0', };
     char date_s[DATE_LEN_MAX] = { '\0', };
     char nanofmt_s[5] = "%";
-    char *tmp_fmt_s = NULL;
 
     struct tm tm = { 0, };
     crm_time_t dt = { 0, };
 
-    if (!format) {
+    if (format == NULL) {
         return NULL;
     }
     pcmk__time_set_hr_dt(&dt, hr_dt);
     ha_get_tm_time(&tm, &dt);
     sprintf(nano_s, "%06d000", hr_dt->useconds);
 
-    while ((format[scanned_pos]) != '\0') {
-        mark_s = strchr(&format[scanned_pos], '%');
-        if (mark_s) {
-            fmt_pos = mark_s - format;
+    while (format[scanned_pos] != '\0') {
+        int fmt_pos;            // Index after last character to pass as-is
+        int nano_digits = 0;    // Length of %N field width (if any)
+        char *tmp_fmt_s = NULL;
+
+        // Look for next format specifier
+        const char *mark_s = strchr(&format[scanned_pos], '%');
+
+        if (mark_s == NULL) {
+            // No more specifiers, so pass remaining string to strftime() as-is
+            scanned_pos = strlen(format);
+            fmt_pos = scanned_pos;
+
+        } else {
+            fmt_pos = mark_s - format; // Index of %
 
             // Skip % and any field width
             scanned_pos = fmt_pos + 1;
@@ -1971,10 +1988,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
                     fmt_pos = scanned_pos; // Pass remaining string as-is
                     break;
             }
-        } else {
-            scanned_pos = strlen(format);
-            fmt_pos = scanned_pos; /* print till end */
         }
+
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
@@ -1997,11 +2012,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
-            nano_digits = 0;
         }
     }
 
-    return (date_len == 0)?NULL:strdup(date_s);
+    return (date_len == 0)? NULL : pcmk__str_copy(date_s);
 #undef DATE_LEN_MAX
 }
 
