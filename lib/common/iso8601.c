@@ -1953,18 +1953,23 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
                 scanned_pos++;
             }
 
-            if (format[scanned_pos] == 'N') {
-                scanned_pos++;
-                nano_digits = atoi(&format[fmt_pos+1]);
-                nano_digits = (nano_digits > 6)?6:nano_digits;
-                nano_digits = (nano_digits < 0)?0:nano_digits;
-                sprintf(&nanofmt_s[1], ".%ds", nano_digits);
-            } else {
-                scanned_pos++;
-                if (format[scanned_pos] != '\0') {
-                    continue;
-                }
-                fmt_pos = scanned_pos; /* print till end */
+            switch (format[scanned_pos]) {
+                case 'N': // %[width]N
+                    scanned_pos++;
+
+                    // Parse field width
+                    nano_digits = atoi(&format[fmt_pos + 1]);
+                    nano_digits = QB_MAX(nano_digits, 0);
+                    nano_digits = QB_MIN(nano_digits, 6);
+                    sprintf(&nanofmt_s[1], ".%ds", nano_digits);
+                    break;
+
+                default: // Some other specifier
+                    if (format[++scanned_pos] != '\0') { // More to parse
+                        continue;
+                    }
+                    fmt_pos = scanned_pos; // Pass remaining string as-is
+                    break;
             }
         } else {
             scanned_pos = strlen(format);
