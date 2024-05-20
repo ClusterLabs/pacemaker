@@ -92,9 +92,7 @@ class SearchObj:
         raise NotImplementedError
 
     def harvest_cached(self):
-        """
-        Return cached logs from before the limit timestamp.
-        """
+        """Return cached logs from before the limit timestamp."""
         raise NotImplementedError
 
     def end(self):
@@ -177,9 +175,7 @@ class FileObj(SearchObj):
         return self.rsh.call_async(self.host, cmd, delegate=self)
 
     def harvest_cached(self):
-        """
-        Return cached logs from before the limit timestamp.
-        """
+        """Return cached logs from before the limit timestamp."""
         # cts-log-watcher script renders caching unnecessary for FileObj.
         # @TODO Caching might be slightly more efficient, if not too complex.
         return []
@@ -320,9 +316,7 @@ class JournalObj(SearchObj):
         return self.rsh.call_async(self.host, command, delegate=self)
 
     def harvest_cached(self):
-        """
-        Return cached logs from before the limit timestamp.
-        """
+        """Return cached logs from before the limit timestamp."""
         before, self._cache = self._split_msgs_by_limit(self._cache)
         return before
 
