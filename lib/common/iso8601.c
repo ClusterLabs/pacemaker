@@ -1945,21 +1945,22 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     while ((format[scanned_pos]) != '\0') {
         mark_s = strchr(&format[scanned_pos], '%');
         if (mark_s) {
-            int fmt_len = 1;
-
             fmt_pos = mark_s - format;
-            while ((format[fmt_pos+fmt_len] != '\0') &&
-                (format[fmt_pos+fmt_len] >= '0') &&
-                (format[fmt_pos+fmt_len] <= '9')) {
-                fmt_len++;
+
+            // Skip % and any field width
+            scanned_pos = fmt_pos + 1;
+            while (isdigit(format[scanned_pos])) {
+                scanned_pos++;
             }
-            scanned_pos = fmt_pos + fmt_len + 1;
-            if (format[fmt_pos+fmt_len] == 'N') {
+
+            if (format[scanned_pos] == 'N') {
+                scanned_pos++;
                 nano_digits = atoi(&format[fmt_pos+1]);
                 nano_digits = (nano_digits > 6)?6:nano_digits;
                 nano_digits = (nano_digits < 0)?0:nano_digits;
                 sprintf(&nanofmt_s[1], ".%ds", nano_digits);
             } else {
+                scanned_pos++;
                 if (format[scanned_pos] != '\0') {
                     continue;
                 }
