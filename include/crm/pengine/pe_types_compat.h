@@ -237,9 +237,6 @@ typedef enum pe_quorum_policy no_quorum_policy_t;
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
-//! \deprecated use pcmk_resource_t instead
-typedef struct pe_resource_s pe_resource_t;
-
 //! \deprecated Do not use
 typedef struct pe_tag_s tag_t;
 
