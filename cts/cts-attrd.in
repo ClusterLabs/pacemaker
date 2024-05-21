@@ -1,6 +1,5 @@
 #!@PYTHON@
-""" Regression tests for Pacemaker's attribute daemon
-"""
+"""Regression tests for Pacemaker's attribute daemon."""
 
 # pylint doesn't like the module name "cts-attrd" which is an invalid complaint for this file
 # but probably something we want to continue warning about elsewhere
@@ -35,9 +34,9 @@ from pacemaker._cts.test import Test, Tests
 
 TEST_DIR = sys.path[0]
 
-def update_path():
-    """ Set the PATH environment variable appropriately for the tests """
 
+def update_path():
+    """Set the PATH environment variable appropriately for the tests."""
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-attrd.in" % TEST_DIR):
         # pylint: disable=protected-access
@@ -55,9 +54,18 @@ def update_path():
 
 
 class AttributeTest(Test):
-    """ Executor for a single test """
+    """Executor for a single test."""
 
     def __init__(self, name, description, **kwargs):
+        """
+        Create a new AttributeTest instance.
+
+        Arguments:
+        name        -- A unique name for this test.  This can be used on the
+                       command line to specify that only a specific test should
+                       be executed.
+        description -- A meaningful description for the test.
+        """
         Test.__init__(self, name, description, **kwargs)
 
         self._daemon_location = "pacemaker-attrd"
@@ -76,35 +84,32 @@ class AttributeTest(Test):
 
 
 class AttributeTests(Tests):
-    """ Collection of all attribute regression tests """
+    """Collection of all attribute regression tests."""
 
     def __init__(self, **kwargs):
+        """Create a new AttributeTests instance."""
         Tests.__init__(self, **kwargs)
 
         self._corosync = Corosync(self.verbose, self.logdir, "cts-attrd")
 
     def new_test(self, name, description):
-        """ Create a named test """
-
+        """Create a named test."""
         test = AttributeTest(name, description, verbose=self.verbose, logdir=self.logdir)
         self._tests.append(test)
         return test
 
     def setup_environment(self, use_corosync):
-        """ Prepare the host before executing any tests """
-
+        """Prepare the host before executing any tests."""
         if use_corosync:
             self._corosync.start(kill_first=True)
 
     def cleanup_environment(self, use_corosync):
-        """ Clean up the host after executing desired tests """
-
+        """Clean up the host after executing desired tests."""
         if use_corosync:
             self._corosync.stop()
 
     def build_basic_tests(self):
-        """ Add basic tests - setting, querying, updating, and deleting attributes """
-
+        """Add basic tests - setting, querying, updating, and deleting attributes."""
         test = self.new_test("set_attr_1",
                              "Set and query an attribute")
         test.add_cmd("attrd_updater", "--name AAA -U 111 --output-as=xml")
@@ -199,8 +204,7 @@ class AttributeTests(Tests):
         test.add_log_pattern("Processed 1 private change for DDD (set foo)")
 
     def build_multiple_query_tests(self):
-        """ Add tests that set and query an attribute across multiple nodes """
-
+        """Add tests that set and query an attribute across multiple nodes."""
         # NOTE:  These tests make use of the fact that nothing in attrd actually
         # cares about whether a node exists when you set or query an attribute.
         # It just keeps creating new hash tables for each node you ask it about.
@@ -226,8 +230,7 @@ class AttributeTests(Tests):
                                   env={"OCF_RESKEY_CRM_meta_on_node": "cluster1"})
 
     def build_regex_tests(self):
-        """ Add tests that use regexes """
-
+        """Add tests that use regexes."""
         test = self.new_test("regex_update_1",
                              "Update attributes using a regex")
         test.add_cmd("attrd_updater", "--name AAA -U 111 --output-as=xml")
@@ -261,8 +264,7 @@ class AttributeTests(Tests):
                              regex=True)
 
     def build_utilization_tests(self):
-        """ Add tests that involve utilization attributes """
-
+        """Add tests that involve utilization attributes."""
         test = self.new_test("utilization_1",
                              "Set and query a utilization attribute")
         test.add_cmd("attrd_updater", "--name AAA -U ABC -z --output-as=xml")
@@ -272,8 +274,7 @@ class AttributeTests(Tests):
                              regex=True)
 
     def build_sync_point_tests(self):
-        """ Add tests that involve sync points """
-
+        """Add tests that involve sync points."""
         test = self.new_test("local_sync_point",
                              "Wait for a local sync point")
         test.add_cmd("attrd_updater", "--name AAA -U 123 --wait=local --output-as=xml")
@@ -292,8 +293,7 @@ class AttributeTests(Tests):
 
 
 def build_options():
-    """ Handle command line arguments """
-
+    """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="Run pacemaker-attrd regression tests",
                                      epilog="Example: Run only the test 'start_stop'\n"
@@ -314,8 +314,7 @@ def build_options():
 
 
 def main():
-    """ Run attrd regression tests as specified by arguments """
-
+    """Run attrd regression tests as specified by arguments."""
     update_path()
 
     # Ensure all command output is in portable locale for comparison
