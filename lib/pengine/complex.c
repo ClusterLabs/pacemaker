@@ -720,6 +720,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     rsc_private->meta = pcmk__strkey_table(free, free);
+    rsc_private->utilization = pcmk__strkey_table(free, free);
     rsc_private->probed_nodes = pcmk__strkey_table(NULL, free);
     rsc_private->allowed_nodes = pcmk__strkey_table(NULL, free);
 
@@ -977,11 +978,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     pcmk__rsc_trace(*rsc, "%s action notification: %s", (*rsc)->id,
                     pcmk_is_set((*rsc)->flags, pcmk__rsc_notify)? "required" : "not required");
 
-    (*rsc)->utilization = pcmk__strkey_table(free, free);
-
     pe__unpack_dataset_nvpairs(rsc_private->xml, PCMK_XE_UTILIZATION,
-                               &rule_data, (*rsc)->utilization, NULL, FALSE,
-                               scheduler);
+                               &rule_data, rsc_private->utilization, NULL,
+                               FALSE, scheduler);
 
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, scheduler) == FALSE) {
@@ -1068,9 +1067,6 @@ common_free(pcmk_resource_t * rsc)
     if (rsc->parameter_cache != NULL) {
         g_hash_table_destroy(rsc->parameter_cache);
     }
-    if (rsc->utilization != NULL) {
-        g_hash_table_destroy(rsc->utilization);
-    }
 
     if ((rsc->private->parent == NULL)
         && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
@@ -1102,6 +1098,9 @@ common_free(pcmk_resource_t * rsc)
 
     if (rsc->private->meta != NULL) {
         g_hash_table_destroy(rsc->private->meta);
+    }
+    if (rsc->private->utilization != NULL) {
+        g_hash_table_destroy(rsc->private->utilization);
     }
     if (rsc->private->probed_nodes != NULL) {
         g_hash_table_destroy(rsc->private->probed_nodes);

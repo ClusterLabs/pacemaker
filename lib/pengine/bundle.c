@@ -1338,10 +1338,12 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          * container.
          */
         if (replica->child != NULL) {
-            GHashTable *empty = replica->container->utilization;
+            GHashTable *empty = replica->container->private->utilization;
 
-            replica->container->utilization = replica->child->utilization;
-            replica->child->utilization = empty;
+            replica->container->private->utilization =
+                replica->child->private->utilization;
+
+            replica->child->private->utilization = empty;
         }
     }
 

@@ -318,6 +318,7 @@ struct pcmk__resource_private {
     void *variant_opaque;           // Variant-specific data
     char *history_id;               // Resource instance ID in history
     GHashTable *meta;               // Resource meta-attributes
+    GHashTable *utilization;        // Resource utilization attributes
     int priority;                   // Priority relative other resources
     int promotion_priority;         // Promotion priority on assigned node
     enum rsc_role_e orig_role;      // Resource's role at start of transition

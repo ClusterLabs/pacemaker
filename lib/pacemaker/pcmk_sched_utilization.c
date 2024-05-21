@@ -173,7 +173,8 @@ pcmk__consume_node_capacity(GHashTable *current_utilization,
         .plus = false,
     };
 
-    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+    g_hash_table_foreach(rsc->private->utilization, update_utilization_value,
+                         &data);
 }
 
 /*!
@@ -192,7 +193,8 @@ pcmk__release_node_capacity(GHashTable *current_utilization,
         .plus = true,
     };
 
-    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+    g_hash_table_foreach(rsc->private->utilization, update_utilization_value,
+                         &data);
 }
 
 
@@ -367,7 +369,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
         g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
-                && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
+                && !have_enough_capacity(node, rsc->id,
+                                         rsc->private->utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rsc->id);
                 resource_location(rsc, node, -PCMK_SCORE_INFINITY,

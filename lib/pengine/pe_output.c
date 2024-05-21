@@ -3161,7 +3161,8 @@ resource_util(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
                                         fn, rsc->id, pcmk__node_name(node));
 
-    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
+    g_hash_table_foreach(rsc->private->utilization, append_dump_text,
+                         &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
 
@@ -3185,7 +3186,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
                                             PCMK_XA_NODE, uname,
                                             PCMK_XA_FUNCTION, fn,
                                             NULL);
-    g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(rsc->private->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }

@@ -105,8 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    GHashTable *utilization;        // Resource's utilization attributes
-
     GList *children;                // Resource's child resources, if any
 
     // Source nodes where stop is needed after migrate_from and migrate_to
