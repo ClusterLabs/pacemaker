@@ -737,7 +737,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->fns = &resource_class_functions[rsc_private->variant];
 
     get_meta_attributes(rsc_private->meta, *rsc, NULL, scheduler);
-    (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
 
     (*rsc)->flags = 0;
     pcmk__set_rsc_flags(*rsc, pcmk__rsc_unassigned);
