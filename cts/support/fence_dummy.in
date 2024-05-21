@@ -1,6 +1,5 @@
 #!@PYTHON@
-"""Dummy fence agent for testing
-"""
+"""Dummy fence agent for testing."""
 
 __copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -182,20 +181,17 @@ no_reboot = False
 no_on = False
 
 def agent():
-    """ Return name this file was run as. """
-
+    """Return name this file was run as."""
     return os.path.basename(sys.argv[0])
 
 
 def fail_usage(message):
-    """ Print a usage message and exit. """
-
+    """Print a usage message and exit."""
     sys.exit("%s\nPlease use '-h' for usage" % message)
 
 
 def show_docs(options):
-    """ Handle informational options (display info and exit). """
-
+    """Handle informational options (display info and exit)."""
     device_opt = options["device_opt"]
 
     if "-h" in options:
@@ -215,16 +211,14 @@ def show_docs(options):
 
 
 def sorted_options(avail_opt):
-    """ Return a list of all options, in their internally specified order. """
-
+    """Return a list of all options, in their internally specified order."""
     sorted_list = [(key, ALL_OPT[key]) for key in avail_opt]
     sorted_list.sort(key=lambda x: x[1]["order"])
     return sorted_list
 
 
 def usage(avail_opt):
-    """ Print a usage message. """
-
+    """Print a usage message."""
     print("Usage:")
     print("\t" + agent() + " [options]")
     print("Options:")
@@ -235,8 +229,7 @@ def usage(avail_opt):
 
 
 def metadata(avail_opt, options):
-    """ Print agent metadata. """
-
+    """Print agent metadata."""
     # This log is just for testing handling of stderr output
     print("asked for fence_dummy metadata", file=sys.stderr)
 
@@ -303,8 +296,7 @@ def metadata(avail_opt, options):
 
 
 def option_longopt(option):
-    """ Return the getopt-compatible long-option name of the given option. """
-
+    """Return the getopt-compatible long-option name of the given option."""
     if ALL_OPT[option]["getopt"].endswith(":"):
         return ALL_OPT[option]["longopt"] + "="
     else:
@@ -312,8 +304,7 @@ def option_longopt(option):
 
 
 def opts_from_command_line(argv, avail_opt):
-    """ Read options from command-line arguments. """
-
+    """Read options from command-line arguments."""
     # Prepare list of options for getopt
     getopt_string = ""
     longopt_list = []
@@ -354,8 +345,7 @@ def opts_from_command_line(argv, avail_opt):
 
 
 def opts_from_stdin(avail_opt):
-    """ Read options from standard input. """
-
+    """Read options from standard input."""
     opt = {}
     name = ""
     for line in sys.stdin.readlines():
@@ -384,8 +374,7 @@ def opts_from_stdin(avail_opt):
 
 
 def process_input(avail_opt):
-    """ Set standard environment variables, and parse all options. """
-
+    """Set standard environment variables, and parse all options."""
     # Set standard environment
     os.putenv("LANG", "C")
     os.putenv("LC_ALL", "C")
@@ -398,8 +387,7 @@ def process_input(avail_opt):
 
 
 def atexit_handler():
-    """ Close stdout on exit. """
-
+    """Close stdout on exit."""
     try:
         sys.stdout.close()
         os.close(1)
@@ -408,8 +396,7 @@ def atexit_handler():
 
 
 def success_mode(options, option, default_value):
-    """ Return exit code specified by option. """
-
+    """Return exit code specified by option."""
     if option in options:
         test_value = options[option]
     else:
@@ -426,8 +413,7 @@ def success_mode(options, option, default_value):
 
 
 def write_options(options):
-    """ Write out all options to debug file. """
-
+    """Write out all options to debug file."""
     try:
         debugfile = io.open(options["-D"], 'at')
         debugfile.write("### %s ###\n" % (time.strftime("%Y-%m-%d %H:%M:%S")))
@@ -440,8 +426,6 @@ def write_options(options):
 
 
 def main():
-    """ Make it so! """
-
     global auto_unfence
     global no_reboot
     global no_on
