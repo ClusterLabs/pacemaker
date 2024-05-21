@@ -14,6 +14,7 @@ __copyright__ = "Copyright 2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
+import fcntl
 import os
 import shutil
 import subprocess
@@ -146,6 +147,48 @@ def cmd_uninstall():
         os.remove(f)
 
 
+def cmd_watch(filename, limit, offset, prefix):
+    """Watch a log file."""
+    if not os.access(filename, os.R_OK):
+        print("%sLast read: %d, limit=%d, count=%d - unreadable" % (prefix, 0, limit, 0))
+        sys.exit(ExitStatus.ERROR)
+
+    with open(filename, "r", encoding="utf-8") as logfile:
+        logfile.seek(0, os.SEEK_END)
+        newsize = logfile.tell()
+
+        if offset != 'EOF':
+            offset = int(offset)
+
+            if newsize >= offset:
+                logfile.seek(offset)
+            else:
+                print("%sFile truncated from %d to %d" % (prefix, offset, newsize))
+
+                if (newsize * 1.05) < offset:
+                    logfile.seek(0)
+
+        # Don't block when we reach EOF
+        fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+
+        count = 0
+        while True:
+            if logfile.tell() >= newsize:
+                break
+
+            if limit and count >= limit:
+                break
+
+            line = logfile.readline()
+            if not line:
+                break
+
+            print(line.strip())
+            count += 1
+
+        print("%sLast read: %d, limit=%d, count=%d" % (prefix, logfile.tell(), limit, count))
+
+
 def build_options():
     """Handle command line arguments."""
     # Create the top-level parser
@@ -157,6 +200,17 @@ def build_options():
 
     # Create the parser for the "uninstall" command
     subparsers.add_parser("uninstall", help="Remove support files")
+
+    # Create the parser for the "watch" command
+    watch_parser = subparsers.add_parser("watch", help="Remote log watcher")
+    watch_parser.add_argument("-f", "--filename", default="/var/log/messages",
+                              help="File to watch")
+    watch_parser.add_argument("-l", "--limit", type=int, default=0,
+                              help="Maximum number of lines to read")
+    watch_parser.add_argument("-o", "--offset", default=0,
+                              help="Which line number to start reading from")
+    watch_parser.add_argument("-p", "--prefix", default="",
+                              help="String to add to the beginning of each line")
 
     args = parser.parse_args()
     return args
@@ -179,3 +233,6 @@ if __name__ == "__main__":
 
     if opts.subparser_name == "uninstall":
         cmd_uninstall()
+
+    if opts.subparser_name == "watch":
+        cmd_watch(opts.filename, opts.limit, opts.offset, opts.prefix)
