@@ -125,4 +125,23 @@ pcmk__cib_test_cleanup(char *out_path)
     unsetenv("CIB_file");
 }
 
+/*!
+ * \internal
+ * \brief Initialize logging for unit testing purposes
+ *
+ * \param[in] name      What to use as system name for logging
+ * \param[in] filename  If not NULL, enable debug logs to this file (intended
+ *                      for debugging during development rather than committed
+ *                      unit tests)
+ */
+void
+pcmk__test_init_logging(const char *name, const char *filename)
+{
+    pcmk__cli_init_logging(name, 0);
+    if (filename != NULL) {
+        pcmk__add_logfile(filename);
+        set_crm_log_level(LOG_DEBUG);
+    }
+}
+
 // LCOV_EXCL_STOP
