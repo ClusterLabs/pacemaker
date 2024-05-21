@@ -3203,8 +3203,9 @@ add_dangling_migration(pcmk_resource_t *rsc, const pcmk_node_t *node)
     pcmk__rsc_trace(rsc, "Dangling migration of %s requires stop on %s",
                     rsc->id, pcmk__node_name(node));
     rsc->private->orig_role = pcmk_role_stopped;
-    rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations,
-                                              (gpointer) node);
+    rsc->private->dangling_migration_sources =
+        g_list_prepend(rsc->private->dangling_migration_sources,
+                       (gpointer) node);
 }
 
 /*!
@@ -3416,8 +3417,8 @@ unpack_migrate_to_failure(struct action_history *history)
          */
 
         // Mark node as having dangling migration so we can force a stop later
-        history->rsc->dangling_migrations =
-            g_list_prepend(history->rsc->dangling_migrations,
+        history->rsc->private->dangling_migration_sources =
+            g_list_prepend(history->rsc->private->dangling_migration_sources,
                            (gpointer) history->node);
     }
 }

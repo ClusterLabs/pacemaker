@@ -376,6 +376,9 @@ struct pcmk__resource_private {
     // The destination node, if migrate_to completed but migrate_from has not
     pcmk_node_t *partial_migration_target;
 
+    // Source nodes where stop is needed after migrate_from and migrate_to
+    GList *dangling_migration_sources;
+
     /* Pay special attention to whether you want to use with_this_colocations
      * and this_with_colocations directly, which include only colocations
      * explicitly involving this resource, or call libpacemaker's

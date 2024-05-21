@@ -719,8 +719,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     current = rsc->private->fns->active_node(rsc, &num_all_active,
                                              &num_clean_active);
 
-    g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
-                   rsc);
+    g_list_foreach(rsc->private->dangling_migration_sources,
+                   pcmk__abort_dangling_migration, rsc);
 
     if ((current != NULL) && (rsc->private->assigned_node != NULL)
         && !pcmk__same_node(current, rsc->private->assigned_node)

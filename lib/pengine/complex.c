@@ -1062,8 +1062,6 @@ common_free(pcmk_resource_t * rsc)
     pcmk__rsc_trace(rsc, "Freeing %s %s",
                     (const char *) rsc->private->xml->name, rsc->id);
 
-    g_list_free(rsc->dangling_migrations);
-
     if (rsc->parameter_cache != NULL) {
         g_hash_table_destroy(rsc->parameter_cache);
     }
@@ -1091,6 +1089,7 @@ common_free(pcmk_resource_t * rsc)
 
     g_list_free(rsc->private->actions);
     g_list_free(rsc->private->active_nodes);
+    g_list_free(rsc->private->dangling_migration_sources);
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);
     g_list_free(rsc->private->location_constraints);
