@@ -1758,7 +1758,7 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
 
     /* consider this node shutting down if transitioning start->stop */
     if ((rsc->private->orig_role == pcmk_role_started)
-        && (rsc->next_role == pcmk_role_stopped)) {
+        && (rsc->private->next_role == pcmk_role_stopped)) {
 
         crm_trace("%s node %s shutting down because connection resource is stopping",
                   (container? "Guest" : "Remote"), this_node->details->id);
@@ -2761,16 +2761,16 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     process_rsc_state(rsc, node, on_fail);
 
     if (get_target_role(rsc, &req_role)) {
-        if ((rsc->next_role == pcmk_role_unknown)
-            || (req_role < rsc->next_role)) {
+        if ((rsc->private->next_role == pcmk_role_unknown)
+            || (req_role < rsc->private->next_role)) {
 
             pe__set_next_role(rsc, req_role, PCMK_META_TARGET_ROLE);
 
-        } else if (req_role > rsc->next_role) {
+        } else if (req_role > rsc->private->next_role) {
             pcmk__rsc_info(rsc,
                            "%s: Not overwriting calculated next role %s"
                            " with requested next role %s",
-                           rsc->id, pcmk_role_text(rsc->next_role),
+                           rsc->id, pcmk_role_text(rsc->private->next_role),
                            pcmk_role_text(req_role));
         }
     }
@@ -3804,7 +3804,7 @@ unpack_rsc_op_failure(struct action_history *history,
                     pcmk_role_text(fail_role));
 
     if ((fail_role != pcmk_role_started)
-        && (history->rsc->next_role < fail_role)) {
+        && (history->rsc->private->next_role < fail_role)) {
         pe__set_next_role(history->rsc, fail_role, "failure");
     }
 
@@ -4970,7 +4970,7 @@ done:
     pcmk__rsc_trace(rsc, "%s role on %s after %s is %s (next %s)",
                     rsc->id, pcmk__node_name(node), history.id,
                     pcmk_role_text(rsc->private->orig_role),
-                    pcmk_role_text(rsc->next_role));
+                    pcmk_role_text(rsc->private->next_role));
 }
 
 static void

@@ -110,7 +110,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
     return node->details->remote_requires_reset
            || node->details->unclean
            || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
-           || (guest_rsc->next_role == pcmk_role_stopped)
+           || (guest_rsc->private->next_role == pcmk_role_stopped)
 
            // Guest is moving
            || ((guest_rsc->private->orig_role > pcmk_role_stopped)

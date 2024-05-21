@@ -101,7 +101,7 @@ get_remote_node_state(const pcmk_node_t *node)
      * is unclean or went offline, we can't process any operations
      * on that remote node until after it starts elsewhere.
      */
-    if ((remote_rsc->next_role == pcmk_role_stopped)
+    if ((remote_rsc->private->next_role == pcmk_role_stopped)
         || (remote_rsc->private->assigned_node == NULL)) {
 
         // The connection resource is not going to run anywhere
@@ -120,7 +120,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
         /* Connection resource is failed */
 
-        if ((remote_rsc->next_role == pcmk_role_stopped)
+        if ((remote_rsc->private->next_role == pcmk_role_stopped)
             && (remote_rsc->private->remote_reconnect_ms > 0U)
             && node->details->remote_was_fenced
             && !pe__shutdown_requested(node)) {
@@ -229,7 +229,7 @@ apply_remote_ordering(pcmk_action_t *action)
                               "connection is unrecoverable",
                               FALSE);
 
-            } else if (remote_rsc->next_role == pcmk_role_stopped) {
+            } else if (remote_rsc->private->next_role == pcmk_role_stopped) {
                 /* State must be remote_state_unknown or remote_state_stopped.
                  * Since the connection is not coming back up in this
                  * transition, stop this resource first.

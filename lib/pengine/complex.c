@@ -745,7 +745,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     rsc_private->orig_role = pcmk_role_stopped;
-    (*rsc)->next_role = pcmk_role_unknown;
+    rsc_private->next_role = pcmk_role_unknown;
 
     rsc_private->ban_after_failures = PCMK_SCORE_INFINITY;
 
@@ -948,10 +948,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         }
     }
 
-    get_target_role(*rsc, &((*rsc)->next_role));
+    get_target_role(*rsc, &(rsc_private->next_role));
     pcmk__rsc_trace(*rsc, "%s desired next state: %s", (*rsc)->id,
-                    ((*rsc)->next_role == pcmk_role_unknown)?
-                        "default" : pcmk_role_text((*rsc)->next_role));
+                    (rsc_private->next_role == pcmk_role_unknown)?
+                        "default" : pcmk_role_text(rsc_private->next_role));
 
     if (rsc_private->fns->unpack(*rsc, scheduler) == FALSE) {
         rsc_private->fns->free(*rsc);
@@ -1256,10 +1256,10 @@ void
 pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role, const char *why)
 {
     CRM_ASSERT((rsc != NULL) && (why != NULL));
-    if (rsc->next_role != role) {
+    if (rsc->private->next_role != role) {
         pcmk__rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
-                        rsc->id, pcmk_role_text(rsc->next_role),
+                        rsc->id, pcmk_role_text(rsc->private->next_role),
                         pcmk_role_text(role), why);
-        rsc->next_role = role;
+        rsc->private->next_role = role;
     }
 }

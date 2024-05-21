@@ -352,7 +352,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
     CRM_CHECK(remote_node != NULL, return);
 
     if ((connection->private->assigned_node != NULL)
-        && (connection->next_role != pcmk_role_stopped)) {
+        && (connection->private->next_role != pcmk_role_stopped)) {
 
         crm_trace("Pacemaker Remote node %s will be online",
                   remote_node->details->id);
@@ -367,7 +367,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
                   "(%sassigned connection's next role is %s)",
                   remote_node->details->id,
                   ((connection->private->assigned_node == NULL)? "un" : ""),
-                  pcmk_role_text(connection->next_role));
+                  pcmk_role_text(connection->private->next_role));
         remote_node->details->shutdown = TRUE;
     }
 }
@@ -478,20 +478,20 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     g_list_free(this_with_colocations);
     g_list_free(with_this_colocations);
 
-    if (rsc->next_role == pcmk_role_stopped) {
+    if (rsc->private->next_role == pcmk_role_stopped) {
         pcmk__rsc_trace(rsc,
                         "Banning %s from all nodes because it will be stopped",
                         rsc->id);
         resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
                           PCMK_META_TARGET_ROLE, scheduler);
 
-    } else if ((rsc->next_role > rsc->private->orig_role)
+    } else if ((rsc->private->next_role > rsc->private->orig_role)
                && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
                && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Resource %s cannot be elevated from %s to %s due to "
                    PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
                    rsc->id, pcmk_role_text(rsc->private->orig_role),
-                   pcmk_role_text(rsc->next_role));
+                   pcmk_role_text(rsc->private->next_role));
         pe__set_next_role(rsc, rsc->private->orig_role,
                           PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE);
     }
@@ -590,7 +590,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
     }
 
     // Bring resource up to its next role on its next node
-    while ((rsc->private->orig_role <= rsc->next_role)
+    while ((rsc->private->orig_role <= rsc->private->next_role)
            && (role != rsc->private->orig_role)
            && !pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
         bool required = need_stop;
@@ -624,7 +624,7 @@ schedule_restart_actions(pcmk_resource_t *rsc, pcmk_node_t *current,
 static const char *
 set_default_next_role(pcmk_resource_t *rsc)
 {
-    if (rsc->next_role != pcmk_role_unknown) {
+    if (rsc->private->next_role != pcmk_role_unknown) {
         return "explicit";
     }
 
@@ -665,8 +665,9 @@ schedule_role_transition_actions(pcmk_resource_t *rsc)
 {
     enum rsc_role_e role = rsc->private->orig_role;
 
-    while (role != rsc->next_role) {
-        enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
+    while (role != rsc->private->next_role) {
+        enum rsc_role_e next_role =
+            rsc_state_matrix[role][rsc->private->next_role];
         rsc_transition_fn fn = NULL;
 
         pcmk__rsc_trace(rsc,
@@ -674,7 +675,7 @@ schedule_role_transition_actions(pcmk_resource_t *rsc)
                         "(ending at %s)",
                         rsc->id, pcmk_role_text(role),
                         pcmk_role_text(next_role),
-                        pcmk_role_text(rsc->next_role));
+                        pcmk_role_text(rsc->private->next_role));
         fn = rsc_action_matrix[role][next_role];
         if (fn == NULL) {
             break;
@@ -712,7 +713,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                     "Creating all actions for %s transition from %s to %s "
                     "(%s) on %s",
                     rsc->id, pcmk_role_text(rsc->private->orig_role),
-                    pcmk_role_text(rsc->next_role), next_role_source,
+                    pcmk_role_text(rsc->private->next_role), next_role_source,
                     pcmk__node_name(rsc->private->assigned_node));
 
     current = rsc->private->fns->active_node(rsc, &num_all_active,
@@ -723,7 +724,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
 
     if ((current != NULL) && (rsc->private->assigned_node != NULL)
         && !pcmk__same_node(current, rsc->private->assigned_node)
-        && (rsc->next_role >= pcmk_role_started)) {
+        && (rsc->private->next_role >= pcmk_role_started)) {
 
         pcmk__rsc_trace(rsc, "Moving %s from %s to %s",
                         rsc->id, pcmk__node_name(current),
@@ -827,7 +828,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
             pcmk__rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
             pcmk__rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
-            if (rsc->next_role == pcmk_role_promoted) {
+            if (rsc->private->next_role == pcmk_role_promoted) {
                 need_promote = true;
             }
         }
@@ -1248,7 +1249,7 @@ is_expected_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     return pcmk_all_flags_set(rsc->flags,
                               pcmk__rsc_stop_unexpected|pcmk__rsc_restarting)
-           && (rsc->next_role > pcmk_role_stopped)
+           && (rsc->private->next_role > pcmk_role_stopped)
            && pcmk__same_node(rsc->private->assigned_node, node);
 }
 

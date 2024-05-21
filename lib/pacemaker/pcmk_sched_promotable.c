@@ -429,7 +429,7 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
     pcmk_node_t *chosen = child->private->fns->location(child, NULL, FALSE);
 
     if (!pcmk_is_set(child->flags, pcmk__rsc_managed)
-        && (child->next_role == pcmk_role_promoted)) {
+        && (child->private->next_role == pcmk_role_promoted)) {
         child->private->promotion_priority = PCMK_SCORE_INFINITY;
         pcmk__rsc_trace(clone,
                         "Final promotion priority for %s is %s "
@@ -898,7 +898,7 @@ set_next_role_promoted(void *data, gpointer user_data)
 {
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
 
-    if (rsc->next_role == pcmk_role_unknown) {
+    if (rsc->private->next_role == pcmk_role_unknown) {
         pe__set_next_role(rsc, pcmk_role_promoted, "promoted instance");
     }
     g_list_foreach(rsc->children, set_next_role_promoted, NULL);
@@ -952,7 +952,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     GList *list = NULL;
 
     pcmk__rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
-                    pcmk_role_text(instance->next_role));
+                    pcmk_role_text(instance->private->next_role));
 
     if (instance->private->fns->state(instance, TRUE) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);

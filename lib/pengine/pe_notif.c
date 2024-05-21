@@ -903,7 +903,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     }
 
     // Create notify actions for start or promote
-    if ((rsc->next_role != pcmk_role_stopped)
+    if ((rsc->private->next_role != pcmk_role_stopped)
         && ((task == pcmk_action_start) || (task == pcmk_action_promote))) {
 
         start = find_first_action(rsc->private->actions, NULL,
@@ -923,7 +923,7 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
         }
         if (rsc->private->assigned_node == NULL) {
             pcmk__sched_err("Next role '%s' but %s is not allocated",
-                            pcmk_role_text(rsc->next_role), rsc->id);
+                            pcmk_role_text(rsc->private->next_role), rsc->id);
             return;
         }
         if ((task != pcmk_action_start) || (start == NULL)

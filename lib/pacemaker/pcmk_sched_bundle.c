@@ -494,7 +494,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
 
     if ((coloc_data->colocation->primary_role >= pcmk_role_promoted)
         && ((replica->child == NULL)
-            || (replica->child->next_role < pcmk_role_promoted))) {
+            || (replica->child->private->next_role < pcmk_role_promoted))) {
         return true;
     }
 

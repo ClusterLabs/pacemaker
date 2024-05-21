@@ -79,7 +79,8 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         }
     }
 
-    pe__set_next_role(rsc, first_member->next_role, "first group member");
+    pe__set_next_role(rsc, first_member->private->next_role,
+                      "first group member");
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_assigning|pcmk__rsc_unassigned);
 
     if (!pe__group_flag_is_set(rsc, pcmk__group_colocated)) {

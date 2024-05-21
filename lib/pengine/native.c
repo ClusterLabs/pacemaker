@@ -903,7 +903,7 @@ native_free(pcmk_resource_t * rsc)
 enum rsc_role_e
 native_resource_state(const pcmk_resource_t * rsc, gboolean current)
 {
-    enum rsc_role_e role = rsc->next_role;
+    enum rsc_role_e role = rsc->private->next_role;
 
     if (current) {
         role = rsc->private->orig_role;

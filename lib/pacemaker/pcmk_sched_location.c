@@ -681,10 +681,11 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > pcmk_role_unknown);
-    if (need_role && (location->role_filter != rsc->next_role)) {
+    if (need_role && (location->role_filter != rsc->private->next_role)) {
         pcmk__rsc_trace(rsc,
                         "Not applying %s to %s because role will be %s not %s",
-                        location->id, rsc->id, pcmk_role_text(rsc->next_role),
+                        location->id, rsc->id,
+                        pcmk_role_text(rsc->private->next_role),
                         pcmk_role_text(location->role_filter));
         return;
     }

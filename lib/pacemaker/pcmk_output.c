@@ -141,7 +141,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     }
 
     if ((rsc->private->orig_role > pcmk_role_started)
-        || (rsc->next_role > pcmk_role_unpromoted)) {
+        || (rsc->private->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -149,7 +149,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         same_host = true;
     }
 
-    if (rsc->private->orig_role == rsc->next_role) {
+    if (rsc->private->orig_role == rsc->private->next_role) {
         same_role = true;
     }
 
@@ -157,7 +157,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         /* Starting and promoting a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s",
                                     pcmk_role_text(rsc->private->orig_role),
-                                    pcmk_role_text(rsc->next_role),
+                                    pcmk_role_text(rsc->private->next_role),
                                     pcmk__node_name(destination));
 
     } else if (origin == NULL) {
@@ -199,7 +199,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         /* Promoting or demoting a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s",
                                     pcmk_role_text(rsc->private->orig_role),
-                                    pcmk_role_text(rsc->next_role),
+                                    pcmk_role_text(rsc->private->next_role),
                                     pcmk__node_name(origin));
 
     } else {
@@ -207,7 +207,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         details = crm_strdup_printf("%s %s -> %s %s",
                                     pcmk_role_text(rsc->private->orig_role),
                                     pcmk__node_name(origin),
-                                    pcmk_role_text(rsc->next_role),
+                                    pcmk_role_text(rsc->private->next_role),
                                     pcmk__node_name(destination));
     }
 
@@ -265,7 +265,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     }
 
     if ((rsc->private->orig_role > pcmk_role_started)
-        || (rsc->next_role > pcmk_role_unpromoted)) {
+        || (rsc->private->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -273,7 +273,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         same_host = true;
     }
 
-    if (rsc->private->orig_role == rsc->next_role) {
+    if (rsc->private->orig_role == rsc->private->next_role) {
         same_role = true;
     }
 
@@ -289,7 +289,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE,
                            pcmk_role_text(rsc->private->orig_role),
-                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE,
+                           pcmk_role_text(rsc->private->next_role),
                            PCMK_XA_DEST, destination->details->uname,
                            NULL);
 
@@ -342,7 +343,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            PCMK_XA_ROLE,
                            pcmk_role_text(rsc->private->orig_role),
-                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE,
+                           pcmk_role_text(rsc->private->next_role),
                            PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
@@ -352,7 +354,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
                            PCMK_XA_ROLE,
                            pcmk_role_text(rsc->private->orig_role),
                            PCMK_XA_SOURCE, origin->details->uname,
-                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE,
+                           pcmk_role_text(rsc->private->next_role),
                            PCMK_XA_DEST, destination->details->uname,
                            NULL);
     }
@@ -1171,7 +1174,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         g_list_free(possible_matches);
     }
 
-    if (rsc->private->orig_role == rsc->next_role) {
+    if (rsc->private->orig_role == rsc->private->next_role) {
         pcmk_action_t *migrate_op = NULL;
 
         CRM_CHECK(next != NULL, return rc);
@@ -1243,7 +1246,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if ((stop != NULL)
-        && ((rsc->next_role == pcmk_role_stopped)
+        && ((rsc->private->next_role == pcmk_role_stopped)
             || ((start != NULL)
                 && !pcmk_is_set(start->flags, pcmk_action_runnable)))) {
 
@@ -1307,13 +1310,13 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         rc = out->message(out, "rsc-action-item", "Demote", rsc, current,
                           next, demote, NULL);
 
-    } else if (rsc->next_role == pcmk_role_promoted) {
+    } else if (rsc->private->next_role == pcmk_role_promoted) {
         CRM_LOG_ASSERT(next);
         rc = out->message(out, "rsc-action-item", "Promote", rsc, current,
                           next, promote, NULL);
 
     } else if ((rsc->private->orig_role == pcmk_role_stopped)
-               && (rsc->next_role > pcmk_role_stopped)) {
+               && (rsc->private->next_role > pcmk_role_stopped)) {
         rc = out->message(out, "rsc-action-item", "Start", rsc, current, next,
                           start, NULL);
     }
