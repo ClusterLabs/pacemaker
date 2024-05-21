@@ -21,159 +21,159 @@ based on its mode (pass|fail|random) without doing anything."""
 
 # Short options used: difhmnoqsvBDHMRUV
 ALL_OPT = {
-    "quiet"   : {
-        "getopt" : "q",
-        "help" : "",
-        "order" : 50
-        },
-    "verbose" : {
-        "getopt" : "v",
-        "longopt" : "verbose",
-        "help" : "-v, --verbose                  Verbose mode",
-        "required" : "0",
-        "shortdesc" : "Verbose mode",
-        "order" : 51
-        },
-    "debug" : {
-        "getopt" : "D:",
-        "longopt" : "debug-file",
-        "help" : "-D, --debug-file=[debugfile]   Debugging to output file",
-        "required" : "0",
-        "shortdesc" : "Write debug information to given file",
-        "order" : 52
-        },
-    "version" : {
-        "getopt" : "V",
-        "longopt" : "version",
-        "help" : "-V, --version                  Display version information and exit",
-        "required" : "0",
-        "shortdesc" : "Display version information and exit",
-        "order" : 53
-        },
-    "help"    : {
-        "getopt" : "h",
-        "longopt" : "help",
-        "help" : "-h, --help                     Display this help and exit",
-        "required" : "0",
-        "shortdesc" : "Display help and exit",
-        "order" : 54
-        },
-    "action" : {
-        "getopt" : "o:",
-        "longopt" : "action",
-        "help" : "-o, --action=[action]          Action: validate-all, status, list, reboot (default), off or on",
-        "required" : "1",
-        "shortdesc" : "Fencing Action",
-        "default" : "reboot",
-        "order" : 1
-        },
-    "nodename" : {
-        "getopt" : "N:",
-        "longopt" : "nodename",
-        "help" : "-N, --nodename                 Node name of fence target (ignored)",
-        "required" : "0",
-        "shortdesc" : "The node name of fence target (ignored)",
-        "order" : 2
-        },
+    "quiet": {
+        "getopt": "q",
+        "help": "",
+        "order": 50
+    },
+    "verbose": {
+        "getopt": "v",
+        "longopt": "verbose",
+        "help": "-v, --verbose                  Verbose mode",
+        "required": "0",
+        "shortdesc": "Verbose mode",
+        "order": 51
+    },
+    "debug": {
+        "getopt": "D:",
+        "longopt": "debug-file",
+        "help": "-D, --debug-file=[debugfile]   Debugging to output file",
+        "required": "0",
+        "shortdesc": "Write debug information to given file",
+        "order": 52
+    },
+    "version": {
+        "getopt": "V",
+        "longopt": "version",
+        "help": "-V, --version                  Display version information and exit",
+        "required": "0",
+        "shortdesc": "Display version information and exit",
+        "order": 53
+    },
+    "help": {
+        "getopt": "h",
+        "longopt": "help",
+        "help": "-h, --help                     Display this help and exit",
+        "required": "0",
+        "shortdesc": "Display help and exit",
+        "order": 54
+    },
+    "action": {
+        "getopt": "o:",
+        "longopt": "action",
+        "help": "-o, --action=[action]          Action: validate-all, status, list, reboot (default), off or on",
+        "required": "1",
+        "shortdesc": "Fencing Action",
+        "default": "reboot",
+        "order": 1
+    },
+    "nodename": {
+        "getopt": "N:",
+        "longopt": "nodename",
+        "help": "-N, --nodename                 Node name of fence target (ignored)",
+        "required": "0",
+        "shortdesc": "The node name of fence target (ignored)",
+        "order": 2
+    },
     "mode": {
-        "getopt" : "M:",
-        "longopt" : "mode",
-        "required" : "0",
-        "help" : "-M, --mode=(pass|fail|random)  Exit status to return for non-monitor operations",
-        "shortdesc" : "Whether fence operations should always pass, always fail, or fail at random",
-        "order" : 3
-        },
-    "monitor_mode" : {
-        "getopt" : "m:",
-        "longopt" : "monitor_mode",
-        "help" : "-m, --monitor_mode=(pass|fail|random) Exit status to return for monitor operations",
-        "required" : "0",
-        "shortdesc" : "Whether monitor operations should always pass, always fail, or fail at random",
-        "order" : 3
-        },
+        "getopt": "M:",
+        "longopt": "mode",
+        "required": "0",
+        "help": "-M, --mode=(pass|fail|random)  Exit status to return for non-monitor operations",
+        "shortdesc": "Whether fence operations should always pass, always fail, or fail at random",
+        "order": 3
+    },
+    "monitor_mode": {
+        "getopt": "m:",
+        "longopt": "monitor_mode",
+        "help": "-m, --monitor_mode=(pass|fail|random) Exit status to return for monitor operations",
+        "required": "0",
+        "shortdesc": "Whether monitor operations should always pass, always fail, or fail at random",
+        "order": 3
+    },
     "random_sleep_range": {
-        "getopt" : "R:",
-        "required" : "0",
-        "longopt" : "random_sleep_range",
-        "help" : "-R, --random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
-        "shortdesc" : "Wait randomly between 1 and [seconds]",
-        "order" : 3
-        },
-    "mock_dynamic_hosts" : {
-        "getopt" : "H:",
-        "longopt" : "mock_dynamic_hosts",
-        "help" : "-H, --mock_dynamic_hosts=[list] What to return when dynamically queried for possible targets",
-        "required" : "0",
-        "shortdesc" : "A list of hosts we can fence",
-        "order" : 3
-        },
-    "delay" : {
-        "getopt" : "f:",
-        "longopt" : "delay",
-        "help" : "-f, --delay [seconds]          Wait X seconds before fencing is started",
-        "required" : "0",
-        "shortdesc" : "Wait X seconds before fencing is started",
-        "default" : "0",
-        "order" : 3
-        },
-    "monitor_delay" : {
-        "getopt" : "d:",
-        "longopt" : "monitor_delay",
-        "help" : "-d, --monitor_delay [seconds]  Wait X seconds before monitor completes",
-        "required" : "0",
-        "shortdesc" : "Wait X seconds before monitor completes",
-        "default" : "0",
-        "order" : 3
-        },
-    "off_delay" : {
-        "getopt" : "F:",
-        "longopt" : "off_delay",
-        "help" : "-F, --off_delay [seconds]      Wait additional X seconds before off action",
-        "required" : "0",
-        "shortdesc" : "Wait additional X seconds before off action",
-        "default" : "0",
-        "order" : 3
-        },
-    "plug" : {
-        "getopt" : "n:",
-        "longopt" : "plug",
-        "help" : "-n, --plug=[id]                Physical plug number on device (ignored)",
-        "required" : "1",
-        "shortdesc" : "Ignored",
-        "order" : 4
-        },
-    "port" : {
-        "getopt" : "n:",
-        "longopt" : "plug",
-        "help" : "-n, --plug=[id]                Physical plug number on device (ignored)",
-        "required" : "1",
-        "shortdesc" : "Ignored",
-        "order" : 4
-        },
-    "switch" : {
-        "getopt" : "s:",
-        "longopt" : "switch",
-        "help" : "-s, --switch=[id]              Physical switch number on device (ignored)",
-        "required" : "0",
-        "shortdesc" : "Ignored",
-        "order" : 4
-        },
-    "nodeid" : {
-        "getopt" : "i:",
-        "longopt" : "nodeid",
-        "help" : "-i, --nodeid                   Corosync id of fence target (ignored)",
-        "required" : "0",
-        "shortdesc" : "Ignored",
-        "order" : 4
-        },
-    "uuid" : {
-        "getopt" : "U:",
-        "longopt" : "uuid",
-        "help" : "-U, --uuid                     UUID of the VM to fence (ignored)",
-        "required" : "0",
-        "shortdesc" : "Ignored",
-        "order" : 4
-        }
+        "getopt": "R:",
+        "required": "0",
+        "longopt": "random_sleep_range",
+        "help": "-R, --random_sleep_range=[seconds] Sleep between 1 and [seconds] before returning",
+        "shortdesc": "Wait randomly between 1 and [seconds]",
+        "order": 3
+    },
+    "mock_dynamic_hosts": {
+        "getopt": "H:",
+        "longopt": "mock_dynamic_hosts",
+        "help": "-H, --mock_dynamic_hosts=[list] What to return when dynamically queried for possible targets",
+        "required": "0",
+        "shortdesc": "A list of hosts we can fence",
+        "order": 3
+    },
+    "delay": {
+        "getopt": "f:",
+        "longopt": "delay",
+        "help": "-f, --delay [seconds]          Wait X seconds before fencing is started",
+        "required": "0",
+        "shortdesc": "Wait X seconds before fencing is started",
+        "default": "0",
+        "order": 3
+    },
+    "monitor_delay": {
+        "getopt": "d:",
+        "longopt": "monitor_delay",
+        "help": "-d, --monitor_delay [seconds]  Wait X seconds before monitor completes",
+        "required": "0",
+        "shortdesc": "Wait X seconds before monitor completes",
+        "default": "0",
+        "order": 3
+    },
+    "off_delay": {
+        "getopt": "F:",
+        "longopt": "off_delay",
+        "help": "-F, --off_delay [seconds]      Wait additional X seconds before off action",
+        "required": "0",
+        "shortdesc": "Wait additional X seconds before off action",
+        "default": "0",
+        "order": 3
+    },
+    "plug": {
+        "getopt": "n:",
+        "longopt": "plug",
+        "help": "-n, --plug=[id]                Physical plug number on device (ignored)",
+        "required": "1",
+        "shortdesc": "Ignored",
+        "order": 4
+    },
+    "port": {
+        "getopt": "n:",
+        "longopt": "plug",
+        "help": "-n, --plug=[id]                Physical plug number on device (ignored)",
+        "required": "1",
+        "shortdesc": "Ignored",
+        "order": 4
+    },
+    "switch": {
+        "getopt": "s:",
+        "longopt": "switch",
+        "help": "-s, --switch=[id]              Physical switch number on device (ignored)",
+        "required": "0",
+        "shortdesc": "Ignored",
+        "order": 4
+    },
+    "nodeid": {
+        "getopt": "i:",
+        "longopt": "nodeid",
+        "help": "-i, --nodeid                   Corosync id of fence target (ignored)",
+        "required": "0",
+        "shortdesc": "Ignored",
+        "order": 4
+    },
+    "uuid": {
+        "getopt": "U:",
+        "longopt": "uuid",
+        "help": "-U, --uuid                     UUID of the VM to fence (ignored)",
+        "required": "0",
+        "shortdesc": "Ignored",
+        "order": 4
+    }
 }
 
 auto_unfence = False
