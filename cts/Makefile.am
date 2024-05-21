@@ -30,10 +30,6 @@ dist_cli_DATA	= $(wildcard cli/*.xml cli/*.exp)
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= cts
 
-# Commands intended to be run only via other commands
-halibdir		= $(CRM_DAEMON_DIR)
-dist_halib_SCRIPTS	= cts-log-watcher
-
 noinst_SCRIPTS		= cluster_test
 
 .PHONY: scheduler-list
@@ -69,7 +65,6 @@ python_files = cts-attrd       \
 	       cts-exec         \
 	       cts-fencing      \
 	       cts-lab          \
-	       cts-log-watcher  \
 	       cts-regression   \
 	       cts-scheduler
 

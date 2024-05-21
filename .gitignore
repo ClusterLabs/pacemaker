@@ -120,7 +120,6 @@ configure
 /cts/cts-exec
 /cts/cts-fencing
 /cts/cts-lab
-/cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
 /cts/lab/CTS.py
@@ -291,6 +290,7 @@ pacemaker_*.info
 /cts/LSBDummy
 /cts/OCFIPraTest.py
 /cts/cts-coverage
+/cts/cts-log-watcher
 /cts/cts-support
 /cts/fence_dummy
 /cts/lab/CTSlab.py

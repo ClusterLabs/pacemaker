@@ -763,7 +763,6 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
-%exclude %{_libexecdir}/pacemaker/cts-log-watcher
 %exclude %{_libexecdir}/pacemaker/cts-support
 %exclude %{_sbindir}/pacemaker-remoted
 %exclude %{_sbindir}/pacemaker_remoted
@@ -935,7 +934,6 @@ exit 0
 %{python3_sitelib}/pacemaker/_cts/
 %{_datadir}/pacemaker/tests
 
-%{_libexecdir}/pacemaker/cts-log-watcher
 %{_libexecdir}/pacemaker/cts-support
 
 %license licenses/GPLv2
