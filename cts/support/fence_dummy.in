@@ -240,42 +240,44 @@ def metadata(avail_opt, options):
   <parameters>""" % (agent(), SHORT_DESC, AGENT_VERSION, OCF_VERSION, LONG_DESC))
 
     for option, dummy in sorted_options(avail_opt):
-        if "shortdesc" in ALL_OPT[option]:
-            print('    <parameter name="' + option + '" unique="0" ' +
-                  'required="' + ALL_OPT[option]["required"] + '">')
+        if "shortdesc" not in ALL_OPT[option]:
+            continue
 
-            default = ""
-            default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
-            default_name_no_arg = "-" + ALL_OPT[option]["getopt"]
+        print('    <parameter name="' + option + '" unique="0" ' +
+              'required="' + ALL_OPT[option]["required"] + '">')
 
-            if "default" in ALL_OPT[option]:
-                default = 'default="%s"' % str(ALL_OPT[option]["default"])
-            elif default_name_arg in options:
-                if options[default_name_arg]:
-                    try:
-                        default = 'default="%s"' % options[default_name_arg]
-                    except TypeError:
-                        ## @todo/@note: Currently there is no clean way how to handle lists
-                        ## we can create a string from it but we can't set it on command line
-                        default = 'default="%s"' % str(options[default_name_arg])
-            elif default_name_no_arg in options:
-                default = 'default="true"'
+        default = ""
+        default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
+        default_name_no_arg = "-" + ALL_OPT[option]["getopt"]
 
-            mixed = ALL_OPT[option]["help"]
-            ## split it between option and help text
-            res = re.compile(r"^(.*--\S+)\s+", re.IGNORECASE | re.S).search(mixed)
-            if None != res:
-                mixed = res.group(1)
-            mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
-            print('      <getopt mixed="' + mixed + '" />')
+        if "default" in ALL_OPT[option]:
+            default = 'default="%s"' % str(ALL_OPT[option]["default"])
+        elif default_name_arg in options:
+            if options[default_name_arg]:
+                try:
+                    default = 'default="%s"' % options[default_name_arg]
+                except TypeError:
+                    ## @todo/@note: Currently there is no clean way how to handle lists
+                    ## we can create a string from it but we can't set it on command line
+                    default = 'default="%s"' % str(options[default_name_arg])
+        elif default_name_no_arg in options:
+            default = 'default="true"'
 
-            if ALL_OPT[option]["getopt"].count(":") > 0:
-                print('      <content type="string" ' + default + ' />')
-            else:
-                print('      <content type="boolean" ' + default + ' />')
+        mixed = ALL_OPT[option]["help"]
+        ## split it between option and help text
+        res = re.compile(r"^(.*--\S+)\s+", re.IGNORECASE | re.S).search(mixed)
+        if None != res:
+            mixed = res.group(1)
+        mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
+        print('      <getopt mixed="' + mixed + '" />')
 
-            print('      <shortdesc lang="en">' + ALL_OPT[option]["shortdesc"] + '</shortdesc>')
-            print('    </parameter>')
+        if ALL_OPT[option]["getopt"].count(":") > 0:
+            print('      <content type="string" ' + default + ' />')
+        else:
+            print('      <content type="boolean" ' + default + ' />')
+
+        print('      <shortdesc lang="en">' + ALL_OPT[option]["shortdesc"] + '</shortdesc>')
+        print('    </parameter>')
 
     print('  </parameters>\n  <actions>')
     if not no_on:
