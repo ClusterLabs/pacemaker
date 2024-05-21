@@ -360,7 +360,9 @@ clone_min_ordering(const char *id,
     pcmk__set_action_flags(clone_min_met, pcmk_action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
-    for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc_first->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),

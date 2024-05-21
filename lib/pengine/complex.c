@@ -1231,8 +1231,9 @@ pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
 void
 pe__count_common(pcmk_resource_t *rsc)
 {
-    if (rsc->children != NULL) {
-        for (GList *item = rsc->children; item != NULL; item = item->next) {
+    if (rsc->private->children != NULL) {
+        for (GList *item = rsc->private->children;
+             item != NULL; item = item->next) {
             pcmk_resource_t *child = item->data;
 
             child->private->fns->count(item->data);

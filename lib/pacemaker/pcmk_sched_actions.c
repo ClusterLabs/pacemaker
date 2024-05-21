@@ -1559,7 +1559,7 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // For collective resources, just call recursively for children
     if (rsc->private->variant > pcmk__rsc_variant_primitive) {
-        g_list_foreach(rsc->children, schedule_reload, user_data);
+        g_list_foreach(rsc->private->children, schedule_reload, user_data);
         return;
     }
 

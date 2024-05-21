@@ -699,6 +699,8 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
     bundled_resource = pe__bundled_resource(action->rsc);
     if (bundled_resource != NULL) {
+        GList *children = bundled_resource->private->children;
+
         // Clone actions are done on the bundled clone resource, not container
         switch (get_complex_task(bundled_resource, action->task)) {
             case pcmk_action_unspecified:
@@ -708,9 +710,7 @@ pcmk__bundle_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
             case pcmk_action_promoted:
             case pcmk_action_demote:
             case pcmk_action_demoted:
-                return pcmk__collective_action_flags(action,
-                                                     bundled_resource->children,
-                                                     node);
+                return pcmk__collective_action_flags(action, children, node);
             default:
                 break;
         }

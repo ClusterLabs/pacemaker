@@ -74,9 +74,9 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
         const char *name = NULL;
         GHashTable *params = NULL;
 
-        if (rsc->children != NULL) {
-            if (add_extra_info(node, rsc->children, scheduler, attrname,
-                               expected_score)) {
+        if (rsc->private->children != NULL) {
+            if (add_extra_info(node, rsc->private->children, scheduler,
+                               attrname, expected_score)) {
                 return true;
             }
         }

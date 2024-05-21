@@ -266,15 +266,18 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
         pe__output_node_weights(rsc, comment, nodes, scheduler);
     }
 
-    // If this resource has children, repeat recursively for each
-    if (rsc && rsc->children) {
-        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
+    if (rsc == NULL) {
+        return;
+    }
 
-            pe__show_node_scores_as(file, function, line, to_log, child,
-                                    comment, child->private->allowed_nodes,
-                                    scheduler);
-        }
+    // If this resource has children, repeat recursively for each
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
+        pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
+
+        pe__show_node_scores_as(file, function, line, to_log, child, comment,
+                                child->private->allowed_nodes, scheduler);
     }
 }
 
@@ -331,10 +334,10 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
          */
         return;
 
-    } else if (rsc->children) {
-        GList *gIter = rsc->children;
+    } else {
+        for (GList *gIter = rsc->private->children;
+             gIter != NULL; gIter = gIter->next) {
 
-        for (; gIter != NULL; gIter = gIter->next) {
             pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
             resource_node_score(child_rsc, node, score, tag);
@@ -563,7 +566,10 @@ void
 pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pcmk__clear_rsc_flags(rsc, flags);
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         pe__clear_resource_flags_recursive((pcmk_resource_t *) gIter->data,
                                            flags);
     }
@@ -582,7 +588,10 @@ void
 pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pcmk__set_rsc_flags(rsc, flags);
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         pe__set_resource_flags_recursive((pcmk_resource_t *) gIter->data,
                                          flags);
     }

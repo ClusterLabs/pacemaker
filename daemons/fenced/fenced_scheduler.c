@@ -122,8 +122,11 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     stonith_key_value_t *params = NULL;
 
     // If this is a collective resource, check children instead
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             register_if_fencing_device(iter->data, NULL);
             if (pcmk__is_clone(rsc)) {
                 return; // Only one instance needs to be checked for clones

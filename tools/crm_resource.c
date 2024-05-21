@@ -869,7 +869,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         GList *iter = NULL;
 
         current = NULL;
-        for(iter = rsc->children; iter; iter = iter->next) {
+        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *)iter->data;
             enum rsc_role_e child_role = child->private->fns->state(child,
                                                                     TRUE);

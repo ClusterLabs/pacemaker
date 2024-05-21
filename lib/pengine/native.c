@@ -162,7 +162,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     && (parent->private->multiply_active_policy
                         == pcmk__multiply_active_block)) {
 
-                    for (GList *gIter = parent->children;
+                    for (GList *gIter = parent->private->children;
                          gIter != NULL; gIter = gIter->next) {
                         pcmk_resource_t *child = gIter->data;
 
@@ -199,7 +199,8 @@ recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     pcmk__insert_meta(rsc->private, PCMK_META_GLOBALLY_UNIQUE,
                       PCMK_VALUE_FALSE);
-    g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
+    g_list_foreach(rsc->private->children, (GFunc) recursive_clear_unique,
+                   NULL);
 }
 
 gboolean
@@ -313,7 +314,9 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
         return rsc;
     }
 
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
         result = rsc->private->fns->find_rsc(child, id, on_node, flags);
@@ -924,10 +927,11 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
     pcmk_node_t *one = NULL;
     GList *result = NULL;
 
-    if (rsc->children) {
-        GList *gIter = rsc->children;
+    if (rsc->private->children != NULL) {
 
-        for (; gIter != NULL; gIter = gIter->next) {
+        for (GList *gIter = rsc->private->children;
+             gIter != NULL; gIter = gIter->next) {
+
             pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
 
             child->private->fns->location(child, &result, current);

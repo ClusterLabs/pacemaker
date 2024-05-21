@@ -122,7 +122,9 @@ pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
     g_hash_table_insert(*copy, rsc->id,
                         pcmk__copy_node_table(rsc->private->allowed_nodes));
 
-    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (const GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__copy_node_tables((const pcmk_resource_t *) iter->data, copy);
     }
 }
@@ -152,7 +154,9 @@ pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
     rsc->private->allowed_nodes =
         pcmk__copy_node_table(g_hash_table_lookup(backup, rsc->id));
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__restore_node_tables((pcmk_resource_t *) iter->data, backup);
     }
 }

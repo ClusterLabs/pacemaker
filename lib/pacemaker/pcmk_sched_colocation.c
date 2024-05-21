@@ -1056,7 +1056,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
     }
 
     // If parent resource can't perform an action, neither can any children
-    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
         mark_action_blocked((pcmk_resource_t *) (iter->data), task, reason);
     }
     free(reason_text);
@@ -1102,7 +1102,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
     }
 
     // Colocation fails only if entire primary can't reach desired role
-    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
         pcmk_action_t *child_action = NULL;
 

@@ -676,8 +676,9 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     const char *container_id = NULL;
 
-    if (rsc->children) {
-        g_list_foreach(rsc->children, (GFunc) setup_container, scheduler);
+    if (rsc->private->children != NULL) {
+        g_list_foreach(rsc->private->children, (GFunc) setup_container,
+                       scheduler);
         return;
     }
 
@@ -2051,7 +2052,10 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     // Check for active (or partially active, for cloned groups) instance
     pcmk__rsc_trace(parent, "Looking for %s on %s in %s",
                     rsc_id, pcmk__node_name(node), parent->id);
-    for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
+
+    for (rIter = parent->private->children;
+         (rIter != NULL) && (rsc == NULL); rIter = rIter->next) {
+
         GList *locations = NULL;
         pcmk_resource_t *child = rIter->data;
 

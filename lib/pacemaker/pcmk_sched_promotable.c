@@ -84,8 +84,8 @@ check_for_role_change(const pcmk_resource_t *rsc, bool *demoting,
     const GList *iter = NULL;
 
     // If this is a cloned group, check group members recursively
-    if (rsc->children != NULL) {
-        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
             check_for_role_change((const pcmk_resource_t *) iter->data,
                                   demoting, promoting);
         }
@@ -170,7 +170,9 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
     const pcmk_resource_t *parent = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         if (node_to_be_promoted_on(child) == NULL) {
@@ -476,7 +478,9 @@ sort_promotable_instances(pcmk_resource_t *clone)
     }
     pcmk__set_rsc_flags(clone, pcmk__rsc_updating_nodes);
 
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(clone,
@@ -488,8 +492,8 @@ sort_promotable_instances(pcmk_resource_t *clone)
     pe__show_node_scores(true, clone, "Before", clone->private->allowed_nodes,
                          clone->private->scheduler);
 
-    g_list_foreach(clone->children, add_promotion_priority_to_node_score,
-                   clone);
+    g_list_foreach(clone->private->children,
+                   add_promotion_priority_to_node_score, clone);
 
     colocations = pcmk__this_with_colocations(clone);
     g_list_foreach(colocations, apply_coloc_to_dependent, clone);
@@ -506,11 +510,12 @@ sort_promotable_instances(pcmk_resource_t *clone)
                          clone->private->scheduler);
 
     // Reset promotion priorities to final node scores
-    g_list_foreach(clone->children, set_promotion_priority_to_node_score,
-                   clone);
+    g_list_foreach(clone->private->children,
+                   set_promotion_priority_to_node_score, clone);
 
     // Finally, sort instances in descending order of promotion priority
-    clone->children = g_list_sort(clone->children, cmp_promotable_instance);
+    clone->private->children = g_list_sort(clone->private->children,
+                                           cmp_promotable_instance);
     pcmk__clear_rsc_flags(clone, pcmk__rsc_updating_nodes);
 }
 
@@ -528,7 +533,7 @@ static pcmk_resource_t *
 find_active_anon_instance(const pcmk_resource_t *clone, const char *id,
                           const pcmk_node_t *node)
 {
-    for (GList *iter = clone->children; iter; iter = iter->next) {
+    for (GList *iter = clone->private->children; iter; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
         pcmk_resource_t *active = NULL;
 
@@ -557,7 +562,7 @@ static bool
 anonymous_known_on(const pcmk_resource_t *clone, const char *id,
                    const pcmk_node_t *node)
 {
-    for (GList *iter = clone->children; iter; iter = iter->next) {
+    for (GList *iter = clone->private->children; iter; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
 
         /* Use ->find_rsc() because this might be a cloned group, and knowing
@@ -729,10 +734,10 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     /* If this is an instance of a cloned group, the promotion score is the sum
      * of all members' promotion scores.
      */
-    if (rsc->children != NULL) {
+    if (rsc->private->children != NULL) {
         int score = 0;
 
-        for (const GList *iter = rsc->children;
+        for (const GList *iter = rsc->private->children;
              iter != NULL; iter = iter->next) {
 
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
@@ -802,7 +807,9 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
         return;
     }
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         GHashTableIter iter;
@@ -860,7 +867,7 @@ set_current_role_unpromoted(void *data, void *user_data)
         // Promotable clones should use unpromoted role instead of started
         rsc->private->orig_role = pcmk_role_unpromoted;
     }
-    g_list_foreach(rsc->children, set_current_role_unpromoted, NULL);
+    g_list_foreach(rsc->private->children, set_current_role_unpromoted, NULL);
 }
 
 /*!
@@ -883,7 +890,7 @@ set_next_role_unpromoted(void *data, void *user_data)
         pe__set_next_role(rsc, pcmk_role_unpromoted, "unpromoted instance");
         g_list_free(assigned);
     }
-    g_list_foreach(rsc->children, set_next_role_unpromoted, NULL);
+    g_list_foreach(rsc->private->children, set_next_role_unpromoted, NULL);
 }
 
 /*!
@@ -901,7 +908,7 @@ set_next_role_promoted(void *data, gpointer user_data)
     if (rsc->private->next_role == pcmk_role_unknown) {
         pe__set_next_role(rsc, pcmk_role_promoted, "promoted instance");
     }
-    g_list_foreach(rsc->children, set_next_role_promoted, NULL);
+    g_list_foreach(rsc->private->children, set_next_role_promoted, NULL);
 }
 
 /*!
@@ -1100,11 +1107,11 @@ pcmk__set_instance_roles(pcmk_resource_t *rsc)
     }
 
     // Set instances' promotion priorities and sort by highest priority first
-    g_list_foreach(rsc->children, set_instance_priority, rsc);
+    g_list_foreach(rsc->private->children, set_instance_priority, rsc);
     sort_promotable_instances(rsc);
 
     // Choose the first N eligible instances to be promoted
-    g_list_foreach(rsc->children, set_instance_role, &promoted);
+    g_list_foreach(rsc->private->children, set_instance_role, &promoted);
     pcmk__rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
                    rsc->id, promoted, pe__clone_promoted_max(rsc));
 }
@@ -1122,7 +1129,9 @@ static void
 create_promotable_instance_actions(pcmk_resource_t *clone,
                                    bool *any_promoting, bool *any_demoting)
 {
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         instance->private->cmds->create_actions(instance);
@@ -1143,7 +1152,9 @@ create_promotable_instance_actions(pcmk_resource_t *clone,
 static void
 reset_instance_priorities(pcmk_resource_t *clone)
 {
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         instance->private->priority = clone->private->priority;
@@ -1185,7 +1196,9 @@ pcmk__order_promotable_instances(pcmk_resource_t *clone)
 
     pcmk__promotable_restart_ordering(clone);
 
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         // Demote before promote
@@ -1266,7 +1279,9 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
      * (for optional colocations) update the dependent's allowed node scores for
      * each one.
      */
-    for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = primary->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
         pcmk_node_t *node = instance->private->fns->location(instance, NULL,
                                                              FALSE);

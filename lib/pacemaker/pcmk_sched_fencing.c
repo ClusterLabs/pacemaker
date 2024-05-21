@@ -257,8 +257,11 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
 static void
 rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
 {
-    if (rsc->children) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *child_rsc = iter->data;
 
             rsc_stonith_ordering(child_rsc, stonith_op);

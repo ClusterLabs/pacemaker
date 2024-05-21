@@ -195,8 +195,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     // If this is a collective resource, probes are created for its children
-    if (rsc->children != NULL) {
-        return pcmk__probe_resource_list(rsc->children, node);
+    if (rsc->private->children != NULL) {
+        return pcmk__probe_resource_list(rsc->private->children, node);
     }
 
     if ((rsc->container != NULL)
@@ -707,8 +707,8 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 
     // For collective resources, order each instance recursively
     if (!pcmk__is_primitive(rsc)) {
-        g_list_foreach(rsc->children, add_start_restart_orderings_for_rsc,
-                       NULL);
+        g_list_foreach(rsc->private->children,
+                       add_start_restart_orderings_for_rsc, NULL);
         return;
     }
 

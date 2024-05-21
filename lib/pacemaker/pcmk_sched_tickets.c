@@ -72,9 +72,9 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         return;
     }
 
-    if (rsc->children) {
+    if (rsc->private->children != NULL) {
         pcmk__rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
-        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
             constraints_for_ticket((pcmk_resource_t *) iter->data, rsc_ticket);
         }
         return;

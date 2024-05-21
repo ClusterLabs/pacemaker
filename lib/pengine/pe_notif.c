@@ -554,8 +554,8 @@ collect_resource_data(const pcmk_resource_t *rsc, bool activity,
     }
 
     // If this is a clone, call recursively for each instance
-    if (rsc->children != NULL) {
-        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
 
             collect_resource_data(child, activity, n_data);
@@ -812,8 +812,9 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
     enum action_tasks task = pcmk_parse_action(n_data->action);
 
     // If this is a clone, call recursively for each instance
-    if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, (GFunc) create_notify_actions, n_data);
+    if (rsc->private->children != NULL) {
+        g_list_foreach(rsc->private->children, (GFunc) create_notify_actions,
+                       n_data);
         return;
     }
 

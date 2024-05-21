@@ -987,7 +987,7 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
                    rsc->private->scheduler);
 
     // Then recursively add its children's actions (appropriate to variant)
-    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         child_rsc->private->cmds->add_actions_to_graph(child_rsc);

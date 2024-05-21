@@ -230,7 +230,7 @@ find_clone_instance(const pcmk_resource_t *rsc, const char *sub_id)
 
     child_base = pcmk__xe_id(clone_data->xml_obj_child);
     child_id = crm_strdup_printf("%s:%s", child_base, sub_id);
-    child = pe_find_resource(rsc->children, child_id);
+    child = pe_find_resource(rsc->private->children, child_id);
 
     free(child_id);
     return child;
@@ -273,7 +273,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     clone_data->total_clones += 1;
     pcmk__rsc_trace(child_rsc, "Setting clone attributes for: %s",
                     child_rsc->id);
-    rsc->children = g_list_append(rsc->children, child_rsc);
+    rsc->private->children = g_list_append(rsc->private->children, child_rsc);
     if (as_orphan) {
         pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
@@ -459,9 +459,9 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 gboolean
 clone_active(pcmk_resource_t * rsc, gboolean all)
 {
-    GList *gIter = rsc->children;
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
 
-    for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
         gboolean child_active = child_rsc->private->fns->active(child_rsc, all);
 
@@ -485,8 +485,9 @@ configured_role_str(pcmk_resource_t * rsc)
     const char *target_role = g_hash_table_lookup(rsc->private->meta,
                                                   PCMK_META_TARGET_ROLE);
 
-    if ((target_role == NULL) && rsc->children && rsc->children->data) {
-        pcmk_resource_t *instance = rsc->children->data; // Any instance will do
+    if ((target_role == NULL) && (rsc->private->children != NULL)) {
+        // Any instance will do
+        pcmk_resource_t *instance = rsc->private->children->data;
 
         target_role = g_hash_table_lookup(instance->private->meta,
                                           PCMK_META_TARGET_ROLE);
@@ -513,7 +514,6 @@ configured_role(pcmk_resource_t *rsc)
 bool
 is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any)
 {
-    GList *gIter;
     bool all = !any;
 
     if (pcmk_is_set(rsc->flags, flag)) {
@@ -524,7 +524,9 @@ is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any)
         return FALSE;
     }
 
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         if(is_set_recursive(gIter->data, flag, any)) {
             if(any) {
                 return TRUE;
@@ -551,7 +553,6 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-    GList *gIter = rsc->children;
     GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
@@ -566,7 +567,9 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
     all = g_list_prepend(all, (gpointer) "*");
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
@@ -638,7 +641,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     GList *promoted_list = NULL;
     GList *started_list = NULL;
-    GList *gIter = rsc->children;
+    GList *gIter = NULL;
 
     const char *desc = NULL;
 
@@ -658,7 +661,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->private->children; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
         gboolean partially_active = child_rsc->private->fns->active(child_rsc,
@@ -929,7 +932,9 @@ clone_free(pcmk_resource_t * rsc)
 
     pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
@@ -942,7 +947,7 @@ clone_free(pcmk_resource_t * rsc)
         child_rsc->private->fns->free(child_rsc);
     }
 
-    g_list_free(rsc->children);
+    g_list_free(rsc->private->children);
 
     if (clone_data) {
         CRM_ASSERT(clone_data->demote_notify == NULL);
@@ -958,9 +963,10 @@ enum rsc_role_e
 clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
 {
     enum rsc_role_e clone_role = pcmk_role_unknown;
-    GList *gIter = rsc->children;
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
         enum rsc_role_e a_role = child_rsc->private->fns->state(child_rsc,
                                                                 current);
@@ -1010,7 +1016,7 @@ pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
                                    only_rsc, pcmk__str_star_matches);
 
         if (!passes) {
-            for (const GList *iter = rsc->children;
+            for (const GList *iter = rsc->private->children;
                  iter != NULL; iter = iter->next) {
 
                 const pcmk_resource_t *child_rsc = NULL;

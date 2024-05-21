@@ -93,8 +93,10 @@ ban_unavailable_allowed_nodes(pcmk_resource_t *instance, int max_per_node)
                 pcmk__rsc_trace(instance, "Banning %s from unavailable node %s",
                                 instance->id, pcmk__node_name(node));
                 node->weight = -PCMK_SCORE_INFINITY;
-                for (GList *child_iter = instance->children;
+
+                for (GList *child_iter = instance->private->children;
                      child_iter != NULL; child_iter = child_iter->next) {
+
                     pcmk_resource_t *child = child_iter->data;
                     pcmk_node_t *child_node = NULL;
 
@@ -252,7 +254,10 @@ did_fail(const pcmk_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         return true;
     }
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         if (did_fail((const pcmk_resource_t *) iter->data)) {
             return true;
         }
@@ -906,7 +911,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 
     // If instance is a collective (a cloned group), check its children instead
     if (instance->private->variant > pcmk__rsc_variant_primitive) {
-        for (iter = instance->children;
+        for (iter = instance->private->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
             check_instance_state((const pcmk_resource_t *) iter->data, state);
@@ -1046,7 +1051,7 @@ get_instance_list(const pcmk_resource_t *rsc)
     if (pcmk__is_bundle(rsc)) {
         return pe__bundle_containers(rsc);
     } else {
-        return rsc->children;
+        return rsc->private->children;
     }
 }
 
@@ -1060,7 +1065,7 @@ get_instance_list(const pcmk_resource_t *rsc)
 static inline void
 free_instance_list(const pcmk_resource_t *rsc, GList *list)
 {
-    if (list != rsc->children) {
+    if (list != rsc->private->children) {
         g_list_free(list);
     }
 }
@@ -1342,7 +1347,7 @@ static const char *
 orig_action_name(const pcmk_action_t *action)
 {
     // Any instance will do
-    const pcmk_resource_t *instance = action->rsc->children->data;
+    const pcmk_resource_t *instance = action->rsc->private->children->data;
 
     char *action_type = NULL;
     const char *action_name = action->task;

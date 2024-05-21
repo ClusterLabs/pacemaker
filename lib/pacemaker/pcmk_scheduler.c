@@ -115,8 +115,9 @@ check_failure_threshold(gpointer data, gpointer user_data)
     const pcmk_node_t *node = user_data;
 
     // If this is a collective resource, apply recursively to children instead
-    if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, check_failure_threshold, user_data);
+    if (rsc->private->children != NULL) {
+        g_list_foreach(rsc->private->children, check_failure_threshold,
+                       user_data);
         return;
     }
 
@@ -165,7 +166,8 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
         pcmk_node_t *match = NULL;
 
         // If this is a collective resource, apply recursively to children
-        g_list_foreach(rsc->children, apply_exclusive_discovery, user_data);
+        g_list_foreach(rsc->private->children, apply_exclusive_discovery,
+                       user_data);
 
         match = g_hash_table_lookup(rsc->private->allowed_nodes,
                                     node->details->id);
@@ -190,8 +192,8 @@ apply_stickiness(gpointer data, gpointer user_data)
     pcmk_node_t *node = NULL;
 
     // If this is a collective resource, apply recursively to children instead
-    if (rsc->children != NULL) {
-        g_list_foreach(rsc->children, apply_stickiness, NULL);
+    if (rsc->private->children != NULL) {
+        g_list_foreach(rsc->private->children, apply_stickiness, NULL);
         return;
     }
 
@@ -366,7 +368,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
     }
     crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
 
-    /* There's no need to recurse into rsc->children because those
+    /* There's no need to recurse into rsc->private->children because those
      * should just be unassigned clone instances.
      */
 
@@ -439,7 +441,9 @@ is_managed(const pcmk_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         return true;
     }
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         if (is_managed((pcmk_resource_t *) iter->data)) {
             return true;
         }

@@ -1165,8 +1165,9 @@ find_unfencing_devices(GList *candidates, GList *matches)
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *candidate = gIter->data;
 
-        if (candidate->children != NULL) {
-            matches = find_unfencing_devices(candidate->children, matches);
+        if (candidate->private->children != NULL) {
+            matches = find_unfencing_devices(candidate->private->children,
+                                             matches);
 
         } else if (!pcmk_is_set(candidate->flags, pcmk__rsc_fence_device)) {
             continue;

@@ -160,7 +160,10 @@ add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
         || pcmk__str_eq(id, rsc->private->history_id, pcmk__str_none)) {
         result = g_list_prepend(result, rsc);
     }
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         result = add_rsc_if_matching(result, child, id);
@@ -205,7 +208,8 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = data;
 
     rsc->private->cmds = &assignment_methods[rsc->private->variant];
-    g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
+    g_list_foreach(rsc->private->children, set_assignment_methods_for_rsc,
+                   NULL);
 }
 
 /*!
@@ -323,8 +327,11 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
     CRM_ASSERT(rsc != NULL);
 
     out = rsc->private->scheduler->priv;
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
             child->private->cmds->output_actions(child);
@@ -410,8 +417,11 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     CRM_ASSERT(rsc != NULL);
     scheduler = rsc->private->scheduler;
 
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *child_rsc = iter->data;
 
             changed |= pcmk__assign_resource(child_rsc, node, force,
@@ -538,7 +548,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
 
     pcmk__set_rsc_flags(rsc, pcmk__rsc_unassigned);
 
-    if (rsc->children == NULL) {
+    if (rsc->private->children == NULL) {
         if (old == NULL) {
             return;
         }
@@ -555,7 +565,9 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         return;
     }
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__unassign_resource((pcmk_resource_t *) iter->data);
     }
 }
