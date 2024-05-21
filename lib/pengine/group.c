@@ -81,7 +81,7 @@ set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
     const char *value_s = NULL;
     int value = 0;
 
-    value_s = g_hash_table_lookup(group->meta, option);
+    value_s = g_hash_table_lookup(group->private->meta, option);
 
     // We don't actually need the null check but it speeds up the common case
     if ((value_s == NULL) || (crm_str_to_boolean(value_s, &value) < 0)

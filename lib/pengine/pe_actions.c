@@ -1174,7 +1174,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
         } else if (pcmk_is_set(candidate->flags, pcmk__rsc_needs_unfencing)) {
             matches = g_list_prepend(matches, candidate);
 
-        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
+        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->private->meta,
                                                     PCMK_STONITH_PROVIDES),
                                 PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
@@ -1286,7 +1286,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;
-                const char *agent = g_hash_table_lookup(match->meta,
+                const char *agent = g_hash_table_lookup(match->private->meta,
                                                         PCMK_XA_TYPE);
                 pcmk__op_digest_t *data = NULL;
 

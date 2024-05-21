@@ -69,7 +69,8 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, PCMK_XA_TYPE);
+        const char *type = g_hash_table_lookup(rsc->private->meta,
+                                               PCMK_XA_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
@@ -2201,7 +2202,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const pcmk_node_t *node = pcmk__current_node(rsc);
-        const char *target_role = g_hash_table_lookup(rsc->meta,
+        const char *target_role = g_hash_table_lookup(rsc->private->meta,
                                                       PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 

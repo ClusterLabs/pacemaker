@@ -1540,7 +1540,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      * needed in the transition graph (for example, to tell unique clone
      * instances apart).
      */
-    value = g_hash_table_lookup(rsc->meta, PCMK__META_CLONE);
+    value = g_hash_table_lookup(rsc->private->meta, PCMK__META_CLONE);
     if (value != NULL) {
         name = crm_meta_name(PCMK__META_CLONE);
         crm_xml_add(xml, name, value);
@@ -1548,7 +1548,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     }
 
     // Not sure if this one is really needed ...
-    value = g_hash_table_lookup(rsc->meta, PCMK_META_REMOTE_NODE);
+    value = g_hash_table_lookup(rsc->private->meta, PCMK_META_REMOTE_NODE);
     if (value != NULL) {
         name = crm_meta_name(PCMK_META_REMOTE_NODE);
         crm_xml_add(xml, name, value);
@@ -1570,7 +1570,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
      * meta-attribute. The graph action needs it, but under a different naming
      * convention than other meta-attributes.
      */
-    value = g_hash_table_lookup(rsc->meta, "external-ip");
+    value = g_hash_table_lookup(rsc->private->meta, "external-ip");
     if (value != NULL) {
         crm_xml_add(xml, "pcmk_external_ip", value);
     }

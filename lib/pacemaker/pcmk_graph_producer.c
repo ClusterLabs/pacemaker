@@ -314,7 +314,8 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 
     for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
         crm_xml_add(rsc_xml, attr_list[lpc],
-                    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
+                    g_hash_table_lookup(action->rsc->private->meta,
+                                        attr_list[lpc]));
     }
 }
 

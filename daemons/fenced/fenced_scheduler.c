@@ -183,8 +183,9 @@ register_if_fencing_device(gpointer data, gpointer user_data)
      * meta-attributes is deprecated. When we can break behavioral backward
      * compatibility, replace node with NULL here.
      */
-    get_meta_attributes(rsc->meta, rsc, node, scheduler);
-    rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
+    get_meta_attributes(rsc->private->meta, rsc, node, scheduler);
+    rsc_provides = g_hash_table_lookup(rsc->private->meta,
+                                       PCMK_STONITH_PROVIDES);
 
     g_hash_table_iter_init(&hash_iter, pe_rsc_params(rsc, node, scheduler));
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) &name,

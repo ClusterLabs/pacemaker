@@ -317,6 +317,7 @@ struct pcmk__resource_private {
     enum pcmk__rsc_variant variant; // Resource variant
     void *variant_opaque;           // Variant-specific data
     char *history_id;               // Resource instance ID in history
+    GHashTable *meta;               // Resource meta-attributes
     int priority;                   // Priority relative other resources
     int promotion_priority;         // Promotion priority on assigned node
     enum rsc_role_e orig_role;      // Resource's role at start of transition

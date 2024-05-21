@@ -197,7 +197,8 @@ static void
 recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
 {
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
-    pcmk__insert_meta(rsc, PCMK_META_GLOBALLY_UNIQUE, PCMK_VALUE_FALSE);
+    pcmk__insert_meta(rsc->private, PCMK_META_GLOBALLY_UNIQUE,
+                      PCMK_VALUE_FALSE);
     g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }
 
@@ -339,7 +340,7 @@ native_parameter(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
     value = g_hash_table_lookup(params, name);
     if (value == NULL) {
         /* try meta attributes instead */
-        value = g_hash_table_lookup(rsc->meta, name);
+        value = g_hash_table_lookup(rsc->private->meta, name);
     }
     return pcmk__str_copy(value);
 }
@@ -676,18 +677,15 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
 
     CRM_ASSERT((kind != NULL) && pcmk__is_primitive(rsc));
 
-    if (rsc->meta) {
-        const char *is_internal = g_hash_table_lookup(rsc->meta,
-                                                      PCMK__META_INTERNAL_RSC);
+    if (crm_is_true(g_hash_table_lookup(rsc->private->meta,
+                                        PCMK__META_INTERNAL_RSC))
+        && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
 
-        if (crm_is_true(is_internal)
-            && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
-
-            crm_trace("skipping print of internal resource %s", rsc->id);
-            return pcmk_rc_no_output;
-        }
-        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
+        crm_trace("skipping print of internal resource %s", rsc->id);
+        return pcmk_rc_no_output;
     }
+    target_role = g_hash_table_lookup(rsc->private->meta,
+                                      PCMK_META_TARGET_ROLE);
 
     if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         cl = PCMK__VALUE_RSC_MANAGED;
@@ -728,18 +726,15 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
 
-    if (rsc->meta) {
-        const char *is_internal = g_hash_table_lookup(rsc->meta,
-                                                      PCMK__META_INTERNAL_RSC);
+    if (crm_is_true(g_hash_table_lookup(rsc->private->meta,
+                                        PCMK__META_INTERNAL_RSC))
+        && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
 
-        if (crm_is_true(is_internal)
-            && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
-
-            crm_trace("skipping print of internal resource %s", rsc->id);
-            return pcmk_rc_no_output;
-        }
-        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
+        crm_trace("skipping print of internal resource %s", rsc->id);
+        return pcmk_rc_no_output;
     }
+    target_role = g_hash_table_lookup(rsc->private->meta,
+                                      PCMK_META_TARGET_ROLE);
 
     {
         gchar *s = pcmk__native_output_string(rsc, name, node, show_opts,
@@ -794,9 +789,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
              crm_element_value(rsc->private->xml, PCMK_XA_TYPE));
 
-    if (rsc->meta != NULL) {
-        target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
-    }
+    target_role = g_hash_table_lookup(rsc->private->meta,
+                                      PCMK_META_TARGET_ROLE);
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->private->active_nodes));
 

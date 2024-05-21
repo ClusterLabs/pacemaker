@@ -1056,7 +1056,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
 static void
 check_role(resource_checks_t *checks)
 {
-    const char *role_s = g_hash_table_lookup(checks->rsc->meta,
+    const char *role_s = g_hash_table_lookup(checks->rsc->private->meta,
                                              PCMK_META_TARGET_ROLE);
 
     if (role_s == NULL) {
@@ -1082,7 +1082,7 @@ check_role(resource_checks_t *checks)
 static void
 check_managed(resource_checks_t *checks)
 {
-    const char *managed_s = g_hash_table_lookup(checks->rsc->meta,
+    const char *managed_s = g_hash_table_lookup(checks->rsc->private->meta,
                                                 PCMK_META_IS_MANAGED);
 
     if ((managed_s != NULL) && !crm_is_true(managed_s)) {

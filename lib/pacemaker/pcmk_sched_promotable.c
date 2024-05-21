@@ -695,7 +695,7 @@ promotion_attr_value(const pcmk_resource_t *rsc, const pcmk_node_t *node,
         // Not assigned yet
         node_type = pcmk__rsc_node_current;
     }
-    target = g_hash_table_lookup(rsc->meta,
+    target = g_hash_table_lookup(rsc->private->meta,
                                  PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     attr_name = pcmk_promotion_score_name(name);
     attr_value = pcmk__node_attr(node, attr_name, target, node_type);

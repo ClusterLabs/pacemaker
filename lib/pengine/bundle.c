@@ -846,7 +846,8 @@ create_replica_resources(pcmk_resource_t *parent,
     }
 
     if ((replica->child != NULL) && (replica->ipaddr != NULL)) {
-        pcmk__insert_meta(replica->child, "external-ip", replica->ipaddr);
+        pcmk__insert_meta(replica->child->private, "external-ip",
+                          replica->ipaddr);
     }
 
     if (replica->remote != NULL) {
@@ -1280,15 +1281,16 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
             bundle_data->attribute_target =
-                g_hash_table_lookup(replica->child->meta,
+                g_hash_table_lookup(replica->child->private->meta,
                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
         }
         bundle_data->container_host_options = g_string_free(buffer, FALSE);
 
         if (bundle_data->attribute_target) {
-            pcmk__insert_dup(rsc->meta, PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+            pcmk__insert_dup(rsc->private->meta,
+                             PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
                              bundle_data->attribute_target);
-            pcmk__insert_dup(bundle_data->child->meta,
+            pcmk__insert_dup(bundle_data->child->private->meta,
                              PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
                              bundle_data->attribute_target);
         }

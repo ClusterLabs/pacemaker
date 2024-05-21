@@ -681,7 +681,8 @@ setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    container_id = g_hash_table_lookup(rsc->meta, PCMK__META_CONTAINER);
+    container_id = g_hash_table_lookup(rsc->private->meta,
+                                       PCMK__META_CONTAINER);
     if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
         pcmk_resource_t *container = pe_find_resource(scheduler->resources,
                                                       container_id);

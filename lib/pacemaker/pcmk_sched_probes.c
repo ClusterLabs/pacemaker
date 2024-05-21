@@ -605,10 +605,9 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      */
     if ((after->rsc != NULL)
         && (after->rsc->private->variant > pcmk__rsc_variant_group)) {
-        const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
-                                                       PCMK_META_INTERLEAVE);
 
-        interleave = crm_is_true(interleave_s);
+        interleave = crm_is_true(g_hash_table_lookup(after->rsc->private->meta,
+                                                     PCMK_META_INTERLEAVE));
         if (interleave) {
             compatible_rsc = pcmk__find_compatible_instance(probe->rsc,
                                                             after->rsc,

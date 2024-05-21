@@ -410,7 +410,8 @@ gboolean
 get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
     enum rsc_role_e local_role = pcmk_role_unknown;
-    const char *value = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
+    const char *value = g_hash_table_lookup(rsc->private->meta,
+                                            PCMK_META_TARGET_ROLE);
 
     CRM_CHECK(role != NULL, return FALSE);
 
@@ -739,7 +740,8 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
     const char *target_role = NULL;
 
     CRM_CHECK(rsc != NULL, return false);
-    target_role = g_hash_table_lookup(rsc->meta, PCMK_META_TARGET_ROLE);
+    target_role = g_hash_table_lookup(rsc->private->meta,
+                                      PCMK_META_TARGET_ROLE);
     if (target_role) {
         // If invalid, we've already logged an error when unpacking
         enum rsc_role_e target_role_e = pcmk_parse_role(target_role);

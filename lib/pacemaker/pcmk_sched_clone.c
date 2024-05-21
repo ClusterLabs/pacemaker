@@ -211,7 +211,7 @@ can_interleave(const pcmk__colocation_t *colocation)
     }
 
     // Only the dependent needs to be marked for interleaving
-    if (!crm_is_true(g_hash_table_lookup(dependent->meta,
+    if (!crm_is_true(g_hash_table_lookup(dependent->private->meta,
                                          PCMK_META_INTERLEAVE))) {
         return false;
     }

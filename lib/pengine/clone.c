@@ -278,7 +278,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
 
-    pcmk__insert_meta(child_rsc, PCMK_META_CLONE_MAX, inc_max);
+    pcmk__insert_meta(child_rsc->private, PCMK_META_CLONE_MAX, inc_max);
     pcmk__rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
   bail:
@@ -306,10 +306,10 @@ unpack_meta_int(const pcmk_resource_t *rsc, const char *meta_name,
                 const char *deprecated_name, int default_value)
 {
     int integer = default_value;
-    const char *value = g_hash_table_lookup(rsc->meta, meta_name);
+    const char *value = g_hash_table_lookup(rsc->private->meta, meta_name);
 
     if ((value == NULL) && (deprecated_name != NULL)) {
-        value = g_hash_table_lookup(rsc->meta, deprecated_name);
+        value = g_hash_table_lookup(rsc->private->meta, deprecated_name);
 
         if (value != NULL) {
             if (pcmk__str_eq(deprecated_name, PCMK__META_PROMOTED_MAX_LEGACY,
@@ -374,7 +374,8 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
                                             QB_MAX(1, g_list_length(scheduler->nodes)));
 
-    if (crm_is_true(g_hash_table_lookup(rsc->meta, PCMK_META_ORDERED))) {
+    if (crm_is_true(g_hash_table_lookup(rsc->private->meta,
+                                        PCMK_META_ORDERED))) {
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
                                                "Clone", rsc->id,
                                                clone_data->flags,
@@ -421,15 +422,16 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
      * This helps ensure clone instances are not shuffled around the cluster
      * for no benefit in situations when pre-allocation is not appropriate
      */
-    if (g_hash_table_lookup(rsc->meta, PCMK_META_RESOURCE_STICKINESS) == NULL) {
-        pcmk__insert_meta(rsc, PCMK_META_RESOURCE_STICKINESS, "1");
+    if (g_hash_table_lookup(rsc->private->meta,
+                            PCMK_META_RESOURCE_STICKINESS) == NULL) {
+        pcmk__insert_meta(rsc->private, PCMK_META_RESOURCE_STICKINESS, "1");
     }
 
     /* This ensures that the PCMK_META_GLOBALLY_UNIQUE value always exists for
      * children to inherit when being unpacked, as well as in resource agents'
      * environment.
      */
-    pcmk__insert_meta(rsc, PCMK_META_GLOBALLY_UNIQUE,
+    pcmk__insert_meta(rsc->private, PCMK_META_GLOBALLY_UNIQUE,
                       pcmk__flag_text(rsc->flags, pcmk__rsc_unique));
 
     if (clone_data->clone_max <= 0) {
@@ -480,13 +482,13 @@ clone_active(pcmk_resource_t * rsc, gboolean all)
 static const char *
 configured_role_str(pcmk_resource_t * rsc)
 {
-    const char *target_role = g_hash_table_lookup(rsc->meta,
+    const char *target_role = g_hash_table_lookup(rsc->private->meta,
                                                   PCMK_META_TARGET_ROLE);
 
     if ((target_role == NULL) && rsc->children && rsc->children->data) {
         pcmk_resource_t *instance = rsc->children->data; // Any instance will do
 
-        target_role = g_hash_table_lookup(instance->meta,
+        target_role = g_hash_table_lookup(instance->private->meta,
                                           PCMK_META_TARGET_ROLE);
     }
     return target_role;

@@ -105,7 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    GHashTable *meta;               // Resource's meta-attributes
     GHashTable *parameters;         // \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;        // Resource's utilization attributes
 

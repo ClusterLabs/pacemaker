@@ -726,7 +726,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 
     if (host != NULL) {
         gpointer target =
-            g_hash_table_lookup(action->rsc->meta,
+            g_hash_table_lookup(action->rsc->private->meta,
                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
         hash2metafield((gpointer) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,

@@ -36,7 +36,7 @@ get_node_score(const char *rule, const char *score, bool raw,
         const char *target = NULL;
         const char *attr_score = NULL;
 
-        target = g_hash_table_lookup(rsc->meta,
+        target = g_hash_table_lookup(rsc->private->meta,
                                      PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
         attr_score = pcmk__node_attr(node, score, target,
@@ -290,7 +290,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         crm_time_t *next_change = crm_time_new_undefined();
         pcmk_rule_input_t rule_input = {
             .now = rsc->private->scheduler->now,
-            .rsc_meta = rsc->meta,
+            .rsc_meta = rsc->private->meta,
             .rsc_id = rsc_id_match,
             .rsc_id_submatches = rsc_id_submatches,
             .rsc_id_nmatches = rsc_id_nmatches,

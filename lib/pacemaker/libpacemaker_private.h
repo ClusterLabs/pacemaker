@@ -526,7 +526,7 @@ pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
         target = PCMK_VALUE_HOST;
 
     } else if (rsc != NULL) {
-        target = g_hash_table_lookup(rsc->meta,
+        target = g_hash_table_lookup(rsc->private->meta,
                                      PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     }
 

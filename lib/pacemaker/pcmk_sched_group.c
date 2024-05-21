@@ -134,7 +134,8 @@ pcmk__group_create_actions(pcmk_resource_t *rsc)
     create_group_pseudo_op(rsc, PCMK_ACTION_RUNNING);
     create_group_pseudo_op(rsc, PCMK_ACTION_STOP);
     create_group_pseudo_op(rsc, PCMK_ACTION_STOPPED);
-    if (crm_is_true(g_hash_table_lookup(rsc->meta, PCMK_META_PROMOTABLE))) {
+    if (crm_is_true(g_hash_table_lookup(rsc->private->meta,
+                                        PCMK_META_PROMOTABLE))) {
         create_group_pseudo_op(rsc, PCMK_ACTION_DEMOTE);
         create_group_pseudo_op(rsc, PCMK_ACTION_DEMOTED);
         create_group_pseudo_op(rsc, PCMK_ACTION_PROMOTE);
