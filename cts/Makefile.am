@@ -1,11 +1,13 @@
 #
-# Copyright 2001-2023 the Pacemaker project contributors
+# Copyright 2001-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
+
+include $(top_srcdir)/mk/python.mk
 
 MAINTAINERCLEANFILES    = Makefile.in
 
@@ -63,14 +65,12 @@ cts-support-uninstall:
 # Everything listed here is a python script, typically generated from a .in file
 # (though that is not a requirement).  We want to run pylint on all of these
 # things after they've been built.
-python_files = cts-attrd 	\
-	       cts-exec 	\
-	       cts-fencing 	\
-	       cts-lab 		\
-	       cts-log-watcher 	\
-	       cts-regression 	\
+python_files = cts-attrd       \
+	       cts-exec         \
+	       cts-fencing      \
+	       cts-lab          \
+	       cts-log-watcher  \
+	       cts-regression   \
 	       cts-scheduler
 
-.PHONY: pylint
-pylint: $(python_files)
-	PYTHONPATH=$(top_builddir)/python pylint --rcfile $(top_srcdir)/python/pylintrc $(python_files)
+PYCHECKFILES ?= $(python_files)
