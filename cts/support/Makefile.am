@@ -25,4 +25,4 @@ cts_SCRIPTS	= fence_dummy		\
 		  LSBDummy		\
 		  pacemaker-cts-dummyd
 
-PYCHECKFILES ?= cts-support
+PYCHECKFILES ?= cts-support pacemaker-cts-dummyd
