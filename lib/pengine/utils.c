@@ -36,16 +36,16 @@ bool
 pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
 {
     if (pcmk__is_guest_or_bundle_node(node)) {
-        /* Guest nodes are fenced by stopping their container resource. We can
-         * do that if the container's host is either online or fenceable.
+        /* A guest or bundle node is fenced by stopping its launcher, which is
+         * possible if the launcher's host is either online or fenceable.
          */
-        pcmk_resource_t *rsc = node->details->remote_rsc->container;
+        pcmk_resource_t *rsc = node->details->remote_rsc->private->launcher;
 
         for (GList *n = rsc->private->active_nodes; n != NULL; n = n->next) {
-            pcmk_node_t *container_node = n->data;
+            pcmk_node_t *launcher_node = n->data;
 
-            if (!container_node->details->online
-                && !pe_can_fence(scheduler, container_node)) {
+            if (!launcher_node->details->online
+                && !pe_can_fence(scheduler, launcher_node)) {
                 return false;
             }
         }

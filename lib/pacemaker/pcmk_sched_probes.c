@@ -101,8 +101,11 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 static bool
 guest_resource_will_stop(const pcmk_node_t *node)
 {
-    const pcmk_resource_t *guest_rsc = node->details->remote_rsc->container;
-    const pcmk_node_t *guest_node = guest_rsc->private->assigned_node;
+    const pcmk_resource_t *guest_rsc = NULL;
+    const pcmk_node_t *guest_node = NULL;
+
+    guest_rsc = node->details->remote_rsc->private->launcher;
+    guest_node = guest_rsc->private->assigned_node;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
@@ -199,7 +202,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         return pcmk__probe_resource_list(rsc->private->children, node);
     }
 
-    if ((rsc->container != NULL)
+    if ((rsc->private->launcher != NULL)
         && !pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         reason = "resource is inside a container";
         goto no_probe;
@@ -244,7 +247,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->private->launcher;
 
         if (guest->private->orig_role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
@@ -391,10 +394,11 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         /* Do not imply a probe ordering for a resource inside of a stopping
-         * container. Otherwise, it might introduce a transition loop, since a
-         * probe could be scheduled after the container starts again.
+         * launcher. Otherwise, it might introduce a transition loop, since a
+         * probe could be scheduled after the launcher starts again.
          */
-        if ((order->rsc2 != NULL) && (order->rsc1->container == order->rsc2)) {
+        if ((order->rsc2 != NULL)
+            && (order->rsc1->private->launcher == order->rsc2)) {
 
             if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {

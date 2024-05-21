@@ -802,7 +802,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->details->remote_rsc = replica->remote;
 
         // Ensure pcmk__is_guest_or_bundle_node() functions correctly
-        replica->remote->container = replica->container;
+        replica->remote->private->launcher = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
@@ -810,7 +810,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         pcmk__insert_dup(replica->node->details->attrs,
                          CRM_ATTR_KIND, "container");
 
-        /* One effect of this is that setup_container() will add
+        /* One effect of this is that unpack_launcher() will add
          * replica->remote to replica->container's fillers, which will make
          * pe__resource_contains_guest_node() true for replica->container.
          *

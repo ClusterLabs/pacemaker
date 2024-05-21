@@ -297,17 +297,10 @@ apply_remote_ordering(pcmk_action_t *action)
 }
 
 static void
-apply_container_ordering(pcmk_action_t *action)
+apply_launcher_ordering(pcmk_action_t *action)
 {
-    /* VMs are also classified as containers for these purposes... in
-     * that they both involve a 'thing' running on a real or remote
-     * cluster node.
-     *
-     * This allows us to be smarter about the type and extent of
-     * recovery actions required in various scenarios
-     */
     pcmk_resource_t *remote_rsc = NULL;
-    pcmk_resource_t *container = NULL;
+    pcmk_resource_t *launcher = NULL;
     enum action_tasks task = pcmk_parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
@@ -316,10 +309,10 @@ apply_container_ordering(pcmk_action_t *action)
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc != NULL);
 
-    container = remote_rsc->container;
-    CRM_ASSERT(container != NULL);
+    launcher = remote_rsc->private->launcher;
+    CRM_ASSERT(launcher != NULL);
 
-    if (pcmk_is_set(container->flags, pcmk__rsc_failed)) {
+    if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
         pe_fence_node(action->rsc->private->scheduler, action->node,
                       "container failed", FALSE);
     }
@@ -328,8 +321,8 @@ apply_container_ordering(pcmk_action_t *action)
               action->task, action->uuid,
               pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
               remote_rsc->id,
-              pcmk_is_set(container->flags, pcmk__rsc_failed)? "failed " : "",
-              container->id);
+              pcmk_is_set(launcher->flags, pcmk__rsc_failed)? "failed " : "",
+              launcher->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
@@ -342,8 +335,8 @@ apply_container_ordering(pcmk_action_t *action)
     switch (task) {
         case pcmk_action_start:
         case pcmk_action_promote:
-            // Force resource recovery if the container is recovered
-            order_start_then_action(container, action,
+            // Force resource recovery if the launcher is recovered
+            order_start_then_action(launcher, action,
                                     pcmk__ar_first_implies_then);
 
             // Wait for the connection resource to be up, too
@@ -352,10 +345,10 @@ apply_container_ordering(pcmk_action_t *action)
 
         case pcmk_action_stop:
         case pcmk_action_demote:
-            if (pcmk_is_set(container->flags, pcmk__rsc_failed)) {
-                /* When the container representing a guest node fails, any stop
+            if (pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
+                /* When the launcher representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
-                 * are implied by the container stopping. This is similar to
+                 * are implied by the launcher stopping. This is similar to
                  * how fencing operations work for cluster nodes and remote
                  * nodes.
                  */
@@ -364,7 +357,7 @@ apply_container_ordering(pcmk_action_t *action)
                  * down.
                  *
                  * If we really wanted to, we could order these after the
-                 * connection start, IFF the container's current role was
+                 * connection start, IFF the launcher's current role was
                  * stopped (otherwise we re-introduce an ordering loop when the
                  * connection is restarting).
                  */
@@ -484,9 +477,9 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * It would probably be better to add PCMK__XA_ROUTER_NODE as part of
          * this logic rather than create_graph_action().
          */
-        if (remote->container) {
+        if (remote->private->launcher != NULL) {
             crm_trace("Container ordering for %s", action->uuid);
-            apply_container_ordering(action);
+            apply_launcher_ordering(action);
 
         } else {
             crm_trace("Remote ordering for %s", action->uuid);
@@ -526,7 +519,7 @@ pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
 {
     return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
             && (node->details->remote_rsc != NULL)
-            && (node->details->remote_rsc->container == rsc);
+            && (node->details->remote_rsc->private->launcher == rsc);
 }
 
 /*!
@@ -562,7 +555,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
 
     began_on = pcmk__current_node(remote);
     ended_on = remote->private->assigned_node;
-    if ((remote->container == NULL)
+    if ((remote->private->launcher == NULL)
         && (remote->private->partial_migration_target != NULL)) {
         partial_migration = true;
     }
@@ -688,13 +681,13 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
 {
     const pcmk_node_t *guest = action->node;
     const pcmk_node_t *host = NULL;
-    const pcmk_resource_t *container = NULL;
+    const pcmk_resource_t *launcher = NULL;
     enum action_tasks task;
 
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
-    container = guest->details->remote_rsc->container;
+    launcher = guest->details->remote_rsc->private->launcher;
 
     task = pcmk_parse_action(action->task);
     if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
@@ -708,7 +701,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk_action_demote:
         case pcmk_action_demoted:
             // "Down" actions take place on guest's current host
-            host = pcmk__current_node(container);
+            host = pcmk__current_node(launcher);
             break;
 
         case pcmk_action_start:
@@ -717,7 +710,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
         case pcmk_action_promote:
         case pcmk_action_promoted:
             // "Up" actions take place on guest's next host
-            host = container->private->assigned_node;
+            host = launcher->private->assigned_node;
             break;
 
         default:

@@ -141,11 +141,11 @@ get_node_names(const GList *list, GString **all_node_names,
         // Add to host node name list if appropriate
         if (host_node_names != NULL) {
             if (pcmk__is_guest_or_bundle_node(node)) {
-                const pcmk_resource_t *container = NULL;
+                const pcmk_resource_t *launcher = NULL;
 
-                container = node->details->remote_rsc->container;
-                if (container->private->active_nodes != NULL) {
-                    node = pcmk__current_node(container);
+                launcher = node->details->remote_rsc->private->launcher;
+                if (launcher->private->active_nodes != NULL) {
+                    node = pcmk__current_node(launcher);
                     if (node->details->uname == NULL) {
                         continue;
                     }

@@ -983,7 +983,9 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                        scheduler);
 
     // Certain checks need allowed nodes
-    if (check_unfencing || check_utilization || (rsc->container != NULL)) {
+    if (check_unfencing || check_utilization
+        || (rsc->private->launcher != NULL)) {
+
         allowed_nodes = allowed_nodes_as_list(rsc);
     }
 
@@ -995,7 +997,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
         pcmk__create_utilization_constraints(rsc, allowed_nodes);
     }
 
-    if (rsc->container != NULL) {
+    if (rsc->private->launcher != NULL) {
         pcmk_resource_t *remote_rsc = NULL;
 
         if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
@@ -1005,37 +1007,39 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
              * to avoid nesting remotes. However, bundles are allowed.
              */
             if (!pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)) {
-                rsc_avoids_remote_nodes(rsc->container);
+                rsc_avoids_remote_nodes(rsc->private->launcher);
             }
 
-            /* If someone cleans up a guest or bundle node's container, we will
-             * likely schedule a (re-)probe of the container and recovery of the
-             * connection. Order the connection stop after the container probe,
-             * so that if we detect the container running, we will trigger a new
+            /* If someone cleans up a guest or bundle node's launcher, we will
+             * likely schedule a (re-)probe of the launcher and recovery of the
+             * connection. Order the connection stop after the launcher probe,
+             * so that if we detect the launcher running, we will trigger a new
              * transition and avoid the unnecessary recovery.
              */
-            pcmk__order_resource_actions(rsc->container, PCMK_ACTION_MONITOR,
+            pcmk__order_resource_actions(rsc->private->launcher,
+                                         PCMK_ACTION_MONITOR,
                                          rsc, PCMK_ACTION_STOP,
                                          pcmk__ar_ordered);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
-         * node by explicitly configuring it with the container=NODENAME
+         * node by explicitly configuring it with the PCMK__META_CONTAINER
          * meta-attribute. This is of questionable merit, since location
          * constraints can accomplish the same thing. But we support it, so here
          * we check whether a resource (that is not itself a remote connection)
-         * has container set to a remote node or guest node resource.
+         * has PCMK__META_CONTAINER set to a remote node or guest node resource.
          */
-        } else if (pcmk_is_set(rsc->container->flags,
+        } else if (pcmk_is_set(rsc->private->launcher->flags,
                                pcmk__rsc_is_remote_connection)) {
-            remote_rsc = rsc->container;
+            remote_rsc = rsc->private->launcher;
         } else  {
-            remote_rsc = pe__resource_contains_guest_node(scheduler,
-                                                          rsc->container);
+            remote_rsc =
+                pe__resource_contains_guest_node(scheduler,
+                                                 rsc->private->launcher);
         }
 
         if (remote_rsc != NULL) {
             /* Force the resource on the Pacemaker Remote node instead of
-             * colocating the resource with the container resource.
+             * colocating the resource with the launcher.
              */
             for (GList *item = allowed_nodes; item; item = item->next) {
                 pcmk_node_t *node = item->data;
@@ -1046,17 +1050,17 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
             }
 
         } else {
-            /* This resource is either a filler for a container that does NOT
+            /* This resource is either a filler for a launcher that does NOT
              * represent a Pacemaker Remote node, or a Pacemaker Remote
              * connection resource for a guest node or bundle.
              */
             int score;
 
-            crm_trace("Order and colocate %s relative to its container %s",
-                      rsc->id, rsc->container->id);
+            crm_trace("Order and colocate %s relative to its launcher %s",
+                      rsc->id, rsc->private->launcher->id);
 
-            pcmk__new_ordering(rsc->container,
-                               pcmk__op_key(rsc->container->id,
+            pcmk__new_ordering(rsc->private->launcher,
+                               pcmk__op_key(rsc->private->launcher->id,
                                             PCMK_ACTION_START, 0),
                                NULL, rsc,
                                pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
@@ -1067,8 +1071,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
             pcmk__new_ordering(rsc,
                                pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                                NULL,
-                               rsc->container,
-                               pcmk__op_key(rsc->container->id,
+                               rsc->private->launcher,
+                               pcmk__op_key(rsc->private->launcher->id,
                                             PCMK_ACTION_STOP, 0),
                                NULL, pcmk__ar_then_implies_first, scheduler);
 
@@ -1078,7 +1082,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                 score = PCMK_SCORE_INFINITY; // Force to run on same host
             }
             pcmk__new_colocation("#resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL,
+                                 rsc->private->launcher, NULL, NULL,
                                  pcmk__coloc_influence);
         }
     }
@@ -1555,14 +1559,13 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
         free(name);
     }
 
-    /* The container meta-attribute can be set on the primitive itself or one of
-     * its parents (for example, a group inside a container resource), so check
-     * them all, and keep the highest one found.
+    /* The PCMK__META_CONTAINER meta-attribute can be set on the primitive
+     * itself or one of its ancestors, so check them all and keep the highest.
      */
     for (parent = rsc; parent != NULL; parent = parent->private->parent) {
-        if (parent->container != NULL) {
+        if (parent->private->launcher != NULL) {
             crm_xml_add(xml, CRM_META "_" PCMK__META_CONTAINER,
-                        parent->container->id);
+                        parent->private->launcher->id);
         }
     }
 

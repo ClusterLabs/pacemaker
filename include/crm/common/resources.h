@@ -105,7 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    pcmk_resource_t *container;     // Resource containing this one, if any
     GList *fillers;                 // Resources contained by this one, if any
 
     // @COMPAT These should be made const at next API compatibility break

@@ -82,21 +82,23 @@ static void unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
                             pcmk_scheduler_t *scheduler);
 
 
-static gboolean
+/*!
+ * \internal
+ * \brief Check whether a node is a dangling guest node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node had a Pacemaker Remote connection resource with a
+ *         launcher that was removed from the CIB, otherwise false.
+ */
+static bool
 is_dangling_guest_node(pcmk_node_t *node)
 {
-    /* we are looking for a remote-node that was supposed to be mapped to a
-     * container resource, but all traces of that container have disappeared 
-     * from both the config and the status section. */
-    if (pcmk__is_pacemaker_remote_node(node)
-        && (node->details->remote_rsc != NULL)
-        && (node->details->remote_rsc->container == NULL)
-        && pcmk_is_set(node->details->remote_rsc->flags,
-                       pcmk__rsc_removed_filler)) {
-        return TRUE;
-    }
-
-    return FALSE;
+    return pcmk__is_pacemaker_remote_node(node)
+           && (node->details->remote_rsc != NULL)
+           && (node->details->remote_rsc->private->launcher == NULL)
+           && pcmk_is_set(node->details->remote_rsc->flags,
+                          pcmk__rsc_removed_filler);
 }
 
 /*!
@@ -114,9 +116,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 {
     CRM_CHECK(node, return);
 
-    /* A guest node is fenced by marking its container as failed */
     if (pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *rsc = node->details->remote_rsc->container;
+        // Fence a guest or bundle node by marking its launcher as failed
+        pcmk_resource_t *rsc = node->details->remote_rsc->private->launcher;
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
@@ -672,30 +674,30 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
 }
 
 static void
-setup_container(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+unpack_launcher(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
-    const char *container_id = NULL;
+    const char *launcher_id = NULL;
 
     if (rsc->private->children != NULL) {
-        g_list_foreach(rsc->private->children, (GFunc) setup_container,
+        g_list_foreach(rsc->private->children, (GFunc) unpack_launcher,
                        scheduler);
         return;
     }
 
-    container_id = g_hash_table_lookup(rsc->private->meta,
-                                       PCMK__META_CONTAINER);
-    if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
-        pcmk_resource_t *container = pe_find_resource(scheduler->resources,
-                                                      container_id);
+    launcher_id = g_hash_table_lookup(rsc->private->meta, PCMK__META_CONTAINER);
+    if ((launcher_id != NULL)
+        && !pcmk__str_eq(launcher_id, rsc->id, pcmk__str_none)) {
+        pcmk_resource_t *launcher = pe_find_resource(scheduler->resources,
+                                                     launcher_id);
 
-        if (container) {
-            rsc->container = container;
-            container->fillers = g_list_append(container->fillers, rsc);
-            pcmk__rsc_trace(rsc, "Resource %s's container is %s",
-                            rsc->id, container_id);
+        if (launcher != NULL) {
+            rsc->private->launcher = launcher;
+            launcher->fillers = g_list_append(launcher->fillers, rsc);
+            pcmk__rsc_trace(rsc, "Resource %s's launcher is %s",
+                            rsc->id, launcher_id);
         } else {
-            pcmk__config_err("Resource %s: Unknown resource container (%s)",
-                             rsc->id, container_id);
+            pcmk__config_err("Resource %s: Unknown " PCMK__META_CONTAINER " %s",
+                             rsc->id, launcher_id);
         }
     }
 }
@@ -805,7 +807,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
                     new_rsc->id, pcmk__node_name(remote_node));
     remote_node->details->remote_rsc = new_rsc;
 
-    if (new_rsc->container == NULL) {
+    if (new_rsc->private->launcher == NULL) {
         /* Handle start-up fencing for remote nodes (as opposed to guest nodes)
          * the same as is done for cluster nodes.
          */
@@ -889,7 +891,7 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     for (gIter = scheduler->resources; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
 
-        setup_container(rsc, scheduler);
+        unpack_launcher(rsc, scheduler);
         link_rsc2remotenode(scheduler, rsc);
     }
 
@@ -1310,12 +1312,12 @@ unpack_node_history(const xmlNode *status, bool fence,
              * connection and containing resource are both up.
              */
             const pcmk_resource_t *remote = this_node->details->remote_rsc;
-            const pcmk_resource_t *container = remote->container;
+            const pcmk_resource_t *launcher = remote->private->launcher;
 
             if ((remote->private->orig_role != pcmk_role_started)
-                || (container->private->orig_role != pcmk_role_started)) {
+                || (launcher->private->orig_role != pcmk_role_started)) {
                 crm_trace("Not unpacking resource history for guest node %s "
-                          "because container and connection are not known to "
+                          "because launcher and connection are not known to "
                           "be up", id);
                 continue;
             }
@@ -1733,28 +1735,31 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
                                pcmk_node_t *this_node)
 {
     pcmk_resource_t *rsc = this_node->details->remote_rsc;
-    pcmk_resource_t *container = NULL;
+    pcmk_resource_t *launcher = NULL;
     pcmk_node_t *host = NULL;
+    const char *node_type = "Remote";
 
-    /* If there is a node state entry for a (former) Pacemaker Remote node
-     * but no resource creating that node, the node's connection resource will
-     * be NULL. Consider it an offline remote node in that case.
-     */
     if (rsc == NULL) {
+        /* This is a leftover node state entry for a former Pacemaker Remote
+         * node whose connection resource was removed. Consider it offline.
+         */
+        crm_trace("Pacemaker Remote node %s is considered OFFLINE because "
+                  "its connection resource has been removed from the CIB",
+                  this_node->details->id);
         this_node->details->online = FALSE;
-        goto remote_online_done;
+        return;
     }
 
-    container = rsc->container;
-
-    if ((container != NULL) && pcmk__list_of_1(rsc->private->active_nodes)) {
-        host = rsc->private->active_nodes->data;
+    launcher = rsc->private->launcher;
+    if (launcher != NULL) {
+        node_type = "Guest";
+        if (pcmk__list_of_1(rsc->private->active_nodes)) {
+            host = rsc->private->active_nodes->data;
+        }
     }
 
     /* If the resource is currently started, mark it online. */
     if (rsc->private->orig_role == pcmk_role_started) {
-        crm_trace("%s node %s presumed ONLINE because connection resource is started",
-                  (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = TRUE;
     }
 
@@ -1763,12 +1768,12 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         && (rsc->private->next_role == pcmk_role_stopped)) {
 
         crm_trace("%s node %s shutting down because connection resource is stopping",
-                  (container? "Guest" : "Remote"), this_node->details->id);
+                  node_type, this_node->details->id);
         this_node->details->shutdown = TRUE;
     }
 
     /* Now check all the failure conditions. */
-    if(container && pcmk_is_set(container->flags, pcmk__rsc_failed)) {
+    if ((launcher != NULL) && pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
                   this_node->details->id);
         this_node->details->online = FALSE;
@@ -1776,15 +1781,15 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
-                  (container? "Guest" : "Remote"), this_node->details->id);
+                  node_type, this_node->details->id);
         this_node->details->online = FALSE;
 
     } else if ((rsc->private->orig_role == pcmk_role_stopped)
-               || ((container != NULL)
-                   && (container->private->orig_role == pcmk_role_stopped))) {
+               || ((launcher != NULL)
+                   && (launcher->private->orig_role == pcmk_role_stopped))) {
 
         crm_trace("%s node %s OFFLINE because its resource is stopped",
-                  (container? "Guest" : "Remote"), this_node->details->id);
+                  node_type, this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = FALSE;
 
@@ -1794,11 +1799,12 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
                   this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
-    }
 
-remote_online_done:
-    crm_trace("Remote node %s online=%s",
-        this_node->details->id, this_node->details->online ? "TRUE" : "FALSE");
+    } else {
+        crm_trace("%s node %s is %s",
+                  node_type, this_node->details->id,
+                  this_node->details->online? "ONLINE" : "OFFLINE");
+    }
 }
 
 static void
@@ -1987,7 +1993,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     }
 
     if (crm_element_value(rsc_entry, PCMK__META_CONTAINER)) {
-        /* This orphaned rsc needs to be mapped to a container. */
+        // This removed resource needs to be mapped to a launcher
         crm_trace("Detected orphaned container filler %s", rsc_id);
         pcmk__set_rsc_flags(rsc, pcmk__rsc_removed_filler);
     }
@@ -2408,16 +2414,16 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         case pcmk_on_fail_restart_container:
             pcmk__set_rsc_flags(rsc, pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
-            if ((rsc->container != NULL) && pcmk__is_bundled(rsc)) {
+            if ((rsc->private->launcher != NULL) && pcmk__is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
                 scheduler->stop_needed = g_list_prepend(scheduler->stop_needed,
-                                                        rsc->container);
-            } else if (rsc->container) {
-                stop_action(rsc->container, node, FALSE);
+                                                        rsc->private->launcher);
+            } else if (rsc->private->launcher != NULL) {
+                stop_action(rsc->private->launcher, node, FALSE);
             } else if (known_active) {
                 stop_action(rsc, node, FALSE);
             }
@@ -2796,35 +2802,35 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
          rsc_entry != NULL; rsc_entry = pcmk__xe_next(rsc_entry)) {
 
         pcmk_resource_t *rsc;
-        pcmk_resource_t *container;
+        pcmk_resource_t *launcher = NULL;
         const char *rsc_id;
-        const char *container_id;
+        const char *launcher_id = NULL;
 
         if (!pcmk__xe_is(rsc_entry, PCMK__XE_LRM_RESOURCE)) {
             continue;
         }
 
-        container_id = crm_element_value(rsc_entry, PCMK__META_CONTAINER);
+        launcher_id = crm_element_value(rsc_entry, PCMK__META_CONTAINER);
         rsc_id = crm_element_value(rsc_entry, PCMK_XA_ID);
-        if (container_id == NULL || rsc_id == NULL) {
+        if ((launcher_id == NULL) || (rsc_id == NULL)) {
             continue;
         }
 
-        container = pe_find_resource(scheduler->resources, container_id);
-        if (container == NULL) {
+        launcher = pe_find_resource(scheduler->resources, launcher_id);
+        if (launcher == NULL) {
             continue;
         }
 
         rsc = pe_find_resource(scheduler->resources, rsc_id);
-        if ((rsc == NULL) || (rsc->container != NULL)
+        if ((rsc == NULL) || (rsc->private->launcher != NULL)
             || !pcmk_is_set(rsc->flags, pcmk__rsc_removed_filler)) {
             continue;
         }
 
-        pcmk__rsc_trace(rsc, "Mapped container of orphaned resource %s to %s",
-                        rsc->id, container_id);
-        rsc->container = container;
-        container->fillers = g_list_append(container->fillers, rsc);
+        pcmk__rsc_trace(rsc, "Mapped launcher of removed resource %s to %s",
+                        rsc->id, launcher_id);
+        rsc->private->launcher = launcher;
+        launcher->fillers = g_list_append(launcher->fillers, rsc);
     }
 }
 
@@ -2867,7 +2873,7 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
     }
 
     /* Now that all resource state has been unpacked for this node, map any
-     * orphaned container fillers to their container resource.
+     * removed launched resources to their launchers.
      */
     if (found_orphaned_container_filler) {
         handle_orphaned_container_fillers(xml, scheduler);

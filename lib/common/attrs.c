@@ -142,7 +142,7 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
      * for the container itself (useful when the container uses the host's
      * storage).
      */
-    container = node->details->remote_rsc->container;
+    container = node->details->remote_rsc->private->launcher;
 
     switch (node_type) {
         case pcmk__rsc_node_assigned:

@@ -354,7 +354,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
 void
 pcmk__fence_guest(pcmk_node_t *node)
 {
-    pcmk_resource_t *container = NULL;
+    pcmk_resource_t *launcher = NULL;
     pcmk_action_t *stop = NULL;
     pcmk_action_t *stonith_op = NULL;
 
@@ -362,21 +362,21 @@ pcmk__fence_guest(pcmk_node_t *node)
      * off vs. reboot. We specify it explicitly, rather than let it default to
      * cluster's default action, because we are not _initiating_ fencing -- we
      * are creating a pseudo-event to describe fencing that is already occurring
-     * by other means (container recovery).
+     * by other means (launcher recovery).
      */
     const char *fence_action = PCMK_ACTION_OFF;
 
     CRM_ASSERT(node != NULL);
 
-    /* Check whether guest's container resource has any explicit stop or
-     * start (the stop may be implied by fencing of the guest's host).
+    /* Check whether guest's launcher has any explicit stop or start (the stop
+     * may be implied by fencing of the guest's host).
      */
-    container = node->details->remote_rsc->container;
-    if (container) {
-        stop = find_first_action(container->private->actions, NULL,
+    launcher = node->details->remote_rsc->private->launcher;
+    if (launcher != NULL) {
+        stop = find_first_action(launcher->private->actions, NULL,
                                  PCMK_ACTION_STOP, NULL);
 
-        if (find_first_action(container->private->actions, NULL,
+        if (find_first_action(launcher->private->actions, NULL,
                               PCMK_ACTION_START, NULL)) {
             fence_action = PCMK_ACTION_REBOOT;
         }
@@ -410,16 +410,16 @@ pcmk__fence_guest(pcmk_node_t *node)
                       pcmk__ar_unrunnable_first_blocks
                       |pcmk__ar_first_implies_then);
         crm_info("Implying guest %s is down (action %d) "
-                 "after container %s is stopped (action %d)",
+                 "after launcher %s is stopped (action %d)",
                  pcmk__node_name(node), stonith_op->id,
-                 container->id, stop->id);
+                 launcher->id, stop->id);
     } else {
         /* If we're fencing the guest node but there's no stop for the guest
          * resource, we must think the guest is already stopped. However, we may
          * think so because its resource history was just cleaned. To avoid
          * unnecessarily considering the guest node down if it's really up,
          * order the pseudo-fencing after any stop of the connection resource,
-         * which will be ordered after any container (re-)probe.
+         * which will be ordered after any launcher (re-)probe.
          */
         stop = find_first_action(node->details->remote_rsc->private->actions,
                                  NULL, PCMK_ACTION_STOP, NULL);

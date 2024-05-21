@@ -401,8 +401,9 @@ static const pcmk_node_t *
 get_bundle_node_host(const pcmk_node_t *node)
 {
     if (pcmk__is_bundle_node(node)) {
-        const pcmk_resource_t *container = node->details->remote_rsc->container;
+        const pcmk_resource_t *container = NULL;
 
+        container = node->details->remote_rsc->private->launcher;
         return container->private->fns->location(container, NULL, 0);
     }
     return node;

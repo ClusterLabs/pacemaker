@@ -87,7 +87,7 @@ enum pcmk__rsc_flags {
     // Whether resource is blocked from further action
     pcmk__rsc_blocked                = (1ULL << 2),
 
-    // Whether resource has been removed but has a container
+    // Whether resource has been removed but was launched
     pcmk__rsc_removed_filler         = (1ULL << 3),
 
     // Whether resource has clone notifications enabled
@@ -342,6 +342,25 @@ struct pcmk__resource_private {
 
     // Configuration of resource operations (possibly expanded from template)
     xmlNode *ops_xml;
+
+    /* A "launcher" is defined in one of these ways:
+     *
+     * - A Pacemaker Remote connection for a guest node or bundle node has its
+     *   launcher set to the resource that starts the guest or the bundle
+     *   replica's container.
+     *
+     * - If the user configures the PCMK__META_CONTAINER meta-attribute for this
+     *   resource, the launcher is set to that.
+     *
+     *   If the launcher is a Pacemaker Remote connection resource, this
+     *   resource may run only on the node created by that connection.
+     *
+     *   Otherwise, this resource will be colocated with and ordered after the
+     *   launcher, and failures of this resource will cause the launcher to be
+     *   recovered instead of this one. This is appropriate for monitoring-only
+     *   resources that represent a service launched by the other resource.
+     */
+    pcmk_resource_t *launcher;
 
     // What to do if the resource is incorrectly active on multiple nodes
     enum pcmk__multiply_active multiply_active_policy;

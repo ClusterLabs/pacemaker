@@ -569,8 +569,11 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
-        const pcmk_resource_t *container = node->details->remote_rsc->container;
-        const pcmk_node_t *host_node = pcmk__current_node(container);
+        const pcmk_resource_t *launcher = NULL;
+        const pcmk_node_t *host_node = NULL;
+
+        launcher = node->details->remote_rsc->private->launcher;
+        host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;
@@ -2087,7 +2090,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->details->remote_rsc->container->id);
+                        node->details->remote_rsc->private->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {

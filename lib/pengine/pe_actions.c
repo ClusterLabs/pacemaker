@@ -916,10 +916,10 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART_CONTAINER,
                             pcmk__str_casei)) {
-        if (rsc->container == NULL) {
+        if (rsc->private->launcher == NULL) {
             pcmk__rsc_debug(rsc,
                             "Using default " PCMK_META_ON_FAIL " for %s "
-                            "of %s because it does not have a container",
+                            "of %s because it does not have a launcher",
                             action_name, rsc->id);
         } else {
             on_fail = pcmk_on_fail_restart_container;
@@ -954,7 +954,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (desc != NULL) {
         // Explicit value used, default not needed
 
-    } else if (rsc->container != NULL) {
+    } else if (rsc->private->launcher != NULL) {
         on_fail = pcmk_on_fail_restart_container;
         desc = "restart container (and possibly migrate) (default)";
 

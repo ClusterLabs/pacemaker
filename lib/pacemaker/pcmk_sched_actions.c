@@ -1442,7 +1442,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
 
             node_name = crm_strdup_printf("%s (resource: %s)",
                                           pcmk__node_name(action->node),
-                                          remote->container->id);
+                                          remote->private->launcher->id);
         } else if (action->node != NULL) {
             node_name = crm_strdup_printf("%s", pcmk__node_name(action->node));
         }
