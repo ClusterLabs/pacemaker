@@ -12,6 +12,7 @@ import time
 import random
 import atexit
 import getopt
+import contextlib
 
 AGENT_VERSION = "4.1.0"
 OCF_VERSION = "1.0"
@@ -180,6 +181,7 @@ auto_unfence = False
 no_reboot = False
 no_on = False
 
+
 def agent():
     """Return name this file was run as."""
     return os.path.basename(sys.argv[0])
@@ -243,30 +245,30 @@ def metadata(avail_opt, options):
         if "shortdesc" not in ALL_OPT[option]:
             continue
 
-        print('    <parameter name="' + option + '" unique="0" ' +
-              'required="' + ALL_OPT[option]["required"] + '">')
+        print('    <parameter name="' + option + '" unique="0" '
+              + 'required="' + ALL_OPT[option]["required"] + '">')
 
         default = ""
         default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
         default_name_no_arg = "-" + ALL_OPT[option]["getopt"]
 
         if "default" in ALL_OPT[option]:
-            default = 'default="%s"' % str(ALL_OPT[option]["default"])
+            default = 'default="%s"' % ALL_OPT[option]["default"]
         elif default_name_arg in options:
             if options[default_name_arg]:
                 try:
                     default = 'default="%s"' % options[default_name_arg]
                 except TypeError:
-                    ## @todo/@note: Currently there is no clean way how to handle lists
-                    ## we can create a string from it but we can't set it on command line
+                    # @todo/@note: Currently there is no clean way how to handle lists
+                    # we can create a string from it but we can't set it on command line
                     default = 'default="%s"' % str(options[default_name_arg])
         elif default_name_no_arg in options:
             default = 'default="true"'
 
         mixed = ALL_OPT[option]["help"]
-        ## split it between option and help text
+        # split it between option and help text
         res = re.compile(r"^(.*--\S+)\s+", re.IGNORECASE | re.S).search(mixed)
-        if None != res:
+        if res is not None:
             mixed = res.group(1)
         mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
         print('      <getopt mixed="' + mixed + '" />')
@@ -301,8 +303,8 @@ def option_longopt(option):
     """Return the getopt-compatible long-option name of the given option."""
     if ALL_OPT[option]["getopt"].endswith(":"):
         return ALL_OPT[option]["longopt"] + "="
-    else:
-        return ALL_OPT[option]["longopt"]
+
+    return ALL_OPT[option]["longopt"]
 
 
 def opts_from_command_line(argv, avail_opt):
@@ -368,9 +370,9 @@ def opts_from_stdin(avail_opt):
             continue
 
         if ALL_OPT[name]["getopt"].endswith(":"):
-            opt["-"+ALL_OPT[name]["getopt"].rstrip(":")] = value
+            opt["-" + ALL_OPT[name]["getopt"].rstrip(":")] = value
         elif value.lower() in ["1", "yes", "on", "true"]:
-            opt["-"+ALL_OPT[name]["getopt"]] = "1"
+            opt["-" + ALL_OPT[name]["getopt"]] = "1"
 
     return opt
 
@@ -384,8 +386,8 @@ def process_input(avail_opt):
     # Read options from command line or standard input
     if len(sys.argv) > 1:
         return opts_from_command_line(sys.argv[1:], avail_opt)
-    else:
-        return opts_from_stdin(avail_opt)
+
+    return opts_from_stdin(avail_opt)
 
 
 def atexit_handler():
@@ -416,15 +418,12 @@ def success_mode(options, option, default_value):
 
 def write_options(options):
     """Write out all options to debug file."""
-    try:
-        debugfile = io.open(options["-D"], 'at')
-        debugfile.write("### %s ###\n" % (time.strftime("%Y-%m-%d %H:%M:%S")))
-        for option in sorted(options):
-            debugfile.write("%s=%s\n" % (option, options[option]))
-        debugfile.write("###\n")
-        debugfile.close()
-    except IOError:
-        pass
+    with contextlib.suppress(IOError):
+        with io.open(options["-D"], "at", encoding="utf-8") as debugfile:
+            debugfile.write("### %s ###\n" % time.strftime("%Y-%m-%d %H:%M:%S"))
+            for option in sorted(options):
+                debugfile.write("%s=%s\n" % (option, options[option]))
+            debugfile.write("###\n")
 
 
 def main():
@@ -443,7 +442,7 @@ def main():
 
     device_opt = ALL_OPT.keys()
 
-    ## Defaults for fence agent
+    # Defaults for fence agent
     atexit.register(atexit_handler)
     options = process_input(device_opt)
     options["device_opt"] = device_opt
