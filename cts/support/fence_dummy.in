@@ -201,10 +201,13 @@ def show_docs(options):
         sys.exit(0)
 
     if "-o" in options and options["-o"].lower() == "metadata":
-        if not os.path.exists(__file__ + ".fail"):
+        f = "%s.fail" % __file__
+
+        if not os.path.exists(f):
             metadata(device_opt, options)
         else:
-            os.remove(__file__ + ".fail")
+            os.remove(f)
+
         sys.exit(0)
 
     if "-V" in options:
@@ -222,12 +225,12 @@ def sorted_options(avail_opt):
 def usage(avail_opt):
     """Print a usage message."""
     print("Usage:")
-    print("\t" + agent() + " [options]")
+    print("\t%s [options]" % agent())
     print("Options:")
 
     for (_, value) in sorted_options(avail_opt):
         if len(value["help"]) != 0:
-            print("   " + value["help"])
+            print("   %s" % value["help"])
 
 
 def metadata(avail_opt, options):
@@ -245,12 +248,12 @@ def metadata(avail_opt, options):
         if "shortdesc" not in ALL_OPT[option]:
             continue
 
-        print('    <parameter name="' + option + '" unique="0" '
-              + 'required="' + ALL_OPT[option]["required"] + '">')
+        print('    <parameter name="%s" unique="0" required="%s">' %
+              (option, ALL_OPT[option]["required"]))
 
         default = ""
-        default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
-        default_name_no_arg = "-" + ALL_OPT[option]["getopt"]
+        default_name_arg = "-%s" % ALL_OPT[option]["getopt"][:-1]
+        default_name_no_arg = "-%s" % ALL_OPT[option]["getopt"]
 
         if "default" in ALL_OPT[option]:
             default = 'default="%s"' % ALL_OPT[option]["default"]
@@ -270,14 +273,14 @@ def metadata(avail_opt, options):
         if res is not None:
             mixed = res.group(1)
         mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
-        print('      <getopt mixed="' + mixed + '" />')
+        print('      <getopt mixed="%s" />' % mixed)
 
         if ALL_OPT[option]["getopt"].count(":") > 0:
-            print('      <content type="string" ' + default + ' />')
+            print('      <content type="string" %s />' % default)
         else:
-            print('      <content type="boolean" ' + default + ' />')
+            print('      <content type="boolean" %s />' % default)
 
-        print('      <shortdesc lang="en">' + ALL_OPT[option]["shortdesc"] + '</shortdesc>')
+        print('      <shortdesc lang="en">%s</shortdesc>' % ALL_OPT[option]["shortdesc"])
         print('    </parameter>')
 
     print('  </parameters>\n  <actions>')
@@ -286,7 +289,7 @@ def metadata(avail_opt, options):
             attr_name = 'automatic'
         else:
             attr_name = 'on_target'
-        print('    <action name="on" ' + attr_name + '="1" />')
+        print('    <action name="on" %s="1" />' % attr_name)
     print('    <action name="off" />')
     if not no_reboot:
         print('    <action name="reboot" />')
@@ -315,7 +318,7 @@ def opts_from_command_line(argv, avail_opt):
         if k in ALL_OPT:
             getopt_string += ALL_OPT[k]["getopt"]
         else:
-            fail_usage("Parse error: unknown option '"+k+"'")
+            fail_usage("Parse error: unknown option '%s'" % k)
 
         if k in ALL_OPT and "longopt" in ALL_OPT[k]:
             longopt_list.append(option_longopt(k))
@@ -323,7 +326,7 @@ def opts_from_command_line(argv, avail_opt):
     try:
         (opt, _) = getopt.gnu_getopt(argv, getopt_string, longopt_list)
     except getopt.GetoptError as error:
-        fail_usage("Parse error: " + error.msg)
+        fail_usage("Parse error: %s" % error.msg)
 
     # Transform longopt to short one which are used in fencing agents
     old_opt = opt
@@ -331,8 +334,14 @@ def opts_from_command_line(argv, avail_opt):
     for old_option in dict(old_opt):
         if old_option.startswith("--"):
             for rec in ALL_OPT.values():
-                if "longopt" in rec and "--" + rec["longopt"] == old_option:
-                    opt["-" + rec["getopt"].rstrip(":")] = dict(old_opt)[old_option]
+                if rec.get("longopt") is None:
+                    continue
+
+                long = "--%s" % rec["longopt"]
+
+                if long == old_option:
+                    short = "-%s" % rec["getopt"][0]
+                    opt[short] = dict(old_opt)[old_option]
         else:
             opt[old_option] = dict(old_opt)[old_option]
 
@@ -369,9 +378,11 @@ def opts_from_stdin(avail_opt):
             continue
 
         if ALL_OPT[name]["getopt"].endswith(":"):
-            opt["-" + ALL_OPT[name]["getopt"].rstrip(":")] = value
+            short = "-%s" % ALL_OPT[name]["getopt"][0]
+            opt[short] = value
         elif value.lower() in ["1", "yes", "on", "true"]:
-            opt["-" + ALL_OPT[name]["getopt"]] = "1"
+            short = "-%s" % ALL_OPT[name]["getopt"]
+            opt[short] = "1"
 
     return opt
 
