@@ -177,10 +177,6 @@ ALL_OPT = {
     }
 }
 
-auto_unfence = False
-no_reboot = False
-no_on = False
-
 
 def agent():
     """Return name this file was run as."""
@@ -192,7 +188,7 @@ def fail_usage(message):
     sys.exit("%s\nPlease use '-h' for usage" % message)
 
 
-def show_docs(options):
+def show_docs(options, auto_unfence, no_reboot, no_on):
     """Handle informational options (display info and exit)."""
     device_opt = options["device_opt"]
 
@@ -204,7 +200,7 @@ def show_docs(options):
         f = "%s.fail" % __file__
 
         if not os.path.exists(f):
-            metadata(device_opt, options)
+            metadata(device_opt, options, auto_unfence, no_reboot, no_on)
         else:
             os.remove(f)
 
@@ -233,7 +229,7 @@ def usage(avail_opt):
             print("   %s" % value["help"])
 
 
-def metadata(avail_opt, options):
+def metadata(avail_opt, options, auto_unfence, no_reboot, no_on):
     """Print agent metadata."""
     # This log is just for testing handling of stderr output
     print("asked for fence_dummy metadata", file=sys.stderr)
@@ -437,9 +433,9 @@ def write_options(options):
 
 
 def main():
-    global auto_unfence
-    global no_reboot
-    global no_on
+    auto_unfence = False
+    no_reboot = False
+    no_on = False
 
     # Meta-data can't take parameters, so we simulate different meta-data
     # behavior based on the executable name (which can be a symbolic link).
@@ -456,7 +452,7 @@ def main():
     atexit.register(atexit_handler)
     options = process_input(device_opt)
     options["device_opt"] = device_opt
-    show_docs(options)
+    show_docs(options, auto_unfence, no_reboot, no_on)
 
     action = options.get("-o", "reboot")
 
