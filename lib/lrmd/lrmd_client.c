@@ -1389,7 +1389,8 @@ static int
 tls_client_handshake(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
-    int rc = pcmk__tls_client_handshake(native->remote, TLS_HANDSHAKE_TIMEOUT);
+    int rc = pcmk__tls_client_handshake(native->remote, TLS_HANDSHAKE_TIMEOUT,
+                                        NULL);
 
     if (rc != pcmk_rc_ok) {
         crm_warn("Disconnecting after TLS handshake with "

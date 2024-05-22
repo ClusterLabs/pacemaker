@@ -125,23 +125,26 @@ localized_remote_header(pcmk__remote_t *remote)
 }
 
 int
-pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec)
+pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
+                           int *gnutls_rc)
 {
-    int rc = 0;
     const time_t time_limit = time(NULL) + timeout_sec;
 
+    if (gnutls_rc != NULL) {
+        *gnutls_rc = GNUTLS_E_SUCCESS;
+    }
     do {
-        rc = gnutls_handshake(*remote->tls_session);
+        int rc = gnutls_handshake(*remote->tls_session);
+
         if ((rc == GNUTLS_E_INTERRUPTED) || (rc == GNUTLS_E_AGAIN)) {
             rc = pcmk__remote_ready(remote, 1000);
             if ((rc != pcmk_rc_ok) && (rc != ETIME)) { // Fatal error
-                crm_trace("TLS handshake poll failed: %s (%d)",
-                          pcmk_rc_str(rc), rc);
                 return rc;
             }
         } else if (rc < 0) {
-            crm_trace("TLS handshake failed: %s (%d)",
-                      gnutls_strerror(rc), rc);
+            if (gnutls_rc != NULL) {
+                *gnutls_rc = rc;
+            }
             return EPROTO;
         } else {
             return pcmk_rc_ok;

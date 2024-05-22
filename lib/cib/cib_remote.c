@@ -356,8 +356,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             return -1;
         }
 
-        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT)
-                != pcmk_rc_ok) {
+        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
+                                       NULL) != pcmk_rc_ok) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);
 
             gnutls_deinit(*connection->tls_session);
