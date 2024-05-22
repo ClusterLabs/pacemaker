@@ -1079,7 +1079,6 @@ common_free(pcmk_resource_t * rsc)
         pcmk__xml_free(rsc->private->xml);
         rsc->private->xml = NULL;
     }
-    g_list_free(rsc->fillers);
     free(rsc->id);
 
     free(rsc->private->variant_opaque);
@@ -1089,6 +1088,7 @@ common_free(pcmk_resource_t * rsc)
 
     g_list_free(rsc->private->actions);
     g_list_free(rsc->private->active_nodes);
+    g_list_free(rsc->private->launched);
     g_list_free(rsc->private->dangling_migration_sources);
     g_list_free(rsc->private->with_this_colocations);
     g_list_free(rsc->private->this_with_colocations);

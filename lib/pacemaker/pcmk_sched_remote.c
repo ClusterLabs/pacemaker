@@ -517,7 +517,7 @@ bool
 pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
                                const pcmk_node_t *node)
 {
-    return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
+    return (rsc != NULL) && (rsc->private->launched != NULL) && (node != NULL)
             && (node->details->remote_rsc != NULL)
             && (node->details->remote_rsc->private->launcher == rsc);
 }

@@ -324,22 +324,22 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
 
 /*!
  * \internal
- * \brief Update fail count and last failure appropriately for a filler resource
+ * \brief Update fail count and last failure appropriately for launched resource
  *
- * \param[in] data       Filler resource
+ * \param[in] data       Launched resource
  * \param[in] user_data  Fail count data to update
  */
 static void
-update_failcount_for_filler(gpointer data, gpointer user_data)
+update_launched_failcount(gpointer data, gpointer user_data)
 {
-    pcmk_resource_t *filler = data;
+    pcmk_resource_t *launched = data;
     struct failcount_data *fc_data = user_data;
-    time_t filler_last_failure = 0;
+    time_t launched_last_failure = 0;
 
-    fc_data->failcount += pe_get_failcount(fc_data->node, filler,
-                                           &filler_last_failure, fc_data->flags,
-                                           fc_data->xml_op);
-    fc_data->last_failure = QB_MAX(fc_data->last_failure, filler_last_failure);
+    fc_data->failcount += pe_get_failcount(fc_data->node, launched,
+                                           &launched_last_failure,
+                                           fc_data->flags, fc_data->xml_op);
+    fc_data->last_failure = QB_MAX(fc_data->last_failure, launched_last_failure);
 }
 
 #define readable_expiration(rsc)    \
@@ -410,20 +410,21 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         }
     }
 
-    /* Add the fail count of any filler resources, except that we never want the
-     * fail counts of a bundle container's fillers to count towards the
-     * container's fail count.
+    /* Add the fail count of any launched resources, except that we never want
+     * the fail counts of a bundle container's launched resources to count
+     * towards the container's fail count.
      *
      * Most importantly, a Pacemaker Remote connection to a bundle container
-     * is a filler of the container, but can reside on a different node than the
+     * is launched by the container, but can reside on a different node than the
      * container itself. Counting its fail count on its node towards the
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->fillers != NULL)
+    if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->private->launched != NULL)
         && !pcmk__is_bundled(rsc)) {
 
-        g_list_foreach(rsc->fillers, update_failcount_for_filler, &fc_data);
+        g_list_foreach(rsc->private->launched, update_launched_failcount,
+                       &fc_data);
         if (fc_data.failcount > 0) {
             pcmk__rsc_info(rsc,
                            "Container %s and the resources within it "

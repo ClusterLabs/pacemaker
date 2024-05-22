@@ -362,6 +362,9 @@ struct pcmk__resource_private {
      */
     pcmk_resource_t *launcher;
 
+    // Resources launched by this one, if any (pcmk_resource_t *)
+    GList *launched;
+
     // What to do if the resource is incorrectly active on multiple nodes
     enum pcmk__multiply_active multiply_active_policy;
 

@@ -1050,7 +1050,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
             }
 
         } else {
-            /* This resource is either a filler for a launcher that does NOT
+            /* This resource is either launched by a resource that does NOT
              * represent a Pacemaker Remote node, or a Pacemaker Remote
              * connection resource for a guest node or bundle.
              */

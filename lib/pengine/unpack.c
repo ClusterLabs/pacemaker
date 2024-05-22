@@ -692,7 +692,8 @@ unpack_launcher(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (launcher != NULL) {
             rsc->private->launcher = launcher;
-            launcher->fillers = g_list_append(launcher->fillers, rsc);
+            launcher->private->launched =
+                g_list_append(launcher->private->launched, rsc);
             pcmk__rsc_trace(rsc, "Resource %s's launcher is %s",
                             rsc->id, launcher_id);
         } else {
@@ -1994,7 +1995,8 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
 
     if (crm_element_value(rsc_entry, PCMK__META_CONTAINER)) {
         // This removed resource needs to be mapped to a launcher
-        crm_trace("Detected orphaned container filler %s", rsc_id);
+        crm_trace("Launched resource %s was removed from the configuration",
+                  rsc_id);
         pcmk__set_rsc_flags(rsc, pcmk__rsc_removed_filler);
     }
     pcmk__set_rsc_flags(rsc, pcmk__rsc_removed);
@@ -2794,7 +2796,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
 }
 
 static void
-handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
+handle_removed_launched_resources(const xmlNode *lrm_rsc_list,
                                   pcmk_scheduler_t *scheduler)
 {
     for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rsc_list, NULL,
@@ -2830,7 +2832,8 @@ handle_orphaned_container_fillers(const xmlNode *lrm_rsc_list,
         pcmk__rsc_trace(rsc, "Mapped launcher of removed resource %s to %s",
                         rsc->id, launcher_id);
         rsc->private->launcher = launcher;
-        launcher->fillers = g_list_append(launcher->fillers, rsc);
+        launcher->private->launched = g_list_append(launcher->private->launched,
+                                                    rsc);
     }
 }
 
@@ -2846,7 +2849,7 @@ static void
 unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
                 pcmk_scheduler_t *scheduler)
 {
-    bool found_orphaned_container_filler = false;
+    bool found_removed_launched_resource = false;
 
     // Drill down to PCMK__XE_LRM_RESOURCES section
     xml = pcmk__xe_first_child(xml, PCMK__XE_LRM, NULL, NULL);
@@ -2868,15 +2871,15 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
 
         if ((rsc != NULL)
             && pcmk_is_set(rsc->flags, pcmk__rsc_removed_filler)) {
-            found_orphaned_container_filler = true;
+            found_removed_launched_resource = true;
         }
     }
 
     /* Now that all resource state has been unpacked for this node, map any
      * removed launched resources to their launchers.
      */
-    if (found_orphaned_container_filler) {
-        handle_orphaned_container_fillers(xml, scheduler);
+    if (found_removed_launched_resource) {
+        handle_removed_launched_resources(xml, scheduler);
     }
 }
 

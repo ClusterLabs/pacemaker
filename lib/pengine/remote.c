@@ -17,13 +17,13 @@
  * \internal
  * \brief Check whether a resource creates a guest node
  *
- * If a given resource contains a filler resource that is a remote connection,
- * return that filler resource (or NULL if none is found).
+ * If a given resource contains a launched resource that is a remote connection,
+ * return that launched resource (or NULL if none is found).
  *
  * \param[in] scheduler  Scheduler data
  * \param[in] rsc        Resource to check
  *
- * \return Filler resource with remote connection, or NULL if none found
+ * \return Launched remote connection, or NULL if none found
  */
 pcmk_resource_t *
 pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
@@ -32,11 +32,13 @@ pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
     if ((rsc != NULL) && (scheduler != NULL)
         && pcmk_is_set(scheduler->flags, pcmk_sched_have_remote_nodes)) {
 
-        for (GList *gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            pcmk_resource_t *filler = gIter->data;
+        for (GList *gIter = rsc->private->launched;
+             gIter != NULL; gIter = gIter->next) {
 
-            if (pcmk_is_set(filler->flags, pcmk__rsc_is_remote_connection)) {
-                return filler;
+            pcmk_resource_t *launched = gIter->data;
+
+            if (pcmk_is_set(launched->flags, pcmk__rsc_is_remote_connection)) {
+                return launched;
             }
         }
     }

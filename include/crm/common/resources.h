@@ -105,8 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    GList *fillers;                 // Resources contained by this one, if any
-
     // @COMPAT These should be made const at next API compatibility break
     pcmk_node_t *pending_node;      // Node on which pending_action is happening
     pcmk_node_t *lock_node;         // Resource shutdown-locked to this node

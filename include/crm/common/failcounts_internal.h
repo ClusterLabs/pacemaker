@@ -18,7 +18,9 @@ extern "C" {
 enum pcmk__fc_flags {
     pcmk__fc_default   = (1 << 0),
     pcmk__fc_effective = (1 << 1),  // Don't count expired failures
-    pcmk__fc_fillers   = (1 << 2),  // If container, include filler failures
+
+    // If resource is a launcher, include failures of launched resources
+    pcmk__fc_fillers   = (1 << 2),
 };
 
 /*!

@@ -811,13 +811,14 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                          CRM_ATTR_KIND, "container");
 
         /* One effect of this is that unpack_launcher() will add
-         * replica->remote to replica->container's fillers, which will make
-         * pe__resource_contains_guest_node() true for replica->container.
+         * replica->remote to replica->container's launched resources, which
+         * will make pe__resource_contains_guest_node() true for
+         * replica->container.
          *
-         * replica->child does NOT get added to replica->container's fillers.
-         * The only noticeable effect if it did would be for its fail count to
-         * be taken into account when checking replica->container's migration
-         * threshold.
+         * replica->child does NOT get added to replica->container's launched
+         * resources. The only noticeable effect if it did would be for its
+         * fail count to be taken into account when checking
+         * replica->container's migration threshold.
          */
         parent->private->children = g_list_append(parent->private->children,
                                                   replica->remote);
