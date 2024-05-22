@@ -106,7 +106,6 @@ struct pe_resource_s {
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
     // @COMPAT These should be made const at next API compatibility break
-    pcmk_node_t *pending_node;      // Node on which pending_action is happening
     pcmk_node_t *lock_node;         // Resource shutdown-locked to this node
 
     time_t lock_time;               // When shutdown lock started

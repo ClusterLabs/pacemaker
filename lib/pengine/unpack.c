@@ -2133,10 +2133,14 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                 /* ... but don't use it if it was already associated with a
                  * pending action on another node
                  */
-                if ((inactive_instance != NULL) &&
-                    (inactive_instance->pending_node != NULL) &&
-                    !pcmk__same_node(inactive_instance->pending_node, node)) {
-                    inactive_instance = NULL;
+                if (inactive_instance != NULL) {
+                    const pcmk_node_t *pending_node = NULL;
+
+                    pending_node = inactive_instance->private->pending_node;
+                    if ((pending_node != NULL)
+                        && !pcmk__same_node(pending_node, node)) {
+                        inactive_instance = NULL;
+                    }
                 }
             }
         }
@@ -4774,11 +4778,11 @@ process_pending_action(struct action_history *history,
          */
 #if 0
         history->rsc->private->pending_action = strdup("probe");
-        history->rsc->pending_node = history->node;
+        history->rsc->private->pending_node = history->node;
 #endif
     } else {
         history->rsc->private->pending_action = strdup(history->task);
-        history->rsc->pending_node = history->node;
+        history->rsc->private->pending_node = history->node;
     }
 }
 

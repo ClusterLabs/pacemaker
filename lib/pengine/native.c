@@ -861,7 +861,7 @@ pe__resource_html(pcmk__output_t *out, va_list args)
 
     if (node == NULL) {
         // This is set only if a non-probe action is pending on this node
-        node = rsc->pending_node;
+        node = rsc->private->pending_node;
     }
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
@@ -886,7 +886,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
 
     if (node == NULL) {
         // This is set only if a non-probe action is pending on this node
-        node = rsc->pending_node;
+        node = rsc->private->pending_node;
     }
     return pe__common_output_text(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
@@ -941,9 +941,12 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
     } else if (current) {
 
         result = g_list_copy(rsc->private->active_nodes);
-        if ((current == 2) && rsc->pending_node
-            && !pe_find_node_id(result, rsc->pending_node->details->id)) {
-                result = g_list_append(result, rsc->pending_node);
+        if ((current == 2) && (rsc->private->pending_node != NULL)
+            && !pe_find_node_id(result,
+                                rsc->private->pending_node->details->id)) {
+
+                result = g_list_append(result,
+                                       (gpointer) rsc->private->pending_node);
         }
 
     } else if (!current && (rsc->private->assigned_node != NULL)) {

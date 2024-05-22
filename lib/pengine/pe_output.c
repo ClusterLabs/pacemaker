@@ -2210,7 +2210,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
         if (node == NULL) {
-            node = rsc->pending_node;
+            node = rsc->private->pending_node;
         }
 
         node_str = pcmk__native_output_string(rsc, rsc_printable_id(rsc), node,
