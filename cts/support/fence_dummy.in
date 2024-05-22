@@ -254,14 +254,13 @@ def metadata(avail_opt, options):
 
         if "default" in ALL_OPT[option]:
             default = 'default="%s"' % ALL_OPT[option]["default"]
-        elif default_name_arg in options:
-            if options[default_name_arg]:
-                try:
-                    default = 'default="%s"' % options[default_name_arg]
-                except TypeError:
-                    # @todo/@note: Currently there is no clean way how to handle lists
-                    # we can create a string from it but we can't set it on command line
-                    default = 'default="%s"' % str(options[default_name_arg])
+        elif options.get(default_name_arg) is not None:
+            try:
+                default = 'default="%s"' % options[default_name_arg]
+            except TypeError:
+                # @todo/@note: Currently there is no clean way how to handle lists
+                # we can create a string from it but we can't set it on command line
+                default = 'default="%s"' % str(options[default_name_arg])
         elif default_name_no_arg in options:
             default = 'default="true"'
 
