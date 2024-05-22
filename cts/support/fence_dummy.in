@@ -223,7 +223,7 @@ def usage(avail_opt):
     print("\t" + agent() + " [options]")
     print("Options:")
 
-    for dummy, value in sorted_options(avail_opt):
+    for (_, value) in sorted_options(avail_opt):
         if len(value["help"]) != 0:
             print("   " + value["help"])
 
@@ -239,7 +239,7 @@ def metadata(avail_opt, options):
   <longdesc>%s</longdesc>
   <parameters>""" % (agent(), SHORT_DESC, AGENT_VERSION, OCF_VERSION, LONG_DESC))
 
-    for option, dummy in sorted_options(avail_opt):
+    for (option, _) in sorted_options(avail_opt):
         if "shortdesc" not in ALL_OPT[option]:
             continue
 
@@ -320,18 +320,18 @@ def opts_from_command_line(argv, avail_opt):
             longopt_list.append(option_longopt(k))
 
     try:
-        opt, dummy = getopt.gnu_getopt(argv, getopt_string, longopt_list)
+        (opt, _) = getopt.gnu_getopt(argv, getopt_string, longopt_list)
     except getopt.GetoptError as error:
         fail_usage("Parse error: " + error.msg)
 
     # Transform longopt to short one which are used in fencing agents
     old_opt = opt
     opt = {}
-    for old_option in dict(old_opt).keys():
+    for old_option in dict(old_opt):
         if old_option.startswith("--"):
-            for option in ALL_OPT.keys():
-                if "longopt" in ALL_OPT[option] and "--" + ALL_OPT[option]["longopt"] == old_option:
-                    opt["-" + ALL_OPT[option]["getopt"].rstrip(":")] = dict(old_opt)[old_option]
+            for rec in ALL_OPT.values():
+                if "longopt" in rec and "--" + rec["longopt"] == old_option:
+                    opt["-" + rec["getopt"].rstrip(":")] = dict(old_opt)[old_option]
         else:
             opt[old_option] = dict(old_opt)[old_option]
 
@@ -449,10 +449,7 @@ def main():
     options["device_opt"] = device_opt
     show_docs(options)
 
-    if "-o" in options:
-        action = options["-o"]
-    else:
-        action = "reboot"
+    action = options.get("-o", "reboot")
 
     # dump input to file
     if "-D" in options and action != "validate-all":
