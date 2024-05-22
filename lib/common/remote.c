@@ -129,10 +129,10 @@ localized_remote_header(pcmk__remote_t *remote)
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
 int
-pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms)
+pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec)
 {
     int rc = 0;
-    time_t time_limit = time(NULL) + timeout_ms / 1000;
+    const time_t time_limit = time(NULL) + timeout_sec;
 
     do {
         rc = gnutls_handshake(*remote->tls_session);

@@ -32,7 +32,8 @@
 
 #  include <gnutls/gnutls.h>
 
-#  define TLS_HANDSHAKE_TIMEOUT_MS 5000
+// GnuTLS handshake timeout in seconds
+#define TLS_HANDSHAKE_TIMEOUT 5
 
 static gnutls_anon_client_credentials_t anon_cred_c;
 static gboolean remote_gnutls_credentials_init = FALSE;
@@ -366,7 +367,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             return -1;
         }
 
-        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT_MS)
+        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT)
                 != pcmk_rc_ok) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);
 

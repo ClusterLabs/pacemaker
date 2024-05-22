@@ -60,8 +60,8 @@ static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-// GnuTLS client handshake timeout in milliseconds
-#define TLS_HANDSHAKE_TIMEOUT 5000
+// GnuTLS client handshake timeout in seconds
+#define TLS_HANDSHAKE_TIMEOUT 5
 
 gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
