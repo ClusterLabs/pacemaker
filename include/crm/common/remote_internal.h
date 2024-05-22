@@ -87,11 +87,11 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
  * \internal
  * \brief Perform client TLS handshake after establishing TCP socket
  *
- * \param[in,out] remote      Newly established remote connection
- * \param[in]     timeout_ms  Abort if handshake is not complete within this
+ * \param[in,out] remote       Newly established remote connection
+ * \param[in]     timeout_sec  Abort handshake if not completed within this time
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
+int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec);
 
 #endif      // PCMK__CRM_COMMON_REMOTE_INTERNAL__H
