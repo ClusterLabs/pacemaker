@@ -420,8 +420,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pcmk__fc_fillers) && (rsc->private->launched != NULL)
-        && !pcmk__is_bundled(rsc)) {
+    if (pcmk_is_set(flags, pcmk__fc_launched)
+        && (rsc->private->launched != NULL) && !pcmk__is_bundled(rsc)) {
 
         g_list_foreach(rsc->private->launched, update_launched_failcount,
                        &fc_data);

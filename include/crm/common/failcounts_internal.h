@@ -20,7 +20,7 @@ enum pcmk__fc_flags {
     pcmk__fc_effective = (1 << 1),  // Don't count expired failures
 
     // If resource is a launcher, include failures of launched resources
-    pcmk__fc_fillers   = (1 << 2),
+    pcmk__fc_launched  = (1 << 2),
 };
 
 /*!
