@@ -339,6 +339,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     if (private->encrypted) {
+        int tls_rc = GNUTLS_E_SUCCESS;
+
         /* initialize GnuTls lib */
         if (remote_gnutls_credentials_init == FALSE) {
             crm_gnutls_global_init();
@@ -356,10 +358,12 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             return -1;
         }
 
-        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
-                                       NULL) != pcmk_rc_ok) {
-            crm_err("Session creation for %s:%d failed", private->server, private->port);
-
+        rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
+                                        &tls_rc);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Remote CIB session creation for %s:%d failed: %s",
+                    private->server, private->port,
+                    (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
             gnutls_deinit(*connection->tls_session);
             gnutls_free(connection->tls_session);
             connection->tls_session = NULL;

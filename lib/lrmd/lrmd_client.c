@@ -1389,13 +1389,15 @@ static int
 tls_client_handshake(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
+    int tls_rc = GNUTLS_E_SUCCESS;
     int rc = pcmk__tls_client_handshake(native->remote, TLS_HANDSHAKE_TIMEOUT,
-                                        NULL);
+                                        &tls_rc);
 
     if (rc != pcmk_rc_ok) {
         crm_warn("Disconnecting after TLS handshake with "
-                 "Pacemaker Remote server %s:%d failed",
-                 native->server, native->port);
+                 "Pacemaker Remote server %s:%d failed: %s",
+                 native->server, native->port,
+                 (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
         native->remote->tls_session = NULL;
