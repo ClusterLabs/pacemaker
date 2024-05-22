@@ -1,7 +1,7 @@
 #!@PYTHON@
 """Dummy fence agent for testing."""
 
-__copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -433,6 +433,7 @@ def write_options(options):
 
 
 def main():
+    """Run the dummy fencing agent."""
     auto_unfence = False
     no_reboot = False
     no_on = False
