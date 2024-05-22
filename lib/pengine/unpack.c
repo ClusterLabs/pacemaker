@@ -98,7 +98,7 @@ is_dangling_guest_node(pcmk_node_t *node)
            && (node->details->remote_rsc != NULL)
            && (node->details->remote_rsc->private->launcher == NULL)
            && pcmk_is_set(node->details->remote_rsc->flags,
-                          pcmk__rsc_removed_filler);
+                          pcmk__rsc_removed_launched);
 }
 
 /*!
@@ -1997,7 +1997,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         // This removed resource needs to be mapped to a launcher
         crm_trace("Launched resource %s was removed from the configuration",
                   rsc_id);
-        pcmk__set_rsc_flags(rsc, pcmk__rsc_removed_filler);
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_removed_launched);
     }
     pcmk__set_rsc_flags(rsc, pcmk__rsc_removed);
     scheduler->resources = g_list_append(scheduler->resources, rsc);
@@ -2825,7 +2825,7 @@ handle_removed_launched_resources(const xmlNode *lrm_rsc_list,
 
         rsc = pe_find_resource(scheduler->resources, rsc_id);
         if ((rsc == NULL) || (rsc->private->launcher != NULL)
-            || !pcmk_is_set(rsc->flags, pcmk__rsc_removed_filler)) {
+            || !pcmk_is_set(rsc->flags, pcmk__rsc_removed_launched)) {
             continue;
         }
 
@@ -2870,7 +2870,7 @@ unpack_node_lrm(pcmk_node_t *node, const xmlNode *xml,
         pcmk_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, scheduler);
 
         if ((rsc != NULL)
-            && pcmk_is_set(rsc->flags, pcmk__rsc_removed_filler)) {
+            && pcmk_is_set(rsc->flags, pcmk__rsc_removed_launched)) {
             found_removed_launched_resource = true;
         }
     }

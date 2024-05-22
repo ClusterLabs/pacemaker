@@ -88,7 +88,7 @@ enum pcmk__rsc_flags {
     pcmk__rsc_blocked                = (1ULL << 2),
 
     // Whether resource has been removed but was launched
-    pcmk__rsc_removed_filler         = (1ULL << 3),
+    pcmk__rsc_removed_launched       = (1ULL << 3),
 
     // Whether resource has clone notifications enabled
     pcmk__rsc_notify                 = (1ULL << 4),
