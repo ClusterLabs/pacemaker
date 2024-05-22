@@ -17,7 +17,6 @@ header_HEADERS		= common.h 		\
 			  pe_types.h 		\
 			  rules.h 		\
 			  status.h 		\
-			  common_compat.h	\
 			  pe_types_compat.h	\
 			  rules_compat.h	\
 			  status_compat.h

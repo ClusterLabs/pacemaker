@@ -196,74 +196,17 @@ extern "C" {
 //! \deprecated Do not use
 #define pe_flag_check_config            pcmk_sched_validate_only
 
-//!@{
-//! \deprecated Do not use (unused by Pacemaker)
-enum pe_graph_flags {
-    pe_graph_none = 0x00000,
-    pe_graph_updated_first = 0x00001,
-    pe_graph_updated_then = 0x00002,
-    pe_graph_disable = 0x00004,
-};
-//!@}
-
-//!@{
-//! \deprecated Do not use
-enum pe_check_parameters {
-    pe_check_last_failure,
-    pe_check_active,
-};
-//!@}
-
-//! \deprecated Use pcmk_action_t instead
-typedef struct pe_action_s action_t;
-
-//! \deprecated Use pcmk_action_t instead
-typedef struct pe_action_s pe_action_t;
-
-//! \deprecated Do not use
-typedef struct pe_action_wrapper_s action_wrapper_t;
-
-//! \deprecated Do not use
-typedef struct pe_action_wrapper_s pe_action_wrapper_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
 typedef struct pe_node_s node_t;
-
-//! \deprecated Use pcmk_node_t instead
-typedef struct pe_node_s pe_node_t;
-
-//! \deprecated Use enum pe_quorum_policy instead
-typedef enum pe_quorum_policy no_quorum_policy_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated use pcmk_resource_t instead
 typedef struct pe_resource_s resource_t;
 
-//! \deprecated use pcmk_resource_t instead
-typedef struct pe_resource_s pe_resource_t;
-
-//! \deprecated Do not use
-typedef struct pe_tag_s tag_t;
-
-//! \deprecated Do not use
-typedef struct pe_tag_s pe_tag_t;
-
-//! \deprecated Do not use
-typedef struct pe_ticket_s ticket_t;
-
-//! \deprecated Do not use
-typedef struct pe_ticket_s pe_ticket_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_scheduler_t instead
 typedef struct pe_working_set_s pe_working_set_t;
-
-//! \deprecated This type should be treated as internal to Pacemaker
-typedef struct resource_alloc_functions_s resource_alloc_functions_t;
-
-//! \deprecated Use pcmk_rsc_methods_t instead
-typedef struct resource_object_functions_s resource_object_functions_t;
 
 #ifdef __cplusplus
 }
