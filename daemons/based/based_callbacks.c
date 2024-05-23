@@ -234,9 +234,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
                 }
             }
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
-#endif
         case pcmk__client_tcp:
             pcmk__remote_send_xml(client_obj->remote, notify_src);
             break;

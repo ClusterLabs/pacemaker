@@ -87,9 +87,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                              client->id);
                 }
                 break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
             case pcmk__client_tls:
-#endif
             case pcmk__client_tcp:
                 crm_debug("Sent %s notification to client %s (id %s)",
                           type, pcmk__client_name(client), client->id);

@@ -109,9 +109,7 @@ bool crm_is_daemon_name(const char *name);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 void crm_gnutls_global_init(void);
-#endif
 
 bool pcmk_str_is_infinity(const char *s);
 bool pcmk_str_is_minus_infinity(const char *s);

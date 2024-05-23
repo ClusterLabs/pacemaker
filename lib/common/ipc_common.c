@@ -100,10 +100,8 @@ pcmk__client_type_str(uint64_t client_type)
             return "IPC";
         case pcmk__client_tcp:
             return "TCP";
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             return "TLS";
-#endif
         default:
             return "unknown";
     }

@@ -316,14 +316,12 @@ pcmk__free_client(pcmk__client_t *c)
         if (c->remote->auth_timeout) {
             g_source_remove(c->remote->auth_timeout);
         }
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (c->remote->tls_session != NULL) {
             /* @TODO Reduce duplication at callers. Put here everything
              * necessary to tear down and free tls_session.
              */
             gnutls_free(c->remote->tls_session);
         }
-#endif  // HAVE_GNUTLS_GNUTLS_H
         free(c->remote->buffer);
         free(c->remote);
     }

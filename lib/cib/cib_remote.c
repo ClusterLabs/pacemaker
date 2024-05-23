@@ -28,16 +28,12 @@
 #include <crm/common/remote_internal.h>
 #include <crm/common/output_internal.h>
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#include <gnutls/gnutls.h>
 
-#  include <gnutls/gnutls.h>
-
-#  define TLS_HANDSHAKE_TIMEOUT_MS 5000
+#define TLS_HANDSHAKE_TIMEOUT_MS 5000
 
 static gnutls_anon_client_credentials_t anon_cred_c;
 static gboolean remote_gnutls_credentials_init = FALSE;
-
-#endif // HAVE_GNUTLS_GNUTLS_H
 
 #include <arpa/inet.h>
 
@@ -269,7 +265,6 @@ cib_tls_close(cib_t *cib)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
     if (private->encrypted) {
         if (private->command.tls_session) {
             gnutls_bye(*(private->command.tls_session), GNUTLS_SHUT_RDWR);
@@ -290,7 +285,6 @@ cib_tls_close(cib_t *cib)
             remote_gnutls_credentials_init = FALSE;
         }
     }
-#endif
 
     if (private->command.tcp_socket) {
         shutdown(private->command.tcp_socket, SHUT_RDWR);       /* no more receptions */
@@ -315,9 +309,7 @@ static void
 cib_remote_connection_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
-#ifdef HAVE_GNUTLS_GNUTLS_H
     cib_tls_close(user_data);
-#endif
 }
 
 static int
@@ -336,9 +328,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     cib_fd_callbacks.destroy = cib_remote_connection_destroy;
 
     connection->tcp_socket = -1;
-#ifdef HAVE_GNUTLS_GNUTLS_H
     connection->tls_session = NULL;
-#endif
     rc = pcmk__connect_remote(private->server, private->port, 0, NULL,
                               &(connection->tcp_socket), NULL, NULL);
     if (rc != pcmk_rc_ok) {
@@ -349,7 +339,6 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     if (private->encrypted) {
         /* initialize GnuTls lib */
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote_gnutls_credentials_init == FALSE) {
             crm_gnutls_global_init();
             gnutls_anon_allocate_client_credentials(&anon_cred_c);
@@ -376,9 +365,6 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             cib_tls_close(cib);
             return -1;
         }
-#else
-        return -EPROTONOSUPPORT;
-#endif
     }
 
     /* login to server */
@@ -495,9 +481,7 @@ cib_remote_signoff(cib_t *cib)
     int rc = pcmk_ok;
 
     crm_debug("Disconnecting from the CIB manager");
-#ifdef HAVE_GNUTLS_GNUTLS_H
     cib_tls_close(cib);
-#endif
 
     cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
