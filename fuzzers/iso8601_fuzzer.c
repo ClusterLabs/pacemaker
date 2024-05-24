@@ -10,26 +10,37 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "util.h"
-#include "iso8601.h"
+#include <crm/common/util.h>
+#include <crm/common/iso8601.h>
+#include <crm/common/iso8601_internal.h>
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+  char *ns;
+  char *result;
+  time_t epoch;
+  pcmk__time_hr_t *now;
+
   // Ensure we have enough data.
   if (size < 10) {
     return 0;
   }
-  char *ns = malloc(size+1);
+  ns = malloc(size+1);
   memcpy(ns, data, size);
   ns[size] = '\0';
 
   crm_time_parse_period(ns);
   pcmk__time_hr_new(ns);
 
-
-  time_t epoch = 0;
-  pcmk__time_hr_t *now = NULL;
+  epoch = 0;
+  now = NULL;
   now = pcmk__time_hr_now(&epoch);
-  pcmk__time_format_hr(ns, now);
+  result = pcmk__time_format_hr(ns, now);
+  if (result == NULL) {
+    free(result);
+  }
 
   free(ns);  
   return 0;

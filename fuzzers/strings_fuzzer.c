@@ -9,21 +9,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
+#include <glib.h>
 
+#include <crm/common/util_compat.h>
+#include <crm/common/strings_internal.h>
 
-#include "strings.h"
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+  char *ns;
+  guint res;
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (size < 10) {
     return 0;
   }
-  char *ns = malloc(size+1);
+  ns = malloc(size+1);
   memcpy(ns, data, size);
   ns[size] = '\0';
 
   pcmk_numeric_strcasecmp(ns, ns);
-  pcmk__trim(ns, "asdfasdf");
-  guint res;
+  pcmk__trim(ns);
   pcmk_parse_interval_spec(ns, &res);
   crm_get_msec(ns);
 

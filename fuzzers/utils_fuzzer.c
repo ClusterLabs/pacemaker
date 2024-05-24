@@ -11,15 +11,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <crm/common/util.h>
+#include <crm/common/util_compat.h>
 
-#include "util.h"
-#include "util_compat.h"
-
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+  char *ns;
   if (size < 10) {
     return 0;
   }
-  char *ns = malloc(size+1);
+  ns = malloc(size+1);
   memcpy(ns, data, size);
   ns[size] = '\0';
    

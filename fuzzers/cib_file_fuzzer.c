@@ -10,27 +10,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <crm_internal.h>
 #include <crm/cib/internal.h>
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  char filename[256];
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+  char *filename;
+  int fd;
 
   // Have at least some data
   if (size < 5) {
     return 0;
   }
 
-  sprintf(filename, "/tmp/libfuzzer.%d", getpid());
-
-  FILE *fp = fopen(filename, "wb");
-  if (!fp)
+  filename = crm_strdup_printf("%s/libfuzzer.XXXXXX", pcmk__get_tmpdir());
+  fd = mkstemp(filename);
+  if (fd == -1) {
     return 0;
-  fwrite(data, size, 1, fp);
-  fclose(fp);
+  }
+  write(fd, data, size);
+  close(fd);
 
-  cib_file_read_and_verify(filename, filename, NULL);
+  cib_file_read_and_verify(filename, NULL, NULL);
 
   unlink(filename);
+  free(filename);
 
   return 0;
 }

@@ -9,7 +9,7 @@ To run this, you can follow the steps:
 git clone https://github.com/google/oss-fuzz
 cd oss-fuzz
 python3 infra/helper.py build_fuzzers pacemaker
-python3 infra/helper.py run_fuzzer pacmaker utils_fuzzer
+python3 infra/helper.py run_fuzzer pacemaker utils_fuzzer
 ```
 
 
