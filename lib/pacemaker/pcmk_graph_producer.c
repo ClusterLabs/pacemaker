@@ -256,7 +256,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
         crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
-                       (long long) action->rsc->lock_time);
+                       (long long) action->rsc->private->lock_time);
     }
 
     // List affected resource

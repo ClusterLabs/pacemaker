@@ -2677,7 +2677,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
              * until the next API compatibility break.
              */
             rsc->lock_node = (pcmk_node_t *) node;
-            rsc->lock_time = lock_time;
+            rsc->private->lock_time = lock_time;
         }
     }
 }

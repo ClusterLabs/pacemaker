@@ -108,8 +108,6 @@ struct pe_resource_s {
     // @COMPAT These should be made const at next API compatibility break
     pcmk_node_t *lock_node;         // Resource shutdown-locked to this node
 
-    time_t lock_time;               // When shutdown lock started
-
     /*
      * Resource parameters may have node-attribute-based rules, which means the
      * values can vary by node. This table has node names as keys and parameter

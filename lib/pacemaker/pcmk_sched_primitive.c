@@ -1673,7 +1673,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
                            "because %s is already active", rsc->id);
             pe__clear_resource_history(rsc, rsc->lock_node);
             rsc->lock_node = NULL;
-            rsc->lock_time = 0;
+            rsc->private->lock_time = 0;
         }
 
     // Only a resource active on exactly one node can be locked
@@ -1687,7 +1687,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
                                 rsc->id, pcmk__node_name(node));
             } else {
                 rsc->lock_node = node;
-                rsc->lock_time = shutdown_time(node);
+                rsc->private->lock_time = shutdown_time(node);
             }
         }
     }
@@ -1698,8 +1698,9 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
     }
 
     if (scheduler->shutdown_lock > 0) {
-        time_t lock_expiration = rsc->lock_time + scheduler->shutdown_lock;
+        time_t lock_expiration;
 
+        lock_expiration = rsc->private->lock_time + scheduler->shutdown_lock;
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
                        rsc->id, pcmk__node_name(rsc->lock_node),
                        (long long) lock_expiration);
