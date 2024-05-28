@@ -88,10 +88,6 @@ typedef struct {
     char *(*parameter)(pcmk_resource_t *rsc, pcmk_node_t *node, gboolean create,
                        const char *name, pcmk_scheduler_t *scheduler);
 
-    // \deprecated Do not use
-    void (*print)(pcmk_resource_t *rsc, const char *pre_text, long options,
-                  void *print_data);
-
     /*!
      * \internal
      * \brief Check whether a resource is active
