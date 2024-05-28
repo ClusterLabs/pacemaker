@@ -64,8 +64,11 @@ enum pe_discover_e {
 };
 //!@}
 
+//! \internal Do not use
+typedef struct pcmk__node_private pcmk__node_private_t;
+
 // Basic node information (all node objects for the same node share this)
-// @COMPAT Make this internal when we can break API backward compatibility
+// @COMPAT Drop this struct once all members are moved to pcmk__node_private_t
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_node_shared_s {
@@ -168,6 +171,9 @@ struct pe_node_s {
 
     // @COMPAT This should be enum pe_discover_e
     int rsc_discover_mode;              // Probe mode (enum pe_discover_e)
+
+    //! \internal Do not use
+    pcmk__node_private_t *private;
 };
 //!@}
 

@@ -28,6 +28,13 @@
  */
 #define PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED  "resource-discovery-enabled"
 
+/* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow
+ * copies, so all pcmk_node_t objects for the same node will share the same
+ * private data)
+ */
+typedef struct pcmk__node_private {
+} pcmk__node_private_t;
+
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
 
 /*!
@@ -70,7 +77,7 @@ static inline bool
 pcmk__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
 {
     return (node1 != NULL) && (node2 != NULL)
-           && (node1->details == node2->details);
+           && (node1->private == node2->private);
 }
 
 #endif  // PCMK__CRM_COMMON_NODES_INTERNAL__H

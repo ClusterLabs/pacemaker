@@ -258,6 +258,7 @@ pe_free_nodes(GList *nodes)
         }
         g_list_free(node->details->running_rsc);
         g_list_free(node->details->allocated_rsc);
+        free(node->private);
         free(node->details);
         free(node);
     }

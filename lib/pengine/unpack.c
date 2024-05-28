@@ -470,9 +470,12 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     new_node->weight = char2score(score);
-    new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
 
-    if (new_node->details == NULL) {
+    new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
+    new_node->private = calloc(1, sizeof(pcmk__node_private_t));
+    if ((new_node->details == NULL) || (new_node->private == NULL)) {
+        free(new_node->details);
+        free(new_node->private);
         free(new_node);
         pcmk__sched_err("Could not allocate memory for node %s", uname);
         return NULL;
