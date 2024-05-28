@@ -54,6 +54,10 @@ panic_local(void)
     pid_t ppid = getppid();
     const char *panic_action = pcmk__env_option(PCMK__ENV_PANIC_ACTION);
 
+    // Default panic action is to reboot
+    char sysrq = 'b';
+    int reboot_cmd = RB_AUTOBOOT;
+
     if(uid != 0 && ppid > 1) {
         /* We're a non-root pacemaker daemon (pacemaker-based,
          * pacemaker-controld, pacemaker-schedulerd, pacemaker-attrd, etc.) with
@@ -90,21 +94,17 @@ panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    if (pcmk__str_eq(panic_action, "crash", pcmk__str_casei)) {
-        sysrq_trigger('c');
-
-    } else if (pcmk__str_eq(panic_action, "sync-crash", pcmk__str_casei)) {
+    if (pcmk__starts_with(panic_action, "sync-")) {
         sync();
-        sysrq_trigger('c');
+        panic_action += strlen("sync-");
+    };
 
-    } else {
-        if (pcmk__str_eq(panic_action, "sync-reboot", pcmk__str_casei)) {
-            sync();
-        }
-        sysrq_trigger('b');
+    if (pcmk__str_eq(panic_action, "crash", pcmk__str_casei)) {
+        sysrq = 'c';
     }
-    /* reboot(RB_HALT_SYSTEM); rc = errno; */
-    reboot(RB_AUTOBOOT);
+
+    sysrq_trigger(sysrq);
+    reboot(reboot_cmd);
     rc = errno;
 
     crm_emerg("Reboot failed, escalating to parent %lld: %s " CRM_XS " rc=%d",
