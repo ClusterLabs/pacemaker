@@ -96,8 +96,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
 
-        CRM_CHECK(a_node != NULL, return);
-        if (pcmk__str_eq(a_node->details->id, node->details->id, pcmk__str_casei)) {
+        if (pcmk__same_node(a_node, node)) {
             return;
         }
     }
@@ -831,7 +830,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
         rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
                                       PCMK_XA_NAME, node->details->uname,
-                                      PCMK_XA_ID, node->details->id,
+                                      PCMK_XA_ID, node->private->id,
                                       PCMK_XA_CACHED, cached,
                                       NULL);
         CRM_ASSERT(rc == pcmk_rc_ok);
@@ -943,7 +942,7 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
         result = g_list_copy(rsc->private->active_nodes);
         if ((current == 2) && (rsc->private->pending_node != NULL)
             && !pe_find_node_id(result,
-                                rsc->private->pending_node->details->id)) {
+                                rsc->private->pending_node->private->id)) {
 
                 result = g_list_append(result,
                                        (gpointer) rsc->private->pending_node);
@@ -963,7 +962,8 @@ native_location(const pcmk_resource_t *rsc, GList **list, int current)
         for (; gIter != NULL; gIter = gIter->next) {
             pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-            if (*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
+            if ((*list == NULL)
+                || (pe_find_node_id(*list, node->private->id) == NULL)) {
                 *list = g_list_append(*list, node);
             }
         }

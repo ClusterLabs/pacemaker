@@ -31,12 +31,12 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     const pcmk_resource_t *parent = rsc->private->parent;
 
     if (g_hash_table_lookup(rsc->private->probed_nodes,
-                            node->details->id) != NULL) {
+                            node->private->id) != NULL) {
         return TRUE;
 
     } else if (pcmk__is_primitive(rsc) && pcmk__is_anonymous_clone(parent)
                && (g_hash_table_lookup(parent->private->probed_nodes,
-                                       node->details->id) != NULL)) {
+                                       node->private->id) != NULL)) {
         /* We check only the parent, not the uber-parent, because we cannot
          * assume that the resource is known if it is in an anonymously cloned
          * group (which may be only partially known).
@@ -77,7 +77,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                 if (pcmk__str_eq(action->task, PCMK_ACTION_START,
                                  pcmk__str_none)
                     && (g_hash_table_lookup(rsc->private->allowed_nodes,
-                                            target->details->id) != NULL)
+                                            target->private->id) != NULL)
                     && !rsc_is_known_on(rsc, target)) {
 
                     /* If we don't know the status of the resource on the node

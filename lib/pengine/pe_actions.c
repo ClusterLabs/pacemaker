@@ -1274,7 +1274,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
         pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->details->uname);
         pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
-                          node->details->id);
+                          node->private->id);
         pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
 
         if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
@@ -1499,8 +1499,7 @@ find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
 
         if ((action->node != NULL)
             && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
-            && pcmk__str_eq(on_node->details->id, action->node->details->id,
-                            pcmk__str_casei)) {
+            && pcmk__same_node(on_node, action->node)) {
 
             crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
             result = g_list_prepend(result, action);

@@ -135,7 +135,7 @@ apply_promoted_locations(pcmk_resource_t *child,
 
         if (location->role_filter == pcmk_role_promoted) {
             constraint_node = pe_find_node_id(location->nodes,
-                                              chosen->details->id);
+                                              chosen->private->id);
         }
         if (constraint_node != NULL) {
             int new_priority = pcmk__add_scores(child->private->priority,
@@ -215,7 +215,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
 
     parent = pe__const_top_resource(rsc, false);
     local_node = g_hash_table_lookup(parent->private->allowed_nodes,
-                                     node->details->id);
+                                     node->private->id);
 
     if (local_node == NULL) {
         /* It should not be possible for the scheduler to have assigned the
@@ -339,7 +339,7 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
     }
 
     node = g_hash_table_lookup(clone->private->allowed_nodes,
-                               chosen->details->id);
+                               chosen->private->id);
     CRM_ASSERT(node != NULL);
 
     node->weight = pcmk__add_scores(promotion_priority, node->weight);
@@ -449,7 +449,7 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
         const pcmk_node_t *node = NULL;
 
         node = g_hash_table_lookup(clone->private->allowed_nodes,
-                                   chosen->details->id);
+                                   chosen->private->id);
 
         CRM_ASSERT(node != NULL);
         child->private->promotion_priority = node->weight;
@@ -573,7 +573,7 @@ anonymous_known_on(const pcmk_resource_t *clone, const char *id,
         CRM_LOG_ASSERT(child != NULL);
         if (child != NULL) {
             if (g_hash_table_lookup(child->private->probed_nodes,
-                                    node->details->id)) {
+                                    node->private->id)) {
                 return true;
             }
         }
@@ -594,7 +594,7 @@ static bool
 is_allowed(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
     pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                               node->details->id);
+                                               node->private->id);
 
     return (allowed != NULL) && (allowed->weight >= 0);
 }
@@ -649,9 +649,9 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
      * consider promotion scores on nodes where we know the status.
      */
     if ((g_hash_table_lookup(rsc->private->probed_nodes,
-                             node->details->id) != NULL)
+                             node->private->id) != NULL)
         || (pe_find_node_id(rsc->private->active_nodes,
-                            node->details->id) != NULL)) {
+                            node->private->id) != NULL)) {
         reason = "known";
     } else {
         pcmk__rsc_trace(rsc,

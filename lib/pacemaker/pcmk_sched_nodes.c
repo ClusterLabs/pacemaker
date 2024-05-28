@@ -75,7 +75,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         pcmk_node_t *new_node = pe__copy_node(node);
 
-        g_hash_table_insert(new_table, (gpointer) new_node->details->id,
+        g_hash_table_insert(new_table, (gpointer) new_node->private->id,
                             new_node);
     }
     return new_table;
@@ -439,5 +439,5 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     } else {
         allowed_nodes = rsc->private->parent->private->allowed_nodes;
     }
-    return g_hash_table_lookup(allowed_nodes, node->details->id);
+    return g_hash_table_lookup(allowed_nodes, node->private->id);
 }

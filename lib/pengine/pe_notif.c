@@ -25,7 +25,7 @@ typedef struct notify_entry_s {
  * \brief Compare two notification entries
  *
  * Compare two notification entries, where the one with the alphabetically first
- * resource name (or if equal, node name) sorts as first, with NULL sorting as
+ * resource name (or if equal, node ID) sorts as first, with NULL sorting as
  * less than non-NULL.
  *
  * \param[in] a  First notification entry to compare
@@ -79,8 +79,8 @@ compare_notify_entries(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    // Finally, compare node names
-    return strcmp(entry_a->node->details->id, entry_b->node->details->id);
+    // Finally, compare node IDs
+    return strcmp(entry_a->node->private->id, entry_b->node->private->id);
 }
 
 /*!

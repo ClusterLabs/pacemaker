@@ -189,7 +189,7 @@ assign_best_node(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     if ((prefer != NULL) && (nodes != NULL)) {
         // Get the allowed node version of prefer
         chosen = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                     prefer->details->id);
+                                     prefer->private->id);
 
         if (chosen == NULL) {
             pcmk__rsc_trace(rsc, "Preferred node %s for %s was unknown",
@@ -355,7 +355,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
         && (connection->private->next_role != pcmk_role_stopped)) {
 
         crm_trace("Pacemaker Remote node %s will be online",
-                  remote_node->details->id);
+                  remote_node->private->id);
         remote_node->details->online = TRUE;
         if (remote_node->details->unseen) {
             // Avoid unnecessary fence, since we will attempt connection
@@ -365,7 +365,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
     } else {
         crm_trace("Pacemaker Remote node %s will be shut down "
                   "(%sassigned connection's next role is %s)",
-                  remote_node->details->id,
+                  remote_node->private->id,
                   ((connection->private->assigned_node == NULL)? "un" : ""),
                   pcmk_role_text(connection->private->next_role));
         remote_node->details->shutdown = TRUE;

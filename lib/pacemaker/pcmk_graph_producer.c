@@ -62,7 +62,7 @@ add_node_to_xml_by_id(const char *id, xmlNode *xml)
 static void
 add_node_to_xml(const pcmk_node_t *node, void *xml)
 {
-    add_node_to_xml_by_id(node->details->id, (xmlNode *) xml);
+    add_node_to_xml_by_id(node->private->id, (xmlNode *) xml);
 }
 
 /*!
@@ -92,7 +92,7 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
             (node->details->maintenance != node->details->remote_maintenance)) {
 
             if (maintenance != NULL) {
-                crm_xml_add(add_node_to_xml_by_id(node->details->id,
+                crm_xml_add(add_node_to_xml_by_id(node->private->id,
                                                   maintenance),
                             PCMK__XA_NODE_IN_MAINTENANCE,
                             (node->details->maintenance? "1" : "0"));
@@ -143,7 +143,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
-        add_node_to_xml_by_id(action->node->details->id, downed);
+        add_node_to_xml_by_id(action->node->private->id, downed);
 
     } else if (pcmk__str_eq(action->task, PCMK_ACTION_STONITH,
                             pcmk__str_none)) {
@@ -154,7 +154,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
 
         if (pcmk__is_fencing_action(fence)) {
             xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
-            add_node_to_xml_by_id(action->node->details->id, downed);
+            add_node_to_xml_by_id(action->node->private->id, downed);
             pe_foreach_guest_node(action->node->details->data_set,
                                   action->node, add_node_to_xml, downed);
         }
@@ -227,7 +227,7 @@ add_node_details(const pcmk_action_t *action, xmlNode *xml)
     pcmk_node_t *router_node = pcmk__connection_host_for_action(action);
 
     crm_xml_add(xml, PCMK__META_ON_NODE, action->node->details->uname);
-    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->details->id);
+    crm_xml_add(xml, PCMK__META_ON_NODE_UUID, action->node->private->id);
     if (router_node != NULL) {
         crm_xml_add(xml, PCMK__XA_ROUTER_NODE, router_node->details->uname);
     }
@@ -462,7 +462,7 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
         pcmk__insert_dup(action->meta, PCMK__META_ON_NODE,
                          action->node->details->uname);
         pcmk__insert_dup(action->meta, PCMK__META_ON_NODE_UUID,
-                         action->node->details->id);
+                         action->node->private->id);
     }
 
     if (skip_details) {

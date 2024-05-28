@@ -492,7 +492,7 @@ pe_find_node_id(const GList *nodes, const char *id)
          * probably depend on the node type, so functionizing the comparison
          * would be worthwhile
          */
-        if (pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
+        if (pcmk__str_eq(node->private->id, id, pcmk__str_casei)) {
             return node;
         }
     }

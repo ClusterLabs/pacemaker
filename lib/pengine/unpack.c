@@ -482,7 +482,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     crm_trace("Creating node for entry %s/%s", uname, id);
-    new_node->details->id = id;
+    new_node->private->id = id;
     new_node->details->uname = uname;
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
@@ -1749,7 +1749,7 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
          */
         crm_trace("Pacemaker Remote node %s is considered OFFLINE because "
                   "its connection resource has been removed from the CIB",
-                  this_node->details->id);
+                  this_node->private->id);
         this_node->details->online = FALSE;
         return;
     }
@@ -1772,20 +1772,20 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         && (rsc->private->next_role == pcmk_role_stopped)) {
 
         crm_trace("%s node %s shutting down because connection resource is stopping",
-                  node_type, this_node->details->id);
+                  node_type, this_node->private->id);
         this_node->details->shutdown = TRUE;
     }
 
     /* Now check all the failure conditions. */
     if ((launcher != NULL) && pcmk_is_set(launcher->flags, pcmk__rsc_failed)) {
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
-                  this_node->details->id);
+                  this_node->private->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
-                  node_type, this_node->details->id);
+                  node_type, this_node->private->id);
         this_node->details->online = FALSE;
 
     } else if ((rsc->private->orig_role == pcmk_role_stopped)
@@ -1793,20 +1793,20 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
                    && (launcher->private->orig_role == pcmk_role_stopped))) {
 
         crm_trace("%s node %s OFFLINE because its resource is stopped",
-                  node_type, this_node->details->id);
+                  node_type, this_node->private->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = FALSE;
 
     } else if (host && (host->details->online == FALSE)
                && host->details->unclean) {
         crm_trace("Guest node %s UNCLEAN because host is unclean",
-                  this_node->details->id);
+                  this_node->private->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
     } else {
         crm_trace("%s node %s is %s",
-                  node_type, this_node->details->id,
+                  node_type, this_node->private->id,
                   this_node->details->online? "ONLINE" : "OFFLINE");
     }
 }
@@ -2294,7 +2294,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         while (iter) {
             if (g_hash_table_lookup(iter->private->probed_nodes,
-                                    node->details->id) == NULL) {
+                                    node->private->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
                 pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
@@ -2302,7 +2302,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                                 pcmk__s(rsc->private->history_id, "the same"),
                                 pcmk__node_name(n));
                 g_hash_table_insert(iter->private->probed_nodes,
-                                    (gpointer) n->details->id, n);
+                                    (gpointer) n->private->id, n);
             }
             if (pcmk_is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
@@ -4136,7 +4136,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
                     crm_trace("Resource %s history entry %s on %s"
                               " has no digest to compare",
                               rsc->id, pcmk__xe_history_key(xml_op),
-                              node->details->id);
+                              node->private->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -5008,8 +5008,8 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
     pcmk__insert_dup(node->details->attrs,
                      CRM_ATTR_UNAME, node->details->uname);
 
-    pcmk__insert_dup(node->details->attrs, CRM_ATTR_ID, node->details->id);
-    if (pcmk__str_eq(node->details->id, scheduler->dc_uuid, pcmk__str_casei)) {
+    pcmk__insert_dup(node->details->attrs, CRM_ATTR_ID, node->private->id);
+    if (pcmk__str_eq(node->private->id, scheduler->dc_uuid, pcmk__str_casei)) {
         scheduler->dc_node = node;
         node->details->is_dc = TRUE;
         pcmk__insert_dup(node->details->attrs,

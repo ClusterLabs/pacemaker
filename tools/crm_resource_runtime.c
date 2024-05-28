@@ -1234,7 +1234,8 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
-        if (pcmk__strcase_any_of(host, node->details->uname, node->details->id, NULL)) {
+        if (pcmk__strcase_any_of(host, node->details->uname, node->private->id,
+                                 NULL)) {
             crm_trace("Resource %s is running on %s\n", rsc->id, host);
             goto done;
         }

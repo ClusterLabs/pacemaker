@@ -596,7 +596,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
          * passed with notify actions.
          */
         pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                                   node->details->id);
+                                                   node->private->id);
 
         if ((allowed == NULL)
             || (allowed->rsc_discover_mode != pcmk_probe_exclusive)) {
@@ -608,7 +608,7 @@ pcmk__clone_create_probe(pcmk_resource_t *rsc, pcmk_node_t *node)
                             "Skipping probe for %s on %s because resource has "
                             "exclusive discovery but is not allowed on node",
                             rsc->id, pcmk__node_name(node));
-            g_hash_table_remove(rsc->private->allowed_nodes, node->details->id);
+            g_hash_table_remove(rsc->private->allowed_nodes, node->private->id);
             return false;
         }
     }

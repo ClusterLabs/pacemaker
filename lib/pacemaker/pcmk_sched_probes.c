@@ -30,7 +30,7 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
 {
     // Check whether resource is currently active on node
     pcmk_node_t *running = pe_find_node_id(rsc->private->active_nodes,
-                                           node->details->id);
+                                           node->private->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
@@ -79,7 +79,7 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 
     if ((rsc1_node != NULL)
         && (g_hash_table_lookup(rsc1->private->probed_nodes,
-                                rsc1_node->details->id) == NULL)) {
+                                rsc1_node->private->id) == NULL)) {
 
         pcmk__new_ordering(rsc1,
                            pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
@@ -212,13 +212,13 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
 
     } else if (g_hash_table_lookup(rsc->private->probed_nodes,
-                                   node->details->id) != NULL) {
+                                   node->private->id) != NULL) {
         reason = "resource state is already known";
         goto no_probe;
     }
 
     allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                  node->details->id);
+                                  node->private->id);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
@@ -300,7 +300,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 no_probe:
     pcmk__rsc_trace(rsc,
                     "Skipping probe for %s on %s because %s",
-                    rsc->id, node->details->id, reason);
+                    rsc->id, node->private->id, reason);
     return false;
 }
 

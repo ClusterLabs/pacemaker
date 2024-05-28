@@ -122,7 +122,7 @@ pe__node_list2table(const GList *list)
         pcmk_node_t *new_node = NULL;
 
         new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
-        g_hash_table_insert(result, (gpointer) new_node->details->id, new_node);
+        g_hash_table_insert(result, (gpointer) new_node->private->id, new_node);
     }
     return result;
 }
@@ -345,11 +345,11 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         }
     }
 
-    match = g_hash_table_lookup(rsc->private->allowed_nodes, node->details->id);
+    match = g_hash_table_lookup(rsc->private->allowed_nodes, node->private->id);
     if (match == NULL) {
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->private->allowed_nodes,
-                            (gpointer) match->details->id, match);
+                            (gpointer) match->private->id, match);
     }
     match->weight = pcmk__add_scores(match->weight, score);
     pcmk__rsc_trace(rsc,

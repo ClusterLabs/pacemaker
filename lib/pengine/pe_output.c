@@ -584,8 +584,10 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
-    if (print_detail && !pcmk__str_eq(node->details->uname, node->details->id, pcmk__str_casei)) {
-        node_id = node->details->id;
+    if (print_detail
+        && !pcmk__str_eq(node->details->uname, node->private->id,
+                         pcmk__str_casei)) {
+        node_id = node->private->id;
     }
 
     /* Determine name length */
@@ -988,7 +990,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
                                      PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
                                      PCMK_XA_NAME, dc->details->uname,
-                                     PCMK_XA_ID, dc->details->id,
+                                     PCMK_XA_ID, dc->private->id,
                                      PCMK_XA_WITH_QUORUM, with_quorum,
                                      PCMK_XA_MIXED_VERSION, mixed_version_s,
                                      NULL);
@@ -2068,7 +2070,7 @@ node_xml(pcmk__output_t *out, va_list args) {
 
         rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
                                       PCMK_XA_NAME, node->details->uname,
-                                      PCMK_XA_ID, node->details->id,
+                                      PCMK_XA_ID, node->private->id,
                                       PCMK_XA_ONLINE, online,
                                       PCMK_XA_STANDBY, standby,
                                       PCMK_XA_STANDBY_ONFAIL, standby_onfail,

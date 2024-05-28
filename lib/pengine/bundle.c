@@ -775,7 +775,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         }
         replica->child->private->allowed_nodes = pcmk__strkey_table(NULL, free);
         g_hash_table_insert(replica->child->private->allowed_nodes,
-                            (gpointer) replica->node->details->id,
+                            (gpointer) replica->node->private->id,
                             pe__copy_node(replica->node));
 
         {
@@ -784,7 +784,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 
             copy->weight = -PCMK_SCORE_INFINITY;
             g_hash_table_insert(parent->private->allowed_nodes,
-                                (gpointer) replica->node->details->id, copy);
+                                (gpointer) replica->node->private->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
                                 parent->private->scheduler) != pcmk_rc_ok) {

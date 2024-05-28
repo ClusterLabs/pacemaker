@@ -72,7 +72,6 @@ typedef struct pcmk__node_private pcmk__node_private_t;
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_node_shared_s {
-    const char *id;             // Node ID at the cluster layer
     const char *uname;          // Node name in cluster
     enum node_type type;        // Node variant
 

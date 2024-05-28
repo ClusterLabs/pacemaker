@@ -985,7 +985,7 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
     if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (action->node != NULL) {
             node_uname = action->node->details->uname;
-            node_uuid = action->node->details->id;
+            node_uuid = action->node->private->id;
         } else {
             node_uname = "<none>";
         }
@@ -1781,7 +1781,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     }
 
     if (pe_find_node_id(rsc->private->active_nodes,
-                        node->details->id) == NULL) {
+                        node->private->id) == NULL) {
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
             pcmk__schedule_cleanup(rsc, node, false);
         }

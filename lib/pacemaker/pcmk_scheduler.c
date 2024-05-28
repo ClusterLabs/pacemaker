@@ -62,7 +62,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
                               "no digest to compare",
-                              rsc->id, pcmk__xe_id(rsc_op), node->details->id);
+                              rsc->id, pcmk__xe_id(rsc_op), node->private->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -170,7 +170,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
                        user_data);
 
         match = g_hash_table_lookup(rsc->private->allowed_nodes,
-                                    node->details->id);
+                                    node->private->id);
         if ((match != NULL)
             && (match->rsc_discover_mode != pcmk_probe_exclusive)) {
             match->weight = -PCMK_SCORE_INFINITY;
@@ -216,7 +216,7 @@ apply_stickiness(gpointer data, gpointer user_data)
     if (!pcmk_is_set(rsc->private->scheduler->flags,
                      pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->private->allowed_nodes,
-                                node->details->id) == NULL)) {
+                                node->private->id) == NULL)) {
         pcmk__rsc_debug(rsc,
                         "Ignoring %s stickiness because the cluster is "
                         "asymmetric and %s is not explicitly allowed",
