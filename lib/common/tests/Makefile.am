@@ -12,6 +12,7 @@ SUBDIRS = \
 	actions		\
 	agents		\
 	cmdline		\
+	digest 		\
 	flags		\
 	health		\
 	io		\

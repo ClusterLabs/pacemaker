@@ -439,14 +439,12 @@ crm_generate_uuid(void)
     return buffer;
 }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 void
 crm_gnutls_global_init(void)
 {
     signal(SIGPIPE, SIG_IGN);
     gnutls_global_init();
 }
-#endif
 
 bool
 pcmk_str_is_infinity(const char *s) {

@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <md5.h>
+#include <gnutls/crypto.h>
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -250,28 +250,39 @@ pcmk__xa_filterable(const char *name)
 char *
 crm_md5sum(const char *buffer)
 {
-    int lpc = 0, len = 0;
+    unsigned int dlen = gnutls_hash_get_len(GNUTLS_DIG_MD5);
+    unsigned char *raw_digest = NULL;
     char *digest = NULL;
-    unsigned char raw_digest[MD5_DIGEST_SIZE];
+    int rc = 0;
+
+    if (dlen == 0) {
+        return NULL;
+    }
 
     if (buffer == NULL) {
-        buffer = "";
+        return NULL;
     }
-    len = strlen(buffer);
 
-    crm_trace("Beginning digest of %d bytes", len);
-    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
-    if (digest) {
-        md5_buffer(buffer, len, raw_digest);
-        for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
-            sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
-        }
-        digest[(2 * MD5_DIGEST_SIZE)] = 0;
-        crm_trace("Digest %s.", digest);
+    raw_digest = pcmk__assert_alloc(dlen, sizeof(unsigned char));
 
-    } else {
-        crm_err("Could not create digest");
+    rc = gnutls_hash_fast(GNUTLS_DIG_MD5, buffer, strlen(buffer), raw_digest);
+
+    if (rc < 0) {
+        free(raw_digest);
+        crm_err("Failed to calculate hash: %s", gnutls_strerror(rc));
+        return NULL;
     }
+
+    digest = pcmk__assert_alloc(1 + (2 * dlen), sizeof(char));
+
+    for (int i = 0; i < dlen; i++) {
+        sprintf(digest + (2 * i), "%02x", raw_digest[i]);
+    }
+
+    digest[(2 * dlen)] = 0;
+    free(raw_digest);
+
+    crm_trace("Digest %s.", digest);
     return digest;
 }
 

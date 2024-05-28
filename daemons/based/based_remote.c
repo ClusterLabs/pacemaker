@@ -36,11 +36,8 @@
 #include "pacemaker-based.h"
 
 /* #undef HAVE_PAM_PAM_APPL_H */
-/* #undef HAVE_GNUTLS_GNUTLS_H */
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  include <gnutls/gnutls.h>
-#endif
+#include <gnutls/gnutls.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -60,7 +57,6 @@ extern gboolean cib_shutdown_flag;
 int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 gnutls_dh_params_t dh_params;
 gnutls_anon_server_credentials_t anon_cred_s;
 static void
@@ -68,7 +64,6 @@ debug_log(int level, const char *str)
 {
     fputs(str, stderr);
 }
-#endif
 
 #define REMOTE_AUTH_TIMEOUT 10000
 
@@ -103,10 +98,6 @@ init_remote_listener(int port, gboolean encrypted)
     }
 
     if (encrypted) {
-#ifndef HAVE_GNUTLS_GNUTLS_H
-        crm_warn("TLS support is not available");
-        return 0;
-#else
         crm_notice("Starting TLS listener on port %d", port);
         crm_gnutls_global_init();
         /* gnutls_global_set_log_level (10); */
@@ -116,7 +107,6 @@ init_remote_listener(int port, gboolean encrypted)
         }
         gnutls_anon_allocate_server_credentials(&anon_cred_s);
         gnutls_anon_set_server_dh_params(anon_cred_s, dh_params);
-#endif
     } else {
         crm_warn("Starting plain-text listener on port %d", port);
     }
@@ -319,7 +309,6 @@ cib_remote_listen(gpointer data)
     new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
     if (ssock == remote_tls_fd) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
         pcmk__set_client_flags(new_client, pcmk__client_tls);
 
         /* create gnutls session for the server socket */
@@ -331,7 +320,6 @@ cib_remote_listen(gpointer data)
             close(csock);
             return TRUE;
         }
-#endif
     } else {
         pcmk__set_client_flags(new_client, pcmk__client_tcp);
         new_client->remote->tcp_socket = csock;
@@ -371,7 +359,6 @@ cib_remote_connection_destroy(gpointer user_data)
         case pcmk__client_tcp:
             csock = client->remote->tcp_socket;
             break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
             if (client->remote->tls_session) {
                 void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
@@ -386,7 +373,6 @@ cib_remote_connection_destroy(gpointer user_data)
                 client->remote->tls_session = NULL;
             }
             break;
-#endif
         default:
             crm_warn("Unknown transport for client %s "
                      CRM_XS " flags=%#016" PRIx64,
@@ -461,7 +447,6 @@ cib_remote_msg(gpointer data)
               pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
               pcmk__client_name(client));
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
 
@@ -488,7 +473,6 @@ cib_remote_msg(gpointer data)
                                                      client);
         return 0;
     }
-#endif
 
     rc = pcmk__read_remote_message(client->remote, timeout);
 

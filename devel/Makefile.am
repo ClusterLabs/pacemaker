@@ -214,7 +214,6 @@ coverage: coverage-partial-clean
 		"$(abs_top_builddir)/tools/*"				\
 		"$(abs_top_builddir)/daemons/*/*"			\
 		"$(abs_top_builddir)/replace/*"				\
-		"$(abs_top_builddir)/lib/gnu/*"
 	genhtml $(top_builddir)/pacemaker_filtered.info -o $(COVERAGE_DIR) -s -t "Pacemaker code coverage"
 
 # Check coverage of CLI regression tests
@@ -258,8 +257,7 @@ INDENT_DIRS	?= .
 # indent target: Extra options to pass to indent
 INDENT_OPTS	?=
 
-INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
-			  lib/gnu/*
+INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h
 INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
 			  --blank-lines-after-procedures		\
 			  --braces-after-func-def-line			\

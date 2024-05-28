@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2023 the Pacemaker project contributors
+ * Copyright 2015-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,8 +85,6 @@ void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg,
 
 void lrmd__register_messages(pcmk__output_t *out);
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
 int lrmd__init_remote_key(gnutls_datum_t *key);
-#endif
 
 #endif

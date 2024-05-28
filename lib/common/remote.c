@@ -33,9 +33,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  include <gnutls/gnutls.h>
-#endif
+#include <gnutls/gnutls.h>
 
 /* Swab macros from linux/swab.h */
 #ifdef HAVE_LINUX_SWAB_H
@@ -125,8 +123,6 @@ localized_remote_header(pcmk__remote_t *remote)
 
     return header;
 }
-
-#ifdef HAVE_GNUTLS_GNUTLS_H
 
 int
 pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms)
@@ -409,7 +405,6 @@ send_tls(gnutls_session_t *session, struct iovec *iov)
     }
     return pcmk_rc_ok;
 }
-#endif
 
 // \return Standard Pacemaker return code
 static int
@@ -464,12 +459,10 @@ remote_send_iovs(pcmk__remote_t *remote, struct iovec *iov, int iovs)
     int rc = pcmk_rc_ok;
 
     for (int lpc = 0; (lpc < iovs) && (rc == pcmk_rc_ok); lpc++) {
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote->tls_session) {
             rc = send_tls(remote->tls_session, &(iov[lpc]));
             continue;
         }
-#endif
         if (remote->tcp_socket) {
             rc = send_plaintext(remote->tcp_socket, &(iov[lpc]));
         } else {
@@ -609,13 +602,11 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 static int
 get_remote_socket(const pcmk__remote_t *remote)
 {
-#ifdef HAVE_GNUTLS_GNUTLS_H
     if (remote->tls_session) {
         void *sock_ptr = gnutls_transport_get_ptr(*remote->tls_session);
 
         return GPOINTER_TO_INT(sock_ptr);
     }
-#endif
 
     if (remote->tcp_socket) {
         return remote->tcp_socket;
@@ -710,7 +701,6 @@ read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
     if (!received && remote->tls_session) {
         read_rc = gnutls_record_recv(*(remote->tls_session),
                                      remote->buffer + remote->buffer_offset,
@@ -726,7 +716,6 @@ read_available_remote_data(pcmk__remote_t *remote)
         }
         received = true;
     }
-#endif
 
     if (!received && remote->tcp_socket) {
         read_rc = read(remote->tcp_socket,

@@ -66,8 +66,7 @@ class BuildOptions:
     RSC_TMP_DIR = "@CRM_RSCTMP_DIR@"
     """Where resource agents should keep state files."""
 
-    # pylint: disable=comparison-of-constants
-    REMOTE_ENABLED = "@PC_NAME_GNUTLS@" != ""
+    REMOTE_ENABLED = True
     """True if Pacemaker Remote support is enabled."""
 
     RUNTIME_STATE_DIR = "@runstatedir@"

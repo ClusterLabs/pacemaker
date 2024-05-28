@@ -26,11 +26,9 @@
 
 #include "pacemaker-execd.h"
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
+#include <gnutls/gnutls.h>
 
-#  include <gnutls/gnutls.h>
-
-#  define LRMD_REMOTE_AUTH_TIMEOUT 10000
+#define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;
 static int ssock = -1;
@@ -429,4 +427,3 @@ execd_stop_tls_server(void)
         ssock = -1;
     }
 }
-#endif

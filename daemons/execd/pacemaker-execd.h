@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the Pacemaker project contributors
+ * Copyright 2012-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,9 +15,7 @@
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
 
-#  ifdef HAVE_GNUTLS_GNUTLS_H
-#    include <gnutls/gnutls.h>
-#  endif
+#  include <gnutls/gnutls.h>
 
 extern GHashTable *rsc_list;
 extern time_t start_time;
@@ -54,11 +52,9 @@ typedef struct lrmd_rsc_s {
     crm_trigger_t *work;
 } lrmd_rsc_t;
 
-#  ifdef HAVE_GNUTLS_GNUTLS_H
 // in remoted_tls.c
 int lrmd_init_remote_tls_server(void);
 void execd_stop_tls_server(void);
-#  endif
 
 int lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply);
 

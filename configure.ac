@@ -112,17 +112,6 @@ AS_IF([test $enable_fatal_warnings -ne $DISABLED dnl
                   [$OPTIONAL], [enable_fatal_warnings=$DISABLED])
       ])
 
-dnl We use md5.c from gnulib, which has its own m4 macros. Per its docs:
-dnl "The macro gl_EARLY must be called as soon as possible after verifying that
-dnl the C compiler is working. ... The core part of the gnulib checks are done
-dnl by the macro gl_INIT." In addition, prevent gnulib from introducing OpenSSL
-dnl as a dependency.
-gl_EARLY
-gl_SET_CRYPTO_CHECK_DEFAULT([no])
-gl_INIT
-
-AC_CHECK_SIZEOF(long)
-
 
 dnl ==============================================
 dnl Linker checks
@@ -339,13 +328,6 @@ AC_ARG_WITH([cibsecrets],
 )
 yes_no_try "$with_cibsecrets" "no"
 with_cibsecrets=$?
-
-AC_ARG_WITH([gnutls],
-    [AS_HELP_STRING([--with-gnutls],
-        [support Pacemaker Remote and remote-tls-port using GnuTLS @<:@try@:>@])]
-)
-yes_no_try "$with_gnutls" "try"
-with_gnutls=$?
 
 PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
@@ -1689,27 +1671,9 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-dnl Require GnuTLS >=2.12.0 (2011-03) for Pacemaker Remote support
-PC_NAME_GNUTLS=""
-AS_CASE([$with_gnutls],
-        [$REQUIRED], [
-            REQUIRE_LIB([gnutls], [gnutls_sec_param_to_pk_bits])
-            REQUIRE_HEADER([gnutls/gnutls.h])
-        ],
-        [$OPTIONAL], [
-            AC_CHECK_LIB([gnutls], [gnutls_sec_param_to_pk_bits],
-                         [], [with_gnutls=$DISABLED])
-            AC_CHECK_HEADERS([gnutls/gnutls.h], [], [with_gnutls=$DISABLED])
-        ]
-)
-AS_IF([test $with_gnutls -ne $DISABLED],
-      [
-          PC_NAME_GNUTLS="gnutls"
-          PCMK_FEATURES="$PCMK_FEATURES remote"
-      ]
-)
-AC_SUBST([PC_NAME_GNUTLS])
-AM_CONDITIONAL([BUILD_REMOTE], [test $with_gnutls -ne $DISABLED])
+PKG_CHECK_MODULES(GNUTLS, [gnutls >= 2.12.0],
+                  [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
+                   LIBS="${LIBS} ${GNUTLS_LIBS}"])
 
 # --- ASAN/UBSAN/TSAN (see man gcc) ---
 # when using SANitizers, we need to pass the -fsanitize..
@@ -2151,6 +2115,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/actions/Makefile                   \
                 lib/common/tests/agents/Makefile                    \
                 lib/common/tests/cmdline/Makefile                   \
+                lib/common/tests/digest/Makefile                    \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/health/Makefile                    \
                 lib/common/tests/io/Makefile                        \
@@ -2173,7 +2138,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/xml/Makefile                       \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
-                lib/gnu/Makefile                                    \
                 lib/libpacemaker.pc                                 \
                 lib/lrmd/Makefile                                   \
                 lib/pacemaker/Makefile                              \

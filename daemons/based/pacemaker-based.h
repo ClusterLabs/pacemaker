@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,9 +31,7 @@
 
 #include "based_transaction.h"
 
-#ifdef HAVE_GNUTLS_GNUTLS_H
-#  include <gnutls/gnutls.h>
-#endif
+#include <gnutls/gnutls.h>
 
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->uname)
 
