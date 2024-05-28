@@ -105,9 +105,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
 
-    // @COMPAT These should be made const at next API compatibility break
-    pcmk_node_t *lock_node;         // Resource shutdown-locked to this node
-
     /*
      * Resource parameters may have node-attribute-based rules, which means the
      * values can vary by node. This table has node names as keys and parameter

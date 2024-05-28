@@ -1317,7 +1317,7 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
-        || !pcmk__same_node(action->node, action->rsc->lock_node)) {
+        || !pcmk__same_node(action->node, action->rsc->private->lock_node)) {
         return false;
     }
 

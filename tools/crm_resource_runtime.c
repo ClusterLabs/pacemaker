@@ -1099,9 +1099,11 @@ check_managed(resource_checks_t *checks)
 static void
 check_locked(resource_checks_t *checks)
 {
-    if (checks->rsc->lock_node != NULL) {
+    const pcmk_node_t *lock_node = checks->rsc->private->lock_node;
+
+    if (lock_node != NULL) {
         checks->flags |= rsc_locked;
-        checks->lock_node = checks->rsc->lock_node->details->uname;
+        checks->lock_node = lock_node->details->uname;
     }
 }
 

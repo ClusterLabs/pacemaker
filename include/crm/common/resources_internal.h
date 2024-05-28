@@ -330,6 +330,7 @@ struct pcmk__resource_private {
     char *pending_action;           // Pending action in history, if any
     const pcmk_node_t *pending_node;// Node on which pending_action is happening
     time_t lock_time;               // When shutdown lock started
+    const pcmk_node_t *lock_node;   // Node that resource is shutdown-locked to
     GList *actions;                 // Actions scheduled for resource
     GList *children;                // Resource's child resources, if any
     pcmk_resource_t *parent;        // Resource's parent resource, if any

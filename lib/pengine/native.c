@@ -520,8 +520,8 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
         provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
     }
 
-    if ((node == NULL) && (rsc->lock_node != NULL)) {
-        node = rsc->lock_node;
+    if ((node == NULL) && (rsc->private->lock_node != NULL)) {
+        node = rsc->private->lock_node;
     }
     if (pcmk_any_flags_set(show_opts, pcmk_show_rsc_only)
         || pcmk__list_of_multiple(rsc->private->active_nodes)) {
@@ -572,7 +572,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
     if (node && !(node->details->online) && node->details->unclean) {
         have_flags = add_output_flag(outstr, "UNCLEAN", have_flags);
     }
-    if (node && (node == rsc->lock_node)) {
+    if ((node != NULL) && pcmk__same_node(node, rsc->private->lock_node)) {
         have_flags = add_output_flag(outstr, "LOCKED", have_flags);
     }
     if (pcmk_is_set(show_opts, pcmk_show_pending)) {
@@ -798,8 +798,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->private->active_nodes));
 
-    if (rsc->lock_node != NULL) {
-        locked_to = rsc->lock_node->details->uname;
+    if (rsc->private->lock_node != NULL) {
+        locked_to = rsc->private->lock_node->details->uname;
     }
 
     rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE,

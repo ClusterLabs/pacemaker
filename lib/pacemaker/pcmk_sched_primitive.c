@@ -1636,7 +1636,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
     const pcmk_node_t *node = (const pcmk_node_t *) data;
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
-    if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
+    if (!pcmk__same_node(node, rsc->private->lock_node)) {
         resource_location(rsc, node, -PCMK_SCORE_INFINITY,
                           PCMK_OPT_SHUTDOWN_LOCK, rsc->private->scheduler);
     }
@@ -1660,7 +1660,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
         return;
     }
 
-    if (rsc->lock_node != NULL) {
+    if (rsc->private->lock_node != NULL) {
         // The lock was obtained from resource history
 
         if (rsc->private->active_nodes != NULL) {
@@ -1671,8 +1671,8 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
             pcmk__rsc_info(rsc,
                            "Cancelling shutdown lock "
                            "because %s is already active", rsc->id);
-            pe__clear_resource_history(rsc, rsc->lock_node);
-            rsc->lock_node = NULL;
+            pe__clear_resource_history(rsc, rsc->private->lock_node);
+            rsc->private->lock_node = NULL;
             rsc->private->lock_time = 0;
         }
 
@@ -1686,13 +1686,13 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
                                 "Not locking %s to unclean %s for shutdown",
                                 rsc->id, pcmk__node_name(node));
             } else {
-                rsc->lock_node = node;
+                rsc->private->lock_node = node;
                 rsc->private->lock_time = shutdown_time(node);
             }
         }
     }
 
-    if (rsc->lock_node == NULL) {
+    if (rsc->private->lock_node == NULL) {
         // No lock needed
         return;
     }
@@ -1702,13 +1702,13 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
         lock_expiration = rsc->private->lock_time + scheduler->shutdown_lock;
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
-                       rsc->id, pcmk__node_name(rsc->lock_node),
+                       rsc->id, pcmk__node_name(rsc->private->lock_node),
                        (long long) lock_expiration);
         pe__update_recheck_time(++lock_expiration, scheduler,
                                 "shutdown lock expiration");
     } else {
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown",
-                       rsc->id, pcmk__node_name(rsc->lock_node));
+                       rsc->id, pcmk__node_name(rsc->private->lock_node));
     }
 
     // If resource is locked to one node, ban it from all other nodes

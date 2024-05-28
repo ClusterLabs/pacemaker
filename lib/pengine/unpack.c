@@ -2672,11 +2672,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                            rsc->id, pcmk__node_name(node));
             pe__clear_resource_history(rsc, node);
         } else {
-            /* @COMPAT I don't like breaking const signatures, but
-             * rsc->lock_node should really be const -- we just can't change it
-             * until the next API compatibility break.
-             */
-            rsc->lock_node = (pcmk_node_t *) node;
+            rsc->private->lock_node = node;
             rsc->private->lock_time = lock_time;
         }
     }
