@@ -136,18 +136,23 @@ pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
     do {
         int rc = gnutls_handshake(*remote->tls_session);
 
-        if ((rc == GNUTLS_E_INTERRUPTED) || (rc == GNUTLS_E_AGAIN)) {
-            rc = pcmk__remote_ready(remote, 1000);
-            if ((rc != pcmk_rc_ok) && (rc != ETIME)) { // Fatal error
-                return rc;
-            }
-        } else if (rc < 0) {
-            if (gnutls_rc != NULL) {
-                *gnutls_rc = rc;
-            }
-            return EPROTO;
-        } else {
-            return pcmk_rc_ok;
+        switch (rc) {
+            case GNUTLS_E_SUCCESS:
+                return pcmk_rc_ok;
+
+            case GNUTLS_E_INTERRUPTED:
+            case GNUTLS_E_AGAIN:
+                rc = pcmk__remote_ready(remote, 1000);
+                if ((rc != pcmk_rc_ok) && (rc != ETIME)) { // Fatal error
+                    return rc;
+                }
+                break;
+
+            default:
+                if (gnutls_rc != NULL) {
+                    *gnutls_rc = rc;
+                }
+                return EPROTO;
         }
     } while (time(NULL) < time_limit);
     return ETIME;
