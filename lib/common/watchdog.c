@@ -101,6 +101,14 @@ panic_local(void)
 
     if (pcmk__str_eq(panic_action, "crash", pcmk__str_casei)) {
         sysrq = 'c';
+
+    } else if (pcmk__str_eq(panic_action, "off", pcmk__str_casei)) {
+        sysrq = 'o';
+#ifdef RB_POWER_OFF
+        reboot_cmd = RB_POWER_OFF;
+#elif defined(RB_POWEROFF)
+        reboot_cmd = RB_POWEROFF;
+#endif
     }
 
     sysrq_trigger(sysrq);
