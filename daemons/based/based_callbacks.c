@@ -185,6 +185,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
     int rid = 0;
     int call_id = 0;
     pcmk__client_t *client_obj = NULL;
+    uint32_t flags = crm_ipc_server_event;
 
     CRM_ASSERT(notify_src && client_id);
 
@@ -198,9 +199,8 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
     }
 
     if (sync_reply) {
-        if (client_obj->ipcs) {
-            CRM_LOG_ASSERT(client_obj->request_id);
-
+        flags = crm_ipc_flags_none;
+        if (client_obj->ipcs != NULL) {
             rid = client_obj->request_id;
             client_obj->request_id = 0;
 
@@ -223,9 +223,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
         case pcmk__client_ipc:
             {
                 int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
-                                            (sync_reply? crm_ipc_flags_none
-                                             : crm_ipc_server_event));
-
+                                            flags);
                 if (rc != pcmk_rc_ok) {
                     crm_warn("%s reply to client %s failed: %s " CRM_XS " rc=%d",
                              (sync_reply? "Synchronous" : "Asynchronous"),
