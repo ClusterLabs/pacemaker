@@ -502,17 +502,19 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // Find the parameter table for given node
-    if (rsc->parameter_cache == NULL) {
-        rsc->parameter_cache = pcmk__strikey_table(free, free_params_table);
+    if (rsc->private->parameter_cache == NULL) {
+        rsc->private->parameter_cache = pcmk__strikey_table(free,
+                                                            free_params_table);
     } else {
-        params_on_node = g_hash_table_lookup(rsc->parameter_cache, node_name);
+        params_on_node = g_hash_table_lookup(rsc->private->parameter_cache,
+                                             node_name);
     }
 
     // If none exists yet, create one with parameters evaluated for node
     if (params_on_node == NULL) {
         params_on_node = pcmk__strkey_table(free, free);
         get_rsc_attributes(params_on_node, rsc, node, scheduler);
-        g_hash_table_insert(rsc->parameter_cache, strdup(node_name),
+        g_hash_table_insert(rsc->private->parameter_cache, strdup(node_name),
                             params_on_node);
     }
     return params_on_node;
@@ -1062,8 +1064,8 @@ common_free(pcmk_resource_t * rsc)
     pcmk__rsc_trace(rsc, "Freeing %s %s",
                     (const char *) rsc->private->xml->name, rsc->id);
 
-    if (rsc->parameter_cache != NULL) {
-        g_hash_table_destroy(rsc->parameter_cache);
+    if (rsc->private->parameter_cache != NULL) {
+        g_hash_table_destroy(rsc->private->parameter_cache);
     }
 
     if ((rsc->private->parent == NULL)

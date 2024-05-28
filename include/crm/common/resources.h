@@ -104,14 +104,6 @@ struct pe_resource_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
-
-    /*
-     * Resource parameters may have node-attribute-based rules, which means the
-     * values can vary by node. This table has node names as keys and parameter
-     * name/value tables as values. Use pe_rsc_params() to get the table for a
-     * given node rather than use this directly.
-     */
-    GHashTable *parameter_cache;
 };
 //!@}
 

@@ -346,6 +346,14 @@ struct pcmk__resource_private {
     // Configuration of resource operations (possibly expanded from template)
     xmlNode *ops_xml;
 
+    /*
+     * Resource parameters may have node-attribute-based rules, which means the
+     * values can vary by node. This table has node names as keys and parameter
+     * name/value tables as values. Use pe_rsc_params() to get the table for a
+     * given node rather than use this directly.
+     */
+    GHashTable *parameter_cache;
+
     /* A "launcher" is defined in one of these ways:
      *
      * - A Pacemaker Remote connection for a guest node or bundle node has its
