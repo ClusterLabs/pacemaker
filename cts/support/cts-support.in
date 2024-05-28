@@ -1,170 +1,238 @@
-#!/bin/sh
-#
-# Installer for support files needed by Pacemaker's Cluster Test Suite
-#
-# Copyright 2018-2022 the Pacemaker project contributors
-#
-# The version control history for this file may have further details.
-#
-# This source code is licensed under the GNU General Public License version 2
-# or later (GPLv2+) WITHOUT ANY WARRANTY.
-#
+#!@PYTHON@
+"""Manage support files for Pacemaker CTS."""
 
-USAGE_TEXT="Usage: $0 <install|uninstall|--help>"
+# pylint doesn't like the module name "cts-attrd" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+# We access various private members several places in this file, so disable this warning
+# file-wide.
+# pylint: disable=protected-access
 
-HELP_TEXT="$USAGE_TEXT
-Commands (must be run as root):
- install      Install support files needed by Pacemaker CTS
- uninstall    Remove support files needed by Pacemaker CTS"
+__copyright__ = "Copyright 2024 the Pacemaker project contributors"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-# These constants must track crm_exit_t values
-CRM_EX_OK=0
-CRM_EX_ERROR=1
-CRM_EX_USAGE=64
+import argparse
+import fcntl
+import os
+import shutil
+import subprocess
+import sys
 
-UNIT_DIR="@systemdsystemunitdir@"
-RUNTIME_UNIT_DIR="@runstatedir@/systemd/system"
-LIBEXEC_DIR="@libexecdir@/pacemaker"
-INIT_DIR="@INITDIR@"
-PCMK__FENCE_BINDIR="@PCMK__FENCE_BINDIR@"
-DATA_DIR="@datadir@/pacemaker/tests/cts"
-UPSTART_DIR="/etc/init"
+# These imports allow running from a source checkout after running `make`.
+# Note that while this doesn't necessarily mean it will successfully run tests,
+# but being able to see --help output can be useful.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
 
-DUMMY_DAEMON="pacemaker-cts-dummyd"
-DUMMY_DAEMON_UNIT="pacemaker-cts-dummyd@.service" 
-COROSYNC_RUNTIME_UNIT="corosync.service.d"
-COROSYNC_RUNTIME_CONF="cts.conf"
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
 
-LSB_DUMMY="LSBDummy"
-UPSTART_DUMMY="pacemaker-cts-dummyd.conf"
-FENCE_DUMMY="fence_dummy"
-FENCE_DUMMY_ALIASES="auto_unfence no_reboot no_on"
+from pacemaker.buildoptions import BuildOptions
+from pacemaker.exitstatus import ExitStatus
 
-# If the install directory doesn't exist, assume we're in a build directory.
-if [ ! -d "$DATA_DIR" ]; then
-    # If readlink supports -e (i.e. GNU), use it.
-    readlink -e / >/dev/null 2>/dev/null
-    if [ $? -eq 0 ]; then
-        DATA_DIR="$(dirname "$(readlink -e "$0")")"
-    else
-        DATA_DIR="$(dirname "$0")"
-    fi
-fi
+COROSYNC_RUNTIME_CONF = "cts.conf"
+COROSYNC_RUNTIME_UNIT = "corosync.service.d"
+DUMMY_DAEMON = "pacemaker-cts-dummyd"
+DUMMY_DAEMON_UNIT = "pacemaker-cts-dummyd@.service"
 
-usage() {
-    echo "Error:" "$@"
-    echo "$USAGE_TEXT"
-    exit $CRM_EX_USAGE
-}
+FENCE_DUMMY = "fence_dummy"
+FENCE_DUMMY_ALIASES = ["auto_unfence", "no_reboot", "no_on"]
+LSB_DUMMY = "LSBDummy"
 
-must_be_root() {
-    if ! [ "$(id -u)" = "0" ]; then
-        usage "this command must be run as root"
-        return $CRM_EX_ERROR
-    fi
-    return $CRM_EX_OK
-}
 
-support_uninstall() {
-    must_be_root || return $CRM_EX_ERROR
+def daemon_reload():
+    """Reload the systemd daemon."""
+    try:
+        subprocess.call(["systemctl", "daemon-reload"])
+    except subprocess.SubprocessError:
+        pass
 
-    if [ -e "$UNIT_DIR/$DUMMY_DAEMON_UNIT" ]; then
-        echo "Removing $UNIT_DIR/$DUMMY_DAEMON_UNIT ..."
-        rm -f "$UNIT_DIR/$DUMMY_DAEMON_UNIT"
-        systemctl daemon-reload # Ignore failure
-    fi
 
-    if [ -e "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT" ]; then
-        echo "Removing $RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT ..."
-        rm -rf "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT"
-        systemctl daemon-reload # Ignore failure
-    fi
+def install(src, destdir, mode=0o755):
+    """Install a file to a given directory with the given mode."""
+    destfile = "%s/%s" % (destdir, os.path.basename(src))
 
-    for FILE in \
-        "$LIBEXEC_DIR/$DUMMY_DAEMON" \
-        "$UPSTART_DIR/$UPSTART_DUMMY" \
-        "$PCMK__FENCE_BINDIR/$FENCE_DUMMY" \
-        "$INIT_DIR/$LSB_DUMMY"
-    do
-        if [ -e "$FILE" ]; then
-            echo "Removing $FILE ..."
-            rm -f "$FILE"
-        fi
-    done
-    for ALIAS in $FENCE_DUMMY_ALIASES; do \
-        FILE="$PCMK__FENCE_BINDIR/fence_dummy_$ALIAS"
-        if [ -L "$FILE" ] || [ -e "$FILE" ]; then
-            echo "Removing $FILE ..."
-            rm -f "$FILE"
-        fi
-    done
+    shutil.copyfile(src, destfile)
+    os.chmod(destfile, mode)
 
-    return $CRM_EX_OK
-}
 
-support_install() {
-    support_uninstall || return $CRM_EX_ERROR
-    cd "$DATA_DIR" || return $CRM_EX_ERROR
-    if [ -d "$UNIT_DIR" ]; then
+def makedirs_if_missing(path):
+    """If the directory path doesn't exist, create it."""
+    if os.path.exists(path):
+        return
 
-        echo "Installing $DUMMY_DAEMON ..."
-        mkdir -p "$LIBEXEC_DIR"
-        install -m 0755 "$DUMMY_DAEMON" "$LIBEXEC_DIR" || return $CRM_EX_ERROR
+    os.makedirs(path)
 
-        echo "Installing $DUMMY_DAEMON_UNIT ..."
-        install -m 0644 "$DUMMY_DAEMON_UNIT" "$UNIT_DIR" || return $CRM_EX_ERROR
-        systemctl daemon-reload # Ignore failure
-    fi
 
-    if [ -d "$RUNTIME_UNIT_DIR" ]; then
+def cmd_install(src):
+    """Install support files needed by Pacemaker CTS."""
+    cmd_uninstall()
 
-        echo "Installing $COROSYNC_RUNTIME_CONF to $RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT ..."
-        mkdir -p "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT"
-        install -m 0644 "$COROSYNC_RUNTIME_CONF" "$RUNTIME_UNIT_DIR/$COROSYNC_RUNTIME_UNIT" || return $CRM_EX_ERROR
+    if not os.path.exists(src):
+        sys.exit(ExitStatus.ERROR)
 
-        systemctl daemon-reload # Ignore failure
-    fi
+    os.chdir(src)
 
-    echo "Installing $FENCE_DUMMY to $PCMK__FENCE_BINDIR ..."
-    mkdir -p "$PCMK__FENCE_BINDIR"
-    install -m 0755 "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR" || return $CRM_EX_ERROR
-    for alias in $FENCE_DUMMY_ALIASES; do \
-        echo "Installing fence_dummy_$alias to $PCMK__FENCE_BINDIR ..."
-        ln -s "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR/fence_dummy_$alias"
-	if [ $? -ne 0 ]; then
-		return $CRM_EX_ERROR
-	fi
-    done
+    if os.path.exists(BuildOptions.UNIT_DIR):
+        print("Installing %s ..." % DUMMY_DAEMON)
+        d = "%s/pacemaker" % BuildOptions.LIBEXEC_DIR
 
-    echo "Installing $LSB_DUMMY to $INIT_DIR ..."
-    mkdir -p "$INIT_DIR"
-    install -m 0755 "$LSB_DUMMY" "$INIT_DIR" || return $CRM_EX_ERROR
+        makedirs_if_missing(d)
+        install(DUMMY_DAEMON, d)
 
-    if [ -d "$UPSTART_DIR" ] && [ -f "$UPSTART_DUMMY" ]; then
-        echo "Installing $UPSTART_DUMMY to $UPSTART_DIR ..."
-        install -m 0644 "$UPSTART_DUMMY" "$UPSTART_DIR" || return $CRM_EX_ERROR
-    fi
-    return $CRM_EX_OK
-}
+        print("Installing %s ..." % DUMMY_DAEMON_UNIT)
+        install(DUMMY_DAEMON_UNIT, BuildOptions.UNIT_DIR)
+        daemon_reload()
 
-COMMAND=""
-while [ $# -gt 0 ] ; do
-    case "$1" in
-        --help)
-            echo "$HELP_TEXT"
-            exit $CRM_EX_OK
-            ;;
-        install|uninstall)
-            COMMAND="$1"
-            shift
-            ;;
-        *)
-            usage "unknown option '$1'"
-            ;;
-    esac
-done
-case "$COMMAND" in
-    install)   support_install              ;;
-    uninstall) support_uninstall            ;;
-    *)         usage "must specify command" ;;
-esac
+    runtime_unit_dir = "%s/systemd/system" % BuildOptions.RUNTIME_STATE_DIR
+    if os.path.exists(runtime_unit_dir):
+        unit_dir = "%s/%s" % (runtime_unit_dir, COROSYNC_RUNTIME_UNIT)
+
+        print("Installing %s to %s ..." % (COROSYNC_RUNTIME_CONF, unit_dir))
+        makedirs_if_missing(unit_dir)
+        install(COROSYNC_RUNTIME_CONF, unit_dir, 0o644)
+        daemon_reload()
+
+    print("Installing %s to %s ..." % (FENCE_DUMMY, BuildOptions._FENCE_BINDIR))
+    makedirs_if_missing(BuildOptions._FENCE_BINDIR)
+    install(FENCE_DUMMY, BuildOptions._FENCE_BINDIR)
+
+    for alias in FENCE_DUMMY_ALIASES:
+        print("Installing fence_dummy_%s to %s ..." % (alias, BuildOptions._FENCE_BINDIR))
+        try:
+            os.symlink(FENCE_DUMMY, "%s/fence_dummy_%s" % (BuildOptions._FENCE_BINDIR, alias))
+        except OSError:
+            sys.exit(ExitStatus.ERROR)
+
+    print("Installing %s to %s ..." % (LSB_DUMMY, BuildOptions.INIT_DIR))
+    makedirs_if_missing(BuildOptions.INIT_DIR)
+    install(LSB_DUMMY, BuildOptions.INIT_DIR)
+
+
+def cmd_uninstall():
+    """Remove support files needed by Pacemaker CTS."""
+    dummy_unit_file = "%s/%s" % (BuildOptions.UNIT_DIR, DUMMY_DAEMON_UNIT)
+
+    if os.path.exists(dummy_unit_file):
+        print("Removing %s ..." % dummy_unit_file)
+        os.remove(dummy_unit_file)
+        daemon_reload()
+
+    corosync_runtime_dir = "%s/systemd/system/%s" % (BuildOptions.RUNTIME_STATE_DIR, COROSYNC_RUNTIME_UNIT)
+
+    if os.path.exists(corosync_runtime_dir):
+        print("Removing %s ..." % corosync_runtime_dir)
+        shutil.rmtree(corosync_runtime_dir)
+        daemon_reload()
+
+    for f in ["%s/pacemaker/%s" % (BuildOptions.LIBEXEC_DIR, DUMMY_DAEMON),
+              "%s/%s" % (BuildOptions._FENCE_BINDIR, FENCE_DUMMY),
+              "%s/%s" % (BuildOptions.INIT_DIR, LSB_DUMMY)]:
+        if not os.path.exists(f):
+            continue
+
+        print("Removing %s ..." % f)
+        os.remove(f)
+
+    for alias in FENCE_DUMMY_ALIASES:
+        f = "%s/fence_dummy_%s" % (BuildOptions._FENCE_BINDIR, alias)
+
+        if not os.path.exists(f) and not os.path.islink(f):
+            continue
+
+        print("Removing %s ..." % f)
+        os.remove(f)
+
+
+def cmd_watch(filename, limit, offset, prefix):
+    """Watch a log file."""
+    if not os.access(filename, os.R_OK):
+        print("%sLast read: %d, limit=%d, count=%d - unreadable" % (prefix, 0, limit, 0))
+        sys.exit(ExitStatus.ERROR)
+
+    with open(filename, "r", encoding="utf-8") as logfile:
+        logfile.seek(0, os.SEEK_END)
+        newsize = logfile.tell()
+
+        if offset != 'EOF':
+            offset = int(offset)
+
+            if newsize >= offset:
+                logfile.seek(offset)
+            else:
+                print("%sFile truncated from %d to %d" % (prefix, offset, newsize))
+
+                if (newsize * 1.05) < offset:
+                    logfile.seek(0)
+
+        # Don't block when we reach EOF
+        fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+
+        count = 0
+        while True:
+            if logfile.tell() >= newsize:
+                break
+
+            if limit and count >= limit:
+                break
+
+            line = logfile.readline()
+            if not line:
+                break
+
+            print(line.strip())
+            count += 1
+
+        print("%sLast read: %d, limit=%d, count=%d" % (prefix, logfile.tell(), limit, count))
+
+
+def build_options():
+    """Handle command line arguments."""
+    # Create the top-level parser
+    parser = argparse.ArgumentParser(description="Support tool for CTS")
+    subparsers = parser.add_subparsers(dest="subparser_name")
+
+    # Create the parser for the "install" command
+    subparsers.add_parser("install", help="Install support files")
+
+    # Create the parser for the "uninstall" command
+    subparsers.add_parser("uninstall", help="Remove support files")
+
+    # Create the parser for the "watch" command
+    watch_parser = subparsers.add_parser("watch", help="Remote log watcher")
+    watch_parser.add_argument("-f", "--filename", default="/var/log/messages",
+                              help="File to watch")
+    watch_parser.add_argument("-l", "--limit", type=int, default=0,
+                              help="Maximum number of lines to read")
+    watch_parser.add_argument("-o", "--offset", default=0,
+                              help="Which line number to start reading from")
+    watch_parser.add_argument("-p", "--prefix", default="",
+                              help="String to add to the beginning of each line")
+
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    opts = build_options()
+
+    if os.geteuid() != 0:
+        print("This command must be run as root")
+        sys.exit(ExitStatus.ERROR)
+
+    # If the install directory doesn't exist, assume we're in a build directory.
+    data_dir = "%s/pacemaker/tests/cts" % BuildOptions.DATA_DIR
+    if not os.path.exists(data_dir):
+        data_dir = "%s/pacemaker/tests/cts" % BuildOptions._BUILD_DIR
+
+    if opts.subparser_name == "install":
+        cmd_install(data_dir)
+
+    if opts.subparser_name == "uninstall":
+        cmd_uninstall()
+
+    if opts.subparser_name == "watch":
+        cmd_watch(opts.filename, opts.limit, opts.offset, opts.prefix)

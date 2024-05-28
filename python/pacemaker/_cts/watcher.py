@@ -16,7 +16,7 @@ from pacemaker._cts.errors import OutputNotFoundError
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
-LOG_WATCHER_BIN = "%s/cts-log-watcher" % BuildOptions.DAEMON_DIR
+CTS_SUPPORT_BIN = "%s/cts-support" % BuildOptions.DAEMON_DIR
 
 
 @unique
@@ -169,8 +169,8 @@ class FileObj(SearchObj):
 
             return None
 
-        cmd = ("%s -p CTSwatcher: -l 200 -f %s -o %s"
-               % (LOG_WATCHER_BIN, self.filename, self.offset))
+        cmd = ("%s watch -p CTSwatcher: -l 200 -f %s -o %s"
+               % (CTS_SUPPORT_BIN, self.filename, self.offset))
 
         return self.rsh.call_async(self.host, cmd, delegate=self)
 
@@ -190,8 +190,8 @@ class FileObj(SearchObj):
         if self.limit:
             return
 
-        cmd = ("%s -p CTSwatcher: -l 2 -f %s -o EOF"
-               % (LOG_WATCHER_BIN, self.filename))
+        cmd = ("%s watch -p CTSwatcher: -l 2 -f %s -o EOF"
+               % (CTS_SUPPORT_BIN, self.filename))
 
         # pylint: disable=not-callable
         (_, lines) = self.rsh(self.host, cmd, verbose=0)
