@@ -203,34 +203,37 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
     }
 
     if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
-        const char *meta_longdesc = NULL;
-        const char *meta_shortdesc = NULL;
-        const char *meta_param = NULL;
+        char *meta_longdesc = NULL;
+        char *meta_shortdesc = NULL;
+        char *meta_param = NULL;
         const char *timeout_str = NULL;
-
-        gchar *meta_longdesc_esc = NULL;
-        gchar *meta_shortdesc_esc = NULL;
 
         stonith_obj = st_new_fn(agent);
         if (stonith_obj != NULL) {
             st_log_fn(stonith_obj, (PILLogFun) &stonith_plugin);
 
-            meta_longdesc = st_info_fn(stonith_obj, ST_DEVICEDESCR);
+            /* A st_info_fn() may free any existing output buffer every time
+             * when it's called. Copy the output every time.
+             */
+            meta_longdesc = pcmk__str_copy(st_info_fn(stonith_obj,
+                                                      ST_DEVICEDESCR));
             if (meta_longdesc == NULL) {
                 crm_warn("no long description in %s's metadata.", agent);
-                meta_longdesc = no_parameter_info;
+                meta_longdesc = pcmk__str_copy(no_parameter_info);
             }
 
-            meta_shortdesc = st_info_fn(stonith_obj, ST_DEVICEID);
+            meta_shortdesc = pcmk__str_copy(st_info_fn(stonith_obj,
+                                                       ST_DEVICEID));
             if (meta_shortdesc == NULL) {
                 crm_warn("no short description in %s's metadata.", agent);
-                meta_shortdesc = no_parameter_info;
+                meta_shortdesc = pcmk__str_copy(no_parameter_info);
             }
 
-            meta_param = st_info_fn(stonith_obj, ST_CONF_XML);
+            meta_param = pcmk__str_copy(st_info_fn(stonith_obj,
+                                                   ST_CONF_XML));
             if (meta_param == NULL) {
                 crm_warn("no list of parameters in %s's metadata.", agent);
-                meta_param = no_parameter_info;
+                meta_param = pcmk__str_copy(no_parameter_info);
             }
 
             st_del_fn(stonith_obj);
@@ -242,13 +245,17 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         }
 
         if (pcmk__xml_needs_escape(meta_longdesc, pcmk__xml_escape_text)) {
-            meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
-                                                 pcmk__xml_escape_text);
+            gchar *meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
+                                                        pcmk__xml_escape_text);
+
+            free(meta_longdesc);
             meta_longdesc = meta_longdesc_esc;
         }
         if (pcmk__xml_needs_escape(meta_shortdesc, pcmk__xml_escape_text)) {
-            meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
-                                                  pcmk__xml_escape_text);
+            gchar *meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
+                                                         pcmk__xml_escape_text);
+
+            free(meta_shortdesc);
             meta_shortdesc = meta_shortdesc_esc;
         }
 
@@ -261,8 +268,9 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
                                    meta_shortdesc, meta_param,
                                    timeout_str, timeout_str, timeout_str);
 
-        g_free(meta_longdesc_esc);
-        g_free(meta_shortdesc_esc);
+        free(meta_longdesc);
+        free(meta_shortdesc);
+        free(meta_param);
     }
     if (output) {
         *output = buffer;
