@@ -749,6 +749,7 @@ exit 0
 %files
 ###########################################################
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
+%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 
 %if %{defined _unitdir}
@@ -799,7 +800,6 @@ exit 0
 
 %files cli
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
-%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %if %{defined _unitdir}
