@@ -37,6 +37,8 @@ typedef struct pcmk__node_private {
      * the node name for Pacemaker Remote nodes)
      */
     const char *id;
+
+    const char *name;                   // Node name in cluster
 } pcmk__node_private_t;
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
@@ -57,8 +59,8 @@ pcmk__node_name(const pcmk_node_t *node)
     if (node == NULL) {
         return "unspecified node";
 
-    } else if (node->details->uname != NULL) {
-        return node->details->uname;
+    } else if (node->private->name != NULL) {
+        return node->private->name;
 
     } else if (node->private->id != NULL) {
         return node->private->id;

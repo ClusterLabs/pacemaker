@@ -1265,14 +1265,14 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     op_key = crm_strdup_printf("%s-%s-%s",
-                               PCMK_ACTION_STONITH, node->details->uname, op);
+                               PCMK_ACTION_STONITH, node->private->name, op);
 
     stonith_op = lookup_singleton(scheduler, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->details->uname);
+        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->private->name);
         pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
                           node->private->id);
         pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);

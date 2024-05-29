@@ -860,8 +860,8 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
-                              cib_conn, cib_sync_call,
+        rc = cli_resource_ban(out, options.rsc_id, current->private->name,
+                              move_lifetime, cib_conn, cib_sync_call,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
@@ -881,8 +881,8 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime,
-                                  cib_conn, cib_sync_call,
+            rc = cli_resource_ban(out, options.rsc_id, current->private->name,
+                                  move_lifetime, cib_conn, cib_sync_call,
                                   options.promoted_role_only,
                                   PCMK_ROLE_PROMOTED);
 
@@ -963,7 +963,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             }
             return rc;
         }
-        rc = cli_resource_clear(options.rsc_id, dest->details->uname, NULL,
+        rc = cli_resource_clear(options.rsc_id, dest->private->name, NULL,
                                 cib_conn, cib_sync_call, true, options.force);
 
     } else {
@@ -1079,7 +1079,7 @@ refresh(pcmk__output_t *out)
                             options.host_uname);
                 return rc;
             }
-            router_node = node->details->uname;
+            router_node = node->private->name;
             attr_options |= pcmk__node_attr_remote;
         }
     }
@@ -1966,7 +1966,7 @@ main(int argc, char **argv)
             } else if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
-                rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
+                rc = cli_resource_ban(out, options.rsc_id, node->private->name,
                                       options.move_lifetime, cib_conn,
                                       cib_sync_call, options.promoted_role_only,
                                       PCMK_ROLE_PROMOTED);

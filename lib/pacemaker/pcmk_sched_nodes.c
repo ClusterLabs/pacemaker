@@ -298,7 +298,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If all else is equal, prefer node with lowest-sorting name
 equal:
-    result = strcmp(node1->details->uname, node2->details->uname);
+    result = strcmp(node1->private->name, node2->private->name);
     if (result < 0) {
         crm_trace("%s before %s (name)",
                   pcmk__node_name(node1), pcmk__node_name(node2));

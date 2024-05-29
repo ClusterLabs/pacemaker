@@ -499,7 +499,7 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
     (pcmk_is_set((flags), pcmk_action_runnable)? "runnable" : "unrunnable")
 
 #define action_node_str(a) \
-    (((a)->node == NULL)? "no node" : (a)->node->details->uname)
+    (((a)->node == NULL)? "no node" : (a)->node->private->name)
 
 /*!
  * \internal
@@ -984,7 +984,7 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
 
     if (!pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         if (action->node != NULL) {
-            node_uname = action->node->details->uname;
+            node_uname = action->node->private->name;
             node_uuid = action->node->private->id;
         } else {
             node_uname = "<none>";
@@ -1072,7 +1072,7 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
     CRM_ASSERT(node != NULL);
 
     shutdown_id = crm_strdup_printf("%s-%s", PCMK_ACTION_DO_SHUTDOWN,
-                                    node->details->uname);
+                                    node->private->name);
 
     shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
                                 node, FALSE, node->details->data_set);
@@ -1571,7 +1571,7 @@ schedule_reload(gpointer data, gpointer user_data)
                         rsc->id,
                         pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : " unmanaged",
                         pcmk_is_set(rsc->flags, pcmk__rsc_failed)? " failed" : "",
-                        (node == NULL)? "inactive" : node->details->uname);
+                        (node == NULL)? "inactive" : node->private->name);
         return;
     }
 
@@ -1934,7 +1934,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
             char *xpath = NULL;
             xmlNode *history = NULL;
 
-            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->details->uname);
+            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->private->name);
             history = get_xpath_object(xpath, scheduler->input, LOG_NEVER);
             free(xpath);
 

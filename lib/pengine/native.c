@@ -556,7 +556,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
     // Failed probe operation
     if (native_displayable_role(rsc) == pcmk_role_stopped) {
-        xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->details->uname : NULL);
+        xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->private->name : NULL);
         if (probe_op != NULL) {
             int rc;
 
@@ -656,7 +656,7 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
             pcmk_node_t *n = (pcmk_node_t *) iter->data;
 
-            have_nodes = add_output_node(outstr, n->details->uname, have_nodes);
+            have_nodes = add_output_node(outstr, n->private->name, have_nodes);
         }
         if (have_nodes) {
             g_string_append(outstr, " ]");
@@ -798,7 +798,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     nodes_running_on = pcmk__itoa(g_list_length(rsc->private->active_nodes));
 
     if (rsc->private->lock_node != NULL) {
-        locked_to = rsc->private->lock_node->details->uname;
+        locked_to = rsc->private->lock_node->private->name;
     }
 
     rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE,
@@ -829,7 +829,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         const char *cached = pcmk__btoa(node->details->online);
 
         rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
-                                      PCMK_XA_NAME, node->details->uname,
+                                      PCMK_XA_NAME, node->private->name,
                                       PCMK_XA_ID, node->private->id,
                                       PCMK_XA_CACHED, cached,
                                       NULL);
@@ -1029,10 +1029,12 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
                     continue;
                 }
 
-                node_table = g_hash_table_lookup(active_table, node->details->uname);
+                node_table = g_hash_table_lookup(active_table, node->private->name);
                 if (node_table == NULL) {
                     node_table = pcmk__strkey_table(free, free);
-                    g_hash_table_insert(active_table, strdup(node->details->uname), node_table);
+                    g_hash_table_insert(active_table,
+                                        strdup(node->private->name),
+                                        node_table);
                 }
 
                 active_counter = g_hash_table_lookup(node_table, buffer);

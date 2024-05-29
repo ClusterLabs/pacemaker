@@ -565,7 +565,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     const char *node_id = NULL;
     int name_len;
 
-    CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
+    CRM_ASSERT((node != NULL) && (node->private->name != NULL));
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
@@ -576,7 +576,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
         host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
-            node_host = host_node->details->uname;
+            node_host = host_node->private->name;
         }
         if (node_host == NULL) {
             node_host = ""; /* so we at least get "uname@" to indicate guest */
@@ -585,13 +585,13 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Node ID is displayed if different from uname and detail is requested */
     if (print_detail
-        && !pcmk__str_eq(node->details->uname, node->private->id,
+        && !pcmk__str_eq(node->private->name, node->private->id,
                          pcmk__str_casei)) {
         node_id = node->private->id;
     }
 
     /* Determine name length */
-    name_len = strlen(node->details->uname) + 1;
+    name_len = strlen(node->private->name) + 1;
     if (node_host) {
         name_len += strlen(node_host) + 1; /* "@node_host" */
     }
@@ -601,7 +601,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Allocate and populate display name */
     node_name = pcmk__assert_alloc(name_len, sizeof(char));
-    strcpy(node_name, node->details->uname);
+    strcpy(node_name, node->private->name);
     if (node_host) {
         strcat(node_name, "@");
         strcat(node_name, node_host);
@@ -696,7 +696,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pcmk__output_create_xml_node(out, PCMK_XE_BAN,
                                  PCMK_XA_ID, location->id,
                                  PCMK_XA_RESOURCE, location->rsc->id,
-                                 PCMK_XA_NODE, pe_node->details->uname,
+                                 PCMK_XA_NODE, pe_node->private->name,
                                  PCMK_XA_WEIGHT, weight_s,
                                  PCMK_XA_PROMOTED_ONLY, promoted_only,
                                  /* This is a deprecated alias for
@@ -989,7 +989,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
         pcmk__output_create_xml_node(out, PCMK_XE_CURRENT_DC,
                                      PCMK_XA_PRESENT, PCMK_VALUE_TRUE,
                                      PCMK_XA_VERSION, pcmk__s(dc_version_s, ""),
-                                     PCMK_XA_NAME, dc->details->uname,
+                                     PCMK_XA_NAME, dc->private->name,
                                      PCMK_XA_ID, dc->private->id,
                                      PCMK_XA_WITH_QUORUM, with_quorum,
                                      PCMK_XA_MIXED_VERSION, mixed_version_s,
@@ -2069,7 +2069,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         int rc = pcmk_rc_ok;
 
         rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
-                                      PCMK_XA_NAME, node->details->uname,
+                                      PCMK_XA_NAME, node->private->name,
                                       PCMK_XA_ID, node->private->id,
                                       PCMK_XA_ONLINE, online,
                                       PCMK_XA_STANDBY, standby,
@@ -2110,7 +2110,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         out->end_list(out);
     } else {
         pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
-                                       PCMK_XA_NAME, node->details->uname,
+                                       PCMK_XA_NAME, node->private->name,
                                        NULL);
     }
 
@@ -2363,7 +2363,8 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(node->details->uname, only_node, pcmk__str_star_matches|pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->private->name, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             g_list_free(attr_list);
             continue;
         }
@@ -2418,7 +2419,7 @@ static int
 node_capacity_xml(pcmk__output_t *out, va_list args)
 {
     const pcmk_node_t *node = va_arg(args, pcmk_node_t *);
-    const char *uname = node->details->uname;
+    const char *uname = node->private->name;
     const char *comment = va_arg(args, const char *);
 
     xmlNodePtr xml_node = pcmk__output_create_xml_node(out, PCMK_XE_CAPACITY,
@@ -2534,7 +2535,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->private->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2570,7 +2571,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->private->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             free(node_name);
             continue;
@@ -2669,7 +2670,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->private->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2712,7 +2713,7 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(node->details->uname, only_node,
+        if (!pcmk__str_in_list(node->private->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
@@ -2856,7 +2857,7 @@ promotion_score(pcmk__output_t *out, va_list args)
 
     out->list_item(out, NULL, "%s promotion score on %s: %s",
                    child_rsc->id,
-                   chosen? chosen->details->uname : "none",
+                   chosen? chosen->private->name : "none",
                    score);
     return pcmk_rc_ok;
 }
@@ -2876,7 +2877,7 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
                                                    NULL);
 
     if (chosen) {
-        crm_xml_add(node, PCMK_XA_NODE, chosen->details->uname);
+        crm_xml_add(node, PCMK_XA_NODE, chosen->private->name);
     }
 
     return pcmk_rc_ok;
@@ -3181,7 +3182,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
 {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
-    const char *uname = node->details->uname;
+    const char *uname = node->private->name;
     const char *fn = va_arg(args, const char *);
 
     xmlNodePtr xml_node = NULL;

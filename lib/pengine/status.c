@@ -242,7 +242,7 @@ pe_free_nodes(GList *nodes)
         }
 
         /* This is called after pe_free_resources(), which means that we can't
-         * use node->details->uname for Pacemaker Remote nodes.
+         * use node->private->name for Pacemaker Remote nodes.
          */
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
                   "(guest or remote)" : pcmk__node_name(node)));

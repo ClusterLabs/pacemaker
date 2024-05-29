@@ -37,7 +37,7 @@ build_node_info_list(const pcmk_resource_t *rsc)
             const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
-            ni->node_name = node->details->uname;
+            ni->node_name = node->private->name;
             if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)
                 && (child->private->fns->state(child,
                                                TRUE) == pcmk_role_promoted)) {
@@ -78,7 +78,7 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
-            ni->node_name = node->details->uname;
+            ni->node_name = node->private->name;
             if (rsc->private->fns->state(rsc, TRUE) == pcmk_role_promoted) {
                 ni->promoted = true;
             }
@@ -709,7 +709,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
                          host_uname);
                 return ENOTCONN;
             }
-            router_node = node->details->uname;
+            router_node = node->private->name;
         }
     }
 
@@ -876,7 +876,7 @@ clear_rsc_fail_attrs(const pcmk_resource_t *rsc, const char *operation,
         attr_options |= pcmk__node_attr_remote;
     }
 
-    rc = pcmk__attrd_api_clear_failures(NULL, node->details->uname, rsc_name,
+    rc = pcmk__attrd_api_clear_failures(NULL, node->private->name, rsc_name,
                                         operation, interval_spec, NULL,
                                         attr_options);
     free(rsc_name);
@@ -940,7 +940,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             node = (pcmk_node_t *) lpc->data;
 
             if (node->details->online) {
-                rc = cli_resource_delete(controld_api, node->details->uname, rsc,
+                rc = cli_resource_delete(controld_api, node->private->name, rsc,
                                          operation, interval_spec, just_failures,
                                          scheduler, force);
             }
@@ -1045,8 +1045,8 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         for (GList *iter = scheduler->nodes; iter; iter = iter->next) {
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
-            rc = clear_rsc_failures(out, controld_api, node->details->uname, NULL,
-                                    operation, interval_spec, scheduler);
+            rc = clear_rsc_failures(out, controld_api, node->private->name,
+                                    NULL, operation, interval_spec, scheduler);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
                          pcmk_rc_str(rc));
@@ -1103,7 +1103,7 @@ check_locked(resource_checks_t *checks)
 
     if (lock_node != NULL) {
         checks->flags |= rsc_locked;
-        checks->lock_node = lock_node->details->uname;
+        checks->lock_node = lock_node->private->name;
     }
 }
 
@@ -1234,7 +1234,7 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pcmk_node_t *node = (pcmk_node_t *) hIter->data;
 
-        if (pcmk__strcase_any_of(host, node->details->uname, node->private->id,
+        if (pcmk__strcase_any_of(host, node->private->name, node->private->id,
                                  NULL)) {
             crm_trace("Resource %s is running on %s\n", rsc->id, host);
             goto done;
@@ -1593,7 +1593,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     bool running = false;
     const char *id = pcmk__s(rsc->private->history_id, rsc->id);
-    const char *host = node ? node->details->uname : NULL;
+    const char *host = node ? node->private->name : NULL;
 
     /* If the implicit resource or primitive resource of a bundle is given, operate on the
      * bundle itself instead.
@@ -2394,11 +2394,11 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
                        force);
 
     /* Clear any previous ban constraints on 'dest'. */
-    cli_resource_clear(rsc_id, dest->details->uname, scheduler->nodes, cib,
+    cli_resource_clear(rsc_id, dest->private->name, scheduler->nodes, cib,
                        cib_options, TRUE, force);
 
     /* Record an explicit preference for 'dest' */
-    rc = cli_resource_prefer(out, rsc_id, dest->details->uname, move_lifetime,
+    rc = cli_resource_prefer(out, rsc_id, dest->private->name, move_lifetime,
                              cib, cib_options, promoted_role_only,
                              PCMK_ROLE_PROMOTED);
 
@@ -2412,9 +2412,9 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
     if (force && !cur_is_dest) {
         /* Ban the original location if possible */
         if(current) {
-            (void)cli_resource_ban(out, rsc_id, current->details->uname, move_lifetime,
-                                   cib, cib_options, promoted_role_only,
-                                   PCMK_ROLE_PROMOTED);
+            (void)cli_resource_ban(out, rsc_id, current->private->name,
+                                   move_lifetime, cib, cib_options,
+                                   promoted_role_only, PCMK_ROLE_PROMOTED);
         } else if(count > 1) {
             out->info(out, "Resource '%s' is currently %s in %d locations. "
                       "One may now move to %s",

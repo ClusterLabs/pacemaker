@@ -497,8 +497,8 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if ((rsc == NULL) || (scheduler == NULL)) {
         return NULL;
     }
-    if ((node != NULL) && (node->details->uname != NULL)) {
-        node_name = node->details->uname;
+    if ((node != NULL) && (node->private->name != NULL)) {
+        node_name = node->private->name;
     }
 
     // Find the parameter table for given node

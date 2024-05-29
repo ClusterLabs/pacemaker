@@ -523,7 +523,7 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
             reason = "active";
         }
         pcmk__rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
-                       (assign_to? assign_to->details->uname : "no node"),
+                       (assign_to? assign_to->private->name : "no node"),
                        reason);
         pcmk__assign_resource(rsc, assign_to, true, stop_if_fail);
 

@@ -976,10 +976,10 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
     crm_trace("Setting address for bundle connection %s to bundle host %s",
               rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
-        crm_xml_add(xml, field, node->details->uname);
+        crm_xml_add(xml, field, node->private->name);
     }
 
-    return node->details->uname;
+    return node->private->name;
 }
 
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \

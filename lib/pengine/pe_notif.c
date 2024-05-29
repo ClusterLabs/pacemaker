@@ -129,13 +129,13 @@ get_node_names(const GList *list, GString **all_node_names,
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
 
-        if (node->details->uname == NULL) {
+        if (node->private->name == NULL) {
             continue;
         }
 
         // Always add to list of all node names
         if (all_node_names != NULL) {
-            pcmk__add_word(all_node_names, 1024, node->details->uname);
+            pcmk__add_word(all_node_names, 1024, node->private->name);
         }
 
         // Add to host node name list if appropriate
@@ -146,12 +146,12 @@ get_node_names(const GList *list, GString **all_node_names,
                 launcher = node->details->remote_rsc->private->launcher;
                 if (launcher->private->active_nodes != NULL) {
                     node = pcmk__current_node(launcher);
-                    if (node->details->uname == NULL) {
+                    if (node->private->name == NULL) {
                         continue;
                     }
                 }
             }
-            pcmk__add_word(host_node_names, 1024, node->details->uname);
+            pcmk__add_word(host_node_names, 1024, node->private->name);
         }
     }
 
@@ -220,8 +220,8 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
         if (rsc_names != NULL) {
             pcmk__add_word(rsc_names, 1024, entry->rsc->id);
         }
-        if ((node_names != NULL) && (entry->node->details->uname != NULL)) {
-            pcmk__add_word(node_names, 1024, entry->node->details->uname);
+        if ((node_names != NULL) && (entry->node->private->name != NULL)) {
+            pcmk__add_word(node_names, 1024, entry->node->private->name);
         }
     }
 
@@ -1006,7 +1006,7 @@ pe__order_notifs_after_fencing(const pcmk_action_t *stop, pcmk_resource_t *rsc,
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);
         add_notify_env(n_data, "notify_stop_resource", rsc->id);
-        add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
+        add_notify_env(n_data, "notify_stop_uname", stop->node->private->name);
         create_notify_actions(uber_parent(rsc), n_data);
         pe__free_action_notification_data(n_data);
     }

@@ -119,7 +119,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
            || ((guest_rsc->private->orig_role > pcmk_role_stopped)
                && (guest_node != NULL)
                && pcmk__find_node_in_list(guest_rsc->private->active_nodes,
-                                          guest_node->details->uname) == NULL);
+                                          guest_node->private->name) == NULL);
 }
 
 /*!
@@ -910,7 +910,7 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
 
             probe_op = custom_action(NULL,
                                      crm_strdup_printf("%s-%s", CRM_OP_REPROBE,
-                                                       node->details->uname),
+                                                       node->private->name),
                                      CRM_OP_REPROBE, node, FALSE, scheduler);
             pcmk__insert_meta(probe_op, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
             continue;

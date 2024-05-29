@@ -79,7 +79,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     }
 
     if (node != NULL) {
-        host = node->details->uname;
+        host = node->private->name;
     }
 
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
@@ -691,7 +691,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
 
-    const char *host_uname = (node == NULL)? NULL : node->details->uname;
+    const char *host_uname = (node == NULL)? NULL : node->private->name;
 
     out->begin_list(out, NULL, NULL, "Resource Reasons");
 
@@ -727,7 +727,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
         cli_resource_check(out, rsc, node);
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
-        const char* host_uname =  node->details->uname;
+        const char* host_uname =  node->private->name;
         GList *allResources = node->details->allocated_rsc;
         GList *activeResources = node->details->running_rsc;
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
@@ -774,7 +774,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     pcmk_node_t *node = va_arg(args, pcmk_node_t *);
 
-    const char *host_uname = (node == NULL)? NULL : node->details->uname;
+    const char *host_uname = (node == NULL)? NULL : node->private->name;
 
     xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, PCMK_XE_REASON,
                                                          NULL);
@@ -813,7 +813,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         cli_resource_check(out, rsc, node);
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
-        const char* host_uname =  node->details->uname;
+        const char* host_uname =  node->private->name;
         GList *allResources = node->details->allocated_rsc;
         GList *activeResources = node->details->running_rsc;
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);

@@ -160,8 +160,7 @@ pe__cmp_node_name(gconstpointer a, gconstpointer b)
         return 1;
     }
 
-    return pcmk__numeric_strcasecmp(node1->details->uname,
-                                    node2->details->uname);
+    return pcmk__numeric_strcasecmp(node1->private->name, node2->private->name);
 }
 
 /*!
@@ -186,7 +185,7 @@ pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
     for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         const pcmk_node_t *node = (const pcmk_node_t *) gIter->data;
 
-        out->message(out, "node-weight", rsc, comment, node->details->uname,
+        out->message(out, "node-weight", rsc, comment, node->private->name,
                      pcmk_readable_score(node->weight));
     }
     g_list_free(list);
@@ -789,7 +788,7 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
     if (rsc != NULL) {
         for (GList *ele = rsc->private->active_nodes; ele; ele = ele->next) {
             pcmk_node_t *node = (pcmk_node_t *) ele->data;
-            if (pcmk__str_in_list(node->details->uname, node_list,
+            if (pcmk__str_in_list(node->private->name, node_list,
                                   pcmk__str_star_matches|pcmk__str_casei)) {
                 return true;
             }

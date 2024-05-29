@@ -401,7 +401,7 @@ static pcmk_action_t *
 new_load_stopped_op(pcmk_node_t *node)
 {
     char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
-                                                node->details->uname);
+                                                node->private->name);
     pcmk_action_t *load_stopped = get_pseudo_op(load_stopped_task,
                                               node->details->data_set);
 

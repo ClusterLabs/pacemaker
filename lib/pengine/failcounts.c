@@ -134,7 +134,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                   "[@" PCMK_META_INTERVAL "='%u']"
 
                 lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
-                                                 node->details->uname, xml_name,
+                                                 node->private->name, xml_name,
                                                  conf_op_name,
                                                  conf_op_interval_ms);
                 lrm_op_xpathObj = xpath_search(rsc->private->scheduler->input,

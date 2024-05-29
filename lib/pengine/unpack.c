@@ -483,7 +483,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     crm_trace("Creating node for entry %s/%s", uname, id);
     new_node->private->id = id;
-    new_node->details->uname = uname;
+    new_node->private->name = uname;
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
     new_node->details->rsc_discovery_enabled = TRUE;
@@ -3175,7 +3175,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
     }
 
     if ((source_node != NULL)
-        && !pcmk__str_eq(*source_name, source_node->details->uname,
+        && !pcmk__str_eq(*source_name, source_node->private->name,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
                          PCMK__META_MIGRATE_SOURCE "='%s' does not match %s",
@@ -3185,7 +3185,7 @@ get_migration_node_names(const xmlNode *entry, const pcmk_node_t *source_node,
     }
 
     if ((target_node != NULL)
-        && !pcmk__str_eq(*target_name, target_node->details->uname,
+        && !pcmk__str_eq(*target_name, target_node->private->name,
                          pcmk__str_casei|pcmk__str_null_matches)) {
         pcmk__config_err("Ignoring resource history entry %s because "
                          PCMK__META_MIGRATE_TARGET "='%s' does not match %s",
@@ -3509,7 +3509,7 @@ record_failed_op(struct action_history *history)
         const char *uname = crm_element_value(xIter, PCMK_XA_UNAME);
 
         if (pcmk__str_eq(history->key, key, pcmk__str_none)
-            && pcmk__str_eq(uname, history->node->details->uname,
+            && pcmk__str_eq(uname, history->node->private->name,
                             pcmk__str_casei)) {
             crm_trace("Skipping duplicate entry %s on %s",
                       history->key, pcmk__node_name(history->node));
@@ -3519,7 +3519,7 @@ record_failed_op(struct action_history *history)
 
     crm_trace("Adding entry for %s on %s to failed action list",
               history->key, pcmk__node_name(history->node));
-    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
+    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->private->name);
     crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
     pcmk__xml_copy(scheduler->failed, history->xml);
 }
@@ -4659,7 +4659,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
                pcmk__node_name(history->node));
     update_resource_state(history, history->expected_exit_status, last_failure,
                           on_fail);
-    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
+    crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->private->name);
 
     record_failed_op(history);
     resource_location(ban_rsc, history->node, -PCMK_SCORE_INFINITY,
@@ -4942,7 +4942,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         update_resource_state(&history, history.expected_exit_status,
                               *last_failure, on_fail);
-        crm_xml_add(xml_op, PCMK_XA_UNAME, node->details->uname);
+        crm_xml_add(xml_op, PCMK_XA_UNAME, node->private->name);
         pcmk__set_rsc_flags(rsc, pcmk__rsc_ignore_failure);
 
         record_failed_op(&history);
@@ -5006,7 +5006,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
     };
 
     pcmk__insert_dup(node->details->attrs,
-                     CRM_ATTR_UNAME, node->details->uname);
+                     CRM_ATTR_UNAME, node->private->name);
 
     pcmk__insert_dup(node->details->attrs, CRM_ATTR_ID, node->private->id);
     if (pcmk__str_eq(node->private->id, scheduler->dc_uuid, pcmk__str_casei)) {

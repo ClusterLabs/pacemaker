@@ -564,7 +564,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "next node %s (starting)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (ended_on? ended_on->details->uname : "none"),
+                  (ended_on? ended_on->private->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return ended_on;
     }
@@ -573,7 +573,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (stopping)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
+                  (began_on? began_on->private->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -582,7 +582,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (not moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
+                  (began_on? began_on->private->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -617,7 +617,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
+                  (began_on? began_on->private->name : "none"),
                   partial_migration? " (partial migration)" : "");
         return began_on;
     }
@@ -629,7 +629,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     crm_trace("Routing %s for %s through remote connection's "
               "next node %s (moving)%s",
               action->task, (action->rsc? action->rsc->id : "no resource"),
-              (ended_on? ended_on->details->uname : "none"),
+              (ended_on? ended_on->private->name : "none"),
               partial_migration? " (partial migration)" : "");
     return ended_on;
 }
@@ -726,7 +726,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
                        target,
                        (gpointer) args_xml);
         hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
-                       (gpointer) host->details->uname,
+                       (gpointer) host->private->name,
                        (gpointer) args_xml);
     }
 }

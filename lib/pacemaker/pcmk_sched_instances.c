@@ -567,7 +567,7 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     pcmk_node_t *chosen = NULL;
 
     pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
-                    ((prefer == NULL)? "no node" : prefer->details->uname));
+                    ((prefer == NULL)? "no node" : prefer->private->name));
 
     if (pcmk_is_set(instance->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(instance,
