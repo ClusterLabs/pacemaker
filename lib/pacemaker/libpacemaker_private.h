@@ -66,7 +66,7 @@ enum pcmk__updated {
     } while (0)
 
 // Resource assignment methods
-struct resource_alloc_functions_s {
+struct pcmk__assignment_methods {
     /*!
      * \internal
      * \brief Assign a resource to a node

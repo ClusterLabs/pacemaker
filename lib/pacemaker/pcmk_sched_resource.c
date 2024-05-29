@@ -17,7 +17,7 @@
 #include "libpacemaker_private.h"
 
 // Resource assignment methods by resource variant
-static pcmk_assignment_methods_t assignment_methods[] = {
+static pcmk__assignment_methods_t assignment_methods[] = {
     {
         pcmk__primitive_assign,
         pcmk__primitive_create_actions,
@@ -119,7 +119,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
     };
 
     for (int i = 0; i < PCMK__NELEM(attr_list); i++) {
-        const char *value = crm_element_value(rsc->xml, attr_list[i]);
+        const char *value = crm_element_value(rsc->private->xml, attr_list[i]);
         const char *old_value = crm_element_value(rsc_entry, attr_list[i]);
 
         if (!pcmk__str_eq(value, old_value, pcmk__str_none)) {
@@ -156,8 +156,8 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
 static GList *
 add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
 {
-    if ((strcmp(rsc->id, id) == 0)
-        || ((rsc->clone_name != NULL) && (strcmp(rsc->clone_name, id) == 0))) {
+    if (pcmk__str_eq(id, rsc->id, pcmk__str_none)
+        || pcmk__str_eq(id, rsc->private->history_id, pcmk__str_none)) {
         result = g_list_prepend(result, rsc);
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -204,7 +204,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
-    rsc->cmds = &assignment_methods[rsc->variant];
+    rsc->private->cmds = &assignment_methods[rsc->variant];
     g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
 }
 
@@ -234,10 +234,10 @@ static inline void
 add_colocated_resources(const pcmk_resource_t *rsc,
                         const pcmk_resource_t *orig_rsc, GList **list)
 {
-    *list = rsc->cmds->colocated_resources(rsc, orig_rsc, *list);
+    *list = rsc->private->cmds->colocated_resources(rsc, orig_rsc, *list);
 }
 
-// Shared implementation of pcmk_assignment_methods_t:colocated_resources()
+// Shared implementation of pcmk__assignment_methods_t:colocated_resources()
 GList *
 pcmk__colocated_resources(const pcmk_resource_t *rsc,
                           const pcmk_resource_t *orig_rsc,
@@ -327,7 +327,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
-            child->cmds->output_actions(child);
+            child->private->cmds->output_actions(child);
         }
         return;
     }
@@ -391,7 +391,7 @@ add_assigned_resource(pcmk_node_t *node, pcmk_resource_t *rsc)
  * \note Assigning a resource to the NULL node using this function is different
  *       from calling pcmk__unassign_resource(), in that it may also update any
  *       actions created for the resource.
- * \note The \c pcmk_assignment_methods_t:assign() method is preferred, unless
+ * \note The \c pcmk__assignment_methods_t:assign() method is preferred, unless
  *       a resource should be assigned to the \c NULL node or every resource in
  *       a tree should be assigned to the same node.
  * \note If \p stop_if_fail is \c false, then \c pcmk__unassign_resource() can
@@ -690,12 +690,14 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node scores
-    resource1->cmds->add_colocated_node_scores(resource1, NULL, resource1->id,
-                                               &r1_nodes, NULL, 1,
-                                               pcmk__coloc_select_this_with);
-    resource2->cmds->add_colocated_node_scores(resource2, NULL, resource2->id,
-                                               &r2_nodes, NULL, 1,
-                                               pcmk__coloc_select_this_with);
+    resource1->private->cmds->add_colocated_node_scores(resource1, NULL,
+                                                        resource1->id,
+                                                        &r1_nodes, NULL, 1,
+                                                        pcmk__coloc_select_this_with);
+    resource2->private->cmds->add_colocated_node_scores(resource2, NULL,
+                                                        resource2->id,
+                                                        &r2_nodes, NULL, 1,
+                                                        pcmk__coloc_select_this_with);
     pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
                          resource1->cluster);
     pe__show_node_scores(true, NULL, resource2->id, r2_nodes,

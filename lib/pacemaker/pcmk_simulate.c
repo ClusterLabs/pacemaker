@@ -46,7 +46,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
     char *action_name = NULL;
     const char *prefix = "";
     const char *action_host = NULL;
-    const char *clone_name = NULL;
+    const char *history_id = NULL;
     const char *task = action->task;
 
     if (action->node != NULL) {
@@ -61,10 +61,10 @@ create_action_name(const pcmk_action_t *action, bool verbose)
     }
 
     if (action->rsc != NULL) {
-        clone_name = action->rsc->clone_name;
+        history_id = action->rsc->private->history_id;
     }
 
-    if (clone_name != NULL) {
+    if (history_id != NULL) {
         char *key = NULL;
         guint interval_ms = 0;
 
@@ -82,9 +82,9 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);
-            key = pcmk__notify_key(clone_name, n_type, n_task);
+            key = pcmk__notify_key(history_id, n_type, n_task);
         } else {
-            key = pcmk__op_key(clone_name, task, interval_ms);
+            key = pcmk__op_key(history_id, task, interval_ms);
         }
 
         if (action_host != NULL) {

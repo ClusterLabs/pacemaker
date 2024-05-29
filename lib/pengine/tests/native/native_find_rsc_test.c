@@ -504,7 +504,7 @@ renamed_rsc(void **state) {
     assert_non_null(promotable_0);
     assert_non_null(promotable_1);
 
-    // Passes because pcmk_rsc_match_history means base name matches clone_name
+    // Passes because pcmk_rsc_match_history means base name matches history_id
     assert_ptr_equal(promotable_0,
                      native_find_rsc(promotable_0, "promotable-rsc", NULL,
                                      pcmk_rsc_match_history));

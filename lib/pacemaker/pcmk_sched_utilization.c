@@ -279,7 +279,7 @@ sum_resource_utilization(const pcmk_resource_t *orig_rsc, GList *rscs)
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
+        rsc->private->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
     }
     return utilization;
 }
@@ -313,7 +313,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     }
 
     // Check whether any resources are colocated with this one
-    colocated_rscs = rsc->cmds->colocated_resources(rsc, NULL, NULL);
+    colocated_rscs = rsc->private->cmds->colocated_resources(rsc, NULL, NULL);
     if (colocated_rscs == NULL) {
         return NULL;
     }

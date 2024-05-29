@@ -188,7 +188,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
 

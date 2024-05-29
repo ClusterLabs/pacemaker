@@ -588,9 +588,9 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
         goto done;
     }
 
-    rclass = crm_element_value(rsc->xml, PCMK_XA_CLASS);
-    rtype = crm_element_value(rsc->xml, PCMK_XA_TYPE);
-    rprovider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER);
+    rclass = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
+    rtype = crm_element_value(rsc->private->xml, PCMK_XA_TYPE);
+    rprovider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
     CRM_ASSERT(cib_node != NULL);

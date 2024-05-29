@@ -181,14 +181,14 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         }
     }
 
-    node = rsc->fns->location(rsc, NULL, FALSE);
+    node = rsc->private->fns->location(rsc, NULL, FALSE);
     if (node == NULL) {
         pcmk__rsc_trace(rsc, "%s can't be promoted because it won't be active",
                         rsc->id);
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        if (rsc->fns->state(rsc, TRUE) == pcmk_role_promoted) {
+        if (rsc->private->fns->state(rsc, TRUE) == pcmk_role_promoted) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
                        rsc->id, pcmk__node_name(node));
         } else {
@@ -276,8 +276,8 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     }
 
     // If those are the same, prefer instance whose current role is higher
-    role1 = rsc1->fns->state(rsc1, TRUE);
-    role2 = rsc2->fns->state(rsc2, TRUE);
+    role1 = rsc1->private->fns->state(rsc1, TRUE);
+    role2 = rsc2->private->fns->state(rsc2, TRUE);
     if (role1 > role2) {
         pcmk__rsc_trace(rsc1,
                         "%s has higher promotion priority than %s "
@@ -322,7 +322,7 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
         return;
     }
 
-    chosen = child->fns->location(child, NULL, FALSE);
+    chosen = child->private->fns->location(child, NULL, FALSE);
     if (chosen == NULL) {
         pcmk__rsc_trace(clone, "Not adding sort index of %s: inactive",
                         child->id);
@@ -366,9 +366,10 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
                     colocation->id, colocation->dependent->id,
                     colocation->primary->id,
                     pcmk_readable_score(colocation->score));
-    primary->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                             &clone->allowed_nodes, colocation,
-                                             factor, flags);
+    primary->private->cmds->add_colocated_node_scores(primary, clone, clone->id,
+                                                      &clone->allowed_nodes,
+                                                      colocation, factor,
+                                                      flags);
 }
 
 /*!
@@ -397,9 +398,11 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                     colocation->id, colocation->dependent->id,
                     colocation->primary->id,
                     pcmk_readable_score(colocation->score));
-    dependent->cmds->add_colocated_node_scores(dependent, clone, clone->id,
-                                               &clone->allowed_nodes,
-                                               colocation, factor, flags);
+    dependent->private->cmds->add_colocated_node_scores(dependent, clone,
+                                                        clone->id,
+                                                        &clone->allowed_nodes,
+                                                        colocation, factor,
+                                                        flags);
 }
 
 /*!
@@ -415,7 +418,7 @@ set_sort_index_to_node_score(gpointer data, gpointer user_data)
     pcmk_resource_t *child = (pcmk_resource_t *) data;
     const pcmk_resource_t *clone = (const pcmk_resource_t *) user_data;
 
-    pcmk_node_t *chosen = child->fns->location(child, NULL, FALSE);
+    pcmk_node_t *chosen = child->private->fns->location(child, NULL, FALSE);
 
     if (!pcmk_is_set(child->flags, pcmk_rsc_managed)
         && (child->next_role == pcmk_role_promoted)) {
@@ -512,9 +515,9 @@ find_active_anon_instance(const pcmk_resource_t *clone, const char *id,
         pcmk_resource_t *active = NULL;
 
         // Use ->find_rsc() in case this is a cloned group
-        active = clone->fns->find_rsc(child, id, node,
-                                      pcmk_rsc_match_clone_only
-                                      |pcmk_rsc_match_current_node);
+        active = clone->private->fns->find_rsc(child, id, node,
+                                               pcmk_rsc_match_clone_only
+                                               |pcmk_rsc_match_current_node);
         if (active != NULL) {
             return active;
         }
@@ -542,8 +545,8 @@ anonymous_known_on(const pcmk_resource_t *clone, const char *id,
         /* Use ->find_rsc() because this might be a cloned group, and knowing
          * that other members of the group are known here implies nothing.
          */
-        child = clone->fns->find_rsc(child, id, NULL,
-                                     pcmk_rsc_match_clone_only);
+        child = clone->private->fns->find_rsc(child, id, NULL,
+                                              pcmk_rsc_match_clone_only);
         CRM_LOG_ASSERT(child != NULL);
         if (child != NULL) {
             if (g_hash_table_lookup(child->known_on, node->details->id)) {
@@ -692,7 +695,7 @@ static int
 promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                 bool *is_default)
 {
-    char *name = NULL;
+    const char *name = NULL;
     const char *attr_value = NULL;
 
     if (is_default != NULL) {
@@ -730,7 +733,7 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
      * known as in resource history, since that's what crm_attribute --promotion
      * would have used.
      */
-    name = (rsc->clone_name == NULL)? rsc->id : rsc->clone_name;
+    name = pcmk__s(rsc->private->history_id, rsc->id);
 
     attr_value = promotion_attr_value(rsc, node, name);
     if (attr_value != NULL) {
@@ -738,18 +741,19 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
                         name, pcmk__node_name(node),
                         pcmk__s(attr_value, "(unset)"));
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
-        /* If we don't have any resource history yet, we won't have clone_name.
+        /* If we don't have any resource history yet, we won't have history_id.
          * In that case, for anonymous clones, try the resource name without
          * any instance number.
          */
-        name = clone_strip(rsc->id);
-        if (strcmp(rsc->id, name) != 0) {
-            attr_value = promotion_attr_value(rsc, node, name);
+        char *rsc_name = clone_strip(rsc->id);
+
+        if (strcmp(rsc->id, rsc_name) != 0) {
+            attr_value = promotion_attr_value(rsc, node, rsc_name);
             pcmk__rsc_trace(rsc, "Promotion score for %s on %s (for %s) = %s",
-                            name, pcmk__node_name(node), rsc->id,
+                            rsc_name, pcmk__node_name(node), rsc->id,
                             pcmk__s(attr_value, "(unset)"));
         }
-        free(name);
+        free(rsc_name);
     }
 
     if (attr_value == NULL) {
@@ -849,7 +853,7 @@ set_next_role_unpromoted(void *data, void *user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
     GList *assigned = NULL;
 
-    rsc->fns->location(rsc, &assigned, FALSE);
+    rsc->private->fns->location(rsc, &assigned, FALSE);
     if (assigned == NULL) {
         pe__set_next_role(rsc, pcmk_role_stopped, "stopped instance");
     } else {
@@ -886,7 +890,8 @@ set_next_role_promoted(void *data, gpointer user_data)
 static void
 show_promotion_score(pcmk_resource_t *instance)
 {
-    pcmk_node_t *chosen = instance->fns->location(instance, NULL, FALSE);
+    pcmk_node_t *chosen = instance->private->fns->location(instance, NULL,
+                                                           FALSE);
 
     if (pcmk_is_set(instance->cluster->flags, pcmk_sched_output_scores)
         && !pcmk__is_daemon && (instance->cluster->priv != NULL)) {
@@ -917,6 +922,7 @@ set_instance_priority(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *instance = (pcmk_resource_t *) data;
     const pcmk_resource_t *clone = (const pcmk_resource_t *) user_data;
+
     const pcmk_node_t *chosen = NULL;
     enum rsc_role_e next_role = pcmk_role_unknown;
     GList *list = NULL;
@@ -924,12 +930,12 @@ set_instance_priority(gpointer data, gpointer user_data)
     pcmk__rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
                     pcmk_role_text(instance->next_role));
 
-    if (instance->fns->state(instance, TRUE) == pcmk_role_started) {
+    if (instance->private->fns->state(instance, TRUE) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);
     }
 
     // Only an instance that will be active can be promoted
-    chosen = instance->fns->location(instance, &list, FALSE);
+    chosen = instance->private->fns->location(instance, &list, FALSE);
     if (pcmk__list_of_multiple(list)) {
         pcmk__config_err("Cannot promote non-colocated child %s",
                          instance->id);
@@ -939,7 +945,7 @@ set_instance_priority(gpointer data, gpointer user_data)
         return;
     }
 
-    next_role = instance->fns->state(instance, FALSE);
+    next_role = instance->private->fns->state(instance, FALSE);
     switch (next_role) {
         case pcmk_role_started:
         case pcmk_role_unknown:
@@ -985,7 +991,8 @@ set_instance_priority(gpointer data, gpointer user_data)
     for (GList *iter = list; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) iter->data;
 
-        instance->cmds->apply_coloc_score(instance, cons->primary, cons, true);
+        instance->private->cmds->apply_coloc_score(instance, cons->primary,
+                                                   cons, true);
     }
     g_list_free(list);
 
@@ -1091,7 +1098,7 @@ create_promotable_instance_actions(pcmk_resource_t *clone,
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->cmds->create_actions(instance);
+        instance->private->cmds->create_actions(instance);
         check_for_role_change(instance, any_demoting, any_promoting);
     }
 }
@@ -1234,12 +1241,14 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
      */
     for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
-        pcmk_node_t *node = instance->fns->location(instance, NULL, FALSE);
+        pcmk_node_t *node = instance->private->fns->location(instance, NULL,
+                                                             FALSE);
 
         if (node == NULL) {
             continue;
         }
-        if (instance->fns->state(instance, FALSE) == colocation->primary_role) {
+        if (instance->private->fns->state(instance,
+                                          FALSE) == colocation->primary_role) {
             update_dependent_allowed_nodes(dependent, primary, node,
                                            colocation);
             affected_nodes = g_list_prepend(affected_nodes, node);

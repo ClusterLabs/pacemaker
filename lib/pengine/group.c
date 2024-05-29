@@ -104,7 +104,7 @@ inactive_resources(pcmk_resource_t *rsc)
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
-        if (!child_rsc->fns->active(child_rsc, TRUE)) {
+        if (!child_rsc->private->fns->active(child_rsc, TRUE)) {
             retval++;
         }
     }
@@ -155,8 +155,9 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
 {
     bool star_list = pcmk__list_of_1(only_rsc) &&
                      pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
-    bool child_filtered = child->fns->is_filtered(child, only_rsc, FALSE);
-    bool child_active = child->fns->active(child, FALSE);
+    bool child_filtered = child->private->fns->is_filtered(child, only_rsc,
+                                                           FALSE);
+    bool child_active = child->private->fns->active(child, FALSE);
     bool show_inactive = pcmk_is_set(show_opts, pcmk_show_inactive_rscs);
 
     /* If the resource is in only_rsc by name (so, ignoring "*") then allow
@@ -179,7 +180,7 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
 gboolean
 group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
-    xmlNode *xml_obj = rsc->xml;
+    xmlNode *xml_obj = rsc->private->xml;
     xmlNode *xml_native_rsc = NULL;
     group_variant_data_t *group_data = NULL;
     const char *clone_id = NULL;
@@ -196,7 +197,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->xml, PCMK__META_CLONE);
+    clone_id = crm_element_value(rsc->private->xml, PCMK__META_CLONE);
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
          xml_native_rsc != NULL;
@@ -242,7 +243,7 @@ group_active(pcmk_resource_t *rsc, gboolean all)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
-        if (child_rsc->fns->active(child_rsc, all)) {
+        if (child_rsc->private->fns->active(child_rsc, all)) {
             c_any = TRUE;
         } else {
             c_all = FALSE;
@@ -266,7 +267,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
-    
+
     const char *desc = NULL;
     GList *gIter = rsc->children;
 
@@ -277,7 +278,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
 
@@ -307,8 +308,8 @@ pe__group_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, (const char *) child_rsc->xml->name, show_opts,
-                     child_rsc, only_node, only_rsc);
+        out->message(out, (const char *) child_rsc->private->xml->name,
+                     show_opts, child_rsc, only_node, only_rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -334,12 +335,12 @@ pe__group_default(pcmk__output_t *out, va_list args)
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
-    gboolean active = rsc->fns->active(rsc, TRUE);
-    gboolean partially_active = rsc->fns->active(rsc, FALSE);
+    gboolean active = rsc->private->fns->active(rsc, TRUE);
+    gboolean partially_active = rsc->private->fns->active(rsc, FALSE);
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->private->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
 
@@ -365,8 +366,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
             group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
                          pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
-            out->message(out, (const char *) child_rsc->xml->name, show_opts,
-                         child_rsc, only_node, only_rsc);
+            out->message(out, (const char *) child_rsc->private->xml->name,
+                         show_opts, child_rsc, only_node, only_rsc);
         }
     }
 
@@ -387,7 +388,7 @@ group_free(pcmk_resource_t * rsc)
 
         CRM_ASSERT(child_rsc);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        child_rsc->fns->free(child_rsc);
+        child_rsc->private->fns->free(child_rsc);
     }
 
     pcmk__rsc_trace(rsc, "Freeing child list");
@@ -404,7 +405,8 @@ group_resource_state(const pcmk_resource_t * rsc, gboolean current)
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
+        enum rsc_role_e role = child_rsc->private->fns->state(child_rsc,
+                                                              current);
 
         if (role > group_role) {
             group_role = role;
@@ -436,7 +438,8 @@ pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 
             const pcmk_resource_t *child_rsc = iter->data;
 
-            if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {
+            if (!child_rsc->private->fns->is_filtered(child_rsc, only_rsc,
+                                                      FALSE)) {
                 passes = TRUE;
                 break;
             }

@@ -87,8 +87,8 @@ static xmlNode *
 find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
                          guint interval_ms, bool include_disabled)
 {
-    for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
-                                                   NULL, NULL);
+    for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+                                                   PCMK_XE_OP, NULL, NULL);
          operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
         bool enabled = false;
@@ -325,13 +325,14 @@ static void
 update_resource_action_runnable(pcmk_action_t *action,
                                 pcmk_scheduler_t *scheduler)
 {
+    pcmk_resource_t *rsc = action->rsc;
+
     if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
         return;
     }
 
     if (action->node == NULL) {
-        pcmk__rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
-                        action->uuid);
+        pcmk__rsc_trace(rsc, "%s is unrunnable (unallocated)", action->uuid);
         pcmk__clear_action_flags(action, pcmk_action_runnable);
 
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
@@ -341,7 +342,7 @@ update_resource_action_runnable(pcmk_action_t *action,
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pcmk__node_name(action->node));
-        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)
+        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)
             && pcmk__str_eq(action->task, PCMK_ACTION_STOP, pcmk__str_casei)
             && !(action->node->details->unclean)) {
             pe_fence_node(scheduler, action->node, "stop is unrunnable", false);
@@ -363,33 +364,31 @@ update_resource_action_runnable(pcmk_action_t *action,
              * such an action cannot be completed if it is on a guest node whose
              * host is unclean and cannot be fenced.
              */
-            pcmk__rsc_debug(action->rsc,
+            pcmk__rsc_debug(rsc,
                             "%s on %s is unrunnable "
                             "(node's host cannot be fenced)",
                             action->uuid, pcmk__node_name(action->node));
             pcmk__clear_action_flags(action, pcmk_action_runnable);
         } else {
-            pcmk__rsc_trace(action->rsc,
+            pcmk__rsc_trace(rsc,
                             "%s on %s does not require fencing or quorum",
                             action->uuid, pcmk__node_name(action->node));
             pcmk__set_action_flags(action, pcmk_action_runnable);
         }
 
     } else {
-        switch (effective_quorum_policy(action->rsc, scheduler)) {
+        switch (effective_quorum_policy(rsc, scheduler)) {
             case pcmk_no_quorum_stop:
-                pcmk__rsc_debug(action->rsc,
-                                "%s on %s is unrunnable (no quorum)",
+                pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                 action->uuid, pcmk__node_name(action->node));
                 pcmk__clear_action_flags(action, pcmk_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
 
             case pcmk_no_quorum_freeze:
-                if (!action->rsc->fns->active(action->rsc, TRUE)
-                    || (action->rsc->next_role > action->rsc->role)) {
-                    pcmk__rsc_debug(action->rsc,
-                                    "%s on %s is unrunnable (no quorum)",
+                if (!rsc->private->fns->active(rsc, TRUE)
+                    || (rsc->next_role > rsc->role)) {
+                    pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,
                                     pcmk__node_name(action->node));
                     pcmk__clear_action_flags(action, pcmk_action_runnable);
@@ -479,8 +478,8 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
          * block (which may have rules that need to be evaluated) rather than
          * XML properties.
          */
-        for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
-                                                       NULL, NULL);
+        for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+                                                       PCMK_XE_OP, NULL, NULL);
              operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
             bool enabled = false;
@@ -648,8 +647,8 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
     guint min_interval_ms = G_MAXUINT;
     xmlNode *op = NULL;
 
-    for (xmlNode *operation = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP,
-                                                   NULL, NULL);
+    for (xmlNode *operation = pcmk__xe_first_child(rsc->private->ops_xml,
+                                                   PCMK_XE_OP, NULL, NULL);
          operation != NULL; operation = pcmk__xe_next_same(operation)) {
 
         bool enabled = false;
@@ -708,9 +707,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *str = NULL;
 
     pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->xml, PCMK_XA_CLASS),
-        .provider = crm_element_value(rsc->xml, PCMK_XA_PROVIDER),
-        .agent = crm_element_value(rsc->xml, PCMK_XA_TYPE),
+        .standard = crm_element_value(rsc->private->xml, PCMK_XA_CLASS),
+        .provider = crm_element_value(rsc->private->xml, PCMK_XA_PROVIDER),
+        .agent = crm_element_value(rsc->private->xml, PCMK_XA_TYPE),
     };
 
     pe_op_eval_data_t op_rule_data = {

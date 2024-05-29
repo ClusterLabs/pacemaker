@@ -555,7 +555,7 @@ rsc_printable_id(const pcmk_resource_t *rsc)
     if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
         return rsc->id;
     }
-    return pcmk__xe_id(rsc->xml);
+    return pcmk__xe_id(rsc->private->xml);
 }
 
 void
@@ -788,7 +788,8 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 bool
 pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node)
 {
-    return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any(rsc, only_node));
+    return rsc->private->fns->active(rsc, FALSE)
+           && !pe__rsc_running_on_any(rsc, only_node);
 }
 
 GList *

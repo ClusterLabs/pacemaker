@@ -316,11 +316,11 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
                         rsc->id, colocation->id, other->id,
                         colocation->score,
                         pcmk_role_text(colocation->dependent_role));
-        other->cmds->assign(other, NULL, true);
+        other->private->cmds->assign(other, NULL, true);
     }
 
     // Apply the colocation score to this resource's allowed node scores
-    rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
+    rsc->private->cmds->apply_coloc_score(rsc, other, colocation, true);
     if ((archive != NULL)
         && !pcmk__any_node_available(rsc->allowed_nodes)) {
         pcmk__rsc_info(rsc,
@@ -403,9 +403,10 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     // Never assign a child without parent being assigned first
     if ((rsc->parent != NULL)
         && !pcmk_is_set(rsc->parent->flags, pcmk_rsc_assigning)) {
+
         pcmk__rsc_debug(rsc, "%s: Assigning parent %s first",
                         rsc->id, rsc->parent->id);
-        rsc->parent->cmds->assign(rsc->parent, prefer, stop_if_fail);
+        rsc->parent->private->cmds->assign(rsc->parent, prefer, stop_if_fail);
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_unassigned)) {
@@ -709,7 +710,8 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                     pcmk_role_text(rsc->next_role), next_role_source,
                     pcmk__node_name(rsc->allocated_to));
 
-    current = rsc->fns->active_node(rsc, &num_all_active, &num_clean_active);
+    current = rsc->private->fns->active_node(rsc, &num_all_active,
+                                             &num_clean_active);
 
     g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
                    rsc);
@@ -777,7 +779,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     }
 
     if (multiply_active) {
-        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+        const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
 
         // Resource was (possibly) incorrectly multiply active
         pcmk__sched_err("%s resource %s might be active on %u nodes (%s)",
@@ -1105,7 +1107,8 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 
     if (for_dependent) {
         // Always process on behalf of primary resource
-        primary->cmds->apply_coloc_score(dependent, primary, colocation, false);
+        primary->private->cmds->apply_coloc_score(dependent, primary,
+                                                  colocation, false);
         return;
     }
 
@@ -1130,7 +1133,7 @@ pcmk__primitive_apply_coloc_score(pcmk_resource_t *dependent,
 }
 
 /* Primitive implementation of
- * pcmk_assignment_methods_t:with_this_colocations()
+ * pcmk__assignment_methods_t:with_this_colocations()
  */
 void
 pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
@@ -1144,7 +1147,8 @@ pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
          */
         pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
         if (rsc->parent != NULL) {
-            rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc, list);
+            rsc->parent->private->cmds->with_this_colocations(rsc->parent,
+                                                              orig_rsc, list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
@@ -1159,7 +1163,7 @@ pcmk__with_primitive_colocations(const pcmk_resource_t *rsc,
 }
 
 /* Primitive implementation of
- * pcmk_assignment_methods_t:this_with_colocations()
+ * pcmk__assignment_methods_t:this_with_colocations()
  */
 void
 pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
@@ -1173,7 +1177,8 @@ pcmk__primitive_with_colocations(const pcmk_resource_t *rsc,
          */
         pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
         if (rsc->parent != NULL) {
-            rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc, list);
+            rsc->parent->private->cmds->this_with_colocations(rsc->parent,
+                                                              orig_rsc, list);
         }
     } else {
         // For an ancestor, add only explicitly configured constraints
@@ -1543,7 +1548,7 @@ pcmk__primitive_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     }
 }
 
-// Primitive implementation of pcmk_assignment_methods_t:add_utilization()
+// Primitive implementation of pcmk__assignment_methods_t:add_utilization()
 void
 pcmk__primitive_add_utilization(const pcmk_resource_t *rsc,
                                 const pcmk_resource_t *orig_rsc,
@@ -1606,7 +1611,7 @@ ban_if_not_locked(gpointer data, gpointer user_data)
     }
 }
 
-// Primitive implementation of pcmk_assignment_methods_t:shutdown_lock()
+// Primitive implementation of pcmk__assignment_methods_t:shutdown_lock()
 void
 pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 {
@@ -1614,7 +1619,7 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
 
     CRM_ASSERT(pcmk__is_primitive(rsc));
 
-    class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+    class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
 
     // Fence devices and remote connections can't be locked
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)

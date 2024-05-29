@@ -63,8 +63,8 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
 {
     const char *id = NULL;
 
-    for (xmlNode *op = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL,
-                                            NULL);
+    for (xmlNode *op = pcmk__xe_first_child(rsc->private->ops_xml, PCMK_XE_OP,
+                                            NULL, NULL);
          op != NULL; op = pcmk__xe_next_same(op)) {
 
         // Check whether action name and interval match
@@ -208,7 +208,7 @@ active_recurring_should_be_optional(const pcmk_resource_t *rsc,
         return false;
     }
 
-    if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
+    if (!pcmk_is_set(rsc->private->cmds->action_flags(start, NULL),
                      pcmk_action_optional)) {
         pcmk__rsc_trace(rsc, "%s will be mandatory because %s is",
                         key, start->uuid);
@@ -612,8 +612,8 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Creating any recurring actions needed for %s",
                     rsc->id);
 
-    for (xmlNode *op = pcmk__xe_first_child(rsc->ops_xml, PCMK_XE_OP, NULL,
-                                            NULL);
+    for (xmlNode *op = pcmk__xe_first_child(rsc->private->ops_xml, PCMK_XE_OP,
+                                            NULL, NULL);
          op != NULL; op = pcmk__xe_next_same(op)) {
 
         struct op_history op_history = { NULL, };

@@ -61,11 +61,11 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     colocations = pcmk__this_with_colocations(rsc);
     for (GList *iter = colocations; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
+        pcmk_resource_t *primary = constraint->primary;
 
         pcmk__rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
-                        rsc->id, constraint->id, constraint->primary->id);
-        constraint->primary->cmds->assign(constraint->primary, prefer,
-                                          stop_if_fail);
+                        rsc->id, constraint->id, primary->id);
+        primary->private->cmds->assign(primary, prefer, stop_if_fail);
     }
     g_list_free(colocations);
 
@@ -156,7 +156,7 @@ pcmk__clone_internal_constraints(pcmk_resource_t *rsc)
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->cmds->internal_constraints(instance);
+        instance->private->cmds->internal_constraints(instance);
 
         // Start clone -> start instance -> clone started
         pcmk__order_starts(rsc, instance, pcmk__ar_unrunnable_first_blocks
@@ -201,6 +201,7 @@ pcmk__clone_internal_constraints(pcmk_resource_t *rsc)
 static bool
 can_interleave(const pcmk__colocation_t *colocation)
 {
+    const pcmk_resource_t *primary = colocation->primary;
     const pcmk_resource_t *dependent = colocation->dependent;
 
     // Only colocations between clone or bundle resources use interleaving
@@ -217,11 +218,11 @@ can_interleave(const pcmk__colocation_t *colocation)
     /* @TODO Do we actually care about multiple primary instances sharing a
      * dependent instance?
      */
-    if (dependent->fns->max_per_node(dependent)
-        != colocation->primary->fns->max_per_node(colocation->primary)) {
+    if (dependent->private->fns->max_per_node(dependent)
+        != primary->private->fns->max_per_node(primary)) {
         pcmk__config_err("Cannot interleave %s and %s because they do not "
                          "support the same number of instances per node",
-                         dependent->id, colocation->primary->id);
+                         dependent->id, primary->id);
         return false;
     }
 
@@ -299,8 +300,9 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
         if (primary_instance != NULL) {
             pcmk__rsc_debug(primary, "Interleaving %s with %s",
                             dependent->id, primary_instance->id);
-            dependent->cmds->apply_coloc_score(dependent, primary_instance,
-                                               colocation, true);
+            dependent->private->cmds->apply_coloc_score(dependent,
+                                                        primary_instance,
+                                                        colocation, true);
 
         } else if (colocation->score >= PCMK_SCORE_INFINITY) {
             crm_notice("%s cannot run because it cannot interleave with "
@@ -324,8 +326,9 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
         // Dependent can run only where primary will have unblocked instances
         for (iter = primary->children; iter != NULL; iter = iter->next) {
             const pcmk_resource_t *instance = iter->data;
-            pcmk_node_t *chosen = instance->fns->location(instance, NULL, 0);
+            pcmk_node_t *chosen = NULL;
 
+            chosen = instance->private->fns->location(instance, NULL, 0);
             if ((chosen != NULL)
                 && !is_set_recursive(instance, pcmk_rsc_blocked, TRUE)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
@@ -344,12 +347,12 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
     for (iter = primary->children; iter != NULL; iter = iter->next) {
         const pcmk_resource_t *instance = iter->data;
 
-        instance->cmds->apply_coloc_score(dependent, instance, colocation,
-                                          false);
+        instance->private->cmds->apply_coloc_score(dependent, instance,
+                                                   colocation, false);
     }
 }
 
-// Clone implementation of pcmk_assignment_methods_t:with_this_colocations()
+// Clone implementation of pcmk__assignment_methods_t:with_this_colocations()
 void
 pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
@@ -359,11 +362,12 @@ pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
 
     if (rsc->parent != NULL) {
-        rsc->parent->cmds->with_this_colocations(rsc->parent, orig_rsc, list);
+        rsc->parent->private->cmds->with_this_colocations(rsc->parent, orig_rsc,
+                                                          list);
     }
 }
 
-// Clone implementation of pcmk_assignment_methods_t:this_with_colocations()
+// Clone implementation of pcmk__assignment_methods_t:this_with_colocations()
 void
 pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
@@ -373,7 +377,8 @@ pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
     pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
 
     if (rsc->parent != NULL) {
-        rsc->parent->cmds->this_with_colocations(rsc->parent, orig_rsc, list);
+        rsc->parent->private->cmds->this_with_colocations(rsc->parent, orig_rsc,
+                                                          list);
     }
 }
 
@@ -411,7 +416,7 @@ pcmk__clone_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        instance->cmds->apply_location(instance, location);
+        instance->private->cmds->apply_location(instance, location);
     }
 }
 
@@ -421,7 +426,7 @@ call_action_flags(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = user_data;
 
-    rsc->cmds->action_flags((pcmk_action_t *) data, NULL);
+    rsc->private->cmds->action_flags((pcmk_action_t *) data, NULL);
 }
 
 /*!
@@ -441,7 +446,7 @@ pcmk__clone_add_actions_to_graph(pcmk_resource_t *rsc)
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
-        child_rsc->cmds->add_actions_to_graph(child_rsc);
+        child_rsc->private->cmds->add_actions_to_graph(child_rsc);
     }
 
     pcmk__add_rsc_actions_to_graph(rsc);
@@ -530,7 +535,7 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
         const pcmk_node_t *instance_node = NULL;
 
-        instance_node = instance->fns->location(instance, NULL, 0);
+        instance_node = instance->private->fns->location(instance, NULL, 0);
         if (pcmk__same_node(instance_node, node)) {
             child = instance;
         }
@@ -542,7 +547,7 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
     }
 
     // Anonymous clones only need to probe a single instance
-    return child->cmds->create_probe(child, node);
+    return child->private->cmds->create_probe(child, node);
 }
 
 /*!
@@ -652,7 +657,7 @@ pcmk__clone_add_graph_meta(const pcmk_resource_t *rsc, xmlNode *xml)
     }
 }
 
-// Clone implementation of pcmk_assignment_methods_t:add_utilization()
+// Clone implementation of pcmk__assignment_methods_t:add_utilization()
 void
 pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
                             const pcmk_resource_t *orig_rsc, GList *all_rscs,
@@ -682,8 +687,9 @@ pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
 
                 if (g_list_find(all_rscs, member) != NULL) {
                     // Add *child's* utilization, not group member's
-                    child->cmds->add_utilization(child, orig_rsc, all_rscs,
-                                                 utilization);
+                    child->private->cmds->add_utilization(child, orig_rsc,
+                                                          all_rscs,
+                                                          utilization);
                     existing = true;
                     break;
                 }
@@ -695,11 +701,12 @@ pcmk__clone_add_utilization(const pcmk_resource_t *rsc,
         // If nothing was found, still add first child's utilization
         child = (pcmk_resource_t *) rsc->children->data;
 
-        child->cmds->add_utilization(child, orig_rsc, all_rscs, utilization);
+        child->private->cmds->add_utilization(child, orig_rsc, all_rscs,
+                                              utilization);
     }
 }
 
-// Clone implementation of pcmk_assignment_methods_t:shutdown_lock()
+// Clone implementation of pcmk__assignment_methods_t:shutdown_lock()
 void
 pcmk__clone_shutdown_lock(pcmk_resource_t *rsc)
 {

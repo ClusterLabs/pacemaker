@@ -43,7 +43,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
      * return the flags as determined by the resource method without a node
      * specified.
      */
-    flags = action->rsc->cmds->action_flags(action, NULL);
+    flags = action->rsc->private->cmds->action_flags(action, NULL);
     if ((node == NULL) || !pcmk__is_clone(action->rsc)) {
         return flags;
     }
@@ -54,7 +54,7 @@ action_flags_for_ordering(pcmk_action_t *action, const pcmk_node_t *node)
     runnable = pcmk_is_set(flags, pcmk_action_runnable);
 
     // Then recheck the resource method with the node
-    flags = action->rsc->cmds->action_flags(action, node);
+    flags = action->rsc->private->cmds->action_flags(action, node);
 
     /* For clones in ordering constraints, the node-specific "runnable" doesn't
      * matter, just the non-node-specific setting (i.e., is the action runnable
@@ -220,8 +220,8 @@ update(pcmk_resource_t *rsc, pcmk_action_t *first, pcmk_action_t *then,
        const pcmk_node_t *node, uint32_t flags, uint32_t filter, uint32_t type,
        pcmk_scheduler_t *scheduler)
 {
-    return rsc->cmds->update_ordered_actions(first, then, node, flags, filter,
-                                             type, scheduler);
+    return rsc->private->cmds->update_ordered_actions(first, then, node, flags,
+                                                      filter, type, scheduler);
 }
 
 /*!
@@ -550,7 +550,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
             && pcmk__is_group(first->rsc)
             && pcmk__str_eq(first->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
+            first_node = first->rsc->private->fns->location(first->rsc, NULL,
+                                                            FALSE);
             if (first_node != NULL) {
                 pcmk__rsc_trace(first->rsc, "Found %s for 'first' %s",
                                 pcmk__node_name(first_node), first->uuid);
@@ -560,7 +561,8 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         if (pcmk__is_group(then->rsc)
             && pcmk__str_eq(then->task, PCMK_ACTION_START, pcmk__str_none)) {
 
-            then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
+            then_node = then->rsc->private->fns->location(then->rsc, NULL,
+                                                          FALSE);
             if (then_node != NULL) {
                 pcmk__rsc_trace(then->rsc, "Found %s for 'then' %s",
                                 pcmk__node_name(then_node), then->uuid);
@@ -726,7 +728,9 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
 
     // Certain optional 'then' actions are unaffected by unrunnable 'first'
     if (pcmk_is_set(then->flags, pcmk_action_optional)) {
-        enum rsc_role_e then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
+        enum rsc_role_e then_rsc_role;
+
+        then_rsc_role = then->rsc->private->fns->state(then->rsc, TRUE);
 
         if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -1447,7 +1451,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->output_actions(rsc);
+        rsc->private->cmds->output_actions(rsc);
     }
 }
 

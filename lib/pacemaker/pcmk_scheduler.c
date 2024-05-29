@@ -238,7 +238,7 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->shutdown_lock(rsc);
+        rsc->private->cmds->shutdown_lock(rsc);
     }
 }
 
@@ -324,7 +324,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
             if (rsc->is_remote_node) {
                 pcmk__rsc_trace(rsc, "Assigning remote connection resource '%s'",
                                 rsc->id);
-                rsc->cmds->assign(rsc, rsc->partial_migration_target, true);
+                rsc->private->cmds->assign(rsc, rsc->partial_migration_target,
+                                           true);
             }
         }
     }
@@ -335,8 +336,8 @@ assign_resources(pcmk_scheduler_t *scheduler)
 
         if (!rsc->is_remote_node) {
             pcmk__rsc_trace(rsc, "Assigning %s resource '%s'",
-                            rsc->xml->name, rsc->id);
-            rsc->cmds->assign(rsc, NULL, true);
+                            rsc->private->xml->name, rsc->id);
+            rsc->private->cmds->assign(rsc, NULL, true);
         }
     }
 
@@ -413,7 +414,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->resources; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        rsc->cmds->create_actions(rsc);
+        rsc->private->cmds->create_actions(rsc);
     }
 }
 
@@ -669,8 +670,8 @@ log_resource_details(pcmk_scheduler_t *scheduler)
         // Log all resources except inactive orphans
         if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
             || (rsc->role != pcmk_role_stopped)) {
-            out->message(out, pcmk__map_element_name(rsc->xml), 0UL, rsc, all,
-                         all);
+            out->message(out, pcmk__map_element_name(rsc->private->xml), 0UL,
+                         rsc, all, all);
         }
     }
 

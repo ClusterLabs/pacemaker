@@ -2010,10 +2010,11 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
                         const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *top = pe__create_clone_child(parent, scheduler);
+    pcmk_resource_t *orphan = NULL;
 
     // find_rsc() because we might be a cloned group
-    pcmk_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL,
-                                               pcmk_rsc_match_clone_only);
+    orphan = top->private->fns->find_rsc(top, rsc_id, NULL,
+                                         pcmk_rsc_match_clone_only);
 
     pcmk__rsc_debug(parent, "Created orphan %s for %s: %s on %s",
                     top->id, parent->id, rsc_id, pcmk__node_name(node));
@@ -2068,7 +2069,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
          * (3) when we re-run calculations on the same scheduler data as part of
          *     a simulation.
          */
-        child->fns->location(child, &locations, 2);
+        child->private->fns->location(child, &locations, 2);
         if (locations) {
             /* We should never associate the same numbered anonymous clone
              * instance with multiple nodes, and clone instances can't migrate,
@@ -2084,8 +2085,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                  *
                  * If the history entry is orphaned, rsc will be NULL.
                  */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL,
-                                            pcmk_rsc_match_clone_only);
+                rsc = parent->private->fns->find_rsc(child, rsc_id, NULL,
+                                                     pcmk_rsc_match_clone_only);
                 if (rsc) {
                     /* If there are multiple instance history entries for an
                      * anonymous clone in a single node's history (which can
@@ -2112,8 +2113,9 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
             if (!skip_inactive && !inactive_instance
                 && !pcmk_is_set(child->flags, pcmk_rsc_blocked)) {
                 // Remember one inactive instance in case we don't find active
-                inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
-                                                          pcmk_rsc_match_clone_only);
+                inactive_instance =
+                    parent->private->fns->find_rsc(child, rsc_id, NULL,
+                                                   pcmk_rsc_match_clone_only);
 
                 /* ... but don't use it if it was already associated with a
                  * pending action on another node
@@ -2213,9 +2215,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     }
 
     if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_none)
-        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_none)) {
+        && !pcmk__str_eq(rsc_id, rsc->private->history_id, pcmk__str_none)) {
 
-        pcmk__str_update(&rsc->clone_name, rsc_id);
+        pcmk__str_update(&(rsc->private->history_id), rsc_id);
         pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                         rsc_id, pcmk__node_name(node), rsc->id,
                         pcmk_is_set(rsc->flags, pcmk_rsc_removed)? " (ORPHAN)" : "");
@@ -2270,10 +2272,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
                 pcmk_node_t *n = pe__copy_node(node);
 
-                pcmk__rsc_trace(rsc, "%s%s%s known on %s",
+                pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
                                 rsc->id,
-                                ((rsc->clone_name == NULL)? "" : " also known as "),
-                                ((rsc->clone_name == NULL)? "" : rsc->clone_name),
+                                pcmk__s(rsc->private->history_id, "the same"),
                                 pcmk__node_name(n));
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
@@ -2486,14 +2487,15 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                 break;
         }
 
-    } else if (rsc->clone_name && strchr(rsc->clone_name, ':') != NULL) {
+    } else if ((rsc->private->history_id != NULL)
+               && (strchr(rsc->private->history_id, ':') != NULL)) {
         /* Only do this for older status sections that included instance numbers
          * Otherwise stopped instances will appear as orphans
          */
-        pcmk__rsc_trace(rsc, "Resetting clone_name %s for %s (stopped)",
-                        rsc->clone_name, rsc->id);
-        free(rsc->clone_name);
-        rsc->clone_name = NULL;
+        pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
+                        rsc->private->history_id, rsc->id);
+        free(rsc->private->history_id);
+        rsc->private->history_id = NULL;
 
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node,

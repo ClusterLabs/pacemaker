@@ -96,7 +96,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                                         "='" PCMK_VALUE_BLOCK "']",
                                     xml_name);
 
-    xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
+    xmlXPathObject *xpathObj = xpath_search(rsc->private->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
@@ -183,7 +183,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
 static inline char *
 rsc_fail_name(const pcmk_resource_t *rsc)
 {
-    const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
+    const char *name = pcmk__s(rsc->private->history_id, rsc->id);
 
     return pcmk_is_set(rsc->flags, pcmk_rsc_unique)? strdup(name) : clone_strip(name);
 }

@@ -57,7 +57,7 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
     for (GList *iter = rscs; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        if (rsc->cmds->create_probe(rsc, node)) {
+        if (rsc->private->cmds->create_probe(rsc, node)) {
             any_created = true;
         }
     }
@@ -170,7 +170,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_pacemaker_remote_node(node)) {
-        const char *class = crm_element_value(rsc->xml, PCMK_XA_CLASS);
+        const char *class = crm_element_value(rsc->private->xml, PCMK_XA_CLASS);
 
         if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_none)) {
             reason = "Pacemaker Remote nodes cannot run stonith agents";
