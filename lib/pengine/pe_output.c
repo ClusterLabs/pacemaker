@@ -2850,10 +2850,13 @@ promotion_score(pcmk__output_t *out, va_list args)
     pcmk_node_t *chosen = va_arg(args, pcmk_node_t *);
     const char *score = va_arg(args, const char *);
 
-    out->list_item(out, NULL, "%s promotion score on %s: %s",
-                   child_rsc->id,
-                   chosen? chosen->details->uname : "none",
-                   score);
+    if (chosen == NULL) {
+        out->list_item(out, NULL, "%s promotion score (inactive): %s",
+                       child_rsc->id, score);
+    } else {
+        out->list_item(out, NULL, "%s promotion score on %s: %s",
+                       child_rsc->id, pcmk__node_name(chosen), score);
+    }
     return pcmk_rc_ok;
 }
 
