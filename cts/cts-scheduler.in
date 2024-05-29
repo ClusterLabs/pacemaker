@@ -1482,12 +1482,10 @@ class CtsScheduler(object):
             return ExitStatus.NOINPUT
 
         # Run simulation to generate summary output
+        test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ] + test_args
         if self.args.run: # Single test mode
-            test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ] + test_args
             print(" ".join(test_cmd_full))
-        else:
-            # @TODO Why isn't test_args added here?
-            test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ]
+
         with io.open(summary_output_filename, "wt") as f:
             simulation = subprocess.Popen(test_cmd_full, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT,
