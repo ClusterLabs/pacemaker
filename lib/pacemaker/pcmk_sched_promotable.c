@@ -438,7 +438,14 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
                         "(unmanaged promoted)",
                         child->id, pcmk_readable_score(PCMK_SCORE_INFINITY));
 
-    } else if ((chosen == NULL) || (child->private->promotion_priority < 0)) {
+    } else if (chosen == NULL) {
+        child->private->promotion_priority = -PCMK_SCORE_INFINITY;
+        pcmk__rsc_trace(clone,
+                        "Final promotion priority for %s is %s "
+                        "(will not be active)",
+                        child->id, pcmk_readable_score(-PCMK_SCORE_INFINITY));
+
+    } else if (child->private->promotion_priority < 0) {
         pcmk__rsc_trace(clone,
                         "Final promotion priority for %s is %s "
                         "(ignoring node score)",
