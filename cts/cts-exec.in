@@ -189,7 +189,7 @@ class ExecTests(Tests):
         self._installed_files = []
         self._rsc_classes = self._setup_rsc_classes()
 
-        print("Testing resource classes", repr(self._rsc_classes))
+        print("Testing resource classes %r" % self._rsc_classes)
 
         self._common_cmds = {
             "ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc "+self._action_timeout+" -C ocf -P pacemaker -T Dummy",
