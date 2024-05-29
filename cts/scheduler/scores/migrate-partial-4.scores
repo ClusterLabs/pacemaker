@@ -1,21 +1,21 @@
 
 drbd-mgs:0 promotion score on lustre01-left: -1
 drbd-mgs:1 promotion score on lustre02-left: -1
-drbd-testfs-mdt0000-left:0 promotion score on none: 0
-drbd-testfs-mdt0000-left:1 promotion score on none: 0
-drbd-testfs-mdt0000:0 promotion score on none: 0
-drbd-testfs-ost0000-left:0 promotion score on none: 0
-drbd-testfs-ost0000-left:1 promotion score on none: 0
-drbd-testfs-ost0000:0 promotion score on none: 0
-drbd-testfs-ost0001-left:0 promotion score on none: 0
-drbd-testfs-ost0001-left:1 promotion score on none: 0
-drbd-testfs-ost0001:0 promotion score on none: 0
-drbd-testfs-ost0002-left:0 promotion score on none: 0
-drbd-testfs-ost0002-left:1 promotion score on none: 0
-drbd-testfs-ost0002:0 promotion score on none: 0
-drbd-testfs-ost0003-left:0 promotion score on none: 0
-drbd-testfs-ost0003-left:1 promotion score on none: 0
-drbd-testfs-ost0003:0 promotion score on none: 0
+drbd-testfs-mdt0000-left:0 promotion score (inactive): -INFINITY
+drbd-testfs-mdt0000-left:1 promotion score (inactive): -INFINITY
+drbd-testfs-mdt0000:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0000-left:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0000-left:1 promotion score (inactive): -INFINITY
+drbd-testfs-ost0000:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0001-left:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0001-left:1 promotion score (inactive): -INFINITY
+drbd-testfs-ost0001:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0002-left:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0002-left:1 promotion score (inactive): -INFINITY
+drbd-testfs-ost0002:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0003-left:0 promotion score (inactive): -INFINITY
+drbd-testfs-ost0003-left:1 promotion score (inactive): -INFINITY
+drbd-testfs-ost0003:0 promotion score (inactive): -INFINITY
 pcmk__clone_assign: drbd-mgs:0 allocation score on lustre01-left: 0
 pcmk__clone_assign: drbd-mgs:0 allocation score on lustre02-left: 0
 pcmk__clone_assign: drbd-mgs:0 allocation score on lustre03-left: -INFINITY

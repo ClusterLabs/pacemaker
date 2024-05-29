@@ -2,9 +2,9 @@
 galera:0 promotion score on rdo7-node1: 100
 galera:1 promotion score on rdo7-node2: 100
 galera:2 promotion score on rdo7-node3: 100
-galera:3 promotion score on none: 0
-galera:4 promotion score on none: 0
-galera:5 promotion score on none: 0
+galera:3 promotion score (inactive): -INFINITY
+galera:4 promotion score (inactive): -INFINITY
+galera:5 promotion score (inactive): -INFINITY
 pcmk__clone_assign: ceilometer-alarm-evaluator-clone allocation score on mrg-07: -INFINITY
 pcmk__clone_assign: ceilometer-alarm-evaluator-clone allocation score on mrg-08: -INFINITY
 pcmk__clone_assign: ceilometer-alarm-evaluator-clone allocation score on mrg-09: -INFINITY
@@ -3704,6 +3704,6 @@ pcmk__primitive_assign: vip-swift allocation score on rdo7-node3: 0
 redis:0 promotion score on rdo7-node1: 1000
 redis:1 promotion score on rdo7-node2: 1
 redis:2 promotion score on rdo7-node3: 1
-redis:3 promotion score on none: 0
-redis:4 promotion score on none: 0
-redis:5 promotion score on none: 0
+redis:3 promotion score (inactive): -INFINITY
+redis:4 promotion score (inactive): -INFINITY
+redis:5 promotion score (inactive): -INFINITY

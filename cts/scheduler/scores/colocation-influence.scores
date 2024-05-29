@@ -657,17 +657,17 @@ rsc13b:0 promotion score on rhel7-3: 10
 rsc13b:1 promotion score on rhel7-4: 5
 rsc13b:2 promotion score on rhel7-1: 5
 rsc13b:3 promotion score on rhel7-2: 5
-rsc13b:4 promotion score on none: 0
-rsc13b:5 promotion score on none: 0
-rsc13b:6 promotion score on none: 0
-rsc13b:7 promotion score on none: 0
-rsc13b:8 promotion score on none: 0
+rsc13b:4 promotion score (inactive): -INFINITY
+rsc13b:5 promotion score (inactive): -INFINITY
+rsc13b:6 promotion score (inactive): -INFINITY
+rsc13b:7 promotion score (inactive): -INFINITY
+rsc13b:8 promotion score (inactive): -INFINITY
 rsc14a:0 promotion score on rhel7-3: -INFINITY
-rsc14a:1 promotion score on none: 0
+rsc14a:1 promotion score (inactive): -INFINITY
 rsc14a:2 promotion score on rhel7-1: -INFINITY
 rsc14a:3 promotion score on rhel7-2: -INFINITY
-rsc14a:4 promotion score on none: 0
-rsc14a:5 promotion score on none: 0
-rsc14a:6 promotion score on none: 0
-rsc14a:7 promotion score on none: 0
-rsc14a:8 promotion score on none: 0
+rsc14a:4 promotion score (inactive): -INFINITY
+rsc14a:5 promotion score (inactive): -INFINITY
+rsc14a:6 promotion score (inactive): -INFINITY
+rsc14a:7 promotion score (inactive): -INFINITY
+rsc14a:8 promotion score (inactive): -INFINITY

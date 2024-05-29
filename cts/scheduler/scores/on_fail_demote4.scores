@@ -453,17 +453,17 @@ pcmk__primitive_assign: stateful-bundle-ip-192.168.122.133 allocation score on r
 pcmk__primitive_assign: stateful-bundle-ip-192.168.122.133 allocation score on rhel7-3: 0
 pcmk__primitive_assign: stateful-bundle-ip-192.168.122.133 allocation score on rhel7-4: -INFINITY
 pcmk__primitive_assign: stateful-bundle-ip-192.168.122.133 allocation score on rhel7-5: -INFINITY
-rsc1:0 promotion score on none: 0
+rsc1:0 promotion score (inactive): -INFINITY
 rsc1:1 promotion score on rhel7-3: 5
 rsc1:2 promotion score on rhel7-5: 5
 rsc1:3 promotion score on rhel7-1: 5
-rsc1:4 promotion score on none: 0
+rsc1:4 promotion score (inactive): -INFINITY
 rsc1:5 promotion score on lxc2: 5
 rsc1:6 promotion score on lxc1: 5
-rsc2:0 promotion score on none: 0
+rsc2:0 promotion score (inactive): -INFINITY
 rsc2:1 promotion score on rhel7-3: 5
 rsc2:2 promotion score on rhel7-5: 5
 rsc2:3 promotion score on rhel7-1: 5
-rsc2:4 promotion score on none: 0
+rsc2:4 promotion score (inactive): -INFINITY
 rsc2:5 promotion score on lxc2: 5
 rsc2:6 promotion score on lxc1: 5
