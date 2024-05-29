@@ -30,10 +30,8 @@ libcrmservice_la_SOURCES	+= services_ocf.c
 if BUILD_LSB
 libcrmservice_la_SOURCES	+= services_lsb.c
 endif
-if BUILD_DBUS
-libcrmservice_la_SOURCES	+= dbus.c
-endif
 if BUILD_SYSTEMD
+libcrmservice_la_SOURCES	+= dbus.c
 libcrmservice_la_SOURCES	+= systemd.c
 endif
 if BUILD_NAGIOS

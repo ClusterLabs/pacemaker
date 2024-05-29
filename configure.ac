@@ -1442,7 +1442,6 @@ PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.5.12],
                       CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"
                   ],[])
 AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
-AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 AC_SUBST(PC_NAME_DBUS)
 
 check_systemdsystemunitdir() {
