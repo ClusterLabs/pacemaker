@@ -71,8 +71,6 @@ struct pe_node_shared_s {
     //! \deprecated Call !pcmk_node_is_clean() instead
     gboolean unclean;           // Whether node requires fencing
 
-    gboolean unseen;            // Whether node has never joined cluster
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_shutting_down() instead
     gboolean shutdown;          // Whether shutting down

@@ -357,7 +357,7 @@ remote_connection_assigned(const pcmk_resource_t *connection)
         crm_trace("Pacemaker Remote node %s will be online",
                   remote_node->private->id);
         remote_node->details->online = TRUE;
-        if (remote_node->details->unseen) {
+        if (!pcmk_is_set(remote_node->private->flags, pcmk__node_seen)) {
             // Avoid unnecessary fence, since we will attempt connection
             remote_node->details->unclean = FALSE;
         }

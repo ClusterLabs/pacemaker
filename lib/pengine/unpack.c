@@ -618,10 +618,6 @@ handle_startup_fencing(pcmk_scheduler_t *scheduler, pcmk_node_t *new_node)
         // Blind faith ...
         new_node->details->unclean = FALSE;
     }
-
-    /* We need to be able to determine if a node's status section
-     * exists or not separate from whether the node is unclean. */
-    new_node->details->unseen = TRUE;
 }
 
 gboolean
@@ -1074,7 +1070,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     rsc = this_node->details->remote_rsc;
     if (this_node->details->remote_requires_reset == FALSE) {
         this_node->details->unclean = FALSE;
-        this_node->details->unseen = FALSE;
+        pcmk__set_node_flags(this_node, pcmk__node_seen);
     }
     attrs = pcmk__xe_first_child(state, PCMK__XE_TRANSIENT_ATTRIBUTES, NULL,
                                  NULL);
@@ -1235,7 +1231,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
      * in the current cluster's lifetime.
      */
     this_node->details->unclean = FALSE;
-    this_node->details->unseen = FALSE;
+    pcmk__set_node_flags(this_node, pcmk__node_seen);
 
     crm_trace("Determining online status of cluster node %s (id %s)",
               pcmk__node_name(this_node), id);
@@ -2348,7 +2344,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * cluster node to move to another node without requiring the
                  * remote nodes to be fenced as well.
                  */
-                node->details->unseen = TRUE;
+                pcmk__clear_node_flags(node, pcmk__node_seen);
                 reason = crm_strdup_printf("%s is active there (fencing will be"
                                            " revoked if remote connection can "
                                            "be re-established elsewhere)",
@@ -2476,15 +2472,16 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
     }
 
-    /* ensure a remote-node connection failure forces an unclean remote-node
-     * to be fenced. By setting unseen = FALSE, the remote-node failure will
-     * result in a fencing operation regardless if we're going to attempt to 
-     * reconnect to the remote-node in this transition or not. */
+    /* Ensure a remote connection failure forces an unclean Pacemaker Remote
+     * node to be fenced. By marking the node as seen, the failure will result
+     * in a fencing operation regardless if we're going to attempt to reconnect
+     * in this transition.
+     */
     if (pcmk_all_flags_set(rsc->flags,
                            pcmk__rsc_failed|pcmk__rsc_is_remote_connection)) {
         tmpnode = pcmk_find_node(scheduler, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
-            tmpnode->details->unseen = FALSE;
+            pcmk__set_node_flags(tmpnode, pcmk__node_seen);
         }
     }
 

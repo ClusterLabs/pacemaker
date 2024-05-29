@@ -43,6 +43,9 @@ enum pcmk__node_flags {
 
     // Whether node is in standby mode due to PCMK_META_ON_FAIL
     pcmk__node_fail_standby     = (UINT32_C(1) << 1),
+
+    // Whether node has ever joined cluster (and thus has node state in CIB)
+    pcmk__node_seen             = (UINT32_C(1) << 2),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow
