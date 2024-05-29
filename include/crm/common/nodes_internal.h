@@ -10,8 +10,9 @@
 #ifndef PCMK__CRM_COMMON_NODES_INTERNAL__H
 #define PCMK__CRM_COMMON_NODES_INTERNAL__H
 
-#include <stdbool.h>
-#include <stdio.h>
+#include <stdio.h>      // NULL
+#include <stdbool.h>    // bool
+#include <stdint.h>     // uint32_t, UINT32_C()
 
 #include <glib.h>
 #include <crm/common/nodes.h>
@@ -34,6 +35,10 @@ enum pcmk__node_variant { // Possible node types
     pcmk__node_variant_remote   = 2,    // Pacemaker Remote node
 };
 
+enum pcmk__node_flags {
+    pcmk__node_none             = UINT32_C(0),
+};
+
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow
  * copies, so all pcmk_node_t objects for the same node will share the same
  * private data)
@@ -46,9 +51,36 @@ typedef struct pcmk__node_private {
 
     const char *name;                   // Node name in cluster
     enum pcmk__node_variant variant;    // Node variant
+    uint32_t flags;                     // Group of enum pcmk__node_flags
 } pcmk__node_private_t;
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
+
+/*!
+ * \internal
+ * \brief Set node flags
+ *
+ * \param[in,out] node          Node to set flags for
+ * \param[in]     flags_to_set  Group of enum pcmk_node_flags to set
+ */
+#define pcmk__set_node_flags(node, flags_to_set) do {                   \
+        (node)->private->flags = pcmk__set_flags_as(__func__, __LINE__, \
+            LOG_TRACE, "Node", pcmk__node_name(node),                   \
+            (node)->private->flags, (flags_to_set), #flags_to_set);     \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear node flags
+ *
+ * \param[in,out] node            Node to clear flags for
+ * \param[in]     flags_to_clear  Group of enum pcmk_node_flags to clear
+ */
+#define pcmk__clear_node_flags(node, flags_to_clear) do {                   \
+        (node)->private->flags = pcmk__clear_flags_as(__func__, __LINE__,   \
+            LOG_TRACE, "Node", pcmk__node_name(node),                       \
+            (node)->private->flags, (flags_to_clear), #flags_to_clear);     \
+    } while (0)
 
 /*!
  * \internal
