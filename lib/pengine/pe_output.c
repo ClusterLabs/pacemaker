@@ -18,6 +18,8 @@
 #include <crm/common/xml.h>
 #include <crm/pengine/internal.h>
 
+#include <pcmki/pcmki_verify.h>
+
 const char *
 pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
 {
@@ -409,10 +411,15 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
+    pcmk__output_t *verify_out;
 
+    void *priv_orig;
+    int verify_rc;
     int rc = pcmk_rc_no_output;
-    
     const char *stack_s = get_cluster_stack(scheduler);
+
+    (void)(verify_rc);
+    (void)(section_opts);
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
@@ -451,7 +458,27 @@ cluster_summary(pcmk__output_t *out, va_list args) {
                      scheduler->localhost, last_written, user, client, origin);
     }
 
-    out->message(out, "cluster-verify", scheduler, section_opts);
+    // Use the existing scheduler, but avoid scheduler output
+    pcmk__output_new(&verify_out, "none", NULL, NULL);
+    //scheduler = pe_new_working_set();
+    priv_orig = scheduler->priv;
+    scheduler->priv = verify_out;
+
+    verify_rc = pcmk__verify(scheduler, verify_out, scheduler->input);
+    scheduler->priv = priv_orig;
+    //pe_free_working_set(scheduler);
+    pcmk__output_free(verify_out);
+
+    if (verify_rc == pcmk_rc_ok) {
+        if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+            PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
+            out->list_item(out, NULL, "CIB syntax is valid");
+        }
+    } else {
+        /* If there are verification errors, always print a statement about that, even if not requested */
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
+        out->list_item(out, NULL, "CIB syntax has errors (for details, run crm_verify -LV)");
+    }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
@@ -485,7 +512,9 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
+    pcmk__output_t *verify_out;
 
+    void *priv_orig;
     int rc = pcmk_rc_no_output;
     const char *stack_s = get_cluster_stack(scheduler);
 
@@ -528,9 +557,22 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
                      scheduler->localhost, last_written, user, client, origin);
     }
 
-    out->message(out, "cluster-verify", scheduler, section_opts);
-    
+    if (pcmk_is_set(section_opts, pcmk_section_verify)) {
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
 
+        // Use the existing scheduler, but avoid scheduler output
+        pcmk__output_new(&verify_out, "none", NULL, NULL);
+        //scheduler = pe_new_working_set();
+        scheduler->priv = out;
+        priv_orig = scheduler->priv;
+        scheduler->priv = verify_out;
+
+        pcmk__verify(scheduler, verify_out, scheduler->input);
+        scheduler->priv = priv_orig;
+        //pe_free_working_set(scheduler);
+        pcmk__output_free(verify_out);
+    }
+    
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(scheduler->nodes),

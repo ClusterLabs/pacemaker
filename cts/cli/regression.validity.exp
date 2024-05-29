@@ -218,16 +218,65 @@ pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.1
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+pcmk__update_schema 	debug: Schema pacemaker-1.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-1.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.0 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.1 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.4 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.5 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.6 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.7 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.8 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.9 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.10 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.0 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.1 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.4 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.5 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.6 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.7 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.8 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.9 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.10 validates
+pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.10
 pcmk__verify 	error: CIB did not pass schema validation
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+pcmk__update_schema 	debug: Schema pacemaker-1.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-1.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.0 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.1 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.4 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.5 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.6 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.7 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.8 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.9 validates
+pcmk__update_schema 	debug: Schema pacemaker-2.10 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.0 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.1 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.2 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.3 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.4 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.5 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.6 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.7 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.8 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.9 validates
+pcmk__update_schema 	debug: Schema pacemaker-3.10 validates
+pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-3.10
 pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
   * CIB syntax has errors (for details, run crm_verify -LV)
   * Full List of Resources:
-    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * No resources
 
 Transition Summary:
 
@@ -236,8 +285,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * CIB syntax has errors (for details, run crm_verify -LV)
   * Full List of Resources:
-    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * No resources
 =#=#=#= End test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)
 =#=#=#= Begin test: Make resulting CIB valid, although without validate-with attribute =#=#=#=
@@ -263,16 +311,18 @@ Schema validation of configuration is disabled (support for validate-with set to
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
 pcmk__verify 	error: CIB did not pass schema validation
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
 pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
   * CIB syntax has errors (for details, run crm_verify -LV)
   * Full List of Resources:
-    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
 
 Transition Summary:
 
@@ -281,8 +331,8 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * CIB syntax has errors (for details, run crm_verify -LV)
   * Full List of Resources:
-    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
 =#=#=#= End test: Run crm_simulate with valid CIB, but without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with valid CIB, but without validate-with attribute
 =#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
@@ -412,16 +462,18 @@ validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constr
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
 pcmk__verify 	error: CIB did not pass schema validation
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
 pcmk__verify 	error: CIB did not pass schema validation
 Current cluster status:
   * CIB syntax has errors (for details, run crm_verify -LV)
   * Full List of Resources:
-    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
 
 Transition Summary:
 
@@ -430,7 +482,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * CIB syntax has errors (for details, run crm_verify -LV)
   * Full List of Resources:
-    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
 =#=#=#= End test: Run crm_simulate with invalid CIB, also without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB, also without validate-with attribute

@@ -53,7 +53,6 @@ Cluster Summary:
   * Current DC: cluster01 (1) (version) - partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 4 resource instances configured
 
@@ -61,7 +60,7 @@ Node List:
   * Node cluster01 (1): online, feature set 3.15.1
   * Node cluster02 (2): online, feature set 3.15.1
   * Node cluster03 (3): OFFLINE
-  * GuestNode guest01-0@: OFFLINE
+  * GuestNode guest01-0@: online
   * RemoteNode remote01 (4): OFFLINE
 
 Active Resources:
@@ -157,7 +156,6 @@ Cluster Summary:
   * Current DC: cluster01 (1) (version) - MIXED-VERSION partition with quorum
   * Last updated:
   * Last change:
-  * CIB syntax has errors (for details, run crm_verify -LV)
   * 5 nodes configured
   * 4 resource instances configured
 
@@ -165,7 +163,7 @@ Node List:
   * Node cluster01 (1): online, feature set 3.15.1
   * Node cluster02 (2): online, feature set 3.15.0
   * Node cluster03 (3): OFFLINE
-  * GuestNode guest01-0@: OFFLINE
+  * GuestNode guest01-0@: online
   * RemoteNode remote01 (4): OFFLINE
 
 Active Resources:
