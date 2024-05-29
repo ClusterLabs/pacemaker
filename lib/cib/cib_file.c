@@ -265,7 +265,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
 
         if (result_cib != private->cib_xml) {
-            free_xml(private->cib_xml);
+            pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
         }
         cib_set_file_flags(private, cib_file_flag_dirty);
@@ -278,9 +278,9 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
 done:
     if ((result_cib != private->cib_xml) && (result_cib != *output)) {
-        free_xml(result_cib);
+        pcmk__xml_free(result_cib);
     }
-    free_xml(cib_diff);
+    pcmk__xml_free(cib_diff);
     return rc;
 }
 
@@ -352,9 +352,9 @@ done:
         && (output->doc != private->cib_xml->doc)
         && ((output_data == NULL) || (output != *output_data))) {
 
-        free_xml(output);
+        pcmk__xml_free(output);
     }
-    free_xml(request);
+    pcmk__xml_free(request);
     return rc;
 }
 
@@ -400,7 +400,7 @@ load_file_cib(const char *filename, xmlNode **output)
         const char *schema = crm_element_value(root, PCMK_XA_VALIDATE_WITH);
 
         crm_err("CIB does not validate against %s, or that schema is unknown", schema);
-        free_xml(root);
+        pcmk__xml_free(root);
         return -pcmk_err_schema_validation;
     }
 
@@ -566,7 +566,7 @@ cib_file_signoff(cib_t *cib)
     }
 
     /* Free the in-memory CIB */
-    free_xml(private->cib_xml);
+    pcmk__xml_free(private->cib_xml);
     private->cib_xml = NULL;
     return rc;
 }
@@ -780,7 +780,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     /* Verify that digests match */
     if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
         free(local_sigfile);
-        free_xml(local_root);
+        pcmk__xml_free(local_root);
         return -pcmk_err_cib_modified;
     }
 
@@ -788,7 +788,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     if (root) {
         *root = local_root;
     } else {
-        free_xml(local_root);
+        pcmk__xml_free(local_root);
     }
     return pcmk_ok;
 }
@@ -898,7 +898,7 @@ cib_file_prepare_xml(xmlNode *root)
      * we discard it on startup anyway, and users get confused by it */
     cib_status_root = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
     CRM_CHECK(cib_status_root != NULL, return);
-    free_xml(cib_status_root);
+    pcmk__xml_free(cib_status_root);
 }
 
 /*!
@@ -1099,7 +1099,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
  *
  * \note The caller is responsible for replacing the \p cib argument's
  *       \p private->cib_xml with \p result_cib on success, and for freeing
- *       \p result_cib using \p free_xml() on failure.
+ *       \p result_cib using \p pcmk__xml_free() on failure.
  */
 static int
 cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,

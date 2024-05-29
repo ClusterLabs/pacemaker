@@ -37,7 +37,7 @@ assert_set_score(const char *initial, const char *new,
     assert_int_equal(pcmk__xe_set_score(test_xml, name, new), reference_rc);
     assert_string_equal(crm_element_value(test_xml, name), reference_val);
 
-    free_xml(test_xml);
+    pcmk__xml_free(test_xml);
 }
 
 static void
@@ -72,7 +72,7 @@ name_is_NULL(void **state)
     assert_int_equal(pcmk__xe_set_score(test_xml, NULL, "X++"), EINVAL);
     assert_string_equal(crm_element_value(test_xml, "X"), "5");
 
-    free_xml(test_xml);
+    pcmk__xml_free(test_xml);
 }
 
 static void
@@ -167,7 +167,7 @@ assignment_result_is_too_large(void **state)
     assert_set_score("5", "X+=100000000000", "1000000", pcmk_rc_ok);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(value_is_name_plus_plus),
                 cmocka_unit_test(value_is_name_plus_equals_integer),
                 cmocka_unit_test(target_is_NULL),

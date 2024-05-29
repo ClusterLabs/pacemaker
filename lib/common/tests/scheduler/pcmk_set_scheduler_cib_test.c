@@ -20,7 +20,7 @@ null_scheduler(void **state)
     assert_int_equal(pcmk_set_scheduler_cib(NULL, NULL), EINVAL);
     assert_int_equal(pcmk_set_scheduler_cib(NULL, cib), EINVAL);
 
-    free_xml(cib);
+    pcmk__xml_free(cib);
 }
 
 static void
@@ -45,7 +45,7 @@ previous_cib_null(void **state)
     assert_int_equal(pcmk_set_scheduler_cib(&scheduler, cib), pcmk_rc_ok);
     assert_ptr_equal(scheduler.input, cib);
 
-    free_xml(cib);
+    pcmk__xml_free(cib);
 }
 
 static void
@@ -60,8 +60,8 @@ previous_cib_nonnull(void **state)
     assert_int_equal(pcmk_set_scheduler_cib(&scheduler, new_cib), pcmk_rc_ok);
     assert_ptr_equal(scheduler.input, new_cib);
 
-    free_xml(old_cib);
-    free_xml(new_cib);
+    pcmk__xml_free(old_cib);
+    pcmk__xml_free(new_cib);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

@@ -147,7 +147,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     if (result) {
         *result = xml_search;
     } else {
-        free_xml(xml_search);
+        pcmk__xml_free(xml_search);
     }
 
     g_string_free(xpath, TRUE);
@@ -299,11 +299,11 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
                 }
 
                 free(found_attr_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 return ENOTUNIQ;
             }
 
-            free_xml(xml_search);
+            pcmk__xml_free(xml_search);
         }
 
         *resources = g_list_append(*resources, rsc);
@@ -419,7 +419,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             default:
                 free(lookup_id);
                 free(found_attr_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 g_list_free(resources);
                 return rc;
         }
@@ -456,8 +456,8 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             *results = g_list_append(*results, ud);
         }
 
-        free_xml(xml_top);
-        free_xml(xml_search);
+        pcmk__xml_free(xml_top);
+        pcmk__xml_free(xml_search);
 
         free(lookup_id);
         free(found_attr_id);
@@ -590,17 +590,17 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         switch (rc) {
             case pcmk_rc_ok:
                 found_attr_id = crm_element_value_copy(xml_search, PCMK_XA_ID);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 break;
 
             case ENXIO:
                 free(lookup_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 continue;
 
             default:
                 free(lookup_id);
-                free_xml(xml_search);
+                pcmk__xml_free(xml_search);
                 g_list_free(resources);
                 return rc;
         }
@@ -626,7 +626,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         free(lookup_id);
-        free_xml(xml_obj);
+        pcmk__xml_free(xml_obj);
         free(found_attr_id);
     }
     g_list_free(resources);
@@ -1334,7 +1334,7 @@ update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
     rc = update_scheduler_input(scheduler, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not upgrade the current CIB XML");
-        free_xml(cib_xml_copy);
+        pcmk__xml_free(cib_xml_copy);
         return rc;
     }
 
@@ -1678,7 +1678,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             orig_target_role = crm_element_value_copy(xml_search, PCMK_XA_VALUE);
         }
 
-        free_xml(xml_search);
+        pcmk__xml_free(xml_search);
 
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,

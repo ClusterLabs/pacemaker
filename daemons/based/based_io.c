@@ -260,7 +260,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
     if (discard_status && status != NULL) {
         // Strip out the PCMK_XE_STATUS section if there is one
-        free_xml(status);
+        pcmk__xml_free(status);
         status = NULL;
     }
     if (status == NULL) {
@@ -337,7 +337,7 @@ uninitializeCib(void)
 
     crm_debug("Deallocating the CIB.");
 
-    free_xml(tmp_cib);
+    pcmk__xml_free(tmp_cib);
 
     crm_debug("The CIB has been deallocated.");
 
@@ -356,7 +356,7 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
 
         CRM_ASSERT(new_cib != saved_cib);
         the_cib = new_cib;
-        free_xml(saved_cib);
+        pcmk__xml_free(saved_cib);
         if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
             crm_debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(cib_writer);
@@ -451,7 +451,7 @@ write_cib_contents(gpointer p)
     exit_rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
 
     /* A nonzero exit code will cause further writes to be disabled */
-    free_xml(cib_local);
+    pcmk__xml_free(cib_local);
     if (p == NULL) {
         crm_exit_t exit_code = CRM_EX_OK;
 

@@ -27,7 +27,7 @@ cib_not_connected(void **state)
      */
     assert_int_equal(pcmk_resource_delete(&xml, "rsc", "primitive"), ENOTCONN);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -60,12 +60,12 @@ bad_input(void **state)
      */
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", NULL), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     assert_int_equal(pcmk_resource_delete(&xml, NULL, "primitive"), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static xmlNode *
@@ -102,12 +102,12 @@ incorrect_type(void **state)
      */
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", "clone"), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     result = find_rsc("Fencing");
     assert_non_null(result);
 
-    free_xml(result);
+    pcmk__xml_free(result);
 }
 
 static void
@@ -118,12 +118,12 @@ correct_type(void **state)
 
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", "primitive"), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     result = find_rsc("Fencing");
     assert_null(result);
 
-    free_xml(result);
+    pcmk__xml_free(result);
 }
 
 static void
@@ -136,7 +136,7 @@ unknown_resource(void **state)
      */
     assert_int_equal(pcmk_resource_delete(&xml, "no_such_resource", "primitive"), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 /* There are two kinds of tests in this file:
@@ -148,7 +148,7 @@ unknown_resource(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_input, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(incorrect_type, setup_test, teardown_test),

@@ -169,7 +169,7 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
         }
 
         *ref = strdup(crm_element_value(cmd, PCMK_XA_REFERENCE));
-        free_xml(cmd);
+        pcmk__xml_free(cmd);
     } else {
         rc = ENOMSG;
     }

@@ -126,7 +126,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     enum rsc_role_e role = pcmk_role_unknown;
     enum pcmk__combine combine = pcmk__combine_unknown;
 
-    rule_xml = expand_idref(rule_xml, rsc->cluster->input);
+    rule_xml = pcmk__xe_resolve_idref(rule_xml, rsc->cluster->input);
     if (rule_xml == NULL) {
         return false; // Error already logged
     }
@@ -462,7 +462,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
                           false, scheduler)) {
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_unpack_error;
     }
@@ -479,7 +479,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     } else {
         // No sets
-        free_xml(*expanded_xml);
+        pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
     }
 
@@ -550,19 +550,19 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
          set != NULL; set = pcmk__xe_next_same(set)) {
 
         any_sets = true;
-        set = expand_idref(set, scheduler->input);
+        set = pcmk__xe_resolve_idref(set, scheduler->input);
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 
             if (expanded_xml) {
-                free_xml(expanded_xml);
+                pcmk__xml_free(expanded_xml);
             }
             return;
         }
     }
 
     if (expanded_xml) {
-        free_xml(expanded_xml);
+        pcmk__xml_free(expanded_xml);
         xml_obj = orig_xml;
     }
 

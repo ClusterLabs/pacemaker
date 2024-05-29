@@ -425,7 +425,8 @@ purge_xml_attributes(xmlNode *xml)
     }
 
     if (!readable_children) {
-        free_xml(xml); /* Nothing readable under here, purge completely */
+        // Nothing readable under here, so purge completely
+        pcmk__xml_free(xml);
     }
     return readable_children;
 }
@@ -506,7 +507,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     } else {
         crm_trace("User '%s' without ACLs denied access to entire XML document",
                   user);
-        free_xml(target);
+        pcmk__xml_free(target);
         target = NULL;
     }
 
@@ -585,9 +586,23 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
                       xml->name, display_id(xml));
 
         } else if (check_top) {
-            crm_trace("ACLs disallow creation of <%s> with "
-                      PCMK_XA_ID "=\"%s\"", xml->name, display_id(xml));
-            pcmk_free_xml_subtree(xml);
+            /* is_root=true should be impossible with check_top=true, but check
+             * for sanity
+             */
+            bool is_root = (xml->doc != NULL)
+                           && (xmlDocGetRootElement(xml->doc) == xml);
+
+            crm_trace("ACLs disallow creation of %s<%s> with "
+                      PCMK_XA_ID "=\"%s\"",
+                      (is_root? "root element " : ""), xml->name,
+                      display_id(xml));
+
+            if (is_root) {
+                xmlFreeDoc(xml->doc);
+            } else {
+                xmlUnlinkNode(xml);
+                xmlFreeNode(xml);
+            }
             return;
 
         } else {

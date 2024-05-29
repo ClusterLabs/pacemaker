@@ -192,6 +192,23 @@ void copy_in_properties(xmlNode *target, const xmlNode *src);
 //! \deprecated Do not use
 void expand_plus_plus(xmlNode * target, const char *name, const char *value);
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Call \c crm_log_init() or \c crm_log_cli_init() instead
+void crm_xml_init(void);
+
+//! \deprecated Exit with \c crm_exit() instead
+void crm_xml_cleanup(void);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void pcmk_free_xml_subtree(xmlNode *xml);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+void free_xml(xmlNode *child);
+
+//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
+xmlNode *expand_idref(xmlNode *input, xmlNode *top);
+
 #ifdef __cplusplus
 }
 #endif

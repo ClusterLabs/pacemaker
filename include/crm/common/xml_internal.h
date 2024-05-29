@@ -165,6 +165,9 @@ enum pcmk__xml_fmt_options {
     pcmk__xml_fmt_diff_short = (1 << 9),
 };
 
+void pcmk__xml_init(void);
+void pcmk__xml_cleanup(void);
+
 int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
                    int depth, uint32_t options);
 int pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml);
@@ -217,6 +220,8 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
+
+xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search);
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
@@ -422,6 +427,7 @@ pcmk__xe_next(const xmlNode *child)
 }
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
+void pcmk__xml_free(xmlNode *xml);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
 xmlNode *pcmk__xe_next_same(const xmlNode *node);
 

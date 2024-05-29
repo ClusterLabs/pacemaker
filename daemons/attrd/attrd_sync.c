@@ -345,7 +345,7 @@ free_action(gpointer data)
     struct confirmation_action *action = (struct confirmation_action *) data;
     g_list_free_full(action->respondents, free);
     mainloop_timer_del(action->timer);
-    free_xml(action->xml);
+    pcmk__xml_free(action->xml);
     free(action->client_id);
     free(action);
 }

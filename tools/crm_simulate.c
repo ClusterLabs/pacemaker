@@ -378,12 +378,12 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
 
     rc = pcmk_update_configured_schema(&cib_object, false);
     if (rc != pcmk_rc_ok) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return rc;
     }
 
     if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
-        free_xml(cib_object);
+        pcmk__xml_free(cib_object);
         return pcmk_rc_schema_validation;
     }
 
@@ -404,7 +404,7 @@ setup_input(pcmk__output_t *out, const char *input, const char *output,
         setenv("CIB_file", output, 1);
     }
 
-    free_xml(cib_object);
+    pcmk__xml_free(cib_object);
     free(local_output);
     return rc;
 }

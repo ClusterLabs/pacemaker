@@ -26,7 +26,7 @@ run_one_test(const char *t, const char *x, int expected)
     assert_int_equal(pcmk__evaluate_date_spec(xml, tm), expected);
 
     crm_time_free(tm);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -42,7 +42,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), EINVAL);
 
     crm_time_free(tm);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -211,7 +211,7 @@ time_after_monthdays_range(void **state)
                  pcmk_rc_before_range);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_invalid),
                 cmocka_unit_test(spec_id_missing),
                 cmocka_unit_test(invalid_range),

@@ -53,26 +53,10 @@ char *calculate_operation_digest(xmlNode * local_cib, const char *version);
 char *calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
                                      const char *version);
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-/*!
- * \brief Initialize the CRM XML subsystem
- *
- * This method sets global XML settings and loads pacemaker schemas into the cache.
- */
-void crm_xml_init(void);
-
-void crm_xml_cleanup(void);
-
-void pcmk_free_xml_subtree(xmlNode *xml);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-void free_xml(xmlNode * child);
-
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
 void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
                               void (*helper)(xmlNode*, void*), void *user_data);
-xmlNode *expand_idref(xmlNode * input, xmlNode * top);
 
 void freeXpathObject(xmlXPathObjectPtr xpathObj);
 xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);

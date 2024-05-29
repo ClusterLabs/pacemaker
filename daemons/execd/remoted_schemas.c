@@ -186,7 +186,7 @@ get_schema_files(void)
                                  write_extra_schema_file, NULL);
     }
 
-    free_xml(reply);
+    pcmk__xml_free(reply);
     cib__clean_up_connection(&cib);
     _exit(pcmk_rc2exitc(rc));
 }
@@ -202,8 +202,8 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
     if ((signo == 0) && (exitcode == 0)) {
         const char *remote_schema_dir = pcmk__remote_schema_dir();
 
-        /* Don't just crm_schema_init here because that will load the base
-         * schemas again too.  Instead just load the things we fetched.
+        /* Don't just call pcmk__schema_init() here because that will load the
+         * base schemas again too. Instead just load the things we fetched.
          */
         pcmk__load_schemas_from_dir(remote_schema_dir);
         pcmk__sort_schemas();
@@ -219,11 +219,11 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
                     (core? " and dumped core" : ""));
         }
 
-        /* Clean up any incomplete schema data we might have been downloading when
-         * the process timed out or crashed.  We don't need to do any extra cleanup
-         * because we never loaded the extra schemas, and we don't need to call
-         * crm_schema_init because that was called in remoted_request_cib_schema_files
-         * before this function.
+        /* Clean up any incomplete schema data we might have been downloading
+         * when the process timed out or crashed. We don't need to do any extra
+         * cleanup because we never loaded the extra schemas, and we don't need
+         * to call pcmk__schema_init() because that was called in
+         * remoted_request_cib_schema_files() before this function.
          */
         clean_up_extra_schema_files();
     }
@@ -257,8 +257,8 @@ remoted_request_cib_schema_files(void)
      * would fail. So we need to load the base schemas right now.
      */
     clean_up_extra_schema_files();
-    crm_schema_cleanup();
-    crm_schema_init();
+    pcmk__schema_cleanup();
+    pcmk__schema_init();
 
     crm_info("Fetching extra schema files from cluster");
     pid = fork();

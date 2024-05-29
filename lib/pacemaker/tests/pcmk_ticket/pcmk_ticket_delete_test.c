@@ -27,7 +27,7 @@ cib_not_connected(void **state)
      */
     assert_int_equal(pcmk_ticket_delete(&xml, "ticketA", false), ENOTCONN);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -59,7 +59,7 @@ bad_arguments(void **state)
 
     assert_int_equal(pcmk_ticket_delete(&xml, NULL, false), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -69,12 +69,12 @@ unknown_ticket(void **state)
 
     assert_int_equal(pcmk_ticket_delete(&xml, "XYZ", false), ENXIO);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     assert_int_equal(pcmk_ticket_delete(&xml, "XYZ", true), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -84,7 +84,7 @@ ticket_granted(void **state)
 
     assert_int_equal(pcmk_ticket_delete(&xml, "ticketB", false), EACCES);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -104,7 +104,7 @@ ticket_exists(void **state)
                      &xml_search, cib_xpath | cib_scope_local);
     assert_null(xml_search);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -125,7 +125,7 @@ force_delete_ticket(void **state)
                      &xml_search, cib_xpath | cib_scope_local);
     assert_null(xml_search);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -147,7 +147,7 @@ duplicate_tickets(void **state)
 
     assert_null(xml_search);
 
-    free_xml(xml);
+    pcmk__xml_free(xml);
     cib__clean_up_connection(&cib);
 }
 
@@ -160,7 +160,7 @@ duplicate_tickets(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(unknown_ticket, setup_test, teardown_test),

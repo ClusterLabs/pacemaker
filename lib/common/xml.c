@@ -787,40 +787,41 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 }
 
 /*!
- * Free an XML element and all of its children, removing it from its parent
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
- * \param[in,out] xml  XML element to free
+ * If \p node is the root of its document, free the entire document.
+ *
+ * \param[in,out] node      XML node to free
+ * \param[in]     position  Position of \p node among its siblings for change
+ *                          tracking (negative to calculate automatically if
+ *                          needed)
  */
-void
-pcmk_free_xml_subtree(xmlNode *xml)
-{
-    xmlUnlinkNode(xml); // Detaches from parent and siblings
-    xmlFreeNode(xml);   // Frees
-}
-
 static void
-free_xml_with_position(xmlNode *child, int position)
+free_xml_with_position(xmlNode *node, int position)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
-    if (child == NULL) {
+    if (node == NULL) {
         return;
     }
-    doc = child->doc;
-    nodepriv = child->_private;
+    doc = node->doc;
+    nodepriv = node->_private;
 
-    if ((doc != NULL) && (xmlDocGetRootElement(doc) == child)) {
-        // Free everything
+    if ((doc != NULL) && (xmlDocGetRootElement(doc) == node)) {
+        /* @TODO Should we check ACLs first? Otherwise it seems like we could
+         * free the root element without write permission.
+         */
         xmlFreeDoc(doc);
         return;
     }
 
-    if (!pcmk__check_acl(child, NULL, pcmk__xf_acl_write)) {
+    if (!pcmk__check_acl(node, NULL, pcmk__xf_acl_write)) {
         GString *xpath = NULL;
 
         pcmk__if_tracing({}, return);
-        xpath = pcmk__element_xpath(child);
+        xpath = pcmk__element_xpath(node);
         qb_log_from_external_source(__func__, __FILE__,
                                     "Cannot remove %s %x", LOG_TRACE,
                                     __LINE__, 0, xpath->str, nodepriv->flags);
@@ -828,45 +829,53 @@ free_xml_with_position(xmlNode *child, int position)
         return;
     }
 
-    if ((doc != NULL) && pcmk__tracking_xml_changes(child, false)
+    if ((doc != NULL) && pcmk__tracking_xml_changes(node, false)
         && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
-        GString *xpath = pcmk__element_xpath(child);
+        GString *xpath = pcmk__element_xpath(node);
 
         if (xpath != NULL) {
             pcmk__deleted_xml_t *deleted_obj = NULL;
 
-            crm_trace("Deleting %s %p from %p", xpath->str, child, doc);
+            crm_trace("Deleting %s %p from %p", xpath->str, node, doc);
 
             deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
             deleted_obj->path = g_string_free(xpath, FALSE);
             deleted_obj->position = -1;
 
             // Record the position only for XML comments for now
-            if (child->type == XML_COMMENT_NODE) {
+            if (node->type == XML_COMMENT_NODE) {
                 if (position >= 0) {
                     deleted_obj->position = position;
 
                 } else {
-                    deleted_obj->position = pcmk__xml_position(child,
+                    deleted_obj->position = pcmk__xml_position(node,
                                                                pcmk__xf_skip);
                 }
             }
 
             docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
                                                   deleted_obj);
-            pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
+            pcmk__set_xml_doc_flag(node, pcmk__xf_dirty);
         }
     }
-    pcmk_free_xml_subtree(child);
+    xmlUnlinkNode(node);
+    xmlFreeNode(node);
 }
 
-
+/*!
+ * \internal
+ * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
+ *
+ * If \p xml is the root of its document, free the entire document.
+ *
+ * \param[in,out] xml  XML node to free
+ */
 void
-free_xml(xmlNode * child)
+pcmk__xml_free(xmlNode *xml)
 {
-    free_xml_with_position(child, -1);
+    free_xml_with_position(xml, -1);
 }
 
 /*!
@@ -929,8 +938,8 @@ pcmk__strip_xml_text(xmlNode *xml)
 
         switch (iter->type) {
             case XML_TEXT_NODE:
-                /* Remove it */
-                pcmk_free_xml_subtree(iter);
+                xmlUnlinkNode(iter);
+                xmlFreeNode(iter);
                 break;
 
             case XML_ELEMENT_NODE:
@@ -1811,7 +1820,7 @@ delete_xe_if_matching(xmlNode *xml, void *user_data)
 
     crm_log_xml_trace(xml, "delete-match");
     crm_log_xml_trace(search, "delete-search");
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     // Found a match and deleted it; stop traversing tree
     return false;
@@ -2117,64 +2126,92 @@ pcmk__xe_next_same(const xmlNode *node)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Initialize the Pacemaker XML environment
+ *
+ * Set an XML buffer allocation scheme, set XML node create and destroy
+ * callbacks, and load schemas into the cache.
+ */
 void
-crm_xml_init(void)
+pcmk__xml_init(void)
 {
-    static bool init = true;
+    // @TODO Try to find a better caller than crm_log_preinit()
+    static bool initialized = false;
 
-    if(init) {
-        init = false;
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
+    if (!initialized) {
+        initialized = true;
+
+        /* Double the buffer size when the buffer needs to grow. The default
+         * allocator XML_BUFFER_ALLOC_EXACT was found to cause poor performance
+         * due to the number of reallocs.
          */
         xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
-        /* Populate and free the _private field when nodes are created and destroyed */
-        xmlDeregisterNodeDefault(free_private_data);
+        // Initialize private data at node creation
         xmlRegisterNodeDefault(new_private_data);
 
-        crm_schema_init();
+        // Free private data at node destruction
+        xmlDeregisterNodeDefault(free_private_data);
+
+        // Load schemas into the cache
+        pcmk__schema_init();
     }
 }
 
+/*!
+ * \internal
+ * \brief Tear down the Pacemaker XML environment
+ *
+ * Destroy schema cache and clean up memory allocated by libxml2.
+ */
 void
-crm_xml_cleanup(void)
+pcmk__xml_cleanup(void)
 {
-    crm_schema_cleanup();
+    pcmk__schema_cleanup();
     xmlCleanupParser();
 }
 
-#define XPATH_MAX 512
-
+/*!
+ * \internal
+ * \brief Get the XML element whose \c PCMK_XA_ID matches an \c PCMK_XA_ID_REF
+ *
+ * \param[in] xml     Element whose \c PCMK_XA_ID_REF attribute to check
+ * \param[in] search  Node whose document to search for node with matching
+ *                    \c PCMK_XA_ID (\c NULL to use \p xml)
+ *
+ * \return If \p xml has a \c PCMK_XA_ID_REF attribute, node in
+ *         <tt>search</tt>'s document whose \c PCMK_XA_ID attribute matches;
+ *         otherwise, \p xml
+ */
 xmlNode *
-expand_idref(xmlNode * input, xmlNode * top)
+pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
 {
     char *xpath = NULL;
     const char *ref = NULL;
     xmlNode *result = NULL;
 
-    if (input == NULL) {
+    if (xml == NULL) {
         return NULL;
     }
 
-    ref = crm_element_value(input, PCMK_XA_ID_REF);
+    ref = crm_element_value(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
-        return input;
+        return xml;
     }
 
-    if (top == NULL) {
-        top = input;
+    if (search == NULL) {
+        search = xml;
     }
 
-    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", input->name, ref);
-    result = get_xpath_object(xpath, top, LOG_DEBUG);
-    if (result == NULL) { // Not possible with schema validation enabled
+    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
+    result = get_xpath_object(xpath, search, LOG_DEBUG);
+    if (result == NULL) {
+        // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
                          "a valid object " CRM_XS " xpath=%s",
-                         input->name, ref, xpath);
+                         xml->name, ref, xpath);
     }
     free(xpath);
     return result;
@@ -2323,7 +2360,7 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 void
 crm_destroy_xml(gpointer data)
 {
-    free_xml(data);
+    pcmk__xml_free(data);
 }
 
 xmlDoc *
@@ -2361,7 +2398,7 @@ int
 add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
 {
     add_node_copy(parent, child);
-    free_xml(child);
+    pcmk__xml_free(child);
     return 1;
 }
 
@@ -2605,7 +2642,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
         if (delete_only) {
             crm_log_xml_trace(child, "delete-match");
             crm_log_xml_trace(update, "delete-search");
-            free_xml(child);
+            pcmk__xml_free(child);
 
         } else {
             crm_log_xml_trace(child, "replace-match");
@@ -2719,6 +2756,37 @@ void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
     pcmk__xe_set_score(target, name, value);
+}
+
+void
+crm_xml_init(void)
+{
+    pcmk__xml_init();
+}
+
+void
+crm_xml_cleanup(void)
+{
+    pcmk__xml_cleanup();
+}
+
+void
+pcmk_free_xml_subtree(xmlNode *xml)
+{
+    xmlUnlinkNode(xml); // Detaches from parent and siblings
+    xmlFreeNode(xml);   // Frees
+}
+
+void
+free_xml(xmlNode *child)
+{
+    pcmk__xml_free(child);
+}
+
+xmlNode *
+expand_idref(xmlNode *input, xmlNode *top)
+{
+    return pcmk__xe_resolve_idref(input, top);
 }
 
 // LCOV_EXCL_STOP

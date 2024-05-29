@@ -27,7 +27,7 @@ cib_not_connected(void **state)
      */
     assert_int_equal(pcmk_ticket_remove_attr(&xml, NULL, NULL, false), ENOTCONN);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static int
@@ -59,7 +59,7 @@ bad_arguments(void **state)
 
     assert_int_equal(pcmk_ticket_remove_attr(&xml, NULL, NULL, false), EINVAL);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 }
 
 static void
@@ -75,7 +75,7 @@ no_attrs(void **state)
     /* Deleting no attributes on a ticket that doesn't exist is a no-op */
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "XYZ", NULL, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
@@ -85,18 +85,18 @@ no_attrs(void **state)
     /* Deleting no attributes on a ticket that exists is also a no-op */
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "ticketA", NULL, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     xml = NULL;
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath | cib_scope_local);
     assert_string_equal("1", crm_element_value(xml_search, "owner"));
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
 
     /* Another way of specifying no attributes */
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "XYZ", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
                      &xml_search, cib_xpath | cib_scope_local);
@@ -119,7 +119,7 @@ remove_missing_attrs(void **state)
     /* Deleting an attribute that doesn't exist is a no-op */
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "ticketA", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -129,7 +129,7 @@ remove_missing_attrs(void **state)
     assert_string_equal("1", crm_element_value(xml_search, "owner"));
     assert_null(crm_element_value(xml_search, "XYZ"));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
     cib__clean_up_connection(&cib);
 }
@@ -146,7 +146,7 @@ remove_existing_attr(void **state)
 
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "ticketA", attrs, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -155,7 +155,7 @@ remove_existing_attr(void **state)
 
     assert_null(crm_element_value(xml_search, "owner"));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
     cib__clean_up_connection(&cib);
 }
@@ -172,7 +172,7 @@ remove_granted_without_force(void **state)
 
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "ticketB", attrs, false), EACCES);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -181,7 +181,7 @@ remove_granted_without_force(void **state)
 
     assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
     cib__clean_up_connection(&cib);
 }
@@ -198,7 +198,7 @@ remove_granted_with_force(void **state)
 
     assert_int_equal(pcmk_ticket_remove_attr(&xml, "ticketB", attrs, true), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    free_xml(xml);
+    pcmk__xml_free(xml);
 
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
@@ -207,7 +207,7 @@ remove_granted_with_force(void **state)
 
     assert_null(crm_element_value(xml_search, PCMK__XA_GRANTED));
 
-    free_xml(xml_search);
+    pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
     cib__clean_up_connection(&cib);
 }
@@ -221,7 +221,7 @@ remove_granted_with_force(void **state)
  * minimal overall setup for the entire group, and then setup the CIB for
  * those tests that need it.
  */
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(cib_not_connected),
                 cmocka_unit_test_setup_teardown(bad_arguments, setup_test, teardown_test),
                 cmocka_unit_test_setup_teardown(no_attrs, setup_test, teardown_test),

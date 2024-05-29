@@ -24,7 +24,7 @@ op_is_not_probe_test(void **state) {
                                       "=\"" PCMK_ACTION_START "\" "
                                   PCMK_META_INTERVAL "=\"0\"/>");
     assert_false(pcmk_xe_mask_probe_failure(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -37,7 +37,7 @@ op_does_not_have_right_values_test(void **state) {
                                       "=\"" PCMK_ACTION_MONITOR "\" "
                                   PCMK_META_INTERVAL "=\"0\"/>");
     assert_false(pcmk_xe_mask_probe_failure(node));
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -48,7 +48,7 @@ op_does_not_have_right_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -66,7 +66,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -77,7 +77,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     /* PCMK_EXEC_DONE */
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
@@ -89,7 +89,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -100,7 +100,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -111,7 +111,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -122,7 +122,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -133,7 +133,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     /* PCMK_EXEC_NOT_INSTALLED */
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
@@ -145,7 +145,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -156,7 +156,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     /* PCMK_EXEC_ERROR */
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
@@ -168,7 +168,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -179,7 +179,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -190,7 +190,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -201,7 +201,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -212,7 +212,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     /* PCMK_EXEC_ERROR_HARD */
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
@@ -224,7 +224,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -235,7 +235,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -246,7 +246,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -257,7 +257,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -268,7 +268,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     /* PCMK_EXEC_ERROR_FATAL */
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
@@ -280,7 +280,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -291,7 +291,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -302,7 +302,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -313,7 +313,7 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 
     s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
@@ -324,10 +324,10 @@ check_values_test(void **state) {
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(op_is_not_probe_test),
                 cmocka_unit_test(op_does_not_have_right_values_test),
                 cmocka_unit_test(check_values_test))

@@ -553,7 +553,7 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
     }
 
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
-    free_xml(xml);
+    pcmk__xml_free(xml);
     return (rc >= 0)? pcmk_rc_ok : pcmk_legacy2rc(rc);
 }
 
@@ -703,7 +703,7 @@ purge_node_from_fencer(const char *node_name, long node_id)
         fprintf(stderr, "Could not purge node %s from fencer: %s\n",
                 pcmk__s(node_name, "by ID"), pcmk_rc_str(rc));
     }
-    free_xml(cmd);
+    pcmk__xml_free(cmd);
     crm_ipc_close(conn);
     crm_ipc_destroy(conn);
     return rc;

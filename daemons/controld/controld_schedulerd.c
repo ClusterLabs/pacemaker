@@ -152,7 +152,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
         pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
         register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
-        free_xml(fsa_input.msg);
+        pcmk__xml_free(fsa_input.msg);
 
     } else {
         crm_info("%s calculation %s is obsolete", CRM_OP_PECALC, msg_ref);

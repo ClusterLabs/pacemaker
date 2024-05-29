@@ -29,7 +29,7 @@ bad_input(void **state) {
     assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST));
     assert_null(xmlHasProp(node, (pcmkXmlStr) PCMK__XA_ATTR_HOST_ID));
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -44,7 +44,7 @@ expected_input(void **state) {
                      crm_element_value_int(node, PCMK__XA_ATTR_HOST_ID, &i));
     assert_int_equal(i, 47);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
 static void
@@ -62,10 +62,10 @@ repeated_use(void **state) {
                      crm_element_value_int(node, PCMK__XA_ATTR_HOST_ID, &i));
     assert_int_equal(i, 3);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(bad_input),
                 cmocka_unit_test(expected_input),
                 cmocka_unit_test(repeated_use))

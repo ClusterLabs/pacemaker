@@ -24,8 +24,8 @@ set_attr(void **state)
     assert_string_equal(crm_element_value(node, "a"), PCMK_VALUE_TRUE);
     assert_string_equal(crm_element_value(node, "b"), PCMK_VALUE_FALSE);
 
-    free_xml(node);
+    pcmk__xml_free(node);
 }
 
-PCMK__UNIT_TEST(pcmk__xml_test_setup_group, NULL,
+PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(set_attr))
