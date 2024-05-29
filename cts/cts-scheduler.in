@@ -1430,7 +1430,7 @@ class CtsScheduler(object):
     def run_one(self, test_name, test_desc, test_args):
         """ Run one scheduler test """
 
-        print("  Test %-25s %s" % ((test_name + ":"), test_desc))
+        print("  Test %-41s %s" % ((test_name + ":"), test_desc))
 
         did_fail = False
         self.num_tests = self.num_tests + 1
