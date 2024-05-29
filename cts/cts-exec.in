@@ -331,7 +331,7 @@ class ExecTests(Tests):
                 agent_source = "%s/extra/resources/%s" % (BuildOptions._BUILD_DIR, agent)
                 agent_dest = "%s/pacemaker/%s" % (BuildOptions.OCF_RA_INSTALL_DIR, agent)
                 if not os.path.exists(agent_dest):
-                    print("Installing %s ..." % (agent_dest))
+                    print("Installing %s ..." % agent_dest)
                     shutil.copyfile(agent_source, agent_dest)
                     os.chmod(agent_dest, EXECMODE)
                     self._installed_files.append(agent_dest)
@@ -342,7 +342,7 @@ class ExecTests(Tests):
         """ Clean up the host after executing desired tests """
 
         for installed_file in self._installed_files:
-            print("Removing %s ..." % (installed_file))
+            print("Removing %s ..." % installed_file)
             os.remove(installed_file)
 
         subprocess.call(["cts-support", "uninstall"])
@@ -354,85 +354,85 @@ class ExecTests(Tests):
 
         ### register/unregister tests ###
         for rsc in self._rsc_classes:
-            test = self.new_test("generic_registration_%s" % (rsc),
-                                 "Simple resource registration test for %s standard" % (rsc))
-            test.add_cmd(common_cmds["%s_reg_line" % (rsc)] + " " + common_cmds["%s_reg_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
+            test = self.new_test("generic_registration_%s" % rsc,
+                                 "Simple resource registration test for %s standard" % rsc)
+            test.add_cmd(common_cmds["%s_reg_line" % rsc] + " " + common_cmds["%s_reg_event" % rsc])
+            test.add_cmd(common_cmds["%s_unreg_line" % rsc] + " " + common_cmds["%s_unreg_event" % rsc])
 
         ### start/stop tests  ###
         for rsc in self._rsc_classes:
-            test = self.new_test("generic_start_stop_%s" % (rsc), "Simple start and stop test for %s standard" % (rsc))
-            test.add_cmd(common_cmds["%s_reg_line" % (rsc)]   + " " + common_cmds["%s_reg_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_start_line" % (rsc)] + " " + common_cmds["%s_start_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
+            test = self.new_test("generic_start_stop_%s" % rsc, "Simple start and stop test for %s standard" % rsc)
+            test.add_cmd(common_cmds["%s_reg_line" % rsc]   + " " + common_cmds["%s_reg_event" % rsc])
+            test.add_cmd(common_cmds["%s_start_line" % rsc] + " " + common_cmds["%s_start_event" % rsc])
+            test.add_cmd(common_cmds["%s_stop_line" % rsc]  + " " + common_cmds["%s_stop_event" % rsc])
+            test.add_cmd(common_cmds["%s_unreg_line" % rsc] + " " + common_cmds["%s_unreg_event" % rsc])
 
         ### monitor cancel test ###
         for rsc in self._rsc_classes:
-            test = self.new_test("generic_monitor_cancel_%s" % (rsc),
-                                 "Simple monitor cancel test for %s standard" % (rsc))
-            test.add_cmd(common_cmds["%s_reg_line" % (rsc)]   + " " + common_cmds["%s_reg_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_start_line" % (rsc)] + " " + common_cmds["%s_start_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+            test = self.new_test("generic_monitor_cancel_%s" % rsc,
+                                 "Simple monitor cancel test for %s standard" % rsc)
+            test.add_cmd(common_cmds["%s_reg_line" % rsc]   + " " + common_cmds["%s_reg_event" % rsc])
+            test.add_cmd(common_cmds["%s_start_line" % rsc] + " " + common_cmds["%s_start_event" % rsc])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
+            test.add_cmd(common_cmds["%s_cancel_line" % rsc] + " " + common_cmds["%s_cancel_event" % rsc])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
+            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % rsc], ExitStatus.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
-            test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
+            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % rsc], ExitStatus.TIMEOUT)
+            test.add_cmd(common_cmds["%s_stop_line" % rsc]  + " " + common_cmds["%s_stop_event" % rsc])
+            test.add_cmd(common_cmds["%s_unreg_line" % rsc] + " " + common_cmds["%s_unreg_event" % rsc])
 
         ### monitor duplicate test ###
         for rsc in self._rsc_classes:
-            test = self.new_test("generic_monitor_duplicate_%s" % (rsc),
-                                 "Test creation and canceling of duplicate monitors for %s standard" % (rsc))
-            test.add_cmd(common_cmds["%s_reg_line" % (rsc)]   + " " + common_cmds["%s_reg_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_start_line" % (rsc)] + " " + common_cmds["%s_start_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+            test = self.new_test("generic_monitor_duplicate_%s" % rsc,
+                                 "Test creation and canceling of duplicate monitors for %s standard" % rsc)
+            test.add_cmd(common_cmds["%s_reg_line" % rsc]   + " " + common_cmds["%s_reg_event" % rsc])
+            test.add_cmd(common_cmds["%s_start_line" % rsc] + " " + common_cmds["%s_start_event" % rsc])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
 
             # Add the duplicate monitors
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
             # verify we still get update events
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
 
             # cancel the monitor, if the duplicate merged with the original, we should no longer see monitor updates
-            test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_cancel_line" % rsc] + " " + common_cmds["%s_cancel_event" % rsc])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
+            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % rsc], ExitStatus.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
-            test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
+            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % rsc], ExitStatus.TIMEOUT)
+            test.add_cmd(common_cmds["%s_stop_line" % rsc]  + " " + common_cmds["%s_stop_event" % rsc])
+            test.add_cmd(common_cmds["%s_unreg_line" % rsc] + " " + common_cmds["%s_unreg_event" % rsc])
 
         ### stop implies cancel test ###
         for rsc in self._rsc_classes:
-            test = self.new_test("generic_stop_implies_cancel_%s" % (rsc),
-                                 "Verify stopping a resource implies cancel of recurring ops for %s standard" % (rsc))
-            test.add_cmd(common_cmds["%s_reg_line" % (rsc)]   + " " + common_cmds["%s_reg_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_start_line" % (rsc)] + " " + common_cmds["%s_start_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+            test = self.new_test("generic_stop_implies_cancel_%s" % rsc,
+                                 "Verify stopping a resource implies cancel of recurring ops for %s standard" % rsc)
+            test.add_cmd(common_cmds["%s_reg_line" % rsc]   + " " + common_cmds["%s_reg_event" % rsc])
+            test.add_cmd(common_cmds["%s_start_line" % rsc] + " " + common_cmds["%s_start_event" % rsc])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
             ### If this fails, that means the monitor may not be getting rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
-            test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
+            test.add_cmd(common_cmds["%s_stop_line" % rsc]  + " " + common_cmds["%s_stop_event" % rsc])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
+            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % rsc], ExitStatus.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % (rsc)], ExitStatus.TIMEOUT)
-            test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
+            test.add_cmd_expected_fail(common_cmds["%s_monitor_event" % rsc], ExitStatus.TIMEOUT)
+            test.add_cmd(common_cmds["%s_unreg_line" % rsc] + " " + common_cmds["%s_unreg_event" % rsc])
 
 
     def build_multi_rsc_tests(self):
@@ -445,20 +445,20 @@ class ExecTests(Tests):
         test = self.new_test("multi_rsc_start_stop_all",
                              "Start, monitor, and stop resources of multiple types and classes")
         for rsc in self._rsc_classes:
-            test.add_cmd(common_cmds["%s_reg_line" % (rsc)]   + " " + common_cmds["%s_reg_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_reg_line" % rsc]   + " " + common_cmds["%s_reg_event" % rsc])
         for rsc in self._rsc_classes:
-            test.add_cmd(common_cmds["%s_start_line" % (rsc)] + " " + common_cmds["%s_start_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_start_line" % rsc] + " " + common_cmds["%s_start_event" % rsc])
         for rsc in self._rsc_classes:
-            test.add_cmd(common_cmds["%s_monitor_line" % (rsc)] + " " + common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_line" % rsc] + " " + common_cmds["%s_monitor_event" % rsc])
         for rsc in self._rsc_classes:
             ### If this fails, that means the monitor is not being rescheduled ####
-            test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_monitor_event" % rsc])
         for rsc in self._rsc_classes:
-            test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_cancel_line" % rsc] + " " + common_cmds["%s_cancel_event" % rsc])
         for rsc in self._rsc_classes:
-            test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_stop_line" % rsc]  + " " + common_cmds["%s_stop_event" % rsc])
         for rsc in self._rsc_classes:
-            test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
+            test.add_cmd(common_cmds["%s_unreg_line" % rsc] + " " + common_cmds["%s_unreg_event" % rsc])
 
     def build_negative_tests(self):
         """ Register tests related to how pacemaker-execd handles failures """
@@ -718,14 +718,14 @@ class ExecTests(Tests):
         test = self.new_test("rsc_inflight_collision", "Verify recurring ops do not collide with other operations for the same rsc.")
         test.add_cmd("-c register_rsc -r test_rsc -P pacemaker -C ocf -T Dummy "
                      "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" "+self._action_timeout)
-        test.add_cmd("-c exec -r test_rsc -a start %s -k op_sleep -v 1 -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\"" % (timeout))
+        test.add_cmd("-c exec -r test_rsc -a start %s -k op_sleep -v 1 -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\"" % timeout)
         for i in range(iterations):
             test.add_cmd('-c exec -r test_rsc -a monitor %s -i 100%dms '
                          '-k op_sleep -v 2 '
                          '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete"' % (timeout, i))
 
-        test.add_cmd("-c exec -r test_rsc -a stop %s -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\"" % (timeout))
-        test.add_cmd("-c unregister_rsc -r test_rsc %s -l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\"" % (timeout))
+        test.add_cmd("-c exec -r test_rsc -a stop %s -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\"" % timeout)
+        test.add_cmd("-c unregister_rsc -r test_rsc %s -l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\"" % timeout)
 
     def build_custom_tests(self):
         """ Register tests that target specific cases """
