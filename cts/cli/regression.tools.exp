@@ -8027,10 +8027,10 @@ export overcloud-rabbit-2=overcloud-rabbit-2
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:4"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:4"/>
     <promotion_score id="promotable-rsc:0" score="9" node="cluster02"/>
-    <promotion_score id="promotable-rsc:2" score="0"/>
-    <promotion_score id="promotable-rsc:3" score="0"/>
-    <promotion_score id="promotable-rsc:4" score="0"/>
     <promotion_score id="promotable-rsc:1" score="-1" node="cluster01"/>
+    <promotion_score id="promotable-rsc:2" score="-INFINITY"/>
+    <promotion_score id="promotable-rsc:3" score="-INFINITY"/>
+    <promotion_score id="promotable-rsc:4" score="-INFINITY"/>
   </allocations>
   <actions>
     <rsc_action action="start" resource="httpd-bundle-2" node="cluster01" reason="unrunnable httpd-bundle-docker-2 start" blocked="true"/>
