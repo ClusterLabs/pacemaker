@@ -1724,18 +1724,17 @@ status_node(pcmk_node_t *node, xmlNodePtr parent, uint32_t show_opts)
     }
 
     // Standby mode
-    if (node->details->standby_onfail && (node->details->running_rsc != NULL)) {
+    if (pcmk_is_set(node->private->flags, pcmk__node_fail_standby)) {
         child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
                                   PCMK_VALUE_STANDBY);
-        pcmk__xe_set_content(child,
-                             " (in standby due to " PCMK_META_ON_FAIL ","
-                             " with active resources)");
-
-    } else if (node->details->standby_onfail) {
-        child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
-                                  PCMK_VALUE_STANDBY);
-        pcmk__xe_set_content(child,
-                             " (in standby due to " PCMK_META_ON_FAIL ")");
+        if (node->details->running_rsc == NULL) {
+            pcmk__xe_set_content(child,
+                                 " (in standby due to " PCMK_META_ON_FAIL ")");
+        } else {
+            pcmk__xe_set_content(child,
+                                 " (in standby due to " PCMK_META_ON_FAIL ","
+                                 " with active resources)");
+        }
 
     } else if (pcmk_is_set(node->private->flags, pcmk__node_standby)) {
         child = pcmk__html_create(parent, PCMK__XE_SPAN, NULL,
@@ -1875,7 +1874,8 @@ node_text_status(const pcmk_node_t *node)
     } else if (node->details->pending) {
         return "pending";
 
-    } else if (node->details->standby_onfail && node->details->online) {
+    } else if (pcmk_is_set(node->private->flags, pcmk__node_fail_standby)
+               && node->details->online) {
         return "standby (" PCMK_META_ON_FAIL ")";
 
     } else if (pcmk_is_set(node->private->flags, pcmk__node_standby)) {
@@ -2050,7 +2050,8 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *online = pcmk__btoa(node->details->online);
         const char *standby = pcmk__flag_text(node->private->flags,
                                               pcmk__node_standby);
-        const char *standby_onfail = pcmk__btoa(node->details->standby_onfail);
+        const char *standby_onfail = pcmk__flag_text(node->private->flags,
+                                                     pcmk__node_fail_standby);
         const char *maintenance = pcmk__btoa(node->details->maintenance);
         const char *pending = pcmk__btoa(node->details->pending);
         const char *unclean = pcmk__btoa(node->details->unclean);
@@ -2578,7 +2579,8 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         // Determine whether to display node individually or in a list
         if (node->details->unclean || node->details->pending
-            || (node->details->standby_onfail && node->details->online)
+            || (pcmk_is_set(node->private->flags, pcmk__node_fail_standby)
+                && node->details->online)
             || pcmk_is_set(node->private->flags, pcmk__node_standby)
             || node->details->maintenance
             || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)

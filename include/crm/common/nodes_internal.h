@@ -40,6 +40,9 @@ enum pcmk__node_flags {
 
     // Whether node is in standby mode
     pcmk__node_standby          = (UINT32_C(1) << 0),
+
+    // Whether node is in standby mode due to PCMK_META_ON_FAIL
+    pcmk__node_fail_standby     = (UINT32_C(1) << 1),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

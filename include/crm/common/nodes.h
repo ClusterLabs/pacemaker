@@ -63,8 +63,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_online() instead
     gboolean online;            // Whether online
 
-    gboolean standby_onfail;    // Whether in standby mode due to on-fail
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_pending() instead
     gboolean pending;           // Whether controller membership is pending

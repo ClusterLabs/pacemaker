@@ -2396,8 +2396,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_standby_node:
-            pcmk__set_node_flags(node, pcmk__node_standby);
-            node->details->standby_onfail = TRUE;
+            pcmk__set_node_flags(node,
+                                 pcmk__node_standby|pcmk__node_fail_standby);
             break;
 
         case pcmk_on_fail_block:
