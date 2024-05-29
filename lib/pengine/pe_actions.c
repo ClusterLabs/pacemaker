@@ -1201,7 +1201,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
 
     /* No need to request a delay if the fencing target is not a normal cluster
      * member, for example if it's a remote node or a guest node. */
-    if (node->details->type != pcmk_node_variant_cluster) {
+    if (node->private->variant != pcmk_node_variant_cluster) {
         return 0;
     }
 
@@ -1213,7 +1213,7 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     for (gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
         pcmk_node_t *n = gIter->data;
 
-        if (n->details->type != pcmk_node_variant_cluster) {
+        if (n->private->variant != pcmk_node_variant_cluster) {
             continue;
         }
 

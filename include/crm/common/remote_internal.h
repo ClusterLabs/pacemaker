@@ -17,6 +17,7 @@
 
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
 #include <crm/common/nodes.h>               // pcmk_node_variant_remote
+#include <crm/common/nodes_internal.h>      // struct pcmk__node_private
 #include <crm/common/resources_internal.h>  // struct pcmk__remote_private
 #include <crm/common/scheduler_types.h>     // pcmk_node_t
 
@@ -45,7 +46,8 @@ void pcmk__sockaddr2str(const void *sa, char *s);
 static inline bool
 pcmk__is_pacemaker_remote_node(const pcmk_node_t *node)
 {
-    return (node != NULL) && (node->details->type == pcmk_node_variant_remote);
+    return (node != NULL)
+            && (node->private->variant == pcmk_node_variant_remote);
 }
 
 /*!

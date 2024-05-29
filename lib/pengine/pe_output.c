@@ -2064,7 +2064,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *is_dc = pcmk__btoa(node->details->is_dc);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
-        const char *node_type = node_type_str(node->details->type);
+        const char *node_type = node_type_str(node->private->variant);
 
         int rc = pcmk_rc_ok;
 

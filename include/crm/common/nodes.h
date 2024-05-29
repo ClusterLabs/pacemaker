@@ -72,8 +72,6 @@ typedef struct pcmk__node_private pcmk__node_private_t;
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_node_shared_s {
-    enum node_type type;        // Node variant
-
     // @TODO Convert these into a flag group
 
     // NOTE: sbd (as of at least 1.5.2) uses this

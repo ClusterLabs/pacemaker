@@ -492,10 +492,10 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        new_node->details->type = pcmk_node_variant_cluster;
+        new_node->private->variant = pcmk_node_variant_cluster;
 
     } else if (pcmk__str_eq(type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
-        new_node->details->type = pcmk_node_variant_remote;
+        new_node->private->variant = pcmk_node_variant_remote;
         pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_remote_nodes);
 
     } else {
@@ -512,7 +512,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
                         "(such as %s) is deprecated and will be removed in a "
                         "future release",
                         pcmk__s(uname, "unnamed node"));
-        new_node->details->type = node_ping;
+        new_node->private->variant = node_ping;
     }
 
     new_node->details->attrs = pcmk__strkey_table(free, free);
@@ -601,7 +601,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
 static void
 handle_startup_fencing(pcmk_scheduler_t *scheduler, pcmk_node_t *new_node)
 {
-    if ((new_node->details->type == pcmk_node_variant_remote)
+    if ((new_node->private->variant == pcmk_node_variant_remote)
         && (new_node->details->remote_rsc == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
          * associated with them. This happens when remote node entries get left
@@ -1830,7 +1830,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         this_node->details->expected_up = TRUE;
     }
 
-    if (this_node->details->type == node_ping) {
+    if (this_node->private->variant == node_ping) {
         this_node->details->unclean = FALSE;
         online = FALSE;         /* As far as resource management is concerned,
                                  * the node is safely offline.
@@ -1861,7 +1861,7 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         this_node->weight = -PCMK_SCORE_INFINITY;
     }
 
-    if (this_node->details->type == node_ping) {
+    if (this_node->private->variant == node_ping) {
         crm_info("%s is not a Pacemaker node", pcmk__node_name(this_node));
 
     } else if (this_node->details->unclean) {

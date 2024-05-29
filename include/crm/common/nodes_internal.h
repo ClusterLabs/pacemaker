@@ -39,6 +39,7 @@ typedef struct pcmk__node_private {
     const char *id;
 
     const char *name;                   // Node name in cluster
+    enum node_type variant;             // Node variant
 } pcmk__node_private_t;
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);

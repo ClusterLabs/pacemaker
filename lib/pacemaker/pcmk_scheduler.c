@@ -267,7 +267,7 @@ count_available_nodes(pcmk_scheduler_t *scheduler)
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
 
         if ((node != NULL) && (node->weight >= 0) && node->details->online
-            && (node->details->type != node_ping)) {
+            && (node->private->variant != node_ping)) {
             scheduler->max_valid_nodes++;
         }
     }
