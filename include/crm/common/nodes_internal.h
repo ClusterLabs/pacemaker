@@ -37,6 +37,9 @@ enum pcmk__node_variant { // Possible node types
 
 enum pcmk__node_flags {
     pcmk__node_none             = UINT32_C(0),
+
+    // Whether node is in standby mode
+    pcmk__node_standby          = (UINT32_C(1) << 0),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

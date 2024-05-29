@@ -1088,7 +1088,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
                                     pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(this_node));
-        this_node->details->standby = TRUE;
+        pcmk__set_node_flags(this_node, pcmk__node_standby);
     }
 
     if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
@@ -1150,7 +1150,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
     if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
                                     pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(node));
-        node->details->standby = TRUE;
+        pcmk__set_node_flags(node, pcmk__node_standby);
     }
 
     if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
@@ -1697,7 +1697,7 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
         } else if ((when_member > 0) || (when_online > 0)) {
             crm_info("- %s is not ready to run resources",
                      pcmk__node_name(this_node));
-            this_node->details->standby = TRUE;
+            pcmk__set_node_flags(this_node, pcmk__node_standby);
             this_node->details->pending = TRUE;
 
         } else {
@@ -1723,7 +1723,7 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
                                 CRMD_JOINSTATE_DOWN, NULL)) {
         crm_info("%s is not ready to run resources",
                  pcmk__node_name(this_node));
-        this_node->details->standby = TRUE;
+        pcmk__set_node_flags(this_node, pcmk__node_standby);
         this_node->details->pending = TRUE;
 
     } else {
@@ -1867,15 +1867,23 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     } else if (this_node->details->unclean) {
         pcmk__sched_warn("%s is unclean", pcmk__node_name(this_node));
 
-    } else if (this_node->details->online) {
-        crm_info("%s is %s", pcmk__node_name(this_node),
-                 this_node->details->shutdown ? "shutting down" :
-                 this_node->details->pending ? "pending" :
-                 this_node->details->standby ? "standby" :
-                 this_node->details->maintenance ? "maintenance" : "online");
+    } else if (!this_node->details->online) {
+        crm_trace("%s is offline", pcmk__node_name(this_node));
+
+    } else if (this_node->details->shutdown) {
+        crm_info("%s is shutting down", pcmk__node_name(this_node));
+
+    } else if (this_node->details->pending) {
+        crm_info("%s is pending", pcmk__node_name(this_node));
+
+    } else if (pcmk_is_set(this_node->private->flags, pcmk__node_standby)) {
+        crm_info("%s is in standby", pcmk__node_name(this_node));
+
+    } else if (this_node->details->maintenance) {
+        crm_info("%s is in maintenance", pcmk__node_name(this_node));
 
     } else {
-        crm_trace("%s is offline", pcmk__node_name(this_node));
+        crm_info("%s is online", pcmk__node_name(this_node));
     }
 }
 
@@ -2388,7 +2396,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             break;
 
         case pcmk_on_fail_standby_node:
-            node->details->standby = TRUE;
+            pcmk__set_node_flags(node, pcmk__node_standby);
             node->details->standby_onfail = TRUE;
             break;
 
