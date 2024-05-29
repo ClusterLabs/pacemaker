@@ -2,19 +2,23 @@
 """ Regression tests for Pacemaker's pacemaker-execd
 """
 
-__copyright__ = "Copyright 2012-2023 the Pacemaker project contributors"
+# pylint doesn't like the module name "cts-execd" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+
+__copyright__ = "Copyright 2012-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
 import io
 import os
-import psutil
 import stat
 import sys
 import subprocess
 import shutil
 import tempfile
-import time
 
 # Where to find test binaries
 # Prefer the source tree if available
@@ -26,13 +30,13 @@ TEST_DIR = sys.path[0]
 if os.path.exists("@abs_top_srcdir@/python"):
     sys.path.insert(0, "@abs_top_srcdir@/python")
 
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
-from pacemaker._cts.errors import ExitCodeError, OutputFoundError, OutputNotFoundError
-from pacemaker._cts.process import killall, exit_if_proc_running, pipe_communicate, stdout_from_command
+from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
 from pacemaker._cts.test import Test, Tests
 
 # File permissions for executable scripts we create
@@ -285,6 +289,7 @@ class ExecTests(Tests):
                 # This code doesn't need this import, but pacemaker-cts-dummyd
                 # does, so ensure the dependency is available rather than cause
                 # all systemd tests to fail.
+                # pylint: disable=import-outside-toplevel,unused-import
                 import systemd.daemon
             except ImportError:
                 print("Python systemd bindings not found.")
