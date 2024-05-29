@@ -939,11 +939,16 @@ show_promotion_score(pcmk_resource_t *instance)
         pcmk__output_t *out = instance->private->scheduler->priv;
 
         out->message(out, "promotion-score", instance, chosen, score_s);
+
+    } else if (chosen == NULL) {
+        pcmk__rsc_debug(pe__const_top_resource(instance, false),
+                        "%s promotion score (inactive): %s (priority=%d)",
+                        instance->id, score_s, instance->private->priority);
+
     } else {
         pcmk__rsc_debug(pe__const_top_resource(instance, false),
-                        "%s promotion score on %s: sort=%s priority=%d",
-                        instance->id,
-                        ((chosen == NULL)? "none" : pcmk__node_name(chosen)),
+                        "%s promotion score on %s: %s (priority=%d)",
+                        instance->id, pcmk__node_name(chosen),
                         score_s, instance->private->priority);
     }
 }
