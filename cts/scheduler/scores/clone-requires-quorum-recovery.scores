@@ -2,7 +2,7 @@
 dummy-boss:0 promotion score on rhel7-3: 10
 dummy-boss:1 promotion score on rhel7-4: 5
 dummy-boss:2 promotion score on rhel7-2: 5
-dummy-boss:3 promotion score on none: 0
+dummy-boss:3 promotion score (inactive): -INFINITY
 pcmk__clone_assign: dummy-boss-clone allocation score on rhel7-1: 0
 pcmk__clone_assign: dummy-boss-clone allocation score on rhel7-2: 0
 pcmk__clone_assign: dummy-boss-clone allocation score on rhel7-3: 0

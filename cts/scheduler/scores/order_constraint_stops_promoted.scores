@@ -1,6 +1,6 @@
 
 NATIVE_RSC_A:0 promotion score on fc16-builder: 10
-NATIVE_RSC_A:1 promotion score on none: 0
+NATIVE_RSC_A:1 promotion score (inactive): -INFINITY
 pcmk__clone_assign: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
 pcmk__clone_assign: NATIVE_RSC_A:0 allocation score on fc16-builder: 11
 pcmk__clone_assign: PROMOTABLE_RSC_A allocation score on fc16-builder2: -INFINITY
