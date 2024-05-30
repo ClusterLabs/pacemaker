@@ -744,9 +744,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_ALERTS instead
 #define XML_CIB_TAG_ALERTS PCMK_XE_ALERTS
 
-//! \deprecated Use \c PCMK_XE_ALERT instead
-#define XML_CIB_TAG_ALERT PCMK_XE_ALERT
-
 #ifdef __cplusplus
 }
 #endif
