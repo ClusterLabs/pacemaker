@@ -674,9 +674,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_FIRST instead
 #define XML_ORDER_ATTR_FIRST PCMK_XA_FIRST
 
-//! \deprecated Use \c PCMK_XA_THEN instead
-#define XML_ORDER_ATTR_THEN PCMK_XA_THEN
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
