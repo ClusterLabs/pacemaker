@@ -1160,45 +1160,5 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
     return pcmk__cpg_message_data(handle, nodeid, pid, content, kind, from);
 }
 
-enum crm_ais_msg_types
-text2msg_type(const char *text)
-{
-    int type = crm_msg_none;
-
-    CRM_CHECK(text != NULL, return type);
-    text = pcmk__message_name(text);
-    if (pcmk__str_eq(text, "ais", pcmk__str_casei)) {
-        type = crm_msg_ais;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {
-        type = crm_msg_cib;
-    } else if (pcmk__strcase_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
-        type = crm_msg_crmd;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
-        type = crm_msg_te;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_casei)) {
-        type = crm_msg_pe;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_casei)) {
-        type = crm_msg_lrmd;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_casei)) {
-        type = crm_msg_stonithd;
-    } else if (pcmk__str_eq(text, "stonith-ng", pcmk__str_casei)) {
-        type = crm_msg_stonith_ng;
-    } else if (pcmk__str_eq(text, "attrd", pcmk__str_casei)) {
-        type = crm_msg_attrd;
-
-    } else {
-        /* This will normally be a transient client rather than
-         * a cluster daemon.  Set the type to the pid of the client
-         */
-        int scan_rc = sscanf(text, "%d", &type);
-
-        if (scan_rc != 1 || type <= crm_msg_stonith_ng) {
-            /* Ensure it's sane */
-            type = crm_msg_none;
-        }
-    }
-    return type;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

@@ -168,9 +168,6 @@ gboolean send_cluster_message(const crm_node_t *node,
 //! \deprecated Do not use
 const char *crm_peer_uuid(crm_node_t *node);
 
-//! \deprecated Do not use
-enum crm_ais_msg_types text2msg_type(const char *text);
-
 #ifdef __cplusplus
 }
 #endif
