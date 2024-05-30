@@ -68,9 +68,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_TIMEOUT "lrmd_timeout"
 
-//! \deprecated Do not use
-#define F_LRMD_WATCHDOG "lrmd_watchdog"
-
 #ifdef __cplusplus
 }
 #endif
