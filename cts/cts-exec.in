@@ -12,7 +12,6 @@ __copyright__ = "Copyright 2012-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
-import io
 import os
 import stat
 import sys
@@ -112,12 +111,14 @@ class ExecTest(Test):
 
     def _start_daemons(self):
         if not self.tls:
+            # pylint: disable=consider-using-with
             self._stonith_process = subprocess.Popen(["pacemaker-fenced", "-s"])
 
         cmd = [self._daemon_location, "-l", self.logpath]
         if self.verbose:
             cmd += ["-V"]
 
+        # pylint: disable=consider-using-with
         self._daemon_process = subprocess.Popen(cmd)
 
     def clean_environment(self):
@@ -129,9 +130,9 @@ class ExecTest(Test):
 
             if self.verbose:
                 print("Daemon Output Start")
-                logfile = io.open(self.logpath, 'rt', errors='replace')
-                for line in logfile:
-                    print(line.strip().encode('utf-8', 'replace'))
+                with open(self.logpath, "rt", errors="replace", encoding="utf-8") as logfile:
+                    for line in logfile:
+                        print(line.strip())
                 print("Daemon Output End")
 
         if self._stonith_process:
