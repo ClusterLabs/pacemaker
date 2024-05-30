@@ -491,9 +491,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_TIMEOUT instead
 #define XML_ATTR_TIMEOUT PCMK_META_TIMEOUT
 
-//! \deprecated Use \c PCMK_META_TIMEOUT instead
-#define XML_ALERT_ATTR_TIMEOUT PCMK_META_TIMEOUT
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
