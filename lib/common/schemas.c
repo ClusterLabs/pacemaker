@@ -1653,15 +1653,6 @@ update_validation(xmlNode **xml, int *best, int max, gboolean transform,
 }
 
 gboolean
-validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
-{
-    bool rc = pcmk__validate_xml(xml_blob, validation,
-                                 to_logs? (xmlRelaxNGValidityErrorFunc) xml_log : NULL,
-                                 GUINT_TO_POINTER(LOG_ERR));
-    return rc? TRUE : FALSE;
-}
-
-gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
     int rc = pcmk_update_configured_schema(xml, to_logs);
