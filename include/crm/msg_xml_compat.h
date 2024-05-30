@@ -551,9 +551,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ORDER_ATTR_FIRST_INSTANCE "first-instance"
 
-//! \deprecated Do not use
-#define XML_ORDER_ATTR_THEN_INSTANCE "then-instance"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
