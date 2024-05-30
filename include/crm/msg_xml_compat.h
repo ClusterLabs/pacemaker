@@ -608,9 +608,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_QUEUE_TIME instead
 #define XML_RSC_OP_T_QUEUE PCMK_XA_QUEUE_TIME
 
-//! \deprecated Do not use
-#define XML_LRM_ATTR_MIGRATE_SOURCE "migrate_source"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
