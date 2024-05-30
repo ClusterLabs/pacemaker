@@ -909,9 +909,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_TAG instead
 #define XML_CIB_TAG_TAG PCMK_XE_TAG
 
-//! \deprecated Use \c PCMK_XE_OBJ_REF instead
-#define XML_CIB_TAG_OBJ_REF PCMK_XE_OBJ_REF
-
 #ifdef __cplusplus
 }
 #endif
