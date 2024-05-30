@@ -116,9 +116,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_RELOAD_AGENT instead
 #define CRMD_ACTION_RELOAD_AGENT PCMK_ACTION_RELOAD_AGENT
 
-//! \deprecated Use PCMK_ACTION_START instead
-#define CRMD_ACTION_START PCMK_ACTION_START
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
