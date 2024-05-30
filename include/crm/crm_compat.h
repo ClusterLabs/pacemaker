@@ -53,9 +53,6 @@ extern "C" {
 //! \deprecated Use PCMK_VALUE_MINUS_INFINITY instead
 #define CRM_MINUS_INFINITY_S PCMK_VALUE_MINUS_INFINITY
 
-//! \deprecated Use PCMK_VALUE_PLUS_INFINITY instead
-#define CRM_PLUS_INFINITY_S PCMK_VALUE_PLUS_INFINITY
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
