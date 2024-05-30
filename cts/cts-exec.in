@@ -1,6 +1,5 @@
 #!@PYTHON@
-""" Regression tests for Pacemaker's pacemaker-execd
-"""
+"""Regression tests for Pacemaker's pacemaker-execd."""
 
 # pylint doesn't like the module name "cts-execd" which is an invalid complaint for this file
 # but probably something we want to continue warning about elsewhere
@@ -41,10 +40,11 @@ from pacemaker._cts.test import Test, Tests
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
 
-def update_path():
-    """ Set the PATH environment variable appropriately for the tests """
 
+def update_path():
+    """Set the PATH environment variable appropriately for the tests."""
     new_path = os.environ['PATH']
+
     if os.path.exists("%s/cts-exec.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BuildOptions._BUILD_DIR, TEST_DIR))
         # For pacemaker-execd, cts-exec-helper, and pacemaker-remoted
@@ -66,9 +66,20 @@ def update_path():
 
 
 class ExecTest(Test):
-    """ Executor for a single pacemaker-execd regression test """
+    """Executor for a single pacemaker-execd regression test."""
 
     def __init__(self, name, description, **kwargs):
+        """Create a new ExecTest instance.
+
+        Arguments:
+        name        -- A unique name for this test.  This can be used on the
+                       command line to specify that only a specific test should
+                       be executed.
+        description -- A meaningful description for the test.
+
+        Keyword arguments:
+        tls         -- Enable pacemaker-remoted.
+        """
         Test.__init__(self, name, description, **kwargs)
 
         self.tls = kwargs.get("tls", False)
@@ -84,8 +95,7 @@ class ExecTest(Test):
         self._stonith_process = None
 
     def _new_cmd(self, cmd, args, exitcode, **kwargs):
-        """ Add a command to be executed as part of this test """
-
+        """Add a command to be executed as part of this test."""
         if self.verbose and cmd == self._test_tool_location:
             args += " -V "
 
@@ -122,8 +132,7 @@ class ExecTest(Test):
         self._daemon_process = subprocess.Popen(cmd)
 
     def clean_environment(self):
-        """ Clean up the host after running a test """
-
+        """Clean up the host after running a test."""
         if self._daemon_process:
             self._daemon_process.terminate()
             self._daemon_process.wait()
@@ -143,34 +152,32 @@ class ExecTest(Test):
         self._stonith_process = None
 
     def add_cmd(self, args):
-        """ Add a cts-exec-helper command to be executed as part of this test """
+        """Add a cts-exec-helper command to be executed as part of this test."""
 
         self._new_cmd(self._test_tool_location, args, ExitStatus.OK)
 
     def add_cmd_and_kill(self, args, kill_proc):
-        """ Add a cts-exec-helper command and system command to be executed as part of this test """
+        """Add a cts-exec-helper command and system command to be executed as part of this test."""
 
         self._new_cmd(self._test_tool_location, args, ExitStatus.OK, kill=kill_proc)
 
     def add_cmd_check_stdout(self, args, match, no_match=None):
-        """ Add a command with expected output to be executed as part of this test """
+        """Add a command with expected output to be executed as part of this test."""
 
         self._new_cmd(self._test_tool_location, args, ExitStatus.OK,
                       stdout_match=match, stdout_negative_match=no_match)
 
     def add_cmd_expected_fail(self, args, exitcode=ExitStatus.ERROR):
-        """ Add a cts-exec-helper command to be executed as part of this test and expected to fail """
+        """Add a cts-exec-helper command to be executed as part of this test and expected to fail."""
 
         self._new_cmd(self._test_tool_location, args, exitcode)
 
     def add_sys_cmd(self, cmd, args):
-        """ Add a simple command to be executed as part of this test """
-
+        """Add a simple command to be executed as part of this test."""
         self._new_cmd(cmd, args, ExitStatus.OK)
 
     def run(self):
-        """ Execute this test. """
-
+        """Execute this test."""
         if self.tls and self.name.count("stonith") != 0:
             self._result_txt = "SKIPPED - '%s' - disabled when testing pacemaker_remote" % (self.name)
             print(self._result_txt)
@@ -178,10 +185,17 @@ class ExecTest(Test):
 
         Test.run(self)
 
+
 class ExecTests(Tests):
-    """ Collection of all pacemaker-execd regression tests """
+    """Collection of all pacemaker-execd regression tests."""
 
     def __init__(self, **kwargs):
+        """
+        Create a new ExecTests instance.
+
+        Keyword arguments:
+        tls         -- Enable pacemaker-remoted.
+        """
         Tests.__init__(self, **kwargs)
 
         self.tls = kwargs.get("tls", False)
@@ -276,6 +290,7 @@ class ExecTests(Tests):
         }
 
     def _setup_rsc_classes(self):
+        """Determine which resource classes are supported."""
         classes = stdout_from_command(["crm_resource", "--list-standards"])
         # Strip trailing empty line
         classes = classes[:-1]
@@ -301,8 +316,7 @@ class ExecTests(Tests):
         return classes
 
     def new_test(self, name, description):
-        """ Create a named test """
-
+        """Create a named test."""
         test = ExecTest(name, description, verbose=self.verbose, tls=self.tls,
                         timeout=self.timeout, force_wait=self.force_wait,
                         logdir=self.logdir)
@@ -310,8 +324,7 @@ class ExecTests(Tests):
         return test
 
     def setup_environment(self):
-        """ Prepare the host before executing any tests """
-
+        """Prepare the host before executing any tests."""
         if BuildOptions.REMOTE_ENABLED:
             os.system("service pacemaker_remote stop")
         self.cleanup_environment()
@@ -341,8 +354,7 @@ class ExecTests(Tests):
         subprocess.call(["cts-support", "install"])
 
     def cleanup_environment(self):
-        """ Clean up the host after executing desired tests """
-
+        """Clean up the host after executing desired tests."""
         for installed_file in self._installed_files:
             print("Removing %s ..." % installed_file)
             os.remove(installed_file)
@@ -350,11 +362,11 @@ class ExecTests(Tests):
         subprocess.call(["cts-support", "uninstall"])
 
     def _build_cmd_str(self, rsc, ty):
+        """Construct a command string for the given resource and type."""
         return "%s %s" % (self._common_cmds["%s_%s_line" % (rsc, ty)], self._common_cmds["%s_%s_event" % (rsc, ty)])
 
     def build_generic_tests(self):
-        """ Register tests that apply to all resource classes """
-
+        """Register tests that apply to all resource classes."""
         common_cmds = self._common_cmds
 
         # register/unregister tests
@@ -441,8 +453,7 @@ class ExecTests(Tests):
 
 
     def build_multi_rsc_tests(self):
-        """ Register complex tests that involve managing multiple resouces of different types """
-
+        """Register complex tests that involve managing multiple resouces of different types."""
         common_cmds = self._common_cmds
         # do not use service and systemd at the same time, it is the same resource.
 
@@ -466,8 +477,7 @@ class ExecTests(Tests):
             test.add_cmd(self._build_cmd_str(rsc, "unreg"))
 
     def build_negative_tests(self):
-        """ Register tests related to how pacemaker-execd handles failures """
-
+        """Register tests related to how pacemaker-execd handles failures."""
         # ocf start timeout test
         test = self.new_test("ocf_start_timeout", "Force start timeout to occur, verify start failure.")
         test.add_cmd("-c register_rsc -r test_rsc -C ocf -P pacemaker -T Dummy "
@@ -689,8 +699,7 @@ class ExecTests(Tests):
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
     def build_stress_tests(self):
-        """ Register stress tests """
-
+        """Register stress tests."""
         timeout = "-t 20000"
 
         iterations = 25
@@ -733,8 +742,7 @@ class ExecTests(Tests):
         test.add_cmd("-c unregister_rsc -r test_rsc %s -l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\"" % timeout)
 
     def build_custom_tests(self):
-        """ Register tests that target specific cases """
-
+        """Register tests that target specific cases."""
         # verify resource temporary folder is created and used by OCF agents
         test = self.new_test("rsc_tmp_dir", "Verify creation and use of rsc temporary state directory")
         test.add_sys_cmd("ls", "-al %s" % BuildOptions.RSC_TMP_DIR)
@@ -887,7 +895,9 @@ class ExecTests(Tests):
             test.add_cmd_check_stdout("-c list_agents -C stonith", "", "Stateful")                # should not exist
             test.add_cmd_check_stdout("-c list_agents ", "fence_dummy")
 
+
 def build_options():
+    """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="Run pacemaker-execd regression tests",
                                      epilog="Example: Run only the test 'start_stop'\n"
@@ -917,8 +927,7 @@ def build_options():
 
 
 def main():
-    """ Run pacemaker-execd regression tests as specified by arguments """
-
+    """Run pacemaker-execd regression tests as specified by arguments."""
     update_path()
 
     # Ensure all command output is in portable locale for comparison
