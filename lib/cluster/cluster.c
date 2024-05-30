@@ -509,12 +509,5 @@ is_corosync_cluster(void)
     return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
 }
 
-gboolean
-send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
-                     const xmlNode *data, gboolean ordered)
-{
-    return pcmk__cluster_send_message(node, service, data);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
