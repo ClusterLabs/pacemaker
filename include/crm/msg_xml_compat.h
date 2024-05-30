@@ -771,9 +771,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_TAG_STATE "node_state"
 
-//! \deprecated Use \c PCMK_XE_NODE instead
-#define XML_CIB_TAG_NODE PCMK_XE_NODE
-
 #ifdef __cplusplus
 }
 #endif
