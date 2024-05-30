@@ -32,9 +32,6 @@ extern "C" {
 //! \deprecated Use PCMK_META_CLONE_MIN instead
 #define XML_RSC_ATTR_INCARNATION_MIN PCMK_META_CLONE_MIN
 
-//! \deprecated Use PCMK_META_CLONE_NODE_MAX instead
-#define XML_RSC_ATTR_INCARNATION_NODEMAX PCMK_META_CLONE_NODE_MAX
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
