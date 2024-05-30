@@ -810,9 +810,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_BUNDLE instead
 #define XML_CIB_TAG_CONTAINER PCMK_XE_BUNDLE
 
-//! \deprecated Use \c PCMK_XE_TEMPLATE instead
-#define XML_CIB_TAG_RSC_TEMPLATE PCMK_XE_TEMPLATE
-
 #ifdef __cplusplus
 }
 #endif
