@@ -75,8 +75,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_shutting_down() instead
     gboolean shutdown;          // Whether shutting down
 
-    gboolean is_dc;             // Whether node is cluster's DC
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode

@@ -2061,7 +2061,8 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *shutdown = pcmk__btoa(node->details->shutdown);
         const char *expected_up = pcmk__flag_text(node->private->flags,
                                                   pcmk__node_expected_up);
-        const char *is_dc = pcmk__btoa(node->details->is_dc);
+        const bool is_dc = pcmk__same_node(node,
+                                           node->details->data_set->dc_node);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
         const char *node_type = node_variant_text(node->private->variant);
@@ -2081,7 +2082,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                       PCMK_XA_FEATURE_SET, feature_set,
                                       PCMK_XA_SHUTDOWN, shutdown,
                                       PCMK_XA_EXPECTED_UP, expected_up,
-                                      PCMK_XA_IS_DC, is_dc,
+                                      PCMK_XA_IS_DC, pcmk__btoa(is_dc),
                                       PCMK_XA_RESOURCES_RUNNING, resources_running,
                                       PCMK_XA_TYPE, node_type,
                                       NULL);

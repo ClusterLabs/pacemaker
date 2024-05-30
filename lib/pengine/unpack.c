@@ -5016,7 +5016,6 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
     pcmk__insert_dup(node->details->attrs, CRM_ATTR_ID, node->private->id);
     if (pcmk__str_eq(node->private->id, scheduler->dc_uuid, pcmk__str_casei)) {
         scheduler->dc_node = node;
-        node->details->is_dc = TRUE;
         pcmk__insert_dup(node->details->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_TRUE);
     } else {

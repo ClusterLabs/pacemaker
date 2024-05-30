@@ -575,6 +575,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pcmk_action_t *fencing = NULL;
+        const bool is_dc = pcmk__same_node(node, scheduler->dc_node);
 
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
@@ -591,7 +592,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
             fencing = schedule_fencing(node);
 
             // Track DC and non-DC fence actions separately
-            if (node->details->is_dc) {
+            if (is_dc) {
                 dc_down = fencing;
             } else {
                 fencing_ops = add_nondc_fencing(fencing_ops, fencing,
@@ -602,7 +603,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
             pcmk_action_t *down_op = pcmk__new_shutdown_action(node);
 
             // Track DC and non-DC shutdown actions separately
-            if (node->details->is_dc) {
+            if (is_dc) {
                 dc_down = down_op;
             } else {
                 shutdown_ops = g_list_prepend(shutdown_ops, down_op);
