@@ -56,13 +56,6 @@ void crm_destroy_xml(gpointer data);
 //! \deprecated Check children member directly
 gboolean xml_has_children(const xmlNode *root);
 
-//! \deprecated Use crm_xml_add() with "true" or "false" instead
-static inline const char *
-crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
-{
-    return crm_xml_add(node, name, (value? "true" : "false"));
-}
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use name member directly
 static inline const char *
