@@ -58,9 +58,6 @@ gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 //! \deprecated Use strcmp() instead
 gboolean safe_str_neq(const char *a, const char *b);
 
-//! \deprecated Use strcasecmp() instead
-#define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
-
 #ifdef __cplusplus
 }
 #endif
