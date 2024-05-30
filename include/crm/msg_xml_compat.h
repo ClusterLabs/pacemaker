@@ -251,9 +251,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_RSC_ATTR_CLEAR_INTERVAL "clear_failure_interval"
 
-//! \deprecated Use \c PCMK_META_CRITICAL instead
-#define XML_RSC_ATTR_CRITICAL PCMK_META_CRITICAL
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
