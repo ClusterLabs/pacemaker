@@ -2595,12 +2595,6 @@ crm_next_same_xml(const xmlNode *sibling)
 }
 
 void
-xml_remove_prop(xmlNode * obj, const char *name)
-{
-    pcmk__xe_remove_attr(obj, name);
-}
-
-void
 crm_xml_init(void)
 {
     pcmk__xml_init();
