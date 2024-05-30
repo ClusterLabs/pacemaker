@@ -2350,21 +2350,6 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 
 #include <crm/common/xml_compat.h>
 
-xmlDoc *
-getDocPtr(xmlNode *node)
-{
-    xmlDoc *doc = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-
-    doc = node->doc;
-    if (doc == NULL) {
-        doc = xmlNewDoc(PCMK__XML_VERSION);
-        xmlDocSetRootElement(doc, node);
-    }
-    return doc;
-}
-
 xmlNode *
 copy_xml(xmlNode *src)
 {
