@@ -98,9 +98,6 @@ xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 //! \deprecated Do not use
 gboolean can_prune_leaf(xmlNode *xml_node);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *create_xml_node(xmlNode *parent, const char *name);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);

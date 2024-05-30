@@ -2509,38 +2509,6 @@ copy_xml(xmlNode *src)
     return copy;
 }
 
-xmlNode *
-create_xml_node(xmlNode *parent, const char *name)
-{
-    // Like pcmk__xe_create(), but returns NULL on failure
-    xmlNode *node = NULL;
-
-    CRM_CHECK(!pcmk__str_empty(name), return NULL);
-
-    if (parent == NULL) {
-        xmlDoc *doc = xmlNewDoc(PCMK__XML_VERSION);
-
-        if (doc == NULL) {
-            return NULL;
-        }
-
-        node = xmlNewDocRawNode(doc, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            xmlFreeDoc(doc);
-            return NULL;
-        }
-        xmlDocSetRootElement(doc, node);
-
-    } else {
-        node = xmlNewChild(parent, NULL, (pcmkXmlStr) name, NULL);
-        if (node == NULL) {
-            return NULL;
-        }
-    }
-    pcmk__xml_mark_created(node);
-    return node;
-}
-
 void
 crm_xml_init(void)
 {
