@@ -789,9 +789,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_ATTRS "attributes"
 
-//! \deprecated Do not use
-#define XML_TAG_PARAM "param"
-
 #ifdef __cplusplus
 }
 #endif
