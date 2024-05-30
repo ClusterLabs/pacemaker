@@ -1049,11 +1049,5 @@ get_object_parent(const char *object_type)
     return pcmk_cib_parent_name_for(object_type);
 }
 
-xmlNode *
-get_object_root(const char *object_type, xmlNode *the_root)
-{
-    return pcmk_find_cib_element(the_root, object_type);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

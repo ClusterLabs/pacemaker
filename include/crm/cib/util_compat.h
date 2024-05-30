@@ -34,9 +34,6 @@ const char *get_object_path(const char *object_type);
 //! \deprecated Use pcmk_cib_parent_name_for() instead
 const char *get_object_parent(const char *object_type);
 
-//! \deprecated Use pcmk_cib_xpath_for() instead
-xmlNode *get_object_root(const char *object_type, xmlNode *the_root);
-
 #ifdef __cplusplus
 }
 #endif
