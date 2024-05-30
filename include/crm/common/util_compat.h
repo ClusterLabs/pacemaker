@@ -83,9 +83,6 @@ long long crm_parse_ll(const char *text, const char *default_text);
 //! \deprecated Use strtoll() instead
 int crm_parse_int(const char *text, const char *default_text);
 
-//! \deprecated Use strtoll() instead
-#define crm_atoi(text, default_text) crm_parse_int(text, default_text)
-
 #ifdef __cplusplus
 }
 #endif
