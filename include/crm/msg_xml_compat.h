@@ -71,9 +71,6 @@ extern "C" {
 //! \deprecated Use PCMK_META_MIGRATION_THRESHOLD instead
 #define XML_RSC_ATTR_FAIL_STICKINESS PCMK_META_MIGRATION_THRESHOLD
 
-//! \deprecated Use PCMK_META_FAILURE_TIMEOUT instead
-#define XML_RSC_ATTR_FAIL_TIMEOUT PCMK_META_FAILURE_TIMEOUT
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
