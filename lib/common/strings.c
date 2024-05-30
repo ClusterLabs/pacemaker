@@ -1317,21 +1317,6 @@ pcmk__g_strcat(GString *buffer, ...)
 #include <crm/common/util_compat.h>
 
 gboolean
-safe_str_neq(const char *a, const char *b)
-{
-    if (a == b) {
-        return FALSE;
-
-    } else if (a == NULL || b == NULL) {
-        return TRUE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
-gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {
     if (use_case) {
