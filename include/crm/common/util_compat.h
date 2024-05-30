@@ -95,9 +95,6 @@ guint g_str_hash_traditional(gconstpointer v);
 //! \deprecated Do not use Pacemaker for generic string comparison
 gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 
-//! \deprecated Do not use Pacemaker for generic string manipulation
-guint crm_strcase_hash(gconstpointer v);
-
 #ifdef __cplusplus
 }
 #endif
