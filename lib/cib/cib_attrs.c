@@ -671,50 +671,6 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
 #include <crm/cib/util_compat.h>
 
 int
-query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
-{
-    int rc = pcmk_ok;
-    xmlNode *a_child = NULL;
-    xmlNode *xml_obj = NULL;
-    xmlNode *fragment = NULL;
-    const char *child_name = NULL;
-
-    CRM_ASSERT(uname != NULL);
-    CRM_ASSERT(uuid != NULL);
-
-    rc = the_cib->cmds->query(the_cib, PCMK_XE_NODES, &fragment,
-                              cib_sync_call | cib_scope_local);
-    if (rc != pcmk_ok) {
-        return rc;
-    }
-
-    xml_obj = fragment;
-    CRM_CHECK(pcmk__xe_is(xml_obj, PCMK_XE_NODES), return -ENOMSG);
-    crm_log_xml_trace(xml_obj, "Result section");
-
-    rc = -ENXIO;
-    *uname = NULL;
-
-    for (a_child = pcmk__xe_first_child(xml_obj, PCMK_XE_NODE, NULL, NULL);
-         a_child != NULL; a_child = pcmk__xe_next_same(a_child)) {
-
-        child_name = pcmk__xe_id(a_child);
-
-        if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
-            child_name = crm_element_value(a_child, PCMK_XA_UNAME);
-            if (child_name != NULL) {
-                *uname = strdup(child_name);
-                rc = pcmk_ok;
-            }
-            break;
-        }
-    }
-
-    pcmk__xml_free(fragment);
-    return rc;
-}
-
-int
 set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value)
 {
     int rc = pcmk_ok;

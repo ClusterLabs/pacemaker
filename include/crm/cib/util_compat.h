@@ -41,9 +41,6 @@ xmlNode *get_object_root(const char *object_type, xmlNode *the_root);
 int set_standby(cib_t *the_cib, const char *uuid, const char *scope,
                 const char *standby_value);
 
-//! \deprecated Do not use
-int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
-
 #ifdef __cplusplus
 }
 #endif
