@@ -1554,11 +1554,5 @@ crm_peer_destroy(void)
     pcmk__cluster_destroy_node_caches();
 }
 
-void
-crm_set_autoreap(gboolean enable)
-{
-    pcmk__cluster_set_autoreap(enable);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
