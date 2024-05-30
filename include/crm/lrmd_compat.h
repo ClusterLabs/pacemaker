@@ -23,9 +23,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use
-#define F_LRMD_OPERATION "lrmd_op"
-
 #ifdef __cplusplus
 }
 #endif
