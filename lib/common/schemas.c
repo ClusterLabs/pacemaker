@@ -1661,65 +1661,6 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
     return rc? TRUE : FALSE;
 }
 
-static void
-dump_file(const char *filename)
-{
-
-    FILE *fp = NULL;
-    int ch, line = 0;
-
-    CRM_CHECK(filename != NULL, return);
-
-    fp = fopen(filename, "r");
-    if (fp == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
-        return;
-    }
-
-    fprintf(stderr, "%4d ", ++line);
-    do {
-        ch = getc(fp);
-        if (ch == EOF) {
-            putc('\n', stderr);
-            break;
-        } else if (ch == '\n') {
-            fprintf(stderr, "\n%4d ", ++line);
-        } else {
-            putc(ch, stderr);
-        }
-    } while (1);
-
-    fclose(fp);
-}
-
-gboolean
-validate_xml_verbose(const xmlNode *xml_blob)
-{
-    int fd = 0;
-    xmlDoc *doc = NULL;
-    xmlNode *xml = NULL;
-    gboolean rc = FALSE;
-    char *filename = NULL;
-
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", pcmk__get_tmpdir());
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-    fd = mkstemp(filename);
-    pcmk__xml_write_fd(xml_blob, filename, fd, false, NULL);
-
-    dump_file(filename);
-
-    doc = xmlReadFile(filename, NULL, 0);
-    xml = xmlDocGetRootElement(doc);
-    rc = pcmk__validate_xml(xml, NULL, NULL, NULL);
-    pcmk__xml_free(xml);
-
-    unlink(filename);
-    free(filename);
-
-    return rc? TRUE : FALSE;
-}
-
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {

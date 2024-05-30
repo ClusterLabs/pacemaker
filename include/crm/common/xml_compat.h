@@ -162,9 +162,6 @@ int update_validation(xmlNode **xml_blob, int *best, int max,
 gboolean validate_xml(xmlNode *xml_blob, const char *validation,
                       gboolean to_logs);
 
-//! \deprecated Do not use
-gboolean validate_xml_verbose(const xmlNode *xml_blob);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
