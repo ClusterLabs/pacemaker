@@ -139,13 +139,6 @@ crm_itoa(int an_int)
     return crm_strdup_printf("%d", an_int);
 }
 
-//! \deprecated Don't use Pacemaker for string manipulation
-static inline char *
-crm_ftoa(double a_float)
-{
-    return crm_strdup_printf("%f", a_float);
-}
-
 #ifdef __cplusplus
 }
 #endif
