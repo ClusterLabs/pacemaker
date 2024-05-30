@@ -30,13 +30,6 @@ extern "C" {
 //! \deprecated Do not use
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
-//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
-static inline gboolean
-is_not_set(long long word, long long bit)
-{
-    return ((word & bit) == 0);
-}
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
 static inline gboolean
