@@ -56,13 +56,6 @@ svc_action_t *services_action_create(const char *name, const char *action,
 //! \deprecated Use resources_list_agents() instead
 GList *services_list(void);
 
-//! \deprecated Use pcmk_exec_status_str() instead
-static inline const char *
-services_lrm_status_str(enum op_status status)
-{
-    return pcmk_exec_status_str((enum pcmk_exec_status) status);
-}
-
 #ifdef __cplusplus
 }
 #endif
