@@ -1275,12 +1275,6 @@ crm_add_logfile(const char *filename)
     return pcmk__add_logfile(filename) == pcmk_rc_ok;
 }
 
-void
-pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
-{
-    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0, level, text, xml);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
 

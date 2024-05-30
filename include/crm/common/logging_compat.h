@@ -79,9 +79,6 @@ void log_data_element(int log_level, const char *file, const char *function,
                       int line, const char *prefix, const xmlNode *data,
                       int depth, int legacy_options);
 
-//! \deprecated Do not use Pacemaker for general-purpose logging
-void pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml);
-
 #ifdef __cplusplus
 }
 #endif
