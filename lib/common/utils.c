@@ -535,13 +535,5 @@ crm_parse_interval_spec(const char *input)
     return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
 }
 
-char *
-pcmk_hostname(void)
-{
-    struct utsname hostinfo;
-
-    return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
