@@ -80,9 +80,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_CANCEL instead
 #define CRMD_ACTION_CANCEL PCMK_ACTION_CANCEL
 
-//! \deprecated Use PCMK_ACTION_DELETE instead
-#define CRMD_ACTION_DELETE PCMK_ACTION_DELETE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
