@@ -242,9 +242,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_MAINTENANCE instead
 #define XML_RSC_ATTR_MAINTENANCE PCMK_META_MAINTENANCE
 
-//! \deprecated Use \c PCMK_META_REMOTE_NODE instead
-#define XML_RSC_ATTR_REMOTE_NODE PCMK_META_REMOTE_NODE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
