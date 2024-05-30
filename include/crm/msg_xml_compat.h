@@ -849,9 +849,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_EXPRESSION instead
 #define XML_TAG_EXPRESSION PCMK_XE_EXPRESSION
 
-//! \deprecated Use \c PCMK_XE_RSC_COLOCATION instead
-#define XML_CONS_TAG_RSC_DEPEND PCMK_XE_RSC_COLOCATION
-
 #ifdef __cplusplus
 }
 #endif
