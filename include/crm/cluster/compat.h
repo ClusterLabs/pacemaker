@@ -108,9 +108,6 @@ gboolean crm_cluster_connect(pcmk_cluster_t *cluster);
 //! \deprecated Use \c pcmk_cluster_disconnect() instead
 void crm_cluster_disconnect(pcmk_cluster_t *cluster);
 
-//! \deprecated Do not use
-int crm_remote_peer_cache_size(void);
-
 // NOTE: sbd (as of at least 1.5.2) uses this enum
 //!@{
 //! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead

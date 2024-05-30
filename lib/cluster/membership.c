@@ -1471,13 +1471,5 @@ crm_get_peer_full(unsigned int id, const char *uname, int flags)
     return pcmk__get_node(id, uname, NULL, flags);
 }
 
-int
-crm_remote_peer_cache_size(void)
-{
-    unsigned int count = pcmk__cluster_num_remote_nodes();
-
-    return QB_MIN(count, INT_MAX);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
