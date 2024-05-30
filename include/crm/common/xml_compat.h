@@ -35,9 +35,6 @@ extern "C" {
 //! \deprecated This function will be removed in a future release
 xmlDoc *getDocPtr(xmlNode *node);
 
-//! \deprecated This function will be removed in a future release
-xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use name member directly
 static inline const char *

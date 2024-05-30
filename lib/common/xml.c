@@ -2350,13 +2350,6 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 
 #include <crm/common/xml_compat.h>
 
-xmlNode *
-find_entity(xmlNode *parent, const char *node_name, const char *id)
-{
-    return pcmk__xe_first_child(parent, node_name,
-                                ((id == NULL)? id : PCMK_XA_ID), id);
-}
-
 xmlDoc *
 getDocPtr(xmlNode *node)
 {
