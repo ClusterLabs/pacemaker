@@ -116,9 +116,6 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_RSC_OP_LAST_RUN "last-run"
 
-//! \deprecated Use name member directly
-#define TYPE(x) (((x) == NULL)? NULL : (const char *) ((x)->name))
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
