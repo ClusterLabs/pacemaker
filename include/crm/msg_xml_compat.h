@@ -224,9 +224,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_NOTIFY instead
 #define XML_RSC_ATTR_NOTIFY PCMK_META_NOTIFY
 
-//! \deprecated Use \c PCMK_META_RESOURCE_STICKINESS instead
-#define XML_RSC_ATTR_STICKINESS PCMK_META_RESOURCE_STICKINESS
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
