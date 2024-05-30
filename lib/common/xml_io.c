@@ -772,19 +772,6 @@ string2xml(const char *input)
     return pcmk__xml_parse(input);
 }
 
-char *
-dump_xml_formatted(const xmlNode *xml)
-{
-    char *str = NULL;
-    GString *buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
-
-    str = pcmk__str_copy(buffer->str);
-    g_string_free(buffer, TRUE);
-    return str;
-}
-
 int
 write_xml_fd(const xmlNode *xml, const char *filename, int fd,
              gboolean compress)
