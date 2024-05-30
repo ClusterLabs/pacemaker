@@ -28,9 +28,6 @@ extern "C" {
  */
 
 //! \deprecated Do not use
-#define crm_get_interval crm_parse_interval_spec
-
-//! \deprecated Do not use
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 //! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
