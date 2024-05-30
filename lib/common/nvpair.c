@@ -995,17 +995,3 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
     }
     return NULL;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/util_compat.h>
-
-int
-pcmk_scan_nvpair(const char *input, char **name, char **value)
-{
-    return pcmk__scan_nvpair(input, name, value);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

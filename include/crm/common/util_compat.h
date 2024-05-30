@@ -64,9 +64,6 @@ gboolean safe_str_neq(const char *a, const char *b);
 //! \deprecated Use snprintf() instead
 char *crm_itoa_stack(int an_int, char *buf, size_t len);
 
-//! \deprecated Use sscanf() instead
-int pcmk_scan_nvpair(const char *input, char **name, char **value);
-
 #ifdef __cplusplus
 }
 #endif
