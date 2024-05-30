@@ -534,11 +534,5 @@ get_local_node_name(void)
     return pcmk__cluster_local_node_name();
 }
 
-const char *
-crm_peer_uname(const char *uuid)
-{
-    return pcmk__node_name_from_uuid(uuid);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
