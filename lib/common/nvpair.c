@@ -1014,16 +1014,6 @@ pcmk_format_nvpair(const char *name, const char *value,
     return pcmk__format_nvpair(name, value, units);
 }
 
-char *
-pcmk_format_named_time(const char *name, time_t epoch_time)
-{
-    char *now_s = pcmk__epoch2str(&epoch_time, 0);
-    char *result = crm_strdup_printf("%s=\"%s\"", name, pcmk__s(now_s, ""));
-
-    free(now_s);
-    return result;
-}
-
 const char *
 crm_xml_replace(xmlNode *node, const char *name, const char *value)
 {

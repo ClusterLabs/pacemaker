@@ -74,9 +74,6 @@ char *pcmk_format_nvpair(const char *name, const char *value,
 //! \deprecated Use \c crm_xml_add() or \c xml_remove_prop() instead
 const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
 
-//! \deprecated Use a standard printf()-style function instead
-char *pcmk_format_named_time(const char *name, time_t epoch_time);
-
 #ifdef __cplusplus
 }
 #endif
