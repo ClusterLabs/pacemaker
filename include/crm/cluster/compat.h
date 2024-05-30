@@ -90,11 +90,6 @@ void pcmk_cpg_membership(cpg_handle_t handle,
 //! \deprecated Do not use
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 
-//! \deprecated Do not use
-gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                           gboolean local, const crm_node_t *node,
-                           enum crm_ais_msg_types dest);
-
 #endif  // SUPPORT_COROSYNC
 
 // NOTE: sbd (as of at least 1.5.2) uses this

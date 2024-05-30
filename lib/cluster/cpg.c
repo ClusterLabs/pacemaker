@@ -1139,19 +1139,5 @@ pcmk_cpg_membership(cpg_handle_t handle,
                          joined_list, joined_list_entries);
 }
 
-gboolean
-send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
-                  gboolean local, const crm_node_t *node,
-                  enum crm_ais_msg_types dest)
-{
-    switch (msg_class) {
-        case crm_class_cluster:
-            return send_cpg_text(data, local, node, dest);
-        default:
-            crm_err("Invalid message class: %d", msg_class);
-            return FALSE;
-    }
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
