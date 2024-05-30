@@ -22,7 +22,6 @@ header_HEADERS = acl.h 			\
 		 ipc_schedulerd.h 	\
 		 iso8601.h 		\
 		 logging.h 		\
-		 logging_compat.h 	\
 		 mainloop.h 		\
 		 mainloop_compat.h 	\
 		 nodes.h 		\
