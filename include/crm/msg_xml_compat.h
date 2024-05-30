@@ -323,9 +323,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_UPDATE_USER instead
 #define XML_ATTR_UPDATE_USER PCMK_XA_UPDATE_USER
 
-//! \deprecated Use \c PCMK_XA_REQUEST instead
-#define XML_ATTR_REQUEST PCMK_XA_REQUEST
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
