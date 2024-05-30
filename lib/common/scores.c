@@ -138,17 +138,3 @@ pcmk__add_scores(int score1, int score2)
 
     return result;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/scores_compat.h>
-
-char *
-score2char(int score)
-{
-    return pcmk__str_copy(pcmk_readable_score(score));
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

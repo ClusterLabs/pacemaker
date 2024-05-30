@@ -24,9 +24,6 @@ extern "C" {
  *             the header itself, will be removed in a future release.
  */
 
-//! \deprecated Use pcmk_readable_score() instead
-char *score2char(int score);
-
 #ifdef __cplusplus
 }
 #endif
