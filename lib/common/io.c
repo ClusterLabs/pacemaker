@@ -641,22 +641,3 @@ pcmk__full_path(const char *filename, const char *dirname)
     CRM_ASSERT(dirname != NULL);
     return crm_strdup_printf("%s/%s", dirname, filename);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/util_compat.h>
-
-void
-crm_build_path(const char *path_c, mode_t mode)
-{
-    int rc = pcmk__build_path(path_c, mode);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not create directory '%s': %s",
-                path_c, pcmk_rc_str(rc));
-    }
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

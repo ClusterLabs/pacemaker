@@ -153,9 +153,6 @@ crm_ttoa(time_t epoch_time)
     return crm_strdup_printf("%lld", (long long) epoch_time);
 }
 
-//! \deprecated Do not use Pacemaker libraries for generic I/O
-void crm_build_path(const char *path_c, mode_t mode);
-
 #ifdef __cplusplus
 }
 #endif
