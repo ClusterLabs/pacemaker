@@ -520,27 +520,5 @@ done:
     pcmk__output_free(out);
 }
 
-void
-xml_log_changes(uint8_t log_level, const char *function, const xmlNode *xml)
-{
-    pcmk__output_t *out = NULL;
-    int rc = pcmk_rc_ok;
-
-    switch (log_level) {
-        case LOG_NEVER:
-            return;
-        case LOG_STDOUT:
-            CRM_CHECK(pcmk__text_output_new(&out, NULL) == pcmk_rc_ok, return);
-            break;
-        default:
-            CRM_CHECK(pcmk__log_output_new(&out) == pcmk_rc_ok, return);
-            pcmk__output_set_log_level(out, log_level);
-            break;
-    }
-    rc = pcmk__xml_show_changes(out, xml);
-    out->finish(out, pcmk_rc2exitc(rc), true, NULL);
-    pcmk__output_free(out);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
