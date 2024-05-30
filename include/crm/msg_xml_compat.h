@@ -470,9 +470,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE "pacemakerd_state"
 
-//! \deprecated Do not use
-#define XML_FAILCIB_ATTR_OBJTYPE "object_type"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
