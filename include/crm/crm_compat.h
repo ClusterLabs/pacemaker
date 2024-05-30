@@ -134,9 +134,6 @@ extern "C" {
 //! \deprecated Do not use
 #define CRMD_METADATA_CALL_TIMEOUT PCMK_DEFAULT_METADATA_TIMEOUT_MS
 
-//! \deprecated Use PCMK_ACTION_CANCEL instead
-#define RSC_CANCEL PCMK_ACTION_CANCEL
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
