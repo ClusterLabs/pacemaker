@@ -464,9 +464,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_SYSFROM "crm_subsystem"
 
-//! \deprecated Do not use
-#define XML_PING_ATTR_CRMDSTATE "crmd_state"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
