@@ -105,9 +105,6 @@ char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
 //! \deprecated Use \c pcmk_cluster_connect() instead
 gboolean crm_cluster_connect(pcmk_cluster_t *cluster);
 
-//! \deprecated Use \c pcmk_cluster_disconnect() instead
-void crm_cluster_disconnect(pcmk_cluster_t *cluster);
-
 // NOTE: sbd (as of at least 1.5.2) uses this enum
 //!@{
 //! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead

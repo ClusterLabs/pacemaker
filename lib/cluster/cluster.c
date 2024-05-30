@@ -476,12 +476,6 @@ crm_cluster_connect(pcmk_cluster_t *cluster)
     return pcmk_cluster_connect(cluster) == pcmk_rc_ok;
 }
 
-void
-crm_cluster_disconnect(pcmk_cluster_t *cluster)
-{
-    pcmk_cluster_disconnect(cluster);
-}
-
 const char *
 name_for_cluster_type(enum cluster_type_e type)
 {
