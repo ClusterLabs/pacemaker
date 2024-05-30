@@ -747,18 +747,3 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
     pcmk__xml_write_file(xml, filename, false, NULL);
     free(f);
 }
-
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_io_compat.h>
-
-xmlNode *
-filename2xml(const char *filename)
-{
-    return pcmk__xml_read(filename);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

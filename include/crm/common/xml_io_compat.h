@@ -25,9 +25,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *filename2xml(const char *filename);
-
 #ifdef __cplusplus
 }
 #endif
