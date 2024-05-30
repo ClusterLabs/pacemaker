@@ -831,9 +831,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_GRAPH_TAG_RSC_OP "rsc_op"
 
-//! \deprecated Do not use
-#define XML_GRAPH_TAG_PSEUDO_EVENT "pseudo_event"
-
 #ifdef __cplusplus
 }
 #endif
