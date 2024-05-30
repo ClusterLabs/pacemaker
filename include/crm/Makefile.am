@@ -21,7 +21,6 @@ header_HEADERS		= cib.h			\
 			  msg_xml.h		\
 			  msg_xml_compat.h	\
 			  services.h		\
-			  services_compat.h	\
 			  stonith-ng.h
 
 noinst_HEADERS		= $(wildcard *_internal.h)
