@@ -1548,11 +1548,5 @@ crm_peer_init(void)
     pcmk__cluster_init_node_caches();
 }
 
-void
-crm_peer_destroy(void)
-{
-    pcmk__cluster_destroy_node_caches();
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
