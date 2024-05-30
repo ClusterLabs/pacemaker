@@ -7,7 +7,6 @@
 : ${SRCDIR:-..}
 
 INCLUDE_FILES="$(find "${SRCDIR}/include/" -name \*.h \
-                      -a \! -name \*internal.h        \
                       -a \! -name config.h            \
                       -a \! -name gettext.h)"
 

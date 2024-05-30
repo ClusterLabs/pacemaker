@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
 #define PCMK__CRM_COMMON_DIGESTS_INTERNAL__H
 
+#include <stdbool.h>
 #include <libxml/tree.h>            // xmlNode
 
 #ifdef __cplusplus

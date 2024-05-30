@@ -7,11 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CIB_INTERNAL__H
-#  define CIB_INTERNAL__H
+#ifndef PCMK__CRM_CIB_INTERNAL__H
+#  define PCMK__CRM_CIB_INTERNAL__H
 #  include <crm/cib.h>
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/output_internal.h>
+#  include <crm/common/strings_internal.h>
 
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"

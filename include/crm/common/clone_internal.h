@@ -13,8 +13,9 @@
 #include <stdio.h>                          // NULL
 #include <stdbool.h>                        // bool
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
-#include <crm/common/resources.h>           // pcmk_rsc_unique
+#include <crm/common/resources.h>           // pcmk_rsc_unique,
 #include <crm/common/resources_internal.h>  // pcmk__rsc_variant_clone etc.
+#include <crm/common/util.h>                // pcmk_is_set
 
 #ifdef __cplusplus
 extern "C" {

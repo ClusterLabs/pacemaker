@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2022 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__SERVICES_INTERNAL__H
-#  define PCMK__SERVICES_INTERNAL__H
+#ifndef PCMK__CRM_SERVICES_INTERNAL__H
+#  define PCMK__CRM_SERVICES_INTERNAL__H
+
+#include <crm/services.h>       // svc_action_t
 
 #ifdef __cplusplus
 extern "C" {

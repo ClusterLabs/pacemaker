@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_COMMON_HEALTH_INTERNAL__H
 #define PCMK__CRM_COMMON_HEALTH_INTERNAL__H
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

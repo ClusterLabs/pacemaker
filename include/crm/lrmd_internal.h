@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef LRMD_INTERNAL__H
-#define LRMD_INTERNAL__H
+#ifndef PCMK__CRM_LRMD_INTERNAL__H
+#define PCMK__CRM_LRMD_INTERNAL__H
 
 #include <stdint.h>                     // uint32_t
 #include <glib.h>                       // GList, GHashTable, gpointer
@@ -17,6 +17,7 @@
 #include <crm/common/mainloop.h>        // mainloop_io_t, ipc_client_callbacks
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/remote_internal.h> // pcmk__remote_t
+#include <crm/common/results_internal.h> // pcmk__action_result_t
 #include <crm/lrmd.h>           // lrmd_t, lrmd_event_data_t, lrmd_rsc_info_t
 
 int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);

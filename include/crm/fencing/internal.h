@@ -7,13 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef STONITH_NG_INTERNAL__H
-#  define STONITH_NG_INTERNAL__H
+#ifndef PCMK__CRM_FENCING_INTERNAL__H
+#  define PCMK__CRM_FENCING_INTERNAL__H
 
 #  include <glib.h>
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
 #  include <crm/common/output_internal.h>
+#  include <crm/common/results_internal.h>
 #  include <crm/stonith-ng.h>
 
 enum st_device_flags {

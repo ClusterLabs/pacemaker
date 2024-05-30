@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-#ifndef PCMK__LOGGING_INTERNAL_H
-#define PCMK__LOGGING_INTERNAL_H
+#ifndef PCMK__CRM_COMMON_LOGGING_INTERNAL__H
+#define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 
 #include <glib.h>
 

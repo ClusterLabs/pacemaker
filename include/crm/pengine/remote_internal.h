@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_REMOTE__H
-#  define PE_REMOTE__H
+#ifndef PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
+#  define PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {

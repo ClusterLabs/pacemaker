@@ -7,11 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__ALERT_INTERNAL__H
-#define PCMK__ALERT_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_ALERTS_INTERNAL__H
+#define PCMK__CRM_COMMON_ALERTS_INTERNAL__H
 
 #include <glib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /* Default-Timeout to use before killing a alerts script (in milliseconds) */
 #define PCMK__ALERT_DEFAULT_TIMEOUT_MS (30000)

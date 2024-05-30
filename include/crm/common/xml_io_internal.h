@@ -7,14 +7,15 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__XML_IO_INTERNAL__H
-#define PCMK__XML_IO_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_XML_IO_INTERNAL__H
+#define PCMK__CRM_COMMON_XML_IO_INTERNAL__H
 
 /*
  * Internal-only wrappers for and extensions to libxml2 I/O
  */
 
 #include <stdbool.h>        // bool
+#include <stdint.h>         // uint32_t, etc.
 
 #include <glib.h>           // GString
 #include <libxml/tree.h>    // xmlNode

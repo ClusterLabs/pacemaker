@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_INTERNAL__H
-#define CRM_COMMON_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_INTERNAL__H
+#define PCMK__CRM_COMMON_INTERNAL__H
 
 #include <unistd.h>             // pid_t, getpid()
 #include <stdbool.h>            // bool
@@ -392,4 +392,4 @@ pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 // internal resource agent functions (from agents.c)
 int pcmk__effective_rc(int rc);
 
-#endif /* CRM_COMMON_INTERNAL__H */
+#endif /* PCMK__CRM_COMMON_INTERNAL__H */

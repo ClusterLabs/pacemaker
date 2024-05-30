@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_INTERNAL__H
-#  define PE_INTERNAL__H
+#ifndef PCMK__CRM_PENGINE_INTERNAL__H
+#  define PCMK__CRM_PENGINE_INTERNAL__H
 
 #  include <stdbool.h>
 #  include <stdint.h>

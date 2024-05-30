@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PACEMAKER_INTERNAL__H
-#  define PACEMAKER_INTERNAL__H
+#ifndef PCMK__PACEMAKER_INTERNAL__H
+#  define PCMK__PACEMAKER_INTERNAL__H
 
 #  include <pcmki/pcmki_acl.h>
 #  include <pcmki/pcmki_agents.h>

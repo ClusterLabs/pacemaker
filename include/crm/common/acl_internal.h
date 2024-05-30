@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_ACL_INTERNAL__H
-#define CRM_COMMON_ACL_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_ACL_INTERNAL__H
+#define PCMK__CRM_COMMON_ACL_INTERNAL__H
 
 #include <string.h>         // strcmp()
 #include <libxml/tree.h>    // xmlNode
@@ -32,4 +32,4 @@ void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
 bool pcmk__check_acl(xmlNode *xml, const char *name,
                      enum xml_private_flags mode);
 
-#endif /* CRM_COMMON_INTERNAL__H */
+#endif /* PCMK__CRM_COMMON_INTERNAL__H */

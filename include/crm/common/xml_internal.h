@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__XML_INTERNAL__H
-#define PCMK__XML_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_XML_INTERNAL__H
+#define PCMK__CRM_COMMON_XML_INTERNAL__H
 
 /*
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
@@ -23,6 +23,7 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>    // PCMK__XE_PROMOTABLE_LEGACY
+#include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 #include <libxml/relaxng.h>
 
@@ -601,4 +602,4 @@ pcmk__map_element_name(const xmlNode *xml)
     }
 }
 
-#endif // PCMK__XML_INTERNAL__H
+#endif // PCMK__CRM_COMMON_XML_INTERNAL__H
