@@ -1586,11 +1586,5 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     return subtract_v1_xml_object(parent, left, right, full, changed, marker);
 }
 
-gboolean
-can_prune_leaf(xmlNode *xml_node)
-{
-    return can_prune_leaf_v1(xml_node);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
