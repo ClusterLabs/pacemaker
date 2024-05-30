@@ -732,9 +732,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CRM_CONFIG instead
 #define XML_CIB_TAG_CRMCONFIG PCMK_XE_CRM_CONFIG
 
-//! \deprecated Use \c PCMK_XE_OP_DEFAULTS instead
-#define XML_CIB_TAG_OPCONFIG PCMK_XE_OP_DEFAULTS
-
 #ifdef __cplusplus
 }
 #endif
