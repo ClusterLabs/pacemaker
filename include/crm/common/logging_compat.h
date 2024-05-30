@@ -65,9 +65,6 @@ enum xml_log_options {
         }                                                                   \
     } while (0)
 
-//! \deprecated Do not use Pacemaker for general-purpose string handling
-#define crm_str(x) (const char *) ((x)? (x) : "<null>")
-
 #ifdef __cplusplus
 }
 #endif
