@@ -524,9 +524,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_START_DELAY instead
 #define XML_OP_ATTR_START_DELAY PCMK_META_START_DELAY
 
-//! \deprecated Use \c PCMK_META_INTERVAL_ORIGIN instead
-#define XML_OP_ATTR_ORIGIN PCMK_META_INTERVAL_ORIGIN
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
