@@ -2711,25 +2711,6 @@ find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
 }
 
 void
-fix_plus_plus_recursive(xmlNode *target)
-{
-    /* TODO: Remove recursion and use xpath searches for value++ */
-    xmlNode *child = NULL;
-
-    for (xmlAttrPtr a = pcmk__xe_first_attr(target); a != NULL; a = a->next) {
-        const char *p_name = (const char *) a->name;
-        const char *p_value = pcmk__xml_attr_value(a);
-
-        expand_plus_plus(target, p_name, p_value);
-    }
-    for (child = pcmk__xe_first_child(target, NULL, NULL, NULL); child != NULL;
-         child = pcmk__xe_next(child)) {
-
-        fix_plus_plus_recursive(child);
-    }
-}
-
-void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
     pcmk__xe_set_score(target, name, value);
