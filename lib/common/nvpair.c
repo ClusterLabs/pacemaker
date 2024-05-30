@@ -1014,44 +1014,5 @@ pcmk_format_nvpair(const char *name, const char *value,
     return pcmk__format_nvpair(name, value, units);
 }
 
-const char *
-crm_xml_replace(xmlNode *node, const char *name, const char *value)
-{
-    bool dirty = FALSE;
-    xmlAttr *attr = NULL;
-    const char *old_value = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(name != NULL && name[0] != 0, return NULL);
-
-    old_value = crm_element_value(node, name);
-
-    /* Could be re-setting the same value */
-    CRM_CHECK(old_value != value, return value);
-
-    if (pcmk__check_acl(node, name, pcmk__xf_acl_write) == FALSE) {
-        /* Create a fake object linked to doc->_private instead? */
-        crm_trace("Cannot replace %s=%s to %s", name, value, node->name);
-        return NULL;
-
-    } else if (old_value && !value) {
-        pcmk__xe_remove_attr(node, name);
-        return NULL;
-    }
-
-    if (pcmk__tracking_xml_changes(node, FALSE)) {
-        if (!old_value || !value || !strcmp(old_value, value)) {
-            dirty = TRUE;
-        }
-    }
-
-    attr = xmlSetProp(node, (pcmkXmlStr) name, (pcmkXmlStr) value);
-    if (dirty) {
-        pcmk__mark_xml_attr_dirty(attr);
-    }
-    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
-    return (char *) attr->children->content;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
