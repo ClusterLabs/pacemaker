@@ -203,16 +203,6 @@ extern "C" {
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
 
-//! \deprecated Do not use
-static inline const char *
-crm_action_str(const char *task, guint interval_ms) {
-    if ((task != NULL) && (interval_ms == 0)
-        && (strcasecmp(task, PCMK_ACTION_MONITOR) == 0)) {
-        return "probe";
-    }
-    return task;
-}
-
 #ifdef __cplusplus
 }
 #endif
