@@ -54,10 +54,6 @@ int query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_rem
 int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                           int level);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/cib/util_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif
