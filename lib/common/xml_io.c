@@ -798,19 +798,6 @@ dump_xml_formatted_with_text(const xmlNode *xml)
     return str;
 }
 
-char *
-dump_xml_unformatted(const xmlNode *xml)
-{
-    char *str = NULL;
-    GString *buffer = g_string_sized_new(1024);
-
-    pcmk__xml_string(xml, 0, buffer, 0);
-
-    str = pcmk__str_copy(buffer->str);
-    g_string_free(buffer, TRUE);
-    return str;
-}
-
 int
 write_xml_fd(const xmlNode *xml, const char *filename, int fd,
              gboolean compress)
