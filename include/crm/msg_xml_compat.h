@@ -434,9 +434,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_CRM_DC_LEAVING "dc-leaving"
 
-//! \deprecated Do not use
-#define F_CRM_ELECTION_ID "election-id"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
