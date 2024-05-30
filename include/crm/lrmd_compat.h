@@ -77,9 +77,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_PROVIDER "lrmd_provider"
 
-//! \deprecated Do not use
-#define F_LRMD_TYPE "lrmd_type"
-
 #ifdef __cplusplus
 }
 #endif
