@@ -1153,12 +1153,5 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     }
 }
 
-char *
-pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid,
-                       void *content, uint32_t *kind, const char **from)
-{
-    return pcmk__cpg_message_data(handle, nodeid, pid, content, kind, from);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
