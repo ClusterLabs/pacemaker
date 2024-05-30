@@ -71,9 +71,6 @@ crm_element_name(const xmlNode *xml)
     return (xml == NULL)? NULL : (const char *) xml->name;
 }
 
-//! \deprecated Do not use
-char *crm_xml_escape(const char *text);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *copy_xml(xmlNode *src_node);
