@@ -146,9 +146,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_IPC_USER "lrmd_ipc_user"
 
-//! \deprecated Do not use
-#define F_LRMD_IPC_MSG "lrmd_ipc_msg"
-
 #ifdef __cplusplus
 }
 #endif
