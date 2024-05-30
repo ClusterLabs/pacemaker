@@ -1503,11 +1503,5 @@ crm_is_peer_active(const crm_node_t * node)
     return pcmk__cluster_is_node_active(node);
 }
 
-guint
-crm_active_peers(void)
-{
-    return pcmk__cluster_num_active_nodes();
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

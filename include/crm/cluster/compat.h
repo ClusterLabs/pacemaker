@@ -123,9 +123,6 @@ void crm_remote_peer_cache_remove(const char *node_name);
 //! \deprecated Do not use
 gboolean crm_is_peer_active(const crm_node_t *node);
 
-//! \deprecated Do not use
-guint crm_active_peers(void);
-
 // NOTE: sbd (as of at least 1.5.2) uses this enum
 //!@{
 //! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead
