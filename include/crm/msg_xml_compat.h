@@ -662,9 +662,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_WITH_RSC_ROLE instead
 #define XML_COLOC_ATTR_TARGET_ROLE PCMK_XA_WITH_RSC_ROLE
 
-//! \deprecated Use \c PCMK_XA_NODE_ATTRIBUTE instead
-#define XML_COLOC_ATTR_NODE_ATTR PCMK_XA_NODE_ATTRIBUTE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
