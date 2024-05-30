@@ -26,9 +26,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Use crm_signal_handler() instead
-gboolean crm_signal(int sig, void (*dispatch) (int sig));
-
 #ifdef __cplusplus
 }
 #endif
