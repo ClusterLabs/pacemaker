@@ -203,9 +203,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_META_ORDERED instead
 #define XML_RSC_ATTR_ORDERED PCMK_META_ORDERED
 
-//! \deprecated Use \c PCMK_META_INTERLEAVE instead
-#define XML_RSC_ATTR_INTERLEAVE PCMK_META_INTERLEAVE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
