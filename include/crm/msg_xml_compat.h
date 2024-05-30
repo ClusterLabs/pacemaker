@@ -984,11 +984,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE_REMOTE "remote"
 
-#ifndef T_CRM
-//! \deprecated Do not use
-#define T_CRM "crmd"
-#endif
-
 #ifdef __cplusplus
 }
 #endif
