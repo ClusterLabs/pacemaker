@@ -1366,12 +1366,6 @@ g_str_hash_traditional(gconstpointer v)
     return pcmk__str_hash(v);
 }
 
-gboolean
-crm_strcase_equal(gconstpointer a, gconstpointer b)
-{
-    return pcmk__strcase_equal(a, b);
-}
-
 long long
 crm_parse_ll(const char *text, const char *default_text)
 {
