@@ -74,9 +74,6 @@ extern "C" {
 //! \deprecated Use PCMK_META_FAILURE_TIMEOUT instead
 #define XML_RSC_ATTR_FAIL_TIMEOUT PCMK_META_FAILURE_TIMEOUT
 
-//! \deprecated Do not use (will be removed in a future release)
-#define XML_ATTR_RA_VERSION "ra-version"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
