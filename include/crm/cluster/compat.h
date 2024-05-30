@@ -52,9 +52,6 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 //! \deprecated Do not use Pacemaker for cluster node cacheing
 crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
 
-//! \deprecated Use stonith_api_kick() from libstonithd instead
-int crm_terminate_member(int nodeid, const char *uname, void *unused);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_connect() instead
 gboolean crm_cluster_connect(pcmk_cluster_t *cluster);

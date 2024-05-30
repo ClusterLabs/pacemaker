@@ -1447,12 +1447,6 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 
 #include <crm/cluster/compat.h>
 
-int
-crm_terminate_member(int nodeid, const char *uname, void *unused)
-{
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
