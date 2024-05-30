@@ -340,35 +340,3 @@ pcmk__warn_multiple_name_matches(pcmk__output_t *out, xmlNode *search,
     out->info(out, "Multiple attributes match " PCMK_XA_NAME "=%s", name);
     pcmk__xe_foreach_child(search, NULL, output_attr_child, out);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_compat.h>
-
-/*!
- * \deprecated This function will be removed in a future release
- * \brief Get an XPath string that matches an XML element as closely as possible
- *
- * \param[in] xml  The XML element for which to build an XPath string
- *
- * \return A string that matches \p xml, or \p NULL if \p xml is \p NULL.
- *
- * \note The caller is responsible for freeing the string using free().
- */
-char *
-xml_get_path(const xmlNode *xml)
-{
-    char *path = NULL;
-    GString *g_path = pcmk__element_xpath(xml);
-
-    if (g_path == NULL) {
-        return NULL;
-    }
-    path = pcmk__str_copy(g_path->str);
-    g_string_free(g_path, TRUE);
-    return path;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
