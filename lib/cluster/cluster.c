@@ -522,11 +522,5 @@ crm_peer_uuid(crm_node_t *peer)
     return pcmk__cluster_node_uuid(peer);
 }
 
-char *
-get_node_name(uint32_t nodeid)
-{
-    return pcmk__cluster_node_name(nodeid);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
