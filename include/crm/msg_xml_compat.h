@@ -665,9 +665,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_NODE_ATTRIBUTE instead
 #define XML_COLOC_ATTR_NODE_ATTR PCMK_XA_NODE_ATTRIBUTE
 
-//! \deprecated Use \c PCMK_XA_INFLUENCE instead
-#define XML_COLOC_ATTR_INFLUENCE PCMK_XA_INFLUENCE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
