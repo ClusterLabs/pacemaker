@@ -972,9 +972,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE_WAITPING "wait_for_ping"
 
-//! \deprecated Do not use
-#define XML_PING_ATTR_PACEMAKERDSTATE_RUNNING "running"
-
 #ifdef __cplusplus
 }
 #endif
