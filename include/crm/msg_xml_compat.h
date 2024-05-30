@@ -692,9 +692,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_TICKET instead
 #define XML_TICKET_ATTR_TICKET PCMK_XA_TICKET
 
-//! \deprecated Use \c PCMK_XA_LOSS_POLICY instead
-#define XML_TICKET_ATTR_LOSS_POLICY PCMK_XA_LOSS_POLICY
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
