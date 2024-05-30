@@ -1426,11 +1426,5 @@ crm_parse_int(const char *text, const char *default_text)
     return (int) result;
 }
 
-char *
-crm_strip_trailing_newline(char *str)
-{
-    return pcmk__trim(str);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

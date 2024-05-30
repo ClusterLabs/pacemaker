@@ -126,9 +126,6 @@ crm_hash_table_size(GHashTable *hashtable)
     return g_hash_table_size(hashtable);
 }
 
-//! \deprecated Don't use Pacemaker for string manipulation
-char *crm_strip_trailing_newline(char *str);
-
 #ifdef __cplusplus
 }
 #endif
