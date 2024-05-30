@@ -105,11 +105,6 @@ xmlNode *create_xml_node(xmlNode *parent, const char *name);
 xmlNode *pcmk_create_xml_text_node(xmlNode *parent, const char *name,
                                    const char *content);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *pcmk_create_html_node(xmlNode *parent, const char *element_name,
-                               const char *id, const char *class_name,
-                               const char *text);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
