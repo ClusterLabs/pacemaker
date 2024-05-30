@@ -773,7 +773,6 @@ exit 0
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
 %doc %{_mandir}/man7/pacemaker-fenced.*
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
-%doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %if %{with linuxha}
 %doc %{_mandir}/man8/fence_legacy.*
@@ -790,7 +789,6 @@ exit 0
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
 %{ocf_root}/resource.d/pacemaker/controld
-%{ocf_root}/resource.d/pacemaker/o2cb
 %{ocf_root}/resource.d/pacemaker/remote
 
 %if %{with upstart_job}
@@ -840,7 +838,6 @@ exit 0
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %exclude %{ocf_root}/resource.d/pacemaker/controld
-%exclude %{ocf_root}/resource.d/pacemaker/o2cb
 %exclude %{ocf_root}/resource.d/pacemaker/remote
 
 %dir %{ocf_root}
@@ -853,7 +850,6 @@ exit 0
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/pacemaker-fenced.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
-%exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm*.8.gz
 %doc %{_mandir}/man8/attrd_updater.*

@@ -51,8 +51,6 @@ class CTSTest:
 
         self._cm = cm
         self._env = EnvFactory().getInstance()
-        self._r_o2cb = None
-        self._r_ocfs2 = []
         self._rsh = RemoteFactory().getInstance()
         self._logger = LogFactory()
         self._timers = {}

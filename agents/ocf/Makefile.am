@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2023 the Pacemaker project contributors
+# Copyright 2008-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,7 +22,6 @@ dist_ocf_SCRIPTS	= attribute	\
 ocf_SCRIPTS		= ClusterMon	\
 			  HealthSMART	\
 			  ifspeed	\
-			  o2cb		\
 			  SysInfo
 
 if BUILD_XML_HELP

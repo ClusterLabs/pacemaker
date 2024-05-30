@@ -65,23 +65,20 @@ class Reattach(CTSTest):
         stopped, even if unmanaged. Disable them before running the Reattach
         test so they don't affect resource placement.
 
-        OCFS2 resources must be disabled too for some reason.
-
         Set target-role to "Stopped" for any of these resources in the CIB.
         """
-        self.debug("Disable incompatible (stonith/OCFS2) resources")
+        self.debug("Disable incompatible resources")
         xml = """'<meta_attributes id="cts-lab-Reattach-meta">
                     <nvpair id="cts-lab-Reattach-target-role" name="target-role" value="Stopped"/>
                     <rule id="cts-lab-Reattach-rule" boolean-op="or" score="INFINITY">
                       <rsc_expression id="cts-lab-Reattach-stonith" class="stonith"/>
-                      <rsc_expression id="cts-lab-Reattach-o2cb" type="o2cb"/>
                     </rule>
                   </meta_attributes>' --scope rsc_defaults"""
         return self._rsh(node, self._cm.templates['CibAddXml'] % xml)
 
     def _enable_incompatible_rscs(self, node):
         """Re-enable resources that were incompatible with this test."""
-        self.debug("Re-enable incompatible (stonith/OCFS2) resources")
+        self.debug("Re-enable incompatible resources")
         xml = """<meta_attributes id="cts-lab-Reattach-meta">"""
         return self._rsh(node, """cibadmin --delete --xml-text '%s'""" % xml)
 
