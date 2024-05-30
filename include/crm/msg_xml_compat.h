@@ -720,9 +720,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_STATUS instead
 #define XML_CIB_TAG_STATUS PCMK_XE_STATUS
 
-//! \deprecated Use \c PCMK_XE_RESOURCES instead
-#define XML_CIB_TAG_RESOURCES PCMK_XE_RESOURCES
-
 #ifdef __cplusplus
 }
 #endif
