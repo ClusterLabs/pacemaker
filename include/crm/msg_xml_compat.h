@@ -45,6 +45,10 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_NVPAIR instead
 #define XML_CIB_TAG_NVPAIR PCMK_XE_NVPAIR
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define XML_CIB_ATTR_SHUTDOWN "shutdown"
+
 #ifdef __cplusplus
 }
 #endif
