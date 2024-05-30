@@ -47,9 +47,6 @@ void xml_log_changes(uint8_t level, const char *function, const xmlNode *xml);
 //! \deprecated This function will be removed in a future release
 void xml_log_patchset(uint8_t level, const char *function, const xmlNode *xml);
 
-//!  \deprecated Use xml_apply_patchset() instead
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use name member directly
 static inline const char *
