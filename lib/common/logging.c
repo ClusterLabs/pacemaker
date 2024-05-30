@@ -1257,21 +1257,6 @@ pcmk__free_common_logger(void)
     }
 }
 
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/logging_compat.h>
-
-gboolean
-crm_log_cli_init(const char *entity)
-{
-    pcmk__cli_init_logging(entity, 0);
-    return TRUE;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
-
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)
 {
     pcmk__config_error_handler = error_handler;

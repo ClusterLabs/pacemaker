@@ -68,9 +68,6 @@ enum xml_log_options {
 //! \deprecated Do not use Pacemaker for general-purpose string handling
 #define crm_str(x) (const char *) ((x)? (x) : "<null>")
 
-//! \deprecated Do not use Pacemaker for general-purpose logging
-gboolean crm_log_cli_init(const char *entity);
-
 #ifdef __cplusplus
 }
 #endif
