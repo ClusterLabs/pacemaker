@@ -194,9 +194,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_ID instead
 #define XML_FAILCIB_ATTR_ID PCMK_XA_ID
 
-//! \deprecated Use \c PCMK_META_CONTAINER_ATTRIBUTE_TARGET instead
-#define XML_RSC_ATTR_TARGET PCMK_META_CONTAINER_ATTRIBUTE_TARGET
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
