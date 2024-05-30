@@ -1118,11 +1118,5 @@ cluster_disconnect_cpg(pcmk_cluster_t *cluster)
     pcmk__cpg_disconnect(cluster);
 }
 
-uint32_t
-get_local_nodeid(cpg_handle_t handle)
-{
-    return pcmk__cpg_local_nodeid(handle);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
