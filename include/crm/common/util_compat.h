@@ -61,9 +61,6 @@ gboolean safe_str_neq(const char *a, const char *b);
 //! \deprecated Use strcasecmp() instead
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
-//! \deprecated Use snprintf() instead
-char *crm_itoa_stack(int an_int, char *buf, size_t len);
-
 #ifdef __cplusplus
 }
 #endif

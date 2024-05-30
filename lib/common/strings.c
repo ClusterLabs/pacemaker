@@ -1351,14 +1351,5 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     return FALSE;
 }
 
-char *
-crm_itoa_stack(int an_int, char *buffer, size_t len)
-{
-    if (buffer != NULL) {
-        snprintf(buffer, len, "%d", an_int);
-    }
-    return buffer;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
