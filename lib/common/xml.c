@@ -2357,12 +2357,6 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
                                 ((id == NULL)? id : PCMK_XA_ID), id);
 }
 
-void
-crm_destroy_xml(gpointer data)
-{
-    pcmk__xml_free(data);
-}
-
 xmlDoc *
 getDocPtr(xmlNode *node)
 {
