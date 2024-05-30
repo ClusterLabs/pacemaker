@@ -1134,11 +1134,5 @@ bz2_strerror(int rc)
     return "Data compression error";
 }
 
-crm_exit_t
-crm_errno2exit(int rc)
-{
-    return pcmk_rc2exitc(pcmk_legacy2rc(rc));
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

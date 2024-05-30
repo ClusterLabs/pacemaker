@@ -28,9 +28,6 @@ extern "C" {
 //! \deprecated Do not use
 const char *bz2_strerror(int rc);
 
-//! \deprecated Use pcmk_rc2exitc(pcmk_legacy2rc(rc)) instead
-crm_exit_t crm_errno2exit(int rc);
-
 #ifdef __cplusplus
 }
 #endif
