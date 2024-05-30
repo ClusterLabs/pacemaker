@@ -768,9 +768,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_ATTRIBUTE instead
 #define XML_CIB_TAG_ALERT_ATTR PCMK_XE_ATTRIBUTE
 
-//! \deprecated Do not use
-#define XML_CIB_TAG_STATE "node_state"
-
 #ifdef __cplusplus
 }
 #endif
