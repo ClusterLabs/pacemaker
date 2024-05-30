@@ -989,11 +989,6 @@ extern "C" {
 #define T_CRM "crmd"
 #endif
 
-#ifndef T_ATTRD
-//! \deprecated Do not use
-#define T_ATTRD "attrd"
-#endif
-
 #ifdef __cplusplus
 }
 #endif
