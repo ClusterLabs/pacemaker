@@ -49,6 +49,9 @@ enum pcmk__node_flags {
 
     // Whether expected join state is member
     pcmk__node_expected_up      = (UINT32_C(1) << 3),
+
+    // Whether probes are allowed on node
+    pcmk__node_probes_allowed   = (UINT32_C(1) << 4),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

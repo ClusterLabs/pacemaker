@@ -484,9 +484,9 @@ pe_create_node(const char *id, const char *uname, const char *type,
     crm_trace("Creating node for entry %s/%s", uname, id);
     new_node->private->id = id;
     new_node->private->name = uname;
+    new_node->private->flags = pcmk__node_probes_allowed;
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
-    new_node->details->rsc_discovery_enabled = TRUE;
     new_node->details->running_rsc = NULL;
     new_node->details->data_set = scheduler;
 
@@ -1119,7 +1119,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
              */
             crm_info("%s has resource discovery disabled",
                      pcmk__node_name(this_node));
-            this_node->details->rsc_discovery_enabled = FALSE;
+            pcmk__clear_node_flags(this_node, pcmk__node_probes_allowed);
         }
     }
 }

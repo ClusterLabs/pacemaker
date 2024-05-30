@@ -893,7 +893,8 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
         } else if (node->details->unclean) { // ... or nodes that need fencing
             continue;
 
-        } else if (!node->details->rsc_discovery_enabled) {
+        } else if (!pcmk_is_set(node->private->flags,
+                                pcmk__node_probes_allowed)) {
             // The user requested that probes not be done on this node
             continue;
         }

@@ -962,7 +962,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return ENODEV;
     }
 
-    if (!node->details->rsc_discovery_enabled) {
+    if (!pcmk_is_set(node->private->flags, pcmk__node_probes_allowed)) {
         out->err(out, "Unable to clean up %s because resource discovery disabled on %s",
                  rsc->id, host_uname);
         return EOPNOTSUPP;

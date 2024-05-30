@@ -79,8 +79,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode
 
-    gboolean rsc_discovery_enabled; // Whether probes are allowed on node
-
     /*
      * Whether this is a guest node whose guest resource must be recovered or a
      * remote node that must be fenced
