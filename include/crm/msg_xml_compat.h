@@ -341,9 +341,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_REFERENCE instead
 #define F_CRM_REFERENCE PCMK_XA_REFERENCE
 
-//! \deprecated Do not use
-#define XML_ATTR_TRANSITION_MAGIC "transition-magic"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
