@@ -359,9 +359,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_TARGET_PATTERN instead
 #define XML_ATTR_STONITH_TARGET_PATTERN PCMK_XA_TARGET_PATTERN
 
-//! \deprecated Use \c PCMK_XA_TARGET_ATTRIBUTE instead
-#define XML_ATTR_STONITH_TARGET_ATTRIBUTE PCMK_XA_TARGET_ATTRIBUTE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
