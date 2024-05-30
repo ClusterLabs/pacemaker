@@ -53,9 +53,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_CALLOPTS "lrmd_callopt"
 
-//! \deprecated Do not use
-#define F_LRMD_CALLDATA "lrmd_calldata"
-
 #ifdef __cplusplus
 }
 #endif
