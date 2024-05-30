@@ -2667,13 +2667,6 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     return FALSE;
 }
 
-gboolean
-update_xml_child(xmlNode *child, xmlNode *to_update)
-{
-    return pcmk__xe_update_match(child, to_update,
-                                 pcmk__xaf_score_update) == pcmk_rc_ok;
-}
-
 void
 crm_xml_init(void)
 {

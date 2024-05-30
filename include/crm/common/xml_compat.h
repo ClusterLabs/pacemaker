@@ -127,9 +127,6 @@ void xml_remove_prop(xmlNode *obj, const char *name);
 gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
                            gboolean delete_only);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-gboolean update_xml_child(xmlNode *child, xmlNode *to_update);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
