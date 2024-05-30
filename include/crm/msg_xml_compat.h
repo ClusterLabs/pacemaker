@@ -548,9 +548,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_TARGET_UUID "on_node_uuid"
 
-//! \deprecated Do not use
-#define XML_ORDER_ATTR_FIRST_INSTANCE "first-instance"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
