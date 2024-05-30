@@ -10,9 +10,7 @@
 #ifndef PCMK__CRM_COMMON_UTIL_COMPAT__H
 #define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
-#include <glib.h>
-#include <libxml/tree.h>
-#include <crm/common/util.h>
+#include <glib.h>   // gboolean
 
 #ifdef __cplusplus
 extern "C" {
