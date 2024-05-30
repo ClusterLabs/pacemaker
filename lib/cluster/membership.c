@@ -1485,11 +1485,5 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
     refresh_remote_nodes(cib);
 }
 
-crm_node_t *
-crm_remote_peer_get(const char *node_name)
-{
-    return pcmk__cluster_lookup_remote_node(node_name);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
