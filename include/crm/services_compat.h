@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -61,35 +61,6 @@ static inline const char *
 services_lrm_status_str(enum op_status status)
 {
     return pcmk_exec_status_str((enum pcmk_exec_status) status);
-}
-
-//! \deprecated Use services_result2ocf() instead
-static inline enum ocf_exitcode
-services_get_ocf_exitcode(const char *action, int lsb_exitcode)
-{
-    /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-    if ((action != NULL) && (strcmp(action, PCMK_ACTION_STATUS) != 0)
-        && (strcmp(action, PCMK_ACTION_MONITOR) != 0)) {
-        if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
-            return PCMK_OCF_UNKNOWN_ERROR;
-        }
-        return (enum ocf_exitcode)lsb_exitcode;
-    }
-
-    /* status has different return codes */
-    switch (lsb_exitcode) {
-        case PCMK_LSB_STATUS_OK:
-            return PCMK_OCF_OK;
-        case PCMK_LSB_STATUS_NOT_INSTALLED:
-            return PCMK_OCF_NOT_INSTALLED;
-        case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
-            return PCMK_OCF_INSUFFICIENT_PRIV;
-        case PCMK_LSB_STATUS_VAR_PID:
-        case PCMK_LSB_STATUS_VAR_LOCK:
-        case PCMK_LSB_STATUS_NOT_RUNNING:
-            return PCMK_OCF_NOT_RUNNING;
-    }
-    return PCMK_OCF_UNKNOWN_ERROR;
 }
 
 #ifdef __cplusplus
