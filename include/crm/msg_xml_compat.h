@@ -365,9 +365,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_DEVICES instead
 #define XML_ATTR_STONITH_DEVICES PCMK_XA_DEVICES
 
-//! \deprecated Do not use
-#define F_CRM_HOST_FROM F_ORIG
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
