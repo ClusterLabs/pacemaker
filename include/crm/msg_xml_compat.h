@@ -978,9 +978,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN "shutting_down"
 
-//! \deprecated Do not use
-#define XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE "shutdown_complete"
-
 #ifdef __cplusplus
 }
 #endif
