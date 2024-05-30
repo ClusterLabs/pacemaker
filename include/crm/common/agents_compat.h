@@ -25,9 +25,6 @@ extern "C" {
 
 #include <stdbool.h>
 
-//! \deprecated Use pcmk_get_ra_caps() instead
-bool crm_provider_required(const char *standard);
-
 #ifdef __cplusplus
 }
 #endif
