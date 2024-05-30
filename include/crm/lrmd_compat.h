@@ -71,9 +71,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_WATCHDOG "lrmd_watchdog"
 
-//! \deprecated Do not use
-#define F_LRMD_CLASS "lrmd_class"
-
 #ifdef __cplusplus
 }
 #endif
