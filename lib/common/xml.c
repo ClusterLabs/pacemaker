@@ -2561,12 +2561,6 @@ pcmk_create_html_node(xmlNode *parent, const char *element_name, const char *id,
     return node;
 }
 
-xmlNode *
-first_named_child(const xmlNode *parent, const char *name)
-{
-    return pcmk__xe_first_child(parent, name, NULL, NULL);
-}
-
 void
 crm_xml_init(void)
 {
