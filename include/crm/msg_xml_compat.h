@@ -804,9 +804,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_GROUP instead
 #define XML_CIB_TAG_GROUP PCMK_XE_GROUP
 
-//! \deprecated Use \c PCMK_XE_CLONE instead
-#define XML_CIB_TAG_INCARNATION PCMK_XE_CLONE
-
 #ifdef __cplusplus
 }
 #endif
