@@ -165,9 +165,6 @@ gboolean send_cluster_message(const crm_node_t *node,
                               enum crm_ais_msg_types service,
                               const xmlNode *data, gboolean ordered);
 
-//! \deprecated Do not use
-const char *crm_peer_uuid(crm_node_t *node);
-
 #ifdef __cplusplus
 }
 #endif

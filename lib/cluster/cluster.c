@@ -516,11 +516,5 @@ send_cluster_message(const crm_node_t *node, enum crm_ais_msg_types service,
     return pcmk__cluster_send_message(node, service, data);
 }
 
-const char *
-crm_peer_uuid(crm_node_t *peer)
-{
-    return pcmk__cluster_node_uuid(peer);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
