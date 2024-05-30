@@ -668,9 +668,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_INFLUENCE instead
 #define XML_COLOC_ATTR_INFLUENCE PCMK_XA_INFLUENCE
 
-//! \deprecated Use \c PCMK_XA_RSC_PATTERN instead
-#define XML_LOC_ATTR_SOURCE_PATTERN PCMK_XA_RSC_PATTERN
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
