@@ -98,9 +98,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_ID "lrmd_rsc_id"
 
-//! \deprecated Do not use
-#define F_LRMD_RSC_ACTION "lrmd_rsc_action"
-
 #ifdef __cplusplus
 }
 #endif
