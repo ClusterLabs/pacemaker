@@ -1360,22 +1360,5 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     return buffer;
 }
 
-long long
-crm_parse_ll(const char *text, const char *default_text)
-{
-    long long result;
-
-    if (text == NULL) {
-        text = default_text;
-        if (text == NULL) {
-            crm_err("No default conversion value supplied");
-            errno = EINVAL;
-            return PCMK__PARSE_INT_DEFAULT;
-        }
-    }
-    scan_ll(text, &result, PCMK__PARSE_INT_DEFAULT, NULL);
-    return result;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

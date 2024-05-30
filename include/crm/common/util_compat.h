@@ -77,9 +77,6 @@ const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_named_time(const char *name, time_t epoch_time);
 
-//! \deprecated Use strtoll() instead
-long long crm_parse_ll(const char *text, const char *default_text);
-
 #ifdef __cplusplus
 }
 #endif
