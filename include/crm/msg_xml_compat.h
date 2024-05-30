@@ -1003,9 +1003,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_NODE_IS_FENCED "node_fenced"
 
-//! \deprecated Do not use
-#define XML_NODE_IS_MAINTENANCE "node_in_maintenance"
-
 #ifdef __cplusplus
 }
 #endif
