@@ -68,9 +68,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XA_PROMOTED_NODE_MAX_LEGACY
 
-//! \deprecated Use PCMK_META_MIGRATION_THRESHOLD instead
-#define XML_RSC_ATTR_FAIL_STICKINESS PCMK_META_MIGRATION_THRESHOLD
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
