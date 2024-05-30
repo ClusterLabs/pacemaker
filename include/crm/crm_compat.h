@@ -65,9 +65,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_STONITH instead
 #define CRM_OP_FENCE PCMK_ACTION_STONITH
 
-//! \deprecated This defined constant will be removed in a future release
-#define CRM_OP_LRM_QUERY "lrm_query"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
