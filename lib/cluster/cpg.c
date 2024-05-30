@@ -1112,11 +1112,5 @@ cluster_connect_cpg(pcmk_cluster_t *cluster)
     return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
 }
 
-void
-cluster_disconnect_cpg(pcmk_cluster_t *cluster)
-{
-    pcmk__cpg_disconnect(cluster);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

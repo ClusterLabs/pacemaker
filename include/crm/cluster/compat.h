@@ -71,9 +71,6 @@ void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
 //! \deprecated Do not use
 gboolean cluster_connect_cpg(pcmk_cluster_t *cluster);
 
-//! \deprecated Do not use
-void cluster_disconnect_cpg(pcmk_cluster_t *cluster);
-
 #endif  // SUPPORT_COROSYNC
 
 // NOTE: sbd (as of at least 1.5.2) uses this
