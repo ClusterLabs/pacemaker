@@ -146,13 +146,6 @@ crm_ftoa(double a_float)
     return crm_strdup_printf("%f", a_float);
 }
 
-//! \deprecated Don't use Pacemaker for string manipulation
-static inline char *
-crm_ttoa(time_t epoch_time)
-{
-    return crm_strdup_printf("%lld", (long long) epoch_time);
-}
-
 #ifdef __cplusplus
 }
 #endif
