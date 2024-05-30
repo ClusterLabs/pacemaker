@@ -86,9 +86,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_DEMOTE instead
 #define CRMD_ACTION_DEMOTE PCMK_ACTION_DEMOTE
 
-//! \deprecated Use PCMK_ACTION_DEMOTED instead
-#define CRMD_ACTION_DEMOTED PCMK_ACTION_DEMOTED
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
