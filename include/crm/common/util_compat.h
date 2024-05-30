@@ -116,16 +116,6 @@ crm_strcase_table_new(void)
 //! \deprecated Do not use Pacemaker for generic hash table manipulation
 GHashTable *crm_str_table_dup(GHashTable *old_table);
 
-//! \deprecated Use g_hash_able_size() instead
-static inline guint
-crm_hash_table_size(GHashTable *hashtable)
-{
-    if (hashtable == NULL) {
-        return 0;
-    }
-    return g_hash_table_size(hashtable);
-}
-
 #ifdef __cplusplus
 }
 #endif
