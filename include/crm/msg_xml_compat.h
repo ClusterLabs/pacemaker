@@ -404,9 +404,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_VALUE_TRUE instead
 #define XML_BOOLEAN_TRUE PCMK_VALUE_TRUE
 
-//! \deprecated Use \c PCMK_VALUE_FALSE instead
-#define XML_BOOLEAN_FALSE PCMK_VALUE_FALSE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
