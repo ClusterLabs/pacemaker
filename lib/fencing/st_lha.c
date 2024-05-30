@@ -208,6 +208,9 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         char *meta_param = NULL;
         const char *timeout_str = NULL;
 
+        gchar *meta_longdesc_esc = NULL;
+        gchar *meta_shortdesc_esc = NULL;
+
         stonith_obj = st_new_fn(agent);
         if (stonith_obj != NULL) {
             st_log_fn(stonith_obj, (PILLogFun) &stonith_plugin);
@@ -245,18 +248,12 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         }
 
         if (pcmk__xml_needs_escape(meta_longdesc, pcmk__xml_escape_text)) {
-            gchar *meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
-                                                        pcmk__xml_escape_text);
-
-            free(meta_longdesc);
-            meta_longdesc = meta_longdesc_esc;
+            meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
+                                                 pcmk__xml_escape_text);
         }
         if (pcmk__xml_needs_escape(meta_shortdesc, pcmk__xml_escape_text)) {
-            gchar *meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
-                                                         pcmk__xml_escape_text);
-
-            free(meta_shortdesc);
-            meta_shortdesc = meta_shortdesc_esc;
+            meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
+                                                  pcmk__xml_escape_text);
         }
 
         /* @TODO This needs a string that's parsable by crm_get_msec(). In
@@ -264,9 +261,16 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
          * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
          */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
-        buffer = crm_strdup_printf(META_TEMPLATE, agent, meta_longdesc,
-                                   meta_shortdesc, meta_param,
-                                   timeout_str, timeout_str, timeout_str);
+        buffer = crm_strdup_printf(META_TEMPLATE, agent,
+                                   ((meta_longdesc_esc != NULL) ?
+                                    meta_longdesc_esc : meta_longdesc),
+                                   ((meta_shortdesc_esc != NULL) ?
+                                    meta_shortdesc_esc : meta_shortdesc),
+                                   meta_param, timeout_str, timeout_str,
+                                   timeout_str);
+
+        g_free(meta_longdesc_esc);
+        g_free(meta_shortdesc_esc);
 
         free(meta_longdesc);
         free(meta_shortdesc);
