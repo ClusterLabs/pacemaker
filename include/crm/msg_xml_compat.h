@@ -729,9 +729,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CONSTRAINTS instead
 #define XML_CIB_TAG_CONSTRAINTS PCMK_XE_CONSTRAINTS
 
-//! \deprecated Use \c PCMK_XE_CRM_CONFIG instead
-#define XML_CIB_TAG_CRMCONFIG PCMK_XE_CRM_CONFIG
-
 #ifdef __cplusplus
 }
 #endif
