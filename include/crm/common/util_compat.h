@@ -27,9 +27,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use
-#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
 static inline gboolean
