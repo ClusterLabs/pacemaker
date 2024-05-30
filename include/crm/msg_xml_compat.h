@@ -335,9 +335,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_REFERENCE instead
 #define XML_ATTR_REFERENCE PCMK_XA_REFERENCE
 
-//! \deprecated Use \c PCMK_XA_REFERENCE instead
-#define XML_ACL_ATTR_REF PCMK_XA_REFERENCE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
