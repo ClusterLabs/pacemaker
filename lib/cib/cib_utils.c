@@ -1043,11 +1043,5 @@ get_object_path(const char *object_type)
     return pcmk_cib_xpath_for(object_type);
 }
 
-const char *
-get_object_parent(const char *object_type)
-{
-    return pcmk_cib_parent_name_for(object_type);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

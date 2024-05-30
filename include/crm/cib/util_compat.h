@@ -31,9 +31,6 @@ extern "C" {
 //! \deprecated Use pcmk_cib_xpath_for() instead
 const char *get_object_path(const char *object_type);
 
-//! \deprecated Use pcmk_cib_parent_name_for() instead
-const char *get_object_parent(const char *object_type);
-
 #ifdef __cplusplus
 }
 #endif
