@@ -957,9 +957,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_OPTIONS "options"
 
-//! \deprecated Do not use
-#define XML_FAIL_TAG_CIB "failed_update"
-
 #ifdef __cplusplus
 }
 #endif
