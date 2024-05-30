@@ -185,9 +185,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VERSION instead
 #define XML_ATTR_VERSION PCMK_XA_VERSION
 
-//! \deprecated Use \c PCMK_XA_DESCRIPTION instead
-#define XML_ATTR_DESC PCMK_XA_DESCRIPTION
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
