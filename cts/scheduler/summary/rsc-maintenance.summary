@@ -1,6 +1,8 @@
 2 of 4 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -15,10 +17,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: rsc1            cancel=10000 on node1
-  * Resource action: rsc2            cancel=10000 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 ]
 

@@ -1,9 +1,29 @@
 Using the original execution date of: 2018-09-11 21:23:25Z
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254002f6d57 on controller-1 changed: 0:0;237:1:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254002f6d57 on controller-1 changed: 0:0;229:2:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-52540066e27e on controller-1 changed: 0:0;227:1:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-52540066e27e on controller-1 changed: 0:0;219:2:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400a16c0d on controller-1 changed: 0:0;235:1:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400a16c0d on controller-1 changed: 0:0;229:2:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254003296a5 on controller-1 changed: 0:0;224:1:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254003296a5 on controller-1 changed: 0:0;216:2:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-52540098c9ff on controller-1 changed: 0:0;219:1:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-52540098c9ff on controller-1 changed: 0:0;211:2:0:79eb6bb3-23ce-41d1-863c-4f68a738af58
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-525400aab9d9 on controller-2 changed: 0:0;232:1:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-525400aab9d9 on controller-2 changed: 0:0;226:2:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254000203a2 on controller-2 changed: 0:0;222:1:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254000203a2 on controller-2 changed: 0:0;216:2:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-52540065418e on controller-2 changed: 0:0;229:1:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-52540065418e on controller-2 changed: 0:0;223:2:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 0s-interval start for stonith-fence_ipmilan-5254005f9a33 on controller-2 changed: 0:0;217:1:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+Only 'private' parameters to 60s-interval monitor for stonith-fence_ipmilan-5254005f9a33 on controller-2 changed: 0:0;211:2:0:018a4c7f-d5cb-4ef8-85a4-031ed2cffd23
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
     * RemoteOnline: [ database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
-    * GuestOnline: [ galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * database-0	(ocf:pacemaker:remote):	 Started controller-0
@@ -53,37 +73,11 @@ Transition Summary:
   * Recover    galera:0                   ( Promoted galera-bundle-0 )
 
 Executing Cluster Transition:
-  * Resource action: galera-bundle-0 stop on controller-0
-  * Pseudo action:   galera-bundle_demote_0
-  * Pseudo action:   galera-bundle-master_demote_0
-  * Pseudo action:   galera_demote_0
-  * Pseudo action:   galera-bundle-master_demoted_0
-  * Pseudo action:   galera-bundle_demoted_0
-  * Pseudo action:   galera-bundle_stop_0
-  * Resource action: galera-bundle-docker-0 stop on database-0
-  * Pseudo action:   stonith-galera-bundle-0-reboot on galera-bundle-0
-  * Pseudo action:   galera-bundle-master_stop_0
-  * Pseudo action:   galera_stop_0
-  * Pseudo action:   galera-bundle-master_stopped_0
-  * Pseudo action:   galera-bundle_stopped_0
-  * Pseudo action:   galera-bundle_start_0
-  * Pseudo action:   galera-bundle-master_start_0
-  * Resource action: galera-bundle-docker-0 start on database-0
-  * Resource action: galera-bundle-docker-0 monitor=60000 on database-0
-  * Resource action: galera-bundle-0 start on controller-0
-  * Resource action: galera-bundle-0 monitor=30000 on controller-0
-  * Resource action: galera          start on galera-bundle-0
-  * Pseudo action:   galera-bundle-master_running_0
-  * Pseudo action:   galera-bundle_running_0
-  * Pseudo action:   galera-bundle_promote_0
-  * Pseudo action:   galera-bundle-master_promote_0
-  * Resource action: galera          promote on galera-bundle-0
-  * Pseudo action:   galera-bundle-master_promoted_0
-  * Pseudo action:   galera-bundle_promoted_0
-  * Resource action: galera          monitor=10000 on galera-bundle-0
 Using the original execution date of: 2018-09-11 21:23:25Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
     * RemoteOnline: [ database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
@@ -97,7 +91,7 @@ Revised Cluster Status:
     * messaging-1	(ocf:pacemaker:remote):	 Started controller-1
     * messaging-2	(ocf:pacemaker:remote):	 Started controller-1
     * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted database-0
+      * galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Promoted database-0
       * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
       * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted database-2
     * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:

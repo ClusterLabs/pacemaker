@@ -1,5 +1,7 @@
 Using the original execution date of: 2017-08-21 17:12:54Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
@@ -10,16 +12,13 @@ Transition Summary:
   * Start      Fencing     ( node1 )
 
 Executing Cluster Transition:
-  * Resource action: Fencing         monitor on node3
-  * Resource action: Fencing         monitor on node2
-  * Resource action: Fencing         monitor on node1
-  * Resource action: Fencing         start on node1
-  * Resource action: Fencing         monitor=120000 on node1
 Using the original execution date of: 2017-08-21 17:12:54Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 node2 node3 ]
 
   * Full List of Resources:
-    * Fencing	(stonith:fence_xvm):	 Started node1
+    * Fencing	(stonith:fence_xvm):	 Stopped

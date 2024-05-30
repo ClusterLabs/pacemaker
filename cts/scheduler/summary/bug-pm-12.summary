@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node-a node-b ]
 
@@ -16,34 +19,11 @@ Transition Summary:
   * Restart    stateful-2:1     (   Promoted node-a )  due to resource definition change
 
 Executing Cluster Transition:
-  * Pseudo action:   ms-sf_demote_0
-  * Pseudo action:   group:1_demote_0
-  * Resource action: stateful-2:1    demote on node-a
-  * Pseudo action:   group:1_demoted_0
-  * Pseudo action:   ms-sf_demoted_0
-  * Pseudo action:   ms-sf_stop_0
-  * Pseudo action:   group:0_stop_0
-  * Resource action: stateful-2:0    stop on node-b
-  * Pseudo action:   group:1_stop_0
-  * Resource action: stateful-2:1    stop on node-a
-  * Pseudo action:   group:0_stopped_0
-  * Pseudo action:   group:1_stopped_0
-  * Pseudo action:   ms-sf_stopped_0
-  * Pseudo action:   ms-sf_start_0
-  * Pseudo action:   group:0_start_0
-  * Resource action: stateful-2:0    start on node-b
-  * Pseudo action:   group:1_start_0
-  * Resource action: stateful-2:1    start on node-a
-  * Pseudo action:   group:0_running_0
-  * Pseudo action:   group:1_running_0
-  * Pseudo action:   ms-sf_running_0
-  * Pseudo action:   ms-sf_promote_0
-  * Pseudo action:   group:1_promote_0
-  * Resource action: stateful-2:1    promote on node-a
-  * Pseudo action:   group:1_promoted_0
-  * Pseudo action:   ms-sf_promoted_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node-a node-b ]
 

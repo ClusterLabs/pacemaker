@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
     * GuestOnline: [ lxc1 lxc2 ]
@@ -18,30 +20,16 @@ Transition Summary:
   * Move       lxc1           ( 18node1 -> 18node2 )
 
 Executing Cluster Transition:
-  * Pseudo action:   M-clone_stop_0
-  * Resource action: A               stop on lxc1
-  * Resource action: A               monitor on lxc2
-  * Resource action: M               stop on lxc1
-  * Pseudo action:   M-clone_stopped_0
-  * Pseudo action:   M-clone_start_0
-  * Resource action: lxc1            stop on 18node1
-  * Resource action: container1      stop on 18node1
-  * Resource action: container1      start on 18node2
-  * Resource action: lxc1            start on 18node2
-  * Resource action: M               start on lxc1
-  * Resource action: M               monitor=10000 on lxc1
-  * Pseudo action:   M-clone_running_0
-  * Resource action: A               start on lxc1
-  * Resource action: A               monitor=10000 on lxc1
-  * Resource action: lxc1            monitor=30000 on 18node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
     * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
-    * container1	(ocf:heartbeat:VirtualDomain):	 Started 18node2
+    * container1	(ocf:heartbeat:VirtualDomain):	 Started 18node1
     * container2	(ocf:heartbeat:VirtualDomain):	 Started 18node2
     * shoot1	(stonith:fence_xvm):	 Started 18node3
     * Clone Set: M-clone [M]:

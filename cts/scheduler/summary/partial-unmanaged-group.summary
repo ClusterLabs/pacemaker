@@ -1,5 +1,7 @@
 Using the original execution date of: 2020-01-20 21:19:17Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel8-1 rhel8-2 rhel8-4 rhel8-5 ]
     * OFFLINE: [ rhel8-3 ]
@@ -18,14 +20,11 @@ Transition Summary:
   * Start      interloper     ( rhel8-2 )  due to unrunnable grp1b stop (blocked)
 
 Executing Cluster Transition:
-  * Pseudo action:   grp1_start_0
-  * Resource action: interloper      monitor on rhel8-5
-  * Resource action: interloper      monitor on rhel8-4
-  * Resource action: interloper      monitor on rhel8-2
-  * Resource action: interloper      monitor on rhel8-1
 Using the original execution date of: 2020-01-20 21:19:17Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel8-1 rhel8-2 rhel8-4 rhel8-5 ]
     * OFFLINE: [ rhel8-3 ]

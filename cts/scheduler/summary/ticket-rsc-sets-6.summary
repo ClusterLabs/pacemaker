@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -19,17 +22,11 @@ Transition Summary:
   * Promote    rsc5:0     ( Unpromoted -> Promoted node1 )
 
 Executing Cluster Transition:
-  * Pseudo action:   clone4_start_0
-  * Pseudo action:   ms5_promote_0
-  * Resource action: rsc4:0          start on node2
-  * Resource action: rsc4:1          start on node1
-  * Pseudo action:   clone4_running_0
-  * Resource action: rsc5:1          promote on node1
-  * Pseudo action:   ms5_promoted_0
-  * Resource action: rsc4:0          monitor=5000 on node2
-  * Resource action: rsc4:1          monitor=5000 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -40,7 +37,6 @@ Revised Cluster Status:
       * rsc2	(ocf:pacemaker:Dummy):	 Started node1
       * rsc3	(ocf:pacemaker:Dummy):	 Started node1
     * Clone Set: clone4 [rsc4]:
-      * Started: [ node1 node2 ]
+      * Stopped: [ node1 node2 ]
     * Clone Set: ms5 [rsc5] (promotable):
-      * Promoted: [ node1 ]
-      * Unpromoted: [ node2 ]
+      * Unpromoted: [ node1 node2 ]

@@ -1,6 +1,8 @@
 4 of 35 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node hex-1: standby
     * Node hex-2: standby (with active resources)
@@ -41,26 +43,29 @@ Transition Summary:
   * Stop       dlm:0       ( hex-2 )  due to node availability
   * Stop       clvmd:0     ( hex-2 )  due to node availability
   * Stop       o2cb:0      ( hex-2 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   baseclone_stop_0
-  * Pseudo action:   basegrp:0_stop_0
-  * Resource action: o2cb            stop on hex-2
-  * Resource action: clvmd           stop on hex-2
-  * Resource action: dlm             stop on hex-2
-  * Pseudo action:   basegrp:0_stopped_0
-  * Pseudo action:   baseclone_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node hex-1: standby
-    * Node hex-2: standby
+    * Node hex-2: standby (with active resources)
     * Node hex-3: OFFLINE (standby)
 
   * Full List of Resources:
     * fencing	(stonith:external/sbd):	 Stopped
     * Clone Set: baseclone [basegrp]:
-      * Stopped: [ hex-1 hex-2 hex-3 ]
+      * Resource Group: basegrp:0:
+        * dlm	(ocf:pacemaker:controld):	 Started hex-2
+        * clvmd	(ocf:lvm2:clvmd):	 Started hex-2
+        * o2cb	(ocf:ocfs2:o2cb):	 Started hex-2
+        * vg1	(ocf:heartbeat:LVM):	 Stopped
+        * fs-ocfs-1	(ocf:heartbeat:Filesystem):	 Stopped
+      * Stopped: [ hex-1 hex-3 ]
     * fs-xfs-1	(ocf:heartbeat:Filesystem):	 Stopped
     * Clone Set: fs2 [fs-ocfs-2]:
       * Stopped: [ hex-1 hex-2 hex-3 ]

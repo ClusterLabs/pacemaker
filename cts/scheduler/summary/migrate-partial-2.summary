@@ -1,27 +1,26 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-13 hex-14 ]
 
   * Full List of Resources:
-    * test-vm	(ocf:heartbeat:Xen):	 Started [ hex-13 hex-14 ]
     * Clone Set: c-clusterfs [dlm]:
       * Started: [ hex-13 hex-14 ]
+    * test-vm	(ocf:heartbeat:Xen):	 Started [ hex-13 hex-14 ]
 
 Transition Summary:
   * Migrate    test-vm     ( hex-14 -> hex-13 )
 
 Executing Cluster Transition:
-  * Resource action: test-vm         migrate_from on hex-13
-  * Resource action: test-vm         stop on hex-14
-  * Pseudo action:   load_stopped_hex-14
-  * Pseudo action:   load_stopped_hex-13
-  * Pseudo action:   test-vm_start_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-13 hex-14 ]
 
   * Full List of Resources:
-    * test-vm	(ocf:heartbeat:Xen):	 Started hex-13
     * Clone Set: c-clusterfs [dlm]:
       * Started: [ hex-13 hex-14 ]
+    * test-vm	(ocf:heartbeat:Xen):	 Started [ hex-13 hex-14 ]

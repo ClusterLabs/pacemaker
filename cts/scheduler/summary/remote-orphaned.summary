@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ 18node1 18node3 ]
     * OFFLINE: [ 18node2 ]
@@ -17,7 +20,7 @@ Current cluster status:
     * Clone Set: master-1 [stateful-1] (promotable):
       * Promoted: [ 18node1 ]
       * Unpromoted: [ 18node3 ]
-      * Stopped: [ 18node2 ]
+      * Stopped: [ 18node2 remote1 ]
     * Resource Group: group-1:
       * r192.168.122.87	(ocf:heartbeat:IPaddr2):	 Started 18node1
       * r192.168.122.88	(ocf:heartbeat:IPaddr2):	 Started 18node1
@@ -29,41 +32,37 @@ Transition Summary:
   * Move       rsc_18node2     ( remote1 -> 18node1 )
   * Stop       ping-1:2        (            remote1 )  due to node availability
   * Stop       remote1         (            18node1 )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: rsc_18node2     stop on remote1
-  * Pseudo action:   Connectivity_stop_0
-  * Resource action: rsc_18node2     start on 18node1
-  * Resource action: ping-1          stop on remote1
-  * Pseudo action:   Connectivity_stopped_0
-  * Resource action: remote1         stop on 18node1
-  * Resource action: remote1         delete on 18node3
-  * Resource action: remote1         delete on 18node1
-  * Resource action: rsc_18node2     monitor=5000 on 18node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ 18node1 18node3 ]
     * OFFLINE: [ 18node2 ]
-    * RemoteOFFLINE: [ remote1 ]
+    * RemoteOnline: [ remote1 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started 18node3
     * FencingPass	(stonith:fence_dummy):	 Started 18node1
     * FencingFail	(stonith:fence_dummy):	 Started 18node3
     * rsc_18node1	(ocf:heartbeat:IPaddr2):	 Started 18node1
-    * rsc_18node2	(ocf:heartbeat:IPaddr2):	 Started 18node1
+    * rsc_18node2	(ocf:heartbeat:IPaddr2):	 Started remote1
     * rsc_18node3	(ocf:heartbeat:IPaddr2):	 Started 18node3
     * migrator	(ocf:pacemaker:Dummy):	 Started 18node1
     * Clone Set: Connectivity [ping-1]:
-      * Started: [ 18node1 18node3 ]
-      * Stopped: [ 18node2 ]
+      * Started: [ 18node1 18node3 remote1 ]
     * Clone Set: master-1 [stateful-1] (promotable):
       * Promoted: [ 18node1 ]
       * Unpromoted: [ 18node3 ]
-      * Stopped: [ 18node2 ]
+      * Stopped: [ 18node2 remote1 ]
     * Resource Group: group-1:
       * r192.168.122.87	(ocf:heartbeat:IPaddr2):	 Started 18node1
       * r192.168.122.88	(ocf:heartbeat:IPaddr2):	 Started 18node1
       * r192.168.122.89	(ocf:heartbeat:IPaddr2):	 Started 18node1
     * lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started 18node1
+    * remote1	(ocf:pacemaker:remote):	 ORPHANED Started 18node1

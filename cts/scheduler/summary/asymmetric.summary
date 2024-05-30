@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ puma1 puma3 ]
 
@@ -12,12 +14,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:1 monitor=19000 on puma1
-  * Resource action: ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0 monitor=20000 on puma3
-  * Resource action: drbd_target_poolA monitor on puma3
-  * Resource action: drbd_target_poolA monitor on puma1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ puma1 puma3 ]
 

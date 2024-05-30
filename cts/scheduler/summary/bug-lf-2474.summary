@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-14 ]
 
@@ -11,13 +13,13 @@ Transition Summary:
   * Start      dummy-default-timeout     ( hex-14 )
 
 Executing Cluster Transition:
-  * Resource action: dummy-10s-timeout start on hex-14
-  * Resource action: dummy-default-timeout start on hex-14
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-14 ]
 
   * Full List of Resources:
-    * dummy-10s-timeout	(ocf:pacemaker:Dummy):	 Started hex-14
-    * dummy-default-timeout	(ocf:pacemaker:Dummy):	 Started hex-14
+    * dummy-10s-timeout	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy-default-timeout	(ocf:pacemaker:Dummy):	 Stopped

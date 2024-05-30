@@ -9,7 +9,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -243,7 +243,11 @@ Active Resources:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output
@@ -481,14 +485,18 @@ Active Resources:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output without the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output without the node section
 =#=#=#= Begin test: Text output with only the node section =#=#=#=
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 =#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
@@ -497,12 +505,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -591,6 +600,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output
 =#=#=#= Begin test: Complete text output with detail =#=#=#=
@@ -599,6 +609,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -607,7 +618,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -715,6 +726,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
+  * not-on-cluster1	prevents dummy from running on cluster01 (1)
 =#=#=#= End test: Complete text output with detail - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output with detail
 =#=#=#= Begin test: Complete brief text output =#=#=#=
@@ -723,12 +735,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
@@ -817,6 +830,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output
 =#=#=#= Begin test: Complete text output grouped by node =#=#=#=
@@ -825,6 +839,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -853,7 +868,7 @@ Node List:
   * GuestNode httpd-bundle-1: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-2: OFFLINE:
+  * GuestNode httpd-bundle-2: online:
     * Resources:
 
 Node Attributes:
@@ -925,6 +940,7 @@ Operations:
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
+  * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output grouped by node
 =#=#=#= Begin test: Complete brief text output grouped by node =#=#=#=
@@ -933,6 +949,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1032,6 +1049,7 @@ Operations:
       * (1) start
 
 Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node
@@ -1284,7 +1302,11 @@ Negative Location Constraints:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output grouped by node
@@ -1294,6 +1316,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1344,6 +1367,7 @@ Operations:
       * (3) monitor: interval="30000ms"
 
 Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by node
@@ -1469,7 +1493,11 @@ Negative Location Constraints:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by node
@@ -1479,6 +1507,7 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -1535,6 +1564,7 @@ Operations:
       * (3) monitor: interval="30000ms"
 
 Negative Location Constraints:
+  * not-on-cluster1	prevents dummy from running on cluster01
   * not-on-cluster1	prevents dummy from running on cluster01
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
@@ -1672,7 +1702,11 @@ Negative Location Constraints:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by tag
@@ -1682,12 +1716,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1746,7 +1781,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by resource tag - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by resource tag
@@ -1788,7 +1827,11 @@ Active Resources:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by node that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by node that doesn't exist
@@ -1803,7 +1846,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -1868,12 +1911,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1932,7 +1976,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by primitive resource
@@ -1942,12 +1990,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2016,7 +2065,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by group resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by group resource
@@ -2026,12 +2079,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2091,7 +2145,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by group resource member - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by group resource member
@@ -2101,12 +2159,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2181,7 +2240,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by clone resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by clone resource
@@ -2191,12 +2254,13 @@ Cluster Summary:
   * Current DC: cluster02 (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2271,7 +2335,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by clone resource instance
@@ -2281,6 +2349,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2289,7 +2358,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2361,7 +2430,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by exact clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by exact clone resource instance
@@ -2376,7 +2449,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Active Resources:
   * No active resources
@@ -2411,7 +2484,11 @@ Active Resources:
     </node>
   </node_attributes>
   <node_history/>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by resource that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by resource that doesn't exist
@@ -2426,7 +2503,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
@@ -2447,7 +2524,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2561,7 +2638,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by inactive bundle resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by inactive bundle resource
@@ -2576,7 +2657,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2660,7 +2741,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled IP address resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundled IP address resource
@@ -2675,7 +2760,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2757,7 +2842,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled container - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundled container
@@ -2772,7 +2861,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2856,7 +2945,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundle connection - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundle connection
@@ -2871,7 +2964,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2967,7 +3060,11 @@ Full List of Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output filtered by bundled primitive resource
@@ -2977,6 +3074,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -2985,7 +3083,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3076,7 +3174,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by clone name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by clone name in cloned group
@@ -3086,6 +3188,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3094,7 +3197,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3185,7 +3288,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by group name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by group name in cloned group
@@ -3195,6 +3302,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3203,7 +3311,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3278,7 +3386,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by exact group instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by exact group instance name in cloned group
@@ -3288,6 +3400,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3296,7 +3409,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3387,7 +3500,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by primitive name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by primitive name in cloned group
@@ -3397,6 +3514,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 5 nodes configured
   * 32 resource instances configured (4 DISABLED)
 
@@ -3405,7 +3523,7 @@ Node List:
   * Node cluster02 (2): online, feature set <3.15.1
   * GuestNode httpd-bundle-0@cluster01: online
   * GuestNode httpd-bundle-1@cluster02: online
-  * GuestNode httpd-bundle-2@: OFFLINE
+  * GuestNode httpd-bundle-2@: online
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -3480,7 +3598,11 @@ Operations:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output, filtered by exact primitive instance name in cloned group
@@ -3670,7 +3792,11 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
   <failures>
     <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="complete" queued="0" exec="33" interval="0" task="monitor"/>
   </failures>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of partially active resources
@@ -3726,6 +3852,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -3906,6 +4033,7 @@ Cluster Summary:
   * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
+  * CIB syntax is valid
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
@@ -4088,7 +4216,11 @@ unpack_rsc_op 	error: Preventing httpd-bundle-clone from restarting on httpd-bun
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: Text output of partially active resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, filtered by node
@@ -4152,7 +4284,11 @@ Active Resources:
       </resource_history>
     </node>
   </node_history>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of active unmanaged resource on offline node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of active unmanaged resource on offline node
@@ -4458,7 +4594,11 @@ Full List of Resources:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of all resources with maintenance-mode enabled
@@ -4475,7 +4615,7 @@ Node List:
   * Node cluster02: maintenance
   * GuestNode httpd-bundle-1: maintenance
   * Online: [ cluster01 ]
-  * GuestOnline: [ httpd-bundle-0 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-2 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -4718,7 +4858,11 @@ Full List of Resources:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of all resources with maintenance enabled for a node - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of all resources with maintenance enabled for a node
@@ -4977,7 +5121,11 @@ Full List of Resources:
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
-  <status code="0" message="OK"/>
+  <status code="0" message="OK">
+    <errors>
+      <error>This tool can only check complete configurations (i.e. those starting with &lt;cib&gt;).</error>
+    </errors>
+  </status>
 </pacemaker-result>
 =#=#=#= End test: XML output of all resources with maintenance meta attribute true - OK (0) =#=#=#=
 * Passed: crm_mon        - XML output of all resources with maintenance meta attribute true

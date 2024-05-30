@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * RemoteNode mrg-02: UNCLEAN (offline)
     * RemoteNode mrg-03: UNCLEAN (offline)
@@ -6,16 +9,19 @@ Current cluster status:
     * Online: [ host-026 host-027 host-028 ]
 
   * Full List of Resources:
-    * neutron-openvswitch-agent-compute	(ocf:heartbeat:Dummy):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
-    * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
-    * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
-    * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+    * neutron-openvswitch-agent-compute	(ocf:heartbeat:Dummy):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
+    * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
+    * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
+    * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
 
 Transition Summary:
 
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * RemoteNode mrg-02: UNCLEAN (offline)
     * RemoteNode mrg-03: UNCLEAN (offline)
@@ -23,7 +29,7 @@ Revised Cluster Status:
     * Online: [ host-026 host-027 host-028 ]
 
   * Full List of Resources:
-    * neutron-openvswitch-agent-compute	(ocf:heartbeat:Dummy):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
-    * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
-    * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
-    * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started [ mrg-03 mrg-02 mrg-04 ]
+    * neutron-openvswitch-agent-compute	(ocf:heartbeat:Dummy):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
+    * libvirtd-compute	(systemd:libvirtd):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
+    * ceilometer-compute	(systemd:openstack-ceilometer-compute):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]
+    * nova-compute	(systemd:openstack-nova-compute):	 ORPHANED Started (unmanaged) [ mrg-03 mrg-02 mrg-04 ]

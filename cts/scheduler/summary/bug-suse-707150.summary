@@ -1,12 +1,16 @@
 5 of 28 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-0 hex-9 ]
     * OFFLINE: [ hex-7 hex-8 ]
 
   * Full List of Resources:
     * vm-00	(ocf:heartbeat:Xen):	 Stopped (disabled)
+    * dummy1	(ocf:heartbeat:Dummy):	 Started hex-0
+    * fencing-sbd	(stonith:external/sbd):	 Started hex-9
     * Clone Set: base-clone [base-group]:
       * Resource Group: base-group:0:
         * dlm	(ocf:pacemaker:controld):	 Started hex-0
@@ -17,8 +21,6 @@ Current cluster status:
         * ocfs2-1	(ocf:heartbeat:Filesystem):	 Stopped
       * Stopped: [ hex-7 hex-8 hex-9 ]
     * vm-01	(ocf:heartbeat:Xen):	 Stopped
-    * fencing-sbd	(stonith:external/sbd):	 Started hex-9
-    * dummy1	(ocf:heartbeat:Dummy):	 Started hex-0
 
 Transition Summary:
   * Start      o2cb:0         ( hex-0 )
@@ -31,45 +33,25 @@ Transition Summary:
   * Start      vm-01          ( hex-9 )  due to unrunnable base-clone running (blocked)
 
 Executing Cluster Transition:
-  * Resource action: vg1:1           monitor on hex-9
-  * Pseudo action:   base-clone_start_0
-  * Pseudo action:   load_stopped_hex-9
-  * Pseudo action:   load_stopped_hex-8
-  * Pseudo action:   load_stopped_hex-7
-  * Pseudo action:   load_stopped_hex-0
-  * Pseudo action:   base-group:0_start_0
-  * Resource action: o2cb:0          start on hex-0
-  * Resource action: clvm:0          start on hex-0
-  * Resource action: cmirrord:0      start on hex-0
-  * Pseudo action:   base-group:1_start_0
-  * Resource action: dlm:1           start on hex-9
-  * Resource action: o2cb:1          start on hex-9
-  * Resource action: clvm:1          start on hex-9
-  * Resource action: cmirrord:1      start on hex-9
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-0 hex-9 ]
     * OFFLINE: [ hex-7 hex-8 ]
 
   * Full List of Resources:
     * vm-00	(ocf:heartbeat:Xen):	 Stopped (disabled)
+    * dummy1	(ocf:heartbeat:Dummy):	 Started hex-0
+    * fencing-sbd	(stonith:external/sbd):	 Started hex-9
     * Clone Set: base-clone [base-group]:
       * Resource Group: base-group:0:
         * dlm	(ocf:pacemaker:controld):	 Started hex-0
-        * o2cb	(ocf:ocfs2:o2cb):	 Started hex-0
-        * clvm	(ocf:lvm2:clvmd):	 Started hex-0
-        * cmirrord	(ocf:lvm2:cmirrord):	 Started hex-0
+        * o2cb	(ocf:ocfs2:o2cb):	 Stopped
+        * clvm	(ocf:lvm2:clvmd):	 Stopped
+        * cmirrord	(ocf:lvm2:cmirrord):	 Stopped
         * vg1	(ocf:heartbeat:LVM):	 Stopped (disabled)
         * ocfs2-1	(ocf:heartbeat:Filesystem):	 Stopped
-      * Resource Group: base-group:1:
-        * dlm	(ocf:pacemaker:controld):	 Started hex-9
-        * o2cb	(ocf:ocfs2:o2cb):	 Started hex-9
-        * clvm	(ocf:lvm2:clvmd):	 Started hex-9
-        * cmirrord	(ocf:lvm2:cmirrord):	 Started hex-9
-        * vg1	(ocf:heartbeat:LVM):	 Stopped (disabled)
-        * ocfs2-1	(ocf:heartbeat:Filesystem):	 Stopped
-      * Stopped: [ hex-7 hex-8 ]
+      * Stopped: [ hex-7 hex-8 hex-9 ]
     * vm-01	(ocf:heartbeat:Xen):	 Stopped
-    * fencing-sbd	(stonith:external/sbd):	 Started hex-9
-    * dummy1	(ocf:heartbeat:Dummy):	 Started hex-0

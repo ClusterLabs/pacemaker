@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cardhu dualamd1 dualamd3 ]
 
@@ -10,10 +12,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: domU-test01     monitor on cardhu
-  * Resource action: dom0-iscsi1-cnx1:0 monitor on cardhu
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cardhu dualamd1 dualamd3 ]
 

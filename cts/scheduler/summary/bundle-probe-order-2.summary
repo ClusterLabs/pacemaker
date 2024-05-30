@@ -1,5 +1,7 @@
 Using the original execution date of: 2017-10-12 07:31:57Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * GuestNode galera-bundle-0: maintenance
     * Online: [ centos1 centos2 centos3 ]
@@ -13,16 +15,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: galera:0        monitor on galera-bundle-0
-  * Resource action: galera-bundle-docker-0 monitor=60000 on centos2
-  * Resource action: galera-bundle-0 monitor=30000 on centos2
-  * Resource action: galera-bundle-docker-1 monitor on centos2
-  * Resource action: galera-bundle-docker-2 monitor on centos3
-  * Resource action: galera-bundle-docker-2 monitor on centos2
-  * Resource action: galera-bundle-docker-2 monitor on centos1
 Using the original execution date of: 2017-10-12 07:31:57Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * GuestNode galera-bundle-0: maintenance
     * Online: [ centos1 centos2 centos3 ]

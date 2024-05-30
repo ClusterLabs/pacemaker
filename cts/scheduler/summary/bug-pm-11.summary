@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node-a node-b ]
 
@@ -16,25 +19,11 @@ Transition Summary:
   * Promote    stateful-2:1     ( Stopped -> Promoted node-a )
 
 Executing Cluster Transition:
-  * Resource action: stateful-2:0    monitor on node-b
-  * Resource action: stateful-2:0    monitor on node-a
-  * Resource action: stateful-2:1    monitor on node-b
-  * Resource action: stateful-2:1    monitor on node-a
-  * Pseudo action:   ms-sf_start_0
-  * Pseudo action:   group:0_start_0
-  * Resource action: stateful-2:0    start on node-b
-  * Pseudo action:   group:1_start_0
-  * Resource action: stateful-2:1    start on node-a
-  * Pseudo action:   group:0_running_0
-  * Pseudo action:   group:1_running_0
-  * Pseudo action:   ms-sf_running_0
-  * Pseudo action:   ms-sf_promote_0
-  * Pseudo action:   group:1_promote_0
-  * Resource action: stateful-2:1    promote on node-a
-  * Pseudo action:   group:1_promoted_0
-  * Pseudo action:   ms-sf_promoted_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node-a node-b ]
 
@@ -42,7 +31,7 @@ Revised Cluster Status:
     * Clone Set: ms-sf [group] (promotable, unique):
       * Resource Group: group:0:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
-        * stateful-2:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
+        * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
       * Resource Group: group:1:
         * stateful-1:1	(ocf:heartbeat:Stateful):	 Promoted node-a
-        * stateful-2:1	(ocf:heartbeat:Stateful):	 Promoted node-a
+        * stateful-2:1	(ocf:heartbeat:Stateful):	 Stopped

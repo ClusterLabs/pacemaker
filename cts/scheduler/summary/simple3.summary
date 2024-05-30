@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
 
@@ -9,11 +11,12 @@ Transition Summary:
   * Start      rsc1    ( node1 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            start on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node1 ]
 
   * Full List of Resources:
-    * rsc1	(ocf:heartbeat:apache):	 Started node1
+    * rsc1	(ocf:heartbeat:apache):	 Stopped

@@ -1,5 +1,7 @@
 Using the original execution date of: 2018-09-26 16:40:38Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node rhel7-1: standby
     * Node rhel7-2: standby
@@ -25,6 +27,8 @@ Executing Cluster Transition:
 Using the original execution date of: 2018-09-26 16:40:38Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node rhel7-1: standby
     * Node rhel7-2: standby

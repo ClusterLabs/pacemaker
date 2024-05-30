@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ srv01 srv02 ]
 
@@ -10,9 +12,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: pgsql           monitor=10000 on srv01
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ srv01 srv02 ]
 

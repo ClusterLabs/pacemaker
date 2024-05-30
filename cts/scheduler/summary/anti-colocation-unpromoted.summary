@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ sle12sp2-1 sle12sp2-2 ]
 
@@ -15,22 +17,16 @@ Transition Summary:
   * Move       dummy1       (          sle12sp2-1 -> sle12sp2-2 )
 
 Executing Cluster Transition:
-  * Resource action: dummy1          stop on sle12sp2-1
-  * Pseudo action:   ms1_demote_0
-  * Resource action: state1          demote on sle12sp2-1
-  * Pseudo action:   ms1_demoted_0
-  * Pseudo action:   ms1_promote_0
-  * Resource action: state1          promote on sle12sp2-2
-  * Pseudo action:   ms1_promoted_0
-  * Resource action: dummy1          start on sle12sp2-2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ sle12sp2-1 sle12sp2-2 ]
 
   * Full List of Resources:
     * st_sbd	(stonith:external/sbd):	 Started sle12sp2-1
     * Clone Set: ms1 [state1] (promotable):
-      * Promoted: [ sle12sp2-2 ]
-      * Unpromoted: [ sle12sp2-1 ]
-    * dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-2
+      * Promoted: [ sle12sp2-1 ]
+      * Unpromoted: [ sle12sp2-2 ]
+    * dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-1

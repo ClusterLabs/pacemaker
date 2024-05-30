@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node rhel7-alt1: standby
     * Node rhel7-alt2: standby
@@ -15,17 +17,17 @@ Transition Summary:
   * Stop       fake    ( rhel7-alt4 )  due to node availability
 
 Executing Cluster Transition:
-  * Fencing rhel7-alt4 (reboot)
-  * Pseudo action:   fake_stop_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node rhel7-alt1: standby
     * Node rhel7-alt2: standby
+    * RemoteNode rhel7-alt4: UNCLEAN (offline)
     * OFFLINE: [ rhel7-alt3 ]
-    * RemoteOFFLINE: [ rhel7-alt4 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Stopped
     * rhel7-alt4	(ocf:pacemaker:remote):	 Stopped
-    * fake	(ocf:heartbeat:Dummy):	 Stopped
+    * fake	(ocf:heartbeat:Dummy):	 Started rhel7-alt4 (UNCLEAN)

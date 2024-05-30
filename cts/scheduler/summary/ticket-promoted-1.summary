@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -10,10 +13,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: rsc1:0          monitor on node2
-  * Resource action: rsc1:0          monitor on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 

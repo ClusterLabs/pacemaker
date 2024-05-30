@@ -1,7 +1,9 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
-    * RemoteNode remote1: UNCLEAN (offline)
     * Online: [ 18builder 18node1 18node2 ]
+    * RemoteOnline: [ remote1 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started 18builder
@@ -14,26 +16,15 @@ Transition Summary:
   * Start      remote1     (            18builder )
 
 Executing Cluster Transition:
-  * Resource action: shooter         stop on 18builder
-  * Resource action: fake            monitor on 18node2
-  * Resource action: fake            monitor on 18node1
-  * Resource action: fake            monitor on 18builder
-  * Resource action: remote1         monitor on 18node2
-  * Resource action: remote1         monitor on 18node1
-  * Resource action: remote1         monitor on 18builder
-  * Resource action: shooter         start on 18node1
-  * Resource action: remote1         start on 18builder
-  * Resource action: shooter         monitor=60000 on 18node1
-  * Resource action: fake            monitor on remote1
-  * Resource action: remote1         monitor=60000 on 18builder
-  * Resource action: fake            start on 18node2
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18builder 18node1 18node2 ]
     * RemoteOnline: [ remote1 ]
 
   * Full List of Resources:
-    * shooter	(stonith:fence_xvm):	 Started 18node1
-    * fake	(ocf:pacemaker:Dummy):	 Started 18node2
-    * remote1	(ocf:pacemaker:remote):	 Started 18builder
+    * shooter	(stonith:fence_xvm):	 Started 18builder
+    * fake	(ocf:pacemaker:Dummy):	 Stopped
+    * remote1	(ocf:pacemaker:remote):	 Stopped

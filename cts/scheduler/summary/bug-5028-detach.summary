@@ -5,6 +5,9 @@
 0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ bl460g6a bl460g6b ]
 
@@ -16,9 +19,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Cluster action:  do_shutdown on bl460g6a
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ bl460g6a bl460g6b ]
 

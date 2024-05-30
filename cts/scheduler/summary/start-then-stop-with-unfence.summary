@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-node1.example.com rhel7-node2.example.com ]
 
@@ -18,27 +20,18 @@ Transition Summary:
   * Start      jrummy:1        (                            rhel7-node1.example.com )
 
 Executing Cluster Transition:
-  * Pseudo action:   jrummy-clone_start_0
-  * Fencing rhel7-node1.example.com (on)
-  * Resource action: mpath-node2     monitor on rhel7-node1.example.com
-  * Resource action: mpath-node1     monitor on rhel7-node1.example.com
-  * Resource action: jrummy          start on rhel7-node1.example.com
-  * Pseudo action:   jrummy-clone_running_0
-  * Resource action: mpath-node1     start on rhel7-node1.example.com
-  * Resource action: ip1             stop on rhel7-node2.example.com
-  * Resource action: jrummy          monitor=10000 on rhel7-node1.example.com
-  * Resource action: mpath-node1     monitor=60000 on rhel7-node1.example.com
-  * Resource action: ip1             start on rhel7-node1.example.com
-  * Resource action: ip1             monitor=10000 on rhel7-node1.example.com
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ rhel7-node1.example.com rhel7-node2.example.com ]
 
   * Full List of Resources:
     * mpath-node2	(stonith:fence_mpath):	 Started rhel7-node2.example.com
-    * mpath-node1	(stonith:fence_mpath):	 Started rhel7-node1.example.com
-    * ip1	(ocf:heartbeat:IPaddr2):	 Started rhel7-node1.example.com
+    * mpath-node1	(stonith:fence_mpath):	 Stopped
+    * ip1	(ocf:heartbeat:IPaddr2):	 Started rhel7-node2.example.com
     * ip2	(ocf:heartbeat:IPaddr2):	 Started rhel7-node2.example.com
     * Clone Set: jrummy-clone [jrummy]:
-      * Started: [ rhel7-node1.example.com rhel7-node2.example.com ]
+      * Started: [ rhel7-node2.example.com ]
+      * Stopped: [ rhel7-node1.example.com ]

@@ -1,12 +1,17 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started 18node2
     * container1	(ocf:heartbeat:VirtualDomain):	 FAILED
     * container2	(ocf:heartbeat:VirtualDomain):	 FAILED
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc1
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED lxc2
       * Stopped: [ 18node1 18node2 18node3 ]
 
 Transition Summary:
@@ -20,54 +25,19 @@ Transition Summary:
   * Start      lxc2           (         18node1 )
 
 Executing Cluster Transition:
-  * Resource action: container1      monitor on 18node3
-  * Resource action: container1      monitor on 18node2
-  * Resource action: container1      monitor on 18node1
-  * Resource action: container2      monitor on 18node3
-  * Resource action: container2      monitor on 18node2
-  * Resource action: container2      monitor on 18node1
-  * Resource action: lxc-ms          monitor on 18node3
-  * Resource action: lxc-ms          monitor on 18node2
-  * Resource action: lxc-ms          monitor on 18node1
-  * Pseudo action:   lxc-ms-master_demote_0
-  * Resource action: lxc1            monitor on 18node3
-  * Resource action: lxc1            monitor on 18node2
-  * Resource action: lxc1            monitor on 18node1
-  * Resource action: lxc2            monitor on 18node3
-  * Resource action: lxc2            monitor on 18node2
-  * Resource action: lxc2            monitor on 18node1
-  * Pseudo action:   stonith-lxc2-reboot on lxc2
-  * Pseudo action:   stonith-lxc1-reboot on lxc1
-  * Resource action: container1      start on 18node1
-  * Resource action: container2      start on 18node1
-  * Pseudo action:   lxc-ms_demote_0
-  * Pseudo action:   lxc-ms-master_demoted_0
-  * Pseudo action:   lxc-ms-master_stop_0
-  * Resource action: lxc1            start on 18node1
-  * Resource action: lxc2            start on 18node1
-  * Pseudo action:   lxc-ms_stop_0
-  * Pseudo action:   lxc-ms_stop_0
-  * Pseudo action:   lxc-ms-master_stopped_0
-  * Pseudo action:   lxc-ms-master_start_0
-  * Resource action: lxc1            monitor=30000 on 18node1
-  * Resource action: lxc2            monitor=30000 on 18node1
-  * Resource action: lxc-ms          start on lxc1
-  * Resource action: lxc-ms          start on lxc2
-  * Pseudo action:   lxc-ms-master_running_0
-  * Resource action: lxc-ms          monitor=10000 on lxc2
-  * Pseudo action:   lxc-ms-master_promote_0
-  * Resource action: lxc-ms          promote on lxc1
-  * Pseudo action:   lxc-ms-master_promoted_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
     * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started 18node2
-    * container1	(ocf:heartbeat:VirtualDomain):	 Started 18node1
-    * container2	(ocf:heartbeat:VirtualDomain):	 Started 18node1
+    * container1	(ocf:heartbeat:VirtualDomain):	 FAILED
+    * container2	(ocf:heartbeat:VirtualDomain):	 FAILED
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Promoted: [ lxc1 ]
-      * Unpromoted: [ lxc2 ]
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Promoted lxc1
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED lxc2
+      * Stopped: [ 18node1 18node2 18node3 ]

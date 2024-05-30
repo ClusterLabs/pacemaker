@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder2 ]
     * OFFLINE: [ fc16-builder fc16-builder3 ]
@@ -11,6 +13,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder2 ]
     * OFFLINE: [ fc16-builder fc16-builder3 ]

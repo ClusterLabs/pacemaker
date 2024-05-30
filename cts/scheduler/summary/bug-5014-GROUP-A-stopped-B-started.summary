@@ -1,6 +1,8 @@
 1 of 2 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
 
@@ -12,18 +14,19 @@ Current cluster status:
 
 Transition Summary:
   * Stop       ClusterIP     ( fc16-builder )  due to node availability
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   group1_stop_0
-  * Resource action: ClusterIP       stop on fc16-builder
-  * Pseudo action:   group1_stopped_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
 
   * Full List of Resources:
     * Resource Group: group1 (disabled):
-      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started fc16-builder (disabled)
     * Resource Group: group2:
       * ClusterIP2	(ocf:heartbeat:IPaddr2):	 Started fc16-builder

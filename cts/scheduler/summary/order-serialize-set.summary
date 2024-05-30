@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node xen-a: standby (with active resources)
     * Online: [ xen-b ]
@@ -25,49 +28,23 @@ Transition Summary:
   * Migrate    base              ( xen-a -> xen-b )
 
 Executing Cluster Transition:
-  * Resource action: xen-a-fencing   stop on xen-b
-  * Resource action: xen-a-fencing   start on xen-b
-  * Resource action: xen-a-fencing   monitor=60000 on xen-b
-  * Resource action: xen-b-fencing   stop on xen-a
-  * Resource action: db              migrate_to on xen-a
-  * Resource action: db              migrate_from on xen-b
-  * Resource action: db              stop on xen-a
-  * Resource action: core-101        migrate_to on xen-a
-  * Pseudo action:   db_start_0
-  * Resource action: core-101        migrate_from on xen-b
-  * Resource action: core-101        stop on xen-a
-  * Resource action: core-200        migrate_to on xen-a
-  * Resource action: db              monitor=10000 on xen-b
-  * Pseudo action:   core-101_start_0
-  * Resource action: core-200        migrate_from on xen-b
-  * Resource action: core-200        stop on xen-a
-  * Resource action: edge            migrate_to on xen-a
-  * Resource action: core-101        monitor=10000 on xen-b
-  * Pseudo action:   core-200_start_0
-  * Resource action: edge            migrate_from on xen-b
-  * Resource action: edge            stop on xen-a
-  * Resource action: base            migrate_to on xen-a
-  * Resource action: core-200        monitor=10000 on xen-b
-  * Pseudo action:   edge_start_0
-  * Resource action: base            migrate_from on xen-b
-  * Resource action: base            stop on xen-a
-  * Resource action: edge            monitor=10000 on xen-b
-  * Pseudo action:   base_start_0
-  * Resource action: base            monitor=10000 on xen-b
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
-    * Node xen-a: standby
+    * Node xen-a: standby (with active resources)
     * Online: [ xen-b ]
 
   * Full List of Resources:
     * xen-a-fencing	(stonith:external/ipmi):	 Started xen-b
-    * xen-b-fencing	(stonith:external/ipmi):	 Stopped
-    * db	(ocf:heartbeat:Xen):	 Started xen-b
+    * xen-b-fencing	(stonith:external/ipmi):	 Started xen-a
+    * db	(ocf:heartbeat:Xen):	 Started xen-a
     * dbreplica	(ocf:heartbeat:Xen):	 Started xen-b
-    * core-101	(ocf:heartbeat:Xen):	 Started xen-b
-    * core-200	(ocf:heartbeat:Xen):	 Started xen-b
+    * core-101	(ocf:heartbeat:Xen):	 Started xen-a
+    * core-200	(ocf:heartbeat:Xen):	 Started xen-a
     * sysadmin	(ocf:heartbeat:Xen):	 Started xen-b
-    * edge	(ocf:heartbeat:Xen):	 Started xen-b
-    * base	(ocf:heartbeat:Xen):	 Started xen-b
+    * edge	(ocf:heartbeat:Xen):	 Started xen-a
+    * base	(ocf:heartbeat:Xen):	 Started xen-a
     * Email_Alerting	(ocf:heartbeat:MailTo):	 Started xen-b

@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ mysql-01 mysql-02 ]
 
@@ -11,17 +13,13 @@ Transition Summary:
   * Start      drbd0:1     ( mysql-02 )
 
 Executing Cluster Transition:
-  * Resource action: drbd0:0         monitor on mysql-01
-  * Resource action: drbd0:1         monitor on mysql-02
-  * Pseudo action:   ms-drbd0_start_0
-  * Resource action: drbd0:0         start on mysql-01
-  * Resource action: drbd0:1         start on mysql-02
-  * Pseudo action:   ms-drbd0_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ mysql-01 mysql-02 ]
 
   * Full List of Resources:
     * Clone Set: ms-drbd0 [drbd0]:
-      * Started: [ mysql-01 mysql-02 ]
+      * Stopped: [ mysql-01 mysql-02 ]

@@ -1,6 +1,9 @@
 0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node dl380g5c: standby (with active resources)
     * Online: [ dl380g5d ]
@@ -13,9 +16,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: dummy:1         monitor=20000 on dl380g5d
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node dl380g5c: standby (with active resources)
     * Online: [ dl380g5d ]

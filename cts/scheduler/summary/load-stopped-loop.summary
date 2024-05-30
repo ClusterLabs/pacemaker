@@ -1,31 +1,39 @@
 32 of 308 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ mgmt01 v03-a v03-b ]
 
   * Full List of Resources:
-    * stonith-v02-a	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v02-b	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v02-c	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v02-d	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-mgmt01	(stonith:fence_xvm):	 Started v03-b
     * stonith-mgmt02	(stonith:meatware):	 Started mgmt01
-    * stonith-v03-c	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v03-a	(stonith:fence_ipmilan):	 Started v03-b
-    * stonith-v03-b	(stonith:fence_ipmilan):	 Started v03-a
-    * stonith-v03-d	(stonith:fence_ipmilan):	 Stopped (disabled)
     * Clone Set: cl-clvmd [clvmd]:
       * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-dlm [dlm]:
       * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-iscsid [iscsid]:
       * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-multipathd [multipathd]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-libvirt-images-fs [libvirt-images-fs]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-libvirt-install-fs [libvirt-install-fs]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-0-iscsi [vds-ok-pool-0-iscsi]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-0-vg [vds-ok-pool-0-vg]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-1-iscsi [vds-ok-pool-1-iscsi]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-1-vg [vds-ok-pool-1-vg]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * stonith-v03-b	(stonith:fence_ipmilan):	 Started v03-a
+    * stonith-v03-a	(stonith:fence_ipmilan):	 Started v03-b
+    * stonith-mgmt01	(stonith:fence_xvm):	 Started v03-b
     * Clone Set: cl-libvirtd [libvirtd]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * Clone Set: cl-multipathd [multipathd]:
-      * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-node-params [node-params]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
@@ -59,18 +67,6 @@ Current cluster status:
     * Clone Set: cl-vlan909-if [vlan909-if]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * Clone Set: cl-libvirt-images-fs [libvirt-images-fs]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-libvirt-install-fs [libvirt-install-fs]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-0-iscsi [vds-ok-pool-0-iscsi]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-0-vg [vds-ok-pool-0-vg]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-1-iscsi [vds-ok-pool-1-iscsi]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-1-vg [vds-ok-pool-1-vg]:
-      * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-libvirt-images-pool [libvirt-images-pool]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
@@ -80,42 +76,18 @@ Current cluster status:
     * Clone Set: cl-vds-ok-pool-1-pool [vds-ok-pool-1-pool]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * git.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped
-    * vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * f13-x64-devel.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * eu2.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * zakaz.transferrus.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * Clone Set: cl-vlan200-if [vlan200-if]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
     * lenny-x32-devel-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
-    * dist.express-consult.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * eu1.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * gotin-bbb-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * maxb-c55-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * metae.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * rodovoepomestie.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * ubuntu9.10-gotin-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * c5-x64-devel.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * Clone Set: cl-mcast-test-net [mcast-test-net]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * dist.fly-uni.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * ktstudio.net-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * cloudsrv.credo-dialogue.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * c6-x64-devel.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
@@ -130,19 +102,49 @@ Current cluster status:
       * Stopped: [ mgmt01 ]
     * gw.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * license.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * terminal.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * lustre01-left.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * lustre02-left.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * test-01.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * Clone Set: cl-libvirt-qpid [libvirt-qpid]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * gw.gleb.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * gw.gotin.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * terminal0.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * Clone Set: cl-mcast-gleb-net [mcast-gleb-net]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
+    * stonith-v02-a	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v02-b	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v02-c	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v02-d	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v03-c	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v03-d	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * git.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped
+    * vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * eu2.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * zakaz.transferrus.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * dist.express-consult.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * eu1.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * gotin-bbb-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * maxb-c55-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * metae.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * rodovoepomestie.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * ubuntu9.10-gotin-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * dist.fly-uni.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * terminal.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * gw.gleb.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * gw.gotin.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
 
 Transition Summary:
   * Reload     vds-ok-pool-0-iscsi:0                       (         mgmt01 )
@@ -151,73 +153,48 @@ Transition Summary:
   * Reload     vds-ok-pool-1-iscsi:0                       (         mgmt01 )
   * Reload     vds-ok-pool-1-iscsi:1                       (          v03-b )
   * Reload     vds-ok-pool-1-iscsi:2                       (          v03-a )
-  * Restart    stonith-v03-b                               (          v03-a )  due to resource definition change
   * Restart    stonith-v03-a                               (          v03-b )  due to resource definition change
+  * Restart    stonith-v03-b                               (          v03-a )  due to resource definition change
   * Migrate    license.anbriz.vds-ok.com-vm                ( v03-b -> v03-a )
   * Migrate    terminal0.anbriz.vds-ok.com-vm              ( v03-a -> v03-b )
   * Start      vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm     (          v03-a )
 
 Executing Cluster Transition:
-  * Resource action: vds-ok-pool-0-iscsi:1 reload-agent on mgmt01
-  * Resource action: vds-ok-pool-0-iscsi:1 monitor=30000 on mgmt01
-  * Resource action: vds-ok-pool-0-iscsi:0 reload-agent on v03-b
-  * Resource action: vds-ok-pool-0-iscsi:0 monitor=30000 on v03-b
-  * Resource action: vds-ok-pool-0-iscsi:2 reload-agent on v03-a
-  * Resource action: vds-ok-pool-0-iscsi:2 monitor=30000 on v03-a
-  * Resource action: vds-ok-pool-1-iscsi:1 reload-agent on mgmt01
-  * Resource action: vds-ok-pool-1-iscsi:1 monitor=30000 on mgmt01
-  * Resource action: vds-ok-pool-1-iscsi:0 reload-agent on v03-b
-  * Resource action: vds-ok-pool-1-iscsi:0 monitor=30000 on v03-b
-  * Resource action: vds-ok-pool-1-iscsi:2 reload-agent on v03-a
-  * Resource action: vds-ok-pool-1-iscsi:2 monitor=30000 on v03-a
-  * Resource action: stonith-v03-b   stop on v03-a
-  * Resource action: stonith-v03-b   start on v03-a
-  * Resource action: stonith-v03-b   monitor=60000 on v03-a
-  * Resource action: stonith-v03-a   stop on v03-b
-  * Resource action: stonith-v03-a   start on v03-b
-  * Resource action: stonith-v03-a   monitor=60000 on v03-b
-  * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_to on v03-a
-  * Pseudo action:   load_stopped_mgmt01
-  * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_from on v03-b
-  * Resource action: terminal0.anbriz.vds-ok.com-vm stop on v03-a
-  * Pseudo action:   load_stopped_v03-a
-  * Resource action: license.anbriz.vds-ok.com-vm migrate_to on v03-b
-  * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm start on v03-a
-  * Resource action: license.anbriz.vds-ok.com-vm migrate_from on v03-a
-  * Resource action: license.anbriz.vds-ok.com-vm stop on v03-b
-  * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-a
-  * Pseudo action:   load_stopped_v03-b
-  * Pseudo action:   license.anbriz.vds-ok.com-vm_start_0
-  * Pseudo action:   terminal0.anbriz.vds-ok.com-vm_start_0
-  * Resource action: license.anbriz.vds-ok.com-vm monitor=10000 on v03-a
-  * Resource action: terminal0.anbriz.vds-ok.com-vm monitor=10000 on v03-b
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ mgmt01 v03-a v03-b ]
 
   * Full List of Resources:
-    * stonith-v02-a	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v02-b	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v02-c	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v02-d	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-mgmt01	(stonith:fence_xvm):	 Started v03-b
     * stonith-mgmt02	(stonith:meatware):	 Started mgmt01
-    * stonith-v03-c	(stonith:fence_ipmilan):	 Stopped (disabled)
-    * stonith-v03-a	(stonith:fence_ipmilan):	 Started v03-b
-    * stonith-v03-b	(stonith:fence_ipmilan):	 Started v03-a
-    * stonith-v03-d	(stonith:fence_ipmilan):	 Stopped (disabled)
     * Clone Set: cl-clvmd [clvmd]:
       * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-dlm [dlm]:
       * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-iscsid [iscsid]:
       * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-multipathd [multipathd]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-libvirt-images-fs [libvirt-images-fs]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-libvirt-install-fs [libvirt-install-fs]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-0-iscsi [vds-ok-pool-0-iscsi]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-0-vg [vds-ok-pool-0-vg]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-1-iscsi [vds-ok-pool-1-iscsi]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * Clone Set: cl-vds-ok-pool-1-vg [vds-ok-pool-1-vg]:
+      * Started: [ mgmt01 v03-a v03-b ]
+    * stonith-v03-b	(stonith:fence_ipmilan):	 Started v03-a
+    * stonith-v03-a	(stonith:fence_ipmilan):	 Started v03-b
+    * stonith-mgmt01	(stonith:fence_xvm):	 Started v03-b
     * Clone Set: cl-libvirtd [libvirtd]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * Clone Set: cl-multipathd [multipathd]:
-      * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-node-params [node-params]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
@@ -251,18 +228,6 @@ Revised Cluster Status:
     * Clone Set: cl-vlan909-if [vlan909-if]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * Clone Set: cl-libvirt-images-fs [libvirt-images-fs]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-libvirt-install-fs [libvirt-install-fs]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-0-iscsi [vds-ok-pool-0-iscsi]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-0-vg [vds-ok-pool-0-vg]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-1-iscsi [vds-ok-pool-1-iscsi]:
-      * Started: [ mgmt01 v03-a v03-b ]
-    * Clone Set: cl-vds-ok-pool-1-vg [vds-ok-pool-1-vg]:
-      * Started: [ mgmt01 v03-a v03-b ]
     * Clone Set: cl-libvirt-images-pool [libvirt-images-pool]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
@@ -272,42 +237,18 @@ Revised Cluster Status:
     * Clone Set: cl-vds-ok-pool-1-pool [vds-ok-pool-1-pool]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * git.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
-    * vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * f13-x64-devel.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * eu2.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * zakaz.transferrus.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * Clone Set: cl-vlan200-if [vlan200-if]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
     * lenny-x32-devel-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
-    * dist.express-consult.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * eu1.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * gotin-bbb-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * maxb-c55-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * metae.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * rodovoepomestie.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * ubuntu9.10-gotin-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * c5-x64-devel.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * Clone Set: cl-mcast-test-net [mcast-test-net]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * dist.fly-uni.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
     * ktstudio.net-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * cloudsrv.credo-dialogue.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * c6-x64-devel.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
@@ -321,17 +262,47 @@ Revised Cluster Status:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
     * gw.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
-    * license.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
-    * terminal.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * license.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * lustre01-left.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * lustre02-left.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
     * test-01.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * Clone Set: cl-libvirt-qpid [libvirt-qpid]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
-    * gw.gleb.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * gw.gotin.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
-    * terminal0.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-b
+    * terminal0.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Started v03-a
     * Clone Set: cl-mcast-gleb-net [mcast-gleb-net]:
       * Started: [ v03-a v03-b ]
       * Stopped: [ mgmt01 ]
+    * stonith-v02-a	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v02-b	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v02-c	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v02-d	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v03-c	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * stonith-v03-d	(stonith:fence_ipmilan):	 Stopped (disabled)
+    * git.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped
+    * vd02-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd02-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd02-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd02-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd03-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-a.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-b.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-c.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * vd04-d.cdev.ttc.prague.cz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * eu2.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * zakaz.transferrus.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * dist.express-consult.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * eu1.ca-pages.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * gotin-bbb-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * maxb-c55-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * metae.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * rodovoepomestie.ru-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * ubuntu9.10-gotin-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * dist.fly-uni.org-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * terminal.anbriz.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * gw.gleb.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)
+    * gw.gotin.vds-ok.com-vm	(ocf:vds-ok:VirtualDomain):	 Stopped (disabled)

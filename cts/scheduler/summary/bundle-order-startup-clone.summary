@@ -1,7 +1,10 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ metal-1 metal-2 metal-3 ]
     * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+    * GuestOnline: [ galera-bundle-0 redis-bundle-0 ]
 
   * Full List of Resources:
     * Clone Set: storage-clone [storage]:
@@ -26,47 +29,14 @@ Transition Summary:
   * Start      redis:0                    (  redis-bundle-0 )
 
 Executing Cluster Transition:
-  * Resource action: storage:0       monitor on metal-1
-  * Resource action: storage:1       monitor on metal-2
-  * Resource action: storage:2       monitor on metal-3
-  * Resource action: galera-bundle-docker-0 monitor on metal-3
-  * Resource action: galera-bundle-docker-0 monitor on metal-2
-  * Resource action: galera-bundle-docker-0 monitor on metal-1
-  * Resource action: haproxy-bundle-docker-0 monitor on metal-3
-  * Resource action: haproxy-bundle-docker-0 monitor on metal-2
-  * Resource action: haproxy-bundle-docker-0 monitor on metal-1
-  * Pseudo action:   redis-bundle-master_pre_notify_start_0
-  * Resource action: redis-bundle-docker-0 monitor on metal-3
-  * Resource action: redis-bundle-docker-0 monitor on metal-2
-  * Resource action: redis-bundle-docker-0 monitor on metal-1
-  * Pseudo action:   redis-bundle_start_0
-  * Pseudo action:   haproxy-bundle_start_0
-  * Resource action: haproxy-bundle-docker-0 start on metal-2
-  * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
-  * Pseudo action:   redis-bundle-master_start_0
-  * Resource action: redis-bundle-docker-0 start on metal-2
-  * Resource action: redis-bundle-0  monitor on metal-3
-  * Resource action: redis-bundle-0  monitor on metal-2
-  * Resource action: redis-bundle-0  monitor on metal-1
-  * Pseudo action:   haproxy-bundle_running_0
-  * Resource action: haproxy-bundle-docker-0 monitor=60000 on metal-2
-  * Resource action: redis-bundle-docker-0 monitor=60000 on metal-2
-  * Resource action: redis-bundle-0  start on metal-2
-  * Resource action: redis:0         start on redis-bundle-0
-  * Pseudo action:   redis-bundle-master_running_0
-  * Resource action: redis-bundle-0  monitor=30000 on metal-2
-  * Pseudo action:   redis-bundle-master_post_notify_running_0
-  * Resource action: redis:0         notify on redis-bundle-0
-  * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
-  * Pseudo action:   redis-bundle_running_0
-  * Resource action: redis:0         monitor=60000 on redis-bundle-0
-  * Resource action: redis:0         monitor=45000 on redis-bundle-0
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ metal-1 metal-2 metal-3 ]
     * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
-    * GuestOnline: [ redis-bundle-0 ]
+    * GuestOnline: [ galera-bundle-0 redis-bundle-0 ]
 
   * Full List of Resources:
     * Clone Set: storage-clone [storage]:
@@ -74,6 +44,6 @@ Revised Cluster Status:
     * Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
       * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
     * Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]:
-      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started metal-2
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Stopped
     * Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Unpromoted metal-2
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Stopped

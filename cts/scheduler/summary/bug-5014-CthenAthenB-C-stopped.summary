@@ -1,6 +1,8 @@
 1 of 3 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
 
@@ -14,11 +16,10 @@ Transition Summary:
   * Start      ClusterIP2    ( fc16-builder )  due to unrunnable ClusterIP start (blocked)
 
 Executing Cluster Transition:
-  * Resource action: ClusterIP       monitor on fc16-builder
-  * Resource action: ClusterIP2      monitor on fc16-builder
-  * Resource action: ClusterIP3      monitor on fc16-builder
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ fc16-builder ]
 

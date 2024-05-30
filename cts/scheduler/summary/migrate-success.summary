@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-13 hex-14 ]
 
@@ -10,10 +12,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Pseudo action:   load_stopped_hex-14
-  * Pseudo action:   load_stopped_hex-13
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ hex-13 hex-14 ]
 

@@ -1,6 +1,9 @@
 0 of 3 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 
@@ -12,9 +15,11 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Cluster action:  clear_failcount for rsc2 on node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 ]
 

@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ dktest1 dktest2 ]
 
@@ -14,13 +16,10 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
-  * Resource action: drbd1:0         monitor=10000 on dktest1
-  * Resource action: drbd1:0         monitor=11000 on dktest2
-  * Resource action: apache-vip      monitor=60000 on dktest1
-  * Resource action: mount           monitor=10000 on dktest1
-  * Resource action: webserver       monitor=30000 on dktest1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ dktest1 dktest2 ]
 

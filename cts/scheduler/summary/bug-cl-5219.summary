@@ -1,6 +1,9 @@
 1 of 9 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
 
@@ -22,14 +25,16 @@ Transition Summary:
   * Stop       child1-service     ( ha2.test.anchor.net.au )  due to node availability
 
 Executing Cluster Transition:
-  * Resource action: child1-service  stop on ha2.test.anchor.net.au
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
 
   * Full List of Resources:
-    * child1-service	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * child1-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au (disabled)
     * child2-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au
     * parent-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au
     * Clone Set: child1 [stateful-child1] (promotable):

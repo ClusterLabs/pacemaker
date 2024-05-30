@@ -1,5 +1,7 @@
 Using the original execution date of: 2019-06-06 13:56:45Z
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node ha-idg-2: standby
     * Online: [ ha-idg-1 ]
@@ -16,6 +18,8 @@ Executing Cluster Transition:
 Using the original execution date of: 2019-06-06 13:56:45Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node ha-idg-2: standby
     * Online: [ ha-idg-1 ]

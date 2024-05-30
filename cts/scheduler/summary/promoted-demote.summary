@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cxa1 cxb1 ]
 
@@ -28,22 +30,10 @@ Transition Summary:
   * Promote    named_drbd_node:1     ( Unpromoted -> Promoted cxb1 )
 
 Executing Cluster Transition:
-  * Resource action: named_address   stop on cxa1
-  * Pseudo action:   named_drbd_pre_notify_promote_0
-  * Resource action: named_address   start on cxb1
-  * Resource action: named_drbd_node:1 notify on cxa1
-  * Resource action: named_drbd_node:0 notify on cxb1
-  * Pseudo action:   named_drbd_confirmed-pre_notify_promote_0
-  * Pseudo action:   named_drbd_promote_0
-  * Resource action: named_drbd_node:0 promote on cxb1
-  * Pseudo action:   named_drbd_promoted_0
-  * Pseudo action:   named_drbd_post_notify_promoted_0
-  * Resource action: named_drbd_node:1 notify on cxa1
-  * Resource action: named_drbd_node:0 notify on cxb1
-  * Pseudo action:   named_drbd_confirmed-post_notify_promoted_0
-  * Resource action: named_drbd_node:0 monitor=10000 on cxb1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ cxa1 cxb1 ]
 
@@ -56,14 +46,13 @@ Revised Cluster Status:
     * Clone Set: cyrus_drbd [cyrus_drbd_node] (promotable):
       * Promoted: [ cxa1 ]
       * Unpromoted: [ cxb1 ]
-    * named_address	(ocf:heartbeat:IPaddr2):	 Started cxb1
+    * named_address	(ocf:heartbeat:IPaddr2):	 Started cxa1
     * named_filesys	(ocf:heartbeat:Filesystem):	 Stopped
     * named_volgroup	(ocf:heartbeat:VolGroup):	 Stopped
     * named_daemon	(ocf:heartbeat:recursor):	 Stopped
     * named_syslogd	(ocf:heartbeat:syslogd):	 Stopped
     * Clone Set: named_drbd [named_drbd_node] (promotable):
-      * Promoted: [ cxb1 ]
-      * Unpromoted: [ cxa1 ]
+      * Unpromoted: [ cxa1 cxb1 ]
     * Clone Set: pingd_clone [pingd_node]:
       * Started: [ cxa1 cxb1 ]
     * Clone Set: fence_clone [fence_node]:

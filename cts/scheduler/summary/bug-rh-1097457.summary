@@ -1,6 +1,9 @@
 2 of 26 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ lama2 lama3 ]
     * GuestOnline: [ lamaVM1 lamaVM2 lamaVM3 ]
@@ -43,56 +46,11 @@ Transition Summary:
   * Restart    lamaVM2    (            lama3 )  due to required VM2 start
 
 Executing Cluster Transition:
-  * Resource action: FSlun1          monitor on lamaVM3
-  * Resource action: FSlun2          monitor on lamaVM3
-  * Resource action: FSlun3          monitor on lamaVM3
-  * Resource action: FSlun3          monitor on lamaVM1
-  * Resource action: FSlun4          monitor on lamaVM1
-  * Resource action: FAKE5-IP        monitor on lamaVM3
-  * Resource action: FAKE5-IP        monitor on lamaVM1
-  * Resource action: FAKE6-IP        monitor on lamaVM3
-  * Resource action: FAKE6-IP        monitor on lamaVM1
-  * Resource action: FAKE5           monitor on lamaVM1
-  * Resource action: FAKE1           monitor on lamaVM3
-  * Resource action: FAKE1-IP        monitor on lamaVM3
-  * Resource action: FAKE2           monitor on lamaVM3
-  * Resource action: FAKE2-IP        monitor on lamaVM3
-  * Resource action: FAKE3           monitor on lamaVM3
-  * Resource action: FAKE3-IP        monitor on lamaVM3
-  * Resource action: FAKE4           monitor on lamaVM3
-  * Resource action: FAKE4           monitor on lamaVM1
-  * Resource action: FAKE4-IP        monitor on lamaVM3
-  * Resource action: FAKE4-IP        monitor on lamaVM1
-  * Resource action: lamaVM2         stop on lama3
-  * Resource action: VM2             stop on lama3
-  * Pseudo action:   stonith-lamaVM2-reboot on lamaVM2
-  * Resource action: VM2             start on lama3
-  * Resource action: VM2             monitor=10000 on lama3
-  * Pseudo action:   lamaVM2-G4_stop_0
-  * Pseudo action:   FAKE4-IP_stop_0
-  * Pseudo action:   FAKE6-clone_stop_0
-  * Resource action: lamaVM2         start on lama3
-  * Resource action: lamaVM2         monitor=30000 on lama3
-  * Resource action: FSlun3          monitor=10000 on lamaVM2
-  * Pseudo action:   FAKE4_stop_0
-  * Pseudo action:   FAKE6_stop_0
-  * Pseudo action:   FAKE6-clone_stopped_0
-  * Pseudo action:   FAKE6-clone_start_0
-  * Pseudo action:   lamaVM2-G4_stopped_0
-  * Resource action: FAKE6           start on lamaVM2
-  * Resource action: FAKE6           monitor=30000 on lamaVM2
-  * Pseudo action:   FAKE6-clone_running_0
-  * Pseudo action:   FSlun3_stop_0
-  * Resource action: FSlun3          start on lama2
-  * Pseudo action:   lamaVM2-G4_start_0
-  * Resource action: FAKE4           start on lamaVM2
-  * Resource action: FAKE4           monitor=30000 on lamaVM2
-  * Resource action: FAKE4-IP        start on lamaVM2
-  * Resource action: FAKE4-IP        monitor=30000 on lamaVM2
-  * Resource action: FSlun3          monitor=10000 on lama2
-  * Pseudo action:   lamaVM2-G4_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ lama2 lama3 ]
     * GuestOnline: [ lamaVM1 lamaVM2 lamaVM3 ]
@@ -105,7 +63,7 @@ Revised Cluster Status:
     * FSlun2	(ocf:heartbeat:Filesystem):	 Started lamaVM1
     * VM2	(ocf:heartbeat:VirtualDomain):	 FAILED lama3
     * VM3	(ocf:heartbeat:VirtualDomain):	 Started lama3
-    * FSlun3	(ocf:heartbeat:Filesystem):	 FAILED [ lama2 lamaVM2 ]
+    * FSlun3	(ocf:heartbeat:Filesystem):	 FAILED lamaVM2
     * FSlun4	(ocf:heartbeat:Filesystem):	 Started lamaVM3
     * FAKE5-IP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
     * FAKE6-IP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)

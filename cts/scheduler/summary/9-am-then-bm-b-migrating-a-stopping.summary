@@ -1,6 +1,8 @@
 1 of 2 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
 
@@ -13,13 +15,13 @@ Transition Summary:
   * Stop       B       ( 18node2 )  due to unrunnable A start
 
 Executing Cluster Transition:
-  * Resource action: B               stop on 18node2
-  * Resource action: A               stop on 18node1
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
 
   * Full List of Resources:
-    * A	(ocf:heartbeat:Dummy):	 Stopped (disabled)
-    * B	(ocf:heartbeat:Dummy):	 Stopped
+    * A	(ocf:heartbeat:Dummy):	 Started 18node1 (disabled)
+    * B	(ocf:heartbeat:Dummy):	 Started 18node2

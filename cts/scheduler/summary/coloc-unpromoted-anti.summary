@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pollux sirius ]
 
@@ -21,16 +23,10 @@ Transition Summary:
   * Start      apache     ( pollux )
 
 Executing Cluster Transition:
-  * Pseudo action:   group-1_start_0
-  * Resource action: fs-1            start on pollux
-  * Resource action: ip-198          start on pollux
-  * Resource action: apache          start on pollux
-  * Pseudo action:   group-1_running_0
-  * Resource action: fs-1            monitor=20000 on pollux
-  * Resource action: ip-198          monitor=30000 on pollux
-  * Resource action: apache          monitor=60000 on pollux
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ pollux sirius ]
 
@@ -41,8 +37,8 @@ Revised Cluster Status:
       * Promoted: [ pollux ]
       * Unpromoted: [ sirius ]
     * Resource Group: group-1:
-      * fs-1	(ocf:heartbeat:Filesystem):	 Started pollux
-      * ip-198	(ocf:heartbeat:IPaddr2):	 Started pollux
-      * apache	(ocf:custom:apache2):	 Started pollux
+      * fs-1	(ocf:heartbeat:Filesystem):	 Stopped
+      * ip-198	(ocf:heartbeat:IPaddr2):	 Stopped
+      * apache	(ocf:custom:apache2):	 Stopped
     * pollux-fencing	(stonith:external/ipmi-soft):	 Started sirius
     * sirius-fencing	(stonith:external/ipmi-soft):	 Started pollux

@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node sgi2: UNCLEAN (offline)
     * Node test02: UNCLEAN (offline)
@@ -43,31 +46,15 @@ Transition Summary:
   * Stop       child_DoFencing:1        (                    ibm1 )  due to node availability
   * Promote    ocf_msdummy:0            ( Stopped -> Promoted va1 )  blocked
   * Start      ocf_msdummy:1            (                     va1 )  due to no quorum (blocked)
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Resource action: child_DoFencing:1 monitor on va1
-  * Resource action: child_DoFencing:2 monitor on va1
-  * Resource action: child_DoFencing:2 monitor on ibm1
-  * Resource action: child_DoFencing:3 monitor on va1
-  * Resource action: child_DoFencing:3 monitor on ibm1
-  * Pseudo action:   DoFencing_stop_0
-  * Resource action: ocf_msdummy:2   monitor on va1
-  * Resource action: ocf_msdummy:2   monitor on ibm1
-  * Resource action: ocf_msdummy:3   monitor on va1
-  * Resource action: ocf_msdummy:3   monitor on ibm1
-  * Resource action: ocf_msdummy:4   monitor on va1
-  * Resource action: ocf_msdummy:4   monitor on ibm1
-  * Resource action: ocf_msdummy:5   monitor on va1
-  * Resource action: ocf_msdummy:5   monitor on ibm1
-  * Resource action: ocf_msdummy:6   monitor on va1
-  * Resource action: ocf_msdummy:6   monitor on ibm1
-  * Resource action: ocf_msdummy:7   monitor on va1
-  * Resource action: ocf_msdummy:7   monitor on ibm1
-  * Resource action: child_DoFencing:1 stop on ibm1
-  * Pseudo action:   DoFencing_stopped_0
-  * Cluster action:  do_shutdown on ibm1
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Node sgi2: UNCLEAN (offline)
     * Node test02: UNCLEAN (offline)
@@ -86,7 +73,7 @@ Revised Cluster Status:
     * rsc_test02	(ocf:heartbeat:IPaddr):	 Stopped
     * Clone Set: DoFencing [child_DoFencing] (unique):
       * child_DoFencing:0	(stonith:ssh):	 Started va1
-      * child_DoFencing:1	(stonith:ssh):	 Stopped
+      * child_DoFencing:1	(stonith:ssh):	 Started ibm1
       * child_DoFencing:2	(stonith:ssh):	 Stopped
       * child_DoFencing:3	(stonith:ssh):	 Stopped
     * Clone Set: master_rsc_1 [ocf_msdummy] (promotable, unique):

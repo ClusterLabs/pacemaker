@@ -1,4 +1,6 @@
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Node node2: standby
     * Online: [ node1 ]
@@ -11,6 +13,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Node node2: standby
     * Online: [ node1 ]

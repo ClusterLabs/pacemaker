@@ -1,5 +1,11 @@
 Using the original execution date of: 2017-10-26 14:23:50Z
 Current cluster status:
+  * Cluster Summary:
+Only 'private' parameters to 0s-interval start for fence_db2 on 407888-db1 changed: 0:0;7:4:0:dcc10f17-10a1-4e5d-89af-ef7ff033520d
+Only 'private' parameters to 60s-interval monitor for fence_db2 on 407888-db1 changed: 0:0;8:4:0:dcc10f17-10a1-4e5d-89af-ef7ff033520d
+Only 'private' parameters to 0s-interval start for fence_db1 on 407892-db2 changed: 0:0;4:3:0:dcc10f17-10a1-4e5d-89af-ef7ff033520d
+Only 'private' parameters to 60s-interval monitor for fence_db1 on 407892-db2 changed: 0:0;5:3:0:dcc10f17-10a1-4e5d-89af-ef7ff033520d
+
   * Node List:
     * Online: [ 407888-db1 407892-db2 ]
 
@@ -14,6 +20,8 @@ Executing Cluster Transition:
 Using the original execution date of: 2017-10-26 14:23:50Z
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ 407888-db1 407892-db2 ]
 

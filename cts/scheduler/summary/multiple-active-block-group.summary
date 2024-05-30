@@ -1,6 +1,8 @@
 0 of 4 resource instances DISABLED and 3 BLOCKED from further action due to failure
 
 Current cluster status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node2 node3 ]
 
@@ -16,6 +18,8 @@ Transition Summary:
 Executing Cluster Transition:
 
 Revised Cluster Status:
+  * Cluster Summary:
+
   * Node List:
     * Online: [ node2 node3 ]
 

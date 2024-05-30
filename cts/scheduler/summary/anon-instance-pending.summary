@@ -1,4 +1,7 @@
 Current cluster status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 node3 node4 node5 node6 node7 node8 node9 node10 node11 ]
 
@@ -76,136 +79,15 @@ Transition Summary:
   * Start      clone5rsc1:10   (  node8 )
   * Start      clone5rsc2:10   (  node8 )
   * Start      clone5rsc3:10   (  node8 )
+Transition failed: terminated
+An invalid transition was produced
 
 Executing Cluster Transition:
-  * Pseudo action:   clone1_start_0
-  * Pseudo action:   clone2_start_0
-  * Resource action: clone3rsc       monitor on node2
-  * Pseudo action:   clone3_start_0
-  * Pseudo action:   clone4_stop_0
-  * Pseudo action:   clone5_start_0
-  * Resource action: clone1rsc       start on node4
-  * Resource action: clone1rsc       start on node9
-  * Resource action: clone1rsc       start on node10
-  * Resource action: clone1rsc       start on node11
-  * Resource action: clone1rsc       start on node5
-  * Resource action: clone1rsc       start on node6
-  * Resource action: clone1rsc       start on node7
-  * Resource action: clone1rsc       start on node8
-  * Pseudo action:   clone1_running_0
-  * Resource action: clone2rsc       start on node4
-  * Resource action: clone2rsc       start on node10
-  * Resource action: clone2rsc       start on node11
-  * Resource action: clone2rsc       start on node3
-  * Pseudo action:   clone2_running_0
-  * Resource action: clone3rsc       start on node5
-  * Resource action: clone3rsc       start on node6
-  * Resource action: clone3rsc       start on node7
-  * Resource action: clone3rsc       start on node8
-  * Resource action: clone3rsc       start on node9
-  * Resource action: clone3rsc       start on node1
-  * Resource action: clone3rsc       start on node10
-  * Resource action: clone3rsc       start on node11
-  * Resource action: clone3rsc       start on node2
-  * Resource action: clone3rsc       start on node4
-  * Pseudo action:   clone3_running_0
-  * Resource action: clone4rsc       stop on node9
-  * Pseudo action:   clone4_stopped_0
-  * Pseudo action:   clone5group:2_start_0
-  * Resource action: clone5rsc2      start on node3
-  * Resource action: clone5rsc3      start on node3
-  * Pseudo action:   clone5group:3_start_0
-  * Resource action: clone5rsc1      start on node9
-  * Resource action: clone5rsc2      start on node9
-  * Resource action: clone5rsc3      start on node9
-  * Pseudo action:   clone5group:4_start_0
-  * Resource action: clone5rsc1      start on node10
-  * Resource action: clone5rsc2      start on node10
-  * Resource action: clone5rsc3      start on node10
-  * Pseudo action:   clone5group:5_start_0
-  * Resource action: clone5rsc1      start on node11
-  * Resource action: clone5rsc2      start on node11
-  * Resource action: clone5rsc3      start on node11
-  * Pseudo action:   clone5group:6_start_0
-  * Resource action: clone5rsc1      start on node4
-  * Resource action: clone5rsc2      start on node4
-  * Resource action: clone5rsc3      start on node4
-  * Pseudo action:   clone5group:7_start_0
-  * Resource action: clone5rsc1      start on node5
-  * Resource action: clone5rsc2      start on node5
-  * Resource action: clone5rsc3      start on node5
-  * Pseudo action:   clone5group:8_start_0
-  * Resource action: clone5rsc1      start on node6
-  * Resource action: clone5rsc2      start on node6
-  * Resource action: clone5rsc3      start on node6
-  * Pseudo action:   clone5group:9_start_0
-  * Resource action: clone5rsc1      start on node7
-  * Resource action: clone5rsc2      start on node7
-  * Resource action: clone5rsc3      start on node7
-  * Pseudo action:   clone5group:10_start_0
-  * Resource action: clone5rsc1      start on node8
-  * Resource action: clone5rsc2      start on node8
-  * Resource action: clone5rsc3      start on node8
-  * Resource action: clone1rsc       monitor=10000 on node4
-  * Resource action: clone1rsc       monitor=10000 on node9
-  * Resource action: clone1rsc       monitor=10000 on node10
-  * Resource action: clone1rsc       monitor=10000 on node11
-  * Resource action: clone1rsc       monitor=10000 on node5
-  * Resource action: clone1rsc       monitor=10000 on node6
-  * Resource action: clone1rsc       monitor=10000 on node7
-  * Resource action: clone1rsc       monitor=10000 on node8
-  * Resource action: clone2rsc       monitor=10000 on node4
-  * Resource action: clone2rsc       monitor=10000 on node10
-  * Resource action: clone2rsc       monitor=10000 on node11
-  * Resource action: clone2rsc       monitor=10000 on node3
-  * Resource action: clone3rsc       monitor=10000 on node5
-  * Resource action: clone3rsc       monitor=10000 on node6
-  * Resource action: clone3rsc       monitor=10000 on node7
-  * Resource action: clone3rsc       monitor=10000 on node8
-  * Resource action: clone3rsc       monitor=10000 on node9
-  * Resource action: clone3rsc       monitor=10000 on node1
-  * Resource action: clone3rsc       monitor=10000 on node10
-  * Resource action: clone3rsc       monitor=10000 on node11
-  * Resource action: clone3rsc       monitor=10000 on node2
-  * Resource action: clone3rsc       monitor=10000 on node4
-  * Pseudo action:   clone5group:2_running_0
-  * Resource action: clone5rsc2      monitor=10000 on node3
-  * Resource action: clone5rsc3      monitor=10000 on node3
-  * Pseudo action:   clone5group:3_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node9
-  * Resource action: clone5rsc2      monitor=10000 on node9
-  * Resource action: clone5rsc3      monitor=10000 on node9
-  * Pseudo action:   clone5group:4_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node10
-  * Resource action: clone5rsc2      monitor=10000 on node10
-  * Resource action: clone5rsc3      monitor=10000 on node10
-  * Pseudo action:   clone5group:5_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node11
-  * Resource action: clone5rsc2      monitor=10000 on node11
-  * Resource action: clone5rsc3      monitor=10000 on node11
-  * Pseudo action:   clone5group:6_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node4
-  * Resource action: clone5rsc2      monitor=10000 on node4
-  * Resource action: clone5rsc3      monitor=10000 on node4
-  * Pseudo action:   clone5group:7_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node5
-  * Resource action: clone5rsc2      monitor=10000 on node5
-  * Resource action: clone5rsc3      monitor=10000 on node5
-  * Pseudo action:   clone5group:8_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node6
-  * Resource action: clone5rsc2      monitor=10000 on node6
-  * Resource action: clone5rsc3      monitor=10000 on node6
-  * Pseudo action:   clone5group:9_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node7
-  * Resource action: clone5rsc2      monitor=10000 on node7
-  * Resource action: clone5rsc3      monitor=10000 on node7
-  * Pseudo action:   clone5group:10_running_0
-  * Resource action: clone5rsc1      monitor=10000 on node8
-  * Resource action: clone5rsc2      monitor=10000 on node8
-  * Resource action: clone5rsc3      monitor=10000 on node8
-  * Pseudo action:   clone5_running_0
 
 Revised Cluster Status:
+  * Cluster Summary:
+    * CIB syntax has errors (for details, run crm_verify -LV)
+
   * Node List:
     * Online: [ node1 node2 node3 node4 node5 node6 node7 node8 node9 node10 node11 ]
 
@@ -213,12 +95,21 @@ Revised Cluster Status:
     * Fencing	(stonith:fence_imaginary):	 Started node1
     * Clone Set: clone1 [clone1rsc] (promotable):
       * Promoted: [ node3 ]
-      * Unpromoted: [ node1 node2 node4 node5 node6 node7 node8 node9 node10 node11 ]
+      * Unpromoted: [ node1 node2 node4 ]
+      * Stopped: [ node5 node6 node7 node8 node9 node10 node11 ]
     * Clone Set: clone2 [clone2rsc]:
-      * Started: [ node2 node3 node4 node10 node11 ]
+      * Started: [ node2 node4 ]
+      * Stopped: [ node1 node3 node5 node6 node7 node8 node9 node10 node11 ]
     * Clone Set: clone3 [clone3rsc]:
-      * Started: [ node1 node2 node3 node4 node5 node6 node7 node8 node9 node10 node11 ]
+      * Started: [ node3 ]
+      * Stopped: [ node1 node2 node4 node5 node6 node7 node8 node9 node10 node11 ]
     * Clone Set: clone4 [clone4rsc]:
+      * clone4rsc	(ocf:pacemaker:Dummy):	 ORPHANED Started node9
       * Started: [ node1 node5 node6 node7 node8 ]
     * Clone Set: clone5 [clone5group]:
-      * Started: [ node1 node2 node3 node4 node5 node6 node7 node8 node9 node10 node11 ]
+      * Resource Group: clone5group:2:
+        * clone5rsc1	(ocf:pacemaker:Dummy):	 Started node3
+        * clone5rsc2	(ocf:pacemaker:Dummy):	 Started node3
+        * clone5rsc3	(ocf:pacemaker:Dummy):	 Stopped
+      * Started: [ node1 node2 ]
+      * Stopped: [ node4 node5 node6 node7 node8 node9 node10 node11 ]
