@@ -35,9 +35,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_IS_IPC_PROVIDER "lrmd_is_ipc_provider"
 
-//! \deprecated Do not use
-#define F_LRMD_CLIENTID "lrmd_clientid"
-
 #ifdef __cplusplus
 }
 #endif
