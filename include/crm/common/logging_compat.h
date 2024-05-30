@@ -74,11 +74,6 @@ gboolean crm_log_cli_init(const char *entity);
 //! \deprecated Do not use Pacemaker for general-purpose logging
 gboolean crm_add_logfile(const char *filename);
 
-//! \deprecated Do not use Pacemaker for general-purpose logging
-void log_data_element(int log_level, const char *file, const char *function,
-                      int line, const char *prefix, const xmlNode *data,
-                      int depth, int legacy_options);
-
 #ifdef __cplusplus
 }
 #endif
