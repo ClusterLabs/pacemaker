@@ -867,9 +867,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_TAG_GENERATION_TUPPLE "generation_tuple"
 
-//! \deprecated Do not use
-#define XML_TAG_TRANSIENT_NODEATTRS "transient_attributes"
-
 #ifdef __cplusplus
 }
 #endif
