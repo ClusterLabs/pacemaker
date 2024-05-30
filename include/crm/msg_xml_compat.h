@@ -738,9 +738,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RSC_DEFAULTS instead
 #define XML_CIB_TAG_RSCCONFIG PCMK_XE_RSC_DEFAULTS
 
-//! \deprecated Use \c PCMK_XE_ACLS instead
-#define XML_CIB_TAG_ACLS PCMK_XE_ACLS
-
 #ifdef __cplusplus
 }
 #endif
