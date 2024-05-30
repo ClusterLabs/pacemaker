@@ -33,6 +33,10 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_CIB_TAG_STATE "node_state"
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define XML_TAG_TRANSIENT_NODEATTRS "transient_attributes"
+
 #ifdef __cplusplus
 }
 #endif
