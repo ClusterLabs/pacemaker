@@ -1567,11 +1567,5 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     return result;
 }
 
-void
-purge_diff_markers(xmlNode *a_node)
-{
-    purge_v1_diff_markers(a_node);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
