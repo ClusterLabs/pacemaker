@@ -617,9 +617,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_SCORE instead
 #define XML_RULE_ATTR_SCORE PCMK_XA_SCORE
 
-//! \deprecated Use \c PCMK_XA_SCORE_ATTRIBUTE instead
-#define XML_RULE_ATTR_SCORE_ATTRIBUTE PCMK_XA_SCORE_ATTRIBUTE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
