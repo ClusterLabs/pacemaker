@@ -89,9 +89,6 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_TAG_OP_VER_META "op_versioned_meta"
 
-//! \deprecated Use \p PCMK_XA_ID instead
-#define XML_ATTR_UUID "id"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
