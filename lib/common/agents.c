@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -198,17 +198,3 @@ pcmk_stonith_param(const char *param)
     param = strchr(param + 5, '_'); // Skip past "pcmk_ACTION"
     return pcmk__str_any_of(param, "_action", "_timeout", "_retries", NULL);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/agents_compat.h>
-
-bool
-crm_provider_required(const char *standard)
-{
-    return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

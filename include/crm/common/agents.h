@@ -72,10 +72,6 @@ int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
 bool pcmk_stonith_param(const char *param);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/agents_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif

@@ -14,7 +14,6 @@ headerdir=$(pkgincludedir)/crm/common
 header_HEADERS = acl.h 			\
 		 actions.h		\
 		 agents.h 		\
-		 agents_compat.h 	\
 		 cib.h 			\
 		 ipc.h 			\
 		 ipc_controld.h 	\
@@ -23,21 +22,18 @@ header_HEADERS = acl.h 			\
 		 iso8601.h 		\
 		 logging.h 		\
 		 mainloop.h 		\
-		 mainloop_compat.h 	\
 		 nodes.h 		\
 		 nvpair.h 		\
 		 options.h 		\
 		 output.h 		\
 		 resources.h		\
 		 results.h 		\
-		 results_compat.h 	\
 		 roles.h		\
 		 rules.h		\
 		 scheduler.h		\
 		 scheduler_types.h	\
 		 schemas.h		\
 		 scores.h		\
-		 scores_compat.h	\
 		 tags.h			\
 		 tickets.h		\
 		 util.h 		\
@@ -45,7 +41,6 @@ header_HEADERS = acl.h 			\
 		 xml.h 			\
 		 xml_compat.h		\
 		 xml_io.h		\
-		 xml_io_compat.h	\
 		 xml_names.h
 
 noinst_HEADERS = $(wildcard *internal.h)
