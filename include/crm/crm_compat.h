@@ -149,9 +149,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_META_DATA instead
 #define RSC_METADATA PCMK_ACTION_META_DATA
 
-//! \deprecated Use PCMK_ACTION_MIGRATE_TO instead
-#define RSC_MIGRATE PCMK_ACTION_MIGRATE_TO
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
