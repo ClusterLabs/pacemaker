@@ -1,3 +1,4 @@
+Setting effective cluster time: 2014-05-07 00:28:00
 Current cluster status:
   * Node List:
     * Online: [ node1 ]
@@ -9,6 +10,7 @@ Transition Summary:
 
 Executing Cluster Transition:
   * Resource action: resD            monitor=3600000 on node1
+Setting effective cluster time: 2014-05-07 00:28:00
 
 Revised Cluster Status:
   * Node List:

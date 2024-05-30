@@ -1,3 +1,4 @@
+Setting effective cluster time: 2005-020
 Current cluster status:
   * Node List:
     * Online: [ node1 node2 ]
@@ -12,6 +13,7 @@ Executing Cluster Transition:
   * Resource action: rsc1            monitor on node2
   * Resource action: rsc1            monitor on node1
   * Resource action: rsc1            start on node2
+Setting effective cluster time: 2005-020
 
 Revised Cluster Status:
   * Node List:

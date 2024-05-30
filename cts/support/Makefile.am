@@ -1,5 +1,5 @@
 #
-# Copyright 2021 the Pacemaker project contributors
+# Copyright 2021-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,4 +25,4 @@ cts_SCRIPTS	= fence_dummy		\
 		  LSBDummy		\
 		  pacemaker-cts-dummyd
 
-PYCHECKFILES ?= cts-support
+PYCHECKFILES ?= cts-support fence_dummy pacemaker-cts-dummyd

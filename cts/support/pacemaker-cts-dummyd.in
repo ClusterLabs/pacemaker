@@ -1,24 +1,29 @@
 #!@PYTHON@
-""" Slow-starting idle daemon that notifies systemd when it starts
-"""
+"""Slow-starting idle daemon that notifies systemd when it starts."""
 
-__copyright__ = "Copyright 2014-2020 the Pacemaker project contributors"
+# pylint doesn't like the module name "pacemaker-cts-dummyd" which is an invalid complaint
+# for this file but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+
+__copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import sys
-import time
+from functools import partial
 import signal
 import subprocess
+import sys
+import time
+
 have_systemd_daemon = True
 try:
     import systemd.daemon
 except ImportError:
     have_systemd_daemon = False
 
-delay = None
 
 def parse_args():
-    global delay
+    """Return the delay given on the command line, if any."""
+    delay = None
 
     # Lone argument is a number of seconds to delay start and stop
     if len(sys.argv) > 0:
@@ -27,24 +32,26 @@ def parse_args():
         except ValueError:
             delay = None
 
+    return delay
 
-def twiddle():
-    global delay
 
+def twiddle(delay):
+    """Sleep the given number of seconds."""
     if delay is not None:
         time.sleep(delay)
 
 
-def bye(signum, frame):
-    twiddle()
+def bye(_signum, _frame, delay=None):
+    """SIGTERM signal handler."""
+    twiddle(delay)
     sys.exit(0)
 
 
 if __name__ == "__main__":
+    d = parse_args()
+    signal.signal(signal.SIGTERM, partial(bye, delay=d))
+    twiddle(d)
 
-    parse_args()
-    signal.signal(signal.SIGTERM, bye)
-    twiddle()
     if have_systemd_daemon:
         systemd.daemon.notify("READY=1")
     else:
