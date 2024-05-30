@@ -822,9 +822,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_TAG_RESOURCE "lrm_resource"
 
-//! \deprecated Do not use
-#define XML_LRM_TAG_RSC_OP "lrm_rsc_op"
-
 #ifdef __cplusplus
 }
 #endif
