@@ -2567,27 +2567,6 @@ first_named_child(const xmlNode *parent, const char *name)
     return pcmk__xe_first_child(parent, name, NULL, NULL);
 }
 
-xmlNode *
-find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
-{
-    xmlNode *result = NULL;
-
-    if (search_path == NULL) {
-        crm_warn("Will never find <NULL>");
-        return NULL;
-    }
-
-    result = pcmk__xe_first_child(root, search_path, NULL, NULL);
-
-    if (must_find && (result == NULL)) {
-        crm_warn("Could not find %s in %s",
-                 search_path,
-                 ((root != NULL)? (const char *) root->name : "<NULL>"));
-    }
-
-    return result;
-}
-
 void
 crm_xml_init(void)
 {

@@ -113,10 +113,6 @@ xmlNode *pcmk_create_html_node(xmlNode *parent, const char *element_name,
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *first_named_child(const xmlNode *parent, const char *name);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
-                       gboolean must_find);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
