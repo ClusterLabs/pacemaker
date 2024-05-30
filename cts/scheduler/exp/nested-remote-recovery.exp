@@ -1,103 +1,99 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="94" operation="monitor" operation_key="galera_monitor_10000" internal_operation_key="galera:0_monitor_10000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
-        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="69" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="92" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="93" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="1">
-    <action_set>
-      <rsc_op id="93" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+      <rsc_op id="86" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
         <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="300000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="67" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
       </trigger>
       <trigger>
-        <rsc_op id="69" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="90" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0"/>
+        <rsc_op id="83" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+        <rsc_op id="84" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="99" operation="promote" operation_key="galera-bundle-master_promote_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="239" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
+  <synapse id="1">
     <action_set>
-      <rsc_op id="92" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+      <rsc_op id="85" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
         <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="67" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <pseudo_event id="81" operation="stop" operation_key="galera-bundle_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="69" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="91" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="95" operation="start" operation_key="galera-bundle-master_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="239" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="3">
-    <action_set>
-      <pseudo_event id="91" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="80" operation="stop" operation_key="galera-bundle_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="90" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0"/>
+        <rsc_op id="84" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="97" operation="stop" operation_key="galera-bundle-master_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="2">
     <action_set>
-      <pseudo_event id="90" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
-      </pseudo_event>
+      <rsc_op id="84" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </rsc_op>
     </action_set>
     <inputs>
       <trigger>
         <pseudo_event id="101" operation="demote" operation_key="galera-bundle-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="83" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="95" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="54" operation="monitor" operation_key="galera_monitor_10000" internal_operation_key="galera:0_monitor_10000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="database-0" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="83" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="86" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -109,7 +105,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="90" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0"/>
+        <rsc_op id="84" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="101" operation="demote" operation_key="galera-bundle-master_demote_0"/>
@@ -122,11 +118,7 @@
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="105" operation="demote" operation_key="galera-bundle_demote_0"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
@@ -136,7 +128,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="93" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+        <rsc_op id="86" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -156,9 +148,6 @@
       <trigger>
         <pseudo_event id="102" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="103" operation="promote" operation_key="galera-bundle_promote_0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="9" priority="1000000">
@@ -169,7 +158,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="91" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0"/>
+        <rsc_op id="85" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="97" operation="stop" operation_key="galera-bundle-master_stop_0"/>
@@ -184,13 +173,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="80" operation="stop" operation_key="galera-bundle_stop_0"/>
+        <pseudo_event id="81" operation="stop" operation_key="galera-bundle_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="102" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="239" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -202,7 +188,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+        <rsc_op id="83" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="95" operation="start" operation_key="galera-bundle-master_start_0"/>
@@ -217,7 +203,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="78" operation="start" operation_key="galera-bundle_start_0"/>
+        <pseudo_event id="79" operation="start" operation_key="galera-bundle_start_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="98" operation="stopped" operation_key="galera-bundle-master_stopped_0"/>
@@ -229,36 +215,33 @@
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="67" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
+      <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
         <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="database-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/mysql/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /var/log/containers/mysql:/var/log/mysql:rw -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <rsc_op id="55" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="78" operation="start" operation_key="galera-bundle_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="239" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+        <pseudo_event id="79" operation="start" operation_key="galera-bundle_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
+      <rsc_op id="55" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
         <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="database-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/mysql/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /var/log/containers/mysql:/var/log/mysql:rw -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="68" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
+        <rsc_op id="69" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="80" operation="stop" operation_key="galera-bundle_stop_0"/>
+        <pseudo_event id="81" operation="stop" operation_key="galera-bundle_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -271,29 +254,29 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="67" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="16">
     <action_set>
-      <rsc_op id="69" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1">
+      <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="67" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
       </trigger>
       <trigger>
-        <rsc_op id="68" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
+        <rsc_op id="69" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="17">
     <action_set>
-      <rsc_op id="68" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1">
+      <rsc_op id="69" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
         <downed>
@@ -301,7 +284,14 @@
         </downed>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="84" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="18">
     <action_set>
@@ -312,132 +302,57 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="69" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="19" priority="1000000">
     <action_set>
-      <pseudo_event id="239" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0">
-        <attributes CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_stonith_action="reboot" />
-        <downed>
-          <node id="galera-bundle-0"/>
-        </downed>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="20" priority="1000000">
-    <action_set>
-      <pseudo_event id="106" operation="demoted" operation_key="galera-bundle_demoted_0">
+      <pseudo_event id="82" operation="stopped" operation_key="galera-bundle_stopped_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="102" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="105" operation="demote" operation_key="galera-bundle_demote_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="21">
-    <action_set>
-      <pseudo_event id="105" operation="demote" operation_key="galera-bundle_demote_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="22" priority="1000000">
-    <action_set>
-      <pseudo_event id="104" operation="promoted" operation_key="galera-bundle_promoted_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="100" operation="promoted" operation_key="galera-bundle-master_promoted_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="23">
-    <action_set>
-      <pseudo_event id="103" operation="promote" operation_key="galera-bundle_promote_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="79" operation="running" operation_key="galera-bundle_running_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="81" operation="stopped" operation_key="galera-bundle_stopped_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="106" operation="demoted" operation_key="galera-bundle_demoted_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="24" priority="1000000">
-    <action_set>
-      <pseudo_event id="81" operation="stopped" operation_key="galera-bundle_stopped_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <rsc_op id="55" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="98" operation="stopped" operation_key="galera-bundle-master_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="25">
+  <synapse id="20">
     <action_set>
-      <pseudo_event id="80" operation="stop" operation_key="galera-bundle_stop_0">
+      <pseudo_event id="81" operation="stop" operation_key="galera-bundle_stop_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="106" operation="demoted" operation_key="galera-bundle_demoted_0"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
-  <synapse id="26" priority="1000000">
+  <synapse id="21" priority="1000000">
     <action_set>
-      <pseudo_event id="79" operation="running" operation_key="galera-bundle_running_0">
+      <pseudo_event id="80" operation="running" operation_key="galera-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="67" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
       </trigger>
       <trigger>
         <pseudo_event id="96" operation="running" operation_key="galera-bundle-master_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="27">
+  <synapse id="22">
     <action_set>
-      <pseudo_event id="78" operation="start" operation_key="galera-bundle_start_0">
+      <pseudo_event id="79" operation="start" operation_key="galera-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="81" operation="stopped" operation_key="galera-bundle_stopped_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="106" operation="demoted" operation_key="galera-bundle_demoted_0"/>
+        <pseudo_event id="82" operation="stopped" operation_key="galera-bundle_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>

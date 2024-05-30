@@ -1120,6 +1120,11 @@ TESTS = [
           "Make sure partial migrations are handled before ops on the remote node" ],
         [ "remote-partial-migrate2",
           "Make sure partial migration target is prefered for remote connection" ],
+        [ "remote-failed-migrate1",
+          "Recover immediately without fencing after failed migrate_from"],
+        [ "remote-failed-migrate2",
+          "Recover immediately without fencing after failed migrate_from "
+          + "(rsc active)"],
         [ "remote-recover-fail", "Make sure start failure causes fencing if rsc are active on remote" ],
         [ "remote-start-fail",
           "Make sure a start failure does not result in fencing if no active resources are on remote" ],

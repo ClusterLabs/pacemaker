@@ -1,7 +1,7 @@
 Current cluster status:
   * Node List:
     * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
-    * RemoteOFFLINE: [ rhel7-auto4 ]
+    * RemoteOnline: [ rhel7-auto4 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_xvm):	 Started rhel7-auto1

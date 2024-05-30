@@ -27,6 +27,4 @@
 "redis-bundle-1_monitor_0 overcloud-controller-2" [ style=bold color="green" fontcolor="black"]
 "redis-bundle-2_monitor_0 overcloud-controller-0" [ style=bold color="green" fontcolor="black"]
 "redis-bundle-2_monitor_0 overcloud-controller-1" [ style=bold color="green" fontcolor="black"]
-"stonith 'reboot' overcloud-novacompute-0" -> "fence1_start_0 overcloud-controller-0" [ style = bold]
-"stonith 'reboot' overcloud-novacompute-0" [ style=bold color="green" fontcolor="black"]
 }

@@ -176,6 +176,9 @@ enum pcmk_rsc_flags {
 
     // Whether resource can be started or promoted only on unfenced nodes
     pcmk_rsc_needs_unfencing        = (1ULL << 30),
+
+    // Whether remote connection resource failure indicates lost connection
+    pcmk_rsc_remote_conn_lost       = (1ULL << 31),
 };
 //!@}
 

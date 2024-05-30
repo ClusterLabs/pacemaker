@@ -659,6 +659,7 @@ path.
 
 Also, if a migratable resource depends on a non-migratable resource, and both
 need to be moved, the migratable resource will be restarted.
+
 .. rubric:: Footnotes
 
 .. [#] Currently, anyway. Automatic monitoring operations may be added in a future

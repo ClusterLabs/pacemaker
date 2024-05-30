@@ -429,15 +429,15 @@ pcmk__primitive_assign: galera-bundle-docker-0 allocation score on controller-0:
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on controller-1: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on controller-2: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on database-0: INFINITY
-pcmk__primitive_assign: galera-bundle-docker-0 allocation score on database-1: -INFINITY
-pcmk__primitive_assign: galera-bundle-docker-0 allocation score on database-2: -INFINITY
+pcmk__primitive_assign: galera-bundle-docker-0 allocation score on database-1: 0
+pcmk__primitive_assign: galera-bundle-docker-0 allocation score on database-2: 0
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on messaging-0: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on messaging-1: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-0 allocation score on messaging-2: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-1 allocation score on controller-0: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-1 allocation score on controller-1: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-1 allocation score on controller-2: -INFINITY
-pcmk__primitive_assign: galera-bundle-docker-1 allocation score on database-0: 0
+pcmk__primitive_assign: galera-bundle-docker-1 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-1 allocation score on database-1: INFINITY
 pcmk__primitive_assign: galera-bundle-docker-1 allocation score on database-2: 0
 pcmk__primitive_assign: galera-bundle-docker-1 allocation score on messaging-0: -INFINITY
@@ -446,7 +446,7 @@ pcmk__primitive_assign: galera-bundle-docker-1 allocation score on messaging-2: 
 pcmk__primitive_assign: galera-bundle-docker-2 allocation score on controller-0: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-2 allocation score on controller-1: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-2 allocation score on controller-2: -INFINITY
-pcmk__primitive_assign: galera-bundle-docker-2 allocation score on database-0: 0
+pcmk__primitive_assign: galera-bundle-docker-2 allocation score on database-0: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-2 allocation score on database-1: -INFINITY
 pcmk__primitive_assign: galera-bundle-docker-2 allocation score on database-2: INFINITY
 pcmk__primitive_assign: galera-bundle-docker-2 allocation score on messaging-0: -INFINITY
