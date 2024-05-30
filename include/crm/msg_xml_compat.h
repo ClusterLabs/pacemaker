@@ -801,9 +801,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_PRIMITIVE instead
 #define XML_CIB_TAG_RESOURCE PCMK_XE_PRIMITIVE
 
-//! \deprecated Use \c PCMK_XE_GROUP instead
-#define XML_CIB_TAG_GROUP PCMK_XE_GROUP
-
 #ifdef __cplusplus
 }
 #endif
