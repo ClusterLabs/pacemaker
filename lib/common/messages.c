@@ -297,13 +297,5 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
     return TRUE;
 }
 
-xmlNode *
-get_message_xml(const xmlNode *msg, const char *field)
-{
-    xmlNode *child = pcmk__xe_first_child(msg, field, NULL, NULL);
-
-    return pcmk__xe_first_child(child, NULL, NULL, NULL);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

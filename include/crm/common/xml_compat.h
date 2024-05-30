@@ -142,9 +142,6 @@ xmlNode *get_xpath_object_relative(const char *xpath, xmlNode *xml_obj,
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 gboolean add_message_xml(xmlNode *msg, const char *field, xmlNode *xml);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *get_message_xml(const xmlNode *msg, const char *field);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
