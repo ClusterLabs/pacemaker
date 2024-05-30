@@ -182,9 +182,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_STOPPED instead
 #define RSC_STOPPED PCMK_ACTION_STOPPED
 
-//! \deprecated Do not use
-#define CRM_OP_LOCAL_SHUTDOWN "start_shutdown"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
