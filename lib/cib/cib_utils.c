@@ -1076,26 +1076,5 @@ cib_pref(GHashTable * options, const char *name)
     return pcmk__cluster_option(options, name);
 }
 
-void
-cib_metadata(void)
-{
-    pcmk__output_t *out = NULL;
-    int rc = pcmk__output_new(&out, "text", NULL, NULL);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Unable to output metadata: %s", pcmk_rc_str(rc));
-        return;
-    }
-
-    pcmk__daemon_metadata(out, "pacemaker-based",
-                          "Cluster Information Base manager options",
-                          "Cluster options used by Pacemaker's Cluster "
-                          "Information Base manager",
-                          pcmk__opt_based);
-
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
