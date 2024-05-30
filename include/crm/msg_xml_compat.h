@@ -930,9 +930,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_TARGET instead
 #define XML_DIFF_VTARGET PCMK_XE_TARGET
 
-//! \deprecated Use \c PCMK_XE_CHANGE instead
-#define XML_DIFF_CHANGE PCMK_XE_CHANGE
-
 #ifdef __cplusplus
 }
 #endif
