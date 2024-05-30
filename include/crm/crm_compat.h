@@ -194,8 +194,6 @@ extern "C" {
 
 #define __likely(expr) __builtin_expect(expr, 1)
 
-#define __unlikely(expr) __builtin_expect(expr, 0)
-
 // This ends the doxygen deprecation comment
 //!@}
 
