@@ -8,19 +8,9 @@
  */
 
 #ifndef PCMK__CRM_CLUSTER_COMPAT__H
-#  define PCMK__CRM_CLUSTER_COMPAT__H
+#define PCMK__CRM_CLUSTER_COMPAT__H
 
-#include <stdint.h>         // uint32_t
-#include <sys/types.h>      // size_t
-
-#include <glib.h>           // gboolean, guint
-#include <libxml/tree.h>    // xmlNode
-
-#if SUPPORT_COROSYNC
-#include <corosync/cpg.h>   // cpg_handle_t
-#endif  // SUPPORT_COROSYNC
-
-#include <crm/cluster.h>    // crm_node_t
+#include <crm/cluster.h>    // pcmk_cluster_t, enum pcmk_cluster_layer
 
 #ifdef __cplusplus
 extern "C" {
