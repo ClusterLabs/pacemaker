@@ -8,10 +8,9 @@
  */
 
 #ifndef PCMK__CRM_MSG_XML_COMPAT__H
-#  define PCMK__CRM_MSG_XML_COMPAT__H
+#define PCMK__CRM_MSG_XML_COMPAT__H
 
-#include <crm/common/agents.h>      // PCMK_STONITH_PROVIDES
-#include <crm/common/xml.h>
+#include <crm/common/xml.h> // PCMK_XE_CIB
 
 #ifdef __cplusplus
 extern "C" {
