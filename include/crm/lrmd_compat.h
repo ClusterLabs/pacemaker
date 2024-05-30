@@ -44,9 +44,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_REMOTE_MSG_TYPE "lrmd_remote_msg_type"
 
-//! \deprecated Do not use
-#define F_LRMD_REMOTE_MSG_ID "lrmd_remote_msg_id"
-
 #ifdef __cplusplus
 }
 #endif
