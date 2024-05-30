@@ -1000,9 +1000,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_NODE_IS_REMOTE "remote_node"
 
-//! \deprecated Do not use
-#define XML_NODE_IS_FENCED "node_fenced"
-
 #ifdef __cplusplus
 }
 #endif
