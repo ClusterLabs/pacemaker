@@ -357,7 +357,8 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
 static const char *
 get_node_feature_set(const pcmk_node_t *node)
 {
-    if (node->details->online && node->details->expected_up
+    if (node->details->online
+        && pcmk_is_set(node->private->flags, pcmk__node_expected_up)
         && !pcmk__is_pacemaker_remote_node(node)) {
 
         const char *feature_set = g_hash_table_lookup(node->details->attrs,
@@ -2058,7 +2059,8 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *health = health_text(pe__node_health(node));
         const char *feature_set = get_node_feature_set(node);
         const char *shutdown = pcmk__btoa(node->details->shutdown);
-        const char *expected_up = pcmk__btoa(node->details->expected_up);
+        const char *expected_up = pcmk__flag_text(node->private->flags,
+                                                  pcmk__node_expected_up);
         const char *is_dc = pcmk__btoa(node->details->is_dc);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);

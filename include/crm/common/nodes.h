@@ -75,7 +75,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_shutting_down() instead
     gboolean shutdown;          // Whether shutting down
 
-    gboolean expected_up;       // Whether expected join state is member
     gboolean is_dc;             // Whether node is cluster's DC
 
     // NOTE: sbd (as of at least 1.5.2) uses this

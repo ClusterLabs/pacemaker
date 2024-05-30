@@ -46,6 +46,9 @@ enum pcmk__node_flags {
 
     // Whether node has ever joined cluster (and thus has node state in CIB)
     pcmk__node_seen             = (UINT32_C(1) << 2),
+
+    // Whether expected join state is member
+    pcmk__node_expected_up      = (UINT32_C(1) << 3),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

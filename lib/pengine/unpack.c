@@ -1574,7 +1574,8 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
                       pcmk__node_name(this_node), join);
         }
 
-    } else if (this_node->details->expected_up == FALSE) {
+    } else if (!pcmk_is_set(this_node->private->flags,
+                            pcmk__node_expected_up)) {
         crm_trace("Node %s controller is down: "
                   "member@%lld online@%lld join=%s expected=%s",
                   pcmk__node_name(this_node), when_member, when_online,
@@ -1817,13 +1818,12 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
     CRM_CHECK(this_node != NULL, return);
 
     this_node->details->shutdown = FALSE;
-    this_node->details->expected_up = FALSE;
 
     if (pe__shutdown_requested(this_node)) {
         this_node->details->shutdown = TRUE;
 
     } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
-        this_node->details->expected_up = TRUE;
+        pcmk__set_node_flags(this_node, pcmk__node_expected_up);
     }
 
     if (this_node->private->variant == pcmk__node_variant_ping) {
