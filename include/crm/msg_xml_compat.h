@@ -885,9 +885,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_ACL_PERMISSION instead
 #define XML_ACL_TAG_PERMISSION PCMK_XE_ACL_PERMISSION
 
-//! \deprecated Do not use
-#define XML_ACL_TAG_ROLE_REFv1 "role_ref"
-
 #ifdef __cplusplus
 }
 #endif
