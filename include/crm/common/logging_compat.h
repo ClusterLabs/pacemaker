@@ -44,27 +44,6 @@ enum xml_log_options {
     xml_log_option_close        = 0x8000,
 };
 
-/*!
- * \brief Log a message using constant priority
- *
- * \param[in] level     Priority at which to log the message
- * \param[in] fmt       printf-style format string literal for message
- * \param[in] args      Any arguments needed by format string
- *
- * \deprecated Do not use Pacemaker for general-purpose logging
- * \note This is a macro, and \p level may be evaluated more than once.
- *       This does nothing when level is LOG_STDOUT.
- */
-#define do_crm_log_always(level, fmt, args...) do {                         \
-        switch (level) {                                                    \
-            case LOG_STDOUT: case LOG_NEVER:                                \
-                break;                                                      \
-            default:                                                        \
-                qb_log((level), fmt , ##args);                              \
-                break;                                                      \
-        }                                                                   \
-    } while (0)
-
 #ifdef __cplusplus
 }
 #endif
