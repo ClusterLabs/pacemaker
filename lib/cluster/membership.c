@@ -1441,3 +1441,17 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
     refresh_remote_nodes(cib);
     refresh_cluster_node_cib_cache(cib);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cluster/compat.h>
+
+void
+crm_peer_init(void)
+{
+    pcmk__cluster_init_node_caches();
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
