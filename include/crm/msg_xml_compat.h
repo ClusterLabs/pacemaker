@@ -638,9 +638,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VALUE_SOURCE instead
 #define XML_EXPR_ATTR_VALUE_SOURCE PCMK_XA_VALUE_SOURCE
 
-//! \deprecated Use \c PCMK_XA_SYMMETRICAL instead
-#define XML_CONS_ATTR_SYMMETRICAL PCMK_XA_SYMMETRICAL
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
