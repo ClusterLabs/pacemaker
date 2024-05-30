@@ -29,7 +29,6 @@ header_HEADERS = acl.h 			\
 		 output.h 		\
 		 resources.h		\
 		 results.h 		\
-		 results_compat.h 	\
 		 roles.h		\
 		 rules.h		\
 		 scheduler.h		\
