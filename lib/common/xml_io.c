@@ -344,7 +344,7 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
  * \brief Append XML text content to a buffer
  *
  * \param[in]     data     XML whose content to append
- * \param[in]     options  Group of \p xml_log_options flags
+ * \param[in]     options  Group of <tt>enum pcmk__xml_fmt_options</tt>
  * \param[in,out] buffer   Where to append the content (must not be \p NULL)
  * \param[in]     depth    Current indentation level
  */

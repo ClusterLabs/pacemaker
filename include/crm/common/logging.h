@@ -421,10 +421,6 @@ pcmk__clip_log_level(int level)
         }                                                       \
     } while(0)
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/logging_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif

@@ -1257,33 +1257,6 @@ pcmk__free_common_logger(void)
     }
 }
 
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/logging_compat.h>
-
-gboolean
-crm_log_cli_init(const char *entity)
-{
-    pcmk__cli_init_logging(entity, 0);
-    return TRUE;
-}
-
-gboolean
-crm_add_logfile(const char *filename)
-{
-    return pcmk__add_logfile(filename) == pcmk_rc_ok;
-}
-
-void
-pcmk_log_xml_impl(uint8_t level, const char *text, const xmlNode *xml)
-{
-    pcmk_log_xml_as(__FILE__, __func__, __LINE__, 0, level, text, xml);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
-
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)
 {
     pcmk__config_error_handler = error_handler;
