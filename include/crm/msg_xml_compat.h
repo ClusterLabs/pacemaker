@@ -933,9 +933,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CHANGE instead
 #define XML_DIFF_CHANGE PCMK_XE_CHANGE
 
-//! \deprecated Use \c PCMK_XE_CHANGE_LIST instead
-#define XML_DIFF_LIST PCMK_XE_CHANGE_LIST
-
 #ifdef __cplusplus
 }
 #endif
