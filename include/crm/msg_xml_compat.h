@@ -176,9 +176,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_CRM_DEBUG_ORIGIN instead
 #define XML_ATTR_ORIGIN PCMK_XA_CRM_DEBUG_ORIGIN
 
-//! \deprecated Use \c PCMK_XA_CRM_TIMESTAMP instead
-#define XML_ATTR_TSTAMP PCMK_XA_CRM_TIMESTAMP
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
