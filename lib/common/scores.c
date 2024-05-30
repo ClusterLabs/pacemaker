@@ -150,14 +150,5 @@ score2char(int score)
     return pcmk__str_copy(pcmk_readable_score(score));
 }
 
-char *
-score2char_stack(int score, char *buf, size_t len)
-{
-    CRM_CHECK((buf != NULL) && (len >= sizeof(PCMK_VALUE_MINUS_INFINITY)),
-              return NULL);
-    strcpy(buf, pcmk_readable_score(score));
-    return buf;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

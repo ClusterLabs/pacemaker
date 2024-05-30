@@ -27,9 +27,6 @@ extern "C" {
 //! \deprecated Use pcmk_readable_score() instead
 char *score2char(int score);
 
-//! \deprecated Use pcmk_readable_score() instead
-char *score2char_stack(int score, char *buf, size_t len);
-
 #ifdef __cplusplus
 }
 #endif
