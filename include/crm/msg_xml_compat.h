@@ -1012,9 +1012,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_NODE_ATTR_RSC_DISCOVERY "resource-discovery-enabled"
 
-//! \deprecated Do not use
-#define ID(x) crm_element_value(x, PCMK_XA_ID)
-
 #ifdef __cplusplus
 }
 #endif
