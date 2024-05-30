@@ -798,9 +798,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RESOURCE_REF instead
 #define XML_TAG_RESOURCE_REF PCMK_XE_RESOURCE_REF
 
-//! \deprecated Use \c PCMK_XE_PRIMITIVE instead
-#define XML_CIB_TAG_RESOURCE PCMK_XE_PRIMITIVE
-
 #ifdef __cplusplus
 }
 #endif
