@@ -162,9 +162,6 @@ void crm_build_path(const char *path_c, mode_t mode);
 //! \deprecated Use \c pcmk_parse_interval_spec() instead
 guint crm_parse_interval_spec(const char *input);
 
-//! \deprecated Use \c PCMK_VALUE_ONLINE instead
-#define ONLINESTATUS PCMK_VALUE_ONLINE
-
 #ifdef __cplusplus
 }
 #endif
