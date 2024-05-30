@@ -28,22 +28,6 @@ extern "C" {
  *             header itself, will be removed in a future release.
  */
 
-//! \deprecated This enum will be removed in a future release
-enum xml_log_options {
-    xml_log_option_filtered     = 0x0001,
-    xml_log_option_formatted    = 0x0002,
-    xml_log_option_text         = 0x0004,
-    xml_log_option_full_fledged = 0x0008,
-    xml_log_option_diff_plus    = 0x0010,
-    xml_log_option_diff_minus   = 0x0020,
-    xml_log_option_diff_short   = 0x0040,
-    xml_log_option_diff_all     = 0x0100,
-    xml_log_option_dirty_add    = 0x1000,
-    xml_log_option_open         = 0x2000,
-    xml_log_option_children     = 0x4000,
-    xml_log_option_close        = 0x8000,
-};
-
 #ifdef __cplusplus
 }
 #endif
