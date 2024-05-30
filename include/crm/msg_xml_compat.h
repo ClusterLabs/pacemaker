@@ -891,9 +891,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ACL_TAG_READ "read"
 
-//! \deprecated Do not use
-#define XML_ACL_TAG_WRITE "write"
-
 #ifdef __cplusplus
 }
 #endif
