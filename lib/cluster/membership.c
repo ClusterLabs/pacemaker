@@ -1453,12 +1453,6 @@ crm_terminate_member(int nodeid, const char *uname, void *unused)
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
 
-int
-crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
-{
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
 {
