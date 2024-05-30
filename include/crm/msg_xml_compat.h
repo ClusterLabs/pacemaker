@@ -888,9 +888,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ACL_TAG_ROLE_REFv1 "role_ref"
 
-//! \deprecated Do not use
-#define XML_ACL_TAG_READ "read"
-
 #ifdef __cplusplus
 }
 #endif
