@@ -41,6 +41,10 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_INSTANCE_ATTRIBUTES instead
 #define XML_TAG_ATTR_SETS PCMK_XE_INSTANCE_ATTRIBUTES
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Use \c PCMK_XE_NVPAIR instead
+#define XML_CIB_TAG_NVPAIR PCMK_XE_NVPAIR
+
 #ifdef __cplusplus
 }
 #endif
