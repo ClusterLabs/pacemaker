@@ -44,9 +44,6 @@ int set_standby(cib_t *the_cib, const char *uuid, const char *scope,
 //! \deprecated Do not use
 int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
 
-//! \deprecated Do not use
-xmlNode *cib_get_generation(cib_t *cib);
-
 #ifdef __cplusplus
 }
 #endif

@@ -1037,21 +1037,6 @@ cib__clean_up_connection(cib_t **cib)
 
 #include <crm/cib/util_compat.h>
 
-xmlNode *
-cib_get_generation(cib_t * cib)
-{
-    xmlNode *the_cib = NULL;
-    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
-
-    cib->cmds->query(cib, NULL, &the_cib, cib_scope_local | cib_sync_call);
-    if (the_cib != NULL) {
-        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
-        pcmk__xml_free(the_cib);
-    }
-
-    return generation;
-}
-
 const char *
 get_object_path(const char *object_type)
 {
