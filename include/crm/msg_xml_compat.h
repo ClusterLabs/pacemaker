@@ -272,9 +272,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_REMOTE_RA_PORT instead
 #define XML_RSC_ATTR_REMOTE_RA_PORT PCMK_REMOTE_RA_PORT
 
-//! \deprecated Use \c PCMK_REMOTE_RA_RECONNECT_INTERVAL instead
-#define XML_REMOTE_ATTR_RECONNECT_INTERVAL PCMK_REMOTE_RA_RECONNECT_INTERVAL
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
