@@ -350,9 +350,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_INDEX instead
 #define XML_ATTR_STONITH_INDEX PCMK_XA_INDEX
 
-//! \deprecated Use \c PCMK_XA_TARGET instead
-#define XML_ATTR_STONITH_TARGET PCMK_XA_TARGET
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
