@@ -994,9 +994,6 @@ extern "C" {
 #define T_ATTRD "attrd"
 #endif
 
-//! \deprecated Do not use
-#define XML_CIB_TAG_SECTION_ALL "all"
-
 #ifdef __cplusplus
 }
 #endif
