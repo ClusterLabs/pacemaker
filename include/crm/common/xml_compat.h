@@ -29,9 +29,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use (will be removed in a future release)
-#define XML_PARANOIA_CHECKS 0
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use name member directly
 static inline const char *
