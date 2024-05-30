@@ -1597,12 +1597,6 @@ pcmk__warn_if_schema_deprecated(const char *schema)
 
 #include <crm/common/xml_compat.h>
 
-const char *
-xml_latest_schema(void)
-{
-    return pcmk__highest_schema_name();
-}
-
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
