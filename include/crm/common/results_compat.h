@@ -25,9 +25,6 @@ extern "C" {
  *             release.
  */
 
-//! \deprecated Do not use
-const char *bz2_strerror(int rc);
-
 #ifdef __cplusplus
 }
 #endif
