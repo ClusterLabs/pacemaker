@@ -148,9 +148,6 @@ xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 //! \deprecated Do not use
 const char *xml_latest_schema(void);
 
-//! \deprecated Do not use
-const char *get_schema_name(int version);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);

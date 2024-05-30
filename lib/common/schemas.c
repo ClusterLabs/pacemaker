@@ -1603,14 +1603,6 @@ xml_latest_schema(void)
     return pcmk__highest_schema_name();
 }
 
-const char *
-get_schema_name(int version)
-{
-    pcmk__schema_t *schema = g_list_nth_data(known_schemas, version);
-
-    return (schema != NULL)? schema->name : "unknown";
-}
-
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
