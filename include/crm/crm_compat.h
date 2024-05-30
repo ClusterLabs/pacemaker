@@ -107,9 +107,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_PROMOTE instead
 #define CRMD_ACTION_PROMOTE PCMK_ACTION_PROMOTE
 
-//! \deprecated Use PCMK_ACTION_PROMOTED instead
-#define CRMD_ACTION_PROMOTED PCMK_ACTION_PROMOTED
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
