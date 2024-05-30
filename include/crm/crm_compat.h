@@ -47,9 +47,6 @@ extern "C" {
 #undef INFINITY
 #define INFINITY PCMK_SCORE_INFINITY
 
-//! \deprecated Use PCMK_VALUE_INFINITY instead
-#define CRM_INFINITY_S PCMK_VALUE_INFINITY
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
