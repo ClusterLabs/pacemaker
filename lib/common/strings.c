@@ -1378,12 +1378,6 @@ crm_strcase_hash(gconstpointer v)
     return pcmk__strcase_hash(v);
 }
 
-GHashTable *
-crm_str_table_dup(GHashTable *old_table)
-{
-    return pcmk__str_table_dup(old_table);
-}
-
 long long
 crm_parse_ll(const char *text, const char *default_text)
 {

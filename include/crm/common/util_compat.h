@@ -113,9 +113,6 @@ crm_strcase_table_new(void)
                                  free, free);
 }
 
-//! \deprecated Do not use Pacemaker for generic hash table manipulation
-GHashTable *crm_str_table_dup(GHashTable *old_table);
-
 #ifdef __cplusplus
 }
 #endif
