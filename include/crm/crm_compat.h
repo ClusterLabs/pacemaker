@@ -167,9 +167,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_PROMOTED instead
 #define RSC_PROMOTED PCMK_ACTION_PROMOTED
 
-//! \deprecated Use PCMK_ACTION_START instead
-#define RSC_START PCMK_ACTION_START
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
