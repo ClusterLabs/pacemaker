@@ -1100,17 +1100,3 @@ pcmk__cpg_send_xml(const xmlNode *msg, const crm_node_t *node,
     g_string_free(data, TRUE);
     return rc;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cluster/compat.h>
-
-gboolean
-cluster_connect_cpg(pcmk_cluster_t *cluster)
-{
-    return pcmk__cpg_connect(cluster) == pcmk_rc_ok;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
