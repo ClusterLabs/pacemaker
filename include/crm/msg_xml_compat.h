@@ -846,9 +846,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_RULE instead
 #define XML_TAG_RULE PCMK_XE_RULE
 
-//! \deprecated Use \c PCMK_XE_EXPRESSION instead
-#define XML_TAG_EXPRESSION PCMK_XE_EXPRESSION
-
 #ifdef __cplusplus
 }
 #endif
