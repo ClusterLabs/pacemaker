@@ -870,9 +870,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_TRANSIENT_NODEATTRS "transient_attributes"
 
-//! \deprecated Use \c PCMK_XE_ACL_TARGET instead
-#define XML_ACL_TAG_USER PCMK_XE_ACL_TARGET
-
 #ifdef __cplusplus
 }
 #endif
