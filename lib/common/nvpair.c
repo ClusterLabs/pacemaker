@@ -1007,12 +1007,5 @@ pcmk_scan_nvpair(const char *input, char **name, char **value)
     return pcmk__scan_nvpair(input, name, value);
 }
 
-char *
-pcmk_format_nvpair(const char *name, const char *value,
-                   const char *units)
-{
-    return pcmk__format_nvpair(name, value, units);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
