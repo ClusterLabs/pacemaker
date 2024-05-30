@@ -329,9 +329,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ATTR_RESPONSE "response"
 
-//! \deprecated Use \c PCMK_XA_UNAME instead
-#define XML_ATTR_UNAME PCMK_XA_UNAME
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
