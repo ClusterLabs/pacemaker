@@ -321,25 +321,3 @@ services__lsb2ocf(const char *action, int exit_status)
             return PCMK_OCF_UNKNOWN_ERROR;
     }
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/services_compat.h>
-
-svc_action_t *
-services_action_create(const char *name, const char *action,
-                       guint interval_ms, int timeout)
-{
-    return resources_action_create(name, PCMK_RESOURCE_CLASS_LSB, NULL, name,
-                                   action, interval_ms, timeout, NULL, 0);
-}
-
-GList *
-services_list(void)
-{
-    return resources_list_agents(PCMK_RESOURCE_CLASS_LSB, NULL);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

@@ -17,12 +17,10 @@ header_HEADERS		= cib.h			\
 			  crm.h			\
 			  crm_compat.h		\
 			  lrmd.h		\
-			  lrmd_compat.h		\
 			  lrmd_events.h		\
 			  msg_xml.h		\
 			  msg_xml_compat.h	\
 			  services.h		\
-			  services_compat.h	\
 			  stonith-ng.h
 
 noinst_HEADERS		= $(wildcard *_internal.h)

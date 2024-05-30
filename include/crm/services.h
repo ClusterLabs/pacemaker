@@ -426,10 +426,6 @@ enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
         }
     }
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/services_compat.h>
-#endif
-
 #  ifdef __cplusplus
 }
 #  endif
