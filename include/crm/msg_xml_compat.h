@@ -774,9 +774,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_NODE instead
 #define XML_CIB_TAG_NODE PCMK_XE_NODE
 
-//! \deprecated Use \c PCMK_XE_NVPAIR instead
-#define XML_CIB_TAG_NVPAIR PCMK_XE_NVPAIR
-
 #ifdef __cplusplus
 }
 #endif
