@@ -528,11 +528,5 @@ get_node_name(uint32_t nodeid)
     return pcmk__cluster_node_name(nodeid);
 }
 
-const char *
-get_local_node_name(void)
-{
-    return pcmk__cluster_local_node_name();
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
