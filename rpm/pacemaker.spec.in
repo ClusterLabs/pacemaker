@@ -55,11 +55,11 @@
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
 
-## Add option to enable support for stonith/external fencing agents
+## Add option for Linux-HA (stonith/external) fencing agent support
 %if 0%{?suse_version} > 0
-%bcond_without stonithd
+%bcond_without linuxha
 %else
-%bcond_with stonithd
+%bcond_with linuxha
 %endif
 
 ## Add option for whether to support storing sensitive information outside CIB
@@ -287,7 +287,7 @@ Requires:      resource-agents
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
-%if %{with stonithd}
+%if %{with linuxha}
 Requires:      %{python_name}-%{name} = %{version}-%{release}
 %endif
 %if !%{defined _unitdir}
@@ -345,7 +345,7 @@ BuildRequires: pkgconfig(systemd)
 Requires:      corosync >= 2.0.0
 BuildRequires: corosync-devel >= 2.0.0
 
-%if %{with stonithd}
+%if %{with linuxha}
 BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
@@ -374,7 +374,7 @@ resource health.
 
 Available rpmbuild rebuild options:
   --with(out) : cibsecrets hardening nls pre_release profiling
-                stonithd upstart_job
+                linuxha upstart_job
 
 %package cli
 License:       GPL-2.0-or-later AND LGPL-2.1-or-later
@@ -763,7 +763,7 @@ exit 0
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
-%if %{with stonithd}
+%if %{with linuxha}
 %{_sbindir}/fence_legacy
 %endif
 %{_sbindir}/fence_watchdog
@@ -775,7 +775,7 @@ exit 0
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
-%if %{with stonithd}
+%if %{with linuxha}
 %doc %{_mandir}/man8/fence_legacy.*
 %endif
 %doc %{_mandir}/man8/fence_watchdog.*
