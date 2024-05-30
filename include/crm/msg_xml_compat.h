@@ -777,9 +777,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_NVPAIR instead
 #define XML_CIB_TAG_NVPAIR PCMK_XE_NVPAIR
 
-//! \deprecated Use \c PCMK_XE_CLUSTER_PROPERTY_SET instead
-#define XML_CIB_TAG_PROPSET PCMK_XE_CLUSTER_PROPERTY_SET
-
 #ifdef __cplusplus
 }
 #endif
