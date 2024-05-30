@@ -1509,38 +1509,5 @@ crm_active_peers(void)
     return pcmk__cluster_num_active_nodes();
 }
 
-guint
-reap_crm_member(uint32_t id, const char *name)
-{
-    int matches = 0;
-    crm_node_t search = { 0, };
-
-    if (crm_peer_cache == NULL) {
-        crm_trace("Membership cache not initialized, ignoring purge request");
-        return 0;
-    }
-
-    search.id = id;
-    search.uname = pcmk__str_copy(name);
-    matches = g_hash_table_foreach_remove(crm_peer_cache,
-                                          should_forget_cluster_node, &search);
-    if(matches) {
-        crm_notice("Purged %d peer%s with " PCMK_XA_ID
-                   "=%u%s%s from the membership cache",
-                   matches, pcmk__plural_s(matches), search.id,
-                   (search.uname? " and/or uname=" : ""),
-                   (search.uname? search.uname : ""));
-
-    } else {
-        crm_info("No peers with " PCMK_XA_ID
-                 "=%u%s%s to purge from the membership cache",
-                 search.id, (search.uname? " and/or uname=" : ""),
-                 (search.uname? search.uname : ""));
-    }
-
-    free(search.uname);
-    return matches;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

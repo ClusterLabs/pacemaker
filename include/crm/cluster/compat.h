@@ -126,9 +126,6 @@ gboolean crm_is_peer_active(const crm_node_t *node);
 //! \deprecated Do not use
 guint crm_active_peers(void);
 
-//! \deprecated Do not use
-guint reap_crm_member(uint32_t id, const char *name);
-
 // NOTE: sbd (as of at least 1.5.2) uses this enum
 //!@{
 //! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead
