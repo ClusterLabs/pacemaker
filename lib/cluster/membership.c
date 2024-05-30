@@ -1497,11 +1497,5 @@ crm_remote_peer_cache_remove(const char *node_name)
     pcmk__cluster_forget_remote_node(node_name);
 }
 
-gboolean
-crm_is_peer_active(const crm_node_t * node)
-{
-    return pcmk__cluster_is_node_active(node);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
