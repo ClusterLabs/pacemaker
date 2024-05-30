@@ -581,9 +581,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_CALLID "call-id"
 
-//! \deprecated Do not use
-#define XML_LRM_ATTR_OP_DIGEST "op-digest"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
