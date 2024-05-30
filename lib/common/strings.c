@@ -1377,30 +1377,5 @@ crm_parse_ll(const char *text, const char *default_text)
     return result;
 }
 
-int
-crm_parse_int(const char *text, const char *default_text)
-{
-    long long result = crm_parse_ll(text, default_text);
-
-    if (result < INT_MIN) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MIN;
-
-    } else if (result > INT_MAX) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MAX;
-    }
-
-    return (int) result;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
