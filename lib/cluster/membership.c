@@ -1542,11 +1542,5 @@ reap_crm_member(uint32_t id, const char *name)
     return matches;
 }
 
-void
-crm_peer_init(void)
-{
-    pcmk__cluster_init_node_caches();
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
