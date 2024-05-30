@@ -596,9 +596,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_LRM_ATTR_SECURE_DIGEST "op-secure-digest"
 
-//! \deprecated Use \c PCMK_XA_EXIT_REASON instead
-#define XML_LRM_ATTR_EXIT_REASON PCMK_XA_EXIT_REASON
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
