@@ -951,9 +951,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_DIFF_MARKER "__crm_diff_marker__"
 
-//! \deprecated Do not use
-#define XML_TAG_FAILED "failed"
-
 #ifdef __cplusplus
 }
 #endif
