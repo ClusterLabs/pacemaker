@@ -644,9 +644,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_RESOURCE_DISCOVERY instead
 #define XML_LOCATION_ATTR_DISCOVERY PCMK_XA_RESOURCE_DISCOVERY
 
-//! \deprecated Use \c PCMK_XE_PARAMETERS instead
-#define XML_TAG_PARAMS PCMK_XE_PARAMETERS
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
