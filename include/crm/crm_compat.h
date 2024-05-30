@@ -71,9 +71,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_CLONE_ONE_OR_MORE instead
 #define CRM_OP_RELAXED_CLONE PCMK_ACTION_CLONE_ONE_OR_MORE
 
-//! \deprecated Use PCMK_ACTION_ONE_OR_MORE instead
-#define CRM_OP_RELAXED_SET PCMK_ACTION_ONE_OR_MORE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
