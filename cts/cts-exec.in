@@ -40,8 +40,8 @@ from pacemaker._cts.test import Test, Tests
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
 
-
 def update_path():
+    # pylint: disable=protected-access
     """Set the PATH environment variable appropriately for the tests."""
     new_path = os.environ['PATH']
 
@@ -153,23 +153,19 @@ class ExecTest(Test):
 
     def add_cmd(self, args):
         """Add a cts-exec-helper command to be executed as part of this test."""
-
         self._new_cmd(self._test_tool_location, args, ExitStatus.OK)
 
     def add_cmd_and_kill(self, args, kill_proc):
         """Add a cts-exec-helper command and system command to be executed as part of this test."""
-
         self._new_cmd(self._test_tool_location, args, ExitStatus.OK, kill=kill_proc)
 
     def add_cmd_check_stdout(self, args, match, no_match=None):
         """Add a command with expected output to be executed as part of this test."""
-
         self._new_cmd(self._test_tool_location, args, ExitStatus.OK,
                       stdout_match=match, stdout_negative_match=no_match)
 
     def add_cmd_expected_fail(self, args, exitcode=ExitStatus.ERROR):
         """Add a cts-exec-helper command to be executed as part of this test and expected to fail."""
-
         self._new_cmd(self._test_tool_location, args, exitcode)
 
     def add_sys_cmd(self, cmd, args):
@@ -333,6 +329,7 @@ class ExecTests(Tests):
             self._installed_files.append("/etc/pacemaker/authkey")
 
         # If we're in build directory, install agents if not already installed
+        # pylint: disable=protected-access
         if os.path.exists("%s/cts/cts-exec.in" % BuildOptions._BUILD_DIR):
 
             if not os.path.exists("%s/pacemaker" % BuildOptions.OCF_RA_INSTALL_DIR):
