@@ -80,12 +80,6 @@ struct pe_node_shared_s {
     gboolean maintenance;       // Whether in maintenance mode
 
     /*
-     * Whether this is a Pacemaker Remote node that was fenced since it was last
-     * connected by the cluster
-     */
-    gboolean remote_was_fenced;
-
-    /*
      * Whether this is a Pacemaker Remote node previously marked in its
      * node state as being in maintenance mode
      */

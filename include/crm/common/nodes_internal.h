@@ -58,6 +58,10 @@ enum pcmk__node_flags {
      */
     pcmk__node_remote_reset     = (UINT32_C(1) << 5),
 
+    /* Whether this is a Pacemaker Remote node that was fenced since it was last
+     * connected by the cluster
+     */
+    pcmk__node_remote_fenced    = (UINT32_C(1) << 6),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

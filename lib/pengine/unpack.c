@@ -1215,13 +1215,20 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
     }
 
     if (pcmk__is_pacemaker_remote_node(this_node)) {
+        int remote_fenced = 0;
+
         /* We can't determine the online status of Pacemaker Remote nodes until
          * after all resource history has been unpacked. In this first pass, we
          * do need to mark whether the node has been fenced, as this plays a
          * role during unpacking cluster node resource state.
          */
         pcmk__scan_min_int(crm_element_value(state, PCMK__XA_NODE_FENCED),
-                           &(this_node->details->remote_was_fenced), 0);
+                           &remote_fenced, 0);
+        if (remote_fenced) {
+            pcmk__set_node_flags(this_node, pcmk__node_remote_fenced);
+        } else {
+            pcmk__clear_node_flags(this_node, pcmk__node_remote_fenced);
+        }
         return;
     }
 
@@ -2450,7 +2457,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                     tmpnode = pcmk_find_node(scheduler, rsc->id);
                 }
                 if (pcmk__is_remote_node(tmpnode)
-                    && !(tmpnode->details->remote_was_fenced)) {
+                    && !pcmk_is_set(tmpnode->private->flags,
+                                    pcmk__node_remote_fenced)) {
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
                      */
@@ -4201,7 +4209,8 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
         pcmk_node_t *remote_node = pcmk_find_node(rsc->private->scheduler,
                                                   rsc->id);
 
-        if (remote_node && !remote_node->details->remote_was_fenced) {
+        if (remote_node && !pcmk_is_set(remote_node->private->flags,
+                                        pcmk__node_remote_fenced)) {
             if (is_last_failure) {
                 crm_info("Waiting to clear monitor failure for remote node %s"
                          " until fencing has occurred", rsc->id);
