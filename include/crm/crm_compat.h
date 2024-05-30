@@ -185,18 +185,6 @@ extern "C" {
 //! \deprecated Do not use
 #define CRM_OP_LOCAL_SHUTDOWN "start_shutdown"
 
-//!@{
-//! \deprecated This macro will be removed in a future release
-
-#  ifndef __GNUC__
-#    define __builtin_expect(expr, result) (expr)
-#  endif
-
-#define __likely(expr) __builtin_expect(expr, 1)
-
-// This ends the doxygen deprecation comment
-//!@}
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
