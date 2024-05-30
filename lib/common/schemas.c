@@ -1611,28 +1611,6 @@ get_schema_name(int version)
     return (schema != NULL)? schema->name : "unknown";
 }
 
-int
-get_schema_version(const char *name)
-{
-    int lpc = 0;
-
-    if (name == NULL) {
-        name = PCMK_VALUE_NONE;
-    }
-
-    for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
-        pcmk__schema_t *schema = iter->data;
-
-        if (pcmk__str_eq(name, schema->name, pcmk__str_casei)) {
-            return lpc;
-        }
-
-        lpc++;
-    }
-
-    return -1;
-}
-
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
