@@ -156,9 +156,6 @@ crm_ttoa(time_t epoch_time)
 //! \deprecated Do not use Pacemaker libraries for generic I/O
 void crm_build_path(const char *path_c, mode_t mode);
 
-//! \deprecated Use \c pcmk_parse_interval_spec() instead
-guint crm_parse_interval_spec(const char *input);
-
 #ifdef __cplusplus
 }
 #endif
