@@ -2394,14 +2394,6 @@ add_node_copy(xmlNode *parent, xmlNode *src_node)
     return child;
 }
 
-int
-add_node_nocopy(xmlNode *parent, const char *name, xmlNode *child)
-{
-    add_node_copy(parent, child);
-    pcmk__xml_free(child);
-    return 1;
-}
-
 gboolean
 xml_has_children(const xmlNode * xml_root)
 {
