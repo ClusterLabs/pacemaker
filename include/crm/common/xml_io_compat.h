@@ -10,7 +10,6 @@
 #ifndef PCMK__CRM_COMMON_XML_IO_COMPAT__H
 #define PCMK__CRM_COMMON_XML_IO_COMPAT__H
 
-#include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
 
 #ifdef __cplusplus
@@ -34,10 +33,6 @@ xmlNode *stdin2xml(void);
 
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *string2xml(const char *input);
-
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-int write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-                 gboolean compress);
 
 #ifdef __cplusplus
 }

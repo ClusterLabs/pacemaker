@@ -772,18 +772,5 @@ string2xml(const char *input)
     return pcmk__xml_parse(input);
 }
 
-int
-write_xml_fd(const xmlNode *xml, const char *filename, int fd,
-             gboolean compress)
-{
-    unsigned int nbytes = 0;
-    int rc = pcmk__xml_write_fd(xml, filename, fd, compress, &nbytes);
-
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
