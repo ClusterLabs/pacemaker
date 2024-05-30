@@ -664,37 +664,3 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     }
     return rc;
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cib/util_compat.h>
-
-int
-set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value)
-{
-    int rc = pcmk_ok;
-    char *attr_id = NULL;
-
-    CRM_CHECK(uuid != NULL, return -EINVAL);
-    CRM_CHECK(standby_value != NULL, return -EINVAL);
-
-    if (pcmk__strcase_any_of(scope, "reboot", PCMK_XE_STATUS, NULL)) {
-        scope = PCMK_XE_STATUS;
-        attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
-
-    } else {
-        scope = PCMK_XE_NODES;
-        attr_id = crm_strdup_printf("standby-%.256s", uuid);
-    }
-
-    rc = update_attr_delegate(the_cib, cib_sync_call, scope, uuid, NULL, NULL,
-                              attr_id, PCMK_NODE_ATTR_STANDBY, standby_value,
-                              TRUE, NULL, NULL);
-
-    free(attr_id);
-    return rc;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
