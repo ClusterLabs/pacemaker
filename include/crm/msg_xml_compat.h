@@ -900,9 +900,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_TICKETS instead
 #define XML_CIB_TAG_TICKETS PCMK_XE_TICKETS
 
-//! \deprecated Do not use
-#define XML_CIB_TAG_TICKET_STATE "ticket_state"
-
 #ifdef __cplusplus
 }
 #endif
