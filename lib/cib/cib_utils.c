@@ -1031,17 +1031,3 @@ cib__clean_up_connection(cib_t **cib)
     *cib = NULL;
     return pcmk_legacy2rc(rc);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cib/util_compat.h>
-
-const char *
-get_object_path(const char *object_type)
-{
-    return pcmk_cib_xpath_for(object_type);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
