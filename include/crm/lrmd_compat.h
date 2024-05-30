@@ -83,9 +83,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_ORIGIN "lrmd_origin"
 
-//! \deprecated Do not use
-#define F_LRMD_RSC_RUN_TIME "lrmd_run_time"
-
 #ifdef __cplusplus
 }
 #endif
