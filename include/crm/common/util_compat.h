@@ -45,13 +45,6 @@ is_set(long long word, long long bit)
     return ((word & bit) == bit);
 }
 
-//! \deprecated Use pcmk_any_flags_set() instead
-static inline gboolean
-is_set_any(long long word, long long bit)
-{
-    return ((word & bit) != 0);
-}
-
 #ifdef __cplusplus
 }
 #endif
