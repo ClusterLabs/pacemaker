@@ -101,9 +101,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_ACTION "lrmd_rsc_action"
 
-//! \deprecated Do not use
-#define F_LRMD_RSC_USERDATA_STR "lrmd_rsc_userdata_str"
-
 #ifdef __cplusplus
 }
 #endif
