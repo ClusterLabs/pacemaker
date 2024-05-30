@@ -1479,11 +1479,5 @@ crm_remote_peer_cache_size(void)
     return QB_MIN(count, INT_MAX);
 }
 
-void
-crm_remote_peer_cache_refresh(xmlNode *cib)
-{
-    refresh_remote_nodes(cib);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

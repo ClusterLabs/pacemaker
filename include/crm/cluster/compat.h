@@ -111,9 +111,6 @@ void crm_cluster_disconnect(pcmk_cluster_t *cluster);
 //! \deprecated Do not use
 int crm_remote_peer_cache_size(void);
 
-//! \deprecated Do not use
-void crm_remote_peer_cache_refresh(xmlNode *cib);
-
 // NOTE: sbd (as of at least 1.5.2) uses this enum
 //!@{
 //! \deprecated Use <tt>enum pcmk_cluster_layer</tt> instead
