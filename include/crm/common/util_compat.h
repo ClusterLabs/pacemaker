@@ -52,9 +52,6 @@ is_set_any(long long word, long long bit)
     return ((word & bit) != 0);
 }
 
-//! \deprecated Use strcmp() or strcasecmp() instead
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
 #ifdef __cplusplus
 }
 #endif

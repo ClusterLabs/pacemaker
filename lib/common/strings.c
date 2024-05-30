@@ -1310,31 +1310,3 @@ pcmk__g_strcat(GString *buffer, ...)
     }
     va_end(ap);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/util_compat.h>
-
-gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case)
-{
-    if (use_case) {
-        return g_strcmp0(a, b) == 0;
-
-        /* TODO - Figure out which calls, if any, really need to be case independent */
-    } else if (a == b) {
-        return TRUE;
-
-    } else if (a == NULL || b == NULL) {
-        /* shouldn't be comparing NULLs */
-        return FALSE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
