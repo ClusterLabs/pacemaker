@@ -53,9 +53,6 @@ enum op_status {
 svc_action_t *services_action_create(const char *name, const char *action,
                                      guint interval_ms, int timeout);
 
-//! \deprecated Use resources_list_agents() instead
-GList *services_list(void);
-
 #ifdef __cplusplus
 }
 #endif

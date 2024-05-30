@@ -335,11 +335,5 @@ services_action_create(const char *name, const char *action,
                                    action, interval_ms, timeout, NULL, 0);
 }
 
-GList *
-services_list(void)
-{
-    return resources_list_agents(PCMK_RESOURCE_CLASS_LSB, NULL);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
