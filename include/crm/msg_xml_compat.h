@@ -479,9 +479,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_OPERATION instead
 #define XML_LRM_ATTR_TASK PCMK_XA_OPERATION
 
-//! \deprecated Use \c PCMK_XA_OPERATION instead
-#define XML_EXPR_ATTR_OPERATION PCMK_XA_OPERATION
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
