@@ -169,20 +169,6 @@ gboolean validate_xml_verbose(const xmlNode *xml_blob);
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
 
-//! \deprecated Do not use
-static inline const char *
-crm_map_element_name(const xmlNode *xml)
-{
-    if (xml == NULL) {
-        return NULL;
-    } else if (strcmp((const char *) xml->name, "master") == 0) {
-        // Can't use PCMK__XE_PROMOTABLE_LEGACY because it's internal
-        return PCMK_XE_CLONE;
-    } else {
-        return (const char *) xml->name;
-    }
-}
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Call \c crm_log_init() or \c crm_log_cli_init() instead
 void crm_xml_init(void);
