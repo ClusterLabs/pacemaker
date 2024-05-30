@@ -87,9 +87,6 @@ xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
 //! \deprecated Do not use
 void purge_diff_markers(xmlNode *a_node);
 
-//! \deprecated Do not use
-xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);

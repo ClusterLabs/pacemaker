@@ -1573,11 +1573,5 @@ purge_diff_markers(xmlNode *a_node)
     purge_v1_diff_markers(a_node);
 }
 
-xmlNode *
-diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
-{
-    return pcmk__diff_v1_xml_object(old, new, suppress);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
