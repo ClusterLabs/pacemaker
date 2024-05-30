@@ -766,11 +766,5 @@ stdin2xml(void)
     return pcmk__xml_read(NULL);
 }
 
-xmlNode *
-string2xml(const char *input)
-{
-    return pcmk__xml_parse(input);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

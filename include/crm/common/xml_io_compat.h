@@ -31,9 +31,6 @@ xmlNode *filename2xml(const char *filename);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *stdin2xml(void);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *string2xml(const char *input);
-
 #ifdef __cplusplus
 }
 #endif
