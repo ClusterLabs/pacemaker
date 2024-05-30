@@ -161,9 +161,6 @@ extern "C" {
 //! \deprecated Do not use
 #define T_LRMD_REPLY "lrmd_reply"
 
-//! \deprecated Do not use
-#define T_LRMD_NOTIFY "lrmd_notify"
-
 #ifdef __cplusplus
 }
 #endif
