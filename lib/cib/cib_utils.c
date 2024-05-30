@@ -1070,11 +1070,5 @@ get_object_root(const char *object_type, xmlNode *the_root)
     return pcmk_find_cib_element(the_root, object_type);
 }
 
-const char *
-cib_pref(GHashTable * options, const char *name)
-{
-    return pcmk__cluster_option(options, name);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

@@ -47,9 +47,6 @@ int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
 //! \deprecated Do not use
 xmlNode *cib_get_generation(cib_t *cib);
 
-//! \deprecated Do not use
-const char *cib_pref(GHashTable * options, const char *name);
-
 #ifdef __cplusplus
 }
 #endif
