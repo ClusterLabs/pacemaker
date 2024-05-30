@@ -518,9 +518,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_COLOC_ATTR_TARGET_INSTANCE "with-rsc-instance"
 
-//! \deprecated Use \c PCMK_META_ON_FAIL instead
-#define XML_OP_ATTR_ON_FAIL PCMK_META_ON_FAIL
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
