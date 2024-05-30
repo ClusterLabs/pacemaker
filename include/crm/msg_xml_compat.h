@@ -813,9 +813,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_TEMPLATE instead
 #define XML_CIB_TAG_RSC_TEMPLATE PCMK_XE_TEMPLATE
 
-//! \deprecated Do not use
-#define XML_CIB_TAG_LRM "lrm"
-
 #ifdef __cplusplus
 }
 #endif
