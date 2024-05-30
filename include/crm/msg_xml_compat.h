@@ -37,6 +37,10 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_TRANSIENT_NODEATTRS "transient_attributes"
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Use \c PCMK_XE_INSTANCE_ATTRIBUTES instead
+#define XML_TAG_ATTR_SETS PCMK_XE_INSTANCE_ATTRIBUTES
+
 #ifdef __cplusplus
 }
 #endif
