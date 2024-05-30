@@ -1432,11 +1432,5 @@ crm_strip_trailing_newline(char *str)
     return pcmk__trim(str);
 }
 
-int
-pcmk_numeric_strcasecmp(const char *s1, const char *s2)
-{
-    return pcmk__numeric_strcasecmp(s1, s2);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API

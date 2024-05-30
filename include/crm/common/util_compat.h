@@ -129,9 +129,6 @@ crm_hash_table_size(GHashTable *hashtable)
 //! \deprecated Don't use Pacemaker for string manipulation
 char *crm_strip_trailing_newline(char *str);
 
-//! \deprecated Don't use Pacemaker for string manipulation
-int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
-
 #ifdef __cplusplus
 }
 #endif
