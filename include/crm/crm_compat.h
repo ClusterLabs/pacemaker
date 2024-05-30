@@ -32,9 +32,6 @@ extern "C" {
 //! \deprecated Use '\0' instead
 #define EOS '\0'
 
-//! \deprecated This defined constant will be removed in a future release
-#define MAX_IPC_DELAY 120
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use PCMK_SCORE_INFINITY instead
 #define CRM_SCORE_INFINITY PCMK_SCORE_INFINITY
