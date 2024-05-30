@@ -837,9 +837,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_GRAPH_TAG_CRM_EVENT "crm_event"
 
-//! \deprecated Do not use
-#define XML_GRAPH_TAG_DOWNED "downed"
-
 #ifdef __cplusplus
 }
 #endif
