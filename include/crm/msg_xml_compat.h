@@ -828,9 +828,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_TAG_GRAPH "transition_graph"
 
-//! \deprecated Do not use
-#define XML_GRAPH_TAG_RSC_OP "rsc_op"
-
 #ifdef __cplusplus
 }
 #endif
