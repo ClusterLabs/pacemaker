@@ -503,11 +503,5 @@ get_cluster_type(void)
     return (enum cluster_type_e) pcmk_get_cluster_layer();
 }
 
-gboolean
-is_corosync_cluster(void)
-{
-    return pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
