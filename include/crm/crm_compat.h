@@ -39,14 +39,6 @@ extern "C" {
 //! \deprecated Use PCMK_SCORE_INFINITY instead
 #define CRM_SCORE_INFINITY PCMK_SCORE_INFINITY
 
-/* INFINITY might be defined elsewhere (such as math.h), so undefine it first.
- * This, of course, complicates any attempt to use the other definition in any
- * code that includes this header.
- */
-//! \deprecated Use PCMK_SCORE_INFINITY instead
-#undef INFINITY
-#define INFINITY PCMK_SCORE_INFINITY
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
