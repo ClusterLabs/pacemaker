@@ -918,9 +918,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_FENCING_LEVEL instead
 #define XML_TAG_FENCING_LEVEL PCMK_XE_FENCING_LEVEL
 
-//! \deprecated Use \c PCMK_XE_DIFF instead
-#define XML_TAG_DIFF PCMK_XE_DIFF
-
 #ifdef __cplusplus
 }
 #endif
