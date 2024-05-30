@@ -8,13 +8,11 @@
  */
 
 #ifndef PCMK__CRM_CRM_COMPAT__H
-#  define PCMK__CRM_CRM_COMPAT__H
+#define PCMK__CRM_CRM_COMPAT__H
 
-#include <strings.h>
-#include <glib.h>
+#include <glib.h>               // GList
 
-#include <crm/common/actions.h>
-#include <crm/common/scores.h>
+#include <crm/common/scores.h>  // PCMK_SCORE_INFINITY
 
 #ifdef __cplusplus
 extern "C" {
