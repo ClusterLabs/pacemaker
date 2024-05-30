@@ -370,8 +370,7 @@ crm_get_msec(const char *input)
     }
 
     // Reject negative and unparsable inputs
-    scan_ll(input, &msec, -1, &units);
-    if (msec < 0) {
+    if ((scan_ll(input, &msec, -1, &units) == EINVAL) || (msec < 0)) {
         return PCMK__PARSE_INT_DEFAULT;
     }
 
