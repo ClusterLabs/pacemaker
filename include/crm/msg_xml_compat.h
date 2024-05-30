@@ -167,9 +167,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_EPOCH instead
 #define XML_ATTR_GENERATION PCMK_XA_EPOCH
 
-//! \deprecated Use \c PCMK_XA_ADMIN_EPOCH instead
-#define XML_ATTR_GENERATION_ADMIN PCMK_XA_ADMIN_EPOCH
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
