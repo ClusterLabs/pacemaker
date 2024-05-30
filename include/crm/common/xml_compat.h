@@ -90,11 +90,6 @@ void purge_diff_markers(xmlNode *a_node);
 //! \deprecated Do not use
 xmlNode *diff_xml_object(xmlNode *left, xmlNode *right, gboolean suppress);
 
-//! \deprecated Do not use
-xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
-                             gboolean full, gboolean *changed,
-                             const char *marker);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);

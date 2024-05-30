@@ -1579,12 +1579,5 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
     return pcmk__diff_v1_xml_object(old, new, suppress);
 }
 
-xmlNode *
-subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
-                    gboolean full, gboolean *changed, const char *marker)
-{
-    return subtract_v1_xml_object(parent, left, right, full, changed, marker);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
