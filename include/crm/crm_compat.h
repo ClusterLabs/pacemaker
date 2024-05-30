@@ -125,9 +125,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_MONITOR instead
 #define CRMD_ACTION_STATUS PCMK_ACTION_MONITOR
 
-//! \deprecated Use PCMK_ACTION_STOP instead
-#define CRMD_ACTION_STOP PCMK_ACTION_STOP
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
