@@ -53,9 +53,6 @@ gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 //! \deprecated Do not use (will be removed in a future release)
 void crm_destroy_xml(gpointer data);
 
-//! \deprecated Check children member directly
-gboolean xml_has_children(const xmlNode *root);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use name member directly
 static inline const char *
