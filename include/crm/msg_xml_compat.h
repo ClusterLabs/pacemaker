@@ -840,9 +840,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_GRAPH_TAG_DOWNED "downed"
 
-//! \deprecated Do not use
-#define XML_GRAPH_TAG_MAINTENANCE "maintenance"
-
 #ifdef __cplusplus
 }
 #endif
