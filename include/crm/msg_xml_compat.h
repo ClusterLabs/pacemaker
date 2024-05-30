@@ -287,9 +287,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_VALUE instead
 #define XML_NVPAIR_ATTR_VALUE PCMK_XA_VALUE
 
-//! \deprecated Use \c PCMK_XA_VALUE instead
-#define XML_ALERT_ATTR_REC_VALUE PCMK_XA_VALUE
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
