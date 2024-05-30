@@ -110,7 +110,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
      */
-    return node->details->remote_requires_reset
+    return pcmk_is_set(node->private->flags, pcmk__node_remote_reset)
            || node->details->unclean
            || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
            || (guest_rsc->private->next_role == pcmk_role_stopped)

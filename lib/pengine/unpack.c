@@ -135,7 +135,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                  * node from running resources. We want to allow it to run resources
                  * in this transition if the recovery succeeds.
                  */
-                node->details->remote_requires_reset = TRUE;
+                pcmk__set_node_flags(node, pcmk__node_remote_reset);
                 pcmk__set_rsc_flags(rsc,
                                     pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
             }
@@ -156,8 +156,8 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
             crm_notice("Not fencing remote node %s "
                        "(otherwise would because %s): connection is unmanaged",
                        pcmk__node_name(node), reason);
-        } else if(node->details->remote_requires_reset == FALSE) {
-            node->details->remote_requires_reset = TRUE;
+        } else if (!pcmk_is_set(node->private->flags, pcmk__node_remote_reset)) {
+            pcmk__set_node_flags(node, pcmk__node_remote_reset);
             pcmk__sched_warn("Remote node %s %s: %s",
                              pcmk__node_name(node),
                              pe_can_fence(scheduler, node)? "will be fenced" : "is unclean",
@@ -1068,7 +1068,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
                        &(this_node->details->remote_maintenance), 0);
 
     rsc = this_node->details->remote_rsc;
-    if (this_node->details->remote_requires_reset == FALSE) {
+    if (!pcmk_is_set(this_node->private->flags, pcmk__node_remote_reset)) {
         this_node->details->unclean = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_seen);
     }
@@ -1778,7 +1778,7 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
                   this_node->private->id);
         this_node->details->online = FALSE;
-        this_node->details->remote_requires_reset = TRUE;
+        pcmk__set_node_flags(this_node, pcmk__node_remote_reset);
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
@@ -1792,14 +1792,14 @@ determine_remote_online_status(pcmk_scheduler_t *scheduler,
         crm_trace("%s node %s OFFLINE because its resource is stopped",
                   node_type, this_node->private->id);
         this_node->details->online = FALSE;
-        this_node->details->remote_requires_reset = FALSE;
+        pcmk__clear_node_flags(this_node, pcmk__node_remote_reset);
 
     } else if (host && (host->details->online == FALSE)
                && host->details->unclean) {
         crm_trace("Guest node %s UNCLEAN because host is unclean",
                   this_node->private->id);
         this_node->details->online = FALSE;
-        this_node->details->remote_requires_reset = TRUE;
+        pcmk__set_node_flags(this_node, pcmk__node_remote_reset);
 
     } else {
         crm_trace("%s node %s is %s",

@@ -889,7 +889,8 @@ create_notify_actions(pcmk_resource_t *rsc, notify_data_t *n_data)
             if ((stop != NULL)
                 && pcmk_is_set(stop->flags, pcmk_action_pseudo)
                 && (current_node->details->unclean
-                    || current_node->details->remote_requires_reset)) {
+                    || pcmk_is_set(current_node->private->flags,
+                                   pcmk__node_remote_reset))) {
                 continue;
             }
 

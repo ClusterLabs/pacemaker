@@ -52,6 +52,12 @@ enum pcmk__node_flags {
 
     // Whether probes are allowed on node
     pcmk__node_probes_allowed   = (UINT32_C(1) << 4),
+
+    /* Whether this either is a guest node whose guest resource must be
+     * recovered or a remote node that must be fenced
+     */
+    pcmk__node_remote_reset     = (UINT32_C(1) << 5),
+
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

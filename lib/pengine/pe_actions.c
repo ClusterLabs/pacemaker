@@ -337,7 +337,8 @@ update_resource_action_runnable(pcmk_action_t *action,
     } else if (!pcmk_is_set(action->flags, pcmk_action_on_dc)
                && !(action->node->details->online)
                && (!pcmk__is_guest_or_bundle_node(action->node)
-                   || action->node->details->remote_requires_reset)) {
+                   || pcmk_is_set(action->node->private->flags,
+                                  pcmk__node_remote_reset))) {
         pcmk__clear_action_flags(action, pcmk_action_runnable);
         do_crm_log(LOG_WARNING, "%s on %s is unrunnable (node is offline)",
                    action->uuid, pcmk__node_name(action->node));

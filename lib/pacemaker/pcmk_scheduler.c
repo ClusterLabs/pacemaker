@@ -581,8 +581,8 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
          * so handle them separately.
          */
         if (pcmk__is_guest_or_bundle_node(node)) {
-            if (node->details->remote_requires_reset && have_managed
-                && pe_can_fence(scheduler, node)) {
+            if (pcmk_is_set(node->private->flags, pcmk__node_remote_reset)
+                && have_managed && pe_can_fence(scheduler, node)) {
                 pcmk__fence_guest(node);
             }
             continue;

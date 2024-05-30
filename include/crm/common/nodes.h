@@ -80,12 +80,6 @@ struct pe_node_shared_s {
     gboolean maintenance;       // Whether in maintenance mode
 
     /*
-     * Whether this is a guest node whose guest resource must be recovered or a
-     * remote node that must be fenced
-     */
-    gboolean remote_requires_reset;
-
-    /*
      * Whether this is a Pacemaker Remote node that was fenced since it was last
      * connected by the cluster
      */
