@@ -78,9 +78,6 @@ char *crm_xml_escape(const char *text);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *copy_xml(xmlNode *src_node);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *add_node_copy(xmlNode *new_parent, xmlNode *xml_node);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);

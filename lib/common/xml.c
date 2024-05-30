@@ -2378,22 +2378,6 @@ getDocPtr(xmlNode *node)
     return doc;
 }
 
-xmlNode *
-add_node_copy(xmlNode *parent, xmlNode *src_node)
-{
-    xmlNode *child = NULL;
-
-    CRM_CHECK((parent != NULL) && (src_node != NULL), return NULL);
-
-    child = xmlDocCopyNode(src_node, parent->doc, 1);
-    if (child == NULL) {
-        return NULL;
-    }
-    xmlAddChild(parent, child);
-    pcmk__xml_mark_created(child);
-    return child;
-}
-
 gboolean
 xml_has_children(const xmlNode * xml_root)
 {
