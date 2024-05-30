@@ -173,9 +173,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_NUM_UPDATES instead
 #define XML_ATTR_NUMUPDATES PCMK_XA_NUM_UPDATES
 
-//! \deprecated Use \c PCMK_XA_CRM_DEBUG_ORIGIN instead
-#define XML_ATTR_ORIGIN PCMK_XA_CRM_DEBUG_ORIGIN
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
