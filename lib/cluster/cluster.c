@@ -464,12 +464,6 @@ pcmk_get_cluster_layer(void)
 
 #include <crm/cluster/compat.h>
 
-void
-set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
-{
-    crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node));
-}
-
 gboolean
 crm_cluster_connect(pcmk_cluster_t *cluster)
 {

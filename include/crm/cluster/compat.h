@@ -59,13 +59,6 @@ int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
                                      int *connection);
 
-/*!
- * \deprecated Use
- *             <tt>crm_xml_add(xml, attr, pcmk__cluster_node_uuid(node))</tt>
- *             instead
- */
-void set_uuid(xmlNode *xml, const char *attr, crm_node_t *node);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_connect() instead
 gboolean crm_cluster_connect(pcmk_cluster_t *cluster);
