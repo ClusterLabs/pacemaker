@@ -641,9 +641,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_SYMMETRICAL instead
 #define XML_CONS_ATTR_SYMMETRICAL PCMK_XA_SYMMETRICAL
 
-//! \deprecated Use \c PCMK_XA_RESOURCE_DISCOVERY instead
-#define XML_LOCATION_ATTR_DISCOVERY PCMK_XA_RESOURCE_DISCOVERY
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
