@@ -86,9 +86,6 @@ int crm_parse_int(const char *text, const char *default_text);
 //! \deprecated Use strtoll() instead
 #define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
-//! \deprecated Use g_str_hash() instead
-guint g_str_hash_traditional(gconstpointer v);
-
 #ifdef __cplusplus
 }
 #endif

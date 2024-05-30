@@ -1360,12 +1360,6 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     return buffer;
 }
 
-guint
-g_str_hash_traditional(gconstpointer v)
-{
-    return pcmk__str_hash(v);
-}
-
 long long
 crm_parse_ll(const char *text, const char *default_text)
 {
