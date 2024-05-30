@@ -726,9 +726,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_NODES instead
 #define XML_CIB_TAG_NODES PCMK_XE_NODES
 
-//! \deprecated Use \c PCMK_XE_CONSTRAINTS instead
-#define XML_CIB_TAG_CONSTRAINTS PCMK_XE_CONSTRAINTS
-
 #ifdef __cplusplus
 }
 #endif
