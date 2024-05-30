@@ -98,9 +98,6 @@ extern "C" {
 //! \deprecated Do not use (will be removed in a future release)
 #define XML_CIB_TAG_DOMAINS "domains"
 
-//! \deprecated Do not use (will be removed in a future release)
-#define XML_CIB_ATTR_SOURCE "source"
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
