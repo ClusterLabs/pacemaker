@@ -1633,25 +1633,6 @@ get_schema_version(const char *name)
     return -1;
 }
 
-int
-update_validation(xmlNode **xml, int *best, int max, gboolean transform,
-                  gboolean to_logs)
-{
-    int rc = pcmk__update_schema(xml, get_schema_name(max), transform, to_logs);
-
-    if ((best != NULL) && (xml != NULL) && (rc == pcmk_rc_ok)) {
-        const char *schema_name = crm_element_value(*xml,
-                                                    PCMK_XA_VALIDATE_WITH);
-        GList *schema_entry = pcmk__get_schema(schema_name);
-
-        if (schema_entry != NULL) {
-            *best = ((pcmk__schema_t *)(schema_entry->data))->schema_index;
-        }
-    }
-
-    return pcmk_rc2legacy(rc);
-}
-
 gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 {
