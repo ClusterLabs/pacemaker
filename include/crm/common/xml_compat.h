@@ -123,10 +123,6 @@ xmlNode *crm_next_same_xml(const xmlNode *sibling);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 void xml_remove_prop(xmlNode *obj, const char *name);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
-                           gboolean delete_only);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
