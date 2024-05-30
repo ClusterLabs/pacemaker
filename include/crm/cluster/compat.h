@@ -49,9 +49,6 @@ typedef pcmk_cluster_t crm_cluster_t;
 //! \deprecated Do not use Pacemaker for cluster node cacheing
 crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
-//! \deprecated Do not use Pacemaker for cluster node cacheing
-crm_node_t *crm_get_peer_full(unsigned int id, const char *uname, int flags);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c pcmk_cluster_connect() instead
 gboolean crm_cluster_connect(pcmk_cluster_t *cluster);

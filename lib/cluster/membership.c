@@ -1453,11 +1453,5 @@ crm_get_peer(unsigned int id, const char *uname)
     return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster_member);
 }
 
-crm_node_t *
-crm_get_peer_full(unsigned int id, const char *uname, int flags)
-{
-    return pcmk__get_node(id, uname, NULL, flags);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
