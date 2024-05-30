@@ -795,9 +795,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_UTILIZATION instead
 #define XML_TAG_UTILIZATION PCMK_XE_UTILIZATION
 
-//! \deprecated Use \c PCMK_XE_RESOURCE_REF instead
-#define XML_TAG_RESOURCE_REF PCMK_XE_RESOURCE_REF
-
 #ifdef __cplusplus
 }
 #endif
