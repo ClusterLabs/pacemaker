@@ -89,9 +89,6 @@ int crm_parse_int(const char *text, const char *default_text);
 //! \deprecated Use g_str_hash() instead
 guint g_str_hash_traditional(gconstpointer v);
 
-//! \deprecated Use g_str_hash() instead
-#define crm_str_hash g_str_hash_traditional
-
 #ifdef __cplusplus
 }
 #endif
