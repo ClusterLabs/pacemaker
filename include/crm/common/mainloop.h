@@ -191,10 +191,6 @@ void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
 
 #define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/mainloop_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
 #endif

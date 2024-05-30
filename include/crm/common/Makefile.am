@@ -23,7 +23,6 @@ header_HEADERS = acl.h 			\
 		 logging.h 		\
 		 logging_compat.h 	\
 		 mainloop.h 		\
-		 mainloop_compat.h 	\
 		 nodes.h 		\
 		 nvpair.h 		\
 		 options.h 		\
