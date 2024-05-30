@@ -98,13 +98,6 @@ gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 //! \deprecated Do not use Pacemaker for generic string manipulation
 guint crm_strcase_hash(gconstpointer v);
 
-//! \deprecated Use g_hash_table_new_full() instead
-static inline GHashTable *
-crm_str_table_new(void)
-{
-    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
-}
-
 #ifdef __cplusplus
 }
 #endif
