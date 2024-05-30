@@ -183,9 +183,6 @@ crm_map_element_name(const xmlNode *xml)
     }
 }
 
-//! \deprecated Do not use
-void expand_plus_plus(xmlNode * target, const char *name, const char *value);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Call \c crm_log_init() or \c crm_log_cli_init() instead
 void crm_xml_init(void);

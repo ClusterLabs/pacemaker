@@ -2711,12 +2711,6 @@ find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
 }
 
 void
-expand_plus_plus(xmlNode * target, const char *name, const char *value)
-{
-    pcmk__xe_set_score(target, name, value);
-}
-
-void
 crm_xml_init(void)
 {
     pcmk__xml_init();
