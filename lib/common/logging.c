@@ -1269,12 +1269,6 @@ crm_log_cli_init(const char *entity)
     return TRUE;
 }
 
-gboolean
-crm_add_logfile(const char *filename)
-{
-    return pcmk__add_logfile(filename) == pcmk_rc_ok;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
 

@@ -71,9 +71,6 @@ enum xml_log_options {
 //! \deprecated Do not use Pacemaker for general-purpose logging
 gboolean crm_log_cli_init(const char *entity);
 
-//! \deprecated Do not use Pacemaker for general-purpose logging
-gboolean crm_add_logfile(const char *filename);
-
 #ifdef __cplusplus
 }
 #endif
