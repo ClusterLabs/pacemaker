@@ -92,9 +92,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_RSC_EXEC_TIME "lrmd_exec_time"
 
-//! \deprecated Do not use
-#define F_LRMD_RSC_QUEUE_TIME "lrmd_queue_time"
-
 #ifdef __cplusplus
 }
 #endif
