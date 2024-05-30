@@ -680,9 +680,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XA_FIRST_ACTION instead
 #define XML_ORDER_ATTR_FIRST_ACTION PCMK_XA_FIRST_ACTION
 
-//! \deprecated Use \c PCMK_XA_THEN_ACTION instead
-#define XML_ORDER_ATTR_THEN_ACTION PCMK_XA_THEN_ACTION
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
