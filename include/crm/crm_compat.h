@@ -152,9 +152,6 @@ extern "C" {
 //! \deprecated Use PCMK_ACTION_MIGRATE_TO instead
 #define RSC_MIGRATE PCMK_ACTION_MIGRATE_TO
 
-//! \deprecated Use PCMK_ACTION_MIGRATE_FROM instead
-#define RSC_MIGRATED PCMK_ACTION_MIGRATE_FROM
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;
