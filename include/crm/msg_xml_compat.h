@@ -396,11 +396,6 @@ extern "C" {
 #define	F_CLIENTNAME "cn"
 #endif
 
-#ifndef F_XML_TAGNAME
-//! \deprecated Do not use
-#define F_XML_TAGNAME "__name__"
-#endif
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
