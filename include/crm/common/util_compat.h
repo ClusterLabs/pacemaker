@@ -132,13 +132,6 @@ char *crm_strip_trailing_newline(char *str);
 //! \deprecated Don't use Pacemaker for string manipulation
 int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
-//! \deprecated Don't use Pacemaker for string manipulation
-static inline char *
-crm_itoa(int an_int)
-{
-    return crm_strdup_printf("%d", an_int);
-}
-
 #ifdef __cplusplus
 }
 #endif
