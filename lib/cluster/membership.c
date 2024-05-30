@@ -1560,11 +1560,5 @@ crm_set_autoreap(gboolean enable)
     pcmk__cluster_set_autoreap(enable);
 }
 
-void
-crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
-{
-    pcmk__cluster_set_status_callback(dispatch);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
