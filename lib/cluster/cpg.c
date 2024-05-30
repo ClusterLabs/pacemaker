@@ -1124,20 +1124,5 @@ get_local_nodeid(cpg_handle_t handle)
     return pcmk__cpg_local_nodeid(handle);
 }
 
-void
-pcmk_cpg_membership(cpg_handle_t handle,
-                    const struct cpg_name *group_name,
-                    const struct cpg_address *member_list,
-                    size_t member_list_entries,
-                    const struct cpg_address *left_list,
-                    size_t left_list_entries,
-                    const struct cpg_address *joined_list,
-                    size_t joined_list_entries)
-{
-    pcmk__cpg_confchg_cb(handle, group_name, member_list, member_list_entries,
-                         left_list, left_list_entries,
-                         joined_list, joined_list_entries);
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
