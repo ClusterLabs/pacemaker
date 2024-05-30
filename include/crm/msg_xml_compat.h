@@ -647,9 +647,6 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_PARAMETERS instead
 #define XML_TAG_PARAMS PCMK_XE_PARAMETERS
 
-//! \deprecated Use \c PCMK_XA_RSC instead
-#define XML_COLOC_ATTR_SOURCE PCMK_XA_RSC
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
