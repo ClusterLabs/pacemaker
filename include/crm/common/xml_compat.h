@@ -101,10 +101,6 @@ gboolean can_prune_leaf(xmlNode *xml_node);
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 xmlNode *create_xml_node(xmlNode *parent, const char *name);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *pcmk_create_xml_text_node(xmlNode *parent, const char *name,
-                                   const char *content);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);

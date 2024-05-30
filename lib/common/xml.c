@@ -2541,16 +2541,6 @@ create_xml_node(xmlNode *parent, const char *name)
     return node;
 }
 
-xmlNode *
-pcmk_create_xml_text_node(xmlNode *parent, const char *name,
-                          const char *content)
-{
-    xmlNode *node = pcmk__xe_create(parent, name);
-
-    pcmk__xe_set_content(node, "%s", content);
-    return node;
-}
-
 void
 crm_xml_init(void)
 {
