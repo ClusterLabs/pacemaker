@@ -897,9 +897,6 @@ extern "C" {
 //! \deprecated Do not use
 #define XML_ACL_TAG_DENY "deny"
 
-//! \deprecated Use \c PCMK_XE_TICKETS instead
-#define XML_CIB_TAG_TICKETS PCMK_XE_TICKETS
-
 #ifdef __cplusplus
 }
 #endif
