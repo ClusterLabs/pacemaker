@@ -2588,12 +2588,6 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
     return result;
 }
 
-xmlNode *
-crm_next_same_xml(const xmlNode *sibling)
-{
-    return pcmk__xe_next_same(sibling);
-}
-
 void
 crm_xml_init(void)
 {

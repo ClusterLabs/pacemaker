@@ -117,9 +117,6 @@ xmlNode *first_named_child(const xmlNode *parent, const char *name);
 xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
                        gboolean must_find);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-xmlNode *crm_next_same_xml(const xmlNode *sibling);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
