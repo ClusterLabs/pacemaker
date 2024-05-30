@@ -282,20 +282,3 @@ pcmk__reset_request(pcmk__request_t *request)
 
     pcmk__reset_result(&(request->result));
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/common/xml_compat.h>
-
-gboolean
-add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
-{
-    xmlNode *holder = pcmk__xe_create(msg, field);
-
-    pcmk__xml_copy(holder, xml);
-    return TRUE;
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API

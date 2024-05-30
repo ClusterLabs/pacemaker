@@ -139,9 +139,6 @@ int find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode *xml_obj,
                                    int error_level);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-gboolean add_message_xml(xmlNode *msg, const char *field, xmlNode *xml);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
