@@ -1441,17 +1441,3 @@ pcmk__refresh_node_caches_from_cib(xmlNode *cib)
     refresh_remote_nodes(cib);
     refresh_cluster_node_cib_cache(cib);
 }
-
-// Deprecated functions kept only for backward API compatibility
-// LCOV_EXCL_START
-
-#include <crm/cluster/compat.h>
-
-crm_node_t *
-crm_get_peer(unsigned int id, const char *uname)
-{
-    return pcmk__get_node(id, uname, NULL, pcmk__node_search_cluster_member);
-}
-
-// LCOV_EXCL_STOP
-// End deprecated API
