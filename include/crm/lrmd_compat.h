@@ -128,9 +128,6 @@ extern "C" {
 //! \deprecated Do not use
 #define F_LRMD_ALERT_PATH "lrmd_alert_path"
 
-//! \deprecated Do not use
-#define F_LRMD_ALERT "lrmd_alert"
-
 #ifdef __cplusplus
 }
 #endif
