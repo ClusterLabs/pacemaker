@@ -130,11 +130,6 @@ gboolean replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update,
 //! \deprecated Do not use Pacemaker for general-purpose XML manipulation
 gboolean update_xml_child(xmlNode *child, xmlNode *to_update);
 
-//! \deprecated Do not use Pacemaker for general-purpose XML manipulation
-int find_xml_children(xmlNode **children, xmlNode *root, const char *tag,
-                      const char *field, const char *value,
-                      gboolean search_matches);
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 gboolean cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs);
