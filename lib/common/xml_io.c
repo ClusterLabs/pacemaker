@@ -785,17 +785,5 @@ write_xml_fd(const xmlNode *xml, const char *filename, int fd,
     return (int) nbytes;
 }
 
-int
-write_xml_file(const xmlNode *xml, const char *filename, gboolean compress)
-{
-    unsigned int nbytes = 0;
-    int rc = pcmk__xml_write_file(xml, filename, compress, &nbytes);
-
-    if (rc != pcmk_rc_ok) {
-        return pcmk_rc2legacy(rc);
-    }
-    return (int) nbytes;
-}
-
 // LCOV_EXCL_STOP
 // End deprecated API
