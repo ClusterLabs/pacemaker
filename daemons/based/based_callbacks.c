@@ -1036,7 +1036,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         }
     }
 
-    if (is_update && !cib_legacy_mode()) {
+    if (is_update) {
         crm_trace("Completed pre-sync update from %s/%s/%s%s",
                   originator ? originator : "local", client_name, call_id,
                   local_notify?" with local notification":"");
@@ -1366,7 +1366,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     pcmk__log_xml_patchset(LOG_TRACE, *cib_diff);
 
   done:
-    if (!pcmk_is_set(call_options, cib_discard_reply) || cib_legacy_mode()) {
+    if (!pcmk_is_set(call_options, cib_discard_reply)) {
         *reply = create_cib_reply(op, call_id, client_id, call_options, rc,
                                   output);
     }
