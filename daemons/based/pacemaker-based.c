@@ -48,7 +48,6 @@ int remote_fd = 0;
 int remote_tls_fd = 0;
 
 GHashTable *config_hash = NULL;
-GHashTable *local_notify_queue = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
@@ -292,10 +291,6 @@ done:
     pcmk__free_arg_context(context);
 
     pcmk__cluster_destroy_node_caches();
-
-    if (local_notify_queue != NULL) {
-        g_hash_table_destroy(local_notify_queue);
-    }
 
     if (config_hash != NULL) {
         g_hash_table_destroy(config_hash);

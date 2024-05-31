@@ -34,15 +34,6 @@
 
 #define EXIT_ESCALATION_MS 10000
 
-static unsigned long cib_local_bcast_num = 0;
-
-typedef struct cib_local_notify_s {
-    xmlNode *notify_src;
-    char *client_id;
-    gboolean from_peer;
-    gboolean sync_reply;
-} cib_local_notify_t;
-
 int next_client_id = 0;
 
 qb_ipcs_service_t *ipcs_ro = NULL;
@@ -489,54 +480,6 @@ process_ping_reply(xmlNode *reply)
             sync_our_cib(reply, FALSE);
         }
     }
-}
-
-static void
-local_notify_destroy_callback(gpointer data)
-{
-    cib_local_notify_t *notify = data;
-
-    pcmk__xml_free(notify->notify_src);
-    free(notify->client_id);
-    free(notify);
-}
-
-static void
-check_local_notify(int bcast_id)
-{
-    const cib_local_notify_t *notify = NULL;
-
-    if (!local_notify_queue) {
-        return;
-    }
-
-    notify = pcmk__intkey_table_lookup(local_notify_queue, bcast_id);
-
-    if (notify) {
-        do_local_notify(notify->notify_src, notify->client_id, notify->sync_reply,
-                        notify->from_peer);
-        pcmk__intkey_table_remove(local_notify_queue, bcast_id);
-    }
-}
-
-static void
-queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
-                   gboolean from_peer)
-{
-    cib_local_notify_t *notify = pcmk__assert_alloc(1,
-                                                    sizeof(cib_local_notify_t));
-
-    notify->notify_src = notify_src;
-    notify->client_id = pcmk__str_copy(client_id);
-    notify->sync_reply = sync_reply;
-    notify->from_peer = from_peer;
-
-    if (!local_notify_queue) {
-        local_notify_queue = pcmk__intkey_table(local_notify_destroy_callback);
-    }
-    pcmk__intkey_table_insert(local_notify_queue, cib_local_bcast_num, notify);
-    // cppcheck doesn't know notify will get freed when hash table is destroyed
-    // cppcheck-suppress memleak
 }
 
 static void
@@ -1045,30 +988,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
         // This was a non-originating secondary update
         crm_trace("Completed update as secondary");
 
-    } else if (cib_legacy_mode() &&
-               rc == pcmk_ok && result_diff != NULL && !(call_options & cib_inhibit_bcast)) {
-        gboolean broadcast = FALSE;
-
-        cib_local_bcast_num++;
-        crm_xml_add_int(request, PCMK__XA_CIB_LOCAL_NOTIFY_ID,
-                        cib_local_bcast_num);
-        broadcast = send_peer_reply(request, result_diff, originator, TRUE);
-
-        if (broadcast && client_id && local_notify && op_reply) {
-
-            /* If we have been asked to sync the reply,
-             * and a bcast msg has gone out, we queue the local notify
-             * until we know the bcast message has been received */
-            local_notify = FALSE;
-            crm_trace("Queuing local %ssync notification for %s",
-                      (call_options & cib_sync_call) ? "" : "a-", client_id);
-
-            queue_local_notify(op_reply, client_id,
-                               pcmk_is_set(call_options, cib_sync_call),
-                               (cib_client == NULL));
-            op_reply = NULL;    /* the reply is queued, so don't free here */
-        }
-
     } else if ((cib_client == NULL)
                && !pcmk_is_set(call_options, cib_discard_reply)) {
 
@@ -1384,19 +1303,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     const char *reason = NULL;
     const char *originator = crm_element_value(msg, PCMK__XA_SRC);
 
-    if (cib_legacy_mode()
-        && pcmk__str_eq(originator, OUR_NODENAME,
-                        pcmk__str_casei|pcmk__str_null_matches)) {
-        /* message is from ourselves */
-        int bcast_id = 0;
-
-        if (crm_element_value_int(msg, PCMK__XA_CIB_LOCAL_NOTIFY_ID,
-                                  &bcast_id) == 0) {
-            check_local_notify(bcast_id);
-        }
-        return;
-
-    } else if (crm_peer_cache == NULL) {
+    if (crm_peer_cache == NULL) {
         reason = "membership not established";
         goto bail;
     }
