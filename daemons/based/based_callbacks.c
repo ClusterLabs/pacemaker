@@ -765,7 +765,7 @@ forward_request(xmlNode *request)
                "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
                pcmk__s(op, "invalid"),
                pcmk__s(section, "all"),
-               pcmk__s(host, (cib_legacy_mode()? "primary" : "all")),
+               pcmk__s(host, "all"),
                pcmk__s(originator, "local"),
                pcmk__s(client_name, "unspecified"),
                pcmk__s(call_id, "unspecified"));
