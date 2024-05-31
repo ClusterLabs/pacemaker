@@ -427,10 +427,6 @@ static GOptionEntry addl_entries[] = {
     { "node", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.dest_node,
       "(Advanced) Send command to the specified host", "value" },
 
-    // @COMPAT: Deprecated
-    { "host", 'h', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
-      &options.dest_node, "deprecated", NULL },
-
     { NULL }
 };
 
