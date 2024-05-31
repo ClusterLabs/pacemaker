@@ -74,7 +74,6 @@ int cib_process_request(xmlNode *request, gboolean privileged,
                         const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(const char *caller, int fast);
-gboolean cib_legacy_mode(void);
 
 gboolean uninitializeCib(void);
 xmlNode *readCibXmlFile(const char *dir, const char *file,

@@ -48,12 +48,6 @@ static int cib_process_command(xmlNode *request,
 static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
                                     size_t size, gboolean privileged);
 
-gboolean
-cib_legacy_mode(void)
-{
-    return FALSE;
-}
-
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
