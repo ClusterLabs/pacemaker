@@ -146,9 +146,6 @@ enum cib_call_options {
     cib_quorum_override = (1 << 20),
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
-    //! \deprecated This value will be removed in a future release
-    cib_inhibit_bcast   = (1 << 24),
-
     cib_force_diff      = (1 << 28),
 };
 
