@@ -957,7 +957,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
          * need to build a reply so we can broadcast a diff, even if the
          * requester doesn't want one.
          */
-        needs_reply = is_update && cib_legacy_mode();
+        needs_reply = FALSE;
         local_notify = FALSE;
         crm_trace("Client is not interested in the reply");
     }
