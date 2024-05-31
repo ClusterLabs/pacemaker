@@ -61,12 +61,12 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
         migrate_to = custom_action(rsc, pcmk__op_key(rsc->id,
                                                      PCMK_ACTION_MIGRATE_TO, 0),
                                    PCMK_ACTION_MIGRATE_TO, current, TRUE,
-                                   rsc->cluster);
+                                   rsc->private->scheduler);
     }
     migrate_from = custom_action(rsc, pcmk__op_key(rsc->id,
                                                    PCMK_ACTION_MIGRATE_FROM, 0),
                                  PCMK_ACTION_MIGRATE_FROM, rsc->allocated_to,
-                                 TRUE, rsc->cluster);
+                                 TRUE, rsc->private->scheduler);
 
     pcmk__set_action_flags(start, pcmk_action_migratable);
     pcmk__set_action_flags(stop, pcmk_action_migratable);
@@ -84,14 +84,14 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                            NULL,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
-                           NULL, pcmk__ar_ordered, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->private->scheduler);
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
                            NULL,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
                            NULL,
                            pcmk__ar_ordered|pcmk__ar_unmigratable_then_blocks,
-                           rsc->cluster);
+                           rsc->private->scheduler);
     } else {
         pcmk__set_action_flags(migrate_from, pcmk_action_migratable);
         migrate_from->needs = start->needs;
@@ -101,7 +101,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                            NULL,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
-                           NULL, pcmk__ar_ordered, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->private->scheduler);
     }
 
     // migrate_from before stop or start
@@ -110,7 +110,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0),
                        NULL,
                        pcmk__ar_ordered|pcmk__ar_unmigratable_then_blocks,
-                       rsc->cluster);
+                       rsc->private->scheduler);
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_FROM, 0),
                        NULL,
                        rsc, pcmk__op_key(rsc->id, PCMK_ACTION_START, 0),
@@ -118,7 +118,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                        pcmk__ar_ordered
                        |pcmk__ar_unmigratable_then_blocks
                        |pcmk__ar_first_else_then,
-                       rsc->cluster);
+                       rsc->private->scheduler);
 
     if (migrate_to != NULL) {
         add_migration_meta(migrate_to, current, rsc->allocated_to);
@@ -157,7 +157,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;
 
     pcmk_action_t *stop = NULL;
-    bool cleanup = pcmk_is_set(rsc->cluster->flags,
+    bool cleanup = pcmk_is_set(rsc->private->scheduler->flags,
                                pcmk_sched_remove_after_stop);
 
     pcmk__rsc_trace(rsc,
@@ -301,7 +301,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                NULL, order->rsc2,
                                pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->rsc1->cluster);
+                               NULL, flags, order->rsc1->private->scheduler);
         }
 
         if (then_migratable) {
@@ -319,7 +319,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                NULL, order->rsc2,
                                pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->rsc1->cluster);
+                               NULL, flags, order->rsc1->private->scheduler);
         }
 
     } else if (then_migratable
@@ -341,7 +341,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                            order->rsc2,
                            pcmk__op_key(order->rsc2->id,
                                         PCMK_ACTION_MIGRATE_TO, 0),
-                           NULL, flags, order->rsc1->cluster);
+                           NULL, flags, order->rsc1->private->scheduler);
 
         // Also order B's migrate_from after A's stop during partial migrations
         if (order->rsc2->partial_migration_target != NULL) {
@@ -351,7 +351,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                NULL, order->rsc2,
                                pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_FROM, 0),
-                               NULL, flags, order->rsc1->cluster);
+                               NULL, flags, order->rsc1->private->scheduler);
         }
 
     } else if (pcmk__str_eq(first_task, PCMK_ACTION_PROMOTE, pcmk__str_none)
@@ -368,7 +368,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                NULL, order->rsc2,
                                pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->rsc1->cluster);
+                               NULL, flags, order->rsc1->private->scheduler);
         }
 
     } else if (pcmk__str_eq(first_task, PCMK_ACTION_DEMOTE, pcmk__str_none)
@@ -385,7 +385,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                NULL, order->rsc2,
                                pcmk__op_key(order->rsc2->id,
                                             PCMK_ACTION_MIGRATE_TO, 0),
-                               NULL, flags, order->rsc1->cluster);
+                               NULL, flags, order->rsc1->private->scheduler);
 
             // Order B migrate_from after A demote during partial migrations
             if (order->rsc2->partial_migration_target != NULL) {
@@ -395,7 +395,8 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                    NULL, order->rsc2,
                                    pcmk__op_key(order->rsc2->id,
                                                 PCMK_ACTION_MIGRATE_FROM, 0),
-                                   NULL, flags, order->rsc1->cluster);
+                                   NULL, flags,
+                                   order->rsc1->private->scheduler);
             }
         }
     }

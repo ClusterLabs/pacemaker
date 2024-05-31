@@ -47,9 +47,10 @@ typedef struct clone_variant_data_s {
     xmlNode *xml_obj_child;
 } clone_variant_data_t;
 
-#define get_clone_variant_data(data, rsc)                               \
-    CRM_ASSERT(pcmk__is_clone(rsc) && (rsc->variant_opaque != NULL));   \
-    data = (clone_variant_data_t *) rsc->variant_opaque;
+#define get_clone_variant_data(data, rsc) do {  \
+        CRM_ASSERT(pcmk__is_clone(rsc));        \
+        data = rsc->private->variant_opaque;    \
+    } while (0)
 
 /*!
  * \internal
@@ -213,7 +214,7 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
                pcmk_scheduler_t *scheduler)
 {
     if (pcmk__is_clone(rsc)) {
-        clone_variant_data_t *clone_data = rsc->variant_opaque;
+        clone_variant_data_t *clone_data = rsc->private->variant_opaque;
 
         pcmk__config_warn("Ignoring " PCMK_META_GLOBALLY_UNIQUE " for %s "
                           "because %s resources such as %s can be used only as "
@@ -355,7 +356,7 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     clone_data = pcmk__assert_alloc(1, sizeof(clone_variant_data_t));
-    rsc->variant_opaque = clone_data;
+    rsc->private->variant_opaque = clone_data;
 
     if (pcmk_is_set(rsc->flags, pcmk_rsc_promotable)) {
         // Use 1 as default but 0 for minimum and invalid
@@ -989,7 +990,7 @@ pe__is_universal_clone(const pcmk_resource_t *rsc,
                        const pcmk_scheduler_t *scheduler)
 {
     if (pcmk__is_clone(rsc)) {
-        clone_variant_data_t *clone_data = rsc->variant_opaque;
+        clone_variant_data_t *clone_data = rsc->private->variant_opaque;
 
         if (clone_data->clone_max == g_list_length(scheduler->nodes)) {
             return TRUE;

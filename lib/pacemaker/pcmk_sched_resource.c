@@ -125,7 +125,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
         if (!pcmk__str_eq(value, old_value, pcmk__str_none)) {
             changed = true;
             trigger_unfencing(rsc, node, "Device definition changed", NULL,
-                              rsc->cluster);
+                              rsc->private->scheduler);
             if (active_on_node) {
                 crm_notice("Forcing restart of %s on %s "
                            "because %s changed from '%s' to '%s'",
@@ -137,7 +137,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
     if (changed && active_on_node) {
         // Make sure the resource is restarted
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
-                      rsc->cluster);
+                      rsc->private->scheduler);
         pcmk__set_rsc_flags(rsc, pcmk_rsc_start_pending);
     }
     return changed;
@@ -204,7 +204,7 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
-    rsc->private->cmds = &assignment_methods[rsc->variant];
+    rsc->private->cmds = &assignment_methods[rsc->private->variant];
     g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
 }
 
@@ -322,7 +322,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 
     CRM_ASSERT(rsc != NULL);
 
-    out = rsc->cluster->priv;
+    out = rsc->private->scheduler->priv;
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
@@ -405,8 +405,10 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
                       bool stop_if_fail)
 {
     bool changed = false;
+    pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(rsc != NULL);
+    scheduler = rsc->private->scheduler;
 
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -502,8 +504,8 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     node->count++;
     pcmk__consume_node_capacity(node->details->utilization, rsc);
 
-    if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_show_utilization)) {
-        pcmk__output_t *out = rsc->cluster->priv;
+    if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
+        pcmk__output_t *out = scheduler->priv;
 
         out->message(out, "resource-util", rsc, node, __func__);
     }
@@ -699,9 +701,9 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
                                                         &r2_nodes, NULL, 1,
                                                         pcmk__coloc_select_this_with);
     pe__show_node_scores(true, NULL, resource1->id, r1_nodes,
-                         resource1->cluster);
+                         resource1->private->scheduler);
     pe__show_node_scores(true, NULL, resource2->id, r2_nodes,
-                         resource2->cluster);
+                         resource2->private->scheduler);
 
     // The resource with highest score on its current node goes first
     reason = "current location";

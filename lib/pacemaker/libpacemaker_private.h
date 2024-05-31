@@ -682,7 +682,7 @@ void pcmk__order_after_each(pcmk_action_t *after, GList *list);
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (first_rsc)->cluster)
+                       NULL, (flags), (first_rsc)->private->scheduler)
 
 #define pcmk__order_starts(rsc1, rsc2, flags)                \
     pcmk__order_resource_actions((rsc1), PCMK_ACTION_START,  \

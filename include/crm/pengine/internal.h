@@ -189,31 +189,32 @@ pcmk_action_t *custom_action(pcmk_resource_t *rsc, char *key, const char *task,
                              const pcmk_node_t *on_node, gboolean optional,
                              pcmk_scheduler_t *scheduler);
 
-#  define delete_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DELETE, 0)
-#  define delete_action(rsc, node, optional) custom_action(		\
-		rsc, delete_key(rsc), PCMK_ACTION_DELETE, node, \
-		optional, rsc->cluster);
+#define delete_key(rsc)  pcmk__op_key((rsc)->id, PCMK_ACTION_DELETE, 0)
+#define stop_key(rsc)    pcmk__op_key((rsc)->id, PCMK_ACTION_STOP, 0)
+#define reload_key(rsc)  pcmk__op_key((rsc)->id, PCMK_ACTION_RELOAD_AGENT, 0)
+#define start_key(rsc)   pcmk__op_key((rsc)->id, PCMK_ACTION_START, 0)
+#define promote_key(rsc) pcmk__op_key((rsc)->id, PCMK_ACTION_PROMOTE, 0)
+#define demote_key(rsc)  pcmk__op_key((rsc)->id, PCMK_ACTION_DEMOTE, 0)
 
-#  define stop_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_STOP, 0)
-#  define stop_action(rsc, node, optional) custom_action(			\
-		rsc, stop_key(rsc), PCMK_ACTION_STOP, node,		\
-		optional, rsc->cluster);
+#define delete_action(rsc, node, optional)                          \
+    custom_action((rsc), delete_key(rsc), PCMK_ACTION_DELETE,       \
+                  (node), (optional), (rsc)->private->scheduler)
 
-#  define reload_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_RELOAD_AGENT, 0)
-#  define start_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_START, 0)
-#  define start_action(rsc, node, optional) custom_action(		\
-		rsc, start_key(rsc), PCMK_ACTION_START, node,           \
-		optional, rsc->cluster)
+#define stop_action(rsc, node, optional)                            \
+    custom_action((rsc), stop_key(rsc), PCMK_ACTION_STOP,           \
+                  (node), (optional), (rsc)->private->scheduler)
 
-#  define promote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_PROMOTE, 0)
-#  define promote_action(rsc, node, optional) custom_action(		\
-		rsc, promote_key(rsc), PCMK_ACTION_PROMOTE, node,	\
-		optional, rsc->cluster)
+#define start_action(rsc, node, optional)                           \
+    custom_action((rsc), start_key(rsc), PCMK_ACTION_START,         \
+                  (node), (optional), (rsc)->private->scheduler)
 
-#  define demote_key(rsc) pcmk__op_key(rsc->id, PCMK_ACTION_DEMOTE, 0)
-#  define demote_action(rsc, node, optional) custom_action(		\
-		rsc, demote_key(rsc), PCMK_ACTION_DEMOTE, node, \
-		optional, rsc->cluster)
+#define promote_action(rsc, node, optional)                         \
+    custom_action((rsc), promote_key(rsc), PCMK_ACTION_PROMOTE,     \
+                  (node), (optional), (rsc)->private->scheduler)
+
+#define demote_action(rsc, node, optional)                          \
+    custom_action((rsc), demote_key(rsc), PCMK_ACTION_DEMOTE,       \
+                  (node), (optional), (rsc)->private->scheduler)
 
 pcmk_action_t *find_first_action(const GList *input, const char *uuid,
                                  const char *task, const pcmk_node_t *on_node);

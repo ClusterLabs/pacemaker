@@ -37,9 +37,11 @@ pcmk_resource_t *
 pe__last_group_member(const pcmk_resource_t *group)
 {
     if (group != NULL) {
-        CRM_CHECK(pcmk__is_group(group) && (group->variant_opaque != NULL),
-                  return NULL);
-        return ((group_variant_data_t *) group->variant_opaque)->last_child;
+        const group_variant_data_t *group_data = NULL;
+
+        CRM_CHECK(pcmk__is_group(group), return NULL);
+        group_data = group->private->variant_opaque;
+        return group_data->last_child;
     }
     return NULL;
 }
@@ -56,11 +58,10 @@ pe__last_group_member(const pcmk_resource_t *group)
 bool
 pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags)
 {
-    group_variant_data_t *group_data = NULL;
+    const group_variant_data_t *group_data = NULL;
 
-    CRM_CHECK(pcmk__is_group(group) && (group->variant_opaque != NULL),
-              return false);
-    group_data = (group_variant_data_t *) group->variant_opaque;
+    CRM_CHECK(pcmk__is_group(group), return false);
+    group_data = group->private->variant_opaque;
     return pcmk_all_flags_set(group_data->flags, flags);
 }
 
@@ -85,8 +86,9 @@ set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
     // We don't actually need the null check but it speeds up the common case
     if ((value_s == NULL) || (crm_str_to_boolean(value_s, &value) < 0)
         || (value != 0)) {
+        group_variant_data_t *group_data = group->private->variant_opaque;
 
-        ((group_variant_data_t *) group->variant_opaque)->flags |= flag;
+        group_data->flags |= flag;
 
     } else {
         pcmk__warn_once(wo_bit,
@@ -189,7 +191,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     group_data = pcmk__assert_alloc(1, sizeof(group_variant_data_t));
     group_data->last_child = NULL;
-    rsc->variant_opaque = group_data;
+    rsc->private->variant_opaque = group_data;
 
     // @COMPAT These are deprecated since 2.1.5
     set_group_flag(rsc, PCMK_META_ORDERED, pcmk__group_ordered,

@@ -79,12 +79,14 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
             }
         }
 
-        pcmk__set_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__set_rsc_flags(replica->child->private->parent,
+                            pcmk_rsc_assigning);
         pcmk__rsc_trace(bundle, "Assigning bundle %s replica child %s",
                         bundle->id, replica->child->id);
         replica->child->private->cmds->assign(replica->child, replica->node,
                                               stop_if_fail);
-        pcmk__clear_rsc_flags(replica->child->parent, pcmk_rsc_assigning);
+        pcmk__clear_rsc_flags(replica->child->private->parent,
+                              pcmk_rsc_assigning);
     }
     return true;
 }
@@ -121,9 +123,10 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     pcmk__rsc_trace(rsc, "Assigning bundle %s", rsc->id);
     pcmk__set_rsc_flags(rsc, pcmk_rsc_assigning);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes,
+                         rsc->private->scheduler);
 
     // Assign all containers first, so we know what nodes the bundle will be on
     containers = g_list_sort(pe__bundle_containers(rsc), pcmk__cmp_instance);
@@ -546,7 +549,7 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
     /* If the constraint dependent is a clone or bundle, "dependent" here is one
      * of its instances. Look for a compatible instance of this bundle.
      */
-    if (colocation->dependent->variant > pcmk_rsc_variant_group) {
+    if (colocation->dependent->private->variant > pcmk__rsc_variant_group) {
         const pcmk_resource_t *primary_container = NULL;
 
         primary_container = compatible_container(dependent, primary);
@@ -802,9 +805,10 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
              * will grab it from there to replace it in node-evaluated
              * parameters.
              */
-            GHashTable *params = pe_rsc_params(replica->remote,
-                                               NULL, replica->remote->cluster);
+            GHashTable *params = NULL;
 
+            params = pe_rsc_params(replica->remote, NULL,
+                                   replica->remote->private->scheduler);
             pcmk__insert_dup(params, PCMK_REMOTE_RA_ADDR, calculated_addr);
         } else {
             pcmk_resource_t *bundle = user_data;
@@ -881,7 +885,7 @@ order_replica_start_after(pcmk__bundle_replica_t *replica, void *user_data)
                        pcmk__op_key(replica->container->id, PCMK_ACTION_START,
                                     0),
                        NULL, pcmk__ar_ordered|pcmk__ar_if_on_same_node,
-                       replica->container->cluster);
+                       replica->container->private->scheduler);
     return true;
 }
 
@@ -955,7 +959,8 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
                                pcmk__op_key(replica->container->id,
                                             PCMK_ACTION_START, 0),
                                NULL, replica->remote, NULL, probe,
-                               pcmk__ar_nested_remote_probe, bundle->cluster);
+                               pcmk__ar_nested_remote_probe,
+                               bundle->private->scheduler);
         }
     }
     return true;

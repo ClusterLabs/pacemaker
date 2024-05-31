@@ -28,25 +28,8 @@ extern "C" {
  * \ingroup core
  */
 
-// Resource variants supported by Pacemaker
 //!@{
 //! \deprecated Do not use
-enum pe_obj_types {
-    // Order matters: some code compares greater or lesser than
-    pcmk_rsc_variant_unknown    = -1,   // Unknown resource variant
-    pcmk_rsc_variant_primitive  = 0,    // Primitive resource
-    pcmk_rsc_variant_group      = 1,    // Group resource
-    pcmk_rsc_variant_clone      = 2,    // Clone resource
-    pcmk_rsc_variant_bundle     = 3,    // Bundle resource
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    pe_unknown      = pcmk_rsc_variant_unknown,
-    pe_native       = pcmk_rsc_variant_primitive,
-    pe_group        = pcmk_rsc_variant_group,
-    pe_clone        = pcmk_rsc_variant_clone,
-    pe_container    = pcmk_rsc_variant_bundle,
-#endif
-};
 
 // What resource needs before it can be recovered from a failed node
 enum rsc_start_requirement {
@@ -58,21 +41,6 @@ enum rsc_start_requirement {
     rsc_req_nothing         = pcmk_requires_nothing,
     rsc_req_quorum          = pcmk_requires_quorum,
     rsc_req_stonith         = pcmk_requires_fencing,
-#endif
-};
-
-// How to recover a resource that is incorrectly active on multiple nodes
-enum rsc_recovery_type {
-    pcmk_multiply_active_restart    = 0,    // Stop on all, start on desired
-    pcmk_multiply_active_stop       = 1,    // Stop on all and leave stopped
-    pcmk_multiply_active_block      = 2,    // Do nothing to resource
-    pcmk_multiply_active_unexpected = 3,    // Stop unexpected instances
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    recovery_stop_start             = pcmk_multiply_active_restart,
-    recovery_stop_only              = pcmk_multiply_active_stop,
-    recovery_block                  = pcmk_multiply_active_block,
-    recovery_stop_unexpected        = pcmk_multiply_active_unexpected,
 #endif
 };
 
@@ -217,12 +185,6 @@ enum pe_find {
 #endif
 };
 
-//! \deprecated Do not use
-enum pe_restart {
-    pe_restart_restart,
-    pe_restart_ignore,
-};
-
 //! \internal Do not use
 typedef struct pcmk__resource_private pcmk__resource_private_t;
 
@@ -241,14 +203,6 @@ struct pe_resource_s {
     //! \deprecated Call pcmk_resource_id() instead
     char *id;                           // Resource ID in configuration
 
-    pcmk_scheduler_t *cluster;          // Cluster that resource is part of
-    pcmk_resource_t *parent;            // Resource's parent resource, if any
-    enum pe_obj_types variant;          // Resource variant
-    void *variant_opaque;               // Variant-specific (and private) data
-
-    enum rsc_recovery_type recovery_type;   // How to recover if failed
-
-    enum pe_restart restart_type;   // \deprecated Do not use
     int priority;                   // Configured priority
     int stickiness;                 // Extra preference for current node
     int sort_index;                 // Promotion score on assigned node

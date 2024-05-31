@@ -85,7 +85,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
               rsc->private->xml->name, rsc->id,
               pcmk__s(rsc->private->history_id, rsc->id),
-              ((rsc->parent == NULL)? "NA" : rsc->parent->id),
+              ((rsc->private->parent == NULL)? "NA" : rsc->private->parent->id),
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);
 
@@ -537,6 +537,7 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
+    const pcmk_scheduler_t *scheduler = checks->rsc->private->scheduler;
 
     if (checks->flags == 0) {
         return pcmk_rc_no_output;
@@ -569,7 +570,7 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
                        "'%s' cannot run on unhealthy nodes due to "
                        PCMK_OPT_NODE_HEALTH_STRATEGY "='%s'",
                        parent->id,
-                       pcmk__cluster_option(checks->rsc->cluster->config_hash,
+                       pcmk__cluster_option(scheduler->config_hash,
                                             PCMK_OPT_NODE_HEALTH_STRATEGY));
     }
 

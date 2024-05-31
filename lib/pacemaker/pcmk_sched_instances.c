@@ -202,8 +202,8 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
-    CRM_ASSERT((instance1 != NULL) && (instance1->parent != NULL)
-               && (instance2 != NULL) && (instance2->parent != NULL)
+    CRM_ASSERT((instance1 != NULL) && (instance1->private->parent != NULL)
+               && (instance2 != NULL) && (instance2->private->parent != NULL)
                && (current_node1 != NULL) && (current_node2 != NULL));
 
     // Create node tables initialized with each node
@@ -599,7 +599,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
     const pcmk_node_t *chosen = NULL;
     int reserved = 0;
 
-    pcmk_resource_t *parent = instance->parent;
+    pcmk_resource_t *parent = instance->private->parent;
     GHashTable *allowed_orig = NULL;
     GHashTable *allowed_orig_parent = parent->allowed_nodes;
     const pcmk_node_t *allowed_node = NULL;
@@ -854,7 +854,8 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
                             "already assigned",
                             instance->id, max_total);
             resource_location(instance, NULL, -PCMK_SCORE_INFINITY,
-                              "collective_limit_reached", collective->cluster);
+                              "collective_limit_reached",
+                              collective->private->scheduler);
 
         } else if (assign_instance(instance, NULL, max_per_node) != NULL) {
             assigned++;
@@ -902,7 +903,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
     }
 
     // If instance is a collective (a cloned group), check its children instead
-    if (instance->variant > pcmk_rsc_variant_primitive) {
+    if (instance->private->variant > pcmk__rsc_variant_primitive) {
         for (iter = instance->children;
              (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
              iter = iter->next) {
@@ -1436,7 +1437,7 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
         changed |= then_instance->private->cmds->update_ordered_actions(
             first_action, then_action, node,
             first_instance->private->cmds->action_flags(first_action, node),
-            filter, type, then->rsc->cluster);
+            filter, type, then->rsc->private->scheduler);
     }
     free_instance_list(then->rsc, instances);
     return changed;
@@ -1469,8 +1470,8 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
         return false;
     }
 
-    if ((first->rsc->variant < pcmk_rsc_variant_clone)
-        || (then->rsc->variant < pcmk_rsc_variant_clone)) {
+    if ((first->rsc->private->variant < pcmk__rsc_variant_clone)
+        || (then->rsc->private->variant < pcmk__rsc_variant_clone)) {
         crm_trace("Not interleaving %s with %s: not clones or bundles",
                   first->uuid, then->uuid);
         return false;
@@ -1519,6 +1520,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                               uint32_t flags, uint32_t filter, uint32_t type)
 {
     pcmk_action_t *instance_action = NULL;
+    pcmk_scheduler_t *scheduler = instance->private->scheduler;
     uint32_t instance_flags = 0;
     uint32_t changed = pcmk__updated_none;
 
@@ -1541,7 +1543,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                                                               instance_action,
                                                               node, flags,
                                                               filter, type,
-                                                              instance->cluster);
+                                                              scheduler);
 
     // Propagate any changes to later actions
     if (pcmk_is_set(changed, pcmk__updated_then)) {
@@ -1549,7 +1551,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
              after_iter != NULL; after_iter = after_iter->next) {
             pcmk__related_action_t *after = after_iter->data;
 
-            pcmk__update_action_for_orderings(after->action, instance->cluster);
+            pcmk__update_action_for_orderings(after->action, scheduler);
         }
     }
 

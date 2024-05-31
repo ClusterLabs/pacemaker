@@ -81,10 +81,10 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
     }
 
     // Process clones before primitives and groups
-    if (rsc1->variant > rsc2->variant) {
+    if (rsc1->private->variant > rsc2->private->variant) {
         return -1;
     }
-    if (rsc1->variant < rsc2->variant) {
+    if (rsc1->private->variant < rsc2->private->variant) {
         return 1;
     }
 
@@ -391,8 +391,9 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     pcmk__add_this_with(&(dependent->rsc_cons), new_con, dependent);
     pcmk__add_with_this(&(primary->rsc_cons_lhs), new_con, primary);
 
-    dependent->cluster->colocation_constraints = g_list_prepend(
-        dependent->cluster->colocation_constraints, new_con);
+    dependent->private->scheduler->colocation_constraints =
+        g_list_prepend(dependent->private->scheduler->colocation_constraints,
+                       new_con);
 
     if (score <= -PCMK_SCORE_INFINITY) {
         anti_colocation_order(dependent, new_con->dependent_role, primary,
@@ -1048,7 +1049,7 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
             pcmk__clear_action_flags(action, pcmk_action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocation_dependents(action);
-            pcmk__update_action_for_orderings(action, rsc->cluster);
+            pcmk__update_action_for_orderings(action, rsc->private->scheduler);
         }
     }
 
@@ -1094,8 +1095,8 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
      * collective resource.
      */
     rsc = uber_parent(action->rsc);
-    if (rsc->parent != NULL) {
-        rsc = rsc->parent; // Bundle
+    if (rsc->private->parent != NULL) {
+        rsc = rsc->private->parent; // Bundle
     }
 
     // Colocation fails only if entire primary can't reach desired role
@@ -1213,11 +1214,13 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     }
 
     dependent_role_rsc = get_resource_for_role(dependent);
+
     primary_role_rsc = get_resource_for_role(primary);
 
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
-        && (dependent_role_rsc->parent != NULL)
-        && pcmk_is_set(dependent_role_rsc->parent->flags, pcmk_rsc_promotable)
+        && (dependent_role_rsc->private->parent != NULL)
+        && pcmk_is_set(dependent_role_rsc->private->parent->flags,
+                       pcmk_rsc_promotable)
         && !pcmk_is_set(dependent_role_rsc->flags, pcmk_rsc_unassigned)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
@@ -1776,7 +1779,8 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                                                             constraint,
                                                             other_factor,
                                                             flags);
-            pe__show_node_scores(true, NULL, log_id, work, source_rsc->cluster);
+            pe__show_node_scores(true, NULL, log_id, work,
+                                 source_rsc->private->scheduler);
         }
         g_list_free(colocations);
 

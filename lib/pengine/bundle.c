@@ -78,9 +78,10 @@ typedef struct pe__bundle_variant_data_s {
         enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
-#define get_bundle_variant_data(data, rsc)                              \
-    CRM_ASSERT(pcmk__is_bundle(rsc) && (rsc->variant_opaque != NULL));  \
-    data = (pe__bundle_variant_data_t *) rsc->variant_opaque;
+#define get_bundle_variant_data(data, rsc) do { \
+        CRM_ASSERT(pcmk__is_bundle(rsc));       \
+        data = rsc->private->variant_opaque;    \
+    } while (0)
 
 /*!
  * \internal
@@ -396,7 +397,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
         if (pe__unpack_resource(xml_ip, &replica->ip, parent,
-                                parent->cluster) != pcmk_rc_ok) {
+                                parent->private->scheduler) != pcmk_rc_ok) {
             return pcmk_rc_unpack_error;
         }
 
@@ -647,7 +648,7 @@ create_container_resource(pcmk_resource_t *parent,
 
     // TODO: Other ops? Timeouts and intervals from underlying resource?
     if (pe__unpack_resource(xml_container, &replica->container, parent,
-                            parent->cluster) != pcmk_rc_ok) {
+                            parent->private->scheduler) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
     pcmk__set_rsc_flags(replica->container, pcmk_rsc_replica_container);
@@ -689,13 +690,14 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         const char *uname = NULL;
         const char *connect_name = NULL;
 
-        if (pe_find_resource(parent->cluster->resources, id) != NULL) {
+        if (pe_find_resource(parent->private->scheduler->resources,
+                             id) != NULL) {
             free(id);
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
                                    replica->child->id, replica->offset);
             //@TODO return error instead of asserting?
-            CRM_ASSERT(pe_find_resource(parent->cluster->resources,
+            CRM_ASSERT(pe_find_resource(parent->private->scheduler->resources,
                                         id) == NULL);
         }
 
@@ -732,10 +734,11 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pcmk_find_node(parent->cluster, uname);
+        node = pcmk_find_node(parent->private->scheduler, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  PCMK_VALUE_MINUS_INFINITY, parent->cluster);
+                                  PCMK_VALUE_MINUS_INFINITY,
+                                  parent->private->scheduler);
         } else {
             node->weight = -PCMK_SCORE_INFINITY;
         }
@@ -758,8 +761,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * @TODO Possible alternative: ensure bundles are unpacked before other
          * resources, so the weight is correct before any copies are made.
          */
-        g_list_foreach(parent->cluster->resources, (GFunc) disallow_node,
-                       (gpointer) uname);
+        g_list_foreach(parent->private->scheduler->resources,
+                       (GFunc) disallow_node, (gpointer) uname);
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
@@ -777,11 +780,11 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         {
             pcmk_node_t *copy = pe__copy_node(replica->node);
             copy->weight = -PCMK_SCORE_INFINITY;
-            g_hash_table_insert(replica->child->parent->allowed_nodes,
+            g_hash_table_insert(replica->child->private->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
-                                parent->cluster) != pcmk_rc_ok) {
+                                parent->private->scheduler) != pcmk_rc_ok) {
             return pcmk_rc_unpack_error;
         }
 
@@ -898,9 +901,8 @@ replica_for_remote(pcmk_resource_t *remote)
     if (top == NULL) {
         return NULL;
     }
-
-    while (top->parent != NULL) {
-        top = top->parent;
+    while (top->private->parent != NULL) {
+        top = top->private->parent;
     }
 
     get_bundle_variant_data(bundle_data, top);
@@ -927,7 +929,7 @@ pe__bundle_needs_remote_name(pcmk_resource_t *rsc)
     }
 
     // Use NULL node since pcmk__bundle_expand() uses that to set value
-    params = pe_rsc_params(rsc, NULL, rsc->cluster);
+    params = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
     value = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
@@ -994,7 +996,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
-    rsc->variant_opaque = bundle_data;
+    rsc->private->variant_opaque = bundle_data;
     bundle_data->prefix = strdup(rsc->id);
 
     xml_obj = pcmk__xe_first_child(rsc->private->xml, PCMK_XE_DOCKER, NULL,

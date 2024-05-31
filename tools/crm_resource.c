@@ -1744,7 +1744,8 @@ main(int argc, char **argv)
         /* The --ban, --clear, --move, and --restart commands do not work with
          * instances of clone resourcs.
          */
-        if (pcmk__is_clone(rsc->parent) && (strchr(options.rsc_id, ':') != NULL)
+        if (pcmk__is_clone(rsc->private->parent)
+            && (strchr(options.rsc_id, ':') != NULL)
             && !accept_clone_instance()) {
 
             exit_code = CRM_EX_INVALID_PARAM;

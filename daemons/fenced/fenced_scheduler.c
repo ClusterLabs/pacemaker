@@ -164,8 +164,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     }
 
     // If device is in a group, check whether local node is allowed for group
-    if (pcmk__is_group(rsc->parent)) {
-        pcmk_node_t *group_node = local_node_allowed_for(rsc->parent);
+    if (pcmk__is_group(rsc->private->parent)) {
+        pcmk_node_t *group_node = local_node_allowed_for(rsc->private->parent);
 
         if ((group_node != NULL) && (group_node->weight < 0)) {
             crm_info("Ignoring fencing device %s "

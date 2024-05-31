@@ -78,28 +78,28 @@ static pcmk__rsc_methods_t resource_class_functions[] = {
     }
 };
 
-static enum pe_obj_types
+static enum pcmk__rsc_variant
 get_resource_type(const char *name)
 {
     if (pcmk__str_eq(name, PCMK_XE_PRIMITIVE, pcmk__str_casei)) {
-        return pcmk_rsc_variant_primitive;
+        return pcmk__rsc_variant_primitive;
 
     } else if (pcmk__str_eq(name, PCMK_XE_GROUP, pcmk__str_casei)) {
-        return pcmk_rsc_variant_group;
+        return pcmk__rsc_variant_group;
 
     } else if (pcmk__str_eq(name, PCMK_XE_CLONE, pcmk__str_casei)) {
-        return pcmk_rsc_variant_clone;
+        return pcmk__rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK__XE_PROMOTABLE_LEGACY,
                             pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
-        return pcmk_rsc_variant_clone;
+        return pcmk__rsc_variant_clone;
 
     } else if (pcmk__str_eq(name, PCMK_XE_BUNDLE, pcmk__str_casei)) {
-        return pcmk_rsc_variant_bundle;
+        return pcmk__rsc_variant_bundle;
     }
 
-    return pcmk_rsc_variant_unknown;
+    return pcmk__rsc_variant_unknown;
 }
 
 /*!
@@ -136,7 +136,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
                              GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
-    pcmk_resource_t *p = rsc->parent;
+    pcmk_resource_t *p = rsc->private->parent;
 
     if (p == NULL) {
         return ;
@@ -152,7 +152,7 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         pe__unpack_dataset_nvpairs(p->private->xml, PCMK_XE_META_ATTRIBUTES,
                                    rule_data, parent_orig_meta, NULL, FALSE,
                                    scheduler);
-        p = p->parent; 
+        p = p->private->parent;
     }
 
     if (parent_orig_meta != NULL) {
@@ -209,7 +209,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
      * the hash table of the child resource. If it is already explicitly set as
      * a child, it will not be overwritten.
      */
-    if (rsc->parent != NULL) {
+    if (rsc->private->parent != NULL) {
         expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, scheduler);
     }
 
@@ -221,8 +221,8 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
      * explicitly set, set a value that is not set from PCMK_XE_RSC_DEFAULTS
      * either. The values already set up to this point will not be overwritten.
      */
-    if (rsc->parent) {
-        g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+    if (rsc->private->parent != NULL) {
+        g_hash_table_foreach(rsc->private->parent->meta, dup_attr, meta_hash);
     }
 }
 
@@ -246,8 +246,8 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                                &rule_data, meta_hash, NULL, FALSE, scheduler);
 
     /* set anything else based on the parent */
-    if (rsc->parent != NULL) {
-        get_rsc_attributes(meta_hash, rsc->parent, node, scheduler);
+    if (rsc->private->parent != NULL) {
+        get_rsc_attributes(meta_hash, rsc->private->parent, node, scheduler);
 
     } else {
         if (pcmk__xe_first_child(scheduler->rsc_defaults,
@@ -527,6 +527,8 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 static void
 unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 {
+    const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
+
     if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_QUORUM, pcmk__str_casei)) {
@@ -534,7 +536,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing);
-        if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+        if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
@@ -547,8 +549,7 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
 
-        } else if (!pcmk_is_set(rsc->cluster->flags,
-                                pcmk_sched_fencing_enabled)) {
+        } else if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
                               "disabled", rsc->id);
@@ -570,15 +571,13 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
                    && xml_contains_remote_node(rsc->private->xml)) {
             value = PCMK_VALUE_QUORUM;
 
-        } else if (pcmk_is_set(rsc->cluster->flags,
-                               pcmk_sched_enable_unfencing)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_enable_unfencing)) {
             value = PCMK_VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(rsc->cluster->flags,
-                               pcmk_sched_fencing_enabled)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             value = PCMK_VALUE_FENCING;
 
-        } else if (rsc->cluster->no_quorum_policy == pcmk_no_quorum_ignore) {
+        } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
             value = PCMK_VALUE_NOTHING;
 
         } else {
@@ -688,7 +687,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
     rsc_private = (*rsc)->private;
 
-    (*rsc)->cluster = scheduler;
+    rsc_private->scheduler = scheduler;
 
     if (expanded_xml) {
         crm_log_xml_trace(expanded_xml, "[expanded XML]");
@@ -702,14 +701,15 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
 
-    (*rsc)->parent = parent;
+    rsc_private->parent = parent;
 
     ops = pcmk__xe_first_child(rsc_private->xml, PCMK_XE_OPERATIONS, NULL,
                                NULL);
     rsc_private->ops_xml = pcmk__xe_resolve_idref(ops, scheduler->input);
 
-    (*rsc)->variant = get_resource_type((const char *) rsc_private->xml->name);
-    if ((*rsc)->variant == pcmk_rsc_variant_unknown) {
+    rsc_private->variant = get_resource_type((const char *)
+                                             rsc_private->xml->name);
+    if (rsc_private->variant == pcmk__rsc_variant_unknown) {
         pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
                          id, rsc_private->xml->name);
         common_free(*rsc);
@@ -732,7 +732,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     warn_about_deprecated_classes(*rsc);
 
-    rsc_private->fns = &resource_class_functions[(*rsc)->variant];
+    rsc_private->fns = &resource_class_functions[rsc_private->variant];
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, scheduler);
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
@@ -750,7 +750,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
-    (*rsc)->recovery_type = pcmk_multiply_active_restart;
     (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
     (*rsc)->failure_timeout = 0;
@@ -831,7 +830,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     // @COMPAT Deprecated meta-attribute
     value = g_hash_table_lookup((*rsc)->meta, PCMK__META_RESTART_TYPE);
     if (pcmk__str_eq(value, PCMK_VALUE_RESTART, pcmk__str_casei)) {
-        (*rsc)->restart_type = pe_restart_restart;
+        rsc_private->restart_type = pcmk__restart_restart;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: restart",
                         (*rsc)->id);
         pcmk__warn_once(pcmk__wo_restart_type,
@@ -839,25 +838,25 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         "and will be removed in a future release");
 
     } else {
-        (*rsc)->restart_type = pe_restart_ignore;
+        rsc_private->restart_type = pcmk__restart_ignore;
         pcmk__rsc_trace(*rsc, "%s dependency restart handling: ignore",
                         (*rsc)->id);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MULTIPLE_ACTIVE);
     if (pcmk__str_eq(value, PCMK_VALUE_STOP_ONLY, pcmk__str_casei)) {
-        (*rsc)->recovery_type = pcmk_multiply_active_stop;
+        rsc_private->multiply_active_policy = pcmk__multiply_active_stop;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: stop only",
                         (*rsc)->id);
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        (*rsc)->recovery_type = pcmk_multiply_active_block;
+        rsc_private->multiply_active_policy = pcmk__multiply_active_block;
         pcmk__rsc_trace(*rsc, "%s multiple running resource recovery: block",
                         (*rsc)->id);
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_STOP_UNEXPECTED,
                             pcmk__str_casei)) {
-        (*rsc)->recovery_type = pcmk_multiply_active_unexpected;
+        rsc_private->multiply_active_policy = pcmk__multiply_active_unexpected;
         pcmk__rsc_trace(*rsc,
                         "%s multiple running resource recovery: "
                         "stop unexpected instances",
@@ -872,7 +871,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "\"" PCMK_VALUE_STOP_START "\"",
                               value);
         }
-        (*rsc)->recovery_type = pcmk_multiply_active_restart;
+        rsc_private->multiply_active_policy = pcmk__multiply_active_restart;
         pcmk__rsc_trace(*rsc,
                         "%s multiple running resource recovery: stop/start",
                         (*rsc)->id);
@@ -1005,11 +1004,11 @@ is_parent(pcmk_resource_t *child, pcmk_resource_t *rsc)
     if (parent == NULL || rsc == NULL) {
         return FALSE;
     }
-    while (parent->parent != NULL) {
-        if (parent->parent == rsc) {
+    while (parent->private->parent != NULL) {
+        if (parent->private->parent == rsc) {
             return TRUE;
         }
-        parent = parent->parent;
+        parent = parent->private->parent;
     }
     return FALSE;
 }
@@ -1022,8 +1021,9 @@ uber_parent(pcmk_resource_t *rsc)
     if (parent == NULL) {
         return NULL;
     }
-    while ((parent->parent != NULL) && !pcmk__is_bundle(parent->parent)) {
-        parent = parent->parent;
+    while ((parent->private->parent != NULL)
+           && !pcmk__is_bundle(parent->private->parent)) {
+        parent = parent->private->parent;
     }
     return parent;
 }
@@ -1047,11 +1047,11 @@ pe__const_top_resource(const pcmk_resource_t *rsc, bool include_bundle)
     if (parent == NULL) {
         return NULL;
     }
-    while (parent->parent != NULL) {
-        if (!include_bundle && pcmk__is_bundle(parent->parent)) {
+    while (parent->private->parent != NULL) {
+        if (!include_bundle && pcmk__is_bundle(parent->private->parent)) {
             break;
         }
-        parent = parent->parent;
+        parent = parent->private->parent;
     }
     return parent;
 }
@@ -1063,7 +1063,8 @@ common_free(pcmk_resource_t * rsc)
         return;
     }
 
-    pcmk__rsc_trace(rsc, "Freeing %s %d", rsc->id, rsc->variant);
+    pcmk__rsc_trace(rsc, "Freeing %s %s",
+                    (const char *) rsc->private->xml->name, rsc->id);
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
@@ -1080,7 +1081,7 @@ common_free(pcmk_resource_t * rsc)
         g_hash_table_destroy(rsc->utilization);
     }
 
-    if ((rsc->parent == NULL)
+    if ((rsc->private->parent == NULL)
         && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
 
         pcmk__xml_free(rsc->private->xml);
@@ -1113,9 +1114,9 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->rsc_location);
     free(rsc->id);
     free(rsc->allocated_to);
-    free(rsc->variant_opaque);
     free(rsc->pending_task);
 
+    free(rsc->private->variant_opaque);
     free(rsc->private->history_id);
     free(rsc->private);
 
@@ -1246,12 +1247,12 @@ pe__count_common(pcmk_resource_t *rsc)
 
     } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
                || (rsc->role > pcmk_role_stopped)) {
-        rsc->cluster->ninstances++;
+        rsc->private->scheduler->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
-            rsc->cluster->disabled_resources++;
+            rsc->private->scheduler->disabled_resources++;
         }
         if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
-            rsc->cluster->blocked_resources++;
+            rsc->private->scheduler->blocked_resources++;
         }
     }
 }

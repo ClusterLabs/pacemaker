@@ -62,12 +62,13 @@ order_start_then_action(pcmk_resource_t *first_rsc, pcmk_action_t *then_action,
                         uint32_t extra)
 {
     if ((first_rsc != NULL) && (then_action != NULL)) {
+
         pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
                            then_action->rsc, NULL, then_action,
                            pcmk__ar_guest_allowed
                            |pcmk__ar_unrunnable_first_blocks
                            |extra,
-                           first_rsc->cluster);
+                           first_rsc->private->scheduler);
     }
 }
 
@@ -78,7 +79,8 @@ order_action_then_stop(pcmk_action_t *first_action, pcmk_resource_t *then_rsc,
     if ((first_action != NULL) && (then_rsc != NULL)) {
         pcmk__new_ordering(first_action->rsc, NULL, first_action,
                            then_rsc, stop_key(then_rsc), NULL,
-                           pcmk__ar_guest_allowed|extra, then_rsc->cluster);
+                           pcmk__ar_guest_allowed|extra,
+                           then_rsc->private->scheduler);
     }
 }
 
@@ -222,7 +224,7 @@ apply_remote_ordering(pcmk_action_t *action)
                  * to the remote connection, since the stop will become implied
                  * by the fencing.
                  */
-                pe_fence_node(remote_rsc->cluster, action->node,
+                pe_fence_node(remote_rsc->private->scheduler, action->node,
                               "resources are active but "
                               "connection is unrecoverable",
                               FALSE);
@@ -273,7 +275,7 @@ apply_remote_ordering(pcmk_action_t *action)
                      * resource on the remote node. Since we have no way to find
                      * out, it is necessary to fence the node.
                      */
-                    pe_fence_node(remote_rsc->cluster, action->node,
+                    pe_fence_node(remote_rsc->private->scheduler, action->node,
                                   "resources are in unknown state "
                                   "and connection is unrecoverable", FALSE);
                 }
@@ -309,7 +311,6 @@ apply_container_ordering(pcmk_action_t *action)
     enum action_tasks task = pcmk_parse_action(action->task);
 
     CRM_ASSERT(action->rsc != NULL);
-    CRM_ASSERT(action->node != NULL);
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
     remote_rsc = action->node->details->remote_rsc;
@@ -319,8 +320,8 @@ apply_container_ordering(pcmk_action_t *action)
     CRM_ASSERT(container != NULL);
 
     if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
-        pe_fence_node(action->rsc->cluster, action->node, "container failed",
-                      FALSE);
+        pe_fence_node(action->rsc->private->scheduler, action->node,
+                      "container failed", FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
@@ -657,7 +658,7 @@ pcmk__substitute_remote_addr(pcmk_resource_t *rsc, GHashTable *params)
     const char *remote_addr = g_hash_table_lookup(params, PCMK_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
-        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->cluster);
+        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->private->scheduler);
 
         remote_addr = g_hash_table_lookup(base, PCMK_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {

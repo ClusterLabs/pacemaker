@@ -725,7 +725,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          */
         .node_hash = (node == NULL)? NULL : node->details->attrs,
 
-        .now = rsc->cluster->now,
+        .now = rsc->private->scheduler->now,
         .match_data = NULL,
         .rsc_data = &rsc_rule_data,
         .op_data = &op_rule_data,
@@ -734,9 +734,9 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     meta = pcmk__strkey_table(free, free);
 
     // Cluster-wide <op_defaults> <meta_attributes>
-    pe__unpack_dataset_nvpairs(rsc->cluster->op_defaults,
+    pe__unpack_dataset_nvpairs(rsc->private->scheduler->op_defaults,
                                PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
-                               FALSE, rsc->cluster);
+                               FALSE, rsc->private->scheduler);
 
     // Derive default timeout for probes from recurring monitor timeouts
     if (pcmk_is_probe(action_name, interval_ms)) {
@@ -762,7 +762,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (action_config != NULL) {
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
-                                   &rule_data, meta, NULL, TRUE, rsc->cluster);
+                                   &rule_data, meta, NULL, TRUE,
+                                   rsc->private->scheduler);
 
         /* Anything set as an <op> XML property has highest precedence.
          * This ensures we use the name and interval from the <op> tag.
@@ -801,7 +802,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
         && (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)
             || pcmk_is_probe(action_name, interval_ms))) {
 
-        GHashTable *params = pe_rsc_params(rsc, node, rsc->cluster);
+        GHashTable *params = pe_rsc_params(rsc, node, rsc->private->scheduler);
 
         timeout_spec = g_hash_table_lookup(params, "pcmk_monitor_timeout");
         if (timeout_spec != NULL) {
@@ -830,7 +831,8 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         str = g_hash_table_lookup(meta, PCMK_META_INTERVAL_ORIGIN);
         if (unpack_interval_origin(str, action_config, interval_ms,
-                                   rsc->cluster->now, &start_delay)) {
+                                   rsc->private->scheduler->now,
+                                   &start_delay)) {
             g_hash_table_insert(meta, pcmk__str_copy(PCMK_META_START_DELAY),
                                 crm_strdup_printf("%lld", start_delay));
         }
@@ -892,9 +894,11 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const char *desc = NULL;
     bool needs_remote_reset = false;
     enum action_fail_response on_fail = pcmk_on_fail_ignore;
+    const pcmk_scheduler_t *scheduler = NULL;
 
     // There's no enum value for unknown or invalid, so assert
     CRM_ASSERT((rsc != NULL) && (action_name != NULL));
+    scheduler = rsc->private->scheduler;
 
     if (value == NULL) {
         // Use default
@@ -904,7 +908,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         desc = "block";
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCE, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             on_fail = pcmk_on_fail_fence_node;
             desc = "node fencing";
         } else {
@@ -965,7 +969,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
      * PCMK_META_ON_FAIL=PCMK_VALUE_FENCE to fence after start failures.
      */
     if (rsc->is_remote_node
-        && pcmk__is_remote_node(pcmk_find_node(rsc->cluster, rsc->id))
+        && pcmk__is_remote_node(pcmk_find_node(scheduler, rsc->id))
         && !pcmk_is_probe(action_name, interval_ms)
         && !pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)) {
         needs_remote_reset = true;
@@ -983,8 +987,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     } else if (needs_remote_reset) {
         if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-            if (pcmk_is_set(rsc->cluster->flags,
-                            pcmk_sched_fencing_enabled)) {
+            if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
                 desc = "fence remote node (default)";
             } else {
                 desc = "recover remote node connection (default)";
@@ -996,7 +999,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
         }
 
     } else if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)) {
-        if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             on_fail = pcmk_on_fail_fence_node;
             desc = "resource fence (default)";
         } else {
@@ -1629,7 +1632,7 @@ pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
     CRM_ASSERT((rsc != NULL) && (node != NULL));
 
     custom_action(rsc, pcmk__op_key(rsc->id, PCMK_ACTION_LRM_DELETE, 0),
-                  PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->cluster);
+                  PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->private->scheduler);
 }
 
 #define sort_return(an_int, why) do {					\
@@ -1806,7 +1809,7 @@ pe__new_rsc_pseudo_action(pcmk_resource_t *rsc, const char *task, bool optional,
     CRM_ASSERT((rsc != NULL) && (task != NULL));
 
     action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
-                           optional, rsc->cluster);
+                           optional, rsc->private->scheduler);
     pcmk__set_action_flags(action, pcmk_action_pseudo);
     if (runnable) {
         pcmk__set_action_flags(action, pcmk_action_runnable);

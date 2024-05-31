@@ -307,8 +307,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     CRM_CHECK(rsc != NULL, return NULL);
 
     // The default placement strategy ignores utilization
-    if (pcmk__str_eq(rsc->cluster->placement_strategy, PCMK_VALUE_DEFAULT,
-                     pcmk__str_casei)) {
+    if (pcmk__str_eq(rsc->private->scheduler->placement_strategy,
+                     PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
         return NULL;
     }
 
@@ -356,7 +356,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rscs_id);
                 resource_location(rsc, node, -PCMK_SCORE_INFINITY,
-                                  "__limit_utilization__", rsc->cluster);
+                                  "__limit_utilization__",
+                                  rsc->private->scheduler);
             }
         }
         most_capable_node = NULL;
@@ -370,7 +371,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rsc->id);
                 resource_location(rsc, node, -PCMK_SCORE_INFINITY,
-                                  "__limit_utilization__", rsc->cluster);
+                                  "__limit_utilization__",
+                                  rsc->private->scheduler);
             }
         }
     }
@@ -380,7 +382,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     free(rscs_id);
 
     pe__show_node_scores(true, rsc, "Post-utilization", rsc->allowed_nodes,
-                         rsc->cluster);
+                         rsc->private->scheduler);
     return most_capable_node;
 }
 
@@ -424,25 +426,28 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 
     pcmk__rsc_trace(rsc,
                     "Creating utilization constraints for %s - strategy: %s",
-                    rsc->id, rsc->cluster->placement_strategy);
+                    rsc->id, rsc->private->scheduler->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
     for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
-                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target,
+                           rsc->private->scheduler);
     }
 
     // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
     for (iter = allowed_nodes; iter; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
-                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target,
+                           rsc->private->scheduler);
         pcmk__new_ordering(NULL, NULL, load_stopped,
                            rsc,
                            pcmk__op_key(rsc->id, PCMK_ACTION_MIGRATE_TO, 0),
                            NULL,
-                           pcmk__ar_if_on_same_node_or_target, rsc->cluster);
+                           pcmk__ar_if_on_same_node_or_target,
+                           rsc->private->scheduler);
     }
 }
 

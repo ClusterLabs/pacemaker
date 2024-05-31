@@ -470,7 +470,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
                         clone->id, child->id, child->sort_index);
     }
     pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
-                         clone->cluster);
+                         clone->private->scheduler);
 
     g_list_foreach(clone->children, add_sort_index_to_node_score, clone);
 
@@ -486,7 +486,7 @@ sort_promotable_instances(pcmk_resource_t *clone)
     pcmk__require_promotion_tickets(clone);
 
     pe__show_node_scores(true, clone, "After", clone->allowed_nodes,
-                         clone->cluster);
+                         clone->private->scheduler);
 
     // Reset sort indexes to final node scores
     g_list_foreach(clone->children, set_sort_index_to_node_score, clone);
@@ -893,10 +893,11 @@ show_promotion_score(pcmk_resource_t *instance)
     pcmk_node_t *chosen = instance->private->fns->location(instance, NULL,
                                                            FALSE);
 
-    if (pcmk_is_set(instance->cluster->flags, pcmk_sched_output_scores)
-        && !pcmk__is_daemon && (instance->cluster->priv != NULL)) {
+    if (pcmk_is_set(instance->private->scheduler->flags,
+                    pcmk_sched_output_scores)
+        && !pcmk__is_daemon && (instance->private->scheduler->priv != NULL)) {
 
-        pcmk__output_t *out = instance->cluster->priv;
+        pcmk__output_t *out = instance->private->scheduler->priv;
 
         out->message(out, "promotion-score", instance, chosen,
                      pcmk_readable_score(instance->sort_index));
@@ -1018,6 +1019,7 @@ set_instance_role(gpointer data, gpointer user_data)
     int *count = (int *) user_data;
 
     const pcmk_resource_t *clone = pe__const_top_resource(instance, false);
+    const pcmk_scheduler_t *scheduler = instance->private->scheduler;
     pcmk_node_t *chosen = NULL;
 
     show_promotion_score(instance);
@@ -1037,8 +1039,8 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     if ((instance->role < pcmk_role_promoted)
-        && !pcmk_is_set(instance->cluster->flags, pcmk_sched_quorate)
-        && (instance->cluster->no_quorum_policy == pcmk_no_quorum_freeze)) {
+        && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
+        && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
                    instance->id);
         set_next_role_unpromoted(instance, NULL);

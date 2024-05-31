@@ -804,7 +804,9 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
          * function.  If not, it needs to move into pe__node_text.
          */
         if (pcmk__str_in_list(rsc_printable_id(rsc), filter, pcmk__str_star_matches) ||
-            (rsc->parent && pcmk__str_in_list(rsc_printable_id(rsc->parent), filter, pcmk__str_star_matches))) {
+            ((rsc->private->parent != NULL)
+             && pcmk__str_in_list(rsc_printable_id(rsc->private->parent),
+                                  filter, pcmk__str_star_matches))) {
             retval = g_list_prepend(retval, rsc);
         }
     }
@@ -890,8 +892,8 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
         rsc_id = pe__clone_child_id(parent);
     }
 
-    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->cluster->failed, NULL,
-                                                NULL, NULL);
+    for (xmlNode *xml_op = pcmk__xe_first_child(rsc->private->scheduler->failed,
+                                                NULL, NULL, NULL);
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op)) {
 
         const char *value = NULL;

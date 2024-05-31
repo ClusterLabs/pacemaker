@@ -74,9 +74,10 @@ pcmk__clone_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     g_list_foreach(colocations, pcmk__add_dependent_scores, rsc);
     g_list_free(colocations);
 
-    pe__show_node_scores(!pcmk_is_set(rsc->cluster->flags,
+    pe__show_node_scores(!pcmk_is_set(rsc->private->scheduler->flags,
                                       pcmk_sched_output_scores),
-                         rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+                         rsc, __func__, rsc->allowed_nodes,
+                         rsc->private->scheduler);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
     pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),
@@ -205,7 +206,7 @@ can_interleave(const pcmk__colocation_t *colocation)
     const pcmk_resource_t *dependent = colocation->dependent;
 
     // Only colocations between clone or bundle resources use interleaving
-    if (dependent->variant <= pcmk_rsc_variant_group) {
+    if (dependent->private->variant <= pcmk__rsc_variant_group) {
         return false;
     }
 
@@ -357,13 +358,15 @@ void
 pcmk__with_clone_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+    parent = rsc->private->parent;
 
     pcmk__add_with_this_list(list, rsc->rsc_cons_lhs, orig_rsc);
 
-    if (rsc->parent != NULL) {
-        rsc->parent->private->cmds->with_this_colocations(rsc->parent, orig_rsc,
-                                                          list);
+    if (parent != NULL) {
+        parent->private->cmds->with_this_colocations(parent, orig_rsc, list);
     }
 }
 
@@ -372,13 +375,15 @@ void
 pcmk__clone_with_colocations(const pcmk_resource_t *rsc,
                              const pcmk_resource_t *orig_rsc, GList **list)
 {
+    const pcmk_resource_t *parent = NULL;
+
     CRM_CHECK((rsc != NULL) && (orig_rsc != NULL) && (list != NULL), return);
+    parent = rsc->private->parent;
 
     pcmk__add_this_with_list(list, rsc->rsc_cons, orig_rsc);
 
-    if (rsc->parent != NULL) {
-        rsc->parent->private->cmds->this_with_colocations(rsc->parent, orig_rsc,
-                                                          list);
+    if (parent != NULL) {
+        parent->private->cmds->this_with_colocations(parent, orig_rsc, list);
     }
 }
 

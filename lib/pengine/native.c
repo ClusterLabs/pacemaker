@@ -91,6 +91,7 @@ void
 native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                    pcmk_scheduler_t *scheduler, gboolean failed)
 {
+    pcmk_resource_t *parent = rsc->private->parent;
     GList *gIter = rsc->running_on;
 
     CRM_CHECK(node != NULL, return);
@@ -117,7 +118,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
     }
 
     if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
-        pcmk_resource_t *p = rsc->parent;
+        pcmk_resource_t *p = parent;
 
         pcmk__rsc_info(rsc, "resource %s isn't managed", rsc->id);
         resource_location(rsc, node, PCMK_SCORE_INFINITY,
@@ -126,14 +127,14 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         while(p && node->details->online) {
             /* add without the additional location constraint */
             p->running_on = g_list_append(p->running_on, node);
-            p = p->parent;
+            p = p->private->parent;
         }
         return;
     }
 
     if (is_multiply_active(rsc)) {
-        switch (rsc->recovery_type) {
-            case pcmk_multiply_active_stop:
+        switch (rsc->private->multiply_active_policy) {
+            case pcmk__multiply_active_stop:
                 {
                     GHashTableIter gIter;
                     pcmk_node_t *local_node = NULL;
@@ -149,7 +150,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     }
                 }
                 break;
-            case pcmk_multiply_active_block:
+            case pcmk__multiply_active_block:
                 pcmk__clear_rsc_flags(rsc, pcmk_rsc_managed);
                 pcmk__set_rsc_flags(rsc, pcmk_rsc_blocked);
 
@@ -157,12 +158,12 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * PCMK_META_MULTIPLE_ACTIVE=PCMK_VALUE_BLOCK, block the entire
                  * entity.
                  */
-                if ((pcmk__is_group(rsc->parent)
-                     || pcmk__is_bundle(rsc->parent))
-                    && (rsc->parent->recovery_type == pcmk_multiply_active_block)) {
-                    GList *gIter = rsc->parent->children;
+                if ((pcmk__is_group(parent) || pcmk__is_bundle(parent))
+                    && (parent->private->multiply_active_policy
+                        == pcmk__multiply_active_block)) {
 
-                    for (; gIter != NULL; gIter = gIter->next) {
+                    for (GList *gIter = parent->children;
+                         gIter != NULL; gIter = gIter->next) {
                         pcmk_resource_t *child = gIter->data;
 
                         pcmk__clear_rsc_flags(child, pcmk_rsc_managed);
@@ -171,7 +172,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                 }
                 break;
 
-            // pcmk_multiply_active_restart, pcmk_multiply_active_unexpected
+            // pcmk__multiply_active_restart, pcmk__multiply_active_unexpected
             default:
                 /* The scheduler will do the right thing because the relevant
                  * variables and flags are set when unpacking the history.
@@ -180,15 +181,15 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
                   rsc->id, pcmk__node_name(node),
-                  pcmk__multiply_active_text(rsc->recovery_type));
+                  pcmk__multiply_active_text(rsc));
 
     } else {
         pcmk__rsc_trace(rsc, "Resource %s is active on %s",
                         rsc->id, pcmk__node_name(node));
     }
 
-    if (rsc->parent != NULL) {
-        native_add_running(rsc->parent, node, scheduler, FALSE);
+    if (parent != NULL) {
+        native_add_running(parent, node, scheduler, FALSE);
     }
 }
 
@@ -1147,7 +1148,7 @@ pe__native_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
         pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         return FALSE;
-    } else if (check_parent && rsc->parent) {
+    } else if (check_parent && (rsc->private->parent != NULL)) {
         const pcmk_resource_t *up = pe__const_top_resource(rsc, true);
 
         return up->private->fns->is_filtered(up, only_rsc, FALSE);

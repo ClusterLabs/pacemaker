@@ -57,7 +57,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
 
         case pcmk__check_last_failure:
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node,
-                                                rsc->cluster);
+                                                rsc->private->scheduler);
             switch (digest_data->rc) {
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s has "
@@ -73,7 +73,7 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
             break;
     }
     if (reason != NULL) {
-        pe__clear_failcount(rsc, node, reason, rsc->cluster);
+        pe__clear_failcount(rsc, node, reason, rsc->private->scheduler);
     }
 }
 
@@ -135,7 +135,7 @@ check_failure_threshold(gpointer data, gpointer user_data)
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
             resource_location(failed, node, -PCMK_SCORE_INFINITY,
-                              "__fail_limit__", rsc->cluster);
+                              "__fail_limit__", rsc->private->scheduler);
         }
     }
 }
@@ -208,7 +208,8 @@ apply_stickiness(gpointer data, gpointer user_data)
      * allowed on the node, so we don't keep the resource somewhere it is no
      * longer explicitly enabled.
      */
-    if (!pcmk_is_set(rsc->cluster->flags, pcmk_sched_symmetric_cluster)
+    if (!pcmk_is_set(rsc->private->scheduler->flags,
+                     pcmk_sched_symmetric_cluster)
         && (g_hash_table_lookup(rsc->allowed_nodes,
                                 node->details->id) == NULL)) {
         pcmk__rsc_debug(rsc,
@@ -220,7 +221,8 @@ apply_stickiness(gpointer data, gpointer user_data)
 
     pcmk__rsc_debug(rsc, "Resource %s has %d stickiness on %s",
                     rsc->id, rsc->stickiness, pcmk__node_name(node));
-    resource_location(rsc, node, rsc->stickiness, "stickiness", rsc->cluster);
+    resource_location(rsc, node, rsc->stickiness, "stickiness",
+                      rsc->private->scheduler);
 }
 
 /*!
@@ -365,7 +367,9 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
      * should just be unassigned clone instances.
      */
 
-    for (GList *iter = rsc->cluster->nodes; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->scheduler->nodes;
+         iter != NULL; iter = iter->next) {
+
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
         pcmk_action_t *clear_op = NULL;
 
@@ -377,13 +381,13 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
         }
 
         clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
-                                       rsc->cluster);
+                                       rsc->private->scheduler);
 
         /* We can't use order_action_then_stop() here because its
          * pcmk__ar_guest_allowed breaks things
          */
         pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
-                           NULL, pcmk__ar_ordered, rsc->cluster);
+                           NULL, pcmk__ar_ordered, rsc->private->scheduler);
     }
 }
 

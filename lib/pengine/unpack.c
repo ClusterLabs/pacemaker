@@ -2192,9 +2192,9 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         }
         free(clone0_id);
 
-    } else if (rsc->variant > pcmk_rsc_variant_primitive) {
-        crm_trace("Resource history for %s is orphaned because it is no longer primitive",
-                  rsc_id);
+    } else if (rsc->private->variant > pcmk__rsc_variant_primitive) {
+        crm_trace("Resource history for %s is orphaned "
+                  "because it is no longer primitive", rsc_id);
         return NULL;
 
     } else {
@@ -2204,7 +2204,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     if (pcmk__is_anonymous_clone(parent)) {
 
         if (pcmk__is_bundled(parent)) {
-            rsc = pe__find_bundle_replica(parent->parent, node);
+            rsc = pe__find_bundle_replica(parent->private->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
 
@@ -2258,8 +2258,11 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     pcmk_node_t *tmpnode = NULL;
     char *reason = NULL;
     enum action_fail_response save_on_fail = pcmk_on_fail_ignore;
+    pcmk_scheduler_t *scheduler = NULL;
 
     CRM_ASSERT(rsc);
+    scheduler = rsc->private->scheduler;
+
     pcmk__rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
                     rsc->id, pcmk_role_text(rsc->role), pcmk__node_name(node),
                     pcmk_on_fail_text(on_fail));
@@ -2281,7 +2284,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (pcmk_is_set(iter->flags, pcmk_rsc_unique)) {
                 break;
             }
-            iter = iter->parent;
+            iter = iter->private->parent;
         }
     }
 
@@ -2304,8 +2307,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
             should_fence = TRUE;
 
-        } else if (pcmk_is_set(rsc->cluster->flags,
-                               pcmk_sched_fencing_enabled)) {
+        } else if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             if (pcmk__is_remote_node(node)
                 && (node->details->remote_rsc != NULL)
                 && !pcmk_is_set(node->details->remote_rsc->flags,
@@ -2330,7 +2332,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             if (reason == NULL) {
                reason = crm_strdup_printf("%s is thought to be active there", rsc->id);
             }
-            pe_fence_node(rsc->cluster, node, reason, FALSE);
+            pe_fence_node(scheduler, node, reason, FALSE);
         }
         free(reason);
     }
@@ -2360,7 +2362,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
              * but also mark the node as unclean
              */
             reason = crm_strdup_printf("%s failed there", rsc->id);
-            pe_fence_node(rsc->cluster, node, reason, FALSE);
+            pe_fence_node(scheduler, node, reason, FALSE);
             free(reason);
             break;
 
@@ -2382,7 +2384,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
              * or not at all
              */
             resource_location(rsc, node, -PCMK_SCORE_INFINITY,
-                              "__action_migration_auto__", rsc->cluster);
+                              "__action_migration_auto__", scheduler);
             break;
 
         case pcmk_on_fail_stop:
@@ -2407,8 +2409,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * container is running yet, so remember it and add a stop
                  * action for it later.
                  */
-                rsc->cluster->stop_needed =
-                    g_list_prepend(rsc->cluster->stop_needed, rsc->container);
+                scheduler->stop_needed = g_list_prepend(scheduler->stop_needed,
+                                                        rsc->container);
             } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
             } else if ((rsc->role != pcmk_role_stopped)
@@ -2419,17 +2421,17 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         case pcmk_on_fail_reset_remote:
             pcmk__set_rsc_flags(rsc, pcmk_rsc_failed|pcmk_rsc_stop_if_failed);
-            if (pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)) {
+            if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
-                    tmpnode = pcmk_find_node(rsc->cluster, rsc->id);
+                    tmpnode = pcmk_find_node(scheduler, rsc->id);
                 }
                 if (pcmk__is_remote_node(tmpnode)
                     && !(tmpnode->details->remote_was_fenced)) {
                     /* The remote connection resource failed in a way that
                      * should result in fencing the remote node.
                      */
-                    pe_fence_node(rsc->cluster, tmpnode,
+                    pe_fence_node(scheduler, tmpnode,
                                   "remote connection is unrecoverable", FALSE);
                 }
             }
@@ -2452,7 +2454,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
     if (pcmk_is_set(rsc->flags, pcmk_rsc_failed) && rsc->is_remote_node) {
-        tmpnode = pcmk_find_node(rsc->cluster, rsc->id);
+        tmpnode = pcmk_find_node(scheduler, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
         }
@@ -2472,7 +2474,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
             }
         }
 
-        native_add_running(rsc, node, rsc->cluster,
+        native_add_running(rsc, node, scheduler,
                            (save_on_fail != pcmk_on_fail_ignore));
         switch (on_fail) {
             case pcmk_on_fail_ignore:
@@ -2990,7 +2992,7 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
                               "[@" PCMK__XA_RC_CODE "!='%d']",
                               node_name, rsc->id, PCMK_OCF_UNKNOWN);
 
-    search = xpath_search(rsc->cluster->input, xpath);
+    search = xpath_search(rsc->private->scheduler->input, xpath);
     result = (numXpathResults(search) == 0);
     freeXpathObject(search);
     free(xpath);
@@ -3251,6 +3253,7 @@ unpack_migrate_to_success(struct action_history *history)
     bool source_newer_op = false;
     bool target_newer_state = false;
     bool active_on_target = false;
+    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
 
     // Get source and target node names from XML
     if (get_migration_node_names(history->xml, history->node, NULL, &source,
@@ -3260,11 +3263,11 @@ unpack_migrate_to_success(struct action_history *history)
 
     // Check for newer state on the source
     source_newer_op = non_monitor_after(history->rsc->id, source, history->xml,
-                                        true, history->rsc->cluster);
+                                        true, scheduler);
 
     // Check for a migrate_from action from this source on the target
     migrate_from = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_FROM,
-                               target, source, -1, history->rsc->cluster);
+                               target, source, -1, scheduler);
     if (migrate_from != NULL) {
         if (source_newer_op) {
             /* There's a newer non-monitor operation on the source and a
@@ -3282,7 +3285,7 @@ unpack_migrate_to_success(struct action_history *history)
      */
     target_newer_state = newer_state_after_migrate(history->rsc->id, target,
                                                    history->xml, migrate_from,
-                                                   history->rsc->cluster);
+                                                   scheduler);
     if (source_newer_op && target_newer_state) {
         return;
     }
@@ -3301,14 +3304,13 @@ unpack_migrate_to_success(struct action_history *history)
      */
     history->rsc->role = pcmk_role_started;
 
-    target_node = pcmk_find_node(history->rsc->cluster, target);
+    target_node = pcmk_find_node(scheduler, target);
     active_on_target = !target_newer_state && (target_node != NULL)
                        && target_node->details->online;
 
     if (from_status != PCMK_EXEC_PENDING) { // migrate_from failed on target
         if (active_on_target) {
-            native_add_running(history->rsc, target_node, history->rsc->cluster,
-                               TRUE);
+            native_add_running(history->rsc, target_node, scheduler, TRUE);
         } else {
             // Mark resource as failed, require recovery, and prevent migration
             pcmk__set_rsc_flags(history->rsc,
@@ -3330,11 +3332,9 @@ unpack_migrate_to_success(struct action_history *history)
     }
 
     if (active_on_target) {
-        pcmk_node_t *source_node = pcmk_find_node(history->rsc->cluster,
-                                                  source);
+        pcmk_node_t *source_node = pcmk_find_node(scheduler, source);
 
-        native_add_running(history->rsc, target_node, history->rsc->cluster,
-                           FALSE);
+        native_add_running(history->rsc, target_node, scheduler, FALSE);
         if ((source_node != NULL) && source_node->details->online) {
             /* This is a partial migration: the migrate_to completed
              * successfully on the source, but the migrate_from has not
@@ -3366,6 +3366,7 @@ unpack_migrate_to_failure(struct action_history *history)
     xmlNode *target_migrate_from = NULL;
     const char *source = NULL;
     const char *target = NULL;
+    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
 
     // Get source and target node names from XML
     if (get_migration_node_names(history->xml, history->node, NULL, &source,
@@ -3381,7 +3382,7 @@ unpack_migrate_to_failure(struct action_history *history)
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(history->rsc->id,
                                       PCMK_ACTION_MIGRATE_FROM, target, source,
-                                      PCMK_OCF_OK, history->rsc->cluster);
+                                      PCMK_OCF_OK, scheduler);
 
     if (/* If the resource state is unknown on the target, it will likely be
          * probed there.
@@ -3393,22 +3394,19 @@ unpack_migrate_to_failure(struct action_history *history)
          * events, this migrate_to no longer matters for the target.
          */
         && !newer_state_after_migrate(history->rsc->id, target, history->xml,
-                                      target_migrate_from,
-                                      history->rsc->cluster)) {
+                                      target_migrate_from, scheduler)) {
         /* The resource has no newer state on the target, so assume it's still
          * active there.
          * (if it is up).
          */
-        pcmk_node_t *target_node = pcmk_find_node(history->rsc->cluster,
-                                                  target);
+        pcmk_node_t *target_node = pcmk_find_node(scheduler, target);
 
         if (target_node && target_node->details->online) {
-            native_add_running(history->rsc, target_node, history->rsc->cluster,
-                               FALSE);
+            native_add_running(history->rsc, target_node, scheduler, FALSE);
         }
 
     } else if (!non_monitor_after(history->rsc->id, source, history->xml, true,
-                                  history->rsc->cluster)) {
+                                  scheduler)) {
         /* We know the resource has newer state on the target, but this
          * migrate_to still matters for the source as long as there's no newer
          * non-monitor operation there.
@@ -3433,6 +3431,7 @@ unpack_migrate_from_failure(struct action_history *history)
     xmlNode *source_migrate_to = NULL;
     const char *source = NULL;
     const char *target = NULL;
+    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
 
     // Get source and target node names from XML
     if (get_migration_node_names(history->xml, NULL, history->node, &source,
@@ -3447,8 +3446,7 @@ unpack_migrate_from_failure(struct action_history *history)
 
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(history->rsc->id, PCMK_ACTION_MIGRATE_TO,
-                                    source, target, PCMK_OCF_OK,
-                                    history->rsc->cluster);
+                                    source, target, PCMK_OCF_OK, scheduler);
 
     if (/* If the resource state is unknown on the source, it will likely be
          * probed there.
@@ -3461,16 +3459,14 @@ unpack_migrate_from_failure(struct action_history *history)
          */
         && !newer_state_after_migrate(history->rsc->id, source,
                                       source_migrate_to, history->xml,
-                                      history->rsc->cluster)) {
+                                      scheduler)) {
         /* The resource has no newer state on the source, so assume it's still
          * active there (if it is up).
          */
-        pcmk_node_t *source_node = pcmk_find_node(history->rsc->cluster,
-                                                  source);
+        pcmk_node_t *source_node = pcmk_find_node(scheduler, source);
 
         if (source_node && source_node->details->online) {
-            native_add_running(history->rsc, source_node, history->rsc->cluster,
-                               TRUE);
+            native_add_running(history->rsc, source_node, scheduler, TRUE);
         }
     }
 }
@@ -3484,11 +3480,13 @@ unpack_migrate_from_failure(struct action_history *history)
 static void
 record_failed_op(struct action_history *history)
 {
+    const pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
+
     if (!(history->node->details->online)) {
         return;
     }
 
-    for (const xmlNode *xIter = history->rsc->cluster->failed->children;
+    for (const xmlNode *xIter = scheduler->failed->children;
          xIter != NULL; xIter = xIter->next) {
 
         const char *key = pcmk__xe_history_key(xIter);
@@ -3507,7 +3505,7 @@ record_failed_op(struct action_history *history)
               history->key, pcmk__node_name(history->node));
     crm_xml_add(history->xml, PCMK_XA_UNAME, history->node->details->uname);
     crm_xml_add(history->xml, PCMK__XA_RSC_ID, history->rsc->id);
-    pcmk__xml_copy(history->rsc->cluster->failed, history->xml);
+    pcmk__xml_copy(scheduler->failed, history->xml);
 }
 
 static char *
@@ -3636,8 +3634,9 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
 {
     int score = -PCMK_SCORE_INFINITY;
     pcmk_resource_t *fail_rsc = rsc;
+    const pcmk_scheduler_t *scheduler = rsc->private->scheduler;
 
-    if (fail_rsc->parent != NULL) {
+    if (fail_rsc->private->parent != NULL) {
         pcmk_resource_t *parent = uber_parent(fail_rsc);
 
         if (pcmk__is_anonymous_clone(parent)) {
@@ -3654,7 +3653,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
     if (fail_rsc->allowed_nodes != NULL) {
         g_hash_table_destroy(fail_rsc->allowed_nodes);
     }
-    fail_rsc->allowed_nodes = pe__node_list2table(rsc->cluster->nodes);
+    fail_rsc->allowed_nodes = pe__node_list2table(scheduler->nodes);
     g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
 }
 
@@ -3705,13 +3704,14 @@ unpack_rsc_op_failure(struct action_history *history,
 {
     bool is_probe = false;
     char *last_change_s = NULL;
+    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
 
     *last_failure = history->xml;
 
     is_probe = pcmk_xe_is_probe(history->xml);
     last_change_s = last_change_str(history->xml);
 
-    if (!pcmk_is_set(history->rsc->cluster->flags, pcmk_sched_symmetric_cluster)
+    if (!pcmk_is_set(scheduler->flags, pcmk_sched_symmetric_cluster)
         && (history->exit_status == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " CRM_XS " exit-status=%d id=%s",
@@ -3758,7 +3758,7 @@ unpack_rsc_op_failure(struct action_history *history,
 
     if (strcmp(history->task, PCMK_ACTION_STOP) == 0) {
         resource_location(history->rsc, history->node, -PCMK_SCORE_INFINITY,
-                          "__stop_fail__", history->rsc->cluster);
+                          "__stop_fail__", scheduler);
 
     } else if (strcmp(history->task, PCMK_ACTION_MIGRATE_TO) == 0) {
         unpack_migrate_to_failure(history);
@@ -4108,13 +4108,13 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
              * When that's needed, defer the check until later.
              */
             pe__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
-                                rsc->cluster);
+                                rsc->private->scheduler);
 
         } else {
             pcmk__op_digest_t *digest_data = NULL;
 
             digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
-                                                rsc->cluster);
+                                                rsc->private->scheduler);
             switch (digest_data->rc) {
                 case pcmk__digest_unknown:
                     crm_trace("Resource %s history entry %s on %s"
@@ -4172,11 +4172,13 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
      * if the remote node hasn't been fenced.
      */
     if (rsc->remote_reconnect_ms
-        && pcmk_is_set(rsc->cluster->flags, pcmk_sched_fencing_enabled)
+        && pcmk_is_set(rsc->private->scheduler->flags,
+                       pcmk_sched_fencing_enabled)
         && (interval_ms != 0)
         && pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
 
-        pcmk_node_t *remote_node = pcmk_find_node(rsc->cluster, rsc->id);
+        pcmk_node_t *remote_node = pcmk_find_node(rsc->private->scheduler,
+                                                  rsc->id);
 
         if (remote_node && !remote_node->details->remote_was_fenced) {
             if (is_last_failure) {
@@ -4215,6 +4217,7 @@ check_operation_expiry(struct action_history *history)
     time_t last_run = 0;
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
+    pcmk_scheduler_t *scheduler = history->rsc->private->scheduler;
 
     if (history->execution_status == PCMK_EXEC_NOT_INSTALLED) {
         pcmk__rsc_trace(history->rsc,
@@ -4232,7 +4235,7 @@ check_operation_expiry(struct action_history *history)
          * timestamp
          */
 
-        time_t now = get_effective_time(history->rsc->cluster);
+        time_t now = get_effective_time(scheduler);
         time_t last_failure = 0;
 
         // Is this particular operation history older than the failure timeout?
@@ -4257,7 +4260,7 @@ check_operation_expiry(struct action_history *history)
                   history->rsc->failure_timeout, (long long) last_failure);
         last_failure += history->rsc->failure_timeout + 1;
         if (unexpired_fail_count && (now < last_failure)) {
-            pe__update_recheck_time(last_failure, history->rsc->cluster,
+            pe__update_recheck_time(last_failure, scheduler,
                                     "fail count expiration");
         }
     }
@@ -4305,10 +4308,9 @@ check_operation_expiry(struct action_history *history)
 
         // Schedule clearing of the fail count
         clear_op = pe__clear_failcount(history->rsc, history->node,
-                                       clear_reason, history->rsc->cluster);
+                                       clear_reason, scheduler);
 
-        if (pcmk_is_set(history->rsc->cluster->flags,
-                        pcmk_sched_fencing_enabled)
+        if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)
             && (history->rsc->remote_reconnect_ms != 0)) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
@@ -4321,8 +4323,7 @@ check_operation_expiry(struct action_history *history)
             crm_info("Clearing %s failure will wait until any scheduled "
                      "fencing of %s completes",
                      history->task, history->rsc->id);
-            order_after_remote_fencing(clear_op, history->rsc,
-                                       history->rsc->cluster);
+            order_after_remote_fencing(clear_op, history->rsc, scheduler);
         }
     }
 
@@ -4643,7 +4644,7 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
 
     record_failed_op(history);
     resource_location(ban_rsc, history->node, -PCMK_SCORE_INFINITY,
-                      "masked-probe-failure", history->rsc->cluster);
+                      "masked-probe-failure", ban_rsc->private->scheduler);
 }
 
 /*!
@@ -4735,7 +4736,8 @@ process_pending_action(struct action_history *history,
 
         migrate_target = crm_element_value(history->xml,
                                            PCMK__META_MIGRATE_TARGET);
-        target = pcmk_find_node(history->rsc->cluster, migrate_target);
+        target = pcmk_find_node(history->rsc->private->scheduler,
+                                migrate_target);
         if (target != NULL) {
             stop_action(history->rsc, target, FALSE);
         }
@@ -4872,7 +4874,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                 *on_fail = pcmk_on_fail_ban;
             }
             resource_location(parent, node, -PCMK_SCORE_INFINITY,
-                              "hard-error", rsc->cluster);
+                              "hard-error", rsc->private->scheduler);
             unpack_rsc_op_failure(&history, failure_strategy, fail_role,
                                   last_failure, on_fail);
             goto done;
@@ -4949,7 +4951,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                        (pcmk__str_empty(history.exit_reason)? "" : ": "),
                        pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, node, -PCMK_SCORE_INFINITY,
-                              "hard-error", rsc->cluster);
+                              "hard-error", rsc->private->scheduler);
 
         } else if (history.execution_status == PCMK_EXEC_ERROR_FATAL) {
             pcmk__sched_err("Preventing %s from restarting anywhere because "
@@ -4959,7 +4961,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                             (pcmk__str_empty(history.exit_reason)? "" : ": "),
                             pcmk__s(history.exit_reason, ""), history.id);
             resource_location(parent, NULL, -PCMK_SCORE_INFINITY,
-                              "fatal-error", rsc->cluster);
+                              "fatal-error", rsc->private->scheduler);
         }
     }
 

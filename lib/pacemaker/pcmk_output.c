@@ -582,7 +582,7 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
     bool recursive = va_arg(args, int);
     bool force = va_arg(args, int);
 
-    pcmk__unpack_constraints(rsc->cluster);
+    pcmk__unpack_constraints(rsc->private->scheduler);
 
     // Constraints apply to group/clone, not member/instance
     if (!force) {
@@ -591,10 +591,12 @@ locations_and_colocations(pcmk__output_t *out, va_list args)
 
     out->message(out, "locations-list", rsc);
 
-    pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->private->scheduler,
+                                    pcmk_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->private->scheduler,
+                                    pcmk_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
     return pcmk_rc_ok;
 }
@@ -608,7 +610,7 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
     bool recursive = va_arg(args, int);
     bool force = va_arg(args, int);
 
-    pcmk__unpack_constraints(rsc->cluster);
+    pcmk__unpack_constraints(rsc->private->scheduler);
 
     // Constraints apply to group/clone, not member/instance
     if (!force) {
@@ -618,10 +620,12 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
     pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
     do_locations_list_xml(out, rsc, false);
 
-    pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->private->scheduler,
+                                    pcmk_rsc_detect_loop);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
-    pe__clear_resource_flags_on_all(rsc->cluster, pcmk_rsc_detect_loop);
+    pe__clear_resource_flags_on_all(rsc->private->scheduler,
+                                    pcmk_rsc_detect_loop);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
 
     pcmk__output_xml_pop_parent(out);
