@@ -307,85 +307,41 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     return;
 }
 
-/*!
- * \internal
- * \brief Find additions or removals in a patch set
- *
- * \param[in]     patchset   XML of patch
- * \param[in]     format     Patch version
- * \param[in]     added      TRUE if looking for additions, FALSE if removals
- * \param[in,out] patch_node Will be set to node if found
- *
- * \return TRUE if format is valid, FALSE if invalid
- */
-static bool
-find_patch_xml_node(const xmlNode *patchset, int format, bool added,
-                    xmlNode **patch_node)
-{
-    xmlNode *cib_node;
-    const char *label;
-
-    switch (format) {
-        case 1:
-            // @COMPAT Remove when v1 patchsets are removed
-            label = added? PCMK__XE_DIFF_ADDED : PCMK__XE_DIFF_REMOVED;
-            *patch_node = pcmk__xe_first_child(patchset, label, NULL, NULL);
-            cib_node = pcmk__xe_first_child(*patch_node, PCMK_XE_CIB, NULL,
-                                            NULL);
-            if (cib_node != NULL) {
-                *patch_node = cib_node;
-            }
-            break;
-        case 2:
-            label = added? PCMK_XE_TARGET : PCMK_XE_SOURCE;
-            *patch_node = pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL,
-                                               NULL);
-            *patch_node = pcmk__xe_first_child(*patch_node, label, NULL, NULL);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            *patch_node = NULL;
-            return FALSE;
-    }
-    return TRUE;
-}
-
 // Get CIB versions used for additions and deletions in a patchset
 bool
 xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 {
-    int lpc = 0;
-    int format = 1;
-    xmlNode *tmp = NULL;
-
-    const char *vfields[] = {
+    static const char *const vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
         PCMK_XA_EPOCH,
         PCMK_XA_NUM_UPDATES,
     };
 
+    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
+                                                  NULL, NULL);
+    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
+                                                 NULL);
+    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
+                                                 NULL);
+    int format = 1;
 
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-
-    /* Process removals */
-    if (!find_patch_xml_node(patchset, format, FALSE, &tmp)) {
+    if (format != 2) {
+        crm_err("Unknown patch format: %d", format);
         return -EINVAL;
     }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
-            crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
+
+    if (source != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_element_value_int(source, vfields[i], &(del[i]));
+            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
         }
     }
 
-    /* Process additions */
-    if (!find_patch_xml_node(patchset, format, TRUE, &tmp)) {
-        return -EINVAL;
-    }
-    if (tmp != NULL) {
-        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
-            crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
+    if (target != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_element_value_int(target, vfields[i], &(add[i]));
+            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
         }
     }
     return pcmk_ok;
