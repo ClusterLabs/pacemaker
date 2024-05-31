@@ -939,9 +939,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
         if (is_update == FALSE || result_diff == NULL) {
             crm_trace("Request not broadcast: R/O call");
 
-        } else if (call_options & cib_inhibit_bcast) {
-            crm_trace("Request not broadcast: inhibited");
-
         } else if (rc != pcmk_ok) {
             crm_trace("Request not broadcast: call failed: %s", pcmk_strerror(rc));
 
@@ -1103,10 +1100,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     }
 
     ping_modified_since = TRUE;
-    if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
-        crm_trace("Skipping update: inhibit broadcast");
-        manage_counters = false;
-    }
 
     // result_cib must not be modified after cib_perform_op() returns
     rc = cib_perform_op(NULL, op, call_options, op_function, false, section,

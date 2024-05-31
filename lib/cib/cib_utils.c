@@ -680,10 +680,6 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         pcmk__xml_copy(wrapper, data);
     }
 
-    if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
-        CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
-                  pcmk__xml_free(*op_msg); return -EPROTO);
-    }
     return pcmk_ok;
 }
 
