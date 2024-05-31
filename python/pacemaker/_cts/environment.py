@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
+from contextlib import suppress
 import os
 import random
 import socket
@@ -191,20 +192,19 @@ class Environment:
             self["have_systemd"] = rc == 0
 
     def _detect_syslog(self):
-        """Detect the syslog variant in use on the target node."""
-        if "syslogd" not in self.data:
-            if self["have_systemd"]:
-                # Systemd
-                (_, lines) = self._rsh(self._target, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
-                self["syslogd"] = lines[0].strip()
-            else:
-                # SYS-V
-                (_, lines) = self._rsh(self._target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
-                self["syslogd"] = lines[0].strip()
+        """Detect the syslog variant in use on the target node (if any)."""
+        if "syslogd" in self.data:
+            return
 
-            if "syslogd" not in self.data or not self["syslogd"]:
-                # default
-                self["syslogd"] = "rsyslog"
+        if self["have_systemd"]:
+            # Systemd
+            (_, lines) = self._rsh(self._target, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+        else:
+            # SYS-V
+            (_, lines) = self._rsh(self._target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+
+        with suppress(IndexError):
+            self["syslogd"] = lines[0].strip()
 
     def disable_service(self, node, service):
         """Disable the given service on the given node."""
