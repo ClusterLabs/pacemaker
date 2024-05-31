@@ -236,13 +236,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, PCMK__XA_CIB_CALLOPT, call_opts);
             crm_xml_add(up, PCMK__XA_CIB_CALLID, call_id);
 
-            if (cib_legacy_mode() && based_is_primary) {
-                rc = cib_process_upgrade(
-                    op, options, section, up, input, existing_cib, result_cib, answer);
-
-            } else {
-                pcmk__cluster_send_message(NULL, crm_msg_cib, up);
-            }
+            pcmk__cluster_send_message(NULL, crm_msg_cib, up);
 
             pcmk__xml_free(up);
 
