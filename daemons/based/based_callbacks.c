@@ -130,7 +130,7 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks = {
  * \param[in] rc            Request return code
  * \param[in] call_data     Request output data
  *
- * \return Reply XML
+ * \return Reply XML (guaranteed not to be \c NULL)
  *
  * \note The caller is responsible for freeing the return value using
  *       \p pcmk__xml_free().
