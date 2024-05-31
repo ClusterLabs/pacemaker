@@ -718,69 +718,22 @@ forward_request(xmlNode *request)
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
-static gboolean
-send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gboolean broadcast)
+static void
+send_peer_reply(xmlNode *msg, const char *originator)
 {
-    CRM_ASSERT(msg != NULL);
+    const crm_node_t *node = NULL;
 
-    if (broadcast) {
-        /* @COMPAT: Legacy code
-         *
-         * This successful call modified the CIB, and the change needs to be
-         * broadcast (sent via cluster to all nodes).
-         */
-        int diff_add_updates = 0;
-        int diff_add_epoch = 0;
-        int diff_add_admin_epoch = 0;
-
-        int diff_del_updates = 0;
-        int diff_del_epoch = 0;
-        int diff_del_admin_epoch = 0;
-
-        const char *digest = NULL;
-        int format = 1;
-
-        xmlNode *wrapper = NULL;
-
-        CRM_LOG_ASSERT(result_diff != NULL);
-        digest = crm_element_value(result_diff, PCMK__XA_DIGEST);
-        crm_element_value_int(result_diff, PCMK_XA_FORMAT, &format);
-
-        cib_diff_version_details(result_diff,
-                                 &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
-                                 &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-
-        crm_trace("Sending update diff %d.%d.%d -> %d.%d.%d %s",
-                  diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                  diff_add_admin_epoch, diff_add_epoch, diff_add_updates, digest);
-
-        crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-        pcmk__xe_set_bool_attr(msg, PCMK__XA_CIB_UPDATE, true);
-        crm_xml_add(msg, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_APPLY_PATCH);
-        crm_xml_add(msg, PCMK__XA_CIB_USER, CRM_DAEMON_USER);
-
-        if (format == 1) {
-            CRM_ASSERT(digest != NULL);
-        }
-
-        wrapper = pcmk__xe_create(msg, PCMK__XE_CIB_UPDATE_DIFF);
-        pcmk__xml_copy(wrapper, result_diff);
-
-        crm_log_xml_explicit(msg, "copy");
-        return pcmk__cluster_send_message(NULL, crm_msg_cib, msg);
-
-    } else if (originator != NULL) {
-        /* send reply via HA to originating node */
-        const crm_node_t *node =
-            pcmk__get_node(0, originator, NULL,
-                           pcmk__node_search_cluster_member);
-
-        crm_trace("Sending request result to %s only", originator);
-        crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
-        return pcmk__cluster_send_message(node, crm_msg_cib, msg);
+    if ((msg == NULL) || (originator == NULL)) {
+        return;
     }
 
-    return FALSE;
+    // Send reply via cluster to originating node
+    node = pcmk__get_node(0, originator, NULL,
+                          pcmk__node_search_cluster_member);
+
+    crm_trace("Sending request result to %s only", originator);
+    crm_xml_add(msg, PCMK__XA_CIB_ISREPLYTO, originator);
+    pcmk__cluster_send_message(node, crm_msg_cib, msg);
 }
 
 /*!
@@ -998,7 +951,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
             crm_trace("Directing reply to %s", originator);
         }
 
-        send_peer_reply(op_reply, result_diff, originator, FALSE);
+        send_peer_reply(op_reply, originator);
     }
 
     if (local_notify && client_id) {
