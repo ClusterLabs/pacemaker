@@ -368,7 +368,6 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                 if ((node->processes ^ old) & crm_proc_cpg) {
                     crm_info("Attempting to disable legacy mode after %s left the cluster",
                              node->uname);
-                    legacy_mode = FALSE;
                 }
             }
             break;

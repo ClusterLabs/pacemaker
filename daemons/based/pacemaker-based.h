@@ -56,7 +56,6 @@ extern gboolean cib_writes_enabled;
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
 extern GHashTable *local_notify_queue;
-extern gboolean legacy_mode;
 extern gboolean stand_alone;
 extern gboolean cib_shutdown_flag;
 extern gchar *cib_root;

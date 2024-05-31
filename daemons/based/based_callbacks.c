@@ -45,8 +45,6 @@ typedef struct cib_local_notify_s {
 
 int next_client_id = 0;
 
-gboolean legacy_mode = FALSE;
-
 qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
@@ -62,7 +60,7 @@ static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
 gboolean
 cib_legacy_mode(void)
 {
-    return legacy_mode;
+    return FALSE;
 }
 
 static int32_t
@@ -835,7 +833,6 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
     } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         crm_info("Detected legacy %s global update from %s", op, originator);
         send_sync_request(NULL);
-        legacy_mode = TRUE;
         return FALSE;
 
     } else if (is_reply
