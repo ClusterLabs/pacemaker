@@ -587,9 +587,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
-// @COMPAT Remove when v1 patchsets are removed
-xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
-
 // @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
 static inline const char *
 pcmk__map_element_name(const xmlNode *xml)
