@@ -17,8 +17,10 @@
 #include <sys/stat.h>                   // stat(), S_ISREG, etc.
 #include <sys/types.h>
 
+#include <glib.h>                       // gboolean, GString
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/xmlstring.h>           // xmlGetUTF8Char()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -788,6 +790,227 @@ pcmk__xe_set_content(xmlNode *node, const char *format, ...)
 
 /*!
  * \internal
+ * \brief Check whether the first character of a string is an XML NameStartChar
+ *
+ * See https://www.w3.org/TR/xml/#NT-NameStartChar.
+ *
+ * This is almost identical to libxml2's \c xmlIsDocNameStartChar(), but they
+ * don't expose it as part of the public API.
+ *
+ * \param[in]  utf8  UTF-8 encoded string
+ * \param[out] len   If not \c NULL, where to store size in bytes of first
+ *                   character in \p utf8
+ *
+ * \return \c true if \p utf8 begins with a valid XML NameStartChar, or \c false
+ *         otherwise
+ */
+bool
+pcmk__xml_is_name_start_char(const char *utf8, int *len)
+{
+    int c = 0;
+    int local_len = 0;
+
+    if (len == NULL) {
+        len = &local_len;
+    }
+
+    /* xmlGetUTF8Char() abuses the len argument. At call time, it must be set to
+     * "the minimum number of bytes present in the sequence... to assure the
+     * next character is completely contained within the sequence." It's similar
+     * to the "n" in the strn*() functions. However, this doesn't make any sense
+     * for null-terminated strings, and there's no value that indicates "keep
+     * going until '\0'." So we set it to 4, the max number of bytes in a UTF-8
+     * character.
+     *
+     * At return, it's set to the actual number of bytes in the char, or 0 on
+     * error.
+     */
+    *len = 4;
+
+    // Note: xmlGetUTF8Char() assumes a 32-bit int
+    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    if (c < 0) {
+        GString *buf = g_string_sized_new(32);
+
+        for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
+            g_string_append_printf(buf, " 0x%.2X", utf8[i]);
+        }
+        crm_info("Invalid UTF-8 character (bytes:%s)",
+                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        g_string_free(buf, TRUE);
+        return false;
+    }
+
+    return (c == '_')
+           || (c == ':')
+           || ((c >= 'a') && (c <= 'z'))
+           || ((c >= 'A') && (c <= 'Z'))
+           || ((c >= 0xC0) && (c <= 0xD6))
+           || ((c >= 0xD8) && (c <= 0xF6))
+           || ((c >= 0xF8) && (c <= 0x2FF))
+           || ((c >= 0x370) && (c <= 0x37D))
+           || ((c >= 0x37F) && (c <= 0x1FFF))
+           || ((c >= 0x200C) && (c <= 0x200D))
+           || ((c >= 0x2070) && (c <= 0x218F))
+           || ((c >= 0x2C00) && (c <= 0x2FEF))
+           || ((c >= 0x3001) && (c <= 0xD7FF))
+           || ((c >= 0xF900) && (c <= 0xFDCF))
+           || ((c >= 0xFDF0) && (c <= 0xFFFD))
+           || ((c >= 0x10000) && (c <= 0xEFFFF));
+}
+
+/*!
+ * \internal
+ * \brief Check whether the first character of a string is an XML NameChar
+ *
+ * See https://www.w3.org/TR/xml/#NT-NameChar.
+ *
+ * This is almost identical to libxml2's \c xmlIsDocNameChar(), but they don't
+ * expose it as part of the public API.
+ *
+ * \param[in]  utf8  UTF-8 encoded string
+ * \param[out] len   If not \c NULL, where to store size in bytes of first
+ *                   character in \p utf8
+ *
+ * \return \c true if \p utf8 begins with a valid XML NameChar, or \c false
+ *         otherwise
+ */
+bool
+pcmk__xml_is_name_char(const char *utf8, int *len)
+{
+    int c = 0;
+    int local_len = 0;
+
+    if (len == NULL) {
+        len = &local_len;
+    }
+
+    // See comment regarding len in pcmk__xml_is_name_start_char()
+    *len = 4;
+
+    // Note: xmlGetUTF8Char() assumes a 32-bit int
+    c = xmlGetUTF8Char((pcmkXmlStr) utf8, len);
+    if (c < 0) {
+        GString *buf = g_string_sized_new(32);
+
+        for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
+            g_string_append_printf(buf, " 0x%.2X", utf8[i]);
+        }
+        crm_info("Invalid UTF-8 character (bytes:%s)",
+                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        g_string_free(buf, TRUE);
+        return false;
+    }
+
+    return ((c >= 'a') && (c <= 'z'))
+           || ((c >= 'A') && (c <= 'Z'))
+           || ((c >= '0') && (c <= '9'))
+           || (c == '_')
+           || (c == ':')
+           || (c == '-')
+           || (c == '.')
+           || (c == 0xB7)
+           || ((c >= 0xC0) && (c <= 0xD6))
+           || ((c >= 0xD8) && (c <= 0xF6))
+           || ((c >= 0xF8) && (c <= 0x2FF))
+           || ((c >= 0x300) && (c <= 0x36F))
+           || ((c >= 0x370) && (c <= 0x37D))
+           || ((c >= 0x37F) && (c <= 0x1FFF))
+           || ((c >= 0x200C) && (c <= 0x200D))
+           || ((c >= 0x203F) && (c <= 0x2040))
+           || ((c >= 0x2070) && (c <= 0x218F))
+           || ((c >= 0x2C00) && (c <= 0x2FEF))
+           || ((c >= 0x3001) && (c <= 0xD7FF))
+           || ((c >= 0xF900) && (c <= 0xFDCF))
+           || ((c >= 0xFDF0) && (c <= 0xFFFD))
+           || ((c >= 0x10000) && (c <= 0xEFFFF));
+}
+
+/*!
+ * \internal
+ * \brief Sanitize a string so it is usable as an XML ID
+ *
+ * An ID must match the Name production as defined here:
+ * https://www.w3.org/TR/xml/#NT-Name.
+ *
+ * Convert an invalid start character to \c '_'. Convert an invalid character
+ * after the start character to \c '.'.
+ *
+ * \param[in,out] id  String to sanitize
+ */
+void
+pcmk__xml_sanitize_id(char *id)
+{
+    bool valid = true;
+    int len = 0;
+
+    // If id is empty or NULL, there's no way to make it a valid XML ID
+    CRM_ASSERT(!pcmk__str_empty(id));
+
+    /* @TODO Suppose there are two strings and each has an invalid ID character
+     * in the same position. The strings are otherwise identical. Both strings
+     * will be sanitized to the same valid ID, which is incorrect.
+     *
+     * The caller is responsible for ensuring the sanitized ID does not already
+     * exist in a given XML document before using it, if uniqueness is desired.
+     */
+    valid = pcmk__xml_is_name_start_char(id, &len);
+    CRM_CHECK(len > 0, return); // UTF-8 encoding error
+    if (!valid) {
+        *id = '_';
+        for (int i = 1; i < len; i++) {
+            id[i] = '.';
+        }
+    }
+
+    for (id += len; *id != '\0'; id += len) {
+        valid = pcmk__xml_is_name_char(id, &len);
+        CRM_CHECK(len > 0, return); // UTF-8 encoding error
+        if (!valid) {
+            for (int i = 0; i < len; i++) {
+                id[i] = '.';
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set a formatted string as an XML element's ID
+ *
+ * If the formatted string would not be a valid ID, it's first sanitized by
+ * \c pcmk__xml_sanitize_id().
+ *
+ * \param[in,out] node    Node whose ID to set
+ * \param[in]     format  <tt>printf(3)</tt>-style format string
+ * \param[in]     ...     Arguments for \p format
+ */
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__xe_set_id(xmlNode *node, const char *format, ...)
+{
+    char *id = NULL;
+    va_list ap;
+
+    CRM_ASSERT(!pcmk__str_empty(format));
+
+    if (node == NULL) {
+        return;
+    }
+
+    va_start(ap, format);
+    CRM_ASSERT(vasprintf(&id, format, ap) >= 0);
+    va_end(ap);
+
+    if (!xmlValidateNameValue((pcmkXmlStr) id)) {
+        pcmk__xml_sanitize_id(id);
+    }
+    crm_xml_add(node, PCMK_XA_ID, id);
+    free(id);
+}
+
+/*!
+ * \internal
  * \brief Free an XML tree if ACLs allow; track deletion if tracking is enabled
  *
  * If \p node is the root of its document, free the entire document.
@@ -974,51 +1197,6 @@ pcmk__xe_add_last_written(xmlNode *xe)
                          pcmk__s(now_s, "Could not determine current time"));
     free(now_s);
     return result;
-}
-
-/*!
- * \brief Sanitize a string so it is usable as an XML ID
- *
- * \param[in,out] id  String to sanitize
- */
-void
-crm_xml_sanitize_id(char *id)
-{
-    char *c;
-
-    for (c = id; *c; ++c) {
-        /* @TODO Sanitize more comprehensively */
-        switch (*c) {
-            case ':':
-            case '#':
-                *c = '.';
-        }
-    }
-}
-
-/*!
- * \brief Set the ID of an XML element using a format
- *
- * \param[in,out] xml  XML element
- * \param[in]     fmt  printf-style format
- * \param[in]     ...  any arguments required by format
- */
-void
-crm_xml_set_id(xmlNode *xml, const char *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *id = NULL;
-
-    /* equivalent to crm_strdup_printf() */
-    va_start(ap, format);
-    len = vasprintf(&id, format, ap);
-    va_end(ap);
-    CRM_ASSERT(len > 0);
-
-    crm_xml_sanitize_id(id);
-    crm_xml_add(xml, PCMK_XA_ID, id);
-    free(id);
 }
 
 /*!
@@ -2394,6 +2572,38 @@ xmlNode *
 expand_idref(xmlNode *input, xmlNode *top)
 {
     return pcmk__xe_resolve_idref(input, top);
+}
+
+void
+crm_xml_sanitize_id(char *id)
+{
+    char *c;
+
+    for (c = id; *c; ++c) {
+        switch (*c) {
+            case ':':
+            case '#':
+                *c = '.';
+        }
+    }
+}
+
+void
+crm_xml_set_id(xmlNode *xml, const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *id = NULL;
+
+    /* equivalent to crm_strdup_printf() */
+    va_start(ap, format);
+    len = vasprintf(&id, format, ap);
+    va_end(ap);
+    CRM_ASSERT(len > 0);
+
+    crm_xml_sanitize_id(id);
+    crm_xml_add(xml, PCMK_XA_ID, id);
+    free(id);
 }
 
 // LCOV_EXCL_STOP

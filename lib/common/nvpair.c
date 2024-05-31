@@ -811,8 +811,8 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
     if (id) {
         crm_xml_add(nvp, PCMK_XA_ID, id);
     } else {
-        crm_xml_set_id(nvp, "%s-%s",
-                       pcmk__s(pcmk__xe_id(parent), PCMK_XE_NVPAIR), name);
+        pcmk__xe_set_id(nvp, "%s-%s",
+                        pcmk__s(pcmk__xe_id(parent), PCMK_XE_NVPAIR), name);
     }
     crm_xml_add(nvp, PCMK_XA_NAME, name);
     crm_xml_add(nvp, PCMK_XA_VALUE, value);

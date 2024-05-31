@@ -29,6 +29,26 @@ extern "C" {
 //! \deprecated Use \c PCMK_XE_CIB instead
 #define XML_TAG_CIB PCMK_XE_CIB
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define XML_CIB_TAG_STATE "node_state"
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define XML_TAG_TRANSIENT_NODEATTRS "transient_attributes"
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Use \c PCMK_XE_INSTANCE_ATTRIBUTES instead
+#define XML_TAG_ATTR_SETS PCMK_XE_INSTANCE_ATTRIBUTES
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Use \c PCMK_XE_NVPAIR instead
+#define XML_CIB_TAG_NVPAIR PCMK_XE_NVPAIR
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define XML_CIB_ATTR_SHUTDOWN "shutdown"
+
 #ifdef __cplusplus
 }
 #endif
