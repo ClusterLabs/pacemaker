@@ -50,7 +50,6 @@ static struct {
     gboolean allow_create;
     gboolean force;
     gboolean get_node_path;
-    gboolean local;
     gboolean no_children;
     gboolean score_update;
     gboolean sync_call;
@@ -59,6 +58,9 @@ static struct {
      * deprecated, but accepted.
      */
     gboolean extended_version;
+
+    // @COMPAT Deprecated since 3.0.0
+    gboolean local;
 } options;
 
 int do_init(void);
@@ -345,9 +347,6 @@ static GOptionEntry addl_entries[] = {
     { "sync-call", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.sync_call, "Wait for call to complete before returning", NULL },
 
-    { "local", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.local,
-      "Command takes effect locally (should be used only for queries)", NULL },
-
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
@@ -427,6 +426,10 @@ static GOptionEntry addl_entries[] = {
     { "node", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.dest_node,
       "(Advanced) Send command to the specified host", "value" },
 
+    // @COMPAT Deprecated since 3.0.0
+    { "local", 'l', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.local,
+      "(deprecated)", NULL },
+
     { NULL }
 };
 
@@ -445,8 +448,8 @@ build_arg_context(pcmk__common_args_t *args)
     };
 
     desc = "Examples:\n\n"
-           "Query the configuration from the local node:\n\n"
-           "\t# cibadmin --query --local\n\n"
+           "Query the configuration:\n\n"
+           "\t# cibadmin --query\n\n"
            "Query just the cluster options configuration:\n\n"
            "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
