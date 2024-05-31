@@ -90,9 +90,6 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_CIB_UPDATE             "cib_update"
 
-// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
-#define PCMK__XE_CIB_UPDATE_DIFF        "cib_update_diff"
-
 // @COMPAT Deprecated since 2.1.7
 #define PCMK__XE_DIFF_ADDED             "diff-added"
 

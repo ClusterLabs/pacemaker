@@ -992,31 +992,14 @@ static xmlNode *
 prepare_input(const xmlNode *request, enum cib__op_type type,
               const char **section)
 {
-    xmlNode *wrapper = NULL;
-    xmlNode *input = NULL;
+    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
+                                            NULL, NULL);
+    xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    *section = NULL;
-
-    switch (type) {
-        case cib__op_apply_patch:
-            {
-                const char *wrapper_name = PCMK__XE_CIB_CALLDATA;
-
-                if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-                    wrapper_name = PCMK__XE_CIB_UPDATE_DIFF;
-                }
-                wrapper = pcmk__xe_first_child(request, wrapper_name, NULL,
-                                               NULL);
-                input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-            }
-            break;
-
-        default:
-            wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA, NULL,
-                                           NULL);
-            input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-            *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
-            break;
+    if (type == cib__op_apply_patch) {
+        *section = NULL;
+    } else {
+        *section = crm_element_value(request, PCMK__XA_CIB_SECTION);
     }
 
     // Grab the specified section
