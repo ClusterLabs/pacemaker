@@ -600,109 +600,17 @@ parse_local_options(const pcmk__client_t *cib_client,
 }
 
 static gboolean
-parse_peer_options_v1(const cib__operation_t *operation, xmlNode *request,
-                      gboolean *local_notify, gboolean *needs_reply,
-                      gboolean *process)
+parse_peer_options(const cib__operation_t *operation, xmlNode *request,
+                   gboolean *local_notify, gboolean *needs_reply,
+                   gboolean *process)
 {
-    const char *op = NULL;
-    const char *host = NULL;
-    const char *delegated = NULL;
-    const char *originator = crm_element_value(request, PCMK__XA_SRC);
-    const char *reply_to = crm_element_value(request, PCMK__XA_CIB_ISREPLYTO);
-
-    gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
-
-    if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        *needs_reply = FALSE;
-        if (is_reply) {
-            *local_notify = TRUE;
-            crm_trace("Processing global/peer update from %s"
-                      " that originated from us", originator);
-        } else {
-            crm_trace("Processing global/peer update from %s", originator);
-        }
-        return TRUE;
-    }
-
-    op = crm_element_value(request, PCMK__XA_CIB_OP);
-    crm_trace("Processing legacy %s request sent by %s", op, originator);
-
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        /* Always process these */
-        *local_notify = FALSE;
-        if (reply_to == NULL || is_reply) {
-            *process = TRUE;
-        }
-        if (is_reply) {
-            *needs_reply = FALSE;
-        }
-        return *process;
-    }
-
-    if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
-        process_ping_reply(request);
-        return FALSE;
-    }
-
-    if (is_reply) {
-        crm_trace("Forward reply sent from %s to local clients", originator);
-        *process = FALSE;
-        *needs_reply = FALSE;
-        *local_notify = TRUE;
-        return TRUE;
-    }
-
-    host = crm_element_value(request, PCMK__XA_CIB_HOST);
-    if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
-        crm_trace("Processing %s request sent to us from %s", op, originator);
-        return TRUE;
-
-    } else if(is_reply == FALSE && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
-        crm_trace("Processing %s request sent to %s by %s", op, host?host:"everyone", originator);
-        *needs_reply = TRUE;
-        return TRUE;
-
-    } else if ((host == NULL) && based_is_primary) {
-        crm_trace("Processing %s request sent to primary instance from %s",
-                  op, originator);
-        return TRUE;
-    }
-
-    delegated = crm_element_value(request, PCMK__XA_CIB_DELEGATED_FROM);
-    if (delegated != NULL) {
-        crm_trace("Ignoring message for primary instance");
-
-    } else if (host != NULL) {
-        /* this is for a specific instance and we're not it */
-        crm_trace("Ignoring msg for instance on %s", host);
-
-    } else if ((reply_to == NULL) && !based_is_primary) {
-        // This is for the primary instance, and we're not it
-        crm_trace("Ignoring reply for primary instance");
-
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        if (reply_to != NULL) {
-            crm_debug("Processing %s from %s", op, originator);
-            *needs_reply = FALSE;
-
-        } else {
-            crm_debug("Processing %s reply from %s", op, originator);
-        }
-        return TRUE;
-
-    } else {
-        crm_err("Nothing for us to do?");
-        crm_log_xml_err(request, "Peer[inbound]");
-    }
-
-    return FALSE;
-}
-
-static gboolean
-parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
-                      gboolean *local_notify, gboolean *needs_reply,
-                      gboolean *process)
-{
+    /* TODO: What happens when an update comes in after node A
+     * requests the CIB from node B, but before it gets the reply (and
+     * sends out the replace operation)?
+     *
+     * (This may no longer be relevant since legacy mode was dropped; need to
+     * trace code more closely to check.)
+     */
     const char *host = NULL;
     const char *delegated = crm_element_value(request,
                                               PCMK__XA_CIB_DELEGATED_FROM);
@@ -827,24 +735,6 @@ parse_peer_options_v2(const cib__operation_t *operation, xmlNode *request,
                       "without ID"),
               originator, (*local_notify? "" : "not"));
     return TRUE;
-}
-
-static gboolean
-parse_peer_options(const cib__operation_t *operation, xmlNode *request,
-                   gboolean *local_notify, gboolean *needs_reply,
-                   gboolean *process)
-{
-    /* TODO: What happens when an update comes in after node A
-     * requests the CIB from node B, but before it gets the reply (and
-     * sends out the replace operation)
-     */
-    if(cib_legacy_mode()) {
-        return parse_peer_options_v1(operation, request, local_notify,
-                                     needs_reply, process);
-    } else {
-        return parse_peer_options_v2(operation, request, local_notify,
-                                     needs_reply, process);
-    }
 }
 
 /*!
