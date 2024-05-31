@@ -59,9 +59,6 @@ static struct {
      * deprecated, but accepted.
      */
     gboolean extended_version;
-
-    //! \deprecated
-    gboolean no_bcast;
 } options;
 
 int do_init(void);
@@ -121,7 +118,7 @@ report_schema_unchanged(void)
 static inline bool
 cib_action_is_dangerous(void)
 {
-    return options.no_bcast || options.delete_all
+    return options.delete_all
            || pcmk__str_any_of(options.cib_action,
                                PCMK__CIB_REQUEST_UPGRADE,
                                PCMK__CIB_REQUEST_ERASE,
@@ -431,10 +428,6 @@ static GOptionEntry addl_entries[] = {
       "(Advanced) Send command to the specified host", "value" },
 
     // @COMPAT: Deprecated
-    { "no-bcast", 'b', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
-      &options.no_bcast, "deprecated", NULL },
-
-    // @COMPAT: Deprecated
     { "host", 'h', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
       &options.dest_node, "deprecated", NULL },
 
@@ -658,13 +651,6 @@ main(int argc, char **argv)
         // Configure command to take effect only locally
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_scope_local);
-    }
-
-    // @COMPAT: Deprecated option
-    if (options.no_bcast) {
-        // Configure command to take effect only locally and not to broadcast
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_inhibit_bcast|cib_scope_local);
     }
 
     if (options.no_children) {
