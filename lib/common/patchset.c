@@ -285,11 +285,11 @@ void
 patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
                         bool with_digest)
 {
-    int format = 1;
     const char *version = NULL;
     char *digest = NULL;
 
-    if ((patch == NULL) || (source == NULL) || (target == NULL)) {
+    if ((patch == NULL) || (source == NULL) || (target == NULL)
+        || !with_digest) {
         return;
     }
 
@@ -297,11 +297,6 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
      * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
      */
     CRM_LOG_ASSERT(!xml_document_dirty(target));
-
-    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
-    if ((format > 1) && !with_digest) {
-        return;
-    }
 
     version = crm_element_value(source, PCMK_XA_CRM_FEATURE_SET);
     digest = pcmk__digest_xml(target, true, version);
