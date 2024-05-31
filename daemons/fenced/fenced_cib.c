@@ -162,31 +162,6 @@ fencing_topology_init(void)
     freeXpathObject(xpathObj);
 }
 
-static void
-remove_cib_device(xmlXPathObjectPtr xpathObj)
-{
-    int max = numXpathResults(xpathObj), lpc = 0;
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *rsc_id = NULL;
-        const char *standard = NULL;
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if(match != NULL) {
-            standard = crm_element_value(match, PCMK_XA_CLASS);
-        }
-
-        if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-            continue;
-        }
-
-        rsc_id = crm_element_value(match, PCMK_XA_ID);
-
-        stonith_device_remove(rsc_id, true);
-    }
-}
-
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
                                "[@" PCMK_XA_NAME "='"   \
                                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
@@ -253,84 +228,23 @@ cib_devices_update(void)
 }
 
 static void
-update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
+update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
-    const char *reason = "none";
-    gboolean needs_update = FALSE;
-    xmlXPathObjectPtr xpath_obj = NULL;
-
-    /* process new constraints */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK_XE_RSC_LOCATION);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
-
-        /* Safest and simplest to always recompute */
-        needs_update = TRUE;
-        reason = "new location constraint";
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-
-            crm_log_xml_trace(match, "new constraint");
-        }
-    }
-    freeXpathObject(xpath_obj);
-
-    /* process deletions */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK__XE_DIFF_REMOVED
-                             "//" PCMK_XE_PRIMITIVE);
-    if (numXpathResults(xpath_obj) > 0) {
-        remove_cib_device(xpath_obj);
-    }
-    freeXpathObject(xpath_obj);
-
-    /* process additions */
-    xpath_obj = xpath_search(msg,
-                             "//" PCMK__XE_CIB_UPDATE_RESULT
-                             "//" PCMK__XE_DIFF_ADDED
-                             "//" PCMK_XE_PRIMITIVE);
-    if (numXpathResults(xpath_obj) > 0) {
-        int max = numXpathResults(xpath_obj), lpc = 0;
-
-        for (lpc = 0; lpc < max; lpc++) {
-            const char *rsc_id = NULL;
-            const char *standard = NULL;
-            xmlNode *match = getXpathResult(xpath_obj, lpc);
-
-            rsc_id = crm_element_value(match, PCMK_XA_ID);
-            standard = crm_element_value(match, PCMK_XA_CLASS);
-
-            if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-                continue;
-            }
-
-            crm_trace("Fencing resource %s was added or modified", rsc_id);
-            reason = "new resource";
-            needs_update = TRUE;
-        }
-    }
-    freeXpathObject(xpath_obj);
-
-    if(needs_update) {
-        crm_info("Updating device list from CIB: %s", reason);
-        cib_devices_update();
-    }
-}
-
-static void
-update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
-{
-    xmlNode *change = NULL;
-    char *reason = NULL;
+    int format = 1;
     xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
     xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    char *reason = NULL;
 
-    for (change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
+    CRM_CHECK(patchset != NULL, return);
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+
+    if (format != 2) {
+        crm_warn("Unknown patch format: %d", format);
+        return;
+    }
+
+    for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change)) {
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
@@ -386,28 +300,6 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
         free(reason);
     } else {
         crm_trace("No updates for device list found in CIB");
-    }
-}
-
-static void
-update_cib_stonith_devices(const char *event, xmlNode * msg)
-{
-    int format = 1;
-    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
-                                            NULL, NULL);
-    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-    CRM_ASSERT(patchset);
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-    switch(format) {
-        case 1:
-            update_cib_stonith_devices_v1(event, msg);
-            break;
-        case 2:
-            update_cib_stonith_devices_v2(event, msg);
-            break;
-        default:
-            crm_warn("Unknown patch format: %d", format);
     }
 }
 
