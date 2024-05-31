@@ -34,8 +34,6 @@
 
 #define EXIT_ESCALATION_MS 10000
 
-int next_client_id = 0;
-
 qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
