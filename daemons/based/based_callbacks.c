@@ -540,55 +540,11 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 }
 
 static void
-parse_local_options_v1(const pcmk__client_t *cib_client,
-                       const cib__operation_t *operation, int call_options,
-                       const char *host, const char *op, gboolean *local_notify,
-                       gboolean *needs_reply, gboolean *process,
-                       gboolean *needs_forward)
-{
-    if (pcmk_is_set(operation->flags, cib__op_attr_modifies)
-        && !pcmk_is_set(call_options, cib_inhibit_bcast)) {
-        /* we need to send an update anyway */
-        *needs_reply = TRUE;
-    } else {
-        *needs_reply = FALSE;
-    }
-
-    if (host == NULL && (call_options & cib_scope_local)) {
-        crm_trace("Processing locally scoped %s op from client %s",
-                  op, pcmk__client_name(cib_client));
-        *local_notify = TRUE;
-
-    } else if ((host == NULL) && based_is_primary) {
-        crm_trace("Processing %s op locally from client %s as primary",
-                  op, pcmk__client_name(cib_client));
-        *local_notify = TRUE;
-
-    } else if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
-        crm_trace("Processing locally addressed %s op from client %s",
-                  op, pcmk__client_name(cib_client));
-        *local_notify = TRUE;
-
-    } else if (stand_alone) {
-        *needs_forward = FALSE;
-        *local_notify = TRUE;
-        *process = TRUE;
-
-    } else {
-        crm_trace("%s op from %s needs to be forwarded to client %s",
-                  op, pcmk__client_name(cib_client),
-                  pcmk__s(host, "the primary instance"));
-        *needs_forward = TRUE;
-        *process = FALSE;
-    }
-}
-
-static void
-parse_local_options_v2(const pcmk__client_t *cib_client,
-                       const cib__operation_t *operation, int call_options,
-                       const char *host, const char *op, gboolean *local_notify,
-                       gboolean *needs_reply, gboolean *process,
-                       gboolean *needs_forward)
+parse_local_options(const pcmk__client_t *cib_client,
+                    const cib__operation_t *operation, int call_options,
+                    const char *host, const char *op, gboolean *local_notify,
+                    gboolean *needs_reply, gboolean *process,
+                    gboolean *needs_forward)
 {
     // Process locally and notify local client
     *process = TRUE;
@@ -640,24 +596,6 @@ parse_local_options_v2(const pcmk__client_t *cib_client,
         crm_trace("Processing %saddressed %s op from client %s",
                   ((host != NULL)? "locally " : "un"),
                   op, pcmk__client_name(cib_client));
-    }
-}
-
-static void
-parse_local_options(const pcmk__client_t *cib_client,
-                    const cib__operation_t *operation, int call_options,
-                    const char *host, const char *op, gboolean *local_notify,
-                    gboolean *needs_reply, gboolean *process,
-                    gboolean *needs_forward)
-{
-    if(cib_legacy_mode()) {
-        parse_local_options_v1(cib_client, operation, call_options, host,
-                               op, local_notify, needs_reply, process,
-                               needs_forward);
-    } else {
-        parse_local_options_v2(cib_client, operation, call_options, host,
-                               op, local_notify, needs_reply, process,
-                               needs_forward);
     }
 }
 
