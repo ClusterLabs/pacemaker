@@ -765,7 +765,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
     const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
     const char *originator = crm_element_value(request, PCMK__XA_SRC);
     const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
-    const char *target = NULL;
     const char *call_id = crm_element_value(request, PCMK__XA_CIB_CALLID);
     const char *client_id = crm_element_value(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = crm_element_value(request,
@@ -781,23 +780,14 @@ cib_process_request(xmlNode *request, gboolean privileged,
         host = NULL;
     }
 
-    // @TODO: Improve trace messages. Target is accurate only for legacy mode.
-    if (host) {
-        target = host;
-
-    } else if (call_options & cib_scope_local) {
-        target = "local host";
-
-    } else {
-        target = "primary";
-    }
-
     if (cib_client == NULL) {
         crm_trace("Processing peer %s operation from %s/%s on %s intended for %s (reply=%s)",
-                  op, client_name, call_id, originator, target, reply_to);
+                  op, client_name, call_id, originator, pcmk__s(host, "all"),
+                  reply_to);
     } else {
         crm_xml_add(request, PCMK__XA_SRC, OUR_NODENAME);
-        crm_trace("Processing local %s operation from %s/%s intended for %s", op, client_name, call_id, target);
+        crm_trace("Processing local %s operation from %s/%s intended for %s",
+                  op, client_name, call_id, pcmk__s(host, "all"));
     }
 
     rc = cib__get_operation(op, &operation);

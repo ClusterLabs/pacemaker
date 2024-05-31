@@ -114,7 +114,7 @@ attrd_read_options(gpointer user_data)
 
     call_id = the_cib->cmds->query(the_cib,
                                    pcmk__cib_abs_xpath_for(PCMK_XE_ALERTS),
-                                   NULL, cib_xpath|cib_scope_local);
+                                   NULL, cib_xpath);
 
     the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, NULL,
                                           "config_query_callback",

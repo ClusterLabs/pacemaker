@@ -972,7 +972,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     }
 
     if (!out->is_quiet(out)) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_scope_local | cib_sync_call);
+        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
@@ -1013,7 +1013,7 @@ initialize_scheduler_data(xmlNodePtr *cib_xml_copy)
             rc = pcmk_rc_cib_corrupt;
         }
     } else {
-        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_scope_local | cib_sync_call);
+        rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
     }
 

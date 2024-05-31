@@ -90,8 +90,7 @@ pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
         xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
     }
 
-    rc = cib->cmds->query(cib, xpath, &xml_search,
-                          cib_sync_call | cib_scope_local | cib_xpath);
+    rc = cib->cmds->query(cib, xpath, &xml_search, cib_sync_call|cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
@@ -128,8 +127,7 @@ pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
         xpath = crm_strdup_printf("%s/" PCMK_XE_RSC_TICKET, xpath_base);
     }
 
-    rc = cib->cmds->query(cib, (const char *) xpath, &result,
-                          cib_sync_call | cib_scope_local | cib_xpath);
+    rc = cib->cmds->query(cib, xpath, &result, cib_sync_call|cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
     if (result != NULL) {

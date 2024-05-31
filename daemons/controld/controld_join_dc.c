@@ -780,10 +780,7 @@ do_dc_join_ack(long long action,
     controld_node_state_deletion_strings(join_from, section, &xpath, NULL);
 
     rc = cib->cmds->remove(cib, xpath, NULL,
-                           cib_scope_local
-                           |cib_xpath
-                           |cib_multiple
-                           |cib_transaction);
+                           cib_xpath|cib_multiple|cib_transaction);
     if (rc != pcmk_ok) {
         goto done;
     }
@@ -813,14 +810,14 @@ do_dc_join_ack(long long action,
     }
 
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, state,
-                           cib_scope_local|cib_can_create|cib_transaction);
+                           cib_can_create|cib_transaction);
     pcmk__xml_free(execd_state);
     if (rc != pcmk_ok) {
         goto done;
     }
 
     // Commit the transaction
-    rc = cib->cmds->end_transaction(cib, true, cib_scope_local);
+    rc = cib->cmds->end_transaction(cib, true, cib_none);
     fsa_register_cib_callback(rc, join_from, join_node_state_commit_callback);
 
     if (rc > 0) {

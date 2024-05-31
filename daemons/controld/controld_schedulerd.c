@@ -104,8 +104,7 @@ handle_disconnect(void)
          *
          */
         rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
-                                                    NULL, NULL,
-                                                    cib_scope_local);
+                                                    NULL, NULL, cib_none);
         fsa_register_cib_callback(rc, uuid_str, save_cib_contents);
     }
 
@@ -360,7 +359,7 @@ do_pe_invoke(long long action,
         return;
     }
 
-    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_scope_local);
+    fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_none);
 
     crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
               fsa_state2string(controld_globals.fsa_state));

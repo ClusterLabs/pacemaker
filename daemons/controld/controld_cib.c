@@ -110,8 +110,7 @@ controld_disconnect_cib_manager(void)
     cib_free_callbacks(cib_conn);
 
     if (cib_conn->state != cib_disconnected) {
-        cib_conn->cmds->set_secondary(cib_conn,
-                                      cib_scope_local|cib_discard_reply);
+        cib_conn->cmds->set_secondary(cib_conn, cib_discard_reply);
         cib_conn->cmds->signoff(cib_conn);
     }
 }
@@ -252,7 +251,7 @@ crmd_cib_smart_opt(void)
         || (controld_globals.fsa_state == S_PENDING)) {
         crm_info("Sending update to local CIB in state: %s",
                  fsa_state2string(controld_globals.fsa_state));
-        cib__set_call_options(call_opt, "update", cib_scope_local);
+        cib__set_call_options(call_opt, "update", cib_none);
     }
     return call_opt;
 }

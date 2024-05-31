@@ -79,7 +79,7 @@ no_attrs(void **state)
     xml = NULL;
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_null(xml_search);
 
     /* Deleting no attributes on a ticket that exists is also a no-op */
@@ -89,7 +89,7 @@ no_attrs(void **state)
     xml = NULL;
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_string_equal("1", crm_element_value(xml_search, "owner"));
     pcmk__xml_free(xml_search);
 
@@ -99,7 +99,7 @@ no_attrs(void **state)
     pcmk__xml_free(xml);
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_null(xml_search);
 
     g_list_free(attrs);
@@ -124,7 +124,7 @@ remove_missing_attrs(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("1", crm_element_value(xml_search, "owner"));
     assert_null(crm_element_value(xml_search, "XYZ"));
@@ -151,7 +151,7 @@ remove_existing_attr(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_null(crm_element_value(xml_search, "owner"));
 
@@ -177,7 +177,7 @@ remove_granted_without_force(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
 
@@ -203,7 +203,7 @@ remove_granted_with_force(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_null(crm_element_value(xml_search, PCMK__XA_GRANTED));
 

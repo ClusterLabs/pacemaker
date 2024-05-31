@@ -643,12 +643,6 @@ main(int argc, char **argv)
                               cib_xpath_address);
     }
 
-    if (options.local) {
-        // Configure command to take effect only locally
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_scope_local);
-    }
-
     if (options.no_children) {
         // When querying an object, don't include its children in the result
         cib__set_call_options(options.cmd_options, crm_system_name,

@@ -644,7 +644,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
         case S_PENDING:
             {
                 cib_t *cib_conn = controld_globals.cib_conn;
-                cib_conn->cmds->set_secondary(cib_conn, cib_scope_local);
+                cib_conn->cmds->set_secondary(cib_conn, cib_none);
             }
             update_dc(NULL);
             break;

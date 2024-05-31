@@ -353,8 +353,7 @@ fenced_query_cib(void)
     int rc = pcmk_ok;
 
     crm_trace("Re-requesting full CIB");
-    rc = cib_api->cmds->query(cib_api, NULL, &local_cib,
-                              cib_scope_local|cib_sync_call);
+    rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         CRM_ASSERT(local_cib != NULL);
@@ -657,7 +656,7 @@ setup_cib(void)
         return;
     }
 
-    rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_scope_local);
+    rc = cib_api->cmds->query(cib_api, NULL, NULL, cib_none);
     cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL,
                                      "init_cib_cache_cb", init_cib_cache_cb);
     cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);

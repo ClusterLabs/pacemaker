@@ -264,7 +264,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                        node_uuid, node_uname, new_node_uuid);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_NODES,
-                                                    node_xml, cib_scope_local);
+                                                    node_xml, cib_none);
             fsa_register_cib_callback(delete_call_id, pcmk__str_copy(node_uuid),
                                       remove_conflicting_node_callback);
 
@@ -273,8 +273,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_STATUS,
-                                                    node_state_xml,
-                                                    cib_scope_local);
+                                                    node_state_xml, cib_none);
             fsa_register_cib_callback(delete_call_id, pcmk__str_copy(node_uuid),
                                       remove_conflicting_node_callback);
             pcmk__xml_free(node_state_xml);
@@ -346,9 +345,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
                                "[@" PCMK_XA_ID "!='", node->uuid, "']", NULL);
 
                 call_id = cib_conn->cmds->query(cib_conn,
-                                                (const char *) xpath->str,
-                                                NULL,
-                                                cib_scope_local|cib_xpath);
+                                                (const char *) xpath->str, NULL,
+                                                cib_xpath);
                 fsa_register_cib_callback(call_id, pcmk__str_copy(node->uuid),
                                           search_conflicting_node_callback);
             }
@@ -361,7 +359,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
-    if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_scope_local,
+    if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
                              node_list_update_callback) == pcmk_rc_ok)
          && (crm_peer_cache != NULL) && AM_I_DC) {
         /*
@@ -386,7 +384,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             }
         }
 
-        controld_update_cib(PCMK_XE_STATUS, node_list, cib_scope_local,
+        controld_update_cib(PCMK_XE_STATUS, node_list, cib_none,
                             crmd_node_update_complete);
     }
     pcmk__xml_free(node_list);
@@ -431,7 +429,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_xml_add(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
         crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
-        controld_update_cib(PCMK_XE_CIB, update, cib_scope_local,
+        controld_update_cib(PCMK_XE_CIB, update, cib_none,
                             cib_quorum_update_complete);
         pcmk__xml_free(update);
 

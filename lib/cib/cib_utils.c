@@ -938,8 +938,7 @@ cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
     if (out != NULL) {
         out->transient(out, "Querying CIB...");
     }
-    rc = cib_conn->cmds->query(cib_conn, NULL, cib_object,
-                               cib_scope_local|cib_sync_call);
+    rc = cib_conn->cmds->query(cib_conn, NULL, cib_object, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {

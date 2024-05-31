@@ -419,7 +419,8 @@ main(int argc, char **argv)
         cib_xml_copy = pcmk__xml_read(options.xml_file);
 
     } else {
-        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy,
+                                   cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
