@@ -115,14 +115,6 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                 continue;
             }
 
-            // @COMPAT Remove when v1 patchsets are removed
-            if (pcmk_any_flags_set(options,
-                                   pcmk__xml_fmt_diff_plus
-                                   |pcmk__xml_fmt_diff_minus)
-                && (strcmp(PCMK__XA_CRM_DIFF_MARKER, p_name) == 0)) {
-                continue;
-            }
-
             if ((hidden != NULL) && (p_name[0] != '\0')
                 && (strstr(hidden, p_name) != NULL)) {
 
