@@ -55,11 +55,6 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
     const char *xpath = crm_element_value(xml, PCMK_XA_XPATH);
     const char *attr = crm_element_value(xml, PCMK_XA_ATTRIBUTE);
 
-    if (ref == NULL) {
-        // @COMPAT Deprecated since 1.1.12 (needed for rolling upgrades)
-        ref = crm_element_value(xml, PCMK__XA_REF);
-    }
-
     if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
         // Schema should prevent this, but to be safe ...
         crm_trace("Ignoring ACL <%s> element without selection criteria",
