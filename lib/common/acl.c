@@ -114,55 +114,59 @@ create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
 static GList *
 parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 {
-    xmlNode *child = NULL;
-
-    for (child = pcmk__xe_first_child(acl_entry, NULL, NULL, NULL);
+    for (const xmlNode *child = pcmk__xe_first_child(acl_entry, NULL, NULL,
+                                                     NULL);
          child != NULL; child = pcmk__xe_next(child)) {
 
-        const char *tag = (const char *) child->name;
-        const char *kind = crm_element_value(child, PCMK_XA_KIND);
-
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
+            const char *kind = crm_element_value(child, PCMK_XA_KIND);
+
             CRM_ASSERT(kind != NULL);
-            crm_trace("Unpacking ACL <%s> element of kind '%s'", tag, kind);
-        } else {
-            crm_trace("Unpacking ACL <%s> element", tag);
-        }
+            crm_trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element of "
+                      "kind '%s'",
+                      kind);
 
-        if (pcmk__str_eq(tag, PCMK_XE_ROLE, pcmk__str_none)) {
-            const char *ref_role = crm_element_value(child, PCMK_XA_ID);
+            if (pcmk__str_eq(kind, PCMK_VALUE_READ, pcmk__str_none)) {
+                acls = create_acl(child, acls, pcmk__xf_acl_read);
 
-            if (ref_role) {
-                xmlNode *role = NULL;
+            } else if (pcmk__str_eq(kind, PCMK_VALUE_WRITE, pcmk__str_none)) {
+                acls = create_acl(child, acls, pcmk__xf_acl_write);
 
-                for (role = pcmk__xe_first_child(acl_top, NULL, NULL, NULL);
-                     role != NULL; role = pcmk__xe_next(role)) {
+            } else if (pcmk__str_eq(kind, PCMK_VALUE_DENY, pcmk__str_none)) {
+                acls = create_acl(child, acls, pcmk__xf_acl_deny);
 
-                    if (!strcmp(PCMK_XE_ACL_ROLE, (const char *) role->name)) {
-                        const char *role_id = crm_element_value(role,
-                                                                PCMK_XA_ID);
-
-                        if (role_id && strcmp(ref_role, role_id) == 0) {
-                            crm_trace("Unpacking referenced role '%s' in ACL <%s> element",
-                                      role_id, acl_entry->name);
-                            acls = parse_acl_entry(acl_top, role, acls);
-                            break;
-                        }
-                    }
-                }
+            } else {
+                crm_warn("Ignoring unknown ACL kind '%s'", kind);
             }
 
-        } else if (strcmp(kind, PCMK_VALUE_READ) == 0) {
-            acls = create_acl(child, acls, pcmk__xf_acl_read);
+        } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
+            const char *ref_role = crm_element_value(child, PCMK_XA_ID);
 
-        } else if (strcmp(kind, PCMK_VALUE_WRITE) == 0) {
-            acls = create_acl(child, acls, pcmk__xf_acl_write);
+            crm_trace("Unpacking <" PCMK_XE_ROLE "> element");
 
-        } else if (strcmp(kind, PCMK_VALUE_DENY) == 0) {
-            acls = create_acl(child, acls, pcmk__xf_acl_deny);
+            if (ref_role == NULL) {
+                continue;
+            }
 
-        } else {
-            crm_warn("Ignoring unknown ACL kind '%s'", kind);
+            for (xmlNode *role = pcmk__xe_first_child(acl_top, NULL, NULL,
+                                                      NULL);
+                 role != NULL; role = pcmk__xe_next(role)) {
+
+                const char *role_id = NULL;
+
+                if (!pcmk__xe_is(role, PCMK_XE_ACL_ROLE)) {
+                    continue;
+                }
+
+                role_id = crm_element_value(role, PCMK_XA_ID);
+
+                if (pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
+                    crm_trace("Unpacking referenced role '%s' in <%s> element",
+                              role_id, acl_entry->name);
+                    acls = parse_acl_entry(acl_top, role, acls);
+                    break;
+                }
+            }
         }
     }
 
