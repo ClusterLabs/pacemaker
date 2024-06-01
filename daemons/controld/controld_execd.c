@@ -1450,14 +1450,6 @@ do_lrm_invoke(long long action,
         fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
                           from_sys);
 
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_none)) {
-        /* @COMPAT This can only be sent by crm_resource --refresh on a
-         * Pacemaker Remote node running Pacemaker 1.1.9, which is extremely
-         * unlikely. It previously would cause the controller to re-write its
-         * resource history to the CIB. Just ignore it.
-         */
-        crm_notice("Ignoring refresh request from Pacemaker Remote 1.1.9 node");
-
     // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, PCMK_VALUE_TRUE,
