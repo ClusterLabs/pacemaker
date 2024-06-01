@@ -242,8 +242,15 @@ xmlNode *
 xml_create_patchset(int format, xmlNode *source, xmlNode *target,
                     bool *config_changed, bool manage_version)
 {
-    int counter = 0;
-    bool config = FALSE;
+    bool local_config_changed = false;
+
+    if (format == 0) {
+        format = 2;
+    }
+    if (format != 2) {
+        crm_err("Unknown patch format: %d", format);
+        return NULL;
+    }
 
     xml_acl_disable(target);
     if (!xml_document_dirty(target)) {
@@ -251,33 +258,26 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         return NULL; /* No change */
     }
 
-    config = is_config_change(target);
-    if (config_changed) {
-        *config_changed = config;
+    if (config_changed == NULL) {
+        config_changed = &local_config_changed;
+    }
+    *config_changed = is_config_change(target);
+
+    if (manage_version) {
+        int counter = 0;
+
+        if (*config_changed) {
+            crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
+
+            crm_element_value_int(target, PCMK_XA_EPOCH, &counter);
+            crm_xml_add_int(target, PCMK_XA_EPOCH, counter + 1);
+
+        } else {
+            crm_element_value_int(target, PCMK_XA_NUM_UPDATES, &counter);
+            crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
+        }
     }
 
-    if (manage_version && config) {
-        crm_trace("Config changed %d", format);
-        crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
-
-        crm_element_value_int(target, PCMK_XA_EPOCH, &counter);
-        crm_xml_add_int(target, PCMK_XA_EPOCH, counter+1);
-
-    } else if (manage_version) {
-        crm_element_value_int(target, PCMK_XA_NUM_UPDATES, &counter);
-        crm_trace("Status changed %d - %d %s", format, counter,
-                  crm_element_value(source, PCMK_XA_NUM_UPDATES));
-        crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, (counter + 1));
-    }
-
-    if (format == 0) {
-        format = 2;
-    }
-
-    if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
-        return NULL;
-    }
     return xml_create_patchset_v2(source, target);
 }
 
