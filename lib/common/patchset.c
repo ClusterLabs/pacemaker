@@ -509,7 +509,6 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 
             switch (f) {
                 case 1:
-                    // @COMPAT Remove when v1 patchsets are removed
                     target = first_matching_xml_child(target, tag, NULL,
                                                       current_position);
                     break;
