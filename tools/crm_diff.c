@@ -162,49 +162,6 @@ log_patch_cib_versions(xmlNode *patch)
     }
 }
 
-static void
-strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
-{
-    int format = 1;
-
-    crm_element_value_int(patch, PCMK_XA_FORMAT, &format);
-    if (format == 2) {
-        xmlNode *version_xml = pcmk__xe_first_child(patch, PCMK_XE_VERSION,
-                                                    NULL, NULL);
-
-        if (version_xml) {
-            pcmk__xml_free(version_xml);
-        }
-
-    } else {
-        int i = 0;
-
-        const char *tags[] = {
-            PCMK__XE_DIFF_REMOVED,
-            PCMK__XE_DIFF_ADDED,
-        };
-
-        for (i = 0; i < PCMK__NELEM(tags); i++) {
-            xmlNode *tmp = NULL;
-            int lpc;
-
-            tmp = pcmk__xe_first_child(patch, tags[i], NULL, NULL);
-            if (tmp) {
-                for (lpc = 0; lpc < nvfields; lpc++) {
-                    pcmk__xe_remove_attr(tmp, vfields[lpc]);
-                }
-
-                tmp = pcmk__xe_first_child(tmp, PCMK_XE_CIB, NULL, NULL);
-                if (tmp) {
-                    for (lpc = 0; lpc < nvfields; lpc++) {
-                        pcmk__xe_remove_attr(tmp, vfields[lpc]);
-                    }
-                }
-            }
-        }
-    }
-}
-
 // \return Standard Pacemaker return code
 static int
 generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
@@ -251,7 +208,8 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         log_patch_cib_versions(output);
 
     } else if (no_version) {
-        strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
+        pcmk__xml_free(pcmk__xe_first_child(output, PCMK_XE_VERSION, NULL,
+                                            NULL));
     }
 
     pcmk__log_xml_patchset(LOG_NOTICE, output);
