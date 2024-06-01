@@ -92,17 +92,17 @@
      <instance_attributes id="status-101">
       <nvpair id="status-101-probe_complete" name="probe_complete" value="true"/>
       <nvpair id="status-101-connected" name="connected" value="0"/>
-      <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-5" value="5"/>
-      <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-4" value="4"/>
-      <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-3" value="3"/>
-      <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-2" value="2"/>
-      <nvpair id="status-101-failcount" name="fail-count-rsc_pcmk-1" value="1"/>
+      <nvpair id="status-101-5-failcount.monitor_5000" name="fail-count-rsc_pcmk-5#monitor_5000" value="5"/>
+      <nvpair id="status-101-4-failcount.monitor_5000" name="fail-count-rsc_pcmk-4#monitor_5000" value="4"/>
+      <nvpair id="status-101-3-failcount.monitor_5000" name="fail-count-rsc_pcmk-3#monitor_5000" value="3"/>
+      <nvpair id="status-101-2-failcount.monitor_5000" name="fail-count-rsc_pcmk-2#monitor_5000" value="2"/>
+      <nvpair id="status-101-1-failcount.monitor_5000" name="fail-count-rsc_pcmk-1#monitor_5000" value="1"/>
 
-      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-5" value="5"/>
-      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-4" value="4"/>
-      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-3" value="3"/>
-      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-2" value="2"/>
-      <nvpair id="status-101-last" name="last-failure-rsc_pcmk-1" value="1"/>
+      <nvpair id="status-101-5-last.monitor_5000" name="last-failure-rsc_pcmk-5#monitor_5000" value="5"/>
+      <nvpair id="status-101-4-last.monitor_5000" name="last-failure-rsc_pcmk-4#monitor_5000" value="4"/>
+      <nvpair id="status-101-3-last.monitor_5000" name="last-failure-rsc_pcmk-3#monitor_5000" value="3"/>
+      <nvpair id="status-101-2-last.monitor_5000" name="last-failure-rsc_pcmk-2#monitor_5000" value="2"/>
+      <nvpair id="status-101-1-last.monitor_5000" name="last-failure-rsc_pcmk-1#monitor_5000" value="1"/>
 
      </instance_attributes>
     </transient_attributes>

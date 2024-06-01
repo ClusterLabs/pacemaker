@@ -342,8 +342,8 @@
       <transient_attributes id="hex-2">
         <instance_attributes id="status-hex-2">
           <nvpair id="status-hex-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-2-last-failure-fs-r0" name="last-failure-fs-r0" value="1361962571"/>
-          <nvpair id="status-hex-2-fail-count-fs-r0" name="fail-count-fs-r0" value="INFINITY"/>
+          <nvpair id="status-hex-2-last-failure-fs-r0.start_0" name="last-failure-fs-r0#start_0" value="1361962571"/>
+          <nvpair id="status-hex-2-fail-count-fs-r0.start_0" name="fail-count-fs-r0#start_0" value="INFINITY"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="hex-2">

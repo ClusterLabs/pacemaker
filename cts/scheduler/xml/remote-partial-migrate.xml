@@ -603,10 +603,10 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-fail-count-pcmk_remote5" name="fail-count-pcmk_remote5" value="INFINITY"/>
-          <nvpair id="status-2-last-failure-pcmk_remote5" name="last-failure-pcmk_remote5" value="1418243823"/>
-          <nvpair id="status-2-fail-count-FAKE9" name="fail-count-FAKE9" value="INFINITY"/>
-          <nvpair id="status-2-last-failure-FAKE9" name="last-failure-FAKE9" value="1418244719"/>
+          <nvpair id="status-2-fail-count-pcmk_remote5.start_0" name="fail-count-pcmk_remote5#start_0" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-pcmk_remote5.start_0" name="last-failure-pcmk_remote5#start_0" value="1418243823"/>
+          <nvpair id="status-2-fail-count-FAKE9.start_0" name="fail-count-FAKE9#start_0" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-FAKE9.start_0" name="last-failure-FAKE9#start_0" value="1418244719"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -796,8 +796,8 @@
         <instance_attributes id="status-3">
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-3-fail-count-pcmk_remote5" name="fail-count-pcmk_remote5" value="INFINITY"/>
-          <nvpair id="status-3-last-failure-pcmk_remote5" name="last-failure-pcmk_remote5" value="1418243833"/>
+          <nvpair id="status-3-fail-count-pcmk_remote5.start_0" name="fail-count-pcmk_remote5#start_0" value="INFINITY"/>
+          <nvpair id="status-3-last-failure-pcmk_remote5.start_0" name="last-failure-pcmk_remote5#start_0" value="1418243833"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -807,8 +807,8 @@
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-1-last-failure-pcmk_remote3" name="last-failure-pcmk_remote3" value="1418243568"/>
-          <nvpair id="status-1-fail-count-pcmk_remote5" name="fail-count-pcmk_remote5" value="INFINITY"/>
-          <nvpair id="status-1-last-failure-pcmk_remote5" name="last-failure-pcmk_remote5" value="1418243813"/>
+          <nvpair id="status-1-fail-count-pcmk_remote5.start_0" name="fail-count-pcmk_remote5#start_0" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-pcmk_remote5.start_0" name="last-failure-pcmk_remote5#start_0" value="1418243813"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1">

@@ -711,8 +711,8 @@
           <nvpair id="status-srv04-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-srv04-default_ping_set" name="default_ping_set" value="100"/>
           <nvpair id="status-srv04-default_ping_set2" name="default_ping_set2" value="100"/>
-          <nvpair id="status-srv04-fail-count-clnUMdummy01:1" name="fail-count-clnUMdummy01:1" value="3"/>
-          <nvpair id="status-srv04-last-failure-clnUMdummy01:1" name="last-failure-clnUMdummy01:1" value="1269837816"/>
+          <nvpair id="status-srv04-fail-count-clnUMdummy01:1.monitor_10000" name="fail-count-clnUMdummy01:1#monitor_10000" value="3"/>
+          <nvpair id="status-srv04-last-failure-clnUMdummy01:1.monitor_10000" name="last-failure-clnUMdummy01:1#monitor_10000" value="1269837816"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -812,10 +812,10 @@
           <nvpair id="status-srv01-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-srv01-default_ping_set" name="default_ping_set" value="100"/>
           <nvpair id="status-srv01-default_ping_set2" name="default_ping_set2" value="100"/>
-          <nvpair id="status-srv01-fail-count-clnUMdummy01:0" name="fail-count-clnUMdummy01:0" value="3"/>
-          <nvpair id="status-srv01-last-failure-clnUMdummy01:0" name="last-failure-clnUMdummy01:0" value="1269837144"/>
-          <nvpair id="status-srv01-fail-count-clnUMdummy01:1" name="fail-count-clnUMdummy01:1" value="3"/>
-          <nvpair id="status-srv01-last-failure-clnUMdummy01:1" name="last-failure-clnUMdummy01:1" value="1269837160"/>
+          <nvpair id="status-srv01-fail-count-clnUMdummy01:0.monitor_10000" name="fail-count-clnUMdummy01:0#monitor_10000" value="3"/>
+          <nvpair id="status-srv01-last-failure-clnUMdummy01:0.monitor_10000" name="last-failure-clnUMdummy01:0#monitor_10000" value="1269837144"/>
+          <nvpair id="status-srv01-fail-count-clnUMdummy01:1.monitor_10000" name="fail-count-clnUMdummy01:1#monitor_10000" value="3"/>
+          <nvpair id="status-srv01-last-failure-clnUMdummy01:1.monitor_10000" name="last-failure-clnUMdummy01:1#monitor_10000" value="1269837160"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -84,8 +84,8 @@
       <transient_attributes id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78">
         <instance_attributes id="instance_attributes.id22297">
           <nvpair id="nvpair.id22304" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22313" name="fail-count-drbd0:0" value="2"/>
-          <nvpair id="nvpair.id22322" name="fail-count-drbd0:1" value="1"/>
+          <nvpair id="nvpair.id22313" name="fail-count-drbd0:0#monitor_12000" value="2"/>
+          <nvpair id="nvpair.id22322" name="fail-count-drbd0:1#monitor_12000" value="1"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id22334">
           <nvpair id="nvpair.id22341" name="master-drbd0:1" value="5"/>
@@ -126,10 +126,10 @@
       <transient_attributes id="aa584ceb-0d17-48ed-97c2-250b062e7407">
         <instance_attributes id="instance_attributes.id23046">
           <nvpair id="nvpair.id23053" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id23062" name="fail-count-drbd1:0" value="2"/>
-          <nvpair id="nvpair.id23072" name="fail-count-drbd0:0" value="2"/>
-          <nvpair id="nvpair.id23081" name="fail-count-drbd1:1" value="2"/>
-          <nvpair id="nvpair.id23090" name="fail-count-drbd0:1" value="3"/>
+          <nvpair id="nvpair.id23062" name="fail-count-drbd1:0#monitor_12000" value="2"/>
+          <nvpair id="nvpair.id23072" name="fail-count-drbd0:0#monitor_12000" value="2"/>
+          <nvpair id="nvpair.id23081" name="fail-count-drbd1:1#monitor_12000" value="2"/>
+          <nvpair id="nvpair.id23090" name="fail-count-drbd0:1#monitor_12000" value="3"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id23102">
           <nvpair name="master-drbd0:0" id="nvpair.id23109" value="75"/>

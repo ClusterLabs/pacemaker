@@ -32,8 +32,8 @@
       <transient_attributes id="4">
         <instance_attributes id="status-4">
           <nvpair id="status-4-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-4-fail-count-remote-node" name="fail-count-remote-node" value="INFINITY"/>
-          <nvpair id="status-4-last-failure-remote-node" name="last-failure-remote-node" value="1359767396"/>
+          <nvpair id="status-4-fail-count-remote-node.start_0" name="fail-count-remote-node#start_0" value="INFINITY"/>
+          <nvpair id="status-4-last-failure-remote-node.start_0" name="last-failure-remote-node#start_0" value="1359767396"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="4">

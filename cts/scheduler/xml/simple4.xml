@@ -31,7 +31,7 @@
       </lrm>
       <transient_attributes id="node1">
         <instance_attributes id="status-node1">
-          <nvpair id="status-node1-fail-count-rsc1" name="fail-count-rsc1" value="1"/>
+          <nvpair id="status-node1-fail-count-rsc1.monitor_60000" name="fail-count-rsc1#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

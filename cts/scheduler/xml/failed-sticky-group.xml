@@ -171,8 +171,8 @@
       <transient_attributes id="act1">
         <instance_attributes id="status-act1">
           <nvpair id="status-act1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-act1-fail-count-prmApPostgreSQLDB1" name="fail-count-prmApPostgreSQLDB1" value="1"/>
-          <nvpair id="status-act1-last-failure-prmApPostgreSQLDB1" name="last-failure-prmApPostgreSQLDB1" value="1310385852"/>
+          <nvpair id="status-act1-fail-count-prmApPostgreSQLDB1.monitor_5000" name="fail-count-prmApPostgreSQLDB1#monitor_5000" value="1"/>
+          <nvpair id="status-act1-last-failure-prmApPostgreSQLDB1.monitor_5000" name="last-failure-prmApPostgreSQLDB1#monitor_5000" value="1310385852"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="act1">

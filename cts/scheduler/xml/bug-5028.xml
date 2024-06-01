@@ -63,8 +63,8 @@
         <instance_attributes id="status-11111111-1111-1111-1111-111111111111">
           <nvpair id="status-11111111-1111-1111-1111-111111111111-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-11111111-1111-1111-1111-111111111111-shutdown" name="shutdown" value="1330667179"/>
-          <nvpair id="status-11111111-1111-1111-1111-111111111111-fail-count-dummy02" name="fail-count-dummy02" value="INFINITY"/>
-          <nvpair id="status-11111111-1111-1111-1111-111111111111-last-failure-dummy02" name="last-failure-dummy02" value="1330667185"/>
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-fail-count-dummy02.start_0" name="fail-count-dummy02#start_0" value="INFINITY"/>
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-last-failure-dummy02.start_0" name="last-failure-dummy02#start_0" value="1330667185"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="11111111-1111-1111-1111-111111111111">

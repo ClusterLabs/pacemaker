@@ -36,7 +36,7 @@
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="node1">
         <instance_attributes id="instance_attributes.id21976">
-          <nvpair id="nvpair.id21982" name="fail-count-rsc2" value="1"/>
+          <nvpair id="nvpair.id21982" name="fail-count-rsc2#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="node1">
@@ -50,7 +50,7 @@
     <node_state id="node2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="node2">
         <instance_attributes id="instance_attributes.id22062">
-          <nvpair id="nvpair.id22068" name="fail-count-rsc3" value="1"/>
+          <nvpair id="nvpair.id22068" name="fail-count-rsc3#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="node2">
@@ -64,7 +64,7 @@
     <node_state id="node3" ha="active" uname="node3" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="node3">
         <instance_attributes id="instance_attributes.id22146">
-          <nvpair id="nvpair.id22153" name="fail-count-rsc2" value="1"/>
+          <nvpair id="nvpair.id22153" name="fail-count-rsc2#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="node3">

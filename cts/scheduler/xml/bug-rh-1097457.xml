@@ -638,8 +638,8 @@
       </lrm>
       <transient_attributes id="lamaVM2">
         <instance_attributes id="status-lamaVM2">
-          <nvpair id="status-lamaVM2-fail-count-FSlun3" name="fail-count-FSlun3" value="1"/>
-          <nvpair id="status-lamaVM2-last-failure-FSlun3" name="last-failure-FSlun3" value="1399961984"/>
+          <nvpair id="status-lamaVM2-fail-count-FSlun3.monitor_10000" name="fail-count-FSlun3#monitor_10000" value="1"/>
+          <nvpair id="status-lamaVM2-last-failure-FSlun3.monitor_10000" name="last-failure-FSlun3#monitor_10000" value="1399961984"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -66,8 +66,8 @@
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1-fail-count-rhel7-auto4" name="fail-count-rhel7-auto4" value="INFINITY"/>
-          <nvpair id="status-1-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237282"/>
+          <nvpair id="status-1-fail-count-rhel7-auto4.start_0" name="fail-count-rhel7-auto4#start_0" value="INFINITY"/>
+          <nvpair id="status-1-last-failure-rhel7-auto4.start_0" name="last-failure-rhel7-auto4#start_0" value="1418237282"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -88,8 +88,8 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-fail-count-rhel7-auto4" name="fail-count-rhel7-auto4" value="INFINITY"/>
-          <nvpair id="status-2-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237340"/>
+          <nvpair id="status-2-fail-count-rhel7-auto4.start_0" name="fail-count-rhel7-auto4#start_0" value="INFINITY"/>
+          <nvpair id="status-2-last-failure-rhel7-auto4.start_0" name="last-failure-rhel7-auto4#start_0" value="1418237340"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

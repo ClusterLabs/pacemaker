@@ -491,7 +491,7 @@
       <transient_attributes id="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700">
         <instance_attributes id="instance_attributes.id26722">
           <nvpair id="nvpair.id26729" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id26738" name="fail-count-child_DoFencing:2" value="1"/>
+          <nvpair id="nvpair.id26738" name="fail-count-child_DoFencing:2#monitor_120000" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

@@ -33,7 +33,7 @@
       </lrm>
       <transient_attributes id="uuid1">
         <instance_attributes id="status-uuid1">
-          <nvpair id="status-uuid1-fc" name="fail-count-rsc1" value="1"/>
+          <nvpair id="status-uuid1-fc" name="fail-count-rsc1#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -47,7 +47,7 @@
       </lrm>
       <transient_attributes id="uuid2">
         <instance_attributes id="status-uuid2">
-          <nvpair id="status-uuid2-fc" name="fail-count-rsc1" value="1"/>
+          <nvpair id="status-uuid2-fc" name="fail-count-rsc1#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

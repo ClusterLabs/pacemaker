@@ -211,8 +211,8 @@
         <instance_attributes id="status-3232261400">
           <nvpair id="status-3232261400-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3232261400-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3232261400-fail-count-pgsr02" name="fail-count-pgsr02" value="1"/>
-          <nvpair id="status-3232261400-last-failure-pgsr02" name="last-failure-pgsr02" value="1439348019"/>
+          <nvpair id="status-3232261400-fail-count-pgsr02.monitor_10000" name="fail-count-pgsr02#monitor_10000" value="1"/>
+          <nvpair id="status-3232261400-last-failure-pgsr02.monitor_10000" name="last-failure-pgsr02#monitor_10000" value="1439348019"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

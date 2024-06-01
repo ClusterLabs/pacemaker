@@ -42,8 +42,8 @@
         <instance_attributes id="status-dhcp180">
           <nvpair id="status-dhcp180-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-dhcp180-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-dhcp180-fail-count-Dummy-test2" name="fail-count-Dummy-test2" value="1"/>
-          <nvpair id="status-dhcp180-last-failure-Dummy-test2" name="last-failure-Dummy-test2" value="1459345561"/>
+          <nvpair id="status-dhcp180-fail-count-Dummy-test2.monitor_10000" name="fail-count-Dummy-test2#monitor_10000" value="1"/>
+          <nvpair id="status-dhcp180-last-failure-Dummy-test2.monitor_10000" name="last-failure-Dummy-test2#monitor_10000" value="1459345561"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="dhcp180">

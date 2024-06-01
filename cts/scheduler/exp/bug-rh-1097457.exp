@@ -661,7 +661,7 @@
   <synapse id="47">
     <action_set>
       <pseudo_event id="114" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2">
-        <attributes CRM_meta_fail_count_FSlun3="1" CRM_meta_last_failure_FSlun3="1399961984" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_stonith_action="reboot" />
+        <attributes CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="lamaVM2"/>
         </downed>

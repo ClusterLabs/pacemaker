@@ -53,8 +53,8 @@
       </lrm>
       <transient_attributes id="node1">
         <instance_attributes id="node1">
-          <nvpair id="fail-count-rsc2-node1" name="fail-count-rsc2" value="1"/>
-          <nvpair id="last-failure-rsc2-node1" name="last-failure-rsc2" value="1397196403"/>
+          <nvpair id="fail-count-rsc2-node1.monitor_10000" name="fail-count-rsc2#monitor_10000" value="1"/>
+          <nvpair id="last-failure-rsc2-node1.monitor_10000" name="last-failure-rsc2#monitor_10000" value="1397196403"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -76,8 +76,8 @@
       </lrm>
       <transient_attributes id="node2">
         <instance_attributes id="node2">
-          <nvpair id="fail-count-rsc1-node2" name="fail-count-rsc1" value="2"/>
-          <nvpair id="last-failure-rsc1-node2" name="last-failure-rsc1" value="1397196015"/>
+          <nvpair id="fail-count-rsc1-node2.monitor_10000" name="fail-count-rsc1#monitor_10000" value="2"/>
+          <nvpair id="last-failure-rsc1-node2.monitor_10000" name="last-failure-rsc1#monitor_10000" value="1397196015"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

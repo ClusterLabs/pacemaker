@@ -183,8 +183,8 @@
         <instance_attributes id="status-rhos4-node4">
           <nvpair id="status-rhos4-node4-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-rhos4-node4-last-failure-keystone" name="last-failure-keystone" value="1385962310"/>
-          <nvpair id="status-rhos4-node4-fail-count-mysql-db" name="fail-count-mysql-db" value="INFINITY"/>
-          <nvpair id="status-rhos4-node4-last-failure-mysql-db" name="last-failure-mysql-db" value="1385962310"/>
+          <nvpair id="status-rhos4-node4-fail-count-mysql-db.start_0" name="fail-count-mysql-db#start_0" value="INFINITY"/>
+          <nvpair id="status-rhos4-node4-last-failure-mysql-db.start_0" name="last-failure-mysql-db#start_0" value="1385962310"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

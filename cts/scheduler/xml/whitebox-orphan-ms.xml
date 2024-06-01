@@ -419,8 +419,8 @@
       </lrm>
       <transient_attributes id="lxc1">
         <instance_attributes id="status-lxc1">
-          <nvpair id="status-lxc1-fail-count-lxc-ms" name="fail-count-lxc-ms" value="2"/>
-          <nvpair id="status-lxc1-last-failure-lxc-ms" name="last-failure-lxc-ms" value="1378511033"/>
+          <nvpair id="status-lxc1-fail-count-lxc-ms.monitor_10000" name="fail-count-lxc-ms#monitor_10000" value="2"/>
+          <nvpair id="status-lxc1-last-failure-lxc-ms.monitor_10000" name="last-failure-lxc-ms#monitor_10000" value="1378511033"/>
           <nvpair id="status-lxc1-promoted-lxc-ms" name="master-lxc-ms" value="10"/>
         </instance_attributes>
       </transient_attributes>

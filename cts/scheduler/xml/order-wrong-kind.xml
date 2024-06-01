@@ -38,7 +38,7 @@
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <transient_attributes id="uuid1">
         <instance_attributes id="instance_attributes.id21960">
-          <nvpair id="nvpair.id21967" name="fail-count-rsc3" value="1"/>
+          <nvpair id="nvpair.id21967" name="fail-count-rsc3#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="any">

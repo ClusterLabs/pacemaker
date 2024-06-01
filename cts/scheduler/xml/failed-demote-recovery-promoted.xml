@@ -100,8 +100,8 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-2-fail-count-DB2_HADR" name="fail-count-DB2_HADR" value="2"/>
-          <nvpair id="status-2-last-failure-DB2_HADR" name="last-failure-DB2_HADR" value="1512045470"/>
+          <nvpair id="status-2-fail-count-DB2_HADR.monitor_5000" name="fail-count-DB2_HADR#monitor_5000" value="2"/>
+          <nvpair id="status-2-last-failure-DB2_HADR.monitor_5000" name="last-failure-DB2_HADR#monitor_5000" value="1512045470"/>
           <nvpair id="status-2-promoted-DB2_HADR" name="master-DB2_HADR" value="10000"/>
         </instance_attributes>
       </transient_attributes>

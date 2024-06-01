@@ -102,8 +102,8 @@
       <transient_attributes id="TCS-2">
         <instance_attributes id="status-TCS-2">
           <nvpair id="status-TCS-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-TCS-2-fail-count-d_tomcat_nms" name="fail-count-d_tomcat_nms" value="309"/>
-          <nvpair id="status-TCS-2-last-failure-d_tomcat_nms" name="last-failure-d_tomcat_nms" value="1373882611"/>
+          <nvpair id="status-TCS-2-fail-count-d_tomcat_nms.monitor_15000" name="fail-count-d_tomcat_nms#monitor_15000" value="309"/>
+          <nvpair id="status-TCS-2-last-failure-d_tomcat_nms.monitor_15000" name="last-failure-d_tomcat_nms#monitor_15000" value="1373882611"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="TCS-2">

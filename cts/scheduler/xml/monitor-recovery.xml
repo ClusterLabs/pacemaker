@@ -97,8 +97,8 @@
       <transient_attributes id="CSE-1">
         <instance_attributes id="status-CSE-1">
           <nvpair id="status-CSE-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-CSE-1-fail-count-d_tomcat" name="fail-count-d_tomcat" value="1"/>
-          <nvpair id="status-CSE-1-last-failure-d_tomcat" name="last-failure-d_tomcat" value="1367909258"/>
+          <nvpair id="status-CSE-1-fail-count-d_tomcat.monitor_15000" name="fail-count-d_tomcat#monitor_15000" value="1"/>
+          <nvpair id="status-CSE-1-last-failure-d_tomcat.monitor_15000" name="last-failure-d_tomcat#monitor_15000" value="1367909258"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

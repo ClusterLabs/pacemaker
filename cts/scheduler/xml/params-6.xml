@@ -5133,8 +5133,8 @@
       <transient_attributes id="v03-a">
         <instance_attributes id="status-v03-a">
           <nvpair id="status-v03-a-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-v03-a-fail-count-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" name="fail-count-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" value="2"/>
-          <nvpair id="status-v03-a-last-failure-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" name="last-failure-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm" value="1322586659"/>
+          <nvpair id="status-v03-a-fail-count-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm.monitor_10000" name="fail-count-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm#monitor_10000" value="2"/>
+          <nvpair id="status-v03-a-last-failure-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm.monitor_10000" name="last-failure-vd01-c.cdev.ttc.prague.cz.vds-ok.com-vm#monitor_10000" value="1322586659"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="v03-a">
@@ -6012,8 +6012,8 @@
       <transient_attributes id="v03-b">
         <instance_attributes id="status-v03-b">
           <nvpair id="status-v03-b-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-v03-b-fail-count-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" name="fail-count-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" value="2"/>
-          <nvpair id="status-v03-b-last-failure-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" name="last-failure-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm" value="1322641309"/>
+          <nvpair id="status-v03-b-fail-count-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm.monitor_10000" name="fail-count-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm#monitor_10000" value="2"/>
+          <nvpair id="status-v03-b-last-failure-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm.monitor_10000" name="last-failure-vd01-a.cdev.ttc.prague.cz.vds-ok.com-vm#monitor_10000" value="1322641309"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="v03-b">

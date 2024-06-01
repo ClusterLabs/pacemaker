@@ -148,7 +148,7 @@
       </lrm>
       <transient_attributes id="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <instance_attributes id="instance_attributes.id23027">
-          <nvpair id="nvpair.id23034" name="fail-count-6d55db96-eb90-49eb-94e0-aeedef2cff51:0" value="1"/>
+          <nvpair id="nvpair.id23034" name="fail-count-6d55db96-eb90-49eb-94e0-aeedef2cff51:0#monitor_60000" value="1"/>
           <nvpair id="nvpair.id23044" name="probe_complete" value="true"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id23056">

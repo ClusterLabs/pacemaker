@@ -200,8 +200,8 @@
           <nvpair id="status-pcmk-1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-pcmk-1-connected" name="connected" value="1"/>
           <nvpair id="status-pcmk-1-promoted-stateful-1.1" name="master-stateful-1:1" value="5"/>
-          <nvpair id="status-pcmk-1-fail-count-stateful-1.1" name="fail-count-stateful-1:1" value="1"/>
-          <nvpair id="status-pcmk-1-last-failure-stateful-1.1" name="last-failure-stateful-1:1" value="1314385046"/>
+          <nvpair id="status-pcmk-1-fail-count-stateful-1.1.monitor_15000" name="fail-count-stateful-1:1#monitor_15000" value="1"/>
+          <nvpair id="status-pcmk-1-last-failure-stateful-1.1.monitor_15000" name="last-failure-stateful-1:1#monitor_15000" value="1314385046"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="pcmk-1">

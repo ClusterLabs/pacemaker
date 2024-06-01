@@ -98,7 +98,7 @@
       <transient_attributes id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
         <instance_attributes id="instance_attributes.id22275">
           <nvpair id="nvpair.id22282" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22292" name="fail-count-OpenVPN" value="1"/>
+          <nvpair id="nvpair.id22292" name="fail-count-OpenVPN#monitor_60000" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
@@ -138,7 +138,7 @@
       <transient_attributes id="transient_attributes.auto-2">
         <instance_attributes id="instance_attributes.id22797">
           <nvpair id="nvpair.id22804" name="probe_complete" value="true"/>
-          <nvpair id="nvpair.id22813" name="fail-count-OpenVPN" value="2"/>
+          <nvpair id="nvpair.id22813" name="fail-count-OpenVPN#monitor_60000" value="2"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="lrm.auto-2">

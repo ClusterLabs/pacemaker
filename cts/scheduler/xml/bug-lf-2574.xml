@@ -101,8 +101,8 @@
         <instance_attributes id="status-45f985d7-e7c8-4834-b01b-16b99526672b">
           <nvpair id="status-45f985d7-e7c8-4834-b01b-16b99526672b-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-45f985d7-e7c8-4834-b01b-16b99526672b-pingd" name="pingd" value="1"/>
-          <nvpair id="status-45f985d7-e7c8-4834-b01b-16b99526672b-fail-count-prmDummy1:0" name="fail-count-prmDummy1:0" value="1"/>
-          <nvpair id="status-45f985d7-e7c8-4834-b01b-16b99526672b-last-failure-prmDummy1:0" name="last-failure-prmDummy1:0" value="1301533340"/>
+          <nvpair id="status-45f985d7-e7c8-4834-b01b-16b99526672b-fail-count-prmDummy1:0.monitor_10000" name="fail-count-prmDummy1:0#monitor_10000" value="1"/>
+          <nvpair id="status-45f985d7-e7c8-4834-b01b-16b99526672b-last-failure-prmDummy1:0.monitor_10000" name="last-failure-prmDummy1:0#monitor_10000" value="1301533340"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="45f985d7-e7c8-4834-b01b-16b99526672b">
