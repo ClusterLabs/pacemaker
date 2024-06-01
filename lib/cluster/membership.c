@@ -210,22 +210,19 @@ pcmk__cluster_forget_remote_node(const char *node_name)
  *
  * \param[in] node_state  XML of node state
  *
- * \return \c CRM_NODE_LOST if \c PCMK__XA_IN_CCM is false in
- *         \c PCMK__XE_NODE_STATE, \c CRM_NODE_MEMBER otherwise
- * \note Unlike most boolean XML attributes, this one defaults to true, for
- *       backward compatibility with older controllers that don't set it.
+ * \return \c CRM_NODE_MEMBER if \c PCMK__XA_IN_CCM is true in
+ *         \c PCMK__XE_NODE_STATE, or \c CRM_NODE_LOST otherwise
  */
 static const char *
 remote_state_from_cib(const xmlNode *node_state)
 {
-    bool status = false;
+    bool in_ccm = false;
 
     if ((pcmk__xe_get_bool_attr(node_state, PCMK__XA_IN_CCM,
-                                &status) == pcmk_rc_ok) && !status) {
-        return CRM_NODE_LOST;
-    } else {
+                                &in_ccm) == pcmk_rc_ok) && in_ccm) {
         return CRM_NODE_MEMBER;
     }
+    return CRM_NODE_LOST;
 }
 
 /* user data for looping through remote node xpath searches */
