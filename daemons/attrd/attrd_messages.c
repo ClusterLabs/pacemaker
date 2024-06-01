@@ -122,20 +122,6 @@ handle_confirm_request(pcmk__request_t *request)
 }
 
 static xmlNode *
-handle_flush_request(pcmk__request_t *request)
-{
-    if (request->peer != NULL) {
-        /* Ignore. The flush command was removed in 2.0.0 but may be
-         * received from peers running older versions.
-         */
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
-    } else {
-        return handle_unknown_request(request);
-    }
-}
-
-static xmlNode *
 handle_query_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
@@ -243,7 +229,6 @@ attrd_register_handlers(void)
     pcmk__server_command_t handlers[] = {
         { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
         { PCMK__ATTRD_CMD_CONFIRM, handle_confirm_request },
-        { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
         { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },

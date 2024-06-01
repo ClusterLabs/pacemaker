@@ -31,7 +31,7 @@
  * --------  ---------  -------------------
  *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
  *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
- *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *                      "flush", PCMK__ATTRD_CMD_SYNC_RESPONSE
  *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_REGEX),
  *                      PCMK__ATTRD_CMD_QUERY
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
@@ -42,8 +42,9 @@
  *                      message
  *     5       2.1.5    Peers can request confirmation of a sent message
  *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
+ *     7       3.0.0    "flush" support dropped
  */
-#define ATTRD_PROTOCOL_VERSION "6"
+#define ATTRD_PROTOCOL_VERSION "7"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
