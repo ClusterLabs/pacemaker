@@ -365,124 +365,94 @@ fenced_query_cib(void)
 }
 
 static void
-remove_fencing_topology(xmlXPathObjectPtr xpathObj)
+update_fencing_topology(const char *event, xmlNode *msg)
 {
-    int max = numXpathResults(xpathObj), lpc = 0;
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *match = getXpathResult(xpathObj, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-    }
-}
-
-static void
-update_fencing_topology(const char *event, xmlNode * msg)
-{
-    int format = 1;
-    const char *xpath;
-    xmlXPathObjectPtr xpathObj = NULL;
     xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
                                             NULL, NULL);
     xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    CRM_ASSERT(patchset);
+    int format = 1;
+
+    int add[] = { 0, 0, 0 };
+    int del[] = { 0, 0, 0 };
+
+    CRM_CHECK(patchset != NULL, return);
+
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_warn("Unknown patch format: %d", format);
+        return;
+    }
 
-    if(format == 1) {
-        /* Process deletions (only) */
-        xpath = "//" PCMK__XE_CIB_UPDATE_RESULT
-                "//" PCMK__XE_DIFF_REMOVED
-                "//" PCMK_XE_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+    xml_patch_versions(patchset, add, del);
 
-        remove_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+    for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
+         change != NULL; change = pcmk__xe_next(change)) {
 
-        /* Process additions and changes */
-        xpath = "//" PCMK__XE_CIB_UPDATE_RESULT
-                "//" PCMK__XE_DIFF_ADDED
-                "//" PCMK_XE_FENCING_LEVEL;
-        xpathObj = xpath_search(msg, xpath);
+        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
 
-        register_fencing_topology(xpathObj);
-        freeXpathObject(xpathObj);
+        if (op == NULL) {
+            continue;
+        }
 
-    } else if(format == 2) {
-        xmlNode *change = NULL;
-        int add[] = { 0, 0, 0 };
-        int del[] = { 0, 0, 0 };
+        if (strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
+            // Change to a specific entry
+            crm_trace("Handling %s operation %d.%d.%d for %s",
+                      op, add[0], add[1], add[2], xpath);
 
-        xml_patch_versions(patchset, add, del);
-
-        for (change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
-             change != NULL; change = pcmk__xe_next(change)) {
-
-            const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-            const char *xpath = crm_element_value(change, PCMK_XA_PATH);
-
-            if(op == NULL) {
-                continue;
-
-            } else if(strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
-                /* Change to a specific entry */
-
-                crm_trace("Handling %s operation %d.%d.%d for %s", op, add[0], add[1], add[2], xpath);
-                if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
-                    continue;
-
-                } else if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-                    add_topology_level(change->children);
-
-                } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
-                    xmlNode *match = pcmk__xe_first_child(change,
-                                                          PCMK_XE_CHANGE_RESULT,
-                                                          NULL, NULL);
-
-                    if(match) {
-                        remove_topology_level(match->children);
-                        add_topology_level(match->children);
-                    }
-
-                } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-                    /* Nuclear option, all we have is the path and an id... not enough to remove a specific entry */
-                    crm_info("Re-initializing fencing topology after %s operation %d.%d.%d for %s",
-                             op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init();
-                    return;
-                }
-
-            } else if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
-                /* Change to the topology in general */
-                crm_info("Re-initializing fencing topology after top-level %s operation  %d.%d.%d for %s",
+            if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
+                /* We have only path and ID, which is not enough info to remove
+                 * a specific entry. Re-initialize the whole topology.
+                 */
+                crm_info("Re-initializing fencing topology after %s operation "
+                         "%d.%d.%d for %s",
                          op, add[0], add[1], add[2], xpath);
                 fencing_topology_init();
                 return;
-
-            } else if (strstr(xpath, "/" PCMK_XE_CONFIGURATION)) {
-                /* Changes to the whole config section, possibly including the topology as a whild */
-                if (pcmk__xe_first_child(change, PCMK_XE_FENCING_TOPOLOGY, NULL,
-                                         NULL) == NULL) {
-                    crm_trace("Nothing for us in %s operation %d.%d.%d for %s.",
-                              op, add[0], add[1], add[2], xpath);
-
-                } else if (pcmk__str_any_of(op,
-                                            PCMK_VALUE_DELETE,
-                                            PCMK_VALUE_CREATE, NULL)) {
-                    crm_info("Re-initializing fencing topology after top-level %s operation %d.%d.%d for %s.",
-                             op, add[0], add[1], add[2], xpath);
-                    fencing_topology_init();
-                    return;
-                }
-
-            } else {
-                crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                          op, add[0], add[1], add[2], xpath);
             }
+
+            if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
+                add_topology_level(change->children);
+
+            } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
+                xmlNode *match = pcmk__xe_first_child(change,
+                                                      PCMK_XE_CHANGE_RESULT,
+                                                      NULL, NULL);
+
+                if (match != NULL) {
+                    remove_topology_level(match->children);
+                    add_topology_level(match->children);
+                }
+            }
+            continue;
         }
 
-    } else {
-        crm_warn("Unknown patch format: %d", format);
+        if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
+            // Change to the topology in general
+            crm_info("Re-initializing fencing topology after top-level "
+                     "%s operation %d.%d.%d for %s",
+                     op, add[0], add[1], add[2], xpath);
+            fencing_topology_init();
+            return;
+        }
+
+        if ((strstr(xpath, "/" PCMK_XE_CONFIGURATION) != NULL)
+            && (pcmk__xe_first_child(change, PCMK_XE_FENCING_TOPOLOGY, NULL,
+                                     NULL) != NULL)
+            && pcmk__str_any_of(op, PCMK_VALUE_CREATE, PCMK_VALUE_DELETE,
+                                NULL)) {
+
+            // Topology was created or entire configuration section was deleted
+            crm_info("Re-initializing fencing topology after top-level "
+                     "%s operation %d.%d.%d for %s",
+                     op, add[0], add[1], add[2], xpath);
+            fencing_topology_init();
+            return;
+        }
+
+        crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
+                  op, add[0], add[1], add[2], xpath);
     }
 }
 
