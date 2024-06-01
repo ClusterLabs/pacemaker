@@ -125,7 +125,6 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
             CRM_ASSERT(kind != NULL);
             crm_trace("Unpacking ACL <%s> element of kind '%s'", tag, kind);
-            tag = kind;
         } else {
             crm_trace("Unpacking ACL <%s> element", tag);
         }
@@ -153,24 +152,17 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                 }
             }
 
-        /* @COMPAT Use of a tag instead of a PCMK_XA_KIND attribute was
-         * deprecated in 1.1.12. We still need to look for tags named
-         * PCMK_VALUE_READ, etc., to support rolling upgrades. However,
-         * eventually we can clean this up and make the variables more intuitive
-         * (for example, don't assign a PCMK_XA_KIND value to the tag variable).
-         */
-        } else if (strcmp(tag, PCMK_VALUE_READ) == 0) {
+        } else if (strcmp(kind, PCMK_VALUE_READ) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_read);
 
-        } else if (strcmp(tag, PCMK_VALUE_WRITE) == 0) {
+        } else if (strcmp(kind, PCMK_VALUE_WRITE) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_write);
 
-        } else if (strcmp(tag, PCMK_VALUE_DENY) == 0) {
+        } else if (strcmp(kind, PCMK_VALUE_DENY) == 0) {
             acls = create_acl(child, acls, pcmk__xf_acl_deny);
 
         } else {
-            crm_warn("Ignoring unknown ACL %s '%s'",
-                     (kind? "kind" : "element"), tag);
+            crm_warn("Ignoring unknown ACL kind '%s'", kind);
         }
     }
 
