@@ -826,19 +826,19 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
         }
     }
 
-    requested_user = crm_element_value(request, PCMK_XE_ACL_TARGET);
+    requested_user = crm_element_value(request, PCMK__XA_ACL_TARGET);
     if (requested_user == NULL) {
         /* @COMPAT rolling upgrades <=1.1.11
          *
          * field is checked for backward compatibility with older versions that
-         * did not use PCMK_XE_ACL_TARGET.
+         * did not use PCMK__XA_ACL_TARGET.
          */
         requested_user = crm_element_value(request, field);
     }
 
     if (!pcmk__is_privileged(effective_user)) {
         /* We're not running as a privileged user, set or overwrite any existing
-         * value for PCMK_XE_ACL_TARGET
+         * value for PCMK__XA_ACL_TARGET
          */
         user = effective_user;
 
@@ -854,7 +854,7 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     } else if (!pcmk__is_privileged(peer_user)) {
         /* The peer is not a privileged user, set or overwrite any existing
-         * value for PCMK_XE_ACL_TARGET
+         * value for PCMK__XA_ACL_TARGET
          */
         user = peer_user;
 
@@ -868,8 +868,8 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
     }
 
     // This requires pointer comparison, not string comparison
-    if (user != crm_element_value(request, PCMK_XE_ACL_TARGET)) {
-        crm_xml_add(request, PCMK_XE_ACL_TARGET, user);
+    if (user != crm_element_value(request, PCMK__XA_ACL_TARGET)) {
+        crm_xml_add(request, PCMK__XA_ACL_TARGET, user);
     }
 
     if (field != NULL && user != crm_element_value(request, field)) {

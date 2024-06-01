@@ -112,6 +112,7 @@ extern "C" {
  * XML attribute names used only by internal code
  */
 
+#define PCMK__XA_ACL_TARGET             "acl_target"
 #define PCMK__XA_ATTR_CLEAR_INTERVAL    "attr_clear_interval"
 #define PCMK__XA_ATTR_CLEAR_OPERATION   "attr_clear_operation"
 #define PCMK__XA_ATTR_DAMPENING         "attr_dampening"
