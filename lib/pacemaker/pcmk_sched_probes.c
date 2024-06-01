@@ -881,39 +881,21 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
     // Schedule probes on each node in the cluster as needed
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;
-        const char *probed = NULL;
 
-        if (!node->details->online) { // Don't probe offline nodes
+        if (!node->details->online) {   // Don't probe offline nodes
             if (pcmk__is_failed_remote_node(node)) {
                 pe_fence_node(scheduler, node,
                               "the connection is unrecoverable", FALSE);
             }
             continue;
+        }
 
-        } else if (node->details->unclean) { // ... or nodes that need fencing
-            continue;
-
-        } else if (!pcmk_is_set(node->private->flags,
-                                pcmk__node_probes_allowed)) {
-            // The user requested that probes not be done on this node
+        if (node->details->unclean) {   // Don't probe nodes that need fencing
             continue;
         }
 
-        /* This is no longer needed for live clusters, since the probe_complete
-         * node attribute will never be in the CIB. However this is still useful
-         * for processing old saved CIBs (< 1.1.14), including the
-         * reprobe-target_rc regression test.
-         */
-        probed = pcmk__node_attr(node, CRM_OP_PROBED, NULL,
-                                 pcmk__rsc_node_current);
-        if (probed != NULL && crm_is_true(probed) == FALSE) {
-            pcmk_action_t *probe_op = NULL;
-
-            probe_op = custom_action(NULL,
-                                     crm_strdup_printf("%s-%s", CRM_OP_REPROBE,
-                                                       node->private->name),
-                                     CRM_OP_REPROBE, node, FALSE, scheduler);
-            pcmk__insert_meta(probe_op, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
+        if (!pcmk_is_set(node->private->flags, pcmk__node_probes_allowed)) {
+            // The user requested that probes not be done on this node
             continue;
         }
 

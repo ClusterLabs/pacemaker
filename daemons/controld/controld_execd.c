@@ -1073,9 +1073,6 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     /* Now delete the copy in the CIB */
     controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
                                cib_none);
-
-    // @COMPAT DCs < 1.1.14 need this deleted (in case it was explicitly false)
-    update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
 /*!
@@ -1449,11 +1446,6 @@ do_lrm_invoke(long long action,
     if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_none)) {
         fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
                           from_sys);
-
-    // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
-    } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
-        update_attrd(lrm_state->node_name, CRM_OP_PROBED, PCMK_VALUE_TRUE,
-                     user_name, is_remote_node);
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_none)
                || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
