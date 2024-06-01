@@ -130,10 +130,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
             crm_trace("Unpacking ACL <%s> element", tag);
         }
 
-        /* @COMPAT PCMK__XE_ROLE_REF was deprecated in Pacemaker 1.1.12 (needed
-         * for rolling upgrades)
-         */
-        if (pcmk__str_any_of(tag, PCMK_XE_ROLE, PCMK__XE_ROLE_REF, NULL)) {
+        if (pcmk__str_eq(tag, PCMK_XE_ROLE, pcmk__str_none)) {
             const char *ref_role = crm_element_value(child, PCMK_XA_ID);
 
             if (ref_role) {
