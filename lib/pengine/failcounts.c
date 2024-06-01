@@ -195,7 +195,6 @@ rsc_fail_name(const pcmk_resource_t *rsc)
  *
  * \param[in]  prefix    Attribute prefix to match
  * \param[in]  rsc_name  Resource name to match as used in failure attributes
- * \param[in]  is_legacy Whether DC uses per-resource fail counts
  * \param[in]  is_unique Whether the resource is a globally unique clone
  * \param[out] re        Where to store resulting regular expression
  *
@@ -204,15 +203,11 @@ rsc_fail_name(const pcmk_resource_t *rsc)
  *       The caller is responsible for freeing re with regfree().
  */
 static int
-generate_fail_regex(const char *prefix, const char *rsc_name,
-                    gboolean is_legacy, gboolean is_unique, regex_t *re)
+generate_fail_regex(const char *prefix, const char *rsc_name, bool is_unique,
+                    regex_t *re)
 {
-    char *pattern;
-
-    /* @COMPAT DC < 1.1.17: Fail counts used to be per-resource rather than
-     * per-operation.
-     */
-    const char *op_pattern = (is_legacy? "" : "#.+_[0-9]+");
+    char *pattern = NULL;
+    const char *op_pattern = "#.+_[0-9]+";
 
     /* Ignore instance numbers for anything other than globally unique clones.
      * Anonymous clone fail counts could contain an instance number if the
@@ -246,24 +241,18 @@ generate_fail_regex(const char *prefix, const char *rsc_name,
  *       regfree().
  */
 static int
-generate_fail_regexes(const pcmk_resource_t *rsc,
-                      regex_t *failcount_re, regex_t *lastfailure_re)
+generate_fail_regexes(const pcmk_resource_t *rsc, regex_t *failcount_re,
+                      regex_t *lastfailure_re)
 {
     int rc = pcmk_rc_ok;
     char *rsc_name = rsc_fail_name(rsc);
-    const char *version = crm_element_value(rsc->private->scheduler->input,
-                                            PCMK_XA_CRM_FEATURE_SET);
 
-    // @COMPAT Pacemaker <= 1.1.16 used a single fail count per resource
-    gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
-
-    if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
+    if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name,
                             pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
-                                   is_legacy,
                                    pcmk_is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;

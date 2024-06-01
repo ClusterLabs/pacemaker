@@ -64,7 +64,6 @@ extern "C" {
  * >=3.0.5:  XML v2 digests are created
  * >=3.0.8:  Peers do not need acks for cancellations
  * >=3.0.9:  DC will send its own shutdown request to all peers
- * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  * >=3.19.0: DC supports PCMK__CIB_REQUEST_COMMIT_TRANSACT
  */

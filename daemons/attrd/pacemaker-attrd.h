@@ -78,19 +78,13 @@ int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failure of all operations for one resource
  * (format takes resource name)
- *
- * @COMPAT attributes set < 1.1.17:
- * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s(#.+_[0-9]+)?$"
+#define ATTRD_RE_CLEAR_ONE ATTRD_RE_CLEAR_ALL "%s#.+_[0-9]+$"
 
 /* regular expression to clear failure of one operation for one resource
  * (format takes resource name, operation name, and interval)
- *
- * @COMPAT attributes set < 1.1.17:
- * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s(#%s_%u)?$"
+#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s#%s_%u$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         guint interval_ms);
