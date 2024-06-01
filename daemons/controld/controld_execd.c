@@ -1300,24 +1300,6 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
             g_hash_table_remove(lrm_state->active_ops, op_id);
         }
         free(op_id);
-
-    } else {
-        /* No ack is needed since abcdaa8, but peers with older versions
-         * in a rolling upgrade need one. We didn't bump the feature set
-         * at that commit, so we can only compare against the previous
-         * CRM version (3.0.8). If any peers have feature set 3.0.9 but
-         * not abcdaa8, they will time out waiting for the ack (no
-         * released versions of Pacemaker are affected).
-         */
-        const char *peer_version = crm_element_value(params,
-                                                     PCMK_XA_CRM_FEATURE_SET);
-
-        if (compare_version(peer_version, "3.0.8") <= 0) {
-            crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
-                     op_key, from_host, peer_version);
-            send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
-                             from_host, from_sys);
-        }
     }
 
     free(op_key);
