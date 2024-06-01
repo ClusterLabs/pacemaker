@@ -17,8 +17,8 @@
  * \internal
  * \brief Output an XML patchset header
  *
- * This function parses a header from an XML patchset (an \p XML_ATTR_DIFF
- * element and its children).
+ * This function parses a header from an XML patchset (a \c PCMK_XE_DIFF element
+ * and its children).
  *
  * All header lines contain three integers separated by dots, of the form
  * <tt>{0}.{1}.{2}</tt>:
@@ -66,7 +66,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
  * \internal
  * \brief Output a user-friendly form of an XML patchset
  *
- * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * This function parses an XML patchset (a \c PCMK_XE_DIFF element and its
  * children) into a user-friendly combined diff output.
  *
  * \param[in,out] out       Output object
@@ -183,7 +183,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
  * \internal
  * \brief Output a user-friendly form of an XML patchset
  *
- * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * This function parses an XML patchset (a \c PCMK_XE_DIFF element and its
  * children) into a user-friendly combined diff output.
  *
  * \param[in,out] out   Output object
@@ -220,7 +220,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Output a user-friendly form of an XML patchset
  *
- * This function parses an XML patchset (an \p XML_ATTR_DIFF element and its
+ * This function parses an XML patchset (a \c PCMK_XE_DIFF element and its
  * children) into a user-friendly combined diff output.
  *
  * \param[in,out] out   Output object
@@ -275,7 +275,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
  * \internal
  * \brief Output an XML patchset
  *
- * This function outputs an XML patchset (an \p XML_ATTR_DIFF element and its
+ * This function outputs an XML patchset (a \c PCMK_XE_DIFF element and its
  * children) without modification, as a CDATA block.
  *
  * \param[in,out] out   Output object
