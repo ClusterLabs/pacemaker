@@ -76,9 +76,6 @@ extern "C" {
 #define PCMK__XE_XPATH_QUERY            "xpath-query"
 #define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
-// @COMPAT Deprecated since 1.1.12
-#define PCMK__XE_ACL_USER               "acl_user"
-
 /* @COMPAT Deprecate somehow. It's undocumented and behaves the same as
  * PCMK__XE_CIB in places where it's recognized.
  */
