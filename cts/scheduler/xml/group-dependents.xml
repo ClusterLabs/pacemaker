@@ -270,7 +270,6 @@
         <instance_attributes id="status-asttest1">
           <nvpair id="status-asttest1-promoted-drbd.0" name="master-drbd:0" value="5"/>
           <nvpair id="status-asttest1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-asttest1-last-failure-ip_voip_route_default.0" name="last-failure-ip_voip_route_default:0" value="1375354971"/>
           <nvpair id="status-asttest1-last-failure-fonulator" name="last-failure-fonulator" value="1375426327"/>
           <nvpair id="status-asttest1-fail-count-fonulator.monitor_1000" name="fail-count-fonulator#monitor_1000" value="1"/>
         </instance_attributes>

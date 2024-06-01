@@ -71,7 +71,6 @@
       <transient_attributes id="3232238257">
         <instance_attributes id="status-3232238257">
           <nvpair id="status-3232238257-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-3232238257-last-failure-prmDummy2" name="last-failure-prmDummy2" value="1475652569"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

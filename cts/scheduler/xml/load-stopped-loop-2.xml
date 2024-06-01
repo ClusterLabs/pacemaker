@@ -479,8 +479,6 @@
         <instance_attributes id="status-16843011">
           <nvpair id="status-16843011-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-16843011-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-16843011-last-failure-xu-test1" name="last-failure-xu-test1" value="1417699642"/>
-          <nvpair id="status-16843011-last-failure-xu-test8" name="last-failure-xu-test8" value="1417701400"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="16843011">
@@ -647,14 +645,6 @@
         <instance_attributes id="status-16843009">
           <nvpair id="status-16843009-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-16843009-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-16843009-last-failure-xu-test1" name="last-failure-xu-test1" value="1417699624"/>
-          <nvpair id="status-16843009-last-failure-xu-test2" name="last-failure-xu-test2" value="1417701400"/>
-          <nvpair id="status-16843009-last-failure-xu-test7" name="last-failure-xu-test7" value="1417701400"/>
-          <nvpair id="status-16843009-last-failure-xu-test3" name="last-failure-xu-test3" value="1417701717"/>
-          <nvpair id="status-16843009-last-failure-xu-test9" name="last-failure-xu-test9" value="1417785570"/>
-          <nvpair id="status-16843009-last-failure-xu-test14" name="last-failure-xu-test14" value="1418303872"/>
-          <nvpair id="status-16843009-last-failure-xu-test5" name="last-failure-xu-test5" value="1418303872"/>
-          <nvpair id="status-16843009-last-failure-p_bl_glusterfs" name="last-failure-p_bl_glusterfs" value="1418306027"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="16843009">
@@ -734,11 +724,6 @@
         <instance_attributes id="status-16843010">
           <nvpair id="status-16843010-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-16843010-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-16843010-last-failure-xu-test15" name="last-failure-xu-test15" value="1417786898"/>
-          <nvpair id="status-16843010-last-failure-xu-test11" name="last-failure-xu-test11" value="1417786291"/>
-          <nvpair id="status-16843010-last-failure-p_bl_glusterfs" name="last-failure-p_bl_glusterfs" value="1418304132"/>
-          <nvpair id="status-16843010-last-failure-xu-test12" name="last-failure-xu-test12" value="1417786372"/>
-          <nvpair id="status-16843010-last-failure-xu-test9" name="last-failure-xu-test9" value="1417787199"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="16843010">

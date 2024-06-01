@@ -33,11 +33,6 @@
   </configuration>
   <status>
     <node_state id="yingying.site" uname="yingying.site" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
-      <transient_attributes id="yingying.site">
-        <instance_attributes id="status-yingying.site">
-          <nvpair id="status-yingying.site-last-failure-rsc2" name="last-failure-rsc2" value="1366727884"/>
-        </instance_attributes>
-      </transient_attributes>
       <lrm id="yingying.site">
         <lrm_resources>
           <lrm_resource id="rsc1" type="Dummy" class="ocf" provider="pacemaker">

@@ -1382,7 +1382,6 @@
           <nvpair id="status-s01-0-promoted-drbd-vds-tftpboot:1" name="master-drbd-vds-tftpboot:1" value="10000"/>
           <nvpair id="status-s01-0-promoted-drbd-vds-http:1" name="master-drbd-vds-http:1" value="10000"/>
           <nvpair name="master-drbd-s01-vm-data:1" id="status-s01-0-promoted-drbd-s01-vm-data:1" value="10000"/>
-          <nvpair id="status-s01-0-last-failure-vip-238-fw:0" name="last-failure-vip-238-fw:0" value="1285930949"/>
           <nvpair id="status-s01-0-promoted-vip-238-fw:0" name="master-vip-238-fw:0" value="1000"/>
         </instance_attributes>
       </transient_attributes>

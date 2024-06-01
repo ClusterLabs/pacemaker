@@ -117,7 +117,6 @@
       <transient_attributes id="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">
         <instance_attributes id="status-ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">
           <nvpair id="status-ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6-last-failure-res_drbd" name="last-failure-res_drbd" value="1250083882"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">

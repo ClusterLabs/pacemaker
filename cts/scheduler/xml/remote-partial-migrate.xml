@@ -806,7 +806,6 @@
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1-last-failure-pcmk_remote3" name="last-failure-pcmk_remote3" value="1418243568"/>
           <nvpair id="status-1-fail-count-pcmk_remote5.start_0" name="fail-count-pcmk_remote5#start_0" value="INFINITY"/>
           <nvpair id="status-1-last-failure-pcmk_remote5.start_0" name="last-failure-pcmk_remote5#start_0" value="1418243813"/>
         </instance_attributes>

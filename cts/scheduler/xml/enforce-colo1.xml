@@ -65,7 +65,6 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-last-failure-gluster-daemon" name="last-failure-gluster-daemon" value="1422649122"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">
@@ -119,7 +118,6 @@
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1-last-failure-gluster-daemon" name="last-failure-gluster-daemon" value="1422649122"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1">

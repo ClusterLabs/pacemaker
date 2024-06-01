@@ -78,7 +78,6 @@
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237396"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">
@@ -119,7 +118,6 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-last-failure-rhel7-auto4" name="last-failure-rhel7-auto4" value="1418237340"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">
