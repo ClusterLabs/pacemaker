@@ -373,25 +373,6 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
-        if (match && crm_element_value(match, PCMK__XA_CRM_DIFF_MARKER)) {
-            /* Deletion */
-            int index = 0;
-            char *target = stonith_level_key(match, fenced_target_by_unknown);
-
-            crm_element_value_int(match, PCMK_XA_INDEX, &index);
-            if (target == NULL) {
-                crm_err("Invalid fencing target in element %s",
-                        pcmk__xe_id(match));
-
-            } else if (index <= 0) {
-                crm_err("Invalid level for %s in element %s",
-                        target, pcmk__xe_id(match));
-
-            } else {
-                topology_remove_helper(target, index);
-            }
-            /* } else { Deal with modifications during the 'addition' stage */
-        }
     }
 }
 

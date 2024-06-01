@@ -307,9 +307,6 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
 
-// @COMPAT Used only with v1 patchsets
-#define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
-
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"
 
