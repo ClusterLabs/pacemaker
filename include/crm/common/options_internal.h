@@ -161,9 +161,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 // @COMPAT Drop at 3.0.0; likely last used in 1.1.24
 #define PCMK__ENV_MCP                       "mcp"
 
-// @COMPAT Drop at 3.0.0; added unused in 1.1.9
-#define PCMK__ENV_QUORUM_TYPE               "quorum_type"
-
 /* @COMPAT Drop at 3.0.0; added to debug shutdown issues when Pacemaker is
  * managed by systemd, but no longer useful.
  */
