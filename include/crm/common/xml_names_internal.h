@@ -82,12 +82,6 @@ extern "C" {
 #define PCMK__XE_ALL                    "all"
 
 // @COMPAT Deprecated since 2.1.8
-#define PCMK__XE_CIB_GENERATION         "cib_generation"
-
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XE_CIB_UPDATE             "cib_update"
-
-// @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
 
 // @COMPAT Deprecated since 1.0.8 (commit 4cb100f)
@@ -289,12 +283,6 @@ extern "C" {
 #define PCMK__XA_TRANSITION_KEY         "transition-key"
 #define PCMK__XA_TRANSITION_MAGIC       "transition-magic"
 #define PCMK__XA_UPTIME                 "uptime"
-
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XA_CIB_OBJECT             "cib_object"
-
-// @COMPAT Deprecated since 2.1.8
-#define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"

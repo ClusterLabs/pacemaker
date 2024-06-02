@@ -123,17 +123,6 @@ cib_notify_send(const xmlNode *xml)
     pcmk_free_ipc_event(iov);
 }
 
-static void
-attach_cib_generation(xmlNode *msg)
-{
-    xmlNode *wrapper = pcmk__xe_create(msg, PCMK__XE_CIB_GENERATION);
-    xmlNode *generation = pcmk__xe_create(wrapper, PCMK__XE_GENERATION_TUPLE);
-
-    if (the_cib != NULL) {
-        pcmk__xe_copy_attrs(generation, the_cib, pcmk__xaf_none);
-    }
-}
-
 void
 cib_diff_notify(const char *op, int result, const char *call_id,
                 const char *client_id, const char *client_name,
@@ -151,7 +140,6 @@ cib_diff_notify(const char *op, int result, const char *call_id,
 
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
-    const char *type = NULL;
 
     if (diff == NULL) {
         return;
@@ -200,26 +188,6 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     crm_xml_add(update_msg, PCMK__XA_CIB_CALLID, call_id);
     crm_xml_add(update_msg, PCMK__XA_SRC, origin);
     crm_xml_add_int(update_msg, PCMK__XA_CIB_RC, result);
-
-    // @COMPAT Unused internally, drop at 3.0.0
-    if (update != NULL) {
-        type = (const char *) update->name;
-        crm_trace("Setting type to update->name: %s", type);
-    } else {
-        type = (const char *) diff->name;
-        crm_trace("Setting type to new_obj->name: %s", type);
-    }
-
-    // @COMPAT Unused internally, drop at 3.0.0
-    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT, pcmk__xe_id(diff));
-    crm_xml_add(update_msg, PCMK__XA_CIB_OBJECT_TYPE, type);
-    attach_cib_generation(update_msg);
-
-    // @COMPAT Unused internally, drop at 3.0.0
-    if (update != NULL) {
-        wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE);
-        pcmk__xml_copy(wrapper, update);
-    }
 
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);

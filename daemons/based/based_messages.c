@@ -376,8 +376,6 @@ cib_msg_copy(xmlNode *msg)
         PCMK__XA_CIB_HOST,
         PCMK__XA_CIB_RC,
         PCMK__XA_CIB_DELEGATED_FROM,
-        PCMK__XA_CIB_OBJECT,
-        PCMK__XA_CIB_OBJECT_TYPE,
         PCMK__XA_CIB_UPDATE,
         PCMK__XA_CIB_CLIENTNAME,
         PCMK__XA_CIB_USER,
