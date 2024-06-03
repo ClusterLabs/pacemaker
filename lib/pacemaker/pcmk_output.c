@@ -2136,7 +2136,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     if (legacy) { \
         pcmk__g_strcat(s, k "=", pcmk__s(v, ""), " ", NULL); \
     } else { \
-        pcmk__g_strcat(s, k "=\"", pcmk__s(v, ""), "\"", NULL); \
+        pcmk__g_strcat(s, k "=\"", pcmk__s(v, ""), "\" ", NULL); \
     } \
 } while (0)
 
