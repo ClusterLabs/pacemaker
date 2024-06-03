@@ -21,8 +21,8 @@
 
 #include <crm/common/xml.h>
 
-#ifndef CRM_COMMON_UNITTEST_INTERNAL__H
-#define CRM_COMMON_UNITTEST_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
+#define PCMK__CRM_COMMON_UNITTEST_INTERNAL__H
 
 /* internal unit testing related utilities */
 
@@ -206,4 +206,4 @@ main(int argc, char **argv) \
     return cmocka_run_group_tests(t, group_setup, group_teardown); \
 }
 
-#endif /* CRM_COMMON_UNITTEST_INTERNAL__H */
+#endif /* PCMK__CRM_COMMON_UNITTEST_INTERNAL__H */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_ELECTION__H
-#  define CRM_COMMON_ELECTION__H
+#ifndef PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
+#  define PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
+
+#include <stdbool.h>
+
+#include <glib.h>           // guint, GSourceFunc
+#include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus
 extern "C" {

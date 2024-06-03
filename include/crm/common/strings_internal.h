@@ -7,12 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__STRINGS_INTERNAL__H
-#define PCMK__STRINGS_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_STRINGS_INTERNAL__H
+#define PCMK__CRM_COMMON_STRINGS_INTERNAL__H
 
 #include <stdbool.h>            // bool
+#include <stdint.h>             // uint32_t, etc.
 
 #include <glib.h>               // guint, GList, GHashTable
+
+#include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
+#include <crm/common/util.h>    // crm_strdup_printf
 
 /* internal constants for generic string functions (from strings.c) */
 
@@ -229,4 +233,4 @@ pcmk__btoa(bool condition)
     return condition? PCMK_VALUE_TRUE : PCMK_VALUE_FALSE;
 }
 
-#endif /* PCMK__STRINGS_INTERNAL__H */
+#endif /* PCMK__CRM_COMMON_STRINGS_INTERNAL__H */

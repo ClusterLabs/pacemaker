@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__IPC_INTERNAL_H
-#define PCMK__IPC_INTERNAL_H
+#ifndef PCMK__CRM_COMMON_IPC_INTERNAL__H
+#define PCMK__CRM_COMMON_IPC_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {

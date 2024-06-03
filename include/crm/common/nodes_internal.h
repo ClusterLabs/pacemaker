@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__NODES_INTERNAL__H
-#define PCMK__NODES_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_NODES_INTERNAL__H
+#define PCMK__CRM_COMMON_NODES_INTERNAL__H
+
+#include <stdbool.h>
+#include <stdio.h>
+
+#include <glib.h>
+#include <crm/common/nodes.h>
 
 /*
  * Special node attributes
@@ -67,4 +73,4 @@ pcmk__same_node(const pcmk_node_t *node1, const pcmk_node_t *node2)
            && (node1->details == node2->details);
 }
 
-#endif  // PCMK__NODES_INTERNAL__H
+#endif  // PCMK__CRM_COMMON_NODES_INTERNAL__H

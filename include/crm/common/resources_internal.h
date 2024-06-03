@@ -11,8 +11,10 @@
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
 #include <glib.h>                       // gboolean, GList
+#include <libxml/tree.h>                // xmlNode
+#include <crm/common/resources.h>       // pcmk_resource_t
 #include <crm/common/roles.h>           // enum rsc_role_e
-#include <crm/common/scheduler_types.h> // pcmk_node_t, pcmk_resource_t, etc.
+#include <crm/common/scheduler_types.h> // pcmk_node_t, etc.
 
 #ifdef __cplusplus
 extern "C" {

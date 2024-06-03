@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__OPTIONS_INTERNAL__H
-#define PCMK__OPTIONS_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_OPTIONS_INTERNAL__H
+#define PCMK__CRM_COMMON_OPTIONS_INTERNAL__H
 
 #ifndef PCMK__CONFIG_H
 #define PCMK__CONFIG_H
@@ -18,7 +18,8 @@
 #include <glib.h>     // GHashTable
 #include <stdbool.h>  // bool
 
-#include <crm/common/util.h>    // pcmk_parse_interval_spec()
+#include <crm/common/util.h>                // pcmk_parse_interval_spec()
+#include <crm/common/output_internal.h>     // pcmk__output_t
 
 _Noreturn void pcmk__cli_help(char cmd);
 

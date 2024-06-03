@@ -7,9 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__ISO8601_INTERNAL__H
-#define PCMK__ISO8601_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_ISO8601_INTERNAL__H
+#define PCMK__CRM_COMMON_ISO8601_INTERNAL__H
 
+#include <glib.h>
 #include <time.h>
 #include <sys/time.h>
 #include <ctype.h>

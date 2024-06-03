@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the Pacemaker project contributors
+ * Copyright 2019-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CMDLINE_INTERNAL__H
-#define PCMK__CMDLINE_INTERNAL__H
+#ifndef PCMK__CRM_COMMON_CMDLINE_INTERNAL__H
+#define PCMK__CRM_COMMON_CMDLINE_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {
