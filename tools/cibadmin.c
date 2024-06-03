@@ -763,7 +763,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        digest = calculate_on_disk_digest(input);
+        digest = pcmk__digest_on_disk_cib(input);
         fprintf(stderr, "Digest: ");
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
@@ -781,7 +781,7 @@ main(int argc, char **argv)
         }
 
         version = crm_element_value(input, PCMK_XA_CRM_FEATURE_SET);
-        digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
+        digest = pcmk__digest_xml(input, true, version);
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);

@@ -455,6 +455,7 @@ enum pcmk__xa_flags {
 };
 
 int pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags);
+void pcmk__xe_sort_attrs(xmlNode *xml);
 
 void pcmk__xml_sanitize_id(char *id);
 void pcmk__xe_set_id(xmlNode *xml, const char *format, ...)

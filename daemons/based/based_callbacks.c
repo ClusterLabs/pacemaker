@@ -449,7 +449,7 @@ process_ping_reply(xmlNode *reply)
 
         if(ping_digest == NULL) {
             crm_trace("Calculating new digest");
-            ping_digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, version);
+            ping_digest = pcmk__digest_xml(the_cib, true, version);
         }
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
