@@ -204,6 +204,7 @@ main(int argc, char **argv)
         }
 
         attrd_free_waitlist();
+        pcmk_cluster_disconnect(attrd_cluster);
         pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
