@@ -192,7 +192,7 @@ struct pe_working_set_s {
     // Be careful about when each piece of information is available and final
 
     // NOTE: sbd (as of at least 1.5.2) uses this
-    //! \deprecated To set scheduler iput, use pcmk_set_scheduler_cib() instead
+    //! \deprecated Set scheduler input with pcmk_set_scheduler_cib() instead
     xmlNode *input;                 // CIB XML
 
     crm_time_t *now;                // Current time for evaluation purposes

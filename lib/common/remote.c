@@ -129,28 +129,34 @@ localized_remote_header(pcmk__remote_t *remote)
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
 int
-pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms)
+pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
+                           int *gnutls_rc)
 {
-    int rc = 0;
-    int pollrc = 0;
-    time_t time_limit = time(NULL) + timeout_ms / 1000;
+    const time_t time_limit = time(NULL) + timeout_sec;
 
+    if (gnutls_rc != NULL) {
+        *gnutls_rc = GNUTLS_E_SUCCESS;
+    }
     do {
-        rc = gnutls_handshake(*remote->tls_session);
-        if ((rc == GNUTLS_E_INTERRUPTED) || (rc == GNUTLS_E_AGAIN)) {
-            pollrc = pcmk__remote_ready(remote, 1000);
-            if ((pollrc != pcmk_rc_ok) && (pollrc != ETIME)) {
-                /* poll returned error, there is no hope */
-                crm_trace("TLS handshake poll failed: %s (%d)",
-                          pcmk_strerror(pollrc), pollrc);
-                return pcmk_legacy2rc(pollrc);
-            }
-        } else if (rc < 0) {
-            crm_trace("TLS handshake failed: %s (%d)",
-                      gnutls_strerror(rc), rc);
-            return EPROTO;
-        } else {
-            return pcmk_rc_ok;
+        int rc = gnutls_handshake(*remote->tls_session);
+
+        switch (rc) {
+            case GNUTLS_E_SUCCESS:
+                return pcmk_rc_ok;
+
+            case GNUTLS_E_INTERRUPTED:
+            case GNUTLS_E_AGAIN:
+                rc = pcmk__remote_ready(remote, 1000);
+                if ((rc != pcmk_rc_ok) && (rc != ETIME)) { // Fatal error
+                    return rc;
+                }
+                break;
+
+            default:
+                if (gnutls_rc != NULL) {
+                    *gnutls_rc = rc;
+                }
+                return EPROTO;
         }
     } while (time(NULL) < time_limit);
     return ETIME;

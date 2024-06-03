@@ -182,68 +182,59 @@ static void
 do_local_notify(const xmlNode *notify_src, const char *client_id,
                 bool sync_reply, bool from_peer)
 {
-    int rid = 0;
-    int call_id = 0;
+    int msg_id = 0;
+    int rc = pcmk_rc_ok;
     pcmk__client_t *client_obj = NULL;
+    uint32_t flags = crm_ipc_server_event;
 
-    CRM_ASSERT(notify_src && client_id);
+    CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
 
-    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &call_id);
+    crm_element_value_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
 
     client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
-        crm_debug("Could not send response %d: client %s not found",
-                  call_id, client_id);
+        crm_debug("Could not notify client %s%s %s of call %d result: "
+                  "client no longer exists", client_id,
+                  (from_peer? " (originator of delegated request)" : ""),
+                  (sync_reply? "synchronously" : "asynchronously"), msg_id);
         return;
     }
 
     if (sync_reply) {
-        if (client_obj->ipcs) {
-            CRM_LOG_ASSERT(client_obj->request_id);
-
-            rid = client_obj->request_id;
+        flags = crm_ipc_flags_none;
+        if (client_obj->ipcs != NULL) {
+            msg_id = client_obj->request_id;
             client_obj->request_id = 0;
-
-            crm_trace("Sending response %d to client %s%s",
-                      rid, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
-        } else {
-            crm_trace("Sending response (call %d) to client %s%s",
-                      call_id, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
         }
-
-    } else {
-        crm_trace("Sending event %d to client %s%s",
-                  call_id, pcmk__client_name(client_obj),
-                  (from_peer? " (originator of delegated request)" : ""));
     }
 
     switch (PCMK__CLIENT_TYPE(client_obj)) {
         case pcmk__client_ipc:
-            {
-                int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
-                                            (sync_reply? crm_ipc_flags_none
-                                             : crm_ipc_server_event));
-
-                if (rc != pcmk_rc_ok) {
-                    crm_warn("%s reply to client %s failed: %s " CRM_XS " rc=%d",
-                             (sync_reply? "Synchronous" : "Asynchronous"),
-                             pcmk__client_name(client_obj), pcmk_rc_str(rc),
-                             rc);
-                }
-            }
+            rc = pcmk__ipc_send_xml(client_obj, msg_id, notify_src, flags);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
 #endif
         case pcmk__client_tcp:
-            pcmk__remote_send_xml(client_obj->remote, notify_src);
+            rc = pcmk__remote_send_xml(client_obj->remote, notify_src);
             break;
         default:
-            crm_err("Unknown transport for client %s "
-                    CRM_XS " flags=%#016" PRIx64,
-                    pcmk__client_name(client_obj), client_obj->flags);
+            rc = EPROTONOSUPPORT;
+            break;
+    }
+    if (rc == pcmk_rc_ok) {
+        crm_trace("Notified %s client %s%s %s of call %d result",
+                  pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
+                  pcmk__client_name(client_obj),
+                  (from_peer? " (originator of delegated request)" : ""),
+                  (sync_reply? "synchronously" : "asynchronously"), msg_id);
+    } else {
+        crm_warn("Could not notify %s client %s%s %s of call %d result: %s",
+                 pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
+                 pcmk__client_name(client_obj),
+                 (from_peer? " (originator of delegated request)" : ""),
+                 (sync_reply? "synchronously" : "asynchronously"), msg_id,
+                 pcmk_rc_str(rc));
     }
 }
 

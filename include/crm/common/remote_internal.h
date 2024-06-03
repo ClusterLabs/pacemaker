@@ -88,12 +88,16 @@ int pcmk__read_handshake_data(const pcmk__client_t *client);
  * \internal
  * \brief Perform client TLS handshake after establishing TCP socket
  *
- * \param[in,out] remote      Newly established remote connection
- * \param[in]     timeout_ms  Abort if handshake is not complete within this
+ * \param[in,out] remote       Newly established remote connection
+ * \param[in]     timeout_sec  Abort handshake if not completed within this time
+ * \param[out]    gnutls_rc    If this is non-NULL, it will be set to the GnuTLS
+ *                             rc (for logging) if this function returns EPROTO,
+ *                             otherwise GNUTLS_E_SUCCESS
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
+int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
+                               int *gnutls_rc);
 
 #endif    // HAVE_GNUTLS_GNUTLS_H
 #endif      // PCMK__CRM_COMMON_REMOTE_INTERNAL__H
