@@ -56,7 +56,9 @@ int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
-#define LRMD_CLIENT_HANDSHAKE_TIMEOUT 5000    /* 5 seconds */
+// GnuTLS client handshake timeout in seconds
+#define TLS_HANDSHAKE_TIMEOUT 5
+
 gnutls_psk_client_credentials_t psk_cred_s;
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
@@ -1375,10 +1377,33 @@ report_async_connection_result(lrmd_t * lrmd, int rc)
     }
 }
 
-static inline int
-lrmd__tls_client_handshake(pcmk__remote_t *remote)
+/*!
+ * \internal
+ * \brief Perform a TLS client handshake with a Pacemaker Remote server
+ *
+ * \param[in] lrmd  Newly established Pacemaker Remote executor connection
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+tls_client_handshake(lrmd_t *lrmd)
 {
-    return pcmk__tls_client_handshake(remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT);
+    lrmd_private_t *native = lrmd->lrmd_private;
+    int tls_rc = GNUTLS_E_SUCCESS;
+    int rc = pcmk__tls_client_handshake(native->remote, TLS_HANDSHAKE_TIMEOUT,
+                                        &tls_rc);
+
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Disconnecting after TLS handshake with "
+                 "Pacemaker Remote server %s:%d failed: %s",
+                 native->server, native->port,
+                 (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+        gnutls_deinit(*native->remote->tls_session);
+        gnutls_free(native->remote->tls_session);
+        native->remote->tls_session = NULL;
+        lrmd_tls_connection_destroy(lrmd);
+    }
+    return rc;
 }
 
 /*!
@@ -1470,13 +1495,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         return;
     }
 
-    if (lrmd__tls_client_handshake(native->remote) != pcmk_rc_ok) {
-        crm_warn("Disconnecting after TLS handshake with Pacemaker Remote server %s:%d failed",
-                 native->server, native->port);
-        gnutls_deinit(*native->remote->tls_session);
-        gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = NULL;
-        lrmd_tls_connection_destroy(lrmd);
+    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
         report_async_connection_result(lrmd, -EKEYREJECTED);
         return;
     }
@@ -1547,12 +1566,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return -EPROTO;
     }
 
-    if (lrmd__tls_client_handshake(native->remote) != pcmk_rc_ok) {
-        crm_err("Session creation for %s:%d failed", native->server, native->port);
-        gnutls_deinit(*native->remote->tls_session);
-        gnutls_free(native->remote->tls_session);
-        native->remote->tls_session = NULL;
-        lrmd_tls_connection_destroy(lrmd);
+    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
         return -EKEYREJECTED;
     }
 

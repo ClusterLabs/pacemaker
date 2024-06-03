@@ -535,7 +535,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
             return NULL;
         }
 
-        crm_trace("Creaing ticket entry for %s", ticket_id);
+        crm_trace("Creating ticket entry for %s", ticket_id);
 
         ticket->id = strdup(ticket_id);
         ticket->granted = FALSE;
