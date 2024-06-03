@@ -203,7 +203,7 @@ class Corosync2Patterns(BasePatterns):
             r"Parameters to .* changed",
             r"pacemakerd.*\[[0-9]+\] terminated( with signal| as IPC server|$)",
             r"pacemaker-schedulerd.*Recover\s+.*\(.* -\> .*\)",
-            r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
+            r"rsyslogd.* lost .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
             r"Unknown node -> we will not deliver message",
