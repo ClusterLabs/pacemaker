@@ -151,14 +151,6 @@ enum pcmk__action_flags {
     // Whether action is a stop to abort a dangling migration
     pcmk__action_migration_abort        = (UINT32_C(1) << 11),
 
-    /*
-     * Whether action is an ordering point for minimum required instances
-     * (used to implement ordering after clones with \c PCMK_META_CLONE_MIN
-     * configured, and ordered sets with \c PCMK_XA_REQUIRE_ALL set to
-     * \c PCMK_VALUE_FALSE).
-     */
-    pcmk__action_min_runnable           = (UINT32_C(1) << 12),
-
     // Whether action is recurring monitor that must be rescheduled if active
     pcmk__action_reschedule             = (UINT32_C(1) << 13),
 

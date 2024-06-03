@@ -521,21 +521,13 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
                     action_optional_str(then->flags),
                     action_runnable_str(then->flags), action_node_str(then));
 
-    if (pcmk_is_set(then->flags, pcmk__action_min_runnable)) {
+    if (then->required_runnable_before > 0) {
         /* Initialize current known "runnable before" actions. As
          * update_action_for_ordering_flags() is called for each of then's
          * before actions, this number will increment as runnable 'first'
          * actions are encountered.
          */
         then->runnable_before = 0;
-
-        if (then->required_runnable_before == 0) {
-            /* @COMPAT This ordering constraint uses the deprecated
-             * PCMK_XA_REQUIRE_ALL=PCMK_VALUE_FALSE attribute. Treat it like
-             * PCMK_META_CLONE_MIN=1.
-             */
-            then->required_runnable_before = 1;
-        }
 
         /* The pcmk__ar_min_runnable clause of
          * update_action_for_ordering_flags() (called below)
@@ -662,7 +654,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
         }
     }
 
-    if (pcmk_is_set(then->flags, pcmk__action_min_runnable)) {
+    if (then->required_runnable_before > 0) {
         if (last_flags == then->flags) {
             pcmk__clear_updated_flags(changed, then, pcmk__updated_then);
         } else {
