@@ -12,6 +12,7 @@
 #include <strings.h>
 #include <glib.h>
 
+#include <crm/common/options.h>
 #include <crm/common/util_compat.h>
 #include <crm/common/strings_internal.h>
 
@@ -28,7 +29,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   memcpy(ns, data, size);
   ns[size] = '\0';
 
-  pcmk_numeric_strcasecmp(ns, ns);
   pcmk__trim(ns);
   pcmk_parse_interval_spec(ns, &res);
   crm_get_msec(ns);
