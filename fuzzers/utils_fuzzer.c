@@ -18,6 +18,8 @@ int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
   char *ns;
+  guint result;
+
   if (size < 10) {
     return 0;
   }
@@ -25,7 +27,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   memcpy(ns, data, size);
   ns[size] = '\0';
 
-  guint result;
   pcmk_parse_interval_spec(ns, &result);
 
   free(ns);  
