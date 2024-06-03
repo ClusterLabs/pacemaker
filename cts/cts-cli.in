@@ -1,0 +1,121 @@
+#!@PYTHON@
+"""Regression tests for Pacemaker's command line tools."""
+
+# pylint doesn't like the module name "cts-cli" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+
+__copyright__ = "Copyright 2024 the Pacemaker project contributors"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import argparse
+import os
+
+# These imports allow running from a source checkout after running `make`.
+if os.path.exists("@abs_top_srcdir@/python"):
+    sys.path.insert(0, "@abs_top_srcdir@/python")
+
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
+if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
+    sys.path.insert(0, "@abs_top_builddir@/python")
+
+from pacemaker.buildoptions import BuildOptions
+
+# The default list of tests to run, in the order they should be run
+default_tests = ["access_render", "daemons", "dates", "error_codes", "tools",
+                 "crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
+other_tests = ["agents"]
+
+# The directory containing this program
+test_home = os.path.dirname(os.path.realpath(__file__))
+
+
+def build_options():
+    """Handle command line arguments."""
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description="Command line tool regression tests",
+                                     epilog="Default tests: %s\n"
+                                            "Other tests: agents (must be run in an installed environment)" %
+                                            " ".join(default_tests))
+    parser.add_argument("-p", "--path", metavar="DIR", action="append",
+                        help="Look for executables in DIR (may be specified multiple times)")
+    parser.add_argument("-r", "--run-only", metavar="TEST", choices=default_tests + other_tests,
+                        action="append",
+                        help="Run only specified tests (may be specified multiple times)")
+    parser.add_argument("-s", "--save", action="store_true",
+                        help="Save actual output as expected output")
+    parser.add_argument("-v", "--valgrind", action="store_true",
+                        help="Run all commands under valgrind")
+    parser.add_argument("-V", "--verbose", action="store_true",
+                        help="Display any differences from expected output")
+
+    args = parser.parse_args()
+
+    if args.path is None:
+        args.path = []
+
+    return args
+
+
+def setup_environment(valgrind):
+    """Set various environment variables needed for operation."""
+    if valgrind:
+        os.environ["G_SLICE"] = "always-malloc"
+
+    # Ensure all command output is in portable locale for comparison
+    os.environ["LC_ALL"] = "C"
+
+    # Log test errors to stderr
+    os.environ["PCMK_stderr"] = "1"
+
+    # Because we will change the value of PCMK_trace_functions and then reset it
+    # back to some initial value at various points, it's easiest to assume it is
+    # defined but empty by default
+    if "PCMK_trace_functions" not in os.environ:
+        os.environ["PCMK_trace_functions"] = ""
+
+
+def path_prepend(p):
+    """Add another directory to the front of $PATH."""
+    old = os.environ["PATH"]
+    os.environ["PATH"] = "%s:%s" % (p, old)
+
+
+def setup_path(opts_path):
+    """Set the PATH environment variable appropriately for the tests."""
+    srcdir = os.path.dirname(test_home)
+
+    # Add any search paths given on the command line
+    for p in opts_path:
+        path_prepend(p)
+
+    if os.path.exists("%s/tools/crm_simulate" % srcdir):
+        print("Using local binaries from: %s" % srcdir)
+
+        path_prepend("%s/tools" % srcdir)
+
+        for daemon in ["based", "controld", "fenced", "schedulerd"]:
+            path_prepend("%s/daemons/%s" % (srcdir, daemon))
+
+        print("Using local schemas from: %s/xml" % srcdir)
+        os.environ["PCMK_schema_directory"] = "%s/xml" % srcdir
+    else:
+        path_prepend(BuildOptions.DAEMON_DIR)
+        os.environ["PCMK_schema_directory"] = BuildOptions.SCHEMA_DIR
+
+
+def main():
+    """Run command line regression tests as specified by arguments."""
+    opts = build_options()
+
+    if not opts.run_only:
+        opts.run_only = default_tests
+
+    setup_environment(opts.valgrind)
+    setup_path(opts.path)
+
+
+if __name__ == "__main__":
+    main()
