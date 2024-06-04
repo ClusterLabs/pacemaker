@@ -242,6 +242,7 @@ pacemaker_*.info
 /cts/scheduler/bug-rh-1097457.trs
 /cts/scheduler/shadow.*
 /cts/test-suite.log
+/lib/*/fuzzers/*/*_fuzzer
 /lib/*/tests/*/*.log
 /lib/*/tests/*/*_test
 /lib/*/tests/*/*.trs
