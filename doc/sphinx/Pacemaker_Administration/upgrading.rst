@@ -163,8 +163,8 @@ See the
 `Pacemaker release calendar
 <https://projects.clusterlabs.org/w/projects/pacemaker/pacemaker_release_calendar/>`_
 on the ClusterLabs wiki to figure out whether the CRM feature set and/or
-Pacemaker Remote protocol version changed between the the Pacemaker release
-versions in your rolling upgrade.
+Pacemaker Remote protocol version changed between the Pacemaker release versions
+in your rolling upgrade.
 
 To perform a rolling upgrade, on each node in turn:
 
