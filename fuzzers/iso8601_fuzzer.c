@@ -21,6 +21,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     char *result = NULL;
     time_t epoch = 0;
     pcmk__time_hr_t *now = NULL;
+    crm_time_period_t *period = NULL;
 
     // Ensure we have enough data.
     if (size < 10) {
@@ -30,12 +31,16 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     memcpy(ns, data, size);
     ns[size] = '\0';
 
-    crm_time_parse_period(ns);
-    pcmk__time_hr_new(ns);
+    period = crm_time_parse_period(ns);
+    crm_time_free_period(period);
+
+    now = pcmk__time_hr_new(ns);
+    pcmk__time_hr_free(now);
 
     epoch = 0;
     now = pcmk__time_hr_now(&epoch);
     result = pcmk__time_format_hr(ns, now);
+    pcmk__time_hr_free(now);
     free(result);
 
     free(ns);
