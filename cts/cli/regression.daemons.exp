@@ -192,7 +192,7 @@
     1.1
   </version>
   <longdesc lang="en">
-    Instance attributes available for all "stonith"-class resources and used by Pacemaker's fence daemon, formerly known as stonithd
+    Instance attributes available for all "stonith"-class resources and used by Pacemaker's fence daemon
   </longdesc>
   <shortdesc lang="en">
     Instance attributes available for all "stonith"-class resources
