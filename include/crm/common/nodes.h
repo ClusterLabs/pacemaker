@@ -57,7 +57,9 @@ typedef struct pcmk__node_private pcmk__node_private_t;
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
 struct pe_node_shared_s {
-    // @TODO Convert these into a flag group
+    /* @COMPAT Convert these gbooleans into new enum pcmk__node_flags values
+     * when we no longer support versions of sbd that use them
+     */
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_online() instead
@@ -78,8 +80,6 @@ struct pe_node_shared_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode
-
-    gboolean unpacked;              // Whether node history has been unpacked
 
     /*
      * Number of resources active on this node (valid after CIB status section

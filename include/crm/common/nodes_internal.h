@@ -68,6 +68,9 @@ enum pcmk__node_flags {
      * node state as being in maintenance mode
      */
     pcmk__node_remote_maint     = (UINT32_C(1) << 7),
+
+    // Whether node history has been unpacked
+    pcmk__node_unpacked         = (UINT32_C(1) << 8),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow

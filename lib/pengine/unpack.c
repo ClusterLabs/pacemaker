@@ -1310,7 +1310,7 @@ unpack_node_history(const xmlNode *status, bool fence,
             continue;
         }
 
-        if (this_node->details->unpacked) {
+        if (pcmk_is_set(this_node->private->flags, pcmk__node_unpacked)) {
             crm_trace("Not unpacking resource history for node %s because "
                       "already unpacked", id);
             continue;
@@ -1373,7 +1373,7 @@ unpack_node_history(const xmlNode *status, bool fence,
         crm_trace("Unpacking resource history for %snode %s",
                   (fence? "unseen " : ""), id);
 
-        this_node->details->unpacked = TRUE;
+        pcmk__set_node_flags(this_node, pcmk__node_unpacked);
         unpack_node_lrm(this_node, state, scheduler);
 
         rc = EAGAIN; // Other node histories might depend on this one
@@ -1447,7 +1447,7 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
             pe__set_next_role(this_node->details->remote_rsc, pcmk_role_stopped,
                               "remote shutdown");
         }
-        if (!this_node->details->unpacked) {
+        if (!pcmk_is_set(this_node->private->flags, pcmk__node_unpacked)) {
             determine_remote_online_status(scheduler, this_node);
         }
     }
