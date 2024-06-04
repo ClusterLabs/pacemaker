@@ -81,12 +81,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode
 
-    /*
-     * Number of resources active on this node (valid after CIB status section
-     * has been unpacked, as long as pcmk_sched_no_counts was not set)
-     */
-    int num_resources;
-
     // Remote connection resource for node, if it is a Pacemaker Remote node
     pcmk_resource_t *remote_rsc;
 

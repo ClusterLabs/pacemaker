@@ -270,16 +270,16 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare number of resources already assigned to node
 
-    if (node1->details->num_resources < node2->details->num_resources) {
+    if (node1->private->num_resources < node2->private->num_resources) {
         crm_trace("%s before %s (%d resources < %d)",
                   pcmk__node_name(node1), pcmk__node_name(node2),
-                  node1->details->num_resources, node2->details->num_resources);
+                  node1->private->num_resources, node2->private->num_resources);
         return -1;
 
-    } else if (node1->details->num_resources > node2->details->num_resources) {
+    } else if (node1->private->num_resources > node2->private->num_resources) {
         crm_trace("%s after %s (%d resources > %d)",
                   pcmk__node_name(node1), pcmk__node_name(node2),
-                  node1->details->num_resources, node2->details->num_resources);
+                  node1->private->num_resources, node2->private->num_resources);
         return 1;
     }
 

@@ -512,7 +512,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     rsc->private->assigned_node = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
-    node->details->num_resources++;
+    node->private->num_resources++;
     node->count++;
     pcmk__consume_node_capacity(node->details->utilization, rsc);
 
@@ -559,7 +559,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
          */
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
                                                     rsc);
-        old->details->num_resources--;
+        old->private->num_resources--;
         pcmk__release_node_capacity(old->details->utilization, rsc);
         free(old);
         return;
