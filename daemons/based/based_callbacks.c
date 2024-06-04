@@ -426,11 +426,9 @@ process_ping_reply(xmlNode *reply)
         crm_trace("Ignoring ping reply %s from %s: cib updated since", seq_s, host);
 
     } else {
-        const char *version = crm_element_value(pong, PCMK_XA_CRM_FEATURE_SET);
-
         if(ping_digest == NULL) {
             crm_trace("Calculating new digest");
-            ping_digest = pcmk__digest_xml(the_cib, true, version);
+            ping_digest = pcmk__digest_xml(the_cib, true);
         }
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);

@@ -140,7 +140,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 {
     const char *host = crm_element_value(req, PCMK__XA_SRC);
     const char *seq = crm_element_value(req, PCMK__XA_CIB_PING_ID);
-    char *digest = pcmk__digest_xml(the_cib, true, CRM_FEATURE_SET);
+    char *digest = pcmk__digest_xml(the_cib, true);
 
     xmlNode *wrapper = NULL;
 
@@ -430,7 +430,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     pcmk__xe_set_bool_attr(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    digest = pcmk__digest_xml(the_cib, true, CRM_FEATURE_SET);
+    digest = pcmk__digest_xml(the_cib, true);
     crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
 
     wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);

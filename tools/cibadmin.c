@@ -760,7 +760,7 @@ main(int argc, char **argv)
         }
 
         version = crm_element_value(input, PCMK_XA_CRM_FEATURE_SET);
-        digest = pcmk__digest_xml(input, true, version);
+        digest = pcmk__digest_xml(input, true);
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
