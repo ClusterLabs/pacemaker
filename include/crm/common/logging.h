@@ -48,24 +48,6 @@ extern "C" {
 #define LOG_NEVER   255
 #endif
 
-/* "Extended information" logging support */
-#ifdef QB_XS
-#define CRM_XS QB_XS
-#define crm_extended_logging(t, e) qb_log_ctl((t), QB_LOG_CONF_EXTENDED, (e))
-#else
-#define CRM_XS "|"
-
-/* A caller might want to check the return value, so we can't define this as a
- * no-op, and we can't simply define it to be 0 because gcc will then complain
- * when the value isn't checked.
- */
-static inline int
-crm_extended_logging(int t, int e)
-{
-    return 0;
-}
-#endif
-
 // @COMPAT Make internal when we can break API backward compatibility
 //! \deprecated Do not use
 extern unsigned int crm_log_level;
@@ -326,7 +308,7 @@ pcmk__clip_log_level(int level)
  * \note This is a macro, and \p level may be evaluated more than once.
  * \note Because crm_perror() adds the system error message and error number
  *       onto the end of fmt, that information will become extended information
- *       if CRM_XS is used inside fmt and will not show up in syslog.
+ *       if QB_XS is used inside fmt and will not show up in syslog.
  */
 #define crm_perror(level, fmt, args...) do {                                \
         uint8_t _level = pcmk__clip_log_level(level);                       \
@@ -423,6 +405,10 @@ pcmk__clip_log_level(int level)
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/logging_compat.h>
 #endif
 
 #endif

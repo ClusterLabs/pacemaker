@@ -115,7 +115,7 @@ panic_local(void)
     reboot(reboot_cmd);
     rc = errno;
 
-    crm_emerg("Reboot failed, escalating to parent %lld: %s " CRM_XS " rc=%d",
+    crm_emerg("Reboot failed, escalating to parent %lld: %s " QB_XS " rc=%d",
               (long long) ppid, pcmk_rc_str(rc), rc);
 
     if(ppid > 1) {
@@ -175,7 +175,7 @@ pcmk__panic(const char *origin)
         {
             // getppid() == 1 means our original parent no longer exists
             crm_emerg("Shutting down instead of panicking the node "
-                      CRM_XS " origin=%s sbd=%lld parent=%d",
+                      QB_XS " origin=%s sbd=%lld parent=%d",
                       origin, (long long) sbd_pid, getppid());
             crm_exit(CRM_EX_FATAL);
             return;

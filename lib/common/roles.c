@@ -30,18 +30,10 @@ pcmk_role_text(enum rsc_role_e role)
             return PCMK_ROLE_STARTED;
 
         case pcmk_role_unpromoted:
-#ifdef PCMK__COMPAT_2_0
-            return PCMK__ROLE_UNPROMOTED_LEGACY;
-#else
             return PCMK_ROLE_UNPROMOTED;
-#endif
 
         case pcmk_role_promoted:
-#ifdef PCMK__COMPAT_2_0
-            return PCMK__ROLE_PROMOTED_LEGACY;
-#else
             return PCMK_ROLE_PROMOTED;
-#endif
 
         default: // pcmk_role_unknown
             return PCMK__ROLE_UNKNOWN;

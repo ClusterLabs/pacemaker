@@ -41,16 +41,3 @@ man7_MANS 	= pacemaker-based.7
 endif
 
 CLEANFILES = $(man7_MANS)
-
-.PHONY: install-exec-hook
-install-exec-hook:
-if BUILD_LEGACY_LINKS
-	$(MKDIR_P) -- $(DESTDIR)$(CRM_DAEMON_DIR)
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib && $(LN_S) pacemaker-based cib
-endif
-
-.PHONY: uninstall-hook
-uninstall-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib
-endif

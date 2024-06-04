@@ -88,7 +88,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
         || (rc != pcmk_ok)) {
 
-        crm_warn("Ignore failed CIB update: %s " CRM_XS " rc=%d",
+        crm_warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
                  pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);

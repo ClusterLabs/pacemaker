@@ -518,7 +518,7 @@ authorize_version(xmlNode *message_data, const char *field,
         || (version_num < 0LL)) {
 
         crm_warn("Rejected IPC hello from %s: '%s' is not a valid protocol %s "
-                 CRM_XS " ref=%s uuid=%s",
+                 QB_XS " ref=%s uuid=%s",
                  client_name, ((version == NULL)? "" : version),
                  field, (ref? ref : "none"), uuid);
         return false;
@@ -554,7 +554,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
 
     if (uuid == NULL) {
         crm_warn("IPC message from client rejected: No client identifier "
-                 CRM_XS " ref=%s", (ref? ref : "none"));
+                 QB_XS " ref=%s", (ref? ref : "none"));
         goto rejected;
     }
 
@@ -569,7 +569,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     client_name = crm_element_value(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
         crm_warn("IPC hello from client rejected: No client name",
-                 CRM_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
+                 QB_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
         goto rejected;
     }
     if (!authorize_version(message_data, PCMK__XA_MAJOR_VERSION, client_name,

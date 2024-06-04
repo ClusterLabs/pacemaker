@@ -404,7 +404,7 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     rc = pcmk__lock_pidfile(pidfile, name);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not lock '%s' for %s: %s " CRM_XS " rc=%d",
+        crm_err("Could not lock '%s' for %s: %s " QB_XS " rc=%d",
                 pidfile, name, pcmk_rc_str(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n",
                pidfile, name, pcmk_rc_str(rc), rc);

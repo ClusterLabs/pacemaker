@@ -221,8 +221,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return pcmk_rc_already;
     }
 
-    // @COMPAT xmlDocGetRootElement() requires non-const in libxml2 < 2.9.2
-    validation = crm_element_value(xmlDocGetRootElement((xmlDoc *) cib_doc),
+    validation = crm_element_value(xmlDocGetRootElement(cib_doc),
                                    PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(PCMK__COMPAT_ACL_2_MIN_INCL,

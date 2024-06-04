@@ -232,7 +232,7 @@ lrmd_remote_listen(gpointer data)
                                                      lrmd_auth_timeout_cb,
                                                      new_client);
     crm_info("Remote client pending authentication "
-             CRM_XS " %p id: %s", new_client, new_client->id);
+             QB_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,

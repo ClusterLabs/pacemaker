@@ -467,7 +467,7 @@ fenced_query_cib(void)
     if (rc == pcmk_rc_ok) {
         CRM_ASSERT(local_cib != NULL);
     } else {
-        crm_err("Couldn't retrieve the CIB: %s " CRM_XS " rc=%d",
+        crm_err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
     }
     return rc;

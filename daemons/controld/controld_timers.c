@@ -173,12 +173,12 @@ crm_timer_popped(gpointer data)
     fsa_timer_t *timer = (fsa_timer_t *) data;
 
     if (timer->log_error) {
-        crm_err("%s just popped in state %s! " CRM_XS " input=%s time=%ums",
+        crm_err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
                 get_timer_desc(timer),
                 fsa_state2string(controld_globals.fsa_state),
                 fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
-        crm_info("%s just popped " CRM_XS " input=%s time=%ums",
+        crm_info("%s just popped " QB_XS " input=%s time=%ums",
                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
                  timer->period_ms);
         timer->counter++;
@@ -476,7 +476,7 @@ controld_shutdown_start_countdown(guint default_period_ms)
         shutdown_escalation_timer->period_ms = default_period_ms;
     }
 
-    crm_notice("Initiating controller shutdown sequence " CRM_XS " limit=%ums",
+    crm_notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
                shutdown_escalation_timer->period_ms);
     controld_start_timer(shutdown_escalation_timer);
 }

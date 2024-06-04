@@ -266,7 +266,7 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == 0) {
         crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
     } else {
-        crm_warn("Deletion of %s (via CIB call %d) failed: %s " CRM_XS " rc=%d",
+        crm_warn("Deletion of %s (via CIB call %d) failed: %s " QB_XS " rc=%d",
                  desc, call_id, pcmk_strerror(rc), rc);
     }
 }
@@ -379,7 +379,7 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
     fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
-    crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
+    crm_info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s",
              desc, cib_rc, xpath);
 
     // CIB library handles freeing desc
@@ -433,7 +433,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
         crm_err("Could not delete resource status of %s on %s%s%s: %s "
-                CRM_XS " rc=%d", rsc_id, node,
+                QB_XS " rc=%d", rsc_id, node,
                 (user_name? " for user " : ""), (user_name? user_name : ""),
                 pcmk_rc_str(rc), rc);
         free(desc);
@@ -450,7 +450,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
         free(desc);
 
     } else {
-        crm_info("Clearing %s (via CIB call %d) " CRM_XS " xpath=%s",
+        crm_info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s",
                  desc, rc, xpath);
         fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
@@ -773,9 +773,9 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         default:
             if (call_id > 0) {
                 crm_warn("Resource history update %d failed: %s "
-                         CRM_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
+                         QB_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
             } else {
-                crm_warn("Resource history update failed: %s " CRM_XS " rc=%d",
+                crm_warn("Resource history update failed: %s " QB_XS " rc=%d",
                          pcmk_strerror(rc), rc);
             }
     }

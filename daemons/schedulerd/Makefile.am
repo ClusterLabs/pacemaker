@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -41,18 +41,6 @@ pacemaker_schedulerd_SOURCES	+= schedulerd_messages.c
 install-exec-local:
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(PE_STATE_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
-
-.PHONY: install-exec-hook
-install-exec-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f pengine && $(LN_S) pacemaker-schedulerd pengine
-endif
-
-.PHONY: uninstall-hook
-uninstall-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f pengine
-endif
 
 .PHONY: uninstall-local
 uninstall-local:

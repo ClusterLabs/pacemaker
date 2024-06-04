@@ -258,7 +258,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                                               pcmk__node_search_cluster_member);
 
             crm_info("Rejecting upgrade request from %s: %s "
-                     CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
+                     QB_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
                      (origin? origin->uname : "lost"));
 
             if (origin) {
@@ -343,7 +343,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
 
     } else if ((rc != pcmk_ok) && !based_is_primary && cib_legacy_mode()) {
         crm_warn("Requesting full CIB refresh because update failed: %s"
-                 CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                 QB_XS " rc=%d", pcmk_strerror(rc), rc);
 
         pcmk__log_xml_patchset(LOG_INFO, input);
         pcmk__xml_free(*result_cib);

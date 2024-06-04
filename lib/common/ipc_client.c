@@ -1133,7 +1133,7 @@ crm_ipc_decompress(crm_ipc_t * client)
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+            crm_err("Decompression failed: %s " QB_XS " rc=%d",
                     pcmk_rc_str(rc), rc);
             free(uncompressed);
             return rc;
@@ -1350,7 +1350,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
     rc = pcmk__ipc_prepare_iov(id, message, client->max_buf_size, &iov, &bytes);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't prepare %s IPC request: %s " CRM_XS " rc=%d",
+        crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
                  client->server_name, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
     }
@@ -1441,16 +1441,16 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
   send_cleanup:
     if (!crm_ipc_connected(client)) {
         crm_notice("Couldn't send %s IPC request %d: Connection closed "
-                   CRM_XS " rc=%d", client->server_name, header->qb.id, rc);
+                   QB_XS " rc=%d", client->server_name, header->qb.id, rc);
 
     } else if (rc == -ETIMEDOUT) {
-        crm_warn("%s IPC request %d failed: %s after %dms " CRM_XS " rc=%d",
+        crm_warn("%s IPC request %d failed: %s after %dms " QB_XS " rc=%d",
                  client->server_name, header->qb.id, pcmk_strerror(rc),
                  ms_timeout, rc);
         crm_write_blackbox(0, NULL);
 
     } else if (rc <= 0) {
-        crm_warn("%s IPC request %d failed: %s " CRM_XS " rc=%d",
+        crm_warn("%s IPC request %d failed: %s " QB_XS " rc=%d",
                  client->server_name, header->qb.id,
                  ((rc == 0)? "No bytes sent" : pcmk_strerror(rc)), rc);
     }
@@ -1641,7 +1641,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     qb_rc = qb_ipcc_fd_get(c, &fd);
     if (qb_rc != 0) {
         rc = (int) -qb_rc; // System errno
-        crm_err("Could not get fd from %s IPC: %s " CRM_XS " rc=%d",
+        crm_err("Could not get fd from %s IPC: %s " QB_XS " rc=%d",
                 name, pcmk_rc_str(rc), rc);
         goto bail;
     }
@@ -1660,7 +1660,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     if (auth_rc != pcmk_rc_ok) {
         rc = auth_rc;
         crm_err("Could not get peer credentials from %s IPC: %s "
-                CRM_XS " rc=%d", name, pcmk_rc_str(rc), rc);
+                QB_XS " rc=%d", name, pcmk_rc_str(rc), rc);
         goto bail;
     }
 

@@ -635,11 +635,7 @@ static const char *
 role_desc(enum rsc_role_e role)
 {
     if (role == pcmk_role_promoted) {
-#ifdef PCMK__COMPAT_2_0
-        return "as " PCMK__ROLE_PROMOTED_LEGACY " ";
-#else
         return "in " PCMK_ROLE_PROMOTED " role ";
-#endif
     }
     return "";
 }

@@ -961,7 +961,7 @@ using libqb's "extended logging" feature:
 
           warning: Action failed: Node not found | rc=-1005 id=hgjjg-51006
    */
-   crm_warn("Action failed: %s " CRM_XS " rc=%d id=%s",
+   crm_warn("Action failed: %s " QB_XS " rc=%d id=%s",
             pcmk_rc_str(rc), rc, id);
 
 

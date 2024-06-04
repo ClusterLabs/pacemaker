@@ -54,9 +54,9 @@ dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
 AM_INIT_AUTOMAKE([1.13 foreign tar-ustar subdir-objects])
 
 dnl Require minimum version of pkg-config
-PKG_PROG_PKG_CONFIG(0.27)
+PKG_PROG_PKG_CONFIG(0.28)
 AS_IF([test x"${PKG_CONFIG}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.27 or later)])])
+      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.28 or later)])])
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
@@ -246,24 +246,6 @@ yes_no_try "$enable_upstart" "try"
 enable_upstart=$?
 
 dnl --enable-* options: features inherent to Pacemaker
-
-AC_ARG_ENABLE([compat-2.0],
-    [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
-        preserve certain output as it was in 2.0; this option will be
-        available only for the lifetime of the 2.1 series @<:@no@:>@]))]
-)
-yes_no_try "$enable_compat_2_0" "no"
-enable_compat_2_0=$?
-
-# Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
-# that users and tools can continue to invoke those names directly (e.g., for
-# meta-data). This option will be removed in a future release.
-AC_ARG_ENABLE([legacy-links],
-    [AS_HELP_STRING([--enable-legacy-links],
-        [add symlinks for old daemon names (deprecated) @<:@no@:>@])]
-)
-yes_no_try "$enable_legacy_links" "no"
-enable_legacy_links=$?
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
 # to enabled. We override the definition of AM_NLS to flip the default and mark
@@ -550,7 +532,7 @@ dnl If PYTHON was specified, ensure it is an absolute path
 AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
 dnl Require a minimum Python version
-AM_PATH_PYTHON([3.4])
+AM_PATH_PYTHON([3.6])
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
@@ -647,16 +629,6 @@ AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
 dnl ==============================================
 dnl Process simple options
 dnl ==============================================
-
-AS_IF([test $enable_compat_2_0 -ne $DISABLED],
-      [
-          AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
-                             [Keep certain output compatible with 2.0 release series])
-          PCMK_FEATURES="$PCMK_FEATURES compat-2.0"
-      ]
-)
-
-AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
@@ -1080,7 +1052,7 @@ AS_IF([test x"$ac_cv_lib_c_dlopen" = x"yes"],
       [LIBADD_DL=-ldl],
       [LIBADD_DL=${lt_cv_dlopen_libs}])
 
-PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.6.0],
+PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
                    LIBS="${LIBS} ${LIBXML2_LIBS}"])
 
@@ -1333,8 +1305,8 @@ AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
     AS_IF([cc_supports_flag -fPIC],
-	  [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
-	  [cc_temp_flags "-Wcast-qual $WERROR"])
+          [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
+          [cc_temp_flags "-Wcast-qual $WERROR"])
 
     AC_MSG_CHECKING([whether curses library is compatible])
     AC_LINK_IFELSE(
@@ -1416,7 +1388,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - LibQB
 dnl ========================================================================
 
-PKG_CHECK_MODULES(libqb, libqb >= 0.17)
+PKG_CHECK_MODULES([libqb], [libqb >= 1.0.1])
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
@@ -1427,6 +1399,7 @@ dnl libqb 2.0.2+ (2020-10)
 AC_CHECK_FUNCS([qb_ipcc_auth_get])
 
 dnl libqb 2.0.0+ (2020-05)
+dnl also defines QB_FEATURE_LOG_HIRES_TIMESTAMPS
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
 
@@ -1446,17 +1419,16 @@ dnl ===============================================
 dnl Detect DBus, systemd, and Upstart support
 dnl ===============================================
 
-HAVE_dbus=1
-PKG_CHECK_MODULES([DBUS], [dbus-1],
-                  [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
-                  [HAVE_dbus=0])
+HAVE_dbus=0
+PC_NAME_DBUS=""
+PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.5.12],
+                  [
+                      HAVE_dbus=1
+                      PC_NAME_DBUS="dbus-1"
+                      CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"
+                  ],[])
 AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
-dnl libdbus 1.5.12+ (2012-03) / 1.6.0+ (2012-06)
-AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
-AS_IF([test $HAVE_dbus = 0],
-      [PC_NAME_DBUS=""],
-      [PC_NAME_DBUS="dbus-1"])
 AC_SUBST(PC_NAME_DBUS)
 
 check_systemdsystemunitdir() {
@@ -2026,7 +1998,6 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [agents/ocf/attribute],
                   [agents/ocf/controld],
                   [agents/ocf/ifspeed],
-                  [agents/ocf/o2cb],
                   [agents/ocf/ping],
                   [agents/ocf/remote],
                   [agents/stonith/fence_legacy],

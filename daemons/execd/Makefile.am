@@ -68,14 +68,8 @@ CLEANFILES = $(man8_MANS)
 # Pacemaker 1 (>=1.1.17).
 .PHONY: install-exec-hook
 install-exec-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd && $(LN_S) pacemaker-execd lrmd
-endif
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
 
 .PHONY: uninstall-hook
 uninstall-hook:
-if BUILD_LEGACY_LINKS
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd
-endif
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted

@@ -9,13 +9,13 @@
 |                 | libtool            | libtool            | libtool        |
 |                 | libtool-ltdl-devel |                    | libltdl-dev    |
 |                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
-| 0.27 or later   | pkgconfig          | pkgconfig          | pkg-config     |
+| 0.28 or later   | pkgconfig          | pkgconfig          | pkg-config     |
 | 2.42.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
-| 2.6.0 or later  | libxml2-devel      | libxml2-devel      | libxml2-dev    |
+| 2.9.2 or later  | libxml2-devel      | libxml2-devel      | libxml2-dev    |
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
-| 0.17.0 or later | libqb-devel        | libqb-devel        | libqb-dev      |
-| 3.4 or later    | python3            | python3            | python3        |
+| 1.0.1 or later  | libqb-devel        | libqb-devel        | libqb-dev      |
+| 3.6 or later    | python3            | python3            | python3        |
 | 0.18 or later   | gettext-devel      | gettext-tools      | gettext        |
 | 0.18 or later   |                    |                    | autopoint      |
 | 2.12.0 or later | gnutls-devel       | libgnutls-devel    | libgnutls-dev  |
@@ -45,7 +45,7 @@ Also:
 | encrypted remote CIB admin                      |                | pam-devel               | pam-devel               | libpam0g-dev            |
 | interactive crm_mon                             |                | ncurses-devel           | ncurses-devel           | ncurses-dev             |
 | systemd support                                 |                | systemd-devel           | systemd-devel           | libsystemd-dev          |
-| systemd/upstart resource support                |                | dbus-devel              | dbus-devel              | libdbus-1-dev           |
+| systemd/upstart resource support                | 1.5.12 or later| dbus-devel              | dbus-devel              | libdbus-1-dev           |
 | Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
 | documentation                                   |                | asciidoc or asciidoctor | asciidoc or asciidoctor | asciidoc or asciidoctor |
 | documentation                                   |                | help2man                | help2man                | help2man                |

@@ -151,14 +151,14 @@ cluster_connect_cfg(void)
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
     if (rc != CS_OK) {
-        crm_crit("Could not connect to Corosync CFG: %s " CRM_XS " rc=%d",
+        crm_crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
                  cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
-        crm_crit("Could not get Corosync CFG descriptor: %s " CRM_XS " rc=%d",
+        crm_crit("Could not get Corosync CFG descriptor: %s " QB_XS " rc=%d",
                  cs_strerror(rc), rc);
         goto bail;
     }
@@ -173,7 +173,7 @@ cluster_connect_cfg(void)
         goto bail;
     } else if (rv < 0) {
         crm_crit("Could not authenticate Corosync CFG provider: %s "
-                 CRM_XS " rc=%d", strerror(-rv), -rv);
+                 QB_XS " rc=%d", strerror(-rv), -rv);
         goto bail;
     }
 
@@ -181,7 +181,7 @@ cluster_connect_cfg(void)
     cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, &nodeid));
     if (rc != CS_OK) {
         crm_crit("Could not get local node ID from Corosync: %s "
-                 CRM_XS " rc=%d", cs_strerror(rc), rc);
+                 QB_XS " rc=%d", cs_strerror(rc), rc);
         goto bail;
     }
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
@@ -190,7 +190,7 @@ cluster_connect_cfg(void)
     retries = 0;
     cs_repeat(retries, 30, rc = corosync_cfg_trackstart(cfg_handle, 0));
     if (rc != CS_OK) {
-        crm_crit("Could not enable Corosync CFG shutdown tracker: %s " CRM_XS " rc=%d",
+        crm_crit("Could not enable Corosync CFG shutdown tracker: %s " QB_XS " rc=%d",
                  cs_strerror(rc), rc);
         goto bail;
     }
@@ -219,7 +219,7 @@ pcmkd_shutdown_corosync(void)
     if (rc == CS_OK) {
         close_cfg();
     } else {
-        crm_warn("Corosync shutdown failed: %s " CRM_XS " rc=%d",
+        crm_warn("Corosync shutdown failed: %s " QB_XS " rc=%d",
                  cs_strerror(rc), rc);
     }
 }
@@ -281,7 +281,7 @@ pacemakerd_read_config(void)
         if (rc != CS_OK) {
             retries++;
             crm_info("Could not connect to Corosync CMAP: %s (retrying in %ds) "
-                     CRM_XS " rc=%d", cs_strerror(rc), retries, rc);
+                     QB_XS " rc=%d", cs_strerror(rc), retries, rc);
             sleep(retries);
 
         } else {
@@ -292,13 +292,13 @@ pacemakerd_read_config(void)
 
     if (rc != CS_OK) {
         crm_crit("Could not connect to Corosync CMAP: %s "
-                 CRM_XS " rc=%d", cs_strerror(rc), rc);
+                 QB_XS " rc=%d", cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = cmap_fd_get(local_handle, &fd);
     if (rc != CS_OK) {
-        crm_crit("Could not get Corosync CMAP descriptor: %s " CRM_XS " rc=%d",
+        crm_crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
                  cs_strerror(rc), rc);
         cmap_finalize(local_handle);
         return FALSE;
@@ -315,7 +315,7 @@ pacemakerd_read_config(void)
         return FALSE;
     } else if (rv < 0) {
         crm_crit("Could not authenticate Corosync CMAP provider: %s "
-                 CRM_XS " rc=%d", strerror(-rv), -rv);
+                 QB_XS " rc=%d", strerror(-rv), -rv);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -325,7 +325,7 @@ pacemakerd_read_config(void)
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
         crm_crit("Expected Corosync cluster layer but detected %s "
-                 CRM_XS " cluster_layer=%d",
+                 QB_XS " cluster_layer=%d",
                  cluster_layer_s, cluster_layer);
         return FALSE;
     }
@@ -358,7 +358,7 @@ pacemakerd_read_config(void)
     if(local_handle){
         gid_t gid = 0;
         if (pcmk_daemon_user(NULL, &gid) < 0) {
-            crm_warn("Could not authorize group with Corosync " CRM_XS
+            crm_warn("Could not authorize group with Corosync " QB_XS
                      " No group found for user %s", CRM_DAEMON_USER);
 
         } else {
@@ -366,7 +366,7 @@ pacemakerd_read_config(void)
             snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
             rc = cmap_set_uint8(local_handle, key, 1);
             if (rc != CS_OK) {
-                crm_warn("Could not authorize group with Corosync: %s " CRM_XS
+                crm_warn("Could not authorize group with Corosync: %s " QB_XS
                          " group=%u rc=%d", pcmk__cs_err_str(rc), gid, rc);
             }
         }

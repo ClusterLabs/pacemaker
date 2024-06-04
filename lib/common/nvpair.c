@@ -457,10 +457,7 @@ crm_element_value(const xmlNode *data, const char *name)
         return NULL;
     }
 
-    /* The first argument to xmlHasProp() has always been const,
-     * but libxml2 <2.9.2 didn't declare that, so cast it
-     */
-    attr = xmlHasProp((xmlNode *) data, (pcmkXmlStr) name);
+    attr = xmlHasProp(data, (pcmkXmlStr) name);
     if (!attr || !attr->children) {
         return NULL;
     }

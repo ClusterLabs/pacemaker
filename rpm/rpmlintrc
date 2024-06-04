@@ -7,8 +7,5 @@ addFilter("E: hardcoded-library-path in /usr/lib/os-release")
 # When building developer packages
 addFilter("W: invalid-url Source0:")
 
-# rpmlint doesn't like logrotate script being in pacemaker-cli package
-addFilter("E: incoherent-logrotate-file /etc/logrotate.d/pacemaker")
-
 # pacemaker_remote scriptlets use a state file
 addFilter("W: dangerous-command-in-%(pre|postun|posttrans) rm")

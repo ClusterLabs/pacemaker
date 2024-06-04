@@ -55,11 +55,11 @@
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
 
-## Add option to enable support for stonith/external fencing agents
+## Add option for Linux-HA (stonith/external) fencing agent support
 %if 0%{?suse_version} > 0
-%bcond_without stonithd
+%bcond_without linuxha
 %else
-%bcond_with stonithd
+%bcond_with linuxha
 %endif
 
 ## Add option for whether to support storing sensitive information outside CIB
@@ -287,7 +287,7 @@ Requires:      resource-agents
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
-%if %{with stonithd}
+%if %{with linuxha}
 Requires:      %{python_name}-%{name} = %{version}-%{release}
 %endif
 %if !%{defined _unitdir}
@@ -301,8 +301,8 @@ BuildRequires: %{python_name}-devel
 BuildRequires: %{python_name}-setuptools
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb >= 0.17.0
-BuildRequires: libqb-devel >= 0.17.0
+Requires:      libqb >= 1.0.1
+BuildRequires: pkgconfig(libqb) >= 1.0.1
 
 # Required basic build tools
 BuildRequires: autoconf
@@ -316,18 +316,18 @@ BuildRequires: libtool
 BuildRequires: %{?pkgname_libtool_devel}
 %endif
 BuildRequires: make
-BuildRequires: pkgconfig
+BuildRequires: pkgconfig >= 0.28
 BuildRequires: sed
 
 # Required for core functionality
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
-BuildRequires: libxml2-devel >= 2.6.0
+BuildRequires: pkgconfig(libxml-2.0) >= 2.9.2
 BuildRequires: libxslt-devel
-BuildRequires: libuuid-devel
+BuildRequires: pkgconfig(uuid)
 BuildRequires: %{pkgname_bzip2_devel}
 
 # Enables optional functionality
-BuildRequires: pkgconfig(dbus-1)
+BuildRequires: pkgconfig(dbus-1) >= 1.5.12
 BuildRequires: %{pkgname_docbook_xsl}
 BuildRequires: %{pkgname_gnutls_devel}
 BuildRequires: help2man
@@ -345,7 +345,7 @@ BuildRequires: pkgconfig(systemd)
 Requires:      corosync >= 2.0.0
 BuildRequires: corosync-devel >= 2.0.0
 
-%if %{with stonithd}
+%if %{with linuxha}
 BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
@@ -374,7 +374,7 @@ resource health.
 
 Available rpmbuild rebuild options:
   --with(out) : cibsecrets hardening nls pre_release profiling
-                stonithd upstart_job
+                linuxha upstart_job
 
 %package cli
 License:       GPL-2.0-or-later AND LGPL-2.1-or-later
@@ -480,12 +480,12 @@ Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{pkgname_bzip2_devel}%{?_isa}
 Requires:      corosync-devel >= 2.0.0
 Requires:      glib2-devel%{?_isa}
-Requires:      libqb-devel%{?_isa}
+Requires:      libqb-devel%{?_isa} >= 1.0.1
 %if %{defined pkgname_libtool_devel_arch}
 Requires:      %{?pkgname_libtool_devel_arch}
 %endif
 Requires:      libuuid-devel%{?_isa}
-Requires:      libxml2-devel%{?_isa} >= 2.6.0
+Requires:      libxml2-devel%{?_isa} >= 2.9.2
 Requires:      libxslt-devel%{?_isa}
 
 %description -n %{pkgname_pcmk_libs}-devel
@@ -749,6 +749,7 @@ exit 0
 %files
 ###########################################################
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
+%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %{_sbindir}/pacemakerd
 
 %if %{defined _unitdir}
@@ -762,7 +763,7 @@ exit 0
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
-%if %{with stonithd}
+%if %{with linuxha}
 %{_sbindir}/fence_legacy
 %endif
 %{_sbindir}/fence_watchdog
@@ -772,9 +773,8 @@ exit 0
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
 %doc %{_mandir}/man7/pacemaker-fenced.*
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
-%doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
-%if %{with stonithd}
+%if %{with linuxha}
 %doc %{_mandir}/man8/fence_legacy.*
 %endif
 %doc %{_mandir}/man8/fence_watchdog.*
@@ -789,7 +789,6 @@ exit 0
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
 %{ocf_root}/resource.d/pacemaker/controld
-%{ocf_root}/resource.d/pacemaker/o2cb
 %{ocf_root}/resource.d/pacemaker/remote
 
 %if %{with upstart_job}
@@ -799,7 +798,6 @@ exit 0
 
 %files cli
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
-%config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 
 %if %{defined _unitdir}
@@ -840,7 +838,6 @@ exit 0
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %exclude %{ocf_root}/resource.d/pacemaker/controld
-%exclude %{ocf_root}/resource.d/pacemaker/o2cb
 %exclude %{ocf_root}/resource.d/pacemaker/remote
 
 %dir %{ocf_root}
@@ -853,7 +850,6 @@ exit 0
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/pacemaker-fenced.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
-%exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm*.8.gz
 %doc %{_mandir}/man8/attrd_updater.*

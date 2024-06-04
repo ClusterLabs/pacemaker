@@ -2420,7 +2420,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
         // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
-                         "a valid object " CRM_XS " xpath=%s",
+                         "a valid object " QB_XS " xpath=%s",
                          xml->name, ref, xpath);
     }
     free(xpath);

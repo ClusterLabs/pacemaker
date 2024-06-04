@@ -572,7 +572,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s@%s: "
-               "%s%s%s%s " CRM_XS " event=%s",
+               "%s%s%s%s " QB_XS " event=%s",
                event->target, (succeeded? "" : " not"),
                event->action, executioner, client, event->origin,
                (succeeded? "OK" : pcmk_exec_status_str(exec_status)),
@@ -684,7 +684,7 @@ controld_timer_fencer_connect(gpointer user_data)
         rc = stonith_api_connect_retry(stonith_api, crm_system_name, 30);
         if (rc != pcmk_ok) {
             crm_err("Could not connect to fencer in 30 attempts: %s "
-                    CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                    QB_XS " rc=%d", pcmk_strerror(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
@@ -701,7 +701,7 @@ controld_timer_fencer_connect(gpointer user_data)
             if (pcmk_is_set(controld_globals.fsa_input_register,
                             R_ST_REQUIRED)) {
                 crm_notice("Fencer connection failed (will retry): %s "
-                           CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                           QB_XS " rc=%d", pcmk_strerror(rc), rc);
 
                 if (!mainloop_timer_running(controld_fencer_connect_timer)) {
                     mainloop_timer_start(controld_fencer_connect_timer);
@@ -710,7 +710,7 @@ controld_timer_fencer_connect(gpointer user_data)
                 return G_SOURCE_CONTINUE;
             } else {
                 crm_info("Fencer connection failed (ignoring because no longer required): %s "
-                         CRM_XS " rc=%d", pcmk_strerror(rc), rc);
+                         QB_XS " rc=%d", pcmk_strerror(rc), rc);
             }
             return G_SOURCE_REMOVE;
         }
@@ -802,7 +802,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         if (reason == NULL) {
            reason = pcmk_exec_status_str(stonith__execution_status(data));
         }
-        crm_notice("Result of fence operation %d: %d (%s) " CRM_XS " key=%s",
+        crm_notice("Result of fence operation %d: %d (%s) " QB_XS " key=%s",
                    data->call_id, stonith__exit_status(data), reason,
                    (const char *) data->userdata);
         return;
@@ -816,7 +816,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         || !pcmk__str_eq(uuid, controld_globals.te_uuid, pcmk__str_none)
         || (controld_globals.transition_graph->id != transition_id)) {
         crm_info("Ignoring fence operation %d result: "
-                 "Not from current transition " CRM_XS
+                 "Not from current transition " QB_XS
                  " complete=%s action=%d uuid=%s (vs %s) transition=%d (vs %d)",
                  data->call_id,
                  pcmk__btoa(controld_globals.transition_graph->complete),
@@ -829,7 +829,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     if (action == NULL) {
         crm_err("Ignoring fence operation %d result: "
                 "Action %d not found in transition graph (bug?) "
-                CRM_XS " uuid=%s transition=%d",
+                QB_XS " uuid=%s transition=%d",
                 data->call_id, stonith_id, uuid, transition_id);
         goto bail;
     }
@@ -986,7 +986,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
                                     PCMK_OPT_PRIORITY_FENCING_DELAY);
 
     crm_notice("Requesting fencing (%s) targeting node %s "
-               CRM_XS " action=%s timeout=%i%s%s",
+               QB_XS " action=%s timeout=%i%s%s",
                type, target, id, stonith_timeout,
                priority_delay ? " priority_delay=" : "",
                priority_delay ? priority_delay : "");

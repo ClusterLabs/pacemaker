@@ -1204,7 +1204,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
 
     CRM_CHECK(node != NULL,
               crm_err("Could not set state for unknown host to %s"
-                      CRM_XS " source=%s", state, source);
+                      QB_XS " source=%s", state, source);
               return NULL);
 
     is_member = pcmk__str_eq(state, CRM_NODE_MEMBER, pcmk__str_casei);
@@ -1226,7 +1226,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
         }
 
         node->state = strdup(state);
-        crm_notice("Node %s state is now %s " CRM_XS
+        crm_notice("Node %s state is now %s " QB_XS
                    " nodeid=%u previous=%s source=%s", node->uname, state,
                    node->id, (last? last : "unknown"), source);
         if (peer_status_callback != NULL) {
@@ -1253,7 +1253,7 @@ update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
         }
 
     } else {
-        crm_trace("Node %s state is unchanged (%s) " CRM_XS
+        crm_trace("Node %s state is unchanged (%s) " QB_XS
                   " nodeid=%u source=%s", node->uname, state, node->id, source);
     }
     return node;

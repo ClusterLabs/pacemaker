@@ -131,20 +131,20 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
 
     if(phase == last) {
         crm_trace("Node %s join-%d phase is still %s "
-                  CRM_XS " nodeid=%u source=%s",
+                  QB_XS " nodeid=%u source=%s",
                   node->uname, current_join_id, crm_join_phase_str(last),
                   node->id, source);
 
     } else if ((phase <= crm_join_none) || (phase == (last + 1))) {
         node->join = phase;
         crm_trace("Node %s join-%d phase is now %s (was %s) "
-                  CRM_XS " nodeid=%u source=%s",
+                  QB_XS " nodeid=%u source=%s",
                  node->uname, current_join_id, crm_join_phase_str(phase),
                  crm_join_phase_str(last), node->id, source);
 
     } else {
         crm_warn("Rejecting join-%d phase update for node %s because "
-                 "can't go from %s to %s " CRM_XS " nodeid=%u source=%s",
+                 "can't go from %s to %s " QB_XS " nodeid=%u source=%s",
                  current_join_id, node->uname, crm_join_phase_str(last),
                  crm_join_phase_str(phase), node->id, source);
     }
@@ -438,7 +438,7 @@ do_dc_join_filter_offer(long long action,
 
     if (lookup_failed_sync_node(join_from, &value) == pcmk_rc_ok) {
         crm_err("Rejecting join-%d request from node %s because we failed to "
-                "sync its CIB in join-%d " CRM_XS " ref=%s",
+                "sync its CIB in join-%d " QB_XS " ref=%s",
                 join_id, join_from, value, ref);
         ack_nack_bool = FALSE;
 
@@ -451,23 +451,23 @@ do_dc_join_filter_offer(long long action,
              * cause for alarm.
              */
             crm_debug("Rejecting join-%d request from inactive node %s "
-                      CRM_XS " ref=%s", join_id, join_from, ref);
+                      QB_XS " ref=%s", join_id, join_from, ref);
         } else {
             crm_err("Rejecting join-%d request from inactive node %s "
-                    CRM_XS " ref=%s", join_id, join_from, ref);
+                    QB_XS " ref=%s", join_id, join_from, ref);
         }
         ack_nack_bool = FALSE;
 
     } else if (generation == NULL) {
         crm_err("Rejecting invalid join-%d request from node %s "
-                "missing CIB generation " CRM_XS " ref=%s",
+                "missing CIB generation " QB_XS " ref=%s",
                 join_id, join_from, ref);
         ack_nack_bool = FALSE;
 
     } else if ((join_version == NULL)
                || !feature_set_compatible(CRM_FEATURE_SET, join_version)) {
         crm_err("Rejecting join-%d request from node %s because feature set %s"
-                " is incompatible with ours (%s) " CRM_XS " ref=%s",
+                " is incompatible with ours (%s) " QB_XS " ref=%s",
                 join_id, join_from, (join_version? join_version : "pre-3.1.0"),
                 CRM_FEATURE_SET, ref);
         ack_nack_bool = FALSE;
@@ -479,13 +479,13 @@ do_dc_join_filter_offer(long long action,
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with first CIB "
                     "generation) due to unknown schema version %s "
-                    CRM_XS " ref=%s",
+                    QB_XS " ref=%s",
                     join_id, join_from, pcmk__s(validation, "(missing)"), ref);
             ack_nack_bool = FALSE;
 
         } else {
             crm_debug("Accepting join-%d request from %s (with first CIB "
-                      "generation) " CRM_XS " ref=%s",
+                      "generation) " QB_XS " ref=%s",
                       join_id, join_from, ref);
             max_generation_xml = pcmk__xml_copy(NULL, generation);
             pcmk__str_update(&max_generation_from, join_from);
@@ -501,14 +501,14 @@ do_dc_join_filter_offer(long long action,
         if (pcmk__get_schema(validation) == NULL) {
             crm_err("Rejecting join-%d request from %s (with better CIB "
                     "generation than current best from %s) due to unknown "
-                    "schema version %s " CRM_XS " ref=%s",
+                    "schema version %s " QB_XS " ref=%s",
                     join_id, join_from, max_generation_from,
                     pcmk__s(validation, "(missing)"), ref);
             ack_nack_bool = FALSE;
 
         } else {
             crm_debug("Accepting join-%d request from %s (with better CIB "
-                      "generation than current best from %s) " CRM_XS " ref=%s",
+                      "generation than current best from %s) " QB_XS " ref=%s",
                       join_id, join_from, max_generation_from, ref);
             crm_log_xml_debug(max_generation_xml, "Old max generation");
             crm_log_xml_debug(generation, "New max generation");
@@ -519,7 +519,7 @@ do_dc_join_filter_offer(long long action,
         }
 
     } else {
-        crm_debug("Accepting join-%d request from %s " CRM_XS " ref=%s",
+        crm_debug("Accepting join-%d request from %s " QB_XS " ref=%s",
                   join_id, join_from, ref);
     }
 
@@ -943,7 +943,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 
     if (controld_globals.membership_id != crm_peer_seq) {
         crm_debug("join-%d: Membership changed from %llu to %llu "
-                  CRM_XS " highest=%llu state=%s for=%s",
+                  QB_XS " highest=%llu state=%s for=%s",
                   current_join_id, controld_globals.membership_id, crm_peer_seq,
                   highest_seq, fsa_state2string(cur_state), source);
         if(highest_seq < crm_peer_seq) {
@@ -957,7 +957,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
             int count = crmd_join_phase_count(crm_join_integrated);
 
             crm_debug("join-%d: Integration of %d peer%s complete "
-                      CRM_XS " state=%s for=%s",
+                      QB_XS " state=%s for=%s",
                       current_join_id, count, pcmk__plural_s(count),
                       fsa_state2string(cur_state), source);
             register_fsa_input_before(C_FSA_INTERNAL, I_INTEGRATED, NULL);
@@ -967,7 +967,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
     } else if (cur_state == S_FINALIZE_JOIN) {
         if (!pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
             crm_debug("join-%d: Delaying finalization until we have CIB "
-                      CRM_XS " state=%s for=%s",
+                      QB_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);
             return TRUE;
 
@@ -975,7 +975,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
             int count = crmd_join_phase_count(crm_join_welcomed);
 
             crm_debug("join-%d: Still waiting on %d welcomed node%s "
-                      CRM_XS " state=%s for=%s",
+                      QB_XS " state=%s for=%s",
                       current_join_id, count, pcmk__plural_s(count),
                       fsa_state2string(cur_state), source);
             crmd_join_phase_log(LOG_DEBUG);
@@ -984,7 +984,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
             int count = crmd_join_phase_count(crm_join_integrated);
 
             crm_debug("join-%d: Still waiting on %d integrated node%s "
-                      CRM_XS " state=%s for=%s",
+                      QB_XS " state=%s for=%s",
                       current_join_id, count, pcmk__plural_s(count),
                       fsa_state2string(cur_state), source);
             crmd_join_phase_log(LOG_DEBUG);
@@ -993,13 +993,13 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
             int count = crmd_join_phase_count(crm_join_finalized);
 
             crm_debug("join-%d: Still waiting on %d finalized node%s "
-                      CRM_XS " state=%s for=%s",
+                      QB_XS " state=%s for=%s",
                       current_join_id, count, pcmk__plural_s(count),
                       fsa_state2string(cur_state), source);
             crmd_join_phase_log(LOG_DEBUG);
 
         } else {
-            crm_debug("join-%d: Complete " CRM_XS " state=%s for=%s",
+            crm_debug("join-%d: Complete " QB_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);
             register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
             return TRUE;

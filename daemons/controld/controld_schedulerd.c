@@ -90,7 +90,7 @@ handle_disconnect(void)
         char *uuid_str = crm_generate_uuid();
 
         crm_crit("Lost connection to the scheduler "
-                 CRM_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
+                 QB_XS " CIB will be saved to " PE_STATE_DIR "/pe-core-%s.bz2",
                  uuid_str);
 
         /*
@@ -447,7 +447,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "
-                CRM_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
+                QB_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
         return;
 
@@ -497,7 +497,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
 
     if (rc < 0) {
-        crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
+        crm_err("Could not contact the scheduler: %s " QB_XS " rc=%d",
                 pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {

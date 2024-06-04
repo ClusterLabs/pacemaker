@@ -361,7 +361,7 @@ pcmk_shutdown_worker(gpointer user_data)
             } else if (now >= next_log) {
                 next_log = now + 30;
                 crm_notice("Still waiting for %s to terminate "
-                           CRM_XS " pid=%lld",
+                           QB_XS " pid=%lld",
                            child->name, (long long) child->pid);
             }
             return TRUE;
@@ -580,7 +580,7 @@ child_liveness(pcmk_child_t *child)
         if (legacy_rc < 0) {
             rc = pcmk_legacy2rc(legacy_rc);
             crm_err("Could not find user and group IDs for user %s: %s "
-                    CRM_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
+                    QB_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
         } else {
             rc = pcmk__ipc_is_authentic_process_active(child->endpoint,
                                                        *ref_uid, *ref_gid,
@@ -777,7 +777,7 @@ find_and_track_existing_processes(void)
                              WAIT_TRIES - pcmk_children[i].respawn_count);
                     continue;
                 default:
-                    crm_crit("Checked liveness of %s: %s " CRM_XS " rc=%d",
+                    crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d",
                              pcmk_children[i].name, pcmk_rc_str(rc), rc);
                     return rc;
             }
@@ -875,7 +875,7 @@ stop_child(pcmk_child_t * child, int signal)
 
     errno = 0;
     if (kill(child->pid, signal) == 0) {
-        crm_notice("Stopping %s "CRM_XS" sent signal %d to process %lld",
+        crm_notice("Stopping %s " QB_XS " sent signal %d to process %lld",
                    child->name, signal, (long long) child->pid);
 
     } else {

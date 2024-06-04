@@ -298,7 +298,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
         if (rc != pcmk_rc_ok) {
             crm_warn("%s notification of client %s failed: %s "
-                     CRM_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
+                     QB_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
                      pcmk_rc_str(rc), client->id, rc);
         } else {
             crm_trace("Sent %s notification to client %s",

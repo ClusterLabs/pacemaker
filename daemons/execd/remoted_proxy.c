@@ -217,7 +217,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not proxy IPC to client %s: %s " CRM_XS " rc=%d",
+        crm_warn("Could not proxy IPC to client %s: %s " QB_XS " rc=%d",
                  ipc_client->id, pcmk_rc_str(rc), rc);
     }
 }

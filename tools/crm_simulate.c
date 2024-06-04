@@ -510,12 +510,6 @@ main(int argc, char **argv)
 
     if (args->verbosity > 0) {
         options.flags |= pcmk_sim_verbose;
-
-#ifdef PCMK__COMPAT_2_0
-        /* Redirect stderr to stdout so we can grep the output */
-        close(STDERR_FILENO);
-        dup2(STDOUT_FILENO, STDERR_FILENO);
-#endif
     }
 
     scheduler = pe_new_working_set();

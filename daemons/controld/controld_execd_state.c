@@ -607,7 +607,7 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
         rc = lrmd__new(&api, lrm_state->node_name, server, port);
         if (rc != pcmk_rc_ok) {
             crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
-                     CRM_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+                     QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
 
             return rc;
         }

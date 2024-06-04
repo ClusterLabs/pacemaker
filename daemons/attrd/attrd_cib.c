@@ -119,7 +119,7 @@ attrd_cib_connect(int max_retry)
     } while ((rc != pcmk_ok) && (attempts < max_retry));
 
     if (rc != pcmk_ok) {
-        crm_err("Connection to the CIB manager failed: %s " CRM_XS " rc=%d",
+        crm_err("Connection to the CIB manager failed: %s " QB_XS " rc=%d",
                 pcmk_strerror(rc), rc);
         goto cleanup;
     }
@@ -278,7 +278,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             break;
     }
 
-    do_crm_log(level, "CIB update %d result for %s: %s " CRM_XS " rc=%d",
+    do_crm_log(level, "CIB update %d result for %s: %s " QB_XS " rc=%d",
                call_id, a->id, pcmk_strerror(rc), rc);
 
     g_hash_table_iter_init(&iter, a->values);
@@ -577,7 +577,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
         rc = add_attr_update(a, v->current, uuid);
         if (rc != pcmk_rc_ok) {
             crm_err("Failed to update %s[%s]='%s': %s "
-                    CRM_XS " node uuid=%s id=%" PRIu32,
+                    QB_XS " node uuid=%s id=%" PRIu32,
                     a->id, v->nodename, v->current, pcmk_rc_str(rc),
                     uuid, v->nodeid);
             continue;

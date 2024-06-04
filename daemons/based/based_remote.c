@@ -297,7 +297,7 @@ cib_remote_listen(gpointer data)
 
     rc = pcmk__set_nonblocking(csock);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+        crm_err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
         close(csock);
         return TRUE;
@@ -330,7 +330,7 @@ cib_remote_listen(gpointer data)
                                                      remote_auth_timeout_cb,
                                                      new_client);
     crm_info("Remote CIB client pending authentication "
-             CRM_XS " %p id: %s", new_client, new_client->id);
+             QB_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
@@ -375,7 +375,7 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
         default:
             crm_warn("Unknown transport for client %s "
-                     CRM_XS " flags=%#016" PRIx64,
+                     QB_XS " flags=%#016" PRIx64,
                      pcmk__client_name(client), client->flags);
     }
 

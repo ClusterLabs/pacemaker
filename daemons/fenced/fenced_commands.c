@@ -696,7 +696,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (cmd->start_delay > 0) {
-        crm_notice("Delaying '%s' action%s%s using %s for %ds " CRM_XS
+        crm_notice("Delaying '%s' action%s%s using %s for %ds " QB_XS
                    " timeout=%ds requested_delay=%ds base=%ds max=%ds",
                    cmd->action,
                    (cmd->target == NULL)? "" : " targeting ",
@@ -2605,7 +2605,7 @@ log_async_result(const async_command_t *cmd,
                                (unsigned int) devices_remaining,
                                pcmk__plural_s(devices_remaining));
     }
-    g_string_append_printf(msg, " " CRM_XS " %scall %d from %s",
+    g_string_append_printf(msg, " " QB_XS " %scall %d from %s",
                            (op_merged? "merged " : ""), cmd->id,
                            cmd->client_name);
 

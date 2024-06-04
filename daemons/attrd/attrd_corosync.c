@@ -269,7 +269,7 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
 
     } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
-                   CRM_XS " from %s with %s write delay",
+                   QB_XS " from %s with %s write delay",
                    attr, host, a->set_type ? " in " : "",
                    pcmk__s(a->set_type, ""), readable_value(v),
                    pcmk__s(value, "(unset)"), peer->uname,
@@ -522,7 +522,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
 
     CRM_CHECK(host != NULL, return);
     crm_notice("Removing all %s attributes for node %s "
-               CRM_XS " %s reaping node from cache",
+               QB_XS " %s reaping node from cache",
                host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);

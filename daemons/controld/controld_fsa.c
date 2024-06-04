@@ -505,7 +505,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* Error checking and reporting */
         } else {
-            crm_err("Action %s not supported "CRM_XS" %#llx",
+            crm_err("Action %s not supported " QB_XS " %#llx",
                     fsa_action2string(controld_globals.fsa_actions),
                     (unsigned long long) controld_globals.fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
@@ -610,7 +610,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
     }
 
     do_crm_log(level, "State transition %s -> %s "
-               CRM_XS " input=%s cause=%s origin=%s",
+               QB_XS " input=%s cause=%s origin=%s",
                state_from, state_to, input, fsa_cause2string(cause),
                msg_data->origin);
 
