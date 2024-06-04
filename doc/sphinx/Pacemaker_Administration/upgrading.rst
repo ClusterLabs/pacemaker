@@ -192,6 +192,8 @@ To perform a rolling upgrade, on each node in turn:
    +-------------------------+---------------------------+
    | Version being Installed | Oldest Compatible Version |
    +=========================+===========================+
+   | Pacemaker 3.y.z         | Pacemaker 2.0.0           |
+   +-------------------------+---------------------------+
    | Pacemaker 2.y.z         | Pacemaker 1.1.11 [#]_     |
    +-------------------------+---------------------------+
    | Pacemaker 1.y.z         | Pacemaker 1.0.0           |
