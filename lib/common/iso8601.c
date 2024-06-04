@@ -1104,7 +1104,6 @@ crm_time_parse_duration(const char *period_s)
     }
 
     diff = crm_time_new_undefined();
-    diff->duration = TRUE;
 
     for (const char *current = period_s + 1;
          current[0] && (current[0] != '/') && !isspace(current[0]);
@@ -1214,6 +1213,8 @@ crm_time_parse_duration(const char *period_s)
                 "because no amounts and units given", period_s);
         goto invalid;
     }
+
+    diff->duration = TRUE;
     return diff;
 
 invalid:
