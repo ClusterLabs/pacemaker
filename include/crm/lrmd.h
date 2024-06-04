@@ -51,16 +51,6 @@ typedef struct lrmd_key_value_s {
  */
 #define LRMD_COMPATIBLE_PROTOCOL "1"
 
-/* \deprecated Do not use (will be removed in a future release)
- *
- * This is the version that the client version will actually be compared
- * against. This should be identical to LRMD_PROTOCOL_VERSION. However, we
- * accidentally bumped LRMD_PROTOCOL_VERSION in 6424a647 (1.1.15) when we didn't
- * need to, so for now it's different. If we ever have a truly incompatible
- * bump, we can drop this and compare against LRMD_PROTOCOL_VERSION.
- */
-#define LRMD_MIN_PROTOCOL_VERSION "1.0"
-
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION PACEMAKER_CONFIG_DIR "/authkey"
 #define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
