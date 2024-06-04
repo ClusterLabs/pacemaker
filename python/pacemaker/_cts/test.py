@@ -238,6 +238,9 @@ class Test:
                                  output.
         env                   -- If not None, variables to set in the environment
         """
+        if cmd is None:
+            raise ValueError("cmd cannot be None")
+
         self._cmds.append(
             {
                 "args": args,
@@ -262,28 +265,34 @@ class Test:
     # PUBLIC METHODS
     #
 
-    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True,
-                env=None):
+    def add_cmd(self, cmd=None, **kwargs):
         """Add a simple command to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, validate=validate, check_rng=check_rng,
-                      check_stderr=check_stderr, env=env)
+        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
+                      validate=kwargs.get("validate", True),
+                      check_rng=kwargs.get("check_rng", True),
+                      check_stderr=kwargs.get("check_stderr", True),
+                      env=kwargs.get("env"))
 
-    def add_cmd_and_kill(self, cmd, args, kill_proc):
+    def add_cmd_and_kill(self, cmd=None, **kwargs):
         """Add a command and system command to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, kill=kill_proc)
+        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
+                      kill=kwargs.get("kill"))
 
-    def add_cmd_check_stdout(self, cmd, args, match, no_match=None, env=None):
+    def add_cmd_check_stdout(self, cmd=None, **kwargs):
         """Add a simple command with expected output to be executed as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, stdout_match=match,
-                      stdout_negative_match=no_match, env=env)
+        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
+                      stdout_match=kwargs.get("match"),
+                      stdout_negative_match=kwargs.get("no_match"),
+                      env=kwargs.get("env"))
 
-    def add_cmd_expected_fail(self, cmd, args, exitcode=ExitStatus.ERROR):
+    def add_cmd_expected_fail(self, cmd=None, **kwargs):
         """Add a command that is expected to fail to be executed as part of this test."""
-        self._new_cmd(cmd, args, exitcode)
+        self._new_cmd(cmd, kwargs.pop("args", ""), kwargs.get("exitcode", ExitStatus.ERROR))
 
-    def add_cmd_no_wait(self, cmd, args):
+    def add_cmd_no_wait(self, cmd=None, **kwargs):
         """Add a simple command to be executed (without waiting) as part of this test."""
-        self._new_cmd(cmd, args, ExitStatus.OK, no_wait=True)
+        self._new_cmd(cmd, kwargs.pop("args", ""), ExitStatus.OK,
+                      no_wait=kwargs.get("no_wait", True))
 
     def add_log_pattern(self, pattern, negative=False, regex=False):
         """Add a pattern that should appear in the test's logs."""
