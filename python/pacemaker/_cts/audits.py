@@ -90,9 +90,10 @@ class LogAudit(ClusterAudit):
                 if rc != 0:
                     self._cm.log("ERROR: Cannot start 'systemd-journald' on %s" % node)
 
-            (rc, _) = self._cm.rsh(node, "service %s restart" % self._cm.env["syslogd"])
-            if rc != 0:
-                self._cm.log("ERROR: Cannot restart '%s' on %s" % (self._cm.env["syslogd"], node))
+            if "syslogd" in self._cm.env:
+                (rc, _) = self._cm.rsh(node, "service %s restart" % self._cm.env["syslogd"])
+                if rc != 0:
+                    self._cm.log("ERROR: Cannot restart '%s' on %s" % (self._cm.env["syslogd"], node))
 
     def _create_watcher(self, patterns, kind):
         """Create a new LogWatcher instance for the given patterns."""
