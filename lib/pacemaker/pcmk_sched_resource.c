@@ -138,7 +138,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
         // Make sure the resource is restarted
         custom_action(rsc, stop_key(rsc), PCMK_ACTION_STOP, node, FALSE,
                       rsc->private->scheduler);
-        pcmk__set_rsc_flags(rsc, pcmk_rsc_start_pending);
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_start_pending);
     }
     return changed;
 }
@@ -343,7 +343,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         }
     }
 
-    if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         /* Don't log stopped orphans */
         return;
     }
@@ -447,7 +447,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         changed = (node != NULL);
     }
     pcmk__unassign_resource(rsc);
-    pcmk__clear_rsc_flags(rsc, pcmk_rsc_unassigned);
+    pcmk__clear_rsc_flags(rsc, pcmk__rsc_unassigned);
 
     if (node == NULL) {
         char *rc_stopped = NULL;
@@ -534,7 +534,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         crm_info("Unassigning %s from %s", rsc->id, pcmk__node_name(old));
     }
 
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_unassigned);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_unassigned);
 
     if (rsc->children == NULL) {
         if (old == NULL) {
@@ -577,12 +577,12 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     pcmk_resource_t *rsc_to_ban = rsc;
 
     // Migration threshold of 0 means never force away
-    if (rsc->migration_threshold == 0) {
+    if (rsc->private->ban_after_failures == 0) {
         return false;
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_ignore_failure)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_ignore_failure)) {
         return false;
     }
 
@@ -594,12 +594,12 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     // If failed resource is anonymous clone instance, we'll force clone away
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         rsc_to_ban = uber_parent(rsc);
     }
 
     // How many more times recovery will be tried on this node
-    remaining_tries = rsc->migration_threshold - fail_count;
+    remaining_tries = rsc->private->ban_after_failures - fail_count;
 
     if (remaining_tries <= 0) {
         pcmk__sched_warn("%s cannot run on %s due to reaching migration "
@@ -607,7 +607,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
                          QB_XS " failures=%d "
                          PCMK_META_MIGRATION_THRESHOLD "=%d",
                          rsc_to_ban->id, pcmk__node_name(node), fail_count,
-                         rsc->migration_threshold);
+                         rsc->private->ban_after_failures);
         if (failed != NULL) {
             *failed = rsc_to_ban;
         }
@@ -617,7 +617,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
     crm_info("%s can fail %d more time%s on "
              "%s before reaching migration threshold (%d)",
              rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
-             pcmk__node_name(node), rsc->migration_threshold);
+             pcmk__node_name(node), rsc->private->ban_after_failures);
     return false;
 }
 
@@ -674,8 +674,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
     // Resources with highest priority should be assigned first
     reason = "priority";
-    r1_score = resource1->priority;
-    r2_score = resource2->priority;
+    r1_score = resource1->private->priority;
+    r2_score = resource2->private->priority;
     if (r1_score > r2_score) {
         rc = -1;
         goto done;

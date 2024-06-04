@@ -251,7 +251,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
                         const char *comment, GHashTable *nodes,
                         pcmk_scheduler_t *scheduler)
 {
-    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         // Don't show allocation scores for orphans
         return;
     }
@@ -284,12 +284,9 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
  * \param[in] a  First resource to compare (can be \c NULL)
  * \param[in] b  Second resource to compare (can be \c NULL)
  *
- * \retval -1 \c a->priority > \c b->priority (or \c b is \c NULL and \c a is
- *            not)
- * \retval  0 \c a->priority == \c b->priority (or both \c a and \c b are
- *            \c NULL)
- * \retval  1 \c a->priority < \c b->priority (or \c a is \c NULL and \c b is
- *            not)
+ * \retval -1 a's priority > b's priority (or \c b is \c NULL and \c a is not)
+ * \retval  0 a's priority == b's priority (or both \c a and \c b are \c NULL)
+ * \retval  1 a's priority < b's priority (or \c a is \c NULL and \c b is not)
  */
 gint
 pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
@@ -307,11 +304,11 @@ pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    if (resource1->priority > resource2->priority) {
+    if (resource1->private->priority > resource2->private->priority) {
         return -1;
     }
 
-    if (resource1->priority < resource2->priority) {
+    if (resource1->private->priority < resource2->private->priority) {
         return 1;
     }
 
@@ -324,7 +321,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
 {
     pcmk_node_t *match = NULL;
 
-    if ((rsc->exclusive_discover
+    if ((pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
          || (node->rsc_discover_mode == pcmk_probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
@@ -435,7 +432,7 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 
     } else if (local_role > pcmk_role_started) {
         if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                        pcmk_rsc_promotable)) {
+                        pcmk__rsc_promotable)) {
             if (local_role > pcmk_role_unpromoted) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -552,7 +549,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 const char *
 rsc_printable_id(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         return rsc->id;
     }
     return pcmk__xe_id(rsc->private->xml);
@@ -596,7 +593,7 @@ trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
         return;
 
     } else if ((rsc != NULL)
-               && !pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
+               && !pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
         /* Wasn't a stonith device */
         return;
 
@@ -747,7 +744,7 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)
                 && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pcmk_rsc_promotable))) {
+                               pcmk__rsc_promotable))) {
             return true;
         }
     }

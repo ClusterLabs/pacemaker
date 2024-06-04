@@ -40,7 +40,7 @@ pcmk_resource_id(const pcmk_resource_t *rsc)
 bool
 pcmk_resource_is_managed(const pcmk_resource_t *rsc)
 {
-    return (rsc == NULL)? false : pcmk_is_set(rsc->flags, pcmk_rsc_managed);
+    return (rsc == NULL)? false : pcmk_is_set(rsc->flags, pcmk__rsc_managed);
 }
 
 /*!

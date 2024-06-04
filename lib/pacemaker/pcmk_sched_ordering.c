@@ -1173,7 +1173,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 
         // Resources and nodes in maintenance mode won't be touched
 
-        if (pcmk_is_set(action->rsc->flags, pcmk_rsc_maintenance)) {
+        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_maintenance)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource in maintenance mode",
@@ -1193,7 +1193,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
          * we may still end up blocking)
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
-                                pcmk_rsc_managed|pcmk_rsc_blocked)) {
+                                pcmk__rsc_managed|pcmk__rsc_blocked)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource is unmanaged or blocked",

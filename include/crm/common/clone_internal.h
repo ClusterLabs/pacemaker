@@ -60,7 +60,7 @@ pcmk__is_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 /*!
@@ -74,7 +74,7 @@ pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_anonymous_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk_rsc_unique);
+    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 #ifdef __cplusplus

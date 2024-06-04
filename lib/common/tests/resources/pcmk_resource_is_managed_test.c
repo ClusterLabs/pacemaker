@@ -24,7 +24,7 @@ static void
 resource_is_managed(void **state)
 {
     pcmk_resource_t rsc1 = {
-        .flags = pcmk_rsc_managed,
+        .flags = pcmk__rsc_managed,
     };
 
     assert_true(pcmk_resource_is_managed(&rsc1));

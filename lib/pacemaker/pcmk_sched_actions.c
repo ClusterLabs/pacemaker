@@ -141,7 +141,7 @@ action_uuid_for_ordering(const char *first_uuid,
         /* If a clone or bundle has notifications enabled, the ordering will be
          * relative to when notifications have been sent for the remapped task.
          */
-        if (pcmk_is_set(first_rsc->flags, pcmk_rsc_notify)
+        if (pcmk_is_set(first_rsc->flags, pcmk__rsc_notify)
             && (pcmk__is_clone(first_rsc) || pcmk__is_bundled(first_rsc))) {
             uuid = pcmk__notify_key(rid, "confirmed-post",
                                     pcmk_action_text(remapped_task));
@@ -467,8 +467,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
                                         |pcmk__ar_then_implies_first
                                         |pcmk__ar_intermediate_stop)
         && (first->rsc != NULL)
-        && !pcmk_is_set(first->rsc->flags, pcmk_rsc_managed)
-        && pcmk_is_set(first->rsc->flags, pcmk_rsc_blocked)
+        && !pcmk_is_set(first->rsc->flags, pcmk__rsc_managed)
+        && pcmk_is_set(first->rsc->flags, pcmk__rsc_blocked)
         && !pcmk_is_set(first->flags, pcmk_action_runnable)
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
@@ -598,7 +598,7 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
              */
             pcmk__set_action_flags(other->action, pcmk_action_optional);
             if (!strcmp(first->task, PCMK_ACTION_RELOAD_AGENT)) {
-                pcmk__clear_rsc_flags(first->rsc, pcmk_rsc_reload);
+                pcmk__clear_rsc_flags(first->rsc, pcmk__rsc_reload);
             }
         }
 
@@ -790,7 +790,7 @@ handle_restart_ordering(pcmk_action_t *first, pcmk_action_t *then,
      */
     if (pcmk_is_set(filter, pcmk_action_runnable)
         && !pcmk_is_set(then->flags, pcmk_action_runnable)
-        && pcmk_is_set(then->rsc->flags, pcmk_rsc_managed)
+        && pcmk_is_set(then->rsc->flags, pcmk__rsc_managed)
         && (first->rsc == then->rsc)) {
         reason = "stop";
     }
@@ -1563,12 +1563,12 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // Skip the reload in certain situations
     if ((node == NULL)
-        || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)
-        || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+        || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)
+        || pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         pcmk__rsc_trace(rsc, "Skip reload of %s:%s%s %s",
                         rsc->id,
-                        pcmk_is_set(rsc->flags, pcmk_rsc_managed)? "" : " unmanaged",
-                        pcmk_is_set(rsc->flags, pcmk_rsc_failed)? " failed" : "",
+                        pcmk_is_set(rsc->flags, pcmk__rsc_managed)? "" : " unmanaged",
+                        pcmk_is_set(rsc->flags, pcmk__rsc_failed)? " failed" : "",
                         (node == NULL)? "inactive" : node->details->uname);
         return;
     }
@@ -1576,7 +1576,7 @@ schedule_reload(gpointer data, gpointer user_data)
     /* If a resource's configuration changed while a start was pending,
      * force a full restart instead of a reload.
      */
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_start_pending)) {
         pcmk__rsc_trace(rsc,
                         "%s: preventing agent reload because start pending",
                         rsc->id);
@@ -1586,7 +1586,7 @@ schedule_reload(gpointer data, gpointer user_data)
     }
 
     // Schedule the reload
-    pcmk__set_rsc_flags(rsc, pcmk_rsc_reload);
+    pcmk__set_rsc_flags(rsc, pcmk__rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), PCMK_ACTION_RELOAD_AGENT, node,
                            FALSE, rsc->private->scheduler);
     pe_action_set_reason(reload, "resource definition change", FALSE);
@@ -1763,7 +1763,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     int start_index = 0;
     GList *sorted_op_list = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         if (pcmk__is_anonymous_clone(pe__const_top_resource(rsc, false))) {
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check "
@@ -1815,7 +1815,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         crm_element_value_ms(rsc_op, PCMK_META_INTERVAL, &interval_ms);
 
         if ((interval_ms > 0)
-            && (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)
+            && (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)
                 || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             pcmk__schedule_cancel(rsc,

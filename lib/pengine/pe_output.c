@@ -332,8 +332,8 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
         }
 
         buf = crm_strdup_printf("%s: " PCMK_META_MIGRATION_THRESHOLD "=%d%s%s",
-                                rsc_id, rsc->migration_threshold, failcount_s,
-                                lastfail_s? lastfail_s : "");
+                                rsc_id, rsc->private->ban_after_failures,
+                                failcount_s, pcmk__s(lastfail_s, ""));
         free(failcount_s);
         free(lastfail_s);
     } else {
@@ -2940,7 +2940,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     if (rsc == NULL) {
         pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
     } else if (all || failcount || last_failure > 0) {
-        char *migration_s = pcmk__itoa(rsc->migration_threshold);
+        char *migration_s = pcmk__itoa(rsc->private->ban_after_failures);
 
         pcmk__xe_set_props(node,
                            PCMK_XA_ORPHAN, PCMK_VALUE_FALSE,
@@ -3032,7 +3032,7 @@ resource_list(pcmk__output_t *out, va_list args)
         gboolean partially_active = rsc->private->fns->active(rsc, FALSE);
 
         /* Skip inactive orphans (deleted but still in CIB) */
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_removed) && !is_active) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {
             continue;
 
         /* Skip active resources if we already displayed them by node */

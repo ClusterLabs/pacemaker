@@ -129,7 +129,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
      * ordered after fencing, even if the resource does not require fencing,
      * because guest node "fencing" is actually just a resource stop.
      */
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)
         || pcmk__is_guest_or_bundle_node(target)) {
 
         order_implicit = true;
@@ -165,7 +165,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             order_actions(stonith_op, parent_stop, pcmk__ar_guest_allowed);
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
                        rsc->id, (order_implicit? "after" : "because"),
                        pcmk__node_name(target));
@@ -175,7 +175,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                      pcmk__node_name(target));
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_notify)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_notify)) {
             pe__order_notifs_after_fencing(action, rsc, stonith_op);
         }
 
@@ -215,9 +215,9 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         pcmk_action_t *action = iter->data;
 
         if (!(action->node->details->online) || action->node->details->unclean
-            || pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+            || pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
 
-            if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+            if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
                 pcmk__rsc_info(rsc,
                                "Demote of failed resource %s is implicit "
                                "after %s is fenced",
@@ -263,7 +263,7 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
             rsc_stonith_ordering(child_rsc, stonith_op);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__rsc_trace(rsc,
                         "Skipping fencing constraints for unmanaged resource: "
                         "%s", rsc->id);
@@ -315,10 +315,10 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
      * only quorum. However, fence agents that unfence often don't have enough
      * information to even probe or start unless the node is first unfenced.
      */
-    if ((pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)
+    if ((pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)
          && pcmk_is_set(rsc->private->scheduler->flags,
                         pcmk_sched_enable_unfencing))
-        || pcmk_is_set(rsc->flags, pcmk_rsc_needs_unfencing)) {
+        || pcmk_is_set(rsc->flags, pcmk__rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
          * the node being unfenced, and all its resources being stopped,

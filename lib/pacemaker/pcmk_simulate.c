@@ -247,7 +247,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
             color = "green";
 
         } else if ((action->rsc != NULL)
-                   && !pcmk_is_set(action->rsc->flags, pcmk_rsc_managed)) {
+                   && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)) {
             color = "red";
             font = "purple";
             if (!all_actions) {

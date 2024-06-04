@@ -70,6 +70,105 @@ enum pcmk__restart {
     pcmk__restart_ignore,
 };
 
+//! Resource scheduling flags
+enum pcmk__rsc_flags {
+    // No resource flags set (compare with equality rather than bit set)
+    pcmk__no_rsc_flags               = 0ULL,
+
+    // Whether resource has been removed from the configuration
+    pcmk__rsc_removed                = (1ULL << 0),
+
+    /* NOTE: sbd (at least as of 1.5.2) uses pe_rsc_managed which equates to
+     * this value, so the value should not be changed
+     */
+    // Whether resource is managed
+    pcmk__rsc_managed                = (1ULL << 1),
+
+    // Whether resource is blocked from further action
+    pcmk__rsc_blocked                = (1ULL << 2),
+
+    // Whether resource has been removed but has a container
+    pcmk__rsc_removed_filler         = (1ULL << 3),
+
+    // Whether resource has clone notifications enabled
+    pcmk__rsc_notify                 = (1ULL << 4),
+
+    // Whether resource is not an anonymous clone instance
+    pcmk__rsc_unique                 = (1ULL << 5),
+
+    // Whether resource's class is "stonith"
+    pcmk__rsc_fence_device           = (1ULL << 6),
+
+    // Whether resource can be promoted and demoted
+    pcmk__rsc_promotable             = (1ULL << 7),
+
+    // Whether resource has not yet been assigned to a node
+    pcmk__rsc_unassigned             = (1ULL << 8),
+
+    // Whether resource is in the process of being assigned to a node
+    pcmk__rsc_assigning              = (1ULL << 9),
+
+    // Whether resource is in the process of modifying allowed node scores
+    pcmk__rsc_updating_nodes         = (1ULL << 10),
+
+    // Whether resource is in the process of scheduling actions to restart
+    pcmk__rsc_restarting             = (1ULL << 11),
+
+    // Whether resource must be stopped (instead of demoted) if it is failed
+    pcmk__rsc_stop_if_failed         = (1ULL << 12),
+
+    // Whether a reload action has been scheduled for resource
+    pcmk__rsc_reload                 = (1ULL << 13),
+
+    // Whether resource is a remote connection allowed to run on a remote node
+    pcmk__rsc_remote_nesting_allowed = (1ULL << 14),
+
+    // Whether resource has \c PCMK_META_CRITICAL meta-attribute enabled
+    pcmk__rsc_critical               = (1ULL << 15),
+
+    // Whether resource is considered failed
+    pcmk__rsc_failed                 = (1ULL << 16),
+
+    // Flag for non-scheduler code to use to detect recursion loops
+    pcmk__rsc_detect_loop            = (1ULL << 17),
+
+    // Whether resource is a Pacemaker Remote connection
+    pcmk__rsc_is_remote_connection   = (1ULL << 18),
+
+    // Whether resource has pending start action in history
+    pcmk__rsc_start_pending          = (1ULL << 19),
+
+    // Whether resource is probed only on nodes marked exclusive
+    pcmk__rsc_exclusive_probes       = (1ULL << 20),
+
+    /*
+     * Whether resource is multiply active with recovery set to
+     * \c PCMK_VALUE_STOP_UNEXPECTED
+     */
+    pcmk__rsc_stop_unexpected        = (1ULL << 22),
+
+    // Whether resource is allowed to live-migrate
+    pcmk__rsc_migratable             = (1ULL << 23),
+
+    // Whether resource has an ignorable failure
+    pcmk__rsc_ignore_failure         = (1ULL << 24),
+
+    // Whether resource is an implicit container resource for a bundle replica
+    pcmk__rsc_replica_container      = (1ULL << 25),
+
+    // Whether resource, its node, or entire cluster is in maintenance mode
+    pcmk__rsc_maintenance            = (1ULL << 26),
+
+    // Whether resource can be started or promoted only on quorate nodes
+    pcmk__rsc_needs_quorum           = (1ULL << 28),
+
+    // Whether resource requires fencing before recovery if on unclean node
+    pcmk__rsc_needs_fencing          = (1ULL << 29),
+
+    // Whether resource can be started or promoted only on unfenced nodes
+    pcmk__rsc_needs_unfencing        = (1ULL << 30),
+};
+
 //! Resource assignment methods (implementation defined by libpacemaker)
 typedef struct pcmk__assignment_methods pcmk__assignment_methods_t;
 
@@ -218,6 +317,13 @@ struct pcmk__resource_private {
     enum pcmk__rsc_variant variant; // Resource variant
     void *variant_opaque;           // Variant-specific data
     char *history_id;               // Resource instance ID in history
+    int priority;                   // Priority relative other resources
+    int promotion_priority;         // Promotion priority on assigned node
+    int stickiness;                 // Extra preference for current node
+    guint failure_expiration_ms;    // Failures expire after this much time
+    int ban_after_failures;         // Ban from node after this many failures
+    guint remote_reconnect_ms;      // Retry interval for remote connections
+    char *pending_action;           // Pending action in history, if any
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
     enum pcmk__restart restart_type;    // Deprecated

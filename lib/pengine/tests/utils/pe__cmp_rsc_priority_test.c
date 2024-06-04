@@ -14,14 +14,16 @@
 
 #include "pe_status_private.h"
 
-pcmk_resource_t rsc1;
-pcmk_resource_t rsc2;
+static pcmk__resource_private_t rsc1_private = { pcmk__rsc_variant_primitive, };
+static pcmk__resource_private_t rsc2_private = { pcmk__rsc_variant_primitive, };
+static pcmk_resource_t rsc1 = { .private = &rsc1_private };
+static pcmk_resource_t rsc2 = { .private = &rsc2_private };
 
 static void
 rscs_equal(void **state)
 {
-    rsc1.priority = 0;
-    rsc2.priority = 0;
+    rsc1.private->priority = 0;
+    rsc2.private->priority = 0;
     assert_int_equal(pe__cmp_rsc_priority(NULL, NULL), 0);
     assert_int_equal(pe__cmp_rsc_priority(&rsc1, &rsc2), 0);
 }
@@ -29,8 +31,8 @@ rscs_equal(void **state)
 static void
 rsc1_first(void **state)
 {
-    rsc1.priority = 1;
-    rsc2.priority = 0;
+    rsc1.private->priority = 1;
+    rsc2.private->priority = 0;
     assert_int_equal(pe__cmp_rsc_priority(&rsc1, NULL), -1);
     assert_int_equal(pe__cmp_rsc_priority(&rsc1, &rsc2), -1);
 }
@@ -38,8 +40,8 @@ rsc1_first(void **state)
 static void
 rsc2_first(void **state)
 {
-    rsc1.priority = 0;
-    rsc2.priority = 1;
+    rsc1.private->priority = 0;
+    rsc2.private->priority = 1;
     assert_int_equal(pe__cmp_rsc_priority(NULL, &rsc2), 1);
     assert_int_equal(pe__cmp_rsc_priority(&rsc1, &rsc2), 1);
 }

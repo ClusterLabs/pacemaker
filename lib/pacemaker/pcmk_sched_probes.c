@@ -105,7 +105,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
      */
     return node->details->remote_requires_reset
            || node->details->unclean
-           || pcmk_is_set(guest_rsc->flags, pcmk_rsc_failed)
+           || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
            || (guest_rsc->next_role == pcmk_role_stopped)
 
            // Guest is moving
@@ -183,7 +183,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
 
-        } else if (rsc->is_remote_node) {
+        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             reason = "Pacemaker Remote nodes cannot host remote connections";
             goto no_probe;
         }
@@ -194,11 +194,12 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         return pcmk__probe_resource_list(rsc->children, node);
     }
 
-    if ((rsc->container != NULL) && !rsc->is_remote_node) {
+    if ((rsc->container != NULL)
+        && !pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         reason = "resource is inside a container";
         goto no_probe;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         reason = "resource is orphaned";
         goto no_probe;
 
@@ -209,7 +210,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
-    if (rsc->exclusive_discover || top->exclusive_discover) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+        || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
         // Exclusive discovery is enabled ...
 
         if (allowed == NULL) {

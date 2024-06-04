@@ -346,7 +346,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
     }
 
     // Order monitor relative to other actions
-    if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+    if ((node == NULL) || pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__new_ordering(rsc, start_key(rsc), NULL,
                            NULL, strdup(mon->uuid), mon,
                            pcmk__ar_first_implies_then
@@ -463,7 +463,7 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         if (!pcmk_is_set(stop->flags, pcmk_action_optional)
             && !pcmk_is_set(action->flags, pcmk_action_optional)
-            && !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+            && !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__rsc_trace(rsc, "%s optional on %s: unmanaged",
                             action->uuid, pcmk__node_name(node));
             pcmk__set_action_flags(action, pcmk_action_optional);
@@ -475,7 +475,7 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
             pcmk__clear_action_flags(action, pcmk_action_runnable);
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__new_ordering(rsc, stop_key(rsc), stop,
                                NULL, NULL, action,
                                pcmk__ar_first_implies_then
@@ -505,7 +505,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
         crm_notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
                    " role are not supported for anonymous clones)", op->id);
         return; // @TODO add support
@@ -547,7 +547,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             order_after_probes(rsc, stop_node, stopped_mon);
         }
 
@@ -583,14 +583,14 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
 {
     pcmk_action_t *start = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for blocked resource %s",
                         rsc->id);
         return;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_maintenance)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__rsc_trace(rsc,
                         "Skipping recurring actions for %s "
                         "in maintenance mode", rsc->id);
@@ -607,7 +607,7 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
                         rsc->id, pcmk__node_name(rsc->allocated_to));
 
     } else if ((rsc->next_role != pcmk_role_stopped)
-        || !pcmk_is_set(rsc->flags, pcmk_rsc_managed)) {
+        || !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
         // Recurring actions for active roles needed
         start = start_action(rsc, rsc->allocated_to, TRUE);
     }

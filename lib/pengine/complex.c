@@ -532,17 +532,17 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
     if (pcmk__str_eq(value, PCMK_VALUE_NOTHING, pcmk__str_casei)) {
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_QUORUM, pcmk__str_casei)) {
-        pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_quorum);
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_quorum);
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
-        pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing);
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing);
         if (!pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
@@ -557,14 +557,14 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
             return;
 
         } else {
-            pcmk__set_rsc_flags(rsc, pcmk_rsc_needs_fencing
-                                     |pcmk_rsc_needs_unfencing);
+            pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing
+                                     |pcmk__rsc_needs_unfencing);
         }
 
     } else {
         const char *orig_value = value;
 
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_fence_device)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
             value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk__is_primitive(rsc)
@@ -738,10 +738,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, scheduler); // \deprecated
 
     (*rsc)->flags = 0;
-    pcmk__set_rsc_flags(*rsc, pcmk_rsc_runnable|pcmk_rsc_unassigned);
+    pcmk__set_rsc_flags(*rsc, pcmk__rsc_unassigned);
 
     if (!pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
     }
 
     (*rsc)->rsc_cons = NULL;
@@ -750,25 +750,23 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->role = pcmk_role_stopped;
     (*rsc)->next_role = pcmk_role_unknown;
 
-    (*rsc)->stickiness = 0;
-    (*rsc)->migration_threshold = PCMK_SCORE_INFINITY;
-    (*rsc)->failure_timeout = 0;
+    rsc_private->ban_after_failures = PCMK_SCORE_INFINITY;
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_PRIORITY);
-    (*rsc)->priority = char2score(value);
+    rsc_private->priority = char2score(value);
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_critical);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_critical);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_NOTIFY);
     if (crm_is_true(value)) {
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_notify);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_notify);
     }
 
     if (xml_contains_remote_node(rsc_private->xml)) {
-        (*rsc)->is_remote_node = TRUE;
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_is_remote_connection);
         if (g_hash_table_lookup((*rsc)->meta, PCMK__META_CONTAINER)) {
             guest_node = true;
         } else {
@@ -778,7 +776,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_ALLOW_MIGRATE);
     if (crm_is_true(value)) {
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
          * to float around the cluster without having to stop all the
@@ -787,7 +785,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
          * problems, migration support can be explicitly turned off with
          * PCMK_META_ALLOW_MIGRATE=false.
          */
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_migratable);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_migratable);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_IS_MANAGED);
@@ -799,32 +797,32 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
         } else if (crm_is_true(value)) {
-            pcmk__set_rsc_flags(*rsc, pcmk_rsc_managed);
+            pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
         } else {
-            pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
+            pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         }
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_MAINTENANCE);
     if (crm_is_true(value)) {
-        pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
     if (pcmk_is_set(scheduler->flags, pcmk_sched_in_maintenance)) {
-        pcmk__clear_rsc_flags(*rsc, pcmk_rsc_managed);
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_maintenance);
+        pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
 
     if (pcmk__is_clone(pe__const_top_resource(*rsc, false))) {
         value = g_hash_table_lookup((*rsc)->meta, PCMK_META_GLOBALLY_UNIQUE);
         if (crm_is_true(value)) {
-            pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);
+            pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
         if (detect_promotable(*rsc)) {
-            pcmk__set_rsc_flags(*rsc, pcmk_rsc_promotable);
+            pcmk__set_rsc_flags(*rsc, pcmk__rsc_promotable);
         }
     } else {
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_unique);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
     }
 
     // @COMPAT Deprecated meta-attribute
@@ -887,7 +885,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
         } else {
-            (*rsc)->stickiness = char2score(value);
+            rsc_private->stickiness = char2score(value);
         }
     }
 
@@ -901,8 +899,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
         } else {
-            (*rsc)->migration_threshold = char2score(value);
-            if ((*rsc)->migration_threshold < 0) {
+            rsc_private->ban_after_failures = char2score(value);
+            if (rsc_private->ban_after_failures < 0) {
                 /* @COMPAT We use 1 here to preserve previous behavior, but this
                  * should probably use the default (INFINITY) or 0 (to disable)
                  * instead.
@@ -910,7 +908,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                 pcmk__warn_once(pcmk__wo_neg_threshold,
                                 PCMK_META_MIGRATION_THRESHOLD
                                 " must be non-negative, using 1 instead");
-                (*rsc)->migration_threshold = 1;
+                rsc_private->ban_after_failures = 1;
             }
         }
     }
@@ -918,7 +916,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     if (pcmk__str_eq(crm_element_value(rsc_private->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pcmk__set_scheduler_flags(scheduler, pcmk_sched_have_fencing);
-        pcmk__set_rsc_flags(*rsc, pcmk_rsc_fence_device);
+        pcmk__set_rsc_flags(*rsc, pcmk__rsc_fence_device);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_REQUIRES);
@@ -926,11 +924,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, PCMK_META_FAILURE_TIMEOUT);
     if (value != NULL) {
-        guint interval_ms = 0U;
-
-        // Stored as seconds
-        pcmk_parse_interval_spec(value, &interval_ms);
-        (*rsc)->failure_timeout = (int) (interval_ms / 1000);
+        pcmk_parse_interval_spec(value, &(rsc_private->failure_expiration_ms));
     }
 
     if (remote_node) {
@@ -946,12 +940,14 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
-            pcmk_parse_interval_spec(value, &((*rsc)->remote_reconnect_ms));
+            pcmk_parse_interval_spec(value,
+                                     &(rsc_private->remote_reconnect_ms));
 
             /* We want to override any default failure_timeout in use when remote
              * PCMK_REMOTE_RA_RECONNECT_INTERVAL is in use.
              */
-            (*rsc)->failure_timeout = (*rsc)->remote_reconnect_ms / 1000;
+            rsc_private->failure_expiration_ms =
+                rsc_private->remote_reconnect_ms;
         }
     }
 
@@ -978,7 +974,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     pcmk__rsc_trace(*rsc, "%s action notification: %s", (*rsc)->id,
-                    pcmk_is_set((*rsc)->flags, pcmk_rsc_notify)? "required" : "not required");
+                    pcmk_is_set((*rsc)->flags, pcmk__rsc_notify)? "required" : "not required");
 
     (*rsc)->utilization = pcmk__strkey_table(free, free);
 
@@ -1082,7 +1078,7 @@ common_free(pcmk_resource_t * rsc)
     }
 
     if ((rsc->private->parent == NULL)
-        && pcmk_is_set(rsc->flags, pcmk_rsc_removed)) {
+        && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
 
         pcmk__xml_free(rsc->private->xml);
         rsc->private->xml = NULL;
@@ -1114,10 +1110,10 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->rsc_location);
     free(rsc->id);
     free(rsc->allocated_to);
-    free(rsc->pending_task);
 
     free(rsc->private->variant_opaque);
     free(rsc->private->history_id);
+    free(rsc->private->pending_action);
     free(rsc->private);
 
     free(rsc);
@@ -1166,7 +1162,7 @@ pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
         } else {
             keep_looking = true;
         }
-    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
+    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         if (is_happy && ((*active == NULL) || !(*active)->details->online
                          || (*active)->details->unclean)) {
             *active = node; // This is the first clean node
@@ -1228,7 +1224,7 @@ pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
         return NULL;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_needs_fencing)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         return rsc->private->fns->active_node(rsc, count, NULL);
     } else {
         return rsc->private->fns->active_node(rsc, NULL, count);
@@ -1245,13 +1241,13 @@ pe__count_common(pcmk_resource_t *rsc)
             child->private->fns->count(item->data);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk_rsc_removed)
+    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
                || (rsc->role > pcmk_role_stopped)) {
         rsc->private->scheduler->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->private->scheduler->disabled_resources++;
         }
-        if (pcmk_is_set(rsc->flags, pcmk_rsc_blocked)) {
+        if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
             rsc->private->scheduler->blocked_resources++;
         }
     }

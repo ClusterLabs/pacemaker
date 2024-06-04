@@ -32,7 +32,7 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 {
     pcmk_node_t *allowed_node = NULL;
 
-    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)) {
+    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)) {
         pcmk__rsc_trace(instance, "%s cannot run on %s: orphaned",
                         instance->id, pcmk__node_name(node));
         return false;
@@ -248,7 +248,7 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
 static bool
 did_fail(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
         return true;
     }
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -400,16 +400,16 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance with higher configured priority
-    if (instance1->priority > instance2->priority) {
+    if (instance1->private->priority > instance2->private->priority) {
         crm_trace("Assign %s before %s: priority (%d > %d)",
                   instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
+                  instance1->private->priority, instance2->private->priority);
         return -1;
 
-    } else if (instance1->priority < instance2->priority) {
+    } else if (instance1->private->priority < instance2->private->priority) {
         crm_trace("Assign %s after %s: priority (%d < %d)",
                   instance1->id, instance2->id,
-                  instance1->priority, instance2->priority);
+                  instance1->private->priority, instance2->private->priority);
         return 1;
     }
 
@@ -535,7 +535,7 @@ increment_parent_count(pcmk_resource_t *instance,
          * shouldn't be possible if the resource is managed, and we won't be
          * able to limit the number of instances assigned to the node.
          */
-        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk_rsc_managed));
+        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk__rsc_managed));
 
     } else {
         allowed->count++;
@@ -563,7 +563,7 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                     ((prefer == NULL)? "no node" : prefer->details->uname));
 
-    if (pcmk_is_set(instance->flags, pcmk_rsc_assigning)) {
+    if (pcmk_is_set(instance->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(instance,
                         "Assignment loop detected involving %s colocations",
                         instance->id);
@@ -657,7 +657,7 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
             pcmk__rsc_info(instance,
                            "Not assigning %s to current node %s: unavailable",
                            instance->id, pcmk__node_name(current));
-            pcmk__set_rsc_flags(instance, pcmk_rsc_unassigned);
+            pcmk__set_rsc_flags(instance, pcmk__rsc_unassigned);
             break;
         }
 
@@ -745,8 +745,8 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->running_on == NULL)
-        || !pcmk_is_set(instance->flags, pcmk_rsc_unassigned)
-        || pcmk_is_set(instance->flags, pcmk_rsc_failed)) {
+        || !pcmk_is_set(instance->flags, pcmk__rsc_unassigned)
+        || pcmk_is_set(instance->flags, pcmk__rsc_failed)) {
         return NULL;
     }
 
@@ -813,7 +813,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         int available = max_total - assigned;
 
         instance = iter->data;
-        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
+        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue;   // Already assigned
         }
 
@@ -831,7 +831,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pcmk_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pcmk_rsc_unassigned)) {
+        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue; // Already assigned
         }
 
@@ -840,7 +840,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pcmk_rsc_managed)) {
+                if (!pcmk_is_set(instance->flags, pcmk__rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
                 crm_notice("%s%s is running on %s which is no longer allowed",
@@ -1092,7 +1092,7 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (!is_set_recursive(instance, pcmk_rsc_blocked, true)) {
+    if (!is_set_recursive(instance, pcmk__rsc_blocked, true)) {
         // We only want instances that haven't failed
         instance_node = instance->private->fns->location(instance, NULL,
                                                          current);
@@ -1308,12 +1308,12 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
         return matching_action;
     }
 
-    if (pcmk_is_set(instance->flags, pcmk_rsc_removed)
+    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)
         || pcmk__str_any_of(action_name, PCMK_ACTION_STOP, PCMK_ACTION_DEMOTE,
                             NULL)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
-                  pcmk_is_set(instance->flags, pcmk_rsc_removed)? "orphan " : "",
+                  pcmk_is_set(instance->flags, pcmk__rsc_removed)? "orphan " : "",
                   instance->id);
     } else {
         crm_err("No %s action found for %s to interleave (bug?)",

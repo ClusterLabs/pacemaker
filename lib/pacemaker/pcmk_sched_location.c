@@ -623,7 +623,7 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
     } else if (pcmk__str_eq(discover_mode, PCMK_VALUE_EXCLUSIVE,
                             pcmk__str_casei)) {
         new_con->discover_mode = pcmk_probe_exclusive;
-        rsc->exclusive_discover = TRUE;
+        pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
 
     } else {
         pcmk__config_err("Invalid " PCMK_XA_RESOURCE_DISCOVERY " value %s "
@@ -720,7 +720,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
         if (allowed_node->rsc_discover_mode < location->discover_mode) {
             if (location->discover_mode == pcmk_probe_exclusive) {
-                rsc->exclusive_discover = TRUE;
+                pcmk__set_rsc_flags(rsc, pcmk__rsc_exclusive_probes);
             }
             /* exclusive > never > always... always is default */
             allowed_node->rsc_discover_mode = location->discover_mode;

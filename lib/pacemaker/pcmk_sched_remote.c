@@ -113,7 +113,7 @@ get_remote_node_state(const pcmk_node_t *node)
             return remote_state_failed;
         }
 
-        if (!pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)) {
+        if (!pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)) {
             /* Connection resource is cleanly stopped */
             return remote_state_stopped;
         }
@@ -121,7 +121,7 @@ get_remote_node_state(const pcmk_node_t *node)
         /* Connection resource is failed */
 
         if ((remote_rsc->next_role == pcmk_role_stopped)
-            && remote_rsc->remote_reconnect_ms
+            && (remote_rsc->private->remote_reconnect_ms > 0U)
             && node->details->remote_was_fenced
             && !pe__shutdown_requested(node)) {
 
@@ -186,7 +186,7 @@ apply_remote_ordering(pcmk_action_t *action)
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -319,16 +319,16 @@ apply_container_ordering(pcmk_action_t *action)
     container = remote_rsc->container;
     CRM_ASSERT(container != NULL);
 
-    if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
+    if (pcmk_is_set(container->flags, pcmk__rsc_failed)) {
         pe_fence_node(action->rsc->private->scheduler, action->node,
                       "container failed", FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
               action->task, action->uuid,
-              pcmk_is_set(remote_rsc->flags, pcmk_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
               remote_rsc->id,
-              pcmk_is_set(container->flags, pcmk_rsc_failed)? "failed " : "",
+              pcmk_is_set(container->flags, pcmk__rsc_failed)? "failed " : "",
               container->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
@@ -352,7 +352,7 @@ apply_container_ordering(pcmk_action_t *action)
 
         case pcmk_action_stop:
         case pcmk_action_demote:
-            if (pcmk_is_set(container->flags, pcmk_rsc_failed)) {
+            if (pcmk_is_set(container->flags, pcmk__rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
                  * are implied by the container stopping. This is similar to
@@ -418,9 +418,9 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * remote connection resource, then make sure this happens before
          * any start of the resource in this transition.
          */
-        if (action->rsc->is_remote_node &&
-            pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
-                         pcmk__str_none)) {
+        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_is_remote_connection)
+            && pcmk__str_eq(action->task, PCMK_ACTION_CLEAR_FAILCOUNT,
+                            pcmk__str_none)) {
 
             pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
                                pcmk__op_key(action->rsc->id, PCMK_ACTION_START,
