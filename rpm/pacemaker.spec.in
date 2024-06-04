@@ -760,7 +760,6 @@ exit 0
 
 %exclude %{_libexecdir}/pacemaker/cts-support
 %exclude %{_sbindir}/pacemaker-remoted
-%exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
 %if %{with linuxha}
@@ -910,7 +909,6 @@ exit 0
 %endif
 
 %{_sbindir}/pacemaker-remoted
-%{_sbindir}/pacemaker_remoted
 %{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING
