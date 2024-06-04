@@ -1053,6 +1053,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     const char *discovery = NULL;
     const xmlNode *attrs = NULL;
     pcmk_resource_t *rsc = NULL;
+    int maint = 0;
 
     if (!pcmk__xe_is(state, PCMK__XE_NODE_STATE)) {
         return;
@@ -1065,7 +1066,12 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
               pcmk__node_name(this_node));
 
     pcmk__scan_min_int(crm_element_value(state, PCMK__XA_NODE_IN_MAINTENANCE),
-                       &(this_node->details->remote_maintenance), 0);
+                       &maint, 0);
+    if (maint) {
+        pcmk__set_node_flags(this_node, pcmk__node_remote_maint);
+    } else {
+        pcmk__clear_node_flags(this_node, pcmk__node_remote_maint);
+    }
 
     rsc = this_node->details->remote_rsc;
     if (!pcmk_is_set(this_node->private->flags, pcmk__node_remote_reset)) {

@@ -79,12 +79,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode
 
-    /*
-     * Whether this is a Pacemaker Remote node previously marked in its
-     * node state as being in maintenance mode
-     */
-    gboolean remote_maintenance;
-
     gboolean unpacked;              // Whether node history has been unpacked
 
     /*

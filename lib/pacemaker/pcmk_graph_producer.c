@@ -88,8 +88,13 @@ add_maintenance_nodes(xmlNode *xml, const pcmk_scheduler_t *scheduler)
          iter != NULL; iter = iter->next) {
         const pcmk_node_t *node = iter->data;
 
-        if (pcmk__is_pacemaker_remote_node(node) &&
-            (node->details->maintenance != node->details->remote_maintenance)) {
+        if (!pcmk__is_pacemaker_remote_node(node)) {
+            continue;
+        }
+        if ((node->details->maintenance
+             && !pcmk_is_set(node->private->flags, pcmk__node_remote_maint))
+            || (!node->details->maintenance
+                && pcmk_is_set(node->private->flags, pcmk__node_remote_maint))) {
 
             if (maintenance != NULL) {
                 crm_xml_add(add_node_to_xml_by_id(node->private->id,

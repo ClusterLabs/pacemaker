@@ -62,6 +62,12 @@ enum pcmk__node_flags {
      * connected by the cluster
      */
     pcmk__node_remote_fenced    = (UINT32_C(1) << 6),
+
+    /*
+     * Whether this is a Pacemaker Remote node previously marked in its
+     * node state as being in maintenance mode
+     */
+    pcmk__node_remote_maint     = (UINT32_C(1) << 7),
 };
 
 /* Implementation of pcmk__node_private_t (pcmk_node_t objects are shallow
