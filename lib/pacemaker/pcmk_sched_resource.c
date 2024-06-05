@@ -368,8 +368,8 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
 static inline void
 add_assigned_resource(pcmk_node_t *node, pcmk_resource_t *rsc)
 {
-    node->details->allocated_rsc = g_list_prepend(node->details->allocated_rsc,
-                                                  rsc);
+    node->private->assigned_resources =
+        g_list_prepend(node->private->assigned_resources, rsc);
 }
 
 /*!
@@ -557,8 +557,8 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.
          */
-        old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
-                                                    rsc);
+        old->private->assigned_resources =
+            g_list_remove(old->private->assigned_resources, rsc);
         old->private->num_resources--;
         pcmk__release_node_capacity(old->details->utilization, rsc);
         free(old);

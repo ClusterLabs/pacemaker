@@ -85,7 +85,6 @@ struct pe_node_shared_s {
     // \deprecated Call pcmk_foreach_active_resource() instead
     GList *running_rsc;             // List of resources active on node
 
-    GList *allocated_rsc;           // List of resources assigned to node
     GHashTable *attrs;              // Node attributes
     GHashTable *utilization;        // Node utilization attributes
     GHashTable *digest_cache;       // Cache of calculated resource digests

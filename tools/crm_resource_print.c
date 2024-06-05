@@ -728,7 +728,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
         const char* host_uname =  node->private->name;
-        GList *allResources = node->details->allocated_rsc;
+        GList *allResources = node->private->assigned_resources;
         GList *activeResources = node->details->running_rsc;
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GList *lpc = NULL;
@@ -814,7 +814,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
         const char* host_uname =  node->private->name;
-        GList *allResources = node->details->allocated_rsc;
+        GList *allResources = node->private->assigned_resources;
         GList *activeResources = node->details->running_rsc;
         GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GList *lpc = NULL;

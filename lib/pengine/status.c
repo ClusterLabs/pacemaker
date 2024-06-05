@@ -257,7 +257,7 @@ pe_free_nodes(GList *nodes)
             g_hash_table_destroy(node->details->digest_cache);
         }
         g_list_free(node->details->running_rsc);
-        g_list_free(node->details->allocated_rsc);
+        g_list_free(node->private->assigned_resources);
         free(node->private);
         free(node->details);
         free(node);
