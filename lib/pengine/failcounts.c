@@ -212,8 +212,6 @@ generate_fail_regex(const char *prefix, const char *rsc_name, bool is_unique,
     /* Ignore instance numbers for anything other than globally unique clones.
      * Anonymous clone fail counts could contain an instance number if the
      * clone was initially unique, failed, then was converted to anonymous.
-     * @COMPAT Also, before 1.1.8, anonymous clone fail counts always contained
-     * clone instance numbers.
      */
     const char *instance_pattern = (is_unique? "" : "(:[0-9]+)?");
 
