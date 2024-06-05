@@ -523,7 +523,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
         pcmk__insert_dup(new_node->private->attrs, CRM_ATTR_KIND, "cluster");
     }
 
-    new_node->details->utilization = pcmk__strkey_table(free, free);
+    new_node->private->utilization = pcmk__strkey_table(free, free);
     new_node->details->digest_cache = pcmk__strkey_table(free,
                                                           pe__free_digests);
 
@@ -5050,7 +5050,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                                scheduler);
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
-                               node->details->utilization, NULL,
+                               node->private->utilization, NULL,
                                FALSE, scheduler);
 
     if (pcmk__node_attr(node, CRM_ATTR_SITE_NAME, NULL,

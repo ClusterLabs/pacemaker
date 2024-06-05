@@ -87,6 +87,7 @@ typedef struct pcmk__node_private {
     enum pcmk__node_variant variant;    // Node variant
     uint32_t flags;                     // Group of enum pcmk__node_flags
     GHashTable *attrs;                  // Node attributes
+    GHashTable *utilization;            // Node utilization attributes
     int num_resources;                  // Number of active resources on node
     GList *assigned_resources;          // List of resources assigned to node
     pcmk_resource_t *remote;            // Pacemaker Remote connection (if any)

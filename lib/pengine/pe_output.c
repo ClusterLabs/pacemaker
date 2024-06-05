@@ -2408,7 +2408,8 @@ node_capacity(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
                                         comment, pcmk__node_name(node));
 
-    g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
+    g_hash_table_foreach(node->private->utilization, append_dump_text,
+                         &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
 
@@ -2427,7 +2428,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
                                                        PCMK_XA_NODE, uname,
                                                        PCMK_XA_COMMENT, comment,
                                                        NULL);
-    g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(node->private->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }

@@ -514,7 +514,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     add_assigned_resource(node, rsc);
     node->private->num_resources++;
     node->count++;
-    pcmk__consume_node_capacity(node->details->utilization, rsc);
+    pcmk__consume_node_capacity(node->private->utilization, rsc);
 
     if (pcmk_is_set(scheduler->flags, pcmk_sched_show_utilization)) {
         pcmk__output_t *out = scheduler->priv;
@@ -560,7 +560,7 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         old->private->assigned_resources =
             g_list_remove(old->private->assigned_resources, rsc);
         old->private->num_resources--;
-        pcmk__release_node_capacity(old->details->utilization, rsc);
+        pcmk__release_node_capacity(old->private->utilization, rsc);
         free(old);
         return;
     }

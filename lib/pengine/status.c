@@ -250,8 +250,8 @@ pe_free_nodes(GList *nodes)
         if (node->private->attrs != NULL) {
             g_hash_table_destroy(node->private->attrs);
         }
-        if (node->details->utilization != NULL) {
-            g_hash_table_destroy(node->details->utilization);
+        if (node->private->utilization != NULL) {
+            g_hash_table_destroy(node->private->utilization);
         }
         if (node->details->digest_cache != NULL) {
             g_hash_table_destroy(node->details->digest_cache);

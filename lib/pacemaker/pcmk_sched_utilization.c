@@ -71,14 +71,14 @@ compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
     const char *node2_value = NULL;
 
     if (data->node2_only) {
-        if (g_hash_table_lookup(data->node1->details->utilization, key)) {
+        if (g_hash_table_lookup(data->node1->private->utilization, key)) {
             return; // We've already compared this attribute
         }
     } else {
         node1_capacity = utilization_value((const char *) value);
     }
 
-    node2_value = g_hash_table_lookup(data->node2->details->utilization, key);
+    node2_value = g_hash_table_lookup(data->node2->private->utilization, key);
     node2_capacity = utilization_value(node2_value);
 
     if (node1_capacity > node2_capacity) {
@@ -111,12 +111,12 @@ pcmk__compare_node_capacities(const pcmk_node_t *node1,
     };
 
     // Compare utilization values that node1 and maybe node2 have
-    g_hash_table_foreach(node1->details->utilization, compare_utilization_value,
+    g_hash_table_foreach(node1->private->utilization, compare_utilization_value,
                          &data);
 
     // Compare utilization values that only node2 has
     data.node2_only = true;
-    g_hash_table_foreach(node2->details->utilization, compare_utilization_value,
+    g_hash_table_foreach(node2->private->utilization, compare_utilization_value,
                          &data);
 
     return data.result;
@@ -224,7 +224,7 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     const char *node_value_s = NULL;
     struct capacity_data *data = user_data;
 
-    node_value_s = g_hash_table_lookup(data->node->details->utilization, key);
+    node_value_s = g_hash_table_lookup(data->node->private->utilization, key);
 
     required = utilization_value(value);
     remaining = utilization_value(node_value_s);
