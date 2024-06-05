@@ -116,7 +116,7 @@ pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                             pcmk__xe_id(cib_node), NULL, NULL, NULL, name,
                             NULL, &output) == pcmk_rc_ok) {
 
-        if (crm_element_value_int(output, name, &failcount) != 0) {
+        if (crm_element_value_int(output, PCMK_XA_VALUE, &failcount) != 0) {
             failcount = 0;
         }
     }
