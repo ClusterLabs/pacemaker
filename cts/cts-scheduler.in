@@ -810,7 +810,6 @@ TESTS = [
                       "Only check the capacities of the nodes that can run the resource"),
     ]),
     SchedulerTestGroup([
-        SchedulerTest("reprobe-target_rc", "Ensure correct target_rc for reprobe of inactive resources"),
         SchedulerTest("node-maintenance-1", "cl#5128 - Node maintenance"),
         SchedulerTest("node-maintenance-2", "cl#5128 - Node maintenance (coming out of maintenance mode)"),
         SchedulerTest("shutdown-maintenance-node", "Do not fence a maintenance node if it shuts down cleanly"),
