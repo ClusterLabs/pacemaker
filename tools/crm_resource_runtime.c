@@ -26,10 +26,12 @@ build_node_info_list(const pcmk_resource_t *rsc)
 {
     GList *retval = NULL;
 
-    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (const GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
 
-        for (const GList *iter2 = child->running_on;
+        for (const GList *iter2 = child->private->active_nodes;
              iter2 != NULL; iter2 = iter2->next) {
 
             const pcmk_node_t *node = (const pcmk_node_t *) iter2->data;
@@ -69,8 +71,10 @@ cli_resource_search(pcmk_resource_t *rsc, const char *requested_name,
 
         retval = build_node_info_list(parent);
 
-    } else if (rsc->running_on != NULL) {
-        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    } else {
+        for (GList *iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             pcmk_node_t *node = (pcmk_node_t *) iter->data;
             node_info_t *ni = pcmk__assert_alloc(1, sizeof(node_info_t));
 
@@ -171,8 +175,9 @@ find_matching_attr_resources_recursive(pcmk__output_t *out,
     int rc = pcmk_rc_ok;
     char *lookup_id = clone_strip(rsc->id);
 
-    /* visit the children */
-    for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
+    for (GList *gIter = rsc->private->children;
+         gIter != NULL; gIter = gIter->next) {
+
         find_matching_attr_resources_recursive(out, result,
                                                (pcmk_resource_t *) gIter->data,
                                                attr_set, attr_set_type, attr_id,
@@ -225,9 +230,10 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
         return g_list_append(result, rsc);
 
-    } else if ((rsc->private->parent == NULL) && (rsc->children != NULL)
-               && pcmk__is_clone(rsc)) {
-        pcmk_resource_t *child = rsc->children->data;
+    } else if ((rsc->private->parent == NULL)
+               && (rsc->private->children != NULL) && pcmk__is_clone(rsc)) {
+
+        pcmk_resource_t *child = rsc->private->children->data;
 
         if (pcmk__is_primitive(child)) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
@@ -477,11 +483,13 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             && pcmk__str_eq(attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_casei)) {
             /* We want to set the attribute only on resources explicitly
-             * colocated with this one, so we use rsc->rsc_cons_lhs directly
-             * rather than the with_this_colocations() method.
+             * colocated with this one, so we use
+             * rsc->private->with_this_colocations directly rather than the
+             * with_this_colocations() method.
              */
             pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-            for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+            for (GList *lpc = rsc->private->with_this_colocations;
+                 lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
@@ -889,9 +897,11 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     if (rsc == NULL) {
         return ENXIO;
 
-    } else if (rsc->children) {
+    } else if (rsc->private->children != NULL) {
 
-        for (const GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+        for (const GList *lpc = rsc->private->children;
+             lpc != NULL; lpc = lpc->next) {
+
             const pcmk_resource_t *child = (const pcmk_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
@@ -905,7 +915,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
     } else if (host_uname == NULL) {
         GList *lpc = NULL;
-        GList *nodes = g_hash_table_get_values(rsc->known_on);
+        GList *nodes = g_hash_table_get_values(rsc->private->probed_nodes);
 
         if(nodes == NULL && force) {
             nodes = pcmk__copy_node_list(scheduler->nodes, false);
@@ -915,7 +925,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             GHashTableIter iter;
             pcmk_node_t *node = NULL;
 
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
                 if(node->weight >= 0) {
                     nodes = g_list_prepend(nodes, node);
@@ -923,7 +933,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             }
 
         } else if(nodes == NULL) {
-            nodes = g_hash_table_get_values(rsc->allowed_nodes);
+            nodes = g_hash_table_get_values(rsc->private->allowed_nodes);
         }
 
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
@@ -1052,7 +1062,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
 static void
 check_role(resource_checks_t *checks)
 {
-    const char *role_s = g_hash_table_lookup(checks->rsc->meta,
+    const char *role_s = g_hash_table_lookup(checks->rsc->private->meta,
                                              PCMK_META_TARGET_ROLE);
 
     if (role_s == NULL) {
@@ -1078,7 +1088,7 @@ check_role(resource_checks_t *checks)
 static void
 check_managed(resource_checks_t *checks)
 {
-    const char *managed_s = g_hash_table_lookup(checks->rsc->meta,
+    const char *managed_s = g_hash_table_lookup(checks->rsc->private->meta,
                                                 PCMK_META_IS_MANAGED);
 
     if ((managed_s != NULL) && !crm_is_true(managed_s)) {
@@ -1089,9 +1099,11 @@ check_managed(resource_checks_t *checks)
 static void
 check_locked(resource_checks_t *checks)
 {
-    if (checks->rsc->lock_node != NULL) {
+    const pcmk_node_t *lock_node = checks->rsc->private->lock_node;
+
+    if (lock_node != NULL) {
         checks->flags |= rsc_locked;
-        checks->lock_node = checks->rsc->lock_node->details->uname;
+        checks->lock_node = lock_node->details->uname;
     }
 }
 
@@ -1133,7 +1145,7 @@ check_node_health(resource_checks_t *checks, pcmk_node_t *node)
         bool allowed = false;
         bool all_nodes_unhealthy = true;
 
-        g_hash_table_iter_init(&iter, checks->rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, checks->rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             allowed = true;
             if (!node_is_unhealthy(node)) {
@@ -1265,8 +1277,10 @@ get_active_resources(const char *host, GList *rsc_list)
          * stopping and starting.
          */
         if (pcmk__is_group(rsc)) {
-            active = g_list_concat(active,
-                                   get_active_resources(host, rsc->children));
+            GList *member_active = NULL;
+
+            member_active = get_active_resources(host, rsc->private->children);
+            active = g_list_concat(active, member_active);
         } else if (resource_is_running_on(rsc, host)) {
             active = g_list_append(active, strdup(rsc->id));
         }
@@ -1450,8 +1464,11 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
     }
 
     // If resource is collective, use maximum of its children's stop timeouts
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *child = iter->data;
             guint delay = max_rsc_stop_timeout(child);
 
@@ -2259,7 +2276,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
 
     if (pcmk__is_clone(rsc)) {
         /* Grab the first child resource in the hope it's not a group */
-        rsc = rsc->children->data;
+        rsc = rsc->private->children->data;
     }
 
     if (pcmk__is_group(rsc)) {
@@ -2332,7 +2349,9 @@ cli_resource_move(const pcmk_resource_t *rsc, const char *rsc_id,
         unsigned int promoted_count = 0;
         pcmk_node_t *promoted_node = NULL;
 
-        for (const GList *iter = rsc->children; iter; iter = iter->next) {
+        for (const GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
             enum rsc_role_e child_role = child->private->fns->state(child,
                                                                     TRUE);

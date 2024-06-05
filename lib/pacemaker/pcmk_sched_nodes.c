@@ -42,7 +42,7 @@ pcmk__node_available(const pcmk_node_t *node, bool consider_score,
 
     // @TODO Go through all callers to see which should set consider_guest
     if (consider_guest && pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->private->launcher;
 
         if (guest->private->fns->location(guest, NULL, FALSE) == NULL) {
             return false;
@@ -120,9 +120,11 @@ pcmk__copy_node_tables(const pcmk_resource_t *rsc, GHashTable **copy)
     }
 
     g_hash_table_insert(*copy, rsc->id,
-                        pcmk__copy_node_table(rsc->allowed_nodes));
+                        pcmk__copy_node_table(rsc->private->allowed_nodes));
 
-    for (const GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (const GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__copy_node_tables((const pcmk_resource_t *) iter->data, copy);
     }
 }
@@ -146,13 +148,15 @@ pcmk__restore_node_tables(pcmk_resource_t *rsc, GHashTable *backup)
 {
     CRM_ASSERT((rsc != NULL) && (backup != NULL));
 
-    g_hash_table_destroy(rsc->allowed_nodes);
+    g_hash_table_destroy(rsc->private->allowed_nodes);
 
     // Copy to avoid danger with multiple restores
-    rsc->allowed_nodes = g_hash_table_lookup(backup, rsc->id);
-    rsc->allowed_nodes = pcmk__copy_node_table(rsc->allowed_nodes);
+    rsc->private->allowed_nodes =
+        pcmk__copy_node_table(g_hash_table_lookup(backup, rsc->id));
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__restore_node_tables((pcmk_resource_t *) iter->data, backup);
     }
 }
@@ -398,7 +402,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                 /* Negative health scores do not apply to resources with
                  * PCMK_META_ALLOW_UNHEALTHY_NODES=true.
                  */
-                constrain = !crm_is_true(g_hash_table_lookup(rsc->meta,
+                constrain = !crm_is_true(g_hash_table_lookup(rsc->private->meta,
                                          PCMK_META_ALLOW_UNHEALTHY_NODES));
             }
             if (constrain) {
@@ -431,9 +435,9 @@ pcmk__top_allowed_node(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     }
 
     if (rsc->private->parent == NULL) {
-        allowed_nodes = rsc->allowed_nodes;
+        allowed_nodes = rsc->private->allowed_nodes;
     } else {
-        allowed_nodes = rsc->private->parent->allowed_nodes;
+        allowed_nodes = rsc->private->parent->private->allowed_nodes;
     }
     return g_hash_table_lookup(allowed_nodes, node->details->id);
 }

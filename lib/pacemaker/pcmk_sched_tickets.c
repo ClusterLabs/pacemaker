@@ -47,7 +47,7 @@ static bool
 ticket_role_matches(const pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
 {
     if ((rsc_ticket->role == pcmk_role_unknown)
-        || (rsc_ticket->role == rsc->role)) {
+        || (rsc_ticket->role == rsc->private->orig_role)) {
         return true;
     }
     pcmk__rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",
@@ -72,9 +72,9 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
         return;
     }
 
-    if (rsc->children) {
+    if (rsc->private->children != NULL) {
         pcmk__rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
-        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
             constraints_for_ticket((pcmk_resource_t *) iter->data, rsc_ticket);
         }
         return;
@@ -84,7 +84,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                     rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
                     pcmk_role_text(rsc_ticket->role));
 
-    if (!rsc_ticket->ticket->granted && (rsc->running_on != NULL)) {
+    if (!rsc_ticket->ticket->granted && (rsc->private->active_nodes != NULL)) {
 
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
@@ -111,7 +111,9 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                                   "__loss_of_ticket__",
                                   rsc->private->scheduler);
 
-                for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+                for (iter = rsc->private->active_nodes;
+                     iter != NULL; iter = iter->next) {
+
                     pe_fence_node(rsc->private->scheduler,
                                   (pcmk_node_t *) iter->data,
                                   "deadman ticket was lost", FALSE);
@@ -122,7 +124,7 @@ constraints_for_ticket(pcmk_resource_t *rsc, const rsc_ticket_t *rsc_ticket)
                 if (!ticket_role_matches(rsc, rsc_ticket)) {
                     return;
                 }
-                if (rsc->running_on != NULL) {
+                if (rsc->private->active_nodes != NULL) {
                     pcmk__clear_rsc_flags(rsc, pcmk__rsc_managed);
                     pcmk__set_rsc_flags(rsc, pcmk__rsc_blocked);
                 }
@@ -227,7 +229,8 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk_ticket_t *ticket,
     pcmk__rsc_trace(rsc, "%s (%s) ==> %s",
                     rsc->id, pcmk_role_text(new_rsc_ticket->role), ticket->id);
 
-    rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
+    rsc->private->ticket_constraints =
+        g_list_append(rsc->private->ticket_constraints, new_rsc_ticket);
 
     rsc->private->scheduler->ticket_constraints =
         g_list_append(rsc->private->scheduler->ticket_constraints,
@@ -527,7 +530,9 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 void
 pcmk__require_promotion_tickets(pcmk_resource_t *rsc)
 {
-    for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
+    for (GList *item = rsc->private->ticket_constraints;
+         item != NULL; item = item->next) {
+
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
 
         if ((rsc_ticket->role == pcmk_role_promoted)

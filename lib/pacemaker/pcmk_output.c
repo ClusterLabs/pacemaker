@@ -73,10 +73,10 @@ do_locations_list_xml(pcmk__output_t *out, pcmk_resource_t *rsc,
                       bool add_header)
 {
     GList *lpc = NULL;
-    GList *list = rsc->rsc_location;
     int rc = pcmk_rc_no_output;
 
-    for (lpc = list; lpc != NULL; lpc = lpc->next) {
+    for (lpc = rsc->private->location_constraints;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__location_t *cons = lpc->data;
 
         GList *lpc2 = NULL;
@@ -140,8 +140,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         rsc_width = len + 2;
     }
 
-    if ((rsc->role > pcmk_role_started)
-        || (rsc->next_role > pcmk_role_unpromoted)) {
+    if ((rsc->private->orig_role > pcmk_role_started)
+        || (rsc->private->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -149,14 +149,15 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         same_host = true;
     }
 
-    if (rsc->role == rsc->next_role) {
+    if (rsc->private->orig_role == rsc->private->next_role) {
         same_role = true;
     }
 
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", pcmk_role_text(rsc->role),
-                                    pcmk_role_text(rsc->next_role),
+        details = crm_strdup_printf("%s -> %s %s",
+                                    pcmk_role_text(rsc->private->orig_role),
+                                    pcmk_role_text(rsc->private->next_role),
                                     pcmk__node_name(destination));
 
     } else if (origin == NULL) {
@@ -165,7 +166,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
-        details = crm_strdup_printf("%s %s", pcmk_role_text(rsc->role),
+        details = crm_strdup_printf("%s %s",
+                                    pcmk_role_text(rsc->private->orig_role),
                                     pcmk__node_name(origin));
 
     } else if (destination == NULL) {
@@ -174,7 +176,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
-        details = crm_strdup_printf("%s %s", pcmk_role_text(rsc->role),
+        details = crm_strdup_printf("%s %s",
+                                    pcmk_role_text(rsc->private->orig_role),
                                     pcmk__node_name(origin));
 
     } else if (same_role && same_host) {
@@ -185,7 +188,7 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         /* Moving a promotable clone instance */
         details = crm_strdup_printf("%s -> %s %s", pcmk__node_name(origin),
                                     pcmk__node_name(destination),
-                                    pcmk_role_text(rsc->role));
+                                    pcmk_role_text(rsc->private->orig_role));
 
     } else if (same_role) {
         /* Moving a normal resource */
@@ -194,16 +197,17 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", pcmk_role_text(rsc->role),
-                                    pcmk_role_text(rsc->next_role),
+        details = crm_strdup_printf("%s -> %s %s",
+                                    pcmk_role_text(rsc->private->orig_role),
+                                    pcmk_role_text(rsc->private->next_role),
                                     pcmk__node_name(origin));
 
     } else {
         /* Moving and promoting/demoting */
         details = crm_strdup_printf("%s %s -> %s %s",
-                                    pcmk_role_text(rsc->role),
+                                    pcmk_role_text(rsc->private->orig_role),
                                     pcmk__node_name(origin),
-                                    pcmk_role_text(rsc->next_role),
+                                    pcmk_role_text(rsc->private->next_role),
                                     pcmk__node_name(destination));
     }
 
@@ -260,8 +264,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         source = action;
     }
 
-    if ((rsc->role > pcmk_role_started)
-        || (rsc->next_role > pcmk_role_unpromoted)) {
+    if ((rsc->private->orig_role > pcmk_role_started)
+        || (rsc->private->next_role > pcmk_role_unpromoted)) {
         need_role = true;
     }
 
@@ -269,7 +273,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         same_host = true;
     }
 
-    if (rsc->role == rsc->next_role) {
+    if (rsc->private->orig_role == rsc->private->next_role) {
         same_role = true;
     }
 
@@ -283,8 +287,10 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_ROLE,
+                           pcmk_role_text(rsc->private->orig_role),
+                           PCMK_XA_NEXT_ROLE,
+                           pcmk_role_text(rsc->private->next_role),
                            PCMK_XA_DEST, destination->details->uname,
                            NULL);
 
@@ -295,7 +301,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
+                           PCMK_XA_ROLE,
+                           pcmk_role_text(rsc->private->orig_role),
                            PCMK_XA_NODE, origin->details->uname,
                            NULL);
 
@@ -306,7 +313,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
+                           PCMK_XA_ROLE,
+                           pcmk_role_text(rsc->private->orig_role),
                            PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
@@ -319,7 +327,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set_props(xml,
                            PCMK_XA_SOURCE, origin->details->uname,
                            PCMK_XA_DEST, destination->details->uname,
-                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
+                           PCMK_XA_ROLE,
+                           pcmk_role_text(rsc->private->orig_role),
                            NULL);
 
     } else if (same_role) {
@@ -332,17 +341,21 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
-                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_ROLE,
+                           pcmk_role_text(rsc->private->orig_role),
+                           PCMK_XA_NEXT_ROLE,
+                           pcmk_role_text(rsc->private->next_role),
                            PCMK_XA_SOURCE, origin->details->uname,
                            NULL);
 
     } else {
         /* Moving and promoting/demoting */
         pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE, pcmk_role_text(rsc->role),
+                           PCMK_XA_ROLE,
+                           pcmk_role_text(rsc->private->orig_role),
                            PCMK_XA_SOURCE, origin->details->uname,
-                           PCMK_XA_NEXT_ROLE, pcmk_role_text(rsc->next_role),
+                           PCMK_XA_NEXT_ROLE,
+                           pcmk_role_text(rsc->private->next_role),
                            PCMK_XA_DEST, destination->details->uname,
                            NULL);
     }
@@ -377,11 +390,13 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         return rc;
     }
 
-    /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
-     * directly rather than rsc->private->cmds->this_with_colocations().
+    /* We're listing constraints explicitly involving rsc, so use
+     * rsc->private->this_with_colocations directly rather than call
+     * rsc->private->cmds->this_with_colocations().
      */
     pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-    for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = rsc->private->this_with_colocations;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
@@ -426,11 +441,13 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
         return rc;
     }
 
-    /* We're listing constraints explicitly involving rsc, so use rsc->rsc_cons
-     * directly rather than rsc->private->cmds->this_with_colocations().
+    /* We're listing constraints explicitly involving rsc, so use
+     * rsc->private->this_with_colocations directly rather than call
+     * rsc->private->cmds->this_with_colocations().
      */
     pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-    for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = rsc->private->this_with_colocations;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
         if (pcmk_is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
@@ -463,11 +480,12 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     }
 
     /* We're listing constraints explicitly involving rsc, so use
-     * rsc->rsc_cons_lhs directly rather than
+     * rsc->private->with_this_colocations directly rather than
      * rsc->private->cmds->with_this_colocations().
      */
     pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-    for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = rsc->private->with_this_colocations;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
@@ -513,11 +531,12 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     /* We're listing constraints explicitly involving rsc, so use
-     * rsc->rsc_cons_lhs directly rather than
+     * rsc->private->with_this_colocations directly rather than
      * rsc->private->cmds->with_this_colocations().
      */
     pcmk__set_rsc_flags(rsc, pcmk__rsc_detect_loop);
-    for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = rsc->private->with_this_colocations;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
         if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
@@ -543,10 +562,10 @@ locations_list(pcmk__output_t *out, va_list args) {
     pcmk_resource_t *rsc = va_arg(args, pcmk_resource_t *);
 
     GList *lpc = NULL;
-    GList *list = rsc->rsc_location;
     int rc = pcmk_rc_no_output;
 
-    for (lpc = list; lpc != NULL; lpc = lpc->next) {
+    for (lpc = rsc->private->location_constraints;
+         lpc != NULL; lpc = lpc->next) {
         pcmk__location_t *cons = lpc->data;
 
         GList *lpc2 = NULL;
@@ -1102,7 +1121,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         const bool managed = pcmk_is_set(rsc->flags, pcmk__rsc_managed);
 
         pcmk__rsc_info(rsc, "Leave   %s\t(%s%s)",
-                       rsc->id, pcmk_role_text(rsc->role),
+                       rsc->id, pcmk_role_text(rsc->private->orig_role),
                        (managed? "" : " unmanaged"));
         return rc;
     }
@@ -1155,7 +1174,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         g_list_free(possible_matches);
     }
 
-    if (rsc->role == rsc->next_role) {
+    if (rsc->private->orig_role == rsc->private->next_role) {
         pcmk_action_t *migrate_op = NULL;
 
         CRM_CHECK(next != NULL, return rc);
@@ -1185,7 +1204,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                                   current, next, promote, demote);
             } else {
                 pcmk__rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
-                               pcmk_role_text(rsc->role),
+                               pcmk_role_text(rsc->private->orig_role),
                                pcmk__node_name(next));
             }
 
@@ -1227,17 +1246,19 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if ((stop != NULL)
-        && ((rsc->next_role == pcmk_role_stopped)
+        && ((rsc->private->next_role == pcmk_role_stopped)
             || ((start != NULL)
                 && !pcmk_is_set(start->flags, pcmk_action_runnable)))) {
 
         key = stop_key(rsc);
-        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->private->active_nodes;
+             iter != NULL; iter = iter->next) {
+
             pcmk_node_t *node = iter->data;
             pcmk_action_t *stop_op = NULL;
 
             reason_op = start;
-            possible_matches = find_actions(rsc->actions, key, node);
+            possible_matches = find_actions(rsc->private->actions, key, node);
             if (possible_matches) {
                 stop_op = possible_matches->data;
                 g_list_free(possible_matches);
@@ -1284,18 +1305,18 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           next, start, NULL);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (rsc->role == pcmk_role_promoted) {
+    } else if (rsc->private->orig_role == pcmk_role_promoted) {
         CRM_LOG_ASSERT(current != NULL);
         rc = out->message(out, "rsc-action-item", "Demote", rsc, current,
                           next, demote, NULL);
 
-    } else if (rsc->next_role == pcmk_role_promoted) {
+    } else if (rsc->private->next_role == pcmk_role_promoted) {
         CRM_LOG_ASSERT(next);
         rc = out->message(out, "rsc-action-item", "Promote", rsc, current,
                           next, promote, NULL);
 
-    } else if ((rsc->role == pcmk_role_stopped)
-               && (rsc->next_role > pcmk_role_stopped)) {
+    } else if ((rsc->private->orig_role == pcmk_role_stopped)
+               && (rsc->private->next_role > pcmk_role_stopped)) {
         rc = out->message(out, "rsc-action-item", "Start", rsc, current, next,
                           start, NULL);
     }

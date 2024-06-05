@@ -84,15 +84,15 @@ check_for_role_change(const pcmk_resource_t *rsc, bool *demoting,
     const GList *iter = NULL;
 
     // If this is a cloned group, check group members recursively
-    if (rsc->children != NULL) {
-        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+        for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
             check_for_role_change((const pcmk_resource_t *) iter->data,
                                   demoting, promoting);
         }
         return;
     }
 
-    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->actions; iter != NULL; iter = iter->next) {
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
 
         if (*promoting && *demoting) {
@@ -170,7 +170,9 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
     const pcmk_resource_t *parent = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         if (node_to_be_promoted_on(child) == NULL) {
@@ -212,7 +214,8 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
     }
 
     parent = pe__const_top_resource(rsc, false);
-    local_node = g_hash_table_lookup(parent->allowed_nodes, node->details->id);
+    local_node = g_hash_table_lookup(parent->private->allowed_nodes,
+                                     node->details->id);
 
     if (local_node == NULL) {
         /* It should not be possible for the scheduler to have assigned the
@@ -335,7 +338,8 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
         return;
     }
 
-    node = g_hash_table_lookup(clone->allowed_nodes, chosen->details->id);
+    node = g_hash_table_lookup(clone->private->allowed_nodes,
+                               chosen->details->id);
     CRM_ASSERT(node != NULL);
 
     node->weight = pcmk__add_scores(promotion_priority, node->weight);
@@ -373,7 +377,7 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
                     colocation->primary->id,
                     pcmk_readable_score(colocation->score));
     primary->private->cmds->add_colocated_node_scores(primary, clone, clone->id,
-                                                      &clone->allowed_nodes,
+                                                      &(clone->private->allowed_nodes),
                                                       colocation, factor,
                                                       flags);
 }
@@ -406,7 +410,7 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                     pcmk_readable_score(colocation->score));
     dependent->private->cmds->add_colocated_node_scores(dependent, clone,
                                                         clone->id,
-                                                        &clone->allowed_nodes,
+                                                        &(clone->private->allowed_nodes),
                                                         colocation, factor,
                                                         flags);
 }
@@ -427,7 +431,7 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
     pcmk_node_t *chosen = child->private->fns->location(child, NULL, FALSE);
 
     if (!pcmk_is_set(child->flags, pcmk__rsc_managed)
-        && (child->next_role == pcmk_role_promoted)) {
+        && (child->private->next_role == pcmk_role_promoted)) {
         child->private->promotion_priority = PCMK_SCORE_INFINITY;
         pcmk__rsc_trace(clone,
                         "Final promotion priority for %s is %s "
@@ -442,8 +446,10 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
                         pcmk_readable_score(child->private->promotion_priority));
 
     } else {
-        const pcmk_node_t *node = g_hash_table_lookup(clone->allowed_nodes,
-                                                      chosen->details->id);
+        const pcmk_node_t *node = NULL;
+
+        node = g_hash_table_lookup(clone->private->allowed_nodes,
+                                   chosen->details->id);
 
         CRM_ASSERT(node != NULL);
         child->private->promotion_priority = node->weight;
@@ -472,7 +478,9 @@ sort_promotable_instances(pcmk_resource_t *clone)
     }
     pcmk__set_rsc_flags(clone, pcmk__rsc_updating_nodes);
 
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         pcmk__rsc_trace(clone,
@@ -481,11 +489,11 @@ sort_promotable_instances(pcmk_resource_t *clone)
                         clone->id, child->id,
                         pcmk_readable_score(child->private->promotion_priority));
     }
-    pe__show_node_scores(true, clone, "Before", clone->allowed_nodes,
+    pe__show_node_scores(true, clone, "Before", clone->private->allowed_nodes,
                          clone->private->scheduler);
 
-    g_list_foreach(clone->children, add_promotion_priority_to_node_score,
-                   clone);
+    g_list_foreach(clone->private->children,
+                   add_promotion_priority_to_node_score, clone);
 
     colocations = pcmk__this_with_colocations(clone);
     g_list_foreach(colocations, apply_coloc_to_dependent, clone);
@@ -498,15 +506,16 @@ sort_promotable_instances(pcmk_resource_t *clone)
     // Ban resource from all nodes if it needs a ticket but doesn't have it
     pcmk__require_promotion_tickets(clone);
 
-    pe__show_node_scores(true, clone, "After", clone->allowed_nodes,
+    pe__show_node_scores(true, clone, "After", clone->private->allowed_nodes,
                          clone->private->scheduler);
 
     // Reset promotion priorities to final node scores
-    g_list_foreach(clone->children, set_promotion_priority_to_node_score,
-                   clone);
+    g_list_foreach(clone->private->children,
+                   set_promotion_priority_to_node_score, clone);
 
     // Finally, sort instances in descending order of promotion priority
-    clone->children = g_list_sort(clone->children, cmp_promotable_instance);
+    clone->private->children = g_list_sort(clone->private->children,
+                                           cmp_promotable_instance);
     pcmk__clear_rsc_flags(clone, pcmk__rsc_updating_nodes);
 }
 
@@ -524,7 +533,7 @@ static pcmk_resource_t *
 find_active_anon_instance(const pcmk_resource_t *clone, const char *id,
                           const pcmk_node_t *node)
 {
-    for (GList *iter = clone->children; iter; iter = iter->next) {
+    for (GList *iter = clone->private->children; iter; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
         pcmk_resource_t *active = NULL;
 
@@ -553,7 +562,7 @@ static bool
 anonymous_known_on(const pcmk_resource_t *clone, const char *id,
                    const pcmk_node_t *node)
 {
-    for (GList *iter = clone->children; iter; iter = iter->next) {
+    for (GList *iter = clone->private->children; iter; iter = iter->next) {
         pcmk_resource_t *child = iter->data;
 
         /* Use ->find_rsc() because this might be a cloned group, and knowing
@@ -563,7 +572,8 @@ anonymous_known_on(const pcmk_resource_t *clone, const char *id,
                                               pcmk_rsc_match_clone_only);
         CRM_LOG_ASSERT(child != NULL);
         if (child != NULL) {
-            if (g_hash_table_lookup(child->known_on, node->details->id)) {
+            if (g_hash_table_lookup(child->private->probed_nodes,
+                                    node->details->id)) {
                 return true;
             }
         }
@@ -583,7 +593,7 @@ anonymous_known_on(const pcmk_resource_t *clone, const char *id,
 static bool
 is_allowed(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 {
-    pcmk_node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes,
+    pcmk_node_t *allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
                                                node->details->id);
 
     return (allowed != NULL) && (allowed->weight >= 0);
@@ -629,7 +639,8 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
      * take all instances' scores into account, to make sure we use any
      * permanent promotion scores.
      */
-    if ((rsc->running_on == NULL) && (g_hash_table_size(rsc->known_on) == 0)) {
+    if ((rsc->private->active_nodes == NULL)
+        && (g_hash_table_size(rsc->private->probed_nodes) == 0)) {
         reason = "none probed";
         goto check_allowed;
     }
@@ -637,8 +648,10 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     /* Otherwise, we've probed and/or started the resource *somewhere*, so
      * consider promotion scores on nodes where we know the status.
      */
-    if ((g_hash_table_lookup(rsc->known_on, node->details->id) != NULL)
-        || (pe_find_node_id(rsc->running_on, node->details->id) != NULL)) {
+    if ((g_hash_table_lookup(rsc->private->probed_nodes,
+                             node->details->id) != NULL)
+        || (pe_find_node_id(rsc->private->active_nodes,
+                            node->details->id) != NULL)) {
         reason = "known";
     } else {
         pcmk__rsc_trace(rsc,
@@ -687,7 +700,7 @@ promotion_attr_value(const pcmk_resource_t *rsc, const pcmk_node_t *node,
         // Not assigned yet
         node_type = pcmk__rsc_node_current;
     }
-    target = g_hash_table_lookup(rsc->meta,
+    target = g_hash_table_lookup(rsc->private->meta,
                                  PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     attr_name = pcmk_promotion_score_name(name);
     attr_value = pcmk__node_attr(node, attr_name, target, node_type);
@@ -721,10 +734,10 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     /* If this is an instance of a cloned group, the promotion score is the sum
      * of all members' promotion scores.
      */
-    if (rsc->children != NULL) {
+    if (rsc->private->children != NULL) {
         int score = 0;
 
-        for (const GList *iter = rsc->children;
+        for (const GList *iter = rsc->private->children;
              iter != NULL; iter = iter->next) {
 
             const pcmk_resource_t *child = (const pcmk_resource_t *) iter->data;
@@ -794,14 +807,16 @@ pcmk__add_promotion_scores(pcmk_resource_t *rsc)
         return;
     }
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
         int score, new_score;
 
-        g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, child_rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (!pcmk__node_available(node, false, false)) {
                 /* This node will never be promoted, so don't apply the
@@ -848,11 +863,11 @@ set_current_role_unpromoted(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
 
-    if (rsc->role == pcmk_role_started) {
+    if (rsc->private->orig_role == pcmk_role_started) {
         // Promotable clones should use unpromoted role instead of started
-        rsc->role = pcmk_role_unpromoted;
+        rsc->private->orig_role = pcmk_role_unpromoted;
     }
-    g_list_foreach(rsc->children, set_current_role_unpromoted, NULL);
+    g_list_foreach(rsc->private->children, set_current_role_unpromoted, NULL);
 }
 
 /*!
@@ -875,7 +890,7 @@ set_next_role_unpromoted(void *data, void *user_data)
         pe__set_next_role(rsc, pcmk_role_unpromoted, "unpromoted instance");
         g_list_free(assigned);
     }
-    g_list_foreach(rsc->children, set_next_role_unpromoted, NULL);
+    g_list_foreach(rsc->private->children, set_next_role_unpromoted, NULL);
 }
 
 /*!
@@ -890,10 +905,10 @@ set_next_role_promoted(void *data, gpointer user_data)
 {
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
 
-    if (rsc->next_role == pcmk_role_unknown) {
+    if (rsc->private->next_role == pcmk_role_unknown) {
         pe__set_next_role(rsc, pcmk_role_promoted, "promoted instance");
     }
-    g_list_foreach(rsc->children, set_next_role_promoted, NULL);
+    g_list_foreach(rsc->private->children, set_next_role_promoted, NULL);
 }
 
 /*!
@@ -944,7 +959,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     GList *list = NULL;
 
     pcmk__rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
-                    pcmk_role_text(instance->next_role));
+                    pcmk_role_text(instance->private->next_role));
 
     if (instance->private->fns->state(instance, TRUE) == pcmk_role_started) {
         set_current_role_unpromoted(instance, NULL);
@@ -999,8 +1014,10 @@ set_instance_priority(gpointer data, gpointer user_data)
     }
 
     // Add relevant location constraint scores for promoted role
-    apply_promoted_locations(instance, instance->rsc_location, chosen);
-    apply_promoted_locations(instance, clone->rsc_location, chosen);
+    apply_promoted_locations(instance, instance->private->location_constraints,
+                             chosen);
+    apply_promoted_locations(instance, clone->private->location_constraints,
+                             chosen);
 
     // Consider instance's role-based colocations with other resources
     list = pcmk__this_with_colocations(instance);
@@ -1053,7 +1070,7 @@ set_instance_role(gpointer data, gpointer user_data)
         return;
     }
 
-    if ((instance->role < pcmk_role_promoted)
+    if ((instance->private->orig_role < pcmk_role_promoted)
         && !pcmk_is_set(scheduler->flags, pcmk_sched_quorate)
         && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
@@ -1064,7 +1081,7 @@ set_instance_role(gpointer data, gpointer user_data)
 
     chosen->count++;
     pcmk__rsc_info(clone, "Choosing %s (%s) on %s for promotion",
-                   instance->id, pcmk_role_text(instance->role),
+                   instance->id, pcmk_role_text(instance->private->orig_role),
                    pcmk__node_name(chosen));
     set_next_role_promoted(instance, NULL);
     (*count)++;
@@ -1084,17 +1101,17 @@ pcmk__set_instance_roles(pcmk_resource_t *rsc)
     pcmk_node_t *node = NULL;
 
     // Repurpose count to track the number of promoted instances assigned
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         node->count = 0;
     }
 
     // Set instances' promotion priorities and sort by highest priority first
-    g_list_foreach(rsc->children, set_instance_priority, rsc);
+    g_list_foreach(rsc->private->children, set_instance_priority, rsc);
     sort_promotable_instances(rsc);
 
     // Choose the first N eligible instances to be promoted
-    g_list_foreach(rsc->children, set_instance_role, &promoted);
+    g_list_foreach(rsc->private->children, set_instance_role, &promoted);
     pcmk__rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
                    rsc->id, promoted, pe__clone_promoted_max(rsc));
 }
@@ -1112,7 +1129,9 @@ static void
 create_promotable_instance_actions(pcmk_resource_t *clone,
                                    bool *any_promoting, bool *any_demoting)
 {
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         instance->private->cmds->create_actions(instance);
@@ -1133,7 +1152,9 @@ create_promotable_instance_actions(pcmk_resource_t *clone,
 static void
 reset_instance_priorities(pcmk_resource_t *clone)
 {
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         instance->private->priority = clone->private->priority;
@@ -1175,7 +1196,9 @@ pcmk__order_promotable_instances(pcmk_resource_t *clone)
 
     pcmk__promotable_restart_ordering(clone);
 
-    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = clone->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
         // Demote before promote
@@ -1221,7 +1244,7 @@ update_dependent_allowed_nodes(pcmk_resource_t *dependent,
                     colocation->primary->id, pcmk__node_name(primary_node),
                     attr, colocation->score, dependent->id);
 
-    g_hash_table_iter_init(&iter, dependent->allowed_nodes);
+    g_hash_table_iter_init(&iter, dependent->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         const char *dependent_value = pcmk__colocation_node_attr(node, attr,
                                                                  dependent);
@@ -1256,7 +1279,9 @@ pcmk__update_dependent_with_promotable(const pcmk_resource_t *primary,
      * (for optional colocations) update the dependent's allowed node scores for
      * each one.
      */
-    for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = primary->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
         pcmk_node_t *node = instance->private->fns->location(instance, NULL,
                                                              FALSE);

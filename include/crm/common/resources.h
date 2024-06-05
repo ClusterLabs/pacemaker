@@ -104,65 +104,6 @@ struct pe_resource_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_resource_is_managed() instead
     unsigned long long flags;       // Group of enum pcmk__rsc_flags
-
-    /* Pay special attention to whether you want to use rsc_cons_lhs and
-     * rsc_cons directly, which include only colocations explicitly involving
-     * this resource, or call libpacemaker's pcmk__with_this_colocations() and
-     * pcmk__this_with_colocations() functions, which may return relevant
-     * colocations involving the resource's ancestors as well.
-     */
-
-    GList *rsc_cons_lhs;      // Colocations of other resources with this one
-    GList *rsc_cons;          // Colocations of this resource with others
-    GList *rsc_location;      // Location constraints for resource
-    GList *actions;           // Actions scheduled for resource
-    GList *rsc_tickets;       // Ticket constraints for resource
-
-    pcmk_node_t *allocated_to;  // Node resource is assigned to
-
-    // The destination node, if migrate_to completed but migrate_from has not
-    pcmk_node_t *partial_migration_target;
-
-    // The source node, if migrate_to completed but migrate_from has not
-    pcmk_node_t *partial_migration_source;
-
-    // Nodes where resource may be active
-    GList *running_on;
-
-    // Nodes where resource has been probed (key is node ID, not name)
-    GHashTable *known_on;
-
-    // Nodes where resource may run (key is node ID, not name)
-    GHashTable *allowed_nodes;
-
-    enum rsc_role_e role;           // Resource's current role
-    enum rsc_role_e next_role;      // Resource's scheduled next role
-
-    GHashTable *meta;               // Resource's meta-attributes
-    GHashTable *parameters;         // \deprecated Use pe_rsc_params() instead
-    GHashTable *utilization;        // Resource's utilization attributes
-
-    GList *children;                // Resource's child resources, if any
-
-    // Source nodes where stop is needed after migrate_from and migrate_to
-    GList *dangling_migrations;
-
-    pcmk_resource_t *container;     // Resource containing this one, if any
-    GList *fillers;                 // Resources contained by this one, if any
-
-    // @COMPAT These should be made const at next API compatibility break
-    pcmk_node_t *pending_node;      // Node on which pending_action is happening
-    pcmk_node_t *lock_node;         // Resource shutdown-locked to this node
-
-    time_t lock_time;               // When shutdown lock started
-
-    /*
-     * Resource parameters may have node-attribute-based rules, which means the
-     * values can vary by node. This table has node names as keys and parameter
-     * name/value tables as values. Use pe_rsc_params() to get the table for a
-     * given node rather than use this directly.
-     */
-    GHashTable *parameter_cache;
 };
 //!@}
 

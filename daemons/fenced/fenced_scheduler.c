@@ -86,7 +86,7 @@ local_node_allowed_for(const pcmk_resource_t *rsc)
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
 
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__str_eq(node->details->uname, stonith_our_uname,
                              pcmk__str_casei)) {
@@ -122,8 +122,11 @@ register_if_fencing_device(gpointer data, gpointer user_data)
     stonith_key_value_t *params = NULL;
 
     // If this is a collective resource, check children instead
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             register_if_fencing_device(iter->data, NULL);
             if (pcmk__is_clone(rsc)) {
                 return; // Only one instance needs to be checked for clones
@@ -183,8 +186,9 @@ register_if_fencing_device(gpointer data, gpointer user_data)
      * meta-attributes is deprecated. When we can break behavioral backward
      * compatibility, replace node with NULL here.
      */
-    get_meta_attributes(rsc->meta, rsc, node, scheduler);
-    rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
+    get_meta_attributes(rsc->private->meta, rsc, node, scheduler);
+    rsc_provides = g_hash_table_lookup(rsc->private->meta,
+                                       PCMK_STONITH_PROVIDES);
 
     g_hash_table_iter_init(&hash_iter, pe_rsc_params(rsc, node, scheduler));
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) &name,

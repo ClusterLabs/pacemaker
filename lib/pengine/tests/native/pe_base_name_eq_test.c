@@ -54,12 +54,17 @@ setup(void **state) {
 
         if (strcmp(rsc->id, "dummy") == 0) {
             dummy = rsc;
+
         } else if (strcmp(rsc->id, "exim-group") == 0) {
             exim_group = rsc;
+
         } else if (strcmp(rsc->id, "httpd-bundle") == 0) {
             httpd_bundle = rsc;
+
         } else if (strcmp(rsc->id, "mysql-clone-group") == 0) {
-            for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            for (GList *iter = rsc->private->children;
+                 iter != NULL; iter = iter->next) {
+
                 pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
                 if (strcmp(child->id, "mysql-group:0") == 0) {
@@ -68,8 +73,11 @@ setup(void **state) {
                     mysql_group_1 = child;
                 }
             }
+
         } else if (strcmp(rsc->id, "promotable-clone") == 0) {
-            for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            for (GList *iter = rsc->private->children;
+                 iter != NULL; iter = iter->next) {
+
                 pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
                 if (strcmp(child->id, "promotable-rsc:0") == 0) {

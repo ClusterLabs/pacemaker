@@ -89,7 +89,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);
 
-    g_list_foreach(rsc->children, (GFunc) cli_resource_print_cts, out);
+    g_list_foreach(rsc->private->children, (GFunc) cli_resource_print_cts, out);
 }
 
 // \return Standard Pacemaker return code
@@ -868,14 +868,14 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 static void
 add_resource_name(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
-    if (rsc->children == NULL) {
+    if (rsc->private->children == NULL) {
         /* Sometimes PCMK_XE_RESOURCE might act as a PCMK_XA_NAME instead of an
          * XML element name, depending on whether pcmk__output_enable_list_element
          * was called.
          */
         out->list_item(out, PCMK_XE_RESOURCE, "%s", rsc->id);
     } else {
-        g_list_foreach(rsc->children, (GFunc) add_resource_name, out);
+        g_list_foreach(rsc->private->children, (GFunc) add_resource_name, out);
     }
 }
 

@@ -401,7 +401,8 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             return pcmk_rc_unpack_error;
         }
 
-        parent->children = g_list_append(parent->children, replica->ip);
+        parent->private->children = g_list_append(parent->private->children,
+                                                  replica->ip);
     }
     return pcmk_rc_ok;
 }
@@ -652,7 +653,8 @@ create_container_resource(pcmk_resource_t *parent,
         return pcmk_rc_unpack_error;
     }
     pcmk__set_rsc_flags(replica->container, pcmk__rsc_replica_container);
-    parent->children = g_list_append(parent->children, replica->container);
+    parent->private->children = g_list_append(parent->private->children,
+                                              replica->container);
 
     return pcmk_rc_ok;
 }
@@ -666,15 +668,14 @@ create_container_resource(pcmk_resource_t *parent,
 static void
 disallow_node(pcmk_resource_t *rsc, const char *uname)
 {
-    gpointer match = g_hash_table_lookup(rsc->allowed_nodes, uname);
+    gpointer match = g_hash_table_lookup(rsc->private->allowed_nodes, uname);
 
     if (match) {
         ((pcmk_node_t *) match)->weight = -PCMK_SCORE_INFINITY;
         ((pcmk_node_t *) match)->rsc_discover_mode = pcmk_probe_never;
     }
-    if (rsc->children) {
-        g_list_foreach(rsc->children, (GFunc) disallow_node, (gpointer) uname);
-    }
+    g_list_foreach(rsc->private->children, (GFunc) disallow_node,
+                   (gpointer) uname);
 }
 
 static int
@@ -769,18 +770,20 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->rsc_discover_mode = pcmk_probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
-        if (replica->child->allowed_nodes != NULL) {
-            g_hash_table_destroy(replica->child->allowed_nodes);
+        if (replica->child->private->allowed_nodes != NULL) {
+            g_hash_table_destroy(replica->child->private->allowed_nodes);
         }
-        replica->child->allowed_nodes = pcmk__strkey_table(NULL, free);
-        g_hash_table_insert(replica->child->allowed_nodes,
+        replica->child->private->allowed_nodes = pcmk__strkey_table(NULL, free);
+        g_hash_table_insert(replica->child->private->allowed_nodes,
                             (gpointer) replica->node->details->id,
                             pe__copy_node(replica->node));
 
         {
+            const pcmk_resource_t *parent = replica->child->private->parent;
             pcmk_node_t *copy = pe__copy_node(replica->node);
+
             copy->weight = -PCMK_SCORE_INFINITY;
-            g_hash_table_insert(replica->child->private->parent->allowed_nodes,
+            g_hash_table_insert(parent->private->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
@@ -788,7 +791,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             return pcmk_rc_unpack_error;
         }
 
-        g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
+        g_hash_table_iter_init(&gIter, replica->remote->private->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
             if (pcmk__is_pacemaker_remote_node(node)) {
                 /* Remote resources can only run on 'normal' cluster node */
@@ -799,7 +802,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->details->remote_rsc = replica->remote;
 
         // Ensure pcmk__is_guest_or_bundle_node() functions correctly
-        replica->remote->container = replica->container;
+        replica->remote->private->launcher = replica->container;
 
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
@@ -807,16 +810,18 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         pcmk__insert_dup(replica->node->details->attrs,
                          CRM_ATTR_KIND, "container");
 
-        /* One effect of this is that setup_container() will add
-         * replica->remote to replica->container's fillers, which will make
-         * pe__resource_contains_guest_node() true for replica->container.
+        /* One effect of this is that unpack_launcher() will add
+         * replica->remote to replica->container's launched resources, which
+         * will make pe__resource_contains_guest_node() true for
+         * replica->container.
          *
-         * replica->child does NOT get added to replica->container's fillers.
-         * The only noticeable effect if it did would be for its fail count to
-         * be taken into account when checking replica->container's migration
-         * threshold.
+         * replica->child does NOT get added to replica->container's launched
+         * resources. The only noticeable effect if it did would be for its
+         * fail count to be taken into account when checking
+         * replica->container's migration threshold.
          */
-        parent->children = g_list_append(parent->children, replica->remote);
+        parent->private->children = g_list_append(parent->private->children,
+                                                  replica->remote);
     }
     return pcmk_rc_ok;
 }
@@ -844,7 +849,8 @@ create_replica_resources(pcmk_resource_t *parent,
     }
 
     if ((replica->child != NULL) && (replica->ipaddr != NULL)) {
-        pcmk__insert_meta(replica->child, "external-ip", replica->ipaddr);
+        pcmk__insert_meta(replica->child->private, "external-ip",
+                          replica->ipaddr);
     }
 
     if (replica->remote != NULL) {
@@ -954,7 +960,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
         return NULL;
     }
 
-    node = replica->container->allocated_to;
+    node = replica->container->private->assigned_node;
     if (node == NULL) {
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.
@@ -1259,8 +1265,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         bundle_data->ports = g_list_append(bundle_data->ports, port);
 
         buffer = g_string_sized_new(1024);
-        for (childIter = bundle_data->child->children; childIter != NULL;
-             childIter = childIter->next) {
+        for (childIter = bundle_data->child->private->children;
+             childIter != NULL; childIter = childIter->next) {
 
             pcmk__bundle_replica_t *replica = NULL;
 
@@ -1278,15 +1284,16 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
             bundle_data->attribute_target =
-                g_hash_table_lookup(replica->child->meta,
+                g_hash_table_lookup(replica->child->private->meta,
                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
         }
         bundle_data->container_host_options = g_string_free(buffer, FALSE);
 
         if (bundle_data->attribute_target) {
-            pcmk__insert_dup(rsc->meta, PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+            pcmk__insert_dup(rsc->private->meta,
+                             PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
                              bundle_data->attribute_target);
-            pcmk__insert_dup(bundle_data->child->meta,
+            pcmk__insert_dup(bundle_data->child->private->meta,
                              PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
                              bundle_data->attribute_target);
         }
@@ -1334,15 +1341,18 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
          * container.
          */
         if (replica->child != NULL) {
-            GHashTable *empty = replica->container->utilization;
+            GHashTable *empty = replica->container->private->utilization;
 
-            replica->container->utilization = replica->child->utilization;
-            replica->child->utilization = empty;
+            replica->container->private->utilization =
+                replica->child->private->utilization;
+
+            replica->child->private->utilization = empty;
         }
     }
 
     if (bundle_data->child) {
-        rsc->children = g_list_append(rsc->children, bundle_data->child);
+        rsc->private->children = g_list_append(rsc->private->children,
+                                               bundle_data->child);
     }
     return TRUE;
 }
@@ -1912,7 +1922,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
                      (GDestroyNotify) free_bundle_replica);
     g_list_free_full(bundle_data->mounts, (GDestroyNotify)mount_free);
     g_list_free_full(bundle_data->ports, (GDestroyNotify)port_free);
-    g_list_free(rsc->children);
+    g_list_free(rsc->private->children);
 
     if(bundle_data->child) {
         pcmk__xml_free(bundle_data->child->private->xml);
@@ -2073,7 +2083,7 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
     for (iter = data->replicas; iter != NULL; iter = iter->next) {
         pcmk__bundle_replica_t *replica = iter->data;
 
-        if (replica->container->running_on != NULL) {
+        if (replica->container->private->active_nodes != NULL) {
             containers = g_list_append(containers, replica->container);
         }
     }
@@ -2099,9 +2109,9 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
     nodes = g_hash_table_new(NULL, NULL);
     for (iter = containers; iter != NULL; iter = iter->next) {
         container = iter->data;
+        for (GList *node_iter = container->private->active_nodes;
+             node_iter != NULL; node_iter = node_iter->next) {
 
-        for (GList *node_iter = container->running_on; node_iter != NULL;
-             node_iter = node_iter->next) {
             node = node_iter->data;
 
             // If insert returns true, we haven't counted this node yet

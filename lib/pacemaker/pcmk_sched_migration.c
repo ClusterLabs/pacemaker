@@ -49,15 +49,16 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     pcmk_action_t *migrate_from = NULL;
     pcmk_action_t *start = NULL;
     pcmk_action_t *stop = NULL;
+    const pcmk_node_t *target_node = rsc->private->partial_migration_target;
 
     pcmk__rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
-                    ((rsc->partial_migration_target == NULL)? "" : "partially "),
+                    ((target_node == NULL)? "" : "partially "),
                     rsc->id, pcmk__node_name(current),
-                    pcmk__node_name(rsc->allocated_to));
-    start = start_action(rsc, rsc->allocated_to, TRUE);
+                    pcmk__node_name(rsc->private->assigned_node));
+    start = start_action(rsc, rsc->private->assigned_node, TRUE);
     stop = stop_action(rsc, current, TRUE);
 
-    if (rsc->partial_migration_target == NULL) {
+    if (target_node == NULL) {
         migrate_to = custom_action(rsc, pcmk__op_key(rsc->id,
                                                      PCMK_ACTION_MIGRATE_TO, 0),
                                    PCMK_ACTION_MIGRATE_TO, current, TRUE,
@@ -65,8 +66,9 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     }
     migrate_from = custom_action(rsc, pcmk__op_key(rsc->id,
                                                    PCMK_ACTION_MIGRATE_FROM, 0),
-                                 PCMK_ACTION_MIGRATE_FROM, rsc->allocated_to,
-                                 TRUE, rsc->private->scheduler);
+                                 PCMK_ACTION_MIGRATE_FROM,
+                                 rsc->private->assigned_node, TRUE,
+                                 rsc->private->scheduler);
 
     pcmk__set_action_flags(start, pcmk_action_migratable);
     pcmk__set_action_flags(stop, pcmk_action_migratable);
@@ -74,7 +76,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     // This is easier than trying to delete it from the graph
     pcmk__set_action_flags(start, pcmk_action_pseudo);
 
-    if (rsc->partial_migration_target == NULL) {
+    if (target_node == NULL) {
         pcmk__set_action_flags(migrate_from, pcmk_action_migratable);
         pcmk__set_action_flags(migrate_to, pcmk_action_migratable);
         migrate_to->needs = start->needs;
@@ -121,7 +123,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
                        rsc->private->scheduler);
 
     if (migrate_to != NULL) {
-        add_migration_meta(migrate_to, current, rsc->allocated_to);
+        add_migration_meta(migrate_to, current, rsc->private->assigned_node);
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             /* migrate_to takes place on the source node, but can affect the
@@ -140,7 +142,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
         }
     }
 
-    add_migration_meta(migrate_from, current, rsc->allocated_to);
+    add_migration_meta(migrate_from, current, rsc->private->assigned_node);
 }
 
 /*!
@@ -217,11 +219,13 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
         return false;
     }
 
-    if ((rsc->allocated_to == NULL) || rsc->allocated_to->details->unclean) {
+    if ((rsc->private->assigned_node == NULL)
+        || rsc->private->assigned_node->details->unclean) {
+
         pcmk__rsc_trace(rsc,
                         "%s cannot migrate because "
                         "its next node (%s) is unclean",
-                        rsc->id, pcmk__node_name(rsc->allocated_to));
+                        rsc->id, pcmk__node_name(rsc->private->assigned_node));
         return false;
     }
 
@@ -344,7 +348,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                            NULL, flags, order->rsc1->private->scheduler);
 
         // Also order B's migrate_from after A's stop during partial migrations
-        if (order->rsc2->partial_migration_target != NULL) {
+        if (order->rsc2->private->partial_migration_target != NULL) {
             pcmk__new_ordering(order->rsc1,
                                pcmk__op_key(order->rsc1->id, PCMK_ACTION_STOP,
                                             0),
@@ -388,7 +392,7 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
                                NULL, flags, order->rsc1->private->scheduler);
 
             // Order B migrate_from after A demote during partial migrations
-            if (order->rsc2->partial_migration_target != NULL) {
+            if (order->rsc2->private->partial_migration_target != NULL) {
                 pcmk__new_ordering(order->rsc1,
                                    pcmk__op_key(order->rsc1->id,
                                                 PCMK_ACTION_DEMOTE, 0),

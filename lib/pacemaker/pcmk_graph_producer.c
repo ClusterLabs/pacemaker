@@ -256,7 +256,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
      */
     if (pcmk__action_locks_rsc_to_node(action)) {
         crm_xml_add_ll(action_xml, PCMK_OPT_SHUTDOWN_LOCK,
-                       (long long) action->rsc->lock_time);
+                       (long long) action->rsc->private->lock_time);
     }
 
     // List affected resource
@@ -314,7 +314,8 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
 
     for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
         crm_xml_add(rsc_xml, attr_list[lpc],
-                    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
+                    g_hash_table_lookup(action->rsc->private->meta,
+                                        attr_list[lpc]));
     }
 }
 
@@ -670,7 +671,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
             && pcmk__str_eq(action->task, PCMK_ACTION_MIGRATE_TO,
                             pcmk__str_none)) {
 
-            pcmk_node_t *assigned = action->rsc->allocated_to;
+            pcmk_node_t *assigned = action->rsc->private->assigned_node;
 
             /* For load_stopped -> migrate_to orderings, we care about where
              * the resource has been assigned, not where migrate_to will be
@@ -982,10 +983,11 @@ pcmk__add_rsc_actions_to_graph(pcmk_resource_t *rsc)
     pcmk__rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
     // First add the resource's own actions
-    g_list_foreach(rsc->actions, add_action_to_graph, rsc->private->scheduler);
+    g_list_foreach(rsc->private->actions, add_action_to_graph,
+                   rsc->private->scheduler);
 
     // Then recursively add its children's actions (appropriate to variant)
-    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->children; iter != NULL; iter = iter->next) {
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) iter->data;
 
         child_rsc->private->cmds->add_actions_to_graph(child_rsc);

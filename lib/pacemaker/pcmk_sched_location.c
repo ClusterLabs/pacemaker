@@ -36,7 +36,7 @@ get_node_score(const char *rule, const char *score, bool raw,
         const char *target = NULL;
         const char *attr_score = NULL;
 
-        target = g_hash_table_lookup(rsc->meta,
+        target = g_hash_table_lookup(rsc->private->meta,
                                      PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
         attr_score = pcmk__node_attr(node, score, target,
@@ -290,7 +290,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         crm_time_t *next_change = crm_time_new_undefined();
         pcmk_rule_input_t rule_input = {
             .now = rsc->private->scheduler->now,
-            .rsc_meta = rsc->meta,
+            .rsc_meta = rsc->private->meta,
             .rsc_id = rsc_id_match,
             .rsc_id_submatches = rsc_id_submatches,
             .rsc_id_nmatches = rsc_id_nmatches,
@@ -639,7 +639,8 @@ pcmk__new_location(const char *id, pcmk_resource_t *rsc,
 
     rsc->private->scheduler->placement_constraints =
         g_list_prepend(rsc->private->scheduler->placement_constraints, new_con);
-    rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
+    rsc->private->location_constraints =
+        g_list_prepend(rsc->private->location_constraints, new_con);
 
     return new_con;
 }
@@ -680,10 +681,11 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
     // If a role was specified, ensure constraint is applicable
     need_role = (location->role_filter > pcmk_role_unknown);
-    if (need_role && (location->role_filter != rsc->next_role)) {
+    if (need_role && (location->role_filter != rsc->private->next_role)) {
         pcmk__rsc_trace(rsc,
                         "Not applying %s to %s because role will be %s not %s",
-                        location->id, rsc->id, pcmk_role_text(rsc->next_role),
+                        location->id, rsc->id,
+                        pcmk_role_text(rsc->private->next_role),
                         pcmk_role_text(location->role_filter));
         return;
     }
@@ -701,14 +703,15 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
     for (GList *iter = location->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = iter->data;
-        pcmk_node_t *allowed_node = g_hash_table_lookup(rsc->allowed_nodes,
-                                                        node->details->id);
+        pcmk_node_t *allowed_node = NULL;
 
+        allowed_node = g_hash_table_lookup(rsc->private->allowed_nodes,
+                                           node->details->id);
         if (allowed_node == NULL) {
             pcmk__rsc_trace(rsc, "* = %d on %s",
                             node->weight, pcmk__node_name(node));
             allowed_node = pe__copy_node(node);
-            g_hash_table_insert(rsc->allowed_nodes,
+            g_hash_table_insert(rsc->private->allowed_nodes,
                                 (gpointer) allowed_node->details->id,
                                 allowed_node);
         } else {

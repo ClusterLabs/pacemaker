@@ -189,7 +189,7 @@ action_for_ordering(pcmk_action_t *action)
         && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
-        result = find_first_action(rsc->actions, uuid, NULL, NULL);
+        result = find_first_action(rsc->private->actions, uuid, NULL, NULL);
         if (result == NULL) {
             crm_warn("Not remapping %s to %s because %s does not have "
                      "remapped action", action->uuid, uuid, rsc->id);
@@ -362,7 +362,8 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         && (then->rsc != NULL)) {
 
         if (!pcmk_is_set(first_flags, pcmk_action_runnable)
-            && (first->rsc != NULL) && (first->rsc->running_on != NULL)) {
+            && (first->rsc != NULL)
+            && (first->rsc->private->active_nodes != NULL)) {
 
             pcmk__rsc_trace(then->rsc,
                             "%s then %s: ignoring because first is stopping",
@@ -881,7 +882,8 @@ pcmk__update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
     }
 
     if (pcmk_is_set(type, pcmk__ar_promoted_then_implies_first)
-        && (then->rsc != NULL) && (then->rsc->role == pcmk_role_promoted)
+        && (then->rsc != NULL)
+        && (then->rsc->private->orig_role == pcmk_role_promoted)
         && pcmk_is_set(filter, pcmk_action_optional)
         && !pcmk_is_set(then->flags, pcmk_action_optional)) {
 
@@ -1315,7 +1317,7 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 {
     // Only resource actions taking place on resource's lock node are locked
     if ((action == NULL) || (action->rsc == NULL)
-        || !pcmk__same_node(action->node, action->rsc->lock_node)) {
+        || !pcmk__same_node(action->node, action->rsc->private->lock_node)) {
         return false;
     }
 
@@ -1440,7 +1442,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
 
             node_name = crm_strdup_printf("%s (resource: %s)",
                                           pcmk__node_name(action->node),
-                                          remote->container->id);
+                                          remote->private->launcher->id);
         } else if (action->node != NULL) {
             node_name = crm_strdup_printf("%s", pcmk__node_name(action->node));
         }
@@ -1557,7 +1559,7 @@ schedule_reload(gpointer data, gpointer user_data)
 
     // For collective resources, just call recursively for children
     if (rsc->private->variant > pcmk__rsc_variant_primitive) {
-        g_list_foreach(rsc->children, schedule_reload, user_data);
+        g_list_foreach(rsc->private->children, schedule_reload, user_data);
         return;
     }
 
@@ -1778,7 +1780,8 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         return;
     }
 
-    if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
+    if (pe_find_node_id(rsc->private->active_nodes,
+                        node->details->id) == NULL) {
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
             pcmk__schedule_cleanup(rsc, node, false);
         }

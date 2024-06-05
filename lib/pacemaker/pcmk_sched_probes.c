@@ -29,13 +29,14 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
                     const pcmk_node_t *node)
 {
     // Check whether resource is currently active on node
-    pcmk_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+    pcmk_node_t *running = pe_find_node_id(rsc->private->active_nodes,
+                                           node->details->id);
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
         pe__add_action_expected_result(probe, CRM_EX_NOT_RUNNING);
 
-    } else if (rsc->role == pcmk_role_promoted) {
+    } else if (rsc->private->orig_role == pcmk_role_promoted) {
         pe__add_action_expected_result(probe, CRM_EX_PROMOTED);
     }
 }
@@ -74,9 +75,11 @@ pcmk__probe_resource_list(GList *rscs, pcmk_node_t *node)
 static void
 probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 {
-    if ((rsc1->allocated_to != NULL)
-        && (g_hash_table_lookup(rsc1->known_on,
-                                rsc1->allocated_to->details->id) == NULL)) {
+    const pcmk_node_t *rsc1_node = rsc1->private->assigned_node;
+
+    if ((rsc1_node != NULL)
+        && (g_hash_table_lookup(rsc1->private->probed_nodes,
+                                rsc1_node->details->id) == NULL)) {
 
         pcmk__new_ordering(rsc1,
                            pcmk__op_key(rsc1->id, PCMK_ACTION_MONITOR, 0),
@@ -98,7 +101,11 @@ probe_then_start(pcmk_resource_t *rsc1, pcmk_resource_t *rsc2)
 static bool
 guest_resource_will_stop(const pcmk_node_t *node)
 {
-    const pcmk_resource_t *guest_rsc = node->details->remote_rsc->container;
+    const pcmk_resource_t *guest_rsc = NULL;
+    const pcmk_node_t *guest_node = NULL;
+
+    guest_rsc = node->details->remote_rsc->private->launcher;
+    guest_node = guest_rsc->private->assigned_node;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
@@ -106,13 +113,13 @@ guest_resource_will_stop(const pcmk_node_t *node)
     return node->details->remote_requires_reset
            || node->details->unclean
            || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
-           || (guest_rsc->next_role == pcmk_role_stopped)
+           || (guest_rsc->private->next_role == pcmk_role_stopped)
 
            // Guest is moving
-           || ((guest_rsc->role > pcmk_role_stopped)
-               && (guest_rsc->allocated_to != NULL)
-               && (pcmk__find_node_in_list(guest_rsc->running_on,
-                   guest_rsc->allocated_to->details->uname) == NULL));
+           || ((guest_rsc->private->orig_role > pcmk_role_stopped)
+               && (guest_node != NULL)
+               && pcmk__find_node_in_list(guest_rsc->private->active_nodes,
+                                          guest_node->details->uname) == NULL);
 }
 
 /*!
@@ -131,7 +138,8 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
-              pcmk_role_text(rsc->role), rsc->id, pcmk__node_name(node));
+              pcmk_role_text(rsc->private->orig_role), rsc->id,
+              pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->private->scheduler);
@@ -190,11 +198,11 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     // If this is a collective resource, probes are created for its children
-    if (rsc->children != NULL) {
-        return pcmk__probe_resource_list(rsc->children, node);
+    if (rsc->private->children != NULL) {
+        return pcmk__probe_resource_list(rsc->private->children, node);
     }
 
-    if ((rsc->container != NULL)
+    if ((rsc->private->launcher != NULL)
         && !pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         reason = "resource is inside a container";
         goto no_probe;
@@ -203,12 +211,14 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         reason = "resource is orphaned";
         goto no_probe;
 
-    } else if (g_hash_table_lookup(rsc->known_on, node->details->id) != NULL) {
+    } else if (g_hash_table_lookup(rsc->private->probed_nodes,
+                                   node->details->id) != NULL) {
         reason = "resource state is already known";
         goto no_probe;
     }
 
-    allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    allowed = g_hash_table_lookup(rsc->private->allowed_nodes,
+                                  node->details->id);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
@@ -237,9 +247,9 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->details->remote_rsc->container;
+        pcmk_resource_t *guest = node->details->remote_rsc->private->launcher;
 
-        if (guest->role == pcmk_role_stopped) {
+        if (guest->private->orig_role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there
             reason = "node's guest is stopped";
             probe_then_start(guest, top);
@@ -274,7 +284,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
      * resource or entire clone to stop if already active.
      */
     if (!pcmk_is_set(probe->flags, pcmk_action_runnable)
-        && (top->running_on == NULL)) {
+        && (top->private->active_nodes == NULL)) {
         pcmk__set_relation_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
 
@@ -384,10 +394,11 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
         }
 
         /* Do not imply a probe ordering for a resource inside of a stopping
-         * container. Otherwise, it might introduce a transition loop, since a
-         * probe could be scheduled after the container starts again.
+         * launcher. Otherwise, it might introduce a transition loop, since a
+         * probe could be scheduled after the launcher starts again.
          */
-        if ((order->rsc2 != NULL) && (order->rsc1->container == order->rsc2)) {
+        if ((order->rsc2 != NULL)
+            && (order->rsc1->private->launcher == order->rsc2)) {
 
             if ((then != NULL) && pcmk__str_eq(then->task, PCMK_ACTION_STOP,
                                                pcmk__str_none)) {
@@ -426,8 +437,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
             then_actions = g_list_prepend(NULL, then);
 
         } else if (order->rsc2 != NULL) {
-            then_actions = find_actions(order->rsc2->actions, order->task2,
-                                        NULL);
+            then_actions = find_actions(order->rsc2->private->actions,
+                                        order->task2, NULL);
             if (then_actions == NULL) { // There aren't any
                 g_list_free(probes);
                 continue;
@@ -507,7 +518,7 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
 
         pcmk__related_action_t *then = then_iter->data;
 
-        if (then->action->rsc->running_on
+        if ((then->action->rsc->private->active_nodes != NULL)
             || (pe__const_top_resource(then->action->rsc, false)
                 != after->action->rsc)
             || !pcmk__str_eq(then->action->task, PCMK_ACTION_START,
@@ -598,10 +609,9 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
      */
     if ((after->rsc != NULL)
         && (after->rsc->private->variant > pcmk__rsc_variant_group)) {
-        const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
-                                                       PCMK_META_INTERLEAVE);
 
-        interleave = crm_is_true(interleave_s);
+        interleave = crm_is_true(g_hash_table_lookup(after->rsc->private->meta,
+                                                     PCMK_META_INTERLEAVE));
         if (interleave) {
             compatible_rsc = pcmk__find_compatible_instance(probe->rsc,
                                                             after->rsc,
@@ -701,8 +711,8 @@ add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
 
     // For collective resources, order each instance recursively
     if (!pcmk__is_primitive(rsc)) {
-        g_list_foreach(rsc->children, add_start_restart_orderings_for_rsc,
-                       NULL);
+        g_list_foreach(rsc->private->children,
+                       add_start_restart_orderings_for_rsc, NULL);
         return;
     }
 

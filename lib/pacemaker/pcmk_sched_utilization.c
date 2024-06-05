@@ -173,7 +173,8 @@ pcmk__consume_node_capacity(GHashTable *current_utilization,
         .plus = false,
     };
 
-    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+    g_hash_table_foreach(rsc->private->utilization, update_utilization_value,
+                         &data);
 }
 
 /*!
@@ -192,7 +193,8 @@ pcmk__release_node_capacity(GHashTable *current_utilization,
         .plus = true,
     };
 
-    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+    g_hash_table_foreach(rsc->private->utilization, update_utilization_value,
+                         &data);
 }
 
 
@@ -329,7 +331,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     unassigned_utilization = sum_resource_utilization(rsc, colocated_rscs);
 
     // Check whether any node has enough capacity for all the resources
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (!pcmk__node_available(node, true, false)) {
             continue;
@@ -348,7 +350,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 
     if (any_capable) {
         // If so, ban resource from any node with insufficient capacity
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
@@ -364,10 +366,11 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 
     } else {
         // Otherwise, ban from nodes with insufficient capacity for rsc alone
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__node_available(node, true, false)
-                && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
+                && !have_enough_capacity(node, rsc->id,
+                                         rsc->private->utilization)) {
                 pcmk__rsc_debug(rsc, "%s does not have enough capacity for %s",
                                 pcmk__node_name(node), rsc->id);
                 resource_location(rsc, node, -PCMK_SCORE_INFINITY,
@@ -381,8 +384,8 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
     g_list_free(colocated_rscs);
     free(rscs_id);
 
-    pe__show_node_scores(true, rsc, "Post-utilization", rsc->allowed_nodes,
-                         rsc->private->scheduler);
+    pe__show_node_scores(true, rsc, "Post-utilization",
+                         rsc->private->allowed_nodes, rsc->private->scheduler);
     return most_capable_node;
 }
 
@@ -429,7 +432,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
                     rsc->id, rsc->private->scheduler->placement_strategy);
 
     // "stop rsc then load_stopped" constraints for current nodes
-    for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+    for (iter = rsc->private->active_nodes; iter != NULL; iter = iter->next) {
         load_stopped = new_load_stopped_op(iter->data);
         pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
                            pcmk__ar_if_on_same_node_or_target,

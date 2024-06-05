@@ -55,14 +55,13 @@ static pcmk_action_t *
 find_existing_action(const char *key, const pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const pcmk_scheduler_t *scheduler)
 {
-    GList *matches = NULL;
-    pcmk_action_t *action = NULL;
-
     /* When rsc is NULL, it would be quicker to check scheduler->singletons,
      * but checking all scheduler->actions takes the node into account.
      */
-    matches = find_actions(((rsc == NULL)? scheduler->actions : rsc->actions),
-                           key, node);
+    GList *actions = (rsc == NULL)? scheduler->actions : rsc->private->actions;
+    GList *matches = find_actions(actions, key, node);
+    pcmk_action_t *action = NULL;
+
     if (matches == NULL) {
         return NULL;
     }
@@ -222,7 +221,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     if (rsc == NULL) {
         add_singleton(scheduler, action);
     } else {
-        rsc->actions = g_list_prepend(rsc->actions, action);
+        rsc->private->actions = g_list_prepend(rsc->private->actions, action);
     }
     return action;
 }
@@ -295,10 +294,10 @@ effective_quorum_policy(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         policy = pcmk_no_quorum_ignore;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_demote) {
-        switch (rsc->role) {
+        switch (rsc->private->orig_role) {
             case pcmk_role_promoted:
             case pcmk_role_unpromoted:
-                if (rsc->next_role > pcmk_role_unpromoted) {
+                if (rsc->private->next_role > pcmk_role_unpromoted) {
                     pe__set_next_role(rsc, pcmk_role_unpromoted,
                                       PCMK_OPT_NO_QUORUM_POLICY "=demote");
                 }
@@ -387,7 +386,7 @@ update_resource_action_runnable(pcmk_action_t *action,
 
             case pcmk_no_quorum_freeze:
                 if (!rsc->private->fns->active(rsc, TRUE)
-                    || (rsc->next_role > rsc->role)) {
+                    || (rsc->private->next_role > rsc->private->orig_role)) {
                     pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,
                                     pcmk__node_name(action->node));
@@ -917,10 +916,10 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_RESTART_CONTAINER,
                             pcmk__str_casei)) {
-        if (rsc->container == NULL) {
+        if (rsc->private->launcher == NULL) {
             pcmk__rsc_debug(rsc,
                             "Using default " PCMK_META_ON_FAIL " for %s "
-                            "of %s because it does not have a container",
+                            "of %s because it does not have a launcher",
                             action_name, rsc->id);
         } else {
             on_fail = pcmk_on_fail_restart_container;
@@ -955,7 +954,7 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     if (desc != NULL) {
         // Explicit value used, default not needed
 
-    } else if (rsc->container != NULL) {
+    } else if (rsc->private->launcher != NULL) {
         on_fail = pcmk_on_fail_restart_container;
         desc = "restart container (and possibly migrate) (default)";
 
@@ -1166,8 +1165,9 @@ find_unfencing_devices(GList *candidates, GList *matches)
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *candidate = gIter->data;
 
-        if (candidate->children != NULL) {
-            matches = find_unfencing_devices(candidate->children, matches);
+        if (candidate->private->children != NULL) {
+            matches = find_unfencing_devices(candidate->private->children,
+                                             matches);
 
         } else if (!pcmk_is_set(candidate->flags, pcmk__rsc_fence_device)) {
             continue;
@@ -1175,7 +1175,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
         } else if (pcmk_is_set(candidate->flags, pcmk__rsc_needs_unfencing)) {
             matches = g_list_prepend(matches, candidate);
 
-        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
+        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->private->meta,
                                                     PCMK_STONITH_PROVIDES),
                                 PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
@@ -1287,7 +1287,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pcmk_resource_t *match = gIter->data;
-                const char *agent = g_hash_table_lookup(match->meta,
+                const char *agent = g_hash_table_lookup(match->private->meta,
                                                         PCMK_XA_TYPE);
                 pcmk__op_digest_t *data = NULL;
 
@@ -1530,9 +1530,9 @@ pe__resource_actions(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     char *key = pcmk__op_key(rsc->id, task, 0);
 
     if (require_node) {
-        result = find_actions_exact(rsc->actions, key, node);
+        result = find_actions_exact(rsc->private->actions, key, node);
     } else {
-        result = find_actions(rsc->actions, key, node);
+        result = find_actions(rsc->private->actions, key, node);
     }
     free(key);
     return result;

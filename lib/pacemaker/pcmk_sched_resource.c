@@ -160,7 +160,10 @@ add_rsc_if_matching(GList *result, pcmk_resource_t *rsc, const char *id)
         || pcmk__str_eq(id, rsc->private->history_id, pcmk__str_none)) {
         result = g_list_prepend(result, rsc);
     }
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
         result = add_rsc_if_matching(result, child, id);
@@ -205,7 +208,8 @@ set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = data;
 
     rsc->private->cmds = &assignment_methods[rsc->private->variant];
-    g_list_foreach(rsc->children, set_assignment_methods_for_rsc, NULL);
+    g_list_foreach(rsc->private->children, set_assignment_methods_for_rsc,
+                   NULL);
 }
 
 /*!
@@ -323,8 +327,11 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
     CRM_ASSERT(rsc != NULL);
 
     out = rsc->private->scheduler->priv;
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *child = (pcmk_resource_t *) iter->data;
 
             child->private->cmds->output_actions(child);
@@ -332,14 +339,14 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
         return;
     }
 
-    next = rsc->allocated_to;
-    if (rsc->running_on) {
+    next = rsc->private->assigned_node;
+    if (rsc->private->active_nodes != NULL) {
         current = pcmk__current_node(rsc);
-        if (rsc->role == pcmk_role_stopped) {
+        if (rsc->private->orig_role == pcmk_role_stopped) {
             /* This can occur when resources are being recovered because
              * the current role can change in pcmk__primitive_create_actions()
              */
-            rsc->role = pcmk_role_started;
+            rsc->private->orig_role = pcmk_role_started;
         }
     }
 
@@ -410,8 +417,11 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     CRM_ASSERT(rsc != NULL);
     scheduler = rsc->private->scheduler;
 
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    if (rsc->private->children != NULL) {
+
+        for (GList *iter = rsc->private->children;
+             iter != NULL; iter = iter->next) {
+
             pcmk_resource_t *child_rsc = iter->data;
 
             changed |= pcmk__assign_resource(child_rsc, node, force,
@@ -441,8 +451,8 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         node = NULL;
     }
 
-    if (rsc->allocated_to != NULL) {
-        changed = !pcmk__same_node(rsc->allocated_to, node);
+    if (rsc->private->assigned_node != NULL) {
+        changed = !pcmk__same_node(rsc->private->assigned_node, node);
     } else {
         changed = (node != NULL);
     }
@@ -459,7 +469,9 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
         }
         pe__set_next_role(rsc, pcmk_role_stopped, "unable to assign");
 
-        for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->private->actions;
+             iter != NULL; iter = iter->next) {
+
             pcmk_action_t *op = (pcmk_action_t *) iter->data;
 
             pcmk__rsc_debug(rsc, "Updating %s for %s assignment failure",
@@ -497,7 +509,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
     }
 
     pcmk__rsc_debug(rsc, "Assigning %s to %s", rsc->id, pcmk__node_name(node));
-    rsc->allocated_to = pe__copy_node(node);
+    rsc->private->assigned_node = pe__copy_node(node);
 
     add_assigned_resource(node, rsc);
     node->details->num_resources++;
@@ -526,7 +538,7 @@ pcmk__assign_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool force,
 void
 pcmk__unassign_resource(pcmk_resource_t *rsc)
 {
-    pcmk_node_t *old = rsc->allocated_to;
+    pcmk_node_t *old = rsc->private->assigned_node;
 
     if (old == NULL) {
         crm_info("Unassigning %s", rsc->id);
@@ -536,11 +548,11 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
 
     pcmk__set_rsc_flags(rsc, pcmk__rsc_unassigned);
 
-    if (rsc->children == NULL) {
+    if (rsc->private->children == NULL) {
         if (old == NULL) {
             return;
         }
-        rsc->allocated_to = NULL;
+        rsc->private->assigned_node = NULL;
 
         /* We're going to free the pcmk_node_t, but its details member is shared
          * and will remain, so update that appropriately first.
@@ -553,7 +565,9 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
         return;
     }
 
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk__unassign_resource((pcmk_resource_t *) iter->data);
     }
 }
@@ -588,7 +602,7 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // If there are no failures, there's no need to force away
     fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pcmk__fc_effective|pcmk__fc_fillers, NULL);
+                                  pcmk__fc_effective|pcmk__fc_launched, NULL);
     if (fail_count <= 0) {
         return false;
     }
@@ -707,10 +721,10 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 
     // The resource with highest score on its current node goes first
     reason = "current location";
-    if (resource1->running_on != NULL) {
+    if (resource1->private->active_nodes != NULL) {
         r1_node = pcmk__current_node(resource1);
     }
-    if (resource2->running_on != NULL) {
+    if (resource2->private->active_nodes != NULL) {
         r2_node = pcmk__current_node(resource2);
     }
     r1_score = get_node_score(r1_node, r1_nodes);

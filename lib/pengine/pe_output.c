@@ -69,13 +69,14 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, PCMK_XA_TYPE);
+        const char *type = g_hash_table_lookup(rsc->private->meta,
+                                               PCMK_XA_TYPE);
         const char *name = NULL;
         GHashTable *params = NULL;
 
-        if (rsc->children != NULL) {
-            if (add_extra_info(node, rsc->children, scheduler, attrname,
-                               expected_score)) {
+        if (rsc->private->children != NULL) {
+            if (add_extra_info(node, rsc->private->children, scheduler,
+                               attrname, expected_score)) {
                 return true;
             }
         }
@@ -568,8 +569,11 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
 
     /* Host is displayed only if this is a guest node and detail is requested */
     if (print_detail && pcmk__is_guest_or_bundle_node(node)) {
-        const pcmk_resource_t *container = node->details->remote_rsc->container;
-        const pcmk_node_t *host_node = pcmk__current_node(container);
+        const pcmk_resource_t *launcher = NULL;
+        const pcmk_node_t *host_node = NULL;
+
+        launcher = node->details->remote_rsc->private->launcher;
+        host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;
@@ -2086,7 +2090,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->details->remote_rsc->container->id);
+                        node->details->remote_rsc->private->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -2201,12 +2205,12 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
     if (rsc) {
         const pcmk_node_t *node = pcmk__current_node(rsc);
-        const char *target_role = g_hash_table_lookup(rsc->meta,
+        const char *target_role = g_hash_table_lookup(rsc->private->meta,
                                                       PCMK_META_TARGET_ROLE);
         uint32_t show_opts = pcmk_show_rsc_only | pcmk_show_pending;
 
         if (node == NULL) {
-            node = rsc->pending_node;
+            node = rsc->private->pending_node;
         }
 
         node_str = pcmk__native_output_string(rsc, rsc_printable_id(rsc), node,
@@ -3160,7 +3164,8 @@ resource_util(pcmk__output_t *out, va_list args)
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
                                         fn, rsc->id, pcmk__node_name(node));
 
-    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
+    g_hash_table_foreach(rsc->private->utilization, append_dump_text,
+                         &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
     free(dump_text);
 
@@ -3184,7 +3189,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
                                             PCMK_XA_NODE, uname,
                                             PCMK_XA_FUNCTION, fn,
                                             NULL);
-    g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
+    g_hash_table_foreach(rsc->private->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }

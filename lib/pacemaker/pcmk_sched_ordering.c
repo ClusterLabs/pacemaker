@@ -301,7 +301,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
         return 0;
     }
 
-    clone_min = g_hash_table_lookup(rsc->meta, PCMK_META_CLONE_MIN);
+    clone_min = g_hash_table_lookup(rsc->private->meta, PCMK_META_CLONE_MIN);
     if (clone_min != NULL) {
         int clone_min_int = 0;
 
@@ -360,7 +360,9 @@ clone_min_ordering(const char *id,
     pcmk__set_action_flags(clone_min_met, pcmk_action_min_runnable);
 
     // Order the actions for each clone instance before the pseudo-action
-    for (GList *iter = rsc_first->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc_first->private->children;
+         iter != NULL; iter = iter->next) {
+
         pcmk_resource_t *child = iter->data;
 
         pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
@@ -1225,7 +1227,7 @@ static GList *
 find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
 {
     // Search under given task key directly
-    GList *list = find_actions(rsc->actions, original_key, NULL);
+    GList *list = find_actions(rsc->private->actions, original_key, NULL);
 
     if (list == NULL) {
         // Search again using this resource's ID
@@ -1236,7 +1238,7 @@ find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
         CRM_CHECK(parse_op_key(original_key, NULL, &task, &interval_ms),
                   return NULL);
         key = pcmk__op_key(rsc->id, task, interval_ms);
-        list = find_actions(rsc->actions, key, NULL);
+        list = find_actions(rsc->private->actions, key, NULL);
         free(key);
         free(task);
     }
