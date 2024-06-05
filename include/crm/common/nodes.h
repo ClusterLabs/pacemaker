@@ -84,8 +84,6 @@ struct pe_node_shared_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     // \deprecated Call pcmk_foreach_active_resource() instead
     GList *running_rsc;             // List of resources active on node
-
-    pcmk_scheduler_t *data_set;     // Cluster that node is part of
 };
 //!@}
 

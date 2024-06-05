@@ -99,6 +99,7 @@ typedef struct pcmk__node_private {
     GList *assigned_resources;          // List of resources assigned to node
     GHashTable *digest_cache;           // Cache of calculated resource digests
     pcmk_resource_t *remote;            // Pacemaker Remote connection (if any)
+    pcmk_scheduler_t *scheduler;        // Scheduler data that node is part of
 } pcmk__node_private_t;
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);

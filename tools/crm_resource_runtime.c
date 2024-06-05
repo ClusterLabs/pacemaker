@@ -1110,7 +1110,7 @@ check_locked(resource_checks_t *checks)
 static bool
 node_is_unhealthy(pcmk_node_t *node)
 {
-    switch (pe__health_strategy(node->details->data_set)) {
+    switch (pe__health_strategy(node->private->scheduler)) {
         case pcmk__health_strategy_none:
             break;
 

@@ -1620,7 +1620,7 @@ shutdown_time(pcmk_node_t *node)
             result = (time_t) result_ll;
         }
     }
-    return (result == 0)? get_effective_time(node->details->data_set) : result;
+    return (result == 0)? get_effective_time(node->private->scheduler) : result;
 }
 
 /*!

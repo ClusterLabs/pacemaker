@@ -488,7 +488,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->online = FALSE;
     new_node->details->shutdown = FALSE;
     new_node->details->running_rsc = NULL;
-    new_node->details->data_set = scheduler;
+    new_node->private->scheduler = scheduler;
 
     if (pcmk__str_eq(type, PCMK_VALUE_MEMBER,
                      pcmk__str_null_matches|pcmk__str_casei)) {
@@ -1627,7 +1627,7 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
 
         time_t timeout = when_member + scheduler->node_pending_timeout;
 
-        if (get_effective_time(node->details->data_set) >= timeout) {
+        if (get_effective_time(node->private->scheduler) >= timeout) {
             return true; // Node has timed out
         }
 
@@ -3867,7 +3867,7 @@ block_if_unrecoverable(struct action_history *history)
     if (strcmp(history->task, PCMK_ACTION_STOP) != 0) {
         return; // All actions besides stop are always recoverable
     }
-    if (pe_can_fence(history->node->details->data_set, history->node)) {
+    if (pe_can_fence(history->node->private->scheduler, history->node)) {
         return; // Failed stops are recoverable via fencing
     }
 

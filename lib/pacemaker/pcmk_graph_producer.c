@@ -160,7 +160,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
         if (pcmk__is_fencing_action(fence)) {
             xmlNode *downed = pcmk__xe_create(xml, PCMK__XE_DOWNED);
             add_node_to_xml_by_id(action->node->private->id, downed);
-            pe_foreach_guest_node(action->node->details->data_set,
+            pe_foreach_guest_node(action->node->private->scheduler,
                                   action->node, add_node_to_xml, downed);
         }
 

@@ -2062,7 +2062,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         const char *expected_up = pcmk__flag_text(node->private->flags,
                                                   pcmk__node_expected_up);
         const bool is_dc = pcmk__same_node(node,
-                                           node->details->data_set->dc_node);
+                                           node->private->scheduler->dc_node);
         int length = g_list_length(node->details->running_rsc);
         char *resources_running = pcmk__itoa(length);
         const char *node_type = node_variant_text(node->private->variant);

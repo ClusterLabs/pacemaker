@@ -123,7 +123,7 @@ pe__node_health(pcmk_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    strategy = pe__health_strategy(node->details->data_set);
+    strategy = pe__health_strategy(node->private->scheduler);
     if (strategy == pcmk__health_strategy_none) {
         return rc;
     }

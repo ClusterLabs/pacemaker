@@ -329,7 +329,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
         pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, TRUE, NULL,
-                                           FALSE, node->details->data_set);
+                                           FALSE, node->private->scheduler);
 
         order_actions(unfence, action, order);
 
@@ -339,7 +339,7 @@ pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
                                              rsc->id, action->task);
 
             trigger_unfencing(NULL, node, reason, NULL,
-                              node->details->data_set);
+                              node->private->scheduler);
             free(reason);
         }
     }
@@ -386,7 +386,7 @@ pcmk__fence_guest(pcmk_node_t *node)
      * against, and the controller can always detect it.
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
-                             FALSE, node->details->data_set);
+                             FALSE, node->private->scheduler);
     pcmk__set_action_flags(stonith_op, pcmk_action_pseudo|pcmk_action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
@@ -396,7 +396,7 @@ pcmk__fence_guest(pcmk_node_t *node)
     if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk_action_pseudo)) {
         pcmk_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
                                                      NULL, FALSE,
-                                                     node->details->data_set);
+                                                     node->private->scheduler);
 
         crm_info("Implying guest %s is down (action %d) after %s fencing",
                  pcmk__node_name(node), stonith_op->id,
@@ -439,7 +439,7 @@ pcmk__fence_guest(pcmk_node_t *node)
     }
 
     // Order/imply other actions relative to pseudo-fence as with real fence
-    pcmk__order_vs_fence(stonith_op, node->details->data_set);
+    pcmk__order_vs_fence(stonith_op, node->private->scheduler);
 }
 
 /*!

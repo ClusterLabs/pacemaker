@@ -484,7 +484,7 @@ static bool
 needs_fencing(const pcmk_node_t *node, bool have_managed)
 {
     return have_managed && node->details->unclean
-           && pe_can_fence(node->details->data_set, node);
+           && pe_can_fence(node->private->scheduler, node);
 }
 
 /*!
@@ -543,10 +543,10 @@ static pcmk_action_t *
 schedule_fencing(pcmk_node_t *node)
 {
     pcmk_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
-                                       FALSE, node->details->data_set);
+                                       FALSE, node->private->scheduler);
 
     pcmk__sched_warn("Scheduling node %s for fencing", pcmk__node_name(node));
-    pcmk__order_vs_fence(fencing, node->details->data_set);
+    pcmk__order_vs_fence(fencing, node->private->scheduler);
     return fencing;
 }
 

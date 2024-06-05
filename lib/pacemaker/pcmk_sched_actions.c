@@ -1075,7 +1075,7 @@ pcmk__new_shutdown_action(pcmk_node_t *node)
                                     node->private->name);
 
     shutdown_op = custom_action(NULL, shutdown_id, PCMK_ACTION_DO_SHUTDOWN,
-                                node, FALSE, node->details->data_set);
+                                node, FALSE, node->private->scheduler);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op);
     pcmk__insert_meta(shutdown_op, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
@@ -1880,7 +1880,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 
         if (rsc_entry->children != NULL) {
             GList *result = pcmk__rscs_matching_id(pcmk__xe_id(rsc_entry),
-                                                   node->details->data_set);
+                                                   node->private->scheduler);
 
             for (GList *iter = result; iter != NULL; iter = iter->next) {
                 pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
