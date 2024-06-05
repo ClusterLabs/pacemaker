@@ -361,7 +361,7 @@ get_node_feature_set(const pcmk_node_t *node)
         && pcmk_is_set(node->private->flags, pcmk__node_expected_up)
         && !pcmk__is_pacemaker_remote_node(node)) {
 
-        const char *feature_set = g_hash_table_lookup(node->details->attrs,
+        const char *feature_set = g_hash_table_lookup(node->private->attrs,
                                                       CRM_ATTR_FEATURE_SET);
 
         /* The feature set attribute is present since 3.15.1. If it is missing,
@@ -2355,7 +2355,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        g_hash_table_iter_init(&iter, node->details->attrs);
+        g_hash_table_iter_init(&iter, node->private->attrs);
         while (g_hash_table_iter_next (&iter, &key, NULL)) {
             attr_list = filter_attr_list(attr_list, key);
         }

@@ -190,7 +190,7 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
          * meta-attributes is deprecated. When we can break behavioral backward
          * compatibility, drop this block.
          */
-        rule_data.node_hash = node->details->attrs;
+        rule_data.node_hash = node->private->attrs;
     }
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->private->xml);
@@ -240,7 +240,7 @@ get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
     };
 
     if (node) {
-        rule_data.node_hash = node->details->attrs;
+        rule_data.node_hash = node->private->attrs;
     }
 
     pe__unpack_dataset_nvpairs(rsc->private->xml, PCMK_XE_INSTANCE_ATTRIBUTES,

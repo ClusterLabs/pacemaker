@@ -697,7 +697,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          * defaults) is deprecated. When we can break behavioral backward
          * compatibility, drop this line.
          */
-        .node_hash = (node == NULL)? NULL : node->details->attrs,
+        .node_hash = (node == NULL)? NULL : node->private->attrs,
 
         .now = rsc->private->scheduler->now,
         .match_data = NULL,
@@ -1128,7 +1128,7 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
         if ((action->node != NULL) && (action->op_entry != NULL)
             && !pcmk_is_set(action->flags, pcmk_action_attrs_evaluated)) {
 
-            GHashTable *attrs = action->node->details->attrs;
+            GHashTable *attrs = action->node->private->attrs;
 
             if (action->extra != NULL) {
                 g_hash_table_destroy(action->extra);

@@ -807,7 +807,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
          */
-        pcmk__insert_dup(replica->node->details->attrs,
+        pcmk__insert_dup(replica->node->private->attrs,
                          CRM_ATTR_KIND, "container");
 
         /* One effect of this is that unpack_launcher() will add

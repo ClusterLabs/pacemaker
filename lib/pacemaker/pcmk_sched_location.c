@@ -200,7 +200,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
 
         pcmk_node_t *node = iter->data;
 
-        rule_input->node_attrs = node->details->attrs;
+        rule_input->node_attrs = node->private->attrs;
         rule_input->rsc_params = pe_rsc_params(rsc, node,
                                                rsc->private->scheduler);
 

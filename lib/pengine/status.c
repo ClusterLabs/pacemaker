@@ -247,8 +247,8 @@ pe_free_nodes(GList *nodes)
         crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
                   "(guest or remote)" : pcmk__node_name(node)));
 
-        if (node->details->attrs != NULL) {
-            g_hash_table_destroy(node->details->attrs);
+        if (node->private->attrs != NULL) {
+            g_hash_table_destroy(node->private->attrs);
         }
         if (node->details->utilization != NULL) {
             g_hash_table_destroy(node->details->utilization);

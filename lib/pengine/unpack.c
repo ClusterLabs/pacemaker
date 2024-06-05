@@ -515,12 +515,12 @@ pe_create_node(const char *id, const char *uname, const char *type,
         new_node->private->variant = pcmk__node_variant_ping;
     }
 
-    new_node->details->attrs = pcmk__strkey_table(free, free);
+    new_node->private->attrs = pcmk__strkey_table(free, free);
 
     if (pcmk__is_pacemaker_remote_node(new_node)) {
-        pcmk__insert_dup(new_node->details->attrs, CRM_ATTR_KIND, "remote");
+        pcmk__insert_dup(new_node->private->attrs, CRM_ATTR_KIND, "remote");
     } else {
-        pcmk__insert_dup(new_node->details->attrs, CRM_ATTR_KIND, "cluster");
+        pcmk__insert_dup(new_node->private->attrs, CRM_ATTR_KIND, "cluster");
     }
 
     new_node->details->utilization = pcmk__strkey_table(free, free);
@@ -817,7 +817,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
         /* pe_create_node() marks the new node as "remote" or "cluster"; now
          * that we know the node is a guest node, update it correctly.
          */
-        pcmk__insert_dup(remote_node->details->attrs,
+        pcmk__insert_dup(remote_node->private->attrs,
                          CRM_ATTR_KIND, "container");
     }
 }
@@ -5025,28 +5025,28 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         .op_data = NULL
     };
 
-    pcmk__insert_dup(node->details->attrs,
+    pcmk__insert_dup(node->private->attrs,
                      CRM_ATTR_UNAME, node->private->name);
 
-    pcmk__insert_dup(node->details->attrs, CRM_ATTR_ID, node->private->id);
+    pcmk__insert_dup(node->private->attrs, CRM_ATTR_ID, node->private->id);
     if (pcmk__str_eq(node->private->id, scheduler->dc_uuid, pcmk__str_casei)) {
         scheduler->dc_node = node;
-        pcmk__insert_dup(node->details->attrs,
+        pcmk__insert_dup(node->private->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_TRUE);
     } else {
-        pcmk__insert_dup(node->details->attrs,
+        pcmk__insert_dup(node->private->attrs,
                          CRM_ATTR_IS_DC, PCMK_VALUE_FALSE);
     }
 
     cluster_name = g_hash_table_lookup(scheduler->config_hash,
                                        PCMK_OPT_CLUSTER_NAME);
     if (cluster_name) {
-        pcmk__insert_dup(node->details->attrs, CRM_ATTR_CLUSTER_NAME,
+        pcmk__insert_dup(node->private->attrs, CRM_ATTR_CLUSTER_NAME,
                          cluster_name);
     }
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES, &rule_data,
-                               node->details->attrs, NULL, overwrite,
+                               node->private->attrs, NULL, overwrite,
                                scheduler);
 
     pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
@@ -5059,12 +5059,12 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
                                                 pcmk__rsc_node_current);
 
         if (site_name) {
-            pcmk__insert_dup(node->details->attrs,
+            pcmk__insert_dup(node->private->attrs,
                              CRM_ATTR_SITE_NAME, site_name);
 
         } else if (cluster_name) {
             /* Default to cluster-name if unset */
-            pcmk__insert_dup(node->details->attrs,
+            pcmk__insert_dup(node->private->attrs,
                              CRM_ATTR_SITE_NAME, cluster_name);
         }
     }

@@ -381,7 +381,7 @@ add_action_attributes(pcmk_action_t *action, xmlNode *action_xml)
          * added in 33d99707, probably for the libfence-based implementation in
          * c9a90bd, which is no longer used.
          */
-        g_hash_table_foreach(action->node->details->attrs, hash2metafield,
+        g_hash_table_foreach(action->node->private->attrs, hash2metafield,
                              args_xml);
     }
 
