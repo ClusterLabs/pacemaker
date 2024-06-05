@@ -96,7 +96,6 @@ pe__copy_node(const pcmk_node_t *this_node)
 
     new_node->rsc_discover_mode = this_node->rsc_discover_mode;
     new_node->weight = this_node->weight;
-    new_node->fixed = this_node->fixed; // @COMPAT deprecated and unused
     new_node->count = this_node->count;
     new_node->details = this_node->details;
     new_node->private = this_node->private;

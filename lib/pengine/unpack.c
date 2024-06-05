@@ -1860,13 +1860,11 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
 
     } else {
         /* remove node from contention */
-        this_node->fixed = TRUE; // @COMPAT deprecated and unused
         this_node->weight = -PCMK_SCORE_INFINITY;
     }
 
     if (online && this_node->details->shutdown) {
         /* don't run resources here */
-        this_node->fixed = TRUE; // @COMPAT deprecated and unused
         this_node->weight = -PCMK_SCORE_INFINITY;
     }
 
