@@ -91,7 +91,7 @@ struct pe_node_shared_s {
 // @COMPAT Make contents internal when we can break API backward compatibility
 //!@{
 //! \deprecated Do not use (public access will be removed in a future release)
-struct pe_node_s {
+struct pcmk__scored_node {
     int weight;         // Node score for a given resource
     gboolean fixed;     // \deprecated Do not use
     int count;          // Counter reused by assignment and promotion code
