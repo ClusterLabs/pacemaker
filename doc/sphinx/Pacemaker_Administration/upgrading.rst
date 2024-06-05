@@ -187,19 +187,24 @@ To perform a rolling upgrade, on each node in turn:
    rolling upgrade in multiple steps, by upgrading to an intermediate version
    first.
 
-.. table:: **Version Compatibility Table**
+The following table lists compatible versions for other nodes in the cluster
+while upgrading a cluster node.
 
-   +-------------------------+---------------------------+
-   | Version being Installed | Oldest Compatible Version |
-   +=========================+===========================+
-   | Pacemaker 3.y.z         | Pacemaker 2.0.0           |
-   +-------------------------+---------------------------+
-   | Pacemaker 2.y.z         | Pacemaker 1.1.11 [#]_     |
-   +-------------------------+---------------------------+
-   | Pacemaker 1.y.z         | Pacemaker 1.0.0           |
-   +-------------------------+---------------------------+
-   | Pacemaker 0.7.z         | Pacemaker 0.6.z           |
-   +-------------------------+---------------------------+
+.. list-table:: **Version Compatibility Table for Cluster Nodes**
+   :class: longtable
+   :widths: 1 1
+   :header-rows: 1
+
+   * - Version Being Installed
+     - Oldest Compatible Version
+   * - Pacemaker 3.y.z
+     - Pacemaker 2.0.0
+   * - Pacemaker 2.y.z
+     - Pacemaker 1.1.11 [#]_
+   * - Pacemaker 1.y.z
+     - Pacemaker 1.0.0
+   * - Pacemaker 0.7.z
+     - Pacemaker 0.6.z
 
 .. index::
    single: upgrade; detach and reattach
