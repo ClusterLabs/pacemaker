@@ -87,6 +87,7 @@ typedef struct pcmk__node_private {
     enum pcmk__node_variant variant;    // Node variant
     uint32_t flags;                     // Group of enum pcmk__node_flags
     int num_resources;                  // Number of active resources on node
+    pcmk_resource_t *remote;            // Pacemaker Remote connection (if any)
 } pcmk__node_private_t;
 
 pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);

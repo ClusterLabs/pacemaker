@@ -143,7 +143,7 @@ get_node_names(const GList *list, GString **all_node_names,
             if (pcmk__is_guest_or_bundle_node(node)) {
                 const pcmk_resource_t *launcher = NULL;
 
-                launcher = node->details->remote_rsc->private->launcher;
+                launcher = node->private->remote->private->launcher;
                 if (launcher->private->active_nodes != NULL) {
                     node = pcmk__current_node(launcher);
                     if (node->private->name == NULL) {
@@ -785,7 +785,7 @@ static pcmk_action_t *
 find_remote_start(pcmk_action_t *action)
 {
     if ((action != NULL) && (action->node != NULL)) {
-        pcmk_resource_t *remote_rsc = action->node->details->remote_rsc;
+        pcmk_resource_t *remote_rsc = action->node->private->remote;
 
         if (remote_rsc != NULL) {
             return find_first_action(remote_rsc->private->actions, NULL,

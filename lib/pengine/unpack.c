@@ -95,9 +95,9 @@ static bool
 is_dangling_guest_node(pcmk_node_t *node)
 {
     return pcmk__is_pacemaker_remote_node(node)
-           && (node->details->remote_rsc != NULL)
-           && (node->details->remote_rsc->private->launcher == NULL)
-           && pcmk_is_set(node->details->remote_rsc->flags,
+           && (node->private->remote != NULL)
+           && (node->private->remote->private->launcher == NULL)
+           && pcmk_is_set(node->private->remote->flags,
                           pcmk__rsc_removed_launched);
 }
 
@@ -118,7 +118,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
     if (pcmk__is_guest_or_bundle_node(node)) {
         // Fence a guest or bundle node by marking its launcher as failed
-        pcmk_resource_t *rsc = node->details->remote_rsc->private->launcher;
+        pcmk_resource_t *rsc = node->private->remote->private->launcher;
 
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
             if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
@@ -146,11 +146,11 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
                  pcmk__node_name(node), reason);
-        pcmk__set_rsc_flags(node->details->remote_rsc,
+        pcmk__set_rsc_flags(node->private->remote,
                             pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
 
     } else if (pcmk__is_remote_node(node)) {
-        pcmk_resource_t *rsc = node->details->remote_rsc;
+        pcmk_resource_t *rsc = node->private->remote;
 
         if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
             crm_notice("Not fencing remote node %s "
@@ -602,7 +602,7 @@ static void
 handle_startup_fencing(pcmk_scheduler_t *scheduler, pcmk_node_t *new_node)
 {
     if ((new_node->private->variant == pcmk__node_variant_remote)
-        && (new_node->details->remote_rsc == NULL)) {
+        && (new_node->private->remote == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
          * associated with them. This happens when remote node entries get left
          * in the nodes section after the connection resource is removed.
@@ -805,7 +805,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
 
     pcmk__rsc_trace(new_rsc, "Linking remote connection resource %s to %s",
                     new_rsc->id, pcmk__node_name(remote_node));
-    remote_node->details->remote_rsc = new_rsc;
+    remote_node->private->remote = new_rsc;
 
     if (new_rsc->private->launcher == NULL) {
         /* Handle start-up fencing for remote nodes (as opposed to guest nodes)
@@ -1073,7 +1073,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         pcmk__clear_node_flags(this_node, pcmk__node_remote_maint);
     }
 
-    rsc = this_node->details->remote_rsc;
+    rsc = this_node->private->remote;
     if (!pcmk_is_set(this_node->private->flags, pcmk__node_remote_reset)) {
         this_node->details->unclean = FALSE;
         pcmk__set_node_flags(this_node, pcmk__node_seen);
@@ -1324,7 +1324,7 @@ unpack_node_history(const xmlNode *status, bool fence,
              * other resource history to the point that we know that the node's
              * connection and containing resource are both up.
              */
-            const pcmk_resource_t *remote = this_node->details->remote_rsc;
+            const pcmk_resource_t *remote = this_node->private->remote;
             const pcmk_resource_t *launcher = remote->private->launcher;
 
             if ((remote->private->orig_role != pcmk_role_started)
@@ -1341,7 +1341,7 @@ unpack_node_history(const xmlNode *status, bool fence,
              * connection is up, with the exception of when shutdown locks are
              * in use.
              */
-            pcmk_resource_t *rsc = this_node->details->remote_rsc;
+            pcmk_resource_t *rsc = this_node->private->remote;
 
             if ((rsc == NULL)
                 || (!pcmk_is_set(scheduler->flags, pcmk_sched_shutdown_lock)
@@ -1443,8 +1443,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
             continue;
         }
         if (this_node->details->shutdown
-            && (this_node->details->remote_rsc != NULL)) {
-            pe__set_next_role(this_node->details->remote_rsc, pcmk_role_stopped,
+            && (this_node->private->remote != NULL)) {
+            pe__set_next_role(this_node->private->remote, pcmk_role_stopped,
                               "remote shutdown");
         }
         if (!pcmk_is_set(this_node->private->flags, pcmk__node_unpacked)) {
@@ -1748,7 +1748,7 @@ static void
 determine_remote_online_status(pcmk_scheduler_t *scheduler,
                                pcmk_node_t *this_node)
 {
-    pcmk_resource_t *rsc = this_node->details->remote_rsc;
+    pcmk_resource_t *rsc = this_node->private->remote;
     pcmk_resource_t *launcher = NULL;
     pcmk_node_t *host = NULL;
     const char *node_type = "Remote";
@@ -2347,8 +2347,8 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
         } else if (pcmk_is_set(scheduler->flags, pcmk_sched_fencing_enabled)) {
             if (pcmk__is_remote_node(node)
-                && (node->details->remote_rsc != NULL)
-                && !pcmk_is_set(node->details->remote_rsc->flags,
+                && (node->private->remote != NULL)
+                && !pcmk_is_set(node->private->remote->flags,
                                 pcmk__rsc_failed)) {
 
                 /* Setting unseen means that fencing of the remote node will
@@ -4920,7 +4920,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         case PCMK_EXEC_NOT_CONNECTED:
             if (pcmk__is_pacemaker_remote_node(node)
-                && pcmk_is_set(node->details->remote_rsc->flags,
+                && pcmk_is_set(node->private->remote->flags,
                                pcmk__rsc_managed)) {
                 /* We should never get into a situation where a managed remote
                  * connection resource is considered OK but a resource action
@@ -4928,7 +4928,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                  * fail-safe in case a bug or unusual circumstances do lead to
                  * that, ensure the remote connection is considered failed.
                  */
-                pcmk__set_rsc_flags(node->details->remote_rsc,
+                pcmk__set_rsc_flags(node->private->remote,
                                     pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
             }
             break; // Not done, do error handling

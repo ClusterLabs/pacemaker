@@ -81,9 +81,6 @@ struct pe_node_shared_s {
     //! \deprecated Call pcmk_node_is_in_maintenance() instead
     gboolean maintenance;       // Whether in maintenance mode
 
-    // Remote connection resource for node, if it is a Pacemaker Remote node
-    pcmk_resource_t *remote_rsc;
-
     // NOTE: sbd (as of at least 1.5.2) uses this
     // \deprecated Call pcmk_foreach_active_resource() instead
     GList *running_rsc;             // List of resources active on node

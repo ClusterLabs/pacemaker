@@ -879,7 +879,7 @@ rsc_avoids_remote_nodes(const pcmk_resource_t *rsc)
 
     g_hash_table_iter_init(&iter, rsc->private->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (node->details->remote_rsc != NULL) {
+        if (node->private->remote != NULL) {
             node->weight = -PCMK_SCORE_INFINITY;
         }
     }
@@ -1044,7 +1044,7 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
             for (GList *item = allowed_nodes; item; item = item->next) {
                 pcmk_node_t *node = item->data;
 
-                if (node->details->remote_rsc != remote_rsc) {
+                if (node->private->remote != remote_rsc) {
                     node->weight = -PCMK_SCORE_INFINITY;
                 }
             }

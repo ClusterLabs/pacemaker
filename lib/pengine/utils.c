@@ -39,7 +39,7 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         /* A guest or bundle node is fenced by stopping its launcher, which is
          * possible if the launcher's host is either online or fenceable.
          */
-        pcmk_resource_t *rsc = node->details->remote_rsc->private->launcher;
+        pcmk_resource_t *rsc = node->private->remote->private->launcher;
 
         for (GList *n = rsc->private->active_nodes; n != NULL; n = n->next) {
             pcmk_node_t *launcher_node = n->data;

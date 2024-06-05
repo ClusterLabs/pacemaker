@@ -703,7 +703,7 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
             }
         }
         if (!cib_only && pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->details->remote_rsc);
+            node = pcmk__current_node(node->private->remote);
             if (node == NULL) {
                 out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
                          host_uname);

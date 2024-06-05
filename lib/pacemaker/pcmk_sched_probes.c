@@ -104,7 +104,7 @@ guest_resource_will_stop(const pcmk_node_t *node)
     const pcmk_resource_t *guest_rsc = NULL;
     const pcmk_node_t *guest_node = NULL;
 
-    guest_rsc = node->details->remote_rsc->private->launcher;
+    guest_rsc = node->private->remote->private->launcher;
     guest_node = guest_rsc->private->assigned_node;
 
     /* Ideally, we'd check whether the guest has a required stop, but that
@@ -247,7 +247,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if (pcmk__is_guest_or_bundle_node(node)) {
-        pcmk_resource_t *guest = node->details->remote_rsc->private->launcher;
+        pcmk_resource_t *guest = node->private->remote->private->launcher;
 
         if (guest->private->orig_role == pcmk_role_stopped) {
             // The guest is stopped, so we know no resource is active there

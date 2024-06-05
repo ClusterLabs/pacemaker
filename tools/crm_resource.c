@@ -1071,7 +1071,7 @@ refresh(pcmk__output_t *out)
         pcmk_node_t *node = pcmk_find_node(scheduler, options.host_uname);
 
         if (pcmk__is_pacemaker_remote_node(node)) {
-            node = pcmk__current_node(node->details->remote_rsc);
+            node = pcmk__current_node(node->private->remote);
             if (node == NULL) {
                 rc = ENXIO;
                 g_set_error(&error, PCMK__RC_ERROR, rc,

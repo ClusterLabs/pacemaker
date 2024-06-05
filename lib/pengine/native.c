@@ -61,11 +61,11 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
-    if (node->details->remote_rsc
-        && (node->details->remote_rsc->private->launcher != NULL)) {
+    if ((node->private->remote != NULL)
+        && (node->private->remote->private->launcher != NULL)) {
         const pcmk_resource_t *launcher = NULL;
 
-        launcher = node->details->remote_rsc->private->launcher;
+        launcher = node->private->remote->private->launcher;
         for (GList *gIter = launcher->private->active_nodes;
              gIter != NULL; gIter = gIter->next) {
 

@@ -799,7 +799,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        replica->node->details->remote_rsc = replica->remote;
+        replica->node->private->remote = replica->remote;
 
         // Ensure pcmk__is_guest_or_bundle_node() functions correctly
         replica->remote->private->launcher = replica->container;

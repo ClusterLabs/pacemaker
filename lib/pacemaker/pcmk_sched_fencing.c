@@ -371,7 +371,7 @@ pcmk__fence_guest(pcmk_node_t *node)
     /* Check whether guest's launcher has any explicit stop or start (the stop
      * may be implied by fencing of the guest's host).
      */
-    launcher = node->details->remote_rsc->private->launcher;
+    launcher = node->private->remote->private->launcher;
     if (launcher != NULL) {
         stop = find_first_action(launcher->private->actions, NULL,
                                  PCMK_ACTION_STOP, NULL);
@@ -421,7 +421,7 @@ pcmk__fence_guest(pcmk_node_t *node)
          * order the pseudo-fencing after any stop of the connection resource,
          * which will be ordered after any launcher (re-)probe.
          */
-        stop = find_first_action(node->details->remote_rsc->private->actions,
+        stop = find_first_action(node->private->remote->private->actions,
                                  NULL, PCMK_ACTION_STOP, NULL);
 
         if (stop) {

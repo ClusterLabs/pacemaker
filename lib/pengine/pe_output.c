@@ -573,7 +573,7 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
         const pcmk_resource_t *launcher = NULL;
         const pcmk_node_t *host_node = NULL;
 
-        launcher = node->details->remote_rsc->private->launcher;
+        launcher = node->private->remote->private->launcher;
         host_node = pcmk__current_node(launcher);
 
         if (host_node && host_node->details) {
@@ -2093,7 +2093,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
             crm_xml_add(xml_node, PCMK_XA_ID_AS_RESOURCE,
-                        node->details->remote_rsc->private->launcher->id);
+                        node->private->remote->private->launcher->id);
         }
 
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {

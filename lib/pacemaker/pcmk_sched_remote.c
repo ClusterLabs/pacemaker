@@ -92,7 +92,7 @@ get_remote_node_state(const pcmk_node_t *node)
 
     CRM_ASSERT(node != NULL);
 
-    remote_rsc = node->details->remote_rsc;
+    remote_rsc = node->private->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     cluster_node = pcmk__current_node(remote_rsc);
@@ -181,7 +181,7 @@ apply_remote_ordering(pcmk_action_t *action)
 
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
-    remote_rsc = action->node->details->remote_rsc;
+    remote_rsc = action->node->private->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
@@ -306,7 +306,7 @@ apply_launcher_ordering(pcmk_action_t *action)
     CRM_ASSERT(action->rsc != NULL);
     CRM_ASSERT(pcmk__is_pacemaker_remote_node(action->node));
 
-    remote_rsc = action->node->details->remote_rsc;
+    remote_rsc = action->node->private->remote;
     CRM_ASSERT(remote_rsc != NULL);
 
     launcher = remote_rsc->private->launcher;
@@ -442,7 +442,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        remote = action->node->details->remote_rsc;
+        remote = action->node->private->remote;
         if (remote == NULL) {
             // Orphaned
             continue;
@@ -499,7 +499,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 bool
 pcmk__is_failed_remote_node(const pcmk_node_t *node)
 {
-    return pcmk__is_remote_node(node) && (node->details->remote_rsc != NULL)
+    return pcmk__is_remote_node(node) && (node->private->remote != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
 
@@ -518,8 +518,8 @@ pcmk__rsc_corresponds_to_guest(const pcmk_resource_t *rsc,
                                const pcmk_node_t *node)
 {
     return (rsc != NULL) && (rsc->private->launched != NULL) && (node != NULL)
-            && (node->details->remote_rsc != NULL)
-            && (node->details->remote_rsc->private->launcher == rsc);
+            && (node->private->remote != NULL)
+            && (node->private->remote->private->launcher == rsc);
 }
 
 /*!
@@ -550,7 +550,7 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
         return NULL;
     }
 
-    remote = action->node->details->remote_rsc;
+    remote = action->node->private->remote;
     CRM_ASSERT(remote != NULL);
 
     began_on = pcmk__current_node(remote);
@@ -687,7 +687,7 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     if (!pcmk__is_guest_or_bundle_node(guest)) {
         return;
     }
-    launcher = guest->details->remote_rsc->private->launcher;
+    launcher = guest->private->remote->private->launcher;
 
     task = pcmk_parse_action(action->task);
     if ((task == pcmk_action_notify) || (task == pcmk_action_notified)) {
