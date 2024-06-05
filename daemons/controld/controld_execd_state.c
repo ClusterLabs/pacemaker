@@ -506,7 +506,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                  * remote peer for validation
                  */
                 int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
-                                               NULL, cib_scope_local);
+                                               NULL, cib_none);
                 cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
                                                        lrmd,
                                                        "remote_config_check",

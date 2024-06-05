@@ -82,8 +82,7 @@ find_rsc(const char *rsc)
                    pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
                    "//*[@" PCMK_XA_ID "=\"", rsc, "\"]", NULL);
 
-    cib->cmds->query(cib, (const char *) xpath->str, &xml_search,
-                     cib_xpath|cib_scope_local);
+    cib->cmds->query(cib, (const char *) xpath->str, &xml_search, cib_xpath);
 
     g_string_free(xpath, TRUE);
     cib__clean_up_connection(&cib);

@@ -62,14 +62,3 @@ cts_exec_helper_SOURCES	= cts-exec-helper.c
 noinst_HEADERS  = pacemaker-execd.h
 
 CLEANFILES = $(man8_MANS)
-
-# Always create a symlink for the old pacemaker_remoted name, so that bundle
-# container images using a current Pacemaker will run on cluster nodes running
-# Pacemaker 1 (>=1.1.17).
-.PHONY: install-exec-hook
-install-exec-hook:
-	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
-
-.PHONY: uninstall-hook
-uninstall-hook:
-	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted

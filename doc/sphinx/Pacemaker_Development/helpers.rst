@@ -167,8 +167,8 @@ you can see, there are already tests for other functions in this same file in
 the ``lib/common/tests/strings`` directory.
 
 * cd into ``lib/common/tests/strings``
-* Add the new file to the the ``check_PROGRAMS`` variable in ``Makefile.am``,
-  making it something like this:
+* Add the new file to the ``check_PROGRAMS`` variable in ``Makefile.am``, making
+  it something like this:
 
   .. code-block:: none
 

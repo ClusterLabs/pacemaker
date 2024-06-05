@@ -152,18 +152,6 @@ enum pcmk__xml_fmt_options {
     // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
     pcmk__xml_fmt_text       = (1 << 6),
-
-    // @COMPAT Remove when v1 patchsets are removed
-    //! Log a created XML subtree
-    pcmk__xml_fmt_diff_plus  = (1 << 7),
-
-    // @COMPAT Remove when v1 patchsets are removed
-    //! Log a removed XML subtree
-    pcmk__xml_fmt_diff_minus = (1 << 8),
-
-    // @COMPAT Remove when v1 patchsets are removed
-    //! Log a minimal version of an XML diff (only showing the changes)
-    pcmk__xml_fmt_diff_short = (1 << 9),
 };
 
 void pcmk__xml_init(void);
@@ -586,9 +574,6 @@ pcmk__xml_attr_value(const xmlAttr *attr)
     return ((attr == NULL) || (attr->children == NULL))? NULL
            : (const char *) attr->children->content;
 }
-
-// @COMPAT Remove when v1 patchsets are removed
-xmlNode *pcmk__diff_v1_xml_object(xmlNode *left, xmlNode *right, bool suppress);
 
 // @COMPAT Drop when PCMK__XE_PROMOTABLE_LEGACY is removed
 static inline const char *

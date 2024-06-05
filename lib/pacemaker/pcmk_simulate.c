@@ -567,7 +567,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
     CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL,
-                                     cib_sync_call|cib_scope_local) == pcmk_ok);
+                                     cib_sync_call) == pcmk_ok);
 
     // Ensure the action node is in the CIB
     uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
@@ -645,7 +645,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__inject_action_result(cib_resource, op, target_outcome);
     lrmd_free_event(op);
     rc = fake_cib->cmds->modify(fake_cib, PCMK_XE_STATUS, cib_node,
-                                cib_sync_call|cib_scope_local);
+                                cib_sync_call);
     CRM_ASSERT(rc == pcmk_ok);
 
   done:
@@ -707,7 +707,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         CRM_ASSERT(cib_node != NULL);
         crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
-                                     cib_sync_call|cib_scope_local);
+                                     cib_sync_call);
         CRM_ASSERT(rc == pcmk_ok);
 
         // Simulate controller clearing node's resource history and attributes
@@ -716,7 +716,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                        "[@" PCMK_XA_UNAME "='", target, "']/" PCMK__XE_LRM,
                        NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
-                               cib_xpath|cib_sync_call|cib_scope_local);
+                               cib_xpath|cib_sync_call);
 
         g_string_truncate(xpath, 0);
         pcmk__g_strcat(xpath,
@@ -724,7 +724,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                        "[@" PCMK_XA_UNAME "='", target, "']"
                        "/" PCMK__XE_TRANSIENT_ATTRIBUTES, NULL);
         fake_cib->cmds->remove(fake_cib, (const char *) xpath->str, NULL,
-                               cib_xpath|cib_sync_call|cib_scope_local);
+                               cib_xpath|cib_sync_call);
 
         pcmk__xml_free(cib_node);
         g_string_free(xpath, TRUE);
@@ -781,7 +781,7 @@ pcmk__simulate_transition(pcmk_scheduler_t *scheduler, cib_t *cib,
         // If not quiet, we'll need the resulting CIB for later display
         xmlNode *cib_object = NULL;
         int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object,
-                                       cib_sync_call|cib_scope_local);
+                                       cib_sync_call);
 
         CRM_ASSERT(rc == pcmk_ok);
         pe_reset_working_set(scheduler);

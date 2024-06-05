@@ -104,37 +104,9 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     return pcmk_rc_ok;
 }
 
-#define XPATH_DIFF_V1 "//" PCMK__XE_CIB_UPDATE_RESULT "//" PCMK__XE_DIFF_ADDED
-
 /*!
  * \internal
- * \brief Check whether a given CIB element was modified in a CIB patchset (v1)
- *
- * \param[in] patchset  CIB XML patchset
- * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c PCMK_XE_CIB)
- *
- * \return \c true if \p element was modified, or \c false otherwise
- */
-static bool
-element_in_patchset_v1(const xmlNode *patchset, const char *element)
-{
-    char *xpath = crm_strdup_printf(XPATH_DIFF_V1 "//%s",
-                                    pcmk__s(element, PCMK_XE_CIB));
-    xmlXPathObject *xpath_obj = xpath_search(patchset, xpath);
-
-    free(xpath);
-
-    if (xpath_obj == NULL) {
-        return false;
-    }
-    freeXpathObject(xpath_obj);
-    return true;
-}
-
-/*!
- * \internal
- * \brief Check whether a given CIB element was modified in a CIB patchset (v2)
+ * \brief Check whether a given CIB element was modified in a CIB patchset
  *
  * \param[in] patchset  CIB XML patchset
  * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
@@ -143,17 +115,32 @@ element_in_patchset_v1(const xmlNode *patchset, const char *element)
  *
  * \return \c true if \p element was modified, or \c false otherwise
  */
-static bool
-element_in_patchset_v2(const xmlNode *patchset, const char *element)
+bool
+cib__element_in_patchset(const xmlNode *patchset, const char *element)
 {
     const char *element_xpath = pcmk__cib_abs_xpath_for(element);
     const char *parent_xpath = pcmk_cib_parent_name_for(element);
     char *element_regex = NULL;
     bool rc = false;
+    int format = 1;
+
+    CRM_ASSERT(patchset != NULL);
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_warn("Unknown patch format: %d", format);
+        return false;
+    }
 
     CRM_CHECK(element_xpath != NULL, return false); // Unsupported element
 
-    // Matches if and only if element_xpath is part of a changed path
+    /* Matches if and only if element_xpath is part of a changed path
+     * (supported values for element never contain XML IDs with schema
+     * validation enabled)
+     *
+     * @TODO Use POSIX word boundary instead of (/|$), if it works:
+     * https://www.regular-expressions.info/wordboundaries.html.
+     */
     element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
@@ -173,7 +160,6 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
             && pcmk__str_eq(diff_xpath, parent_xpath, pcmk__str_none)
             && pcmk__xe_is(pcmk__xe_first_child(change, NULL, NULL, NULL),
                                                 element)) {
-
             // Newly added element
             rc = true;
             break;
@@ -182,38 +168,6 @@ element_in_patchset_v2(const xmlNode *patchset, const char *element)
 
     free(element_regex);
     return rc;
-}
-
-/*!
- * \internal
- * \brief Check whether a given CIB element was modified in a CIB patchset
- *
- * \param[in] patchset  CIB XML patchset
- * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c PCMK_XE_CIB). Supported values include any CIB
- *                      element supported by \c pcmk__cib_abs_xpath_for().
- *
- * \return \c true if \p element was modified, or \c false otherwise
- */
-bool
-cib__element_in_patchset(const xmlNode *patchset, const char *element)
-{
-    int format = 1;
-
-    CRM_ASSERT(patchset != NULL);
-
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-    switch (format) {
-        case 1:
-            return element_in_patchset_v1(patchset, element);
-
-        case 2:
-            return element_in_patchset_v2(patchset, element);
-
-        default:
-            crm_warn("Unknown patch format: %d", format);
-            return false;
-    }
 }
 
 /*!
@@ -505,17 +459,7 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
     crm_trace("Massaging CIB contents");
     pcmk__strip_xml_text(scratch);
 
-    if (!make_copy) {
-        /* At this point, patchset_cib is just the PCMK_XE_CIB tag and its
-         * properties.
-         *
-         * The v1 format would barf on this, but we know the v2 patch
-         * format only needs it for the top-level version fields
-         */
-        local_diff = xml_create_patchset(2, patchset_cib, scratch,
-                                         config_changed, manage_counters);
-
-    } else {
+    if (make_copy) {
         static time_t expires = 0;
         time_t tm_now = time(NULL);
 
@@ -523,10 +467,10 @@ cib_perform_op(cib_t *cib, const char *op, int call_options, cib__op_fn_t fn,
             expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
             with_digest = true;
         }
-
-        local_diff = xml_create_patchset(0, patchset_cib, scratch,
-                                         config_changed, manage_counters);
     }
+
+    local_diff = xml_create_patchset(0, patchset_cib, scratch,
+                                     config_changed, manage_counters);
 
     pcmk__log_xml_changes(LOG_TRACE, scratch);
     xml_accept_changes(scratch);
@@ -690,10 +634,6 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         pcmk__xml_copy(wrapper, data);
     }
 
-    if (pcmk_is_set(call_options, cib_inhibit_bcast)) {
-        CRM_CHECK(pcmk_is_set(call_options, cib_scope_local),
-                  pcmk__xml_free(*op_msg); return -EPROTO);
-    }
     return pcmk_ok;
 }
 
@@ -998,8 +938,7 @@ cib__signon_query(pcmk__output_t *out, cib_t **cib, xmlNode **cib_object)
     if (out != NULL) {
         out->transient(out, "Querying CIB...");
     }
-    rc = cib_conn->cmds->query(cib_conn, NULL, cib_object,
-                               cib_scope_local|cib_sync_call);
+    rc = cib_conn->cmds->query(cib_conn, NULL, cib_object, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {

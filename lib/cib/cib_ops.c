@@ -502,27 +502,6 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         }
     }
 
-    // @COMPAT cib_mixed_update is deprecated as of 2.1.7
-    if (pcmk_is_set(options, cib_mixed_update)) {
-        int max = 0, lpc;
-        xmlXPathObjectPtr xpathObj = xpath_search(*result_cib, "//@__delete__");
-
-        if (xpathObj) {
-            max = numXpathResults(xpathObj);
-            crm_log_xml_trace(*result_cib, "Mixed result");
-        }
-
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = getXpathResult(xpathObj, lpc);
-            xmlChar *match_path = xmlGetNodePath(match);
-
-            crm_debug("Destroying %s", match_path);
-            free(match_path);
-            pcmk__xml_free(match);
-        }
-
-        freeXpathObject(xpathObj);
-    }
     return pcmk_ok;
 }
 
@@ -684,78 +663,6 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
     *result_cib = pcmk__xml_copy(NULL, existing_cib);
 
     return xml_apply_patchset(*result_cib, input, TRUE);
-}
-
-// @COMPAT: v1-only
-bool
-cib__config_changed_v1(xmlNode *last, xmlNode *next, xmlNode **diff)
-{
-    int lpc = 0, max = 0;
-    bool config_changes = false;
-    xmlXPathObject *xpathObj = NULL;
-    int format = 1;
-
-    CRM_ASSERT(diff != NULL);
-
-    if (*diff == NULL && last != NULL && next != NULL) {
-        *diff = pcmk__diff_v1_xml_object(last, next, false);
-    }
-
-    if (*diff == NULL) {
-        goto done;
-    }
-
-    crm_element_value_int(*diff, PCMK_XA_FORMAT, &format);
-    CRM_LOG_ASSERT(format == 1);
-
-    xpathObj = xpath_search(*diff, "//" PCMK_XE_CONFIGURATION);
-    if (numXpathResults(xpathObj) > 0) {
-        config_changes = true;
-        goto done;
-    }
-    freeXpathObject(xpathObj);
-
-    /*
-     * Do not check PCMK__XE_DIFF_ADDED "//" PCMK_XE_CIB
-     * This always contains every field and would produce a false positive
-     * every time if the checked value existed
-     */
-    xpathObj = xpath_search(*diff, "//" PCMK__XE_DIFF_REMOVED "//" PCMK_XE_CIB);
-    max = numXpathResults(xpathObj);
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *top = getXpathResult(xpathObj, lpc);
-
-        if (crm_element_value(top, PCMK_XA_EPOCH) != NULL) {
-            config_changes = true;
-            goto done;
-        }
-        if (crm_element_value(top, PCMK_XA_ADMIN_EPOCH) != NULL) {
-            config_changes = true;
-            goto done;
-        }
-
-        if (crm_element_value(top, PCMK_XA_VALIDATE_WITH) != NULL) {
-            config_changes = true;
-            goto done;
-        }
-        if (crm_element_value(top, PCMK_XA_CRM_FEATURE_SET) != NULL) {
-            config_changes = true;
-            goto done;
-        }
-        if (crm_element_value(top, PCMK_XA_REMOTE_CLEAR_PORT) != NULL) {
-            config_changes = true;
-            goto done;
-        }
-        if (crm_element_value(top, PCMK_XA_REMOTE_TLS_PORT) != NULL) {
-            config_changes = true;
-            goto done;
-        }
-    }
-
-  done:
-    freeXpathObject(xpathObj);
-    return config_changes;
 }
 
 int

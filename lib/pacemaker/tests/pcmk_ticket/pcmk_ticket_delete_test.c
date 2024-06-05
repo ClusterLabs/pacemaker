@@ -101,7 +101,7 @@ ticket_exists(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_null(xml_search);
 
     pcmk__xml_free(xml);
@@ -122,7 +122,7 @@ force_delete_ticket(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
     assert_null(xml_search);
 
     pcmk__xml_free(xml);
@@ -143,7 +143,7 @@ duplicate_tickets(void **state)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketC\"]",
-                     &xml_search, cib_xpath | cib_scope_local);
+                     &xml_search, cib_xpath);
 
     assert_null(xml_search);
 

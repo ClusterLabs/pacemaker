@@ -90,15 +90,6 @@ extern "C" {
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_CIB_UPDATE             "cib_update"
 
-// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
-#define PCMK__XE_CIB_UPDATE_DIFF        "cib_update_diff"
-
-// @COMPAT Deprecated since 2.1.7
-#define PCMK__XE_DIFF_ADDED             "diff-added"
-
-// @COMPAT Deprecated since 2.1.7
-#define PCMK__XE_DIFF_REMOVED           "diff-removed"
-
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
 
@@ -309,12 +300,6 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XA_CIB_OBJECT_TYPE        "cib_object_type"
-
-// @COMPAT Deprecated since 1.1.12; used with legacy CIB updates
-#define PCMK__XA_CIB_LOCAL_NOTIFY_ID    "cib_local_notify_id"
-
-// @COMPAT Used only with v1 patchsets
-#define PCMK__XA_CRM_DIFF_MARKER        "__crm_diff_marker__"
 
 // @COMPAT Deprecated since 2.1.5
 #define PCMK__XA_FIRST_INSTANCE         "first-instance"

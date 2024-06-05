@@ -141,8 +141,8 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         pcmk__g_strcat(xpath, "[@" PCMK_XA_NAME "='", attr_name, "']", NULL);
     }
 
-    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
-                              cib_sync_call | cib_scope_local | cib_xpath);
+    rc = the_cib->cmds->query(the_cib, xpath->str, &xml_search,
+                              cib_sync_call|cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
@@ -1351,7 +1351,7 @@ update_scheduler_input_to_cib(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
     xmlNode *cib_xml_copy = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+    rc = cib->cmds->query(cib, NULL, &cib_xml_copy, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {

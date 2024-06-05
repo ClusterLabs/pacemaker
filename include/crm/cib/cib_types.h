@@ -67,27 +67,11 @@ enum cib_call_options {
     cib_no_children     = (1 << 5),
     cib_xpath_address   = (1 << 6),
 
-    //! \deprecated This value will be removed in a future release
-    cib_mixed_update    = (1 << 7),
-
-    /* @COMPAT: cib_scope_local is processed only in the legacy function
-     * parse_local_options_v1().
-     *
-     * If (host == NULL):
-     * * In legacy mode, the CIB manager forwards a request to the primary
-     *   instance unless cib_scope_local is set or the local node is primary.
-     * * Outside of legacy mode:
-     *   * If a request modifies the CIB, the CIB manager forwards it to all
-     *     nodes.
-     *   * Otherwise, the CIB manager processes the request locally.
-     *
-     * There is no current use case for this implementing this flag in
-     * non-legacy mode.
-     */
-
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated This value will be removed in a future release
     cib_scope_local     = (1 << 8),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
     cib_dryrun          = (1 << 9),
 
@@ -133,22 +117,7 @@ enum cib_call_options {
     cib_sync_call       = (1 << 12),
 
     cib_no_mtime        = (1 << 13),
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated This value will be removed in a future release
-    cib_zero_copy       = (1 << 14),
-#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-
     cib_inhibit_notify  = (1 << 16),
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated This value will be removed in a future release
-    cib_quorum_override = (1 << 20),
-#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-
-    //! \deprecated This value will be removed in a future release
-    cib_inhibit_bcast   = (1 << 24),
-
     cib_force_diff      = (1 << 28),
 };
 

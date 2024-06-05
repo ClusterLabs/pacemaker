@@ -48,7 +48,6 @@ int remote_fd = 0;
 int remote_tls_fd = 0;
 
 GHashTable *config_hash = NULL;
-GHashTable *local_notify_queue = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
@@ -293,10 +292,6 @@ done:
 
     pcmk__cluster_destroy_node_caches();
 
-    if (local_notify_queue != NULL) {
-        g_hash_table_destroy(local_notify_queue);
-    }
-
     if (config_hash != NULL) {
         g_hash_table_destroy(config_hash);
     }
@@ -359,20 +354,6 @@ static void
 cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
     switch (type) {
-        case crm_status_processes:
-            if (cib_legacy_mode()
-                && !pcmk_is_set(node->processes, crm_get_cluster_proc())) {
-
-                uint32_t old = data? *(const uint32_t *)data : 0;
-
-                if ((node->processes ^ old) & crm_proc_cpg) {
-                    crm_info("Attempting to disable legacy mode after %s left the cluster",
-                             node->uname);
-                    legacy_mode = FALSE;
-                }
-            }
-            break;
-
         case crm_status_uname:
         case crm_status_nstate:
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
@@ -381,6 +362,9 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                 crm_info("No more peers");
                 terminate_cib(__func__, -1);
             }
+            break;
+
+        default:
             break;
     }
 }

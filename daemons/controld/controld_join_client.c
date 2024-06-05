@@ -133,7 +133,7 @@ do_cl_join_offer_respond(long long action,
     update_dc_expected(input->msg);
 
     query_call_id = cib_conn->cmds->query(cib_conn, NULL, NULL,
-                                          cib_scope_local|cib_no_children);
+                                          cib_no_children);
     fsa_register_cib_callback(query_call_id, pcmk__str_copy(join_id),
                               join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);

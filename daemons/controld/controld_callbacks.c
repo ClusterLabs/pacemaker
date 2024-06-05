@@ -238,7 +238,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 if (compare_version(controld_globals.dc_version, "3.0.9") > 0) {
                     controld_delete_node_state(node->uname,
                                                controld_section_attrs,
-                                               cib_scope_local);
+                                               cib_none);
                 }
 
             } else if (AM_I_DC
@@ -253,7 +253,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 } else {
                     controld_delete_node_state(node->uname,
                                                controld_section_attrs,
-                                               cib_scope_local);
+                                               cib_none);
                 }
             }
             break;
