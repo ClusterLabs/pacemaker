@@ -524,8 +524,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
     }
 
     new_node->private->utilization = pcmk__strkey_table(free, free);
-    new_node->details->digest_cache = pcmk__strkey_table(free,
-                                                          pe__free_digests);
+    new_node->private->digest_cache = pcmk__strkey_table(free,
+                                                         pe__free_digests);
 
     scheduler->nodes = g_list_insert_sorted(scheduler->nodes, new_node,
                                             pe__cmp_node_name);

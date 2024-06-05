@@ -253,8 +253,8 @@ pe_free_nodes(GList *nodes)
         if (node->private->utilization != NULL) {
             g_hash_table_destroy(node->private->utilization);
         }
-        if (node->details->digest_cache != NULL) {
-            g_hash_table_destroy(node->details->digest_cache);
+        if (node->private->digest_cache != NULL) {
+            g_hash_table_destroy(node->private->digest_cache);
         }
         g_list_free(node->details->running_rsc);
         g_list_free(node->private->assigned_resources);

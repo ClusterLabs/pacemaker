@@ -90,6 +90,7 @@ typedef struct pcmk__node_private {
     GHashTable *utilization;            // Node utilization attributes
     int num_resources;                  // Number of active resources on node
     GList *assigned_resources;          // List of resources assigned to node
+    GHashTable *digest_cache;           // Cache of calculated resource digests
     pcmk_resource_t *remote;            // Pacemaker Remote connection (if any)
 } pcmk__node_private_t;
 

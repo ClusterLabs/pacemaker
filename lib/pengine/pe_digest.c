@@ -365,12 +365,12 @@ rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
     pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
-    data = g_hash_table_lookup(node->details->digest_cache, key);
+    data = g_hash_table_lookup(node->private->digest_cache, key);
     if (data == NULL) {
         data = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
                                      NULL, calc_secure, scheduler);
         CRM_ASSERT(data != NULL);
-        g_hash_table_insert(node->details->digest_cache, strdup(key), data);
+        g_hash_table_insert(node->private->digest_cache, strdup(key), data);
     }
     free(key);
     return data;
