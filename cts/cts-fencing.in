@@ -114,10 +114,10 @@ class FenceTests(Tests):
             verbose_arg = "-V"
 
         test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
-        test.add_cmd("cts-fence-helper", "-t %s" % (verbose_arg), validate=False)
+        test.add_cmd("cts-fence-helper", args="-t %s" % verbose_arg, validate=False)
 
         test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", True)
-        test.add_cmd("cts-fence-helper", "-m %s" % (verbose_arg), validate=False)
+        test.add_cmd("cts-fence-helper", args="-m %s" % verbose_arg, validate=False)
 
     def build_custom_timeout_tests(self):
         """ Register tests to verify custom timeout usage """
@@ -126,12 +126,12 @@ class FenceTests(Tests):
         test = self.new_test("cpg_custom_timeout_1",
                              "Verify per device timeouts work as expected without using topology.", True)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node1 node2 node3"')
+                     args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1"')
+                     args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3 -o pcmk_off_timeout=1')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4"')
-        test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+                     args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3 -o pcmk_off_timeout=4')
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4 = 10
         test.add_log_pattern("Total timeout set to 12s")
 
@@ -139,15 +139,15 @@ class FenceTests(Tests):
         test = self.new_test("cpg_custom_timeout_2",
                              "Verify per device timeouts work as expected _WITH_ topology.", True)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node1 node2 node3"')
+                     args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1  -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=1000ms"')
+                     args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3 -o pcmk_off_timeout=1000ms')
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4000s"')
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v false2")
-        test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+                     args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3 -o pcmk_off_timeout=4000s')
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v false2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4000 = 4006
         test.add_log_pattern("Total timeout set to 4807s")
 
@@ -157,11 +157,11 @@ class FenceTests(Tests):
         ### Simple test that overlapping fencing operations get merged
         test = self.new_test("cpg_custom_merge_single",
                              "Verify overlapping identical fencing operations are merged, no fencing levels used.", True)
-        test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-        test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
-        test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         ### one merger will happen
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
@@ -171,15 +171,15 @@ class FenceTests(Tests):
         ### Test that multiple mergers occur
         test = self.new_test("cpg_custom_merge_multiple",
                              "Verify multiple overlapping identical fencing operations are merged", True)
-        test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"delay=2\" -o \"pcmk_host_list=node3\" ")
-        test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
+                     args="--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o delay=2 -o pcmk_host_list=node3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
@@ -196,17 +196,17 @@ class FenceTests(Tests):
         test = self.new_test("cpg_custom_merge_with_topology",
                              "Verify multiple overlapping identical fencing operations are merged with fencing levels.",
                              True)
-        test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-        test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\" ")
-        test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false2")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true1")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
@@ -224,14 +224,14 @@ class FenceTests(Tests):
 
         test = self.new_test("cpg_custom_no_merge",
                              "Verify differing fencing operations are not merged", True)
-        test.add_cmd("stonith_admin", "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3 node2\"")
-        test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3 node2\" ")
-        test.add_cmd("stonith_admin", "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3 node2\"")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false2")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
-        test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node2 -t 10")
-        test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node3 node2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3 node2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node3 node2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true1")
+        test.add_cmd_no_wait("stonith_admin", args="--output-as=xml -F node2 -t 10")
+        test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 10")
         test.add_log_pattern("Merging fencing action 'off' targeting node3 originating from client",
                              negative=True)
 
@@ -255,16 +255,16 @@ class FenceTests(Tests):
                                  "Verify that all devices timeout, a fencing failure is returned.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false2  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false2  -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false3 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             if test_type["use_cpg"]:
-                test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.TIMEOUT)
+                test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -F node3 -t 2", exitcode=ExitStatus.TIMEOUT)
                 test.add_log_pattern("Total timeout set to 7s")
             else:
-                test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -F node3 -t 2", ExitStatus.ERROR)
+                test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -F node3 -t 2", exitcode=ExitStatus.ERROR)
 
             test.add_log_pattern("targeting node3 using false1 returned ")
             test.add_log_pattern("targeting node3 using false2 returned ")
@@ -276,12 +276,12 @@ class FenceTests(Tests):
                                  "Verify that when one fence device fails for a node, the others are tried.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+                         args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
 
             if test_type["use_cpg"]:
                 test.add_log_pattern("Total timeout set to 18s")
@@ -292,14 +292,14 @@ class FenceTests(Tests):
                                  "Verify proper error-handling when using a non-existent fence-agent.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1 -a fence_missing -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+                         args="--output-as=xml -R true1 -a fence_missing -o mode=pass -o pcmk_host_list=node3")
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node2\"")
+                         args="--output-as=xml -R true2 -a fence_dummy -o mode=pass -o pcmk_host_list=node2")
 
             test.add_cmd_expected_fail("stonith_admin",
-                                       "--output-as=xml -F node3 -t 5",
-                                       ExitStatus.NOSUCH)
-            test.add_cmd("stonith_admin", "--output-as=xml -F node2 -t 5")
+                                       args="--output-as=xml -F node3 -t 5",
+                                       exitcode=ExitStatus.NOSUCH)
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node2 -t 5")
 
         # simple topology test for one device
         for test_type in test_types:
@@ -309,9 +309,9 @@ class FenceTests(Tests):
             test = self.new_test("%s_topology_simple" % test_type["prefix"],
                                  "Verify all fencing devices at a level are used.", test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true")
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+                         args='--output-as=xml -R true  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
 
             test.add_log_pattern("Total timeout set to 6s")
             test.add_log_pattern("targeting node3 using true returned 0")
@@ -326,10 +326,10 @@ class FenceTests(Tests):
                                  "Verify fencing occurrs after all topology levels are removed",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true")
-            test.add_cmd("stonith_admin", "--output-as=xml -d node3 -i 1")
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+                         args='--output-as=xml -R true  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true")
+            test.add_cmd("stonith_admin", args="--output-as=xml -d node3 -i 1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
 
             test.add_log_pattern("Total timeout set to 6s")
             test.add_log_pattern("targeting node3 using true returned 0")
@@ -343,12 +343,12 @@ class FenceTests(Tests):
                                  "Verify if one device in a level fails, the other is tried.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false  -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true")
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
+                         args='--output-as=xml -R true  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 20")
 
             test.add_log_pattern("Total timeout set to 48s")
             test.add_log_pattern("targeting node3 using false returned 1")
@@ -363,26 +363,26 @@ class FenceTests(Tests):
                                  "Verify if one level fails, the next leve is tried.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true2  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true3  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true4  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true4  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true2")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v false2")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v true3")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v true4")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v false2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v true3")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v true4")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 3")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 3")
 
             test.add_log_pattern("Total timeout set to 21s")
             test.add_log_pattern("targeting node3 using false1 returned 1")
@@ -400,22 +400,22 @@ class FenceTests(Tests):
                                  "Verify topology can continue with missing devices.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true2  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true3  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true4  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true4  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true2")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v false2")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v true3")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v true4")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v false2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v true3")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v true4")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
 
         # Test what happens if multiple fencing levels are defined, and then the first one is removed.
         for test_type in test_types:
@@ -425,31 +425,31 @@ class FenceTests(Tests):
             test = self.new_test("%s_topology_level_removal" % test_type["prefix"],
                                  "Verify level removal works.", test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true2  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true3  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true4  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true4  -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false2 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3"')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true1")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true2")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v false2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v false2")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v true3")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v true4")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v true3")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 3 -v true4")
 
             # Now remove level 2, verify none of the devices in level two are hit.
-            test.add_cmd("stonith_admin", "--output-as=xml -d node3 -i 2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -d node3 -i 2")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 20")
 
             test.add_log_pattern("Total timeout set to 96s")
             test.add_log_pattern("targeting node3 using false1 returned 1")
@@ -467,9 +467,9 @@ class FenceTests(Tests):
                                  "Verify targeting topology by node name pattern works.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         """--output-as=xml -R true -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node1 node2 node3" """)
-            test.add_cmd("stonith_admin", """--output-as=xml -r '@node.*' -i 1 -v true""")
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
+                         args='--output-as=xml -R true -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -r '@node.*' -i 1 -v true")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5")
             test.add_log_pattern("targeting node3 using true returned 0")
 
         # test allowing commas and semicolons as delimiters in pcmk_host_list
@@ -478,11 +478,11 @@ class FenceTests(Tests):
                                  "Verify commas and semicolons can be used as pcmk_host_list delimiters",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node1,node2,node3" """)
+                         args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1,node2,node3"')
             test.add_cmd("stonith_admin",
-                         """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=pcmk1;pcmk2;pcmk3" """)
-            test.add_cmd("stonith_admin", "stonith_admin --output-as=xml -F node2 -t 5")
-            test.add_cmd("stonith_admin", "stonith_admin --output-as=xml -F pcmk3 -t 5")
+                         args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=pcmk1;pcmk2;pcmk3"')
+            test.add_cmd("stonith_admin", args="stonith_admin --output-as=xml -F node2 -t 5")
+            test.add_cmd("stonith_admin", args="stonith_admin --output-as=xml -F pcmk3 -t 5")
             test.add_log_pattern("targeting node2 using true1 returned 0")
             test.add_log_pattern("targeting pcmk3 using true2 returned 0")
 
@@ -492,26 +492,28 @@ class FenceTests(Tests):
                                  "Verify list of devices that can fence a node is correct",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+                         args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true3 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -l node1 -V", "true2", "true1")
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -l node1 -V", "true3", "true1")
+                         args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l node1 -V",
+                                      stdout_match="true2", stdout_negative_match="true1")
+            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l node1 -V",
+                                      stdout_match="true3", stdout_negative_match="true1")
 
         # simple test of device monitor
         for test_type in test_types:
             test = self.new_test("%s_monitor" % test_type["prefix"],
                                  "Verify device is reachable", test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -R false1  -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node3\"")
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=node3"')
+            test.add_cmd("stonith_admin", args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node3"')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -Q true1")
-            test.add_cmd("stonith_admin", "--output-as=xml -Q false1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q false1")
             test.add_cmd_expected_fail("stonith_admin",
-                                       "--output-as=xml -Q true2",
-                                       ExitStatus.NOSUCH)
+                                       args="--output-as=xml -Q true2",
+                                       exitcode=ExitStatus.NOSUCH)
 
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
@@ -519,8 +521,8 @@ class FenceTests(Tests):
                                  "Verify monitor uses duration of timeout period given.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         '--output-as=xml -R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -Q true1 -t 5", ExitStatus.ERROR)
+                         args='--output-as=xml -R true1 -a fence_dummy -o mode=fail -o monitor_mode=fail -o pcmk_host_list=node3')
+            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true1 -t 5", exitcode=ExitStatus.ERROR)
             test.add_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
@@ -529,8 +531,8 @@ class FenceTests(Tests):
                                  "Verify monitor retries until max retry value or timeout is hit.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         '--output-as=xml -R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -Q true1 -t 15", ExitStatus.ERROR)
+                         args='--output-as=xml -R true1  -a fence_dummy -o mode=fail -o monitor_mode=fail -o pcmk_host_list=node3')
+            test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -Q true1 -t 15", exitcode=ExitStatus.ERROR)
             test.add_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
@@ -538,30 +540,30 @@ class FenceTests(Tests):
             test = self.new_test("%s_register" % test_type["prefix"],
                                  "Verify devices can be registered and un-registered",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -Q true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -Q true1")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -D true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -D true1")
 
             test.add_cmd_expected_fail("stonith_admin",
-                                       "--output-as=xml -Q true1",
-                                       ExitStatus.NOSUCH)
+                                       args="--output-as=xml -Q true1",
+                                       exitcode=ExitStatus.NOSUCH)
 
         # simple reboot test
         for test_type in test_types:
             test = self.new_test("%s_reboot" % test_type["prefix"],
                                  "Verify devices can be rebooted",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -B node3 -t 5")
+            test.add_cmd("stonith_admin", args="--output-as=xml -B node3 -t 5")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -D true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -D true1")
 
             test.add_cmd_expected_fail("stonith_admin",
-                                       "--output-as=xml -Q true1",
-                                       ExitStatus.NOSUCH)
+                                       args="--output-as=xml -Q true1",
+                                       exitcode=ExitStatus.NOSUCH)
 
         # test fencing history.
         for test_type in test_types:
@@ -570,22 +572,24 @@ class FenceTests(Tests):
             test = self.new_test("%s_fence_history" % test_type["prefix"],
                                  "Verify last fencing operation is returned.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node3\"")
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_list=node3')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5 -V")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 -t 5 -V")
 
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -H node3", 'action="off" target="node3" .* status="success"')
+            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -H node3",
+                                      stdout_match='action="off" target="node3" .* status="success"')
 
         # simple test of dynamic list query
         for test_type in test_types:
             test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "--output-as=xml -R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "--output-as=xml -R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -l fake_port_1", 'count="3"')
+            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l fake_port_1",
+                                      stdout_match='count="3"')
 
 
         # fence using dynamic list query
@@ -593,22 +597,23 @@ class FenceTests(Tests):
             test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "--output-as=xml -R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "--output-as=xml -R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -F fake_port_1 -t 5 -V")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F fake_port_1 -t 5 -V")
 
         # simple test of  query using status action
         for test_type in test_types:
             test = self.new_test("%s_status_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "--output-as=xml -R true1  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -R true2  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -R true3  -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_check=status\"")
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true1  -a fence_dummy -o mode=pass -o pcmk_host_check=status')
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true2  -a fence_dummy -o mode=pass -o pcmk_host_check=status')
+            test.add_cmd("stonith_admin", args='--output-as=xml -R true3  -a fence_dummy -o mode=pass -o pcmk_host_check=status')
 
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -l fake_port_1", 'count="3"')
+            test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -l fake_port_1",
+                                      stdout_match='count="3"')
 
         # test what happens when no reboot action is advertised
         for test_type in test_types:
@@ -616,8 +621,8 @@ class FenceTests(Tests):
                                  "Verify reboot action defaults to off when no reboot action is advertised by agent.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1 -a fence_dummy_no_reboot -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
+                         args='--output-as=xml -R true1 -a fence_dummy_no_reboot -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -B node1 -t 5 -V")
             test.add_log_pattern("does not support reboot")
             test.add_log_pattern("using true1 returned 0")
 
@@ -627,8 +632,8 @@ class FenceTests(Tests):
                                  "Verify reboot action can be used when metadata advertises it.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
-            test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
+                         args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+            test.add_cmd("stonith_admin", args="--output-as=xml -B node1 -t 5 -V")
             test.add_log_pattern("does not advertise support for 'reboot', performing 'off'",
                                  negative=True)
             test.add_log_pattern("using true1 returned 0")
@@ -642,21 +647,21 @@ class FenceTests(Tests):
                                  "Verify all fencing delays are applied correctly and taken into account by fencing timeouts with topology.",
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_delay_base=1\"")
+                         args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=1')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R false1 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_delay_base=1\"")
+                         args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=1')
             # Resulting "random" delay will always be 1 since (rand() % (delay_max - delay_base)) is always 0 here.
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\" -o \"pcmk_delay_base=1\" -o \"pcmk_delay_max=2\"")
+                         args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=1 -o pcmk_delay_max=2')
             test.add_cmd("stonith_admin",
-                         "--output-as=xml -R true3 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
+                         args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
 
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v false1")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true2")
-            test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true3")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true2")
+            test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true3")
 
-            test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
+            test.add_cmd("stonith_admin", args="--output-as=xml -F node3 --delay 1")
 
             # Total fencing timeout takes all fencing delays into account.
             test.add_log_pattern("Total timeout set to 582s")
@@ -693,8 +698,8 @@ class FenceTests(Tests):
                              "Verify nodeid is given when fence agent has nodeid as parameter", True)
 
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F %s -t 3" % our_uname)
         test.add_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
 
         ### verify nodeid is _NOT_ supplied when nodeid is not in the metadata parameters
@@ -704,8 +709,8 @@ class FenceTests(Tests):
 
         # use a host name that won't be in corosync.conf
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=regr-test\"")
-        test.add_cmd("stonith_admin", "--output-as=xml -F regr-test -t 3")
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o pcmk_host_list=regr-test')
+        test.add_cmd("stonith_admin", args="--output-as=xml -F regr-test -t 3")
         test.add_log_pattern("as nodeid with fence action 'off' targeting regr-test",
                              negative=True)
 
@@ -715,8 +720,8 @@ class FenceTests(Tests):
                              False)
 
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -F %s -t 3" % our_uname)
         test.add_log_pattern("as nodeid with fence action 'off' targeting %s" % our_uname,
                              negative=True)
 
@@ -730,10 +735,10 @@ class FenceTests(Tests):
                              "Verify require unfencing on all devices when automatic=true in agent's metadata",
                              True)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
+                     args='--output-as=xml -R true2 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U %s -t 3" % our_uname)
         # both devices should be executed
         test.add_log_pattern("using true1 returned 0")
         test.add_log_pattern("using true2 returned 0")
@@ -743,22 +748,22 @@ class FenceTests(Tests):
                              "Verify require unfencing on all devices when automatic=true in agent's metadata",
                              True)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=fail" -o "pcmk_host_list=%s"' % (our_uname))
-        test.add_cmd_expected_fail("stonith_admin", "--output-as=xml -U %s -t 6" % (our_uname), ExitStatus.ERROR)
+                     args='--output-as=xml -R true2 -a fence_dummy_auto_unfence -o mode=fail -o "pcmk_host_list=%s"' % our_uname)
+        test.add_cmd_expected_fail("stonith_admin", args="--output-as=xml -U %s -t 6" % our_uname, exitcode=ExitStatus.ERROR)
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_3",
                              "Verify require unfencing on all devices even when at different topology levels",
                              True)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v true1" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
+                     args='--output-as=xml -R true2 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 1 -v true1" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 2 -v true2" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U %s -t 3" % our_uname)
         test.add_log_pattern("using true1 returned 0")
         test.add_log_pattern("using true2 returned 0")
 
@@ -767,30 +772,30 @@ class FenceTests(Tests):
                              "Verify all required devices are executed even with topology levels fail.",
                              True)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R true2 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true3 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R true3 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R true4 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R true4 -a fence_dummy_auto_unfence -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false3 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=%s node3"' % (our_uname))
+                     args='--output-as=xml -R false3 -a fence_dummy -o mode=fail -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd('stonith_admin',
-                     '--output-as=xml -R false4 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=%s node3"' % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v true1" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v false1" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v false2" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v false3" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true3" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 3 -v false4" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 4 -v true4" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
+                     args='--output-as=xml -R false4 -a fence_dummy -o mode=fail -o "pcmk_host_list=%s node3"' % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 1 -v true1" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 1 -v false1" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 2 -v false2" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 2 -v true2" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 2 -v false3" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 2 -v true3" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 3 -v false4" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 4 -v true4" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U %s -t 3" % our_uname)
         test.add_log_pattern("using true1 returned 0")
         test.add_log_pattern("using true2 returned 0")
         test.add_log_pattern("using true3 returned 0")
@@ -805,8 +810,8 @@ class FenceTests(Tests):
         test = self.new_test("cpg_unfence_on_target_1",
                              "Verify unfencing with on_target = true", True)
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s"' % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -U %s -t 3" % our_uname)
         test.add_log_pattern("(on) to be executed on target")
 
         ### verify failure of unfencing using on_target device
@@ -814,10 +819,10 @@ class FenceTests(Tests):
                              "Verify failure unfencing with on_target = true",
                              True)
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s node_fake_1234"' % our_uname)
         test.add_cmd_expected_fail("stonith_admin",
-                                   "--output-as=xml -U node_fake_1234 -t 3",
-                                   ExitStatus.NOSUCH)
+                                   args="--output-as=xml -U node_fake_1234 -t 3",
+                                   exitcode=ExitStatus.NOSUCH)
         test.add_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
@@ -826,14 +831,14 @@ class FenceTests(Tests):
                              True)
 
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node3\"" % (our_uname))
+                     args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s node3"' % our_uname)
 
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v true1" % (our_uname))
-        test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 1 -v true1" % our_uname)
+        test.add_cmd("stonith_admin", args="--output-as=xml -r %s -i 2 -v true2" % our_uname)
 
-        test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
+        test.add_cmd("stonith_admin", args="--output-as=xml -U %s -t 3" % our_uname)
         test.add_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology fails when target node doesn't exist
@@ -842,16 +847,16 @@ class FenceTests(Tests):
                              True)
 
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s node_fake"' % our_uname)
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake\"" % (our_uname))
+                     args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=%s node_fake"' % our_uname)
 
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 1 -v true1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 2 -v true2")
 
         test.add_cmd_expected_fail("stonith_admin",
-                                   "--output-as=xml -U node_fake -t 3",
-                                   ExitStatus.NOSUCH)
+                                   args="--output-as=xml -U node_fake -t 3",
+                                   exitcode=ExitStatus.NOSUCH)
         test.add_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):
@@ -860,13 +865,13 @@ class FenceTests(Tests):
         test = self.new_test("cpg_remap_simple",
                              "Verify sequential topology reboot is remapped to all-off-then-all-on", True)
         test.add_cmd("stonith_admin",
-                     """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """
-                     """-o "pcmk_off_timeout=1" -o "pcmk_reboot_timeout=10" """)
+                     args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake '
+                          '-o pcmk_off_timeout=1 -o pcmk_reboot_timeout=10')
         test.add_cmd("stonith_admin",
-                     """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """
-                     """-o "pcmk_off_timeout=2" -o "pcmk_reboot_timeout=20" """)
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
-        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+                     args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake '
+                          '-o pcmk_off_timeout=2 -o pcmk_reboot_timeout=20')
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
         test.add_log_pattern("Total timeout set to 3s for peer's fencing targeting node_fake")
@@ -883,16 +888,16 @@ class FenceTests(Tests):
                              "pcmk_reboot_action=off or agent doesn't support "
                              "'on'", True)
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true1 -a fence_dummy -o mode=pass "
-                     "-o pcmk_host_list=node_fake -o pcmk_off_timeout=1 "
-                     "-o pcmk_reboot_timeout=10 -o pcmk_reboot_action=off")
+                     args="--output-as=xml -R true1 -a fence_dummy -o mode=pass "
+                          "-o pcmk_host_list=node_fake -o pcmk_off_timeout=1 "
+                          "-o pcmk_reboot_timeout=10 -o pcmk_reboot_action=off")
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -R true2 -a fence_dummy_no_on "
-                     "-o mode=pass -o pcmk_host_list=node_fake "
-                     "-o pcmk_off_timeout=2 -o pcmk_reboot_timeout=20")
+                     args="--output-as=xml -R true2 -a fence_dummy_no_on "
+                          "-o mode=pass -o pcmk_host_list=node_fake "
+                          "-o pcmk_off_timeout=2 -o pcmk_reboot_timeout=20")
         test.add_cmd("stonith_admin",
-                     "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
-        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+                     args="--output-as=xml -r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
         test.add_log_pattern("Total timeout set to 3s for peer's fencing targeting node_fake")
@@ -910,13 +915,13 @@ class FenceTests(Tests):
         test = self.new_test("cpg_remap_automatic",
                              "Verify remapped topology reboot skips automatic 'on'", True)
         test.add_cmd("stonith_admin",
-                     """--output-as=xml -R true1 -a fence_dummy_auto_unfence """
-                     """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
+                     args='--output-as=xml -R true1 -a fence_dummy_auto_unfence '
+                          '-o mode=pass -o pcmk_host_list=node_fake')
         test.add_cmd("stonith_admin",
-                     """--output-as=xml -R true2 -a fence_dummy_auto_unfence """
-                     """-o "mode=pass" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
-        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+                     args='--output-as=xml -R true2 -a fence_dummy_auto_unfence '
+                          '-o "mode=pass" -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 1 -v true1 -v true2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         test.add_log_pattern("perform 'off' action targeting node_fake using true1")
         test.add_log_pattern("perform 'off' action targeting node_fake using true2")
@@ -930,12 +935,12 @@ class FenceTests(Tests):
         test = self.new_test("cpg_remap_complex_1",
                              "Verify remapped topology reboot in second level works if non-remapped first level fails",
                              True)
-        test.add_cmd("stonith_admin", """--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v false1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v true2")
-        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+        test.add_cmd("stonith_admin", args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 1 -v false1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 2 -v true1 -v true2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("perform 'reboot' action targeting node_fake using false1")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         test.add_log_pattern("perform 'off' action targeting node_fake using true1")
@@ -948,15 +953,15 @@ class FenceTests(Tests):
         test = self.new_test("cpg_remap_complex_2",
                              "Verify remapped topology reboot failure in second level proceeds to third level",
                              True)
-        test.add_cmd("stonith_admin", """--output-as=xml -R false1 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", """--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", """--output-as=xml -R true1 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", """--output-as=xml -R true3 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node_fake" """)
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v false1")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v false2 -v true3")
-        test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 3 -v true2")
-        test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
+        test.add_cmd("stonith_admin", args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args='--output-as=xml -R false2 -a fence_dummy -o mode=fail -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o pcmk_host_list=node_fake')
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 1 -v false1")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 2 -v true1 -v false2 -v true3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node_fake -i 3 -v true2")
+        test.add_cmd("stonith_admin", args="--output-as=xml -B node_fake -t 5")
         test.add_log_pattern("perform 'reboot' action targeting node_fake using false1")
         test.add_log_pattern("Remapping multiple-device reboot targeting node_fake")
         test.add_log_pattern("perform 'off' action targeting node_fake using true1")
@@ -972,28 +977,29 @@ class FenceTests(Tests):
 
         test = self.new_test("get_metadata",
                              "Run stonith_admin --metadata for the fence_dummy agent", True)
-        test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -a fence_dummy --metadata", '<shortdesc lang')
+        test.add_cmd_check_stdout("stonith_admin", args="--output-as=xml -a fence_dummy --metadata",
+                                  stdout_match='<shortdesc lang')
 
     def build_metadata_tests(self):
         """ run fence-agents coming with pacemaker with -o metadata and check for valid xml """
 
         test = self.new_test("check_metadata_dummy",
                              "Run fence_dummy -o metadata and check for valid xml", False)
-        test.add_cmd("fence_dummy", "-o metadata", check_rng=False, check_stderr=False)
+        test.add_cmd("fence_dummy", args="-o metadata", check_rng=False, check_stderr=False)
         # fence_dummy prints on stderr to check that tools just listen on stdout
 
         test = self.new_test("check_metadata_watchdog",
                              "Run fence_watchdog -o metadata and check for valid xml", False)
-        test.add_cmd("fence_watchdog", "-o metadata", check_rng=False)
+        test.add_cmd("fence_watchdog", args="-o metadata", check_rng=False)
 
     def build_validate_tests(self):
         """ run stonith_admin --validate for the fence_dummy agent and check command output """
 
         test = self.new_test("validate_dummy",
                              "Run stonith_admin --validate-all and check output", False)
-        test.add_cmd_expected_fail("stonith_admin", "-a fence_dummy --validate --output-as=xml")
-        test.add_cmd("stonith_admin", """-a fence_dummy --validate -o "delay=5" --output-as=xml""", check_rng=False)
-        test.add_cmd_expected_fail("stonith_admin", """-a fence_dummy --validate -o "delay=15" --output-as=xml""")
+        test.add_cmd_expected_fail("stonith_admin", args="-a fence_dummy --validate --output-as=xml")
+        test.add_cmd("stonith_admin", args='-a fence_dummy --validate -o delay=5 --output-as=xml', check_rng=False)
+        test.add_cmd_expected_fail("stonith_admin", args='-a fence_dummy --validate -o delay=15 --output-as=xml')
 
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
